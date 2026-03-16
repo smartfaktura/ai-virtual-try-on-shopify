@@ -542,7 +542,8 @@ export default function Generate() {
   });
 
   const onModelCategories: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
-  const posesByCategory = filterVisible(mockTryOnPoses).reduce((acc, pose) => {
+  const allScenePoses = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]));
+  const posesByCategory = allScenePoses.reduce((acc, pose) => {
     // For Virtual Try-On, only show on-model categories
     if (activeWorkflow?.uses_tryon && !onModelCategories.includes(pose.category)) return acc;
     if (!acc[pose.category]) acc[pose.category] = [];
@@ -550,7 +551,7 @@ export default function Generate() {
     return acc;
   }, {} as Record<PoseCategory, TryOnPose[]>);
 
-  const popularCombinations = createPopularCombinations(mockModels, mockTryOnPoses);
+  const popularCombinations = createPopularCombinations(mockModels, allScenePoses);
 
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
