@@ -164,6 +164,7 @@ export default function Freestyle() {
   }, [activeJob]);
 
   // Pre-fill from Discover page URL params
+  const initialSceneParam = useRef(searchParams.get('scene'));
   useEffect(() => {
     const p = searchParams.get('prompt');
     const r = searchParams.get('ratio');
@@ -175,13 +176,10 @@ export default function Freestyle() {
     }
     if (q === 'high') setQuality('high');
     if (sceneParam) {
-      let matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
-      // Check custom scenes (e.g. custom-{uuid} from dashboard)
-      if (!matchedScene && sceneParam.startsWith('custom-')) {
-        matchedScene = customScenePoses.find((s) => s.poseId === sceneParam);
-      }
+      const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
       if (matchedScene) {
         setSelectedScene(matchedScene);
+        initialSceneParam.current = null; // consumed
         if (!localStorage.getItem('hideSceneAppliedHint')) {
           setShowSceneHint(true);
         }
@@ -192,6 +190,20 @@ export default function Freestyle() {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Deferred custom scene matching (custom scenes load async)
+  useEffect(() => {
+    const sceneParam = initialSceneParam.current;
+    if (!sceneParam || !sceneParam.startsWith('custom-') || customScenePoses.length === 0) return;
+    const matched = customScenePoses.find((s) => s.poseId === sceneParam);
+    if (matched) {
+      setSelectedScene(matched);
+      initialSceneParam.current = null;
+      if (!localStorage.getItem('hideSceneAppliedHint')) {
+        setShowSceneHint(true);
+      }
+    }
+  }, [customScenePoses]); // eslint-disable-line react-hooks/exhaustive-deps
   const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages, fetchNextPage, hasNextPage, isFetchingNextPage } = useFreestyleImages();
   const [isSaving, setIsSaving] = useState(false);
 
