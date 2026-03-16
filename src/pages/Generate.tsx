@@ -2862,7 +2862,7 @@ export default function Generate() {
 
         {/* Model Selection */}
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-20">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
@@ -2880,7 +2880,9 @@ export default function Generate() {
                   <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
                 ))}
               </div>
-              <div className="flex justify-between">
+            </CardContent></Card>
+            <div className="fixed bottom-0 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 bg-background/95 backdrop-blur-sm border-t border-border">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
                 <Button variant="outline" onClick={() => {
                   if (isMirrorSelfie) {
                     setMirrorSettingsPhase('scenes');
@@ -2897,7 +2899,7 @@ export default function Generate() {
                   <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
                 )}
               </div>
-            </CardContent></Card>
+            </div>
           </div>
         )}
 
