@@ -346,7 +346,7 @@ export default function Workflows() {
   return (
     <PageHeader
       title="Workflows"
-      subtitle="Generate virtual try-ons, product listings, UGC selfies, flat lays, staging & more — pick a workflow below."
+      subtitle="Pick a workflow to start generating — or jump to one below."
     >
       {/* ── Quick-nav pills ── */}
       {!isLoading && workflows.length > 0 && (
