@@ -131,6 +131,20 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  // Fetch freestyle generation count (exclude Perspectives)
+  const { data: freestyleCount = 0 } = useQuery({
+    queryKey: ['dashboard-freestyle-count', user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('freestyle_generations')
+        .select('*', { count: 'exact', head: true })
+        .is('workflow_label', null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user,
+  });
+
   // Fetch recent jobs (generation_jobs + Picture Perspectives from freestyle_generations)
   const { data: recentJobs = [], isLoading: jobsLoading } = useQuery({
     queryKey: ['dashboard-recent-jobs', user?.id],
@@ -275,6 +289,7 @@ export default function Dashboard() {
             productCount={productCount}
             brandProfileCount={brandProfileCount}
             jobCount={totalJobCount}
+            freestyleCount={freestyleCount}
           />
         </div>
 

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
+import { Check, Upload, Palette, Sparkles, Wand2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
@@ -10,6 +10,7 @@ interface OnboardingChecklistProps {
   productCount: number;
   brandProfileCount: number;
   jobCount: number;
+  freestyleCount: number;
 }
 
 const steps = [
@@ -40,15 +41,25 @@ const steps = [
     cta: 'Go to Workflows',
     memberName: 'Kenji',
   },
+  {
+    key: 'freestyle',
+    title: 'Try Freestyle Studio',
+    description: 'Any prompt, select product, model & scene — one-click generation like ChatGPT, but for your images.',
+    icon: Wand2,
+    path: '/app/freestyle',
+    cta: 'Try Freestyle',
+    memberName: 'Amara',
+  },
 ] as const;
 
-export function OnboardingChecklist({ productCount, brandProfileCount, jobCount }: OnboardingChecklistProps) {
+export function OnboardingChecklist({ productCount, brandProfileCount, jobCount, freestyleCount }: OnboardingChecklistProps) {
   const navigate = useNavigate();
 
   const completionMap: Record<string, boolean> = {
     products: productCount > 0,
     brand: brandProfileCount > 0,
     generate: jobCount > 0,
+    freestyle: freestyleCount > 0,
   };
 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
