@@ -41,7 +41,7 @@ interface TryOnSettingsPanelProps {
   tryOnSceneCount: number;
   openBuyModal: () => void;
   handleGenerateClick: () => void;
-  setCurrentStep: (step: string) => void;
+  setCurrentStep: (step: 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results') => void;
 }
 
 export default function TryOnSettingsPanel({

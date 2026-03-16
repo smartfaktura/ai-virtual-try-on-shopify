@@ -90,8 +90,8 @@ interface WorkflowSettingsPanelProps {
   setMirrorSettingsPhase: (p: 'scenes' | 'final') => void;
 
   // UGC state
-  ugcMood: string;
-  setUgcMood: (m: string) => void;
+  ugcMood: UgcMood;
+  setUgcMood: (m: UgcMood) => void;
 
   // Settings
   quality: ImageQuality;
@@ -127,7 +127,7 @@ interface WorkflowSettingsPanelProps {
   openBuyModal: () => void;
   handleGenerateClick: () => void;
   handleGenerateScenePreviews: () => void;
-  setCurrentStep: (step: string) => void;
+  setCurrentStep: (step: 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results') => void;
 }
 
 export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps) {

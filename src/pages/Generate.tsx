@@ -81,6 +81,9 @@ import { FramingSelector } from '@/components/app/FramingSelector';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { detectDefaultFraming } from '@/lib/framingUtils';
+import UpscaleSettingsPanel from '@/components/app/generate/UpscaleSettingsPanel';
+import WorkflowSettingsPanel from '@/components/app/generate/WorkflowSettingsPanel';
+import TryOnSettingsPanel from '@/components/app/generate/TryOnSettingsPanel';
 type UserProduct = Tables<'user_products'>;
 
 const FLAT_LAY_AESTHETICS = [
@@ -3172,849 +3175,111 @@ export default function Generate() {
 
         {/* Upscale Workflow Settings */}
         {isUpscale && currentStep === 'settings' && (selectedProduct || scratchUpload) && (
-          <div className="space-y-4">
-            {/* Product summary */}
-            <Card><CardContent className="p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {sourceType === 'scratch' ? 'Uploaded Image' : isMultiProductMode ? `Selected Images (${productQueue.length})` : 'Selected Product'}
-                </span>
-                <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
-              </div>
-              {isMultiProductMode ? (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {productQueue.map(p => (
-                    <div key={p.id} className="flex-shrink-0 w-[72px]">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                    <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
-                    <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Custom Upload' : selectedProduct?.productType}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent></Card>
-
-            {/* Resolution Picker */}
-            <Card><CardContent className="p-5 space-y-4">
-              <div>
-                <h3 className="text-base font-semibold flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  Choose Resolution
-                </h3>
-                <p className="text-sm text-muted-foreground">Select the target resolution for your enhanced images</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {([
-                  { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 10, badge: 'Standard' },
-                  { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 15, badge: 'Premium' },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setUpscaleResolution(opt.key)}
-                    className={cn(
-                      'relative p-5 rounded-xl border-2 text-left transition-all',
-                      upscaleResolution === opt.key
-                        ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                        : 'border-border hover:border-primary/40'
-                    )}
-                  >
-                    <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">{opt.badge}</Badge>
-                    <p className="text-lg font-bold">{opt.label}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{opt.desc}</p>
-                    <p className="text-sm font-semibold text-primary mt-2">{opt.credits} credits per image</p>
-                  </button>
-                ))}
-              </div>
-            </CardContent></Card>
-
-            {/* Cost Summary */}
-            <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
-              <div>
-                <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-                <p className="text-xs text-muted-foreground">
-                  {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 15 : 10} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
-                </p>
-              </div>
-              {balance >= creditCost ? (
-                <p className="text-sm text-muted-foreground">{balance} credits available</p>
-              ) : (
-                <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  {balance} credits — need {creditCost}. Top up
-                </button>
-              )}
-            </div>
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
-              <Button
-                onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                className={cn("gap-2", balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : '')}
-              >
-                <Sparkles className="w-4 h-4" />
-                {balance >= creditCost ? `Enhance ${upscaleImageCount} Image${upscaleImageCount !== 1 ? 's' : ''} to ${upscaleResolution === '4k' ? '4K' : '2K'}` : 'Buy Credits'}
-              </Button>
-            </div>
-          </div>
+          <UpscaleSettingsPanel
+            selectedProduct={selectedProduct}
+            scratchUpload={scratchUpload}
+            sourceType={sourceType}
+            isMultiProductMode={isMultiProductMode}
+            productQueue={productQueue}
+            upscaleResolution={upscaleResolution}
+            setUpscaleResolution={setUpscaleResolution}
+            creditCost={creditCost}
+            upscaleImageCount={upscaleImageCount}
+            balance={balance}
+            openBuyModal={openBuyModal}
+            handleGenerateClick={handleGenerateClick}
+            setCurrentStep={setCurrentStep}
+          />
         )}
 
         {/* Workflow-Specific Settings */}
         {hasWorkflowConfig && !isUpscale && currentStep === 'settings' && (generationMode !== 'virtual-try-on' || isSelfieUgc) && (selectedProduct || scratchUpload) && (
-          <div className="space-y-4">
-            {/* Product summary — hidden in mirror selfie final phase */}
-            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
-            <Card><CardContent className="p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {sourceType === 'scratch' ? 'Uploaded Image' : isFlatLay && selectedFlatLayProductIds.size > 1 ? `Selected Products (${selectedFlatLayProductIds.size})` : isMultiProductMode ? `Selected Products (${productQueue.length})` : 'Selected Product'}
-                </span>
-                <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
-              </div>
-              {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
-                    <div key={up.id} className="flex-shrink-0 w-[72px]">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                        <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : isMultiProductMode ? (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {productQueue.map(p => (
-                    <div key={p.id} className="flex-shrink-0 w-[72px]">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                    <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
-                    <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : `${selectedProduct?.vendor} • ${selectedProduct?.productType}`}</p>
-                  </div>
-                </div>
-              )}
-              {selectedBrandProfile && (
-                <div className="pt-2 border-t border-border">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Palette className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">{selectedBrandProfile.name}</span>
-                      <Badge variant="secondary" className="text-[10px] capitalize">{selectedBrandProfile.tone}</Badge>
-                    </div>
-                    <Button variant="link" size="sm" onClick={() => setCurrentStep('brand-profile')}>Change</Button>
-                  </div>
-                </div>
-              )}
-            </CardContent></Card>
-            )}
-
-            {/* Variation Strategy Preview — hidden in mirror selfie final phase */}
-            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
-            <Card><CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                     <h3 className="text-base font-semibold">
-                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Style' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
-                    </h3>
-                    {isFlatLay && (
-                      <>
-                        <Badge variant="secondary" className="text-[10px]"><Layers className="w-3 h-3 mr-1" />Flat Lay</Badge>
-                        <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Surfaces</Badge>
-                      </>
-                    )}
-                    {isInteriorDesign && (
-                      <>
-                        <Badge variant="secondary" className="text-[10px]">{interiorType === 'interior' ? 'Interior' : 'Exterior'}</Badge>
-                        <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Styles</Badge>
-                      </>
-                    )}
-                    {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && activeWorkflow?.name !== 'Mirror Selfie Set' && (
-                      <>
-                        <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
-                        <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
-                      </>
-                    )}
-                    {variationStrategy?.type === 'scene' && activeWorkflow?.name === 'Mirror Selfie Set' && (
-                      <>
-                        <Badge variant="secondary" className="text-[10px]"><Smartphone className="w-3 h-3 mr-1" />Mirror Selfie</Badge>
-                        <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Environments</Badge>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
-                     isInteriorDesign ? 'Choose 1 design style to generate for your room' :
-                     variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
-                     variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
-                     variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
-                     variationStrategy?.type === 'layout' ? 'Different layout compositions' :
-                     variationStrategy?.type === 'paired' ? 'Before and after comparison' :
-                     variationStrategy?.type === 'angle' ? 'Multiple angles and perspectives' :
-                     variationStrategy?.type === 'mood' ? 'Different mood and energy styles' :
-                     variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
-                     'Workflow-specific variations'}
-                  </p>
-                  {variationStrategy?.type === 'scene' && (
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                      Products shown are reference examples only. Our VOVV Studio AI team will generate each scene with your selected product.
-                    </p>
-                  )}
-                </div>
-                {!isInteriorDesign && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
-                    const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
-                    if (selectedVariationIndices.size === currentMax) {
-                      setSelectedVariationIndices(new Set());
-                    } else {
-                      setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, currentMax).map((_, i) => i)));
-                    }
-                  }}
-                >
-                  {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : `Select ${PAID_SCENE_LIMIT}`}
-                </Button>
-                )}
-              </div>
-
-              {/* Scene category filter tabs */}
-              {variationStrategy?.type === 'scene' && (() => {
-                // Build category list from scope-filtered variations
-                const scopeFilteredVars = isInteriorDesign
-                  ? variationStrategy.variations.filter((v: any) => !v.scope || v.scope === interiorType)
-                  : variationStrategy.variations;
-                const cats = Array.from(new Set(scopeFilteredVars.map(v => v.category).filter(Boolean))) as string[];
-                if (cats.length <= 1) return null;
-                return (
-                  <div className="flex gap-1.5 flex-wrap">
-                    <button
-                      onClick={() => setSceneFilterCategory('all')}
-                      className={cn(
-                        'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                        sceneFilterCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      )}
-                    >All</button>
-                    {cats.map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => setSceneFilterCategory(cat)}
-                        className={cn(
-                          'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                          sceneFilterCategory === cat ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        )}
-                      >{cat}</button>
-                    ))}
-                  </div>
-                );
-              })()}
-
-              {/* Mirror Selfie Tips */}
-              {activeWorkflow?.name === 'Mirror Selfie Set' && (
-                <Alert className="border-primary/20 bg-primary/5">
-                  <Smartphone className="w-4 h-4 text-primary" />
-                  <AlertDescription className="space-y-1.5">
-                    <p className="font-semibold text-sm">Mirror Selfie Composition</p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Your model will appear holding a smartphone, capturing their reflection in a mirror</li>
-                      <li>Each environment places your product in a different real-world mirror setting</li>
-                      <li>Choose any aspect ratio in the next step — 4:5 portrait recommended for Instagram</li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {/* Visual scene cards grid */}
-              <div className={cn("grid gap-3", (isMirrorSelfie || isSelfieUgc) ? "grid-cols-3 sm:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4")}>
-                {variationStrategy?.variations
-                  .map((v, i) => ({ v, i }))
-                  .filter(({ v }) => {
-                    // Filter by interior/exterior scope for staging workflow
-                    if (isInteriorDesign && (v as any).scope) {
-                      if ((v as any).scope !== interiorType) return false;
-                    }
-                    // Filter by category chip
-                    if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return false;
-                    return true;
-                  })
-                  .map(({ v, i }) => {
-                  const isSelected = selectedVariationIndices.has(i);
-                  const hasPreview = !!v.preview_url;
-
-                  const cardContent = (
-                    <div
-                      onClick={() => {
-                        setSelectedVariationIndices(prev => {
-                          const next = new Set(prev);
-                          if (next.has(i)) { next.delete(i); }
-                          else {
-                            // Free user cap
-                            if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-                              toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
-                              return prev;
-                            }
-                            // Paid user cap
-                            if (!isFreeUser && next.size >= PAID_SCENE_LIMIT) {
-                              toast.error(`Maximum ${PAID_SCENE_LIMIT} scenes per generation.`);
-                              return prev;
-                            }
-                            next.add(i);
-                          }
-                          return next;
-                        });
-                      }}
-                      className={cn(
-                        "relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group border-2",
-                        isSelected
-                          ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
-                          : "border-border hover:border-primary/40 hover:scale-[1.02]"
-                      )}
-                    >
-                      {/* Image or gradient fallback */}
-                      <div className={cn("relative", (isMirrorSelfie || isSelfieUgc) ? "aspect-[9/16]" : "aspect-square")}>
-                        {hasPreview ? (
-                          <img
-                            src={getOptimizedUrl(v.preview_url, { quality: 60 })}
-                            alt={v.label}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : v.label === 'AI Creative Pick' ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 via-slate-700 to-slate-500 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:250%_100%] animate-shimmer" />
-                            <Sparkles className="w-8 h-8 text-white drop-shadow-lg relative z-10" />
-                            <span className="text-[10px] font-bold text-white/90 mt-1.5 relative z-10 tracking-wide">AI PICKS</span>
-                          </div>
-                        ) : (
-                          <div className={cn(
-                            "w-full h-full flex items-center justify-center",
-                            i % 8 === 0 ? "bg-gradient-to-br from-gray-100 to-white" :
-                            i % 8 === 1 ? "bg-gradient-to-br from-gray-200 to-gray-100" :
-                            i % 8 === 2 ? "bg-gradient-to-br from-amber-100 to-orange-50" :
-                            i % 8 === 3 ? "bg-gradient-to-br from-pink-50 to-purple-50" :
-                            i % 8 === 4 ? "bg-gradient-to-br from-green-100 to-emerald-50" :
-                            i % 8 === 5 ? "bg-gradient-to-br from-blue-100 to-sky-50" :
-                            i % 8 === 6 ? "bg-gradient-to-br from-yellow-100 to-amber-50" :
-                            "bg-gradient-to-br from-gray-700 to-gray-900"
-                          )}>
-                            <Package className={cn("w-8 h-8", i % 8 === 7 ? "text-gray-400" : "text-muted-foreground/40")} />
-                          </div>
-                        )}
-
-                        {/* Dark overlay for label readability */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
-                          <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
-                          {v.category && (
-                            <span className="text-[9px] text-white/60 font-medium">{v.category}</span>
-                          )}
-                        </div>
-
-                        {/* Selection checkmark */}
-                        {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-md">
-                            <Check className="w-3 h-3 text-primary-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-
-                  return <div key={i}>{cardContent}</div>;
-                })}
-              </div>
-
-              {/* Info note about showcase products */}
-              <div className="flex items-start gap-2 px-1">
-                <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                <p className="text-xs text-muted-foreground">
-                  {isInteriorDesign
-                    ? 'Each style will generate a uniquely staged version of your room while preserving its architecture.'
-                    : 'Products shown are for demonstration only — your product will be placed in each selected scene.'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  {isInteriorDesign ? (
-                    selectedVariationIndices.size === 0 ? (
-                      <p className="text-xs text-muted-foreground">Tap a style to select it</p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {selectedVariationIndices.size} style{selectedVariationIndices.size !== 1 ? 's' : ''} selected
-                      </p>
-                    )
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      {selectedVariationIndices.size === 0 ? (
-                        <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
-                      ) : (
-                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} scenes selected
-                          {workflowImageCount > MAX_IMAGES_PER_JOB && (
-                            <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
-                          )}
-                        </>
-                      )}
-                    </p>
-                  )}
-                  {isFreeUser && (
-                    <div className="mt-2 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
-                      <Lock className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                      <p className="text-xs text-muted-foreground">
-                        Free plan: 1 {isInteriorDesign ? 'style' : 'scene'} per generation.{' '}
-                        <button onClick={openBuyModal} className="text-primary font-semibold hover:underline">Upgrade</button>
-                        {' '}to unlock up to 3.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent></Card>
-            )}
-
-            {/* Mirror Selfie scenes phase: Continue to Model */}
-            {isMirrorSelfie && mirrorSettingsPhase === 'scenes' && (
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
-                <Button disabled={selectedVariationIndices.size === 0} onClick={() => setCurrentStep('model')}>
-                  Continue to Model
-                </Button>
-              </div>
-            )}
-
-            {/* Flat Lay surfaces phase: Continue to Details */}
-            {isFlatLay && flatLayPhase === 'surfaces' && (
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product')}>Back</Button>
-                <Button disabled={selectedVariationIndices.size === 0} onClick={() => setFlatLayPhase('details')}>
-                  Continue to Details
-                </Button>
-              </div>
-            )}
-
-            {/* Flat Lay details phase: Aesthetics + Styling Notes + Quality */}
-            {isFlatLay && flatLayPhase === 'details' && (
-              <>
-                {/* Composition Style Toggle */}
-                <Card><CardContent className="p-5 space-y-4">
-                  <div>
-                    <h3 className="text-base font-semibold flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-primary" />
-                      Composition Style
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Choose what appears alongside your products</p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {([
-                      { key: 'clean' as const, label: 'Products Only', desc: 'Clean layout with just your products, no extra items' },
-                      { key: 'decorated' as const, label: 'Add Styling Props', desc: 'Include decorative elements (leaves, fabric, abstract shapes) around your products' },
-                    ]).map(opt => (
-                      <button
-                        key={opt.key}
-                        onClick={() => {
-                          setFlatLayPropStyle(opt.key);
-                          if (opt.key === 'clean') { setSelectedAesthetics([]); setStylingNotes(''); }
-                        }}
-                        className={cn(
-                          'p-4 rounded-xl border-2 text-left transition-all',
-                          flatLayPropStyle === opt.key
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                            : 'border-border hover:border-primary/40'
-                        )}
-                      >
-                        <p className="text-sm font-semibold">{opt.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </CardContent></Card>
-
-                {/* Aesthetic quick-chips — only when decorated */}
-                {flatLayPropStyle === 'decorated' && (
-                <Card><CardContent className="p-5 space-y-4">
-                  <div>
-                    <h3 className="text-base font-semibold">Styling & Aesthetics</h3>
-                    <p className="text-sm text-muted-foreground">Add decorative props and mood to your flat lay</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Quick Aesthetics</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {FLAT_LAY_AESTHETICS.map(a => {
-                        const isActive = selectedAesthetics.includes(a.id);
-                        return (
-                          <button
-                            key={a.id}
-                            onClick={() => setSelectedAesthetics(prev =>
-                              isActive ? prev.filter(x => x !== a.id) : [...prev, a.id]
-                            )}
-                            className={cn(
-                              'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
-                              isActive
-                                ? 'border-primary bg-primary text-primary-foreground'
-                                : 'border-border bg-muted text-muted-foreground hover:border-primary/40'
-                            )}
-                            title={a.hint}
-                          >
-                            {a.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {selectedAesthetics.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Props: {selectedAesthetics.map(id => FLAT_LAY_AESTHETICS.find(a => a.id === id)?.hint).filter(Boolean).join(', ')}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Styling Notes (optional)</Label>
-                    <Textarea
-                      placeholder="e.g. eucalyptus leaves, silk ribbon, warm tones..."
-                      value={stylingNotes}
-                      onChange={e => setStylingNotes(e.target.value)}
-                      className="min-h-[60px]"
-                    />
-                    <p className="text-xs text-muted-foreground">Describe any specific decorative props, colors, or mood (no commercial products)</p>
-                  </div>
-                </CardContent></Card>
-                )}
-
-                <Card><CardContent className="p-5 space-y-4">
-                  <h3 className="text-base font-semibold">Generation Settings</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Quality</Label>
-                      <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard — Fast generation</SelectItem>
-                          <SelectItem value="high">High — Best quality</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Aspect Ratio</Label>
-                      <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-                    </div>
-                  </div>
-                </CardContent></Card>
-
-                {/* Cost summary */}
-                <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
-                  <div>
-                    <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
-                      {' '}× {quality === 'high' ? 16 : 8} credits
-                      {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
-                    </p>
-                  </div>
-                  {balance >= creditCost ? (
-                    <p className="text-sm text-muted-foreground">{balance} credits available</p>
-                  ) : (
-                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      {balance} credits — need {creditCost}. Top up
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setFlatLayPhase('surfaces')}>Back to Surfaces</Button>
-                  <Button
-                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                    disabled={selectedVariationIndices.size === 0}
-                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
-                  >
-                    {balance >= creditCost ? `Generate ${selectedVariationIndices.size} Flat Lay Images` : 'Buy Credits'}
-                  </Button>
-                </div>
-              </>
-            )}
-
-            {/* UGC Mood / Expression Selector — only for Selfie/UGC workflow */}
-            {isSelfieUgc && (
-              <Card><CardContent className="p-5 space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    Creator Mood
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Set the expression and energy for your UGC content</p>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {UGC_MOODS.map(mood => (
-                    <button
-                      key={mood.id}
-                      onClick={() => setUgcMood(mood.id)}
-                      className={cn(
-                        'relative p-4 rounded-xl border-2 text-left transition-all flex flex-col gap-1',
-                        ugcMood === mood.id
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                          : 'border-border hover:border-primary/40'
-                      )}
-                    >
-                      {mood.recommended && (
-                        <span className="absolute -top-2.5 right-3 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-primary text-primary-foreground rounded-full">
-                          Popular
-                        </span>
-                      )}
-                      <span className="text-2xl">{mood.emoji}</span>
-                      <p className="text-sm font-semibold">{mood.label}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight">{mood.desc}</p>
-                      <p className="text-[10px] text-muted-foreground/70 italic">{mood.example}</p>
-                    </button>
-                  ))}
-                </div>
-              </CardContent></Card>
-            )}
-
-            {/* Framing Selector — only for Selfie/UGC workflow */}
-            {isSelfieUgc && (
-              <Card><CardContent className="p-5">
-                <FramingSelector framing={framing} onFramingChange={setFraming} />
-              </CardContent></Card>
-            )}
-
-            {/* Interior / Exterior room details moved to upload step */}
-
-            {/* Product Angles — hidden for Mirror Selfie Set, Flat Lay, Selfie/UGC, and Interior Design */}
-            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && !isSelfieUgc && !isInteriorDesign && (
-              <Card><CardContent className="p-5 space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold">Product Angles</h3>
-                  <p className="text-sm text-muted-foreground">Choose which angles to generate for each scene</p>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {([
-                    { key: 'front' as const, label: 'Front Only', desc: '1 image per scene', multiplier: '×1' },
-                    { key: 'front-side' as const, label: 'Front + Side', desc: '2 images per scene', multiplier: '×2' },
-                    { key: 'front-back' as const, label: 'Front + Back', desc: '2 images per scene', multiplier: '×2' },
-                    { key: 'all' as const, label: 'All Angles', desc: '3 images per scene', multiplier: '×3' },
-                  ]).map(opt => (
-                    <button
-                      key={opt.key}
-                      onClick={() => setProductAngle(opt.key)}
-                      className={cn(
-                        'p-3 rounded-xl border-2 text-left transition-all',
-                        productAngle === opt.key
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                          : 'border-border hover:border-primary/40'
-                      )}
-                    >
-                      <p className="text-sm font-semibold">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
-                      <Badge variant="secondary" className="mt-1.5 text-[10px]">{opt.multiplier}</Badge>
-                    </button>
-                  ))}
-                </div>
-              </CardContent></Card>
-            )}
-
-            {/* Quality & Settings — hidden during mirror selfie scenes phase and flat lay (handled above) */}
-            {!(isMirrorSelfie && mirrorSettingsPhase === 'scenes') && !isFlatLay && (
-              <>
-                <Card><CardContent className="p-5 space-y-4">
-                  <h3 className="text-base font-semibold">Generation Settings</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                      <Label>Quality</Label>
-                      <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard — Fast generation</SelectItem>
-                          <SelectItem value="high">High — Best quality</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Aspect Ratio</Label>
-                      {isInteriorDesign ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">Original</Badge>
-                          <span className="text-xs text-muted-foreground">Matches uploaded photo</span>
-                        </div>
-                      ) : uiConfig?.lock_aspect_ratio ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
-                          <span className="text-xs text-muted-foreground">Locked by workflow</span>
-                        </div>
-                      ) : variationStrategy?.type === 'multi-ratio' ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">Multiple</Badge>
-                          <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
-                        </div>
-                      ) : (
-                        <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-                      )}
-                    </div>
-                  </div>
-                </CardContent></Card>
-
-                {/* Cost summary */}
-                <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
-                  <div>
-                    <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-                     <p className="text-xs text-muted-foreground">
-                      {isMultiProductMode ? `${productQueue.length} products × ` : ''}
-                      {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
-                      {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× 8 credits
-                    </p>
-                  </div>
-                  {balance >= creditCost ? (
-                    <p className="text-sm text-muted-foreground">{balance} credits available</p>
-                  ) : (
-                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      {balance} credits — need {creditCost}. Top up
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => {
-                    if (isMirrorSelfie) {
-                      setCurrentStep('model');
-                    } else if (isInteriorDesign) {
-                      setCurrentStep('upload');
-                    } else {
-                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'));
-                    }
-                  }}>Back</Button>
-                  <Button
-                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                    disabled={selectedVariationIndices.size === 0}
-                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
-                  >
-                    {balance >= creditCost ? (isInteriorDesign ? `Generate ${selectedVariationIndices.size} Staging Image${selectedVariationIndices.size !== 1 ? 's' : ''}` : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
+          <WorkflowSettingsPanel
+            selectedProduct={selectedProduct}
+            scratchUpload={scratchUpload}
+            sourceType={sourceType}
+            isMultiProductMode={isMultiProductMode}
+            productQueue={productQueue}
+            userProducts={userProducts}
+            activeWorkflow={activeWorkflow ?? null}
+            workflowConfig={workflowConfig}
+            variationStrategy={variationStrategy}
+            uiConfig={uiConfig}
+            isFlatLay={isFlatLay}
+            isMirrorSelfie={isMirrorSelfie}
+            isSelfieUgc={isSelfieUgc}
+            isInteriorDesign={isInteriorDesign}
+            selectedVariationIndices={selectedVariationIndices}
+            setSelectedVariationIndices={setSelectedVariationIndices}
+            sceneFilterCategory={sceneFilterCategory}
+            setSceneFilterCategory={setSceneFilterCategory}
+            flatLayPhase={flatLayPhase}
+            setFlatLayPhase={setFlatLayPhase}
+            selectedFlatLayProductIds={selectedFlatLayProductIds}
+            selectedAesthetics={selectedAesthetics}
+            setSelectedAesthetics={setSelectedAesthetics}
+            stylingNotes={stylingNotes}
+            setStylingNotes={setStylingNotes}
+            flatLayPropStyle={flatLayPropStyle}
+            setFlatLayPropStyle={setFlatLayPropStyle}
+            mirrorSettingsPhase={mirrorSettingsPhase}
+            setMirrorSettingsPhase={setMirrorSettingsPhase}
+            ugcMood={ugcMood}
+            setUgcMood={setUgcMood}
+            quality={quality}
+            setQuality={setQuality}
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            framing={framing}
+            setFraming={setFraming}
+            productAngle={productAngle}
+            setProductAngle={setProductAngle}
+            selectedBrandProfile={selectedBrandProfile}
+            selectedBrandProfileId={selectedBrandProfileId}
+            brandProfiles={brandProfiles}
+            balance={balance}
+            creditCost={creditCost}
+            isFreeUser={isFreeUser}
+            workflowImageCount={workflowImageCount}
+            multiProductCount={multiProductCount}
+            angleMultiplier={angleMultiplier}
+            interiorType={interiorType}
+            isAdmin={isAdmin}
+            isGeneratingPreviews={isGeneratingPreviews}
+            openBuyModal={openBuyModal}
+            handleGenerateClick={handleGenerateClick}
+            handleGenerateScenePreviews={handleGenerateScenePreviews}
+            setCurrentStep={setCurrentStep}
+          />
         )}
 
         {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPoses.size > 0 && (
-          <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
-            <Card><CardContent className="p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Selected Model & {selectedPoses.size > 1 ? 'Scenes' : 'Scene'}</span>
-                <Button variant="link" size="sm" onClick={() => setCurrentStep('model')}>Change</Button>
-              </div>
-              <div className="flex items-center gap-6 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20"><img src={selectedModel.previewUrl} alt="" className="w-full h-full object-cover" /></div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Model</p>
-                    <p className="text-sm font-medium">{selectedModel.name}</p>
-                  </div>
-                </div>
-                <Separator orientation="vertical" className="h-10" />
-                {Array.from(selectedPoses).map(poseId => {
-                  const p = selectedPoseMap.get(poseId);
-                  if (!p) return null;
-                  const img = selectedModel?.gender === 'male' && p.previewUrlMale ? p.previewUrlMale : p.previewUrl;
-                  return (
-                    <div key={poseId} className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-primary/20"><img src={img} alt="" className="w-full h-full object-cover" /></div>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Scene</p>
-                        <p className="text-sm font-medium">{p.name}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent></Card>
-
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="text-base font-semibold">Generation Settings</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Number of Images per Scene</Label>
-                  <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '2' | '3' | '4')}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 image</SelectItem>
-                      {!isFreeUser && <SelectItem value="2">2 images</SelectItem>}
-                      {!isFreeUser && <SelectItem value="3">3 images</SelectItem>}
-                      {!isFreeUser && <SelectItem value="4">4 images</SelectItem>}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Quality</Label>
-                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard — Fast generation, good quality</SelectItem>
-                      <SelectItem value="high">High (Pro Model) — Best quality, ~60-120s per image</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <FramingSelector framing={framing} onFramingChange={setFraming} />
-              <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-            </CardContent></Card>
-
-            <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
-              <div>
-                <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
-                <p className="text-xs text-muted-foreground">
-                  {(() => {
-                    const parts: string[] = [];
-                    parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
-                    if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
-                    if (isMultiProductMode) parts.push(`${multiProductCount} products`);
-                    parts.push(`8 credits each`);
-                    return parts.join(' × ');
-                  })()}
-                </p>
-              </div>
-              {balance >= creditCost ? (
-                <p className="text-sm text-muted-foreground">{balance} credits available</p>
-              ) : (
-                <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  {balance} credits — need {creditCost}. Top up
-                </button>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
-              <Button
-                onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
-              >
-                {balance >= creditCost ? `Generate ${parseInt(imageCount) * tryOnSceneCount * multiProductCount} Try-On Images` : 'Buy Credits'}
-              </Button>
-            </div>
-          </div>
+          <TryOnSettingsPanel
+            selectedProduct={selectedProduct}
+            scratchUpload={scratchUpload}
+            selectedModel={selectedModel}
+            selectedPose={selectedPose}
+            selectedPoses={selectedPoses}
+            selectedPoseMap={selectedPoseMap}
+            creditCost={creditCost}
+            imageCount={imageCount}
+            setImageCount={setImageCount}
+            quality={quality}
+            setQuality={setQuality}
+            framing={framing}
+            setFraming={setFraming}
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            balance={balance}
+            isFreeUser={isFreeUser}
+            isMultiProductMode={isMultiProductMode}
+            multiProductCount={multiProductCount}
+            productQueue={productQueue}
+            tryOnSceneCount={tryOnSceneCount}
+            openBuyModal={openBuyModal}
+            handleGenerateClick={handleGenerateClick}
+            setCurrentStep={setCurrentStep}
+          />
         )}
 
         {/* Generating */}
