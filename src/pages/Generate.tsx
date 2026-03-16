@@ -60,6 +60,7 @@ import { PoseSelectorCard } from '@/components/app/PoseSelectorCard';
 import { GenerationModeToggle } from '@/components/app/GenerationModeToggle';
 import { ModelFilterBar } from '@/components/app/ModelFilterBar';
 import { PoseCategorySection } from '@/components/app/PoseCategorySection';
+import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 import { TryOnPreview } from '@/components/app/TryOnPreview';
 import { PopularCombinations, createPopularCombinations } from '@/components/app/PopularCombinations';
 import { SourceTypeSelector } from '@/components/app/SourceTypeSelector';
