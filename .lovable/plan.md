@@ -1,30 +1,37 @@
 
 
-## Product Perspectives — Implemented ✅
+## Audit Results: Slug-Based Workflow URLs
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### What's correct
+1. **Database migration** — `slug` column added with unique constraint and backfill ✅
+2. **Generate.tsx** — Reads `workflowSlug` from `useParams`, queries by slug, falls back to legacy `?workflow=` query param ✅
+3. **Workflows.tsx** — Navigates to `/app/generate/${workflow.slug}` ✅
+4. **Dashboard.tsx** — Navigates to `/app/generate/${slug}` ✅
+5. **No legacy `?workflow=` links remain** anywhere in the codebase ✅
+6. **Workflow type** updated with `slug` property ✅
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Issues found
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**1. Route ordering bug — `/generate/bulk` is unreachable**
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+In `App.tsx` lines 137-139:
+```
+<Route path="/generate/:workflowSlug" />   ← catches "bulk" as a slug
+<Route path="/generate" />
+<Route path="/generate/bulk" />            ← never reached
+```
+
+The dynamic `:workflowSlug` route matches the literal `"bulk"` path before it can reach the static `/generate/bulk` route. **Fix**: Move `/generate/bulk` above `/generate/:workflowSlug`.
+
+**2. Console warning — `AspectRatioSelector` ref forwarding**
+
+`WorkflowSettingsPanel` passes a ref to `AspectRatioSelector` which is a function component without `forwardRef`. This is a pre-existing issue (not caused by the slug refactor) but worth noting — it's a React warning, not a crash.
+
+### Plan
+
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Reorder: move `/generate/bulk` route **before** `/generate/:workflowSlug` |
+
+That's the only fix needed. Everything else was implemented correctly.
+
