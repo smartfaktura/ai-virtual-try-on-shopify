@@ -20,10 +20,11 @@ async function persistSession(
     if (!session?.user?.id) return sessionId;
 
     if (sessionId) {
-      await supabase
+      const { error } = await supabase
         .from('chat_sessions')
         .update({ messages: JSON.parse(JSON.stringify(messages)), updated_at: new Date().toISOString() })
         .eq('id', sessionId);
+      if (error) console.error('persistSession update error:', error);
       return sessionId;
     } else {
       const { data, error } = await supabase
