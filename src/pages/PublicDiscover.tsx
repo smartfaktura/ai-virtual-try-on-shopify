@@ -27,6 +27,7 @@ interface PublicCustomScene {
   category: string;
   image_url: string;
   is_active: boolean;
+  created_at: string;
 }
 
 function toTryOnPose(scene: PublicCustomScene): TryOnPose {
@@ -37,6 +38,7 @@ function toTryOnPose(scene: PublicCustomScene): TryOnPose {
     description: scene.description,
     promptHint: scene.description,
     previewUrl: scene.image_url,
+    created_at: scene.created_at,
   };
 }
 
