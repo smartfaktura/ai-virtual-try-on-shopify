@@ -1,60 +1,52 @@
 
 
-## Plan: Store live chat sessions in the database
+## Product Perspectives — Implemented ✅
 
-### Problem
-Chat conversations from the StudioChat widget are ephemeral — they exist only in React state and are lost when the user navigates away or refreshes. There's no way to review what users are asking.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Approach
-Create a `chat_sessions` table to persist each conversation. Save the full message history after each assistant response completes. Admin users can view all sessions.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
+
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
 ### Changes
-
-**1. Database migration — create `chat_sessions` table**
-
-```sql
-CREATE TABLE public.chat_sessions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  messages jsonb NOT NULL DEFAULT '[]'::jsonb,
-  page_url text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.chat_sessions ENABLE ROW LEVEL SECURITY;
-
--- Users can manage their own sessions
-CREATE POLICY "Users can insert own sessions" ON public.chat_sessions
-  FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own sessions" ON public.chat_sessions
-  FOR UPDATE TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can view own sessions" ON public.chat_sessions
-  FOR SELECT TO authenticated USING (auth.uid() = user_id);
-
--- Admins can view all sessions
-CREATE POLICY "Admins can view all sessions" ON public.chat_sessions
-  FOR SELECT TO authenticated USING (has_role(auth.uid(), 'admin'::app_role));
-
-CREATE POLICY "Admins can delete sessions" ON public.chat_sessions
-  FOR DELETE TO authenticated USING (has_role(auth.uid(), 'admin'::app_role));
-```
-
-**2. `src/hooks/useStudioChat.ts`**
-
-- Add a `sessionIdRef` to track the current session UUID
-- After each completed assistant response (in the `finally` block), upsert the session:
-  - First message → `INSERT` a new row, store the returned ID
-  - Subsequent messages → `UPDATE` the existing row's `messages` and `updated_at`
-- On `clearChat`, reset `sessionIdRef` so the next conversation creates a new session
-- Pass `location.pathname` from the component to store `page_url`
-
-**3. `src/components/app/StudioChat.tsx`**
-
-- Pass `location.pathname` to the hook so it can record which page the chat started on
-
-### Result
-Every chat conversation is saved with the user ID, full message history, and the page it started on. Admins can query all sessions to see what users are asking. No new UI needed — this is backend-only persistence.
-
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

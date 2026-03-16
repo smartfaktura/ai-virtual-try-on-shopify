@@ -10,12 +10,42 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/studio-chat`
 const MAX_MESSAGES = 30;
 const COOLDOWN_MS = 2000;
 
-export function useStudioChat() {
+async function persistSession(
+  sessionId: string | null,
+  messages: ChatMessage[],
+  pageUrl: string | null
+): Promise<string | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return sessionId;
+
+    if (sessionId) {
+      await supabase
+        .from('chat_sessions')
+        .update({ messages: JSON.parse(JSON.stringify(messages)), updated_at: new Date().toISOString() })
+        .eq('id', sessionId);
+      return sessionId;
+    } else {
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .insert({ user_id: session.user.id, messages: JSON.parse(JSON.stringify(messages)), page_url: pageUrl })
+        .select('id')
+        .single();
+      if (error || !data) return null;
+      return data.id;
+    }
+  } catch {
+    return sessionId;
+  }
+}
+
+export function useStudioChat(pageUrl?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isThrottled, setIsThrottled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const lastSentRef = useRef<number>(0);
+  const sessionIdRef = useRef<string | null>(null);
 
   const sendMessage = useCallback(async (input: string) => {
     // Cooldown check
@@ -153,8 +183,18 @@ export function useStudioChat() {
     } finally {
       setIsLoading(false);
       abortRef.current = null;
+
+      // Persist session to database
+      setMessages(prev => {
+        if (prev.length > 0) {
+          persistSession(sessionIdRef.current, prev, pageUrl ?? null).then(id => {
+            sessionIdRef.current = id;
+          });
+        }
+        return prev;
+      });
     }
-  }, [messages]);
+  }, [messages, pageUrl]);
 
   const cancelStream = useCallback(() => {
     abortRef.current?.abort();
@@ -165,11 +205,18 @@ export function useStudioChat() {
     abortRef.current?.abort();
     setMessages([]);
     setIsLoading(false);
+    sessionIdRef.current = null;
   }, []);
 
   const addSystemMessage = useCallback((content: string) => {
-    setMessages(prev => [...prev, { role: 'assistant', content }]);
-  }, []);
+    setMessages(prev => {
+      const updated = [...prev, { role: 'assistant' as const, content }];
+      persistSession(sessionIdRef.current, updated, pageUrl ?? null).then(id => {
+        sessionIdRef.current = id;
+      });
+      return updated;
+    });
+  }, [pageUrl]);
 
   return { messages, isLoading, isThrottled, sendMessage, cancelStream, clearChat, addSystemMessage };
 }
