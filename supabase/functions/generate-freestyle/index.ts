@@ -527,6 +527,7 @@ async function generateImage(
             model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
+            max_tokens: 8192,
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
           signal: AbortSignal.timeout(timeoutMs),

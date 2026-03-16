@@ -287,6 +287,7 @@ async function generateImage(
               },
             ],
             modalities: ["image", "text"],
+            max_tokens: 8192,
             image_config: { aspect_ratio: aspectRatio },
           }),
         }
