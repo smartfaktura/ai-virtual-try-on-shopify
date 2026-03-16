@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X, Maximize, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
