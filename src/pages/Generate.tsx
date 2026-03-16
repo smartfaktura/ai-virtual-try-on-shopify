@@ -1555,7 +1555,7 @@ export default function Generate() {
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
   const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
   const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 15 : 10) : 0;
-  const singleProductCreditCost = isUpscale ? 0 : (hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount);
+  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 * tryOnSceneCount : (hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount));
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
