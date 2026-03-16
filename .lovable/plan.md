@@ -1,30 +1,34 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix: Add `workflow_slug` and `workflow_name` to tryon enqueue payloads
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The tryon-specific enqueue paths in `Generate.tsx` are missing `workflow_slug` and `workflow_name` fields that were added to the standard workflow paths. This means:
+1. Retry links for tryon jobs on the Workflows page will fall back to the ugly `?workflow=UUID` pattern
+2. The GlobalGenerationBar won't display the workflow name for tryon jobs
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Changes
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**File: `src/pages/Generate.tsx`**
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+1. **`enqueueTryOnForProduct` function (~line 1058)** — Add `workflow_name` and `workflow_slug` to the payload:
+```
+workflow_id: activeWorkflow?.id || null,
+workflow_name: activeWorkflow?.name || null,    // ADD
+workflow_slug: activeWorkflow?.slug || null,     // ADD
+product_id: product.id || null,
+product_name: product.title,
+```
+
+2. **Single-scene tryon enqueue (~line 1155)** — Add the same fields plus `product_name`:
+```
+workflow_id: activeWorkflow?.id || null,
+workflow_name: activeWorkflow?.name || null,    // ADD
+workflow_slug: activeWorkflow?.slug || null,     // ADD
+product_id: selectedProduct?.id || null,
+product_name: selectedProduct?.title || productData.title,  // ADD (was missing)
+brand_profile_id: selectedBrandProfileId || null,
+```
+
+Two small additions in the same file, bringing the tryon paths in line with the workflow paths.
+
