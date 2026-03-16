@@ -181,7 +181,13 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                       : 'border-transparent hover:border-border'
                   )}
                 >
-                  <img src={pose.previewUrl} alt={pose.name} className="w-full aspect-[4/5] object-cover" />
+                  <ShimmerImage
+                    src={getOptimizedUrl(pose.previewUrl, { width: 240, quality: 60 })}
+                    alt={pose.name}
+                    className="w-full aspect-[4/5] object-cover"
+                    aspectRatio="4/5"
+                    loading="lazy"
+                  />
                   <div className="px-1.5 py-1 bg-background">
                     <p className={cn('font-medium text-foreground leading-tight truncate', expanded ? 'text-[10px]' : 'text-[9px] lg:text-[11px]')}>{pose.name}</p>
                   </div>
