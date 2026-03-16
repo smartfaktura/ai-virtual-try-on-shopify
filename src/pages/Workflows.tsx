@@ -417,6 +417,7 @@ export default function Workflows() {
           {workflows.map((workflow, index) => (
             <WorkflowCard
               key={workflow.id}
+              id={`workflow-${workflow.id}`}
               workflow={workflow}
               onSelect={() => handleCreateVisualSet(workflow)}
               reversed={index % 2 !== 0}
