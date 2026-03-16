@@ -1,30 +1,30 @@
 
 
-## Plan: Remove Dead Bulk Generation Code & Fix Route Order
+## Product Perspectives — Implemented ✅
 
-### Confirmed
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-No file in the codebase navigates to `/app/generate/bulk`. The route, page, and supporting components are dead code.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Changes
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-| Action | File |
-|--------|------|
-| **Edit** | `src/App.tsx` — Remove `BulkGenerate` import and `/generate/bulk` route. Fix route order: `/generate` before `/generate/:workflowSlug`. |
-| **Delete** | `src/pages/BulkGenerate.tsx` |
-| **Delete** | `src/components/app/BulkSettingsCard.tsx` |
-| **Delete** | `src/components/app/BulkProgressTracker.tsx` |
-| **Delete** | `src/components/app/BulkResultsView.tsx` |
-| **Delete** | `src/hooks/useBulkGeneration.ts` |
-| **Keep** | `src/types/bulk.ts` — still imported by `Generate.tsx` |
-
-### Route fix in App.tsx
-
-```
-// After cleanup
-<Route path="/generate" element={<Generate />} />
-<Route path="/generate/:workflowSlug" element={<Generate />} />
-```
-
-Removes ~200 lines of dead code and eliminates the route shadowing issue.
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
