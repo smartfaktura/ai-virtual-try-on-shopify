@@ -127,7 +127,7 @@ interface WorkflowSettingsPanelProps {
   openBuyModal: () => void;
   handleGenerateClick: () => void;
   handleGenerateScenePreviews: () => void;
-  setCurrentStep: (step: string) => void;
+  setCurrentStep: (step: 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results') => void;
 }
 
 export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps) {
