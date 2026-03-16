@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
@@ -41,6 +42,7 @@ export function DiscoverDetailModal({
   onToggleFeatured,
   onDelete,
 }: DiscoverDetailModalProps) {
+  const navigate = useNavigate();
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -157,12 +159,17 @@ export function DiscoverDetailModal({
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
             {/* Category label + title */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
                   {category}
                 </p>
                 {!isPreset && (
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
+                )}
+                {isPreset && item.data.workflow_name && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
+                    · <Workflow className="w-3 h-3" /> {item.data.workflow_name}
+                  </span>
                 )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
@@ -250,6 +257,19 @@ export function DiscoverDetailModal({
               {isPreset ? 'Use Prompt' : 'Use Scene'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+
+            {/* Workflow CTA */}
+            {isPreset && item.data.workflow_slug && (
+              <Button
+                variant="outline"
+                onClick={() => { onClose(); navigate(`/app/generate?workflow=${item.data.workflow_slug}`); }}
+                className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
+              >
+                <Workflow className="w-4 h-4" />
+                Try {item.data.workflow_name || 'This Workflow'}
+                <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+              </Button>
+            )}
 
             {/* Secondary actions */}
             <div className="flex gap-2">

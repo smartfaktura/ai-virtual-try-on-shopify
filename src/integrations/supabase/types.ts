@@ -378,6 +378,8 @@ export type Database = {
           sort_order: number
           tags: string[] | null
           title: string
+          workflow_name: string | null
+          workflow_slug: string | null
         }
         Insert: {
           aspect_ratio?: string
@@ -393,6 +395,8 @@ export type Database = {
           sort_order?: number
           tags?: string[] | null
           title: string
+          workflow_name?: string | null
+          workflow_slug?: string | null
         }
         Update: {
           aspect_ratio?: string
@@ -408,6 +412,8 @@ export type Database = {
           sort_order?: number
           tags?: string[] | null
           title?: string
+          workflow_name?: string | null
+          workflow_slug?: string | null
         }
         Relationships: []
       }

@@ -1,0 +1,1 @@
+ALTER TABLE public.discover_presets ADD COLUMN workflow_slug text, ADD COLUMN workflow_name text;

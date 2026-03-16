@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Eye, Compass, X, Copy, Sparkles } from 'lucide-react';
+import { ArrowRight, Eye, Compass, X, Copy, Sparkles, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -248,27 +248,48 @@ export function RecentCreationsGallery() {
                     {selectedPreset.category}
                     {selectedPreset.model_name && ` · ${selectedPreset.model_name}`}
                     {selectedPreset.scene_name && ` · ${selectedPreset.scene_name}`}
+                    {selectedPreset.workflow_name && (
+                      <span className="inline-flex items-center gap-1 text-primary ml-1">
+                        · <Workflow className="w-3 h-3 inline" /> {selectedPreset.workflow_name}
+                      </span>
+                    )}
                   </DialogDescription>
                 </DialogHeader>
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
                   {selectedPreset.prompt}
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => handleCopyPrompt(selectedPreset.prompt)}
-                  >
-                    <Copy className="w-3.5 h-3.5" /> Copy Prompt
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-1.5 flex-1"
-                    onClick={() => handleUseStyle(selectedPreset)}
-                  >
-                    <Sparkles className="w-3.5 h-3.5" /> Use This Style
-                  </Button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => handleCopyPrompt(selectedPreset.prompt)}
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Copy Prompt
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="gap-1.5 flex-1"
+                      onClick={() => handleUseStyle(selectedPreset)}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Use This Style
+                    </Button>
+                  </div>
+                  {selectedPreset.workflow_slug && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 w-full border-primary/20 hover:bg-primary/5"
+                      onClick={() => {
+                        setSelectedPreset(null);
+                        navigate(`/app/generate?workflow=${selectedPreset.workflow_slug}`);
+                      }}
+                    >
+                      <Workflow className="w-3.5 h-3.5" /> Try {selectedPreset.workflow_name || 'This Workflow'}
+                      <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </>

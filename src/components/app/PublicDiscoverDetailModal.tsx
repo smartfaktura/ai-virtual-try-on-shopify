@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, X, Eye } from 'lucide-react';
+import { ArrowRight, X, Eye, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -87,10 +87,15 @@ export function PublicDiscoverDetailModal({
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
             {/* Category label + title */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
                   {category}
                 </p>
+                {isPreset && item.data.workflow_name && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
+                    · <Workflow className="w-3 h-3" /> {item.data.workflow_name}
+                  </span>
+                )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
               {isPreset && (
