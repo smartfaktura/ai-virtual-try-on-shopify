@@ -1,30 +1,45 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix sticky navigation for Model and Scene selection steps
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The `sticky bottom-0` approach doesn't work because the scroll container is `<main id="app-main-scroll">` in AppShell, but the sticky div is deeply nested inside intermediate wrapper divs (`space-y-4`, `max-w-7xl mx-auto px-4...`). CSS `sticky` requires all ancestors between the sticky element and the scroll container to have `overflow: visible` — the nesting breaks it.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+Additionally, the Model selection step (line 2883) has no sticky bar at all — its Back/Continue buttons are just inline inside `CardContent`.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### Solution
+Use **fixed positioning** instead of sticky, rendering a bottom-pinned bar for both the Model and Scene steps.
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+**File: `src/pages/Generate.tsx`**
+
+#### 1. Scene step (~line 2933)
+Change the sticky div to `fixed bottom-0` with proper width constraints:
+```tsx
+{/* Replace sticky div with fixed bottom bar */}
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
+    <Button variant="outline" onClick={...}>Back</Button>
+    <Button disabled={...} onClick={...}>Continue to Settings (...)</Button>
+  </div>
+</div>
+```
+
+#### 2. Model step (~line 2883)
+Move the Back/Continue buttons out of `CardContent` into the same fixed bottom bar pattern:
+```tsx
+{/* Remove inline buttons from CardContent */}
+{/* Add fixed bottom bar after the Card */}
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
+    <Button variant="outline" onClick={...}>Back</Button>
+    <Button disabled={!selectedModel} onClick={...}>Continue to Scene</Button>
+  </div>
+</div>
+```
+
+#### 3. Add bottom padding
+Add `pb-20` to both step wrapper divs (`<div className="space-y-4 pb-20">`) so content doesn't get hidden behind the fixed bar.
+
+#### 4. Account for sidebar
+Use `lg:left-64` (or whatever the sidebar width is) on the fixed bar so it doesn't overlap the sidebar on desktop. Will check actual sidebar width before implementing.
+
