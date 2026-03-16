@@ -15,6 +15,15 @@ export interface CustomScene {
   created_at: string;
 }
 
+function buildOptimizedUrl(url: string): string | null {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return null;
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
+}
+
 function toTryOnPose(scene: CustomScene): TryOnPose {
   return {
     poseId: `custom-${scene.id}`,
@@ -23,6 +32,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     description: scene.description,
     promptHint: scene.description,
     previewUrl: scene.image_url,
+    optimizedImageUrl: scene.optimized_image_url || undefined,
   };
 }
 
