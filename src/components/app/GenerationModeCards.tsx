@@ -68,7 +68,7 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
         <Button
           className="w-full rounded-full font-semibold gap-2 mt-4"
           variant="outline"
-          onClick={() => navigate('/app/generate?mode=virtual-try-on')}
+          onClick={() => navigate('/app/generate/virtual-try-on-set')}
         >
           {compact ? 'Try On' : 'Try It'}
           <ArrowRight className="w-4 h-4" />
