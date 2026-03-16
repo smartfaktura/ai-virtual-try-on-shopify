@@ -1,30 +1,26 @@
 
 
-## Product Perspectives — Implemented ✅
+## Shorten all custom scene descriptions to 5-7 words
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The custom scenes pulled from the database have descriptions that are too long (full sentences like "Warm, intimate evening cafe with strung lights and soft, inviting ambiance perfect for fashion"). The hardcoded `mockTryOnPoses` already have short 5-7 word descriptions — the custom scenes need to match.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Change
+Run a single database migration to UPDATE the `description` column on every row in `custom_scenes` to a concise 5-7 word phrase. This covers all ~60+ custom scenes. No code changes needed — the descriptions are rendered as-is from the DB.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**Examples of before → after:**
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| Scene | Before | After |
+|-------|--------|-------|
+| 1990s Disposable Camera | Warm, intimate evening cafe with strung lights and soft, inviting ambiance... | Retro café with warm string lights |
+| Amber Glow Studio | Dramatic warm light contrasts a cool blue background... | Warm light on cool blue backdrop |
+| Clean White Studio | Bright, even studio lighting with a seamless white background... | Clean white seamless studio backdrop |
+| Crimson Spotlight | A striking red studio environment with dramatic, directional lighting... | Bold red studio with dramatic light |
+| Dark Rock Display | Product presented on textured dark rocks, dramatic lighting... | Textured dark rocks with moody light |
+| Cloudy Sky Dream | Product nestled in soft clouds under a dramatic blue sky... | Dreamy clouds under dramatic blue sky |
+| Industrial Concrete | A dark, moody studio environment with subtle lighting... | Dark moody studio with concrete elements |
+| Elegant Vanity Setup | Luxurious, bright, and clean environment with soft, natural lighting... | Luxurious vanity with soft natural light |
+| Golden Radiance Product | Dynamic, high-contrast lighting on a metallic gradient background... | Metallic gradient with golden highlights |
+
+All ~60+ scenes will be updated in a single SQL `UPDATE ... CASE` statement.
+
