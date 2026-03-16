@@ -339,6 +339,19 @@ function polishUserPrompt(
         `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo. If a product reference image also contains a person, IGNORE that person entirely. The generated person must match ONLY the [MODEL IMAGE] reference.`
       );
     }
+    // Gender enforcement for layered path
+    if (modelContext) {
+      const lowerCtx = modelContext.toLowerCase();
+      if (lowerCtx.startsWith('male')) {
+        layers.push(
+          "GENDER RULE: A male model has been selected. ALL people in this image MUST be male. Do NOT generate any female figures, women, or feminine-presenting people — even if the scene reference image contains women. Replace any implied female presence with male figures matching the selected model's characteristics."
+        );
+      } else if (lowerCtx.startsWith('female')) {
+        layers.push(
+          "GENDER RULE: A female model has been selected. ALL people in this image MUST be female. Do NOT generate any male figures, men, or masculine-presenting people — even if the scene reference image contains men. Replace any implied male presence with female figures matching the selected model's characteristics."
+        );
+      }
+    }
     if (isSelfie) {
       if (cameraStyle === 'natural') {
         layers.push(
