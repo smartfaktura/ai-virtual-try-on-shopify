@@ -300,7 +300,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-[260px] bg-sidebar shadow-2xl">
-            <div className="absolute top-4 right-3">
+            <div className="absolute top-4 right-3 z-10">
               <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-sidebar-foreground/70 hover:bg-white/[0.04]">
                 <X className="w-5 h-5" />
               </button>
