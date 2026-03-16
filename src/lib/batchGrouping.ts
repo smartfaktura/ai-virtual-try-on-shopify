@@ -21,6 +21,7 @@ export interface BatchGroup {
   key: string;
   workflow_id: string | null;
   workflow_name: string | null;
+  workflow_slug: string | null;
   product_name: string | null;
   jobs: ActiveJob[];
   totalCount: number;
