@@ -217,6 +217,7 @@ export function GlobalGenerationBar() {
                     <p className="text-xs font-medium flex-1 truncate">
                       {group.job_type === 'upscale'
                         ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
+                        : group.job_type === 'freestyle' ? 'Freestyle complete'
                         : 'Complete'}
                     </p>
                     <Button
