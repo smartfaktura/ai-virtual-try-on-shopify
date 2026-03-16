@@ -182,7 +182,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                   )}
                 >
                   <ShimmerImage
-                    src={getOptimizedUrl(pose.previewUrl, { width: 240, quality: 60 })}
+                    src={getOptimizedUrl(pose.previewUrl, { quality: 60 })}
                     alt={pose.name}
                     className="w-full aspect-[4/5] object-cover"
                     aspectRatio="4/5"
