@@ -81,6 +81,9 @@ import { FramingSelector } from '@/components/app/FramingSelector';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { detectDefaultFraming } from '@/lib/framingUtils';
+import UpscaleSettingsPanel from '@/components/app/generate/UpscaleSettingsPanel';
+import WorkflowSettingsPanel from '@/components/app/generate/WorkflowSettingsPanel';
+import TryOnSettingsPanel from '@/components/app/generate/TryOnSettingsPanel';
 type UserProduct = Tables<'user_products'>;
 
 const FLAT_LAY_AESTHETICS = [
