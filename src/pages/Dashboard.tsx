@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 /* ── Inline card with IntersectionObserver for animations ── */
-function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (id: string) => void }) {
+function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
