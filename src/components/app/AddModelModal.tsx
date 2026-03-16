@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useAddCustomModel } from '@/hooks/useCustomModels';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const GENDERS = ['female', 'male'];
 const BODY_TYPES = ['slim', 'athletic', 'average', 'plus-size'];
@@ -34,16 +35,10 @@ export function AddModelModal({ open, onClose, imageUrl }: AddModelModalProps) {
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-model-from-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ imageUrl }),
+      const { data, error } = await supabase.functions.invoke('create-model-from-image', {
+        body: { imageUrl },
       });
-      if (!resp.ok) throw new Error('Analysis failed');
-      const data = await resp.json();
+      if (error) throw error;
       setName(data.name || '');
       if (GENDERS.includes(data.gender)) setGender(data.gender);
       if (BODY_TYPES.includes(data.body_type)) setBodyType(data.body_type);
