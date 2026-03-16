@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Camera, ChevronDown, X, Maximize2, LayoutGrid } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
