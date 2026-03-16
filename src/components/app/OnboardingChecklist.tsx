@@ -41,6 +41,15 @@ const steps = [
     cta: 'Go to Workflows',
     memberName: 'Kenji',
   },
+  {
+    key: 'freestyle',
+    title: 'Try Freestyle Studio',
+    description: 'Any prompt, select product, model & scene — one-click generation like ChatGPT, but for your images.',
+    icon: Wand2,
+    path: '/app/freestyle',
+    cta: 'Try Freestyle',
+    memberName: 'Amara',
+  },
 ] as const;
 
 export function OnboardingChecklist({ productCount, brandProfileCount, jobCount }: OnboardingChecklistProps) {
