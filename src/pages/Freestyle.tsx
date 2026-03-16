@@ -697,7 +697,7 @@ export default function Freestyle() {
             />
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
+          <div className="hidden md:flex flex-col items-center justify-center h-full px-4 sm:px-6">
             <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
               <Sparkles className="w-8 h-8 text-muted-foreground/40" />
             </div>
