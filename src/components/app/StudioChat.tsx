@@ -217,7 +217,7 @@ export function StudioChat() {
             {/* Starter chips */}
             {showChips && (
               <div className="flex flex-wrap gap-2 pt-1">
-                {STARTER_CHIPS.map((chip) => (
+                {getChipsForPage(location.pathname).map((chip) => (
                   <button
                     key={chip}
                     onClick={() => handleChip(chip)}
