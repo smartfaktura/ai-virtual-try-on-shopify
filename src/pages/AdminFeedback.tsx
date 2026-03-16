@@ -219,9 +219,9 @@ export default function AdminFeedback() {
               <TableHead>User</TableHead>
               <TableHead className="w-24">Type</TableHead>
               <TableHead className="hidden sm:table-cell">Message</TableHead>
-              <TableHead className="hidden md:table-cell">Page</TableHead>
-              <TableHead className="w-28">Status</TableHead>
-              <TableHead className="hidden sm:table-cell w-32">Date</TableHead>
+              <TableHead className="hidden md:table-cell w-28">Page</TableHead>
+              <TableHead className="w-24">Status</TableHead>
+              <TableHead className="hidden sm:table-cell w-28">Date</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
