@@ -224,7 +224,7 @@ export function RecentCreationsGallery() {
       </div>
 
       {/* Preset preview — Discover-style split modal */}
-      {selectedPreset && <PresetDetailOverlay preset={selectedPreset} onClose={() => setSelectedPreset(null)} onCopyPrompt={handleCopyPrompt} onUseStyle={handleUseStyle} navigate={navigate} />}
+      {selectedPreset && <PresetDetailOverlay preset={selectedPreset} onClose={() => setSelectedPreset(null)} onUseStyle={handleUseStyle} navigate={navigate} />}
     </div>
   );
 }
