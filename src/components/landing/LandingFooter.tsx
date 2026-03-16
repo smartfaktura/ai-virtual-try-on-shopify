@@ -7,6 +7,8 @@ const footerLinks = {
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
     { label: 'Creative Drops', to: '/features/creative-drops' },
     { label: 'Brand Profiles', to: '/features/brand-profiles' },
+    { label: 'Image Upscaling', to: '/features/upscale' },
+    { label: 'Perspectives', to: '/features/perspectives' },
   ],
   Company: [
     { label: 'About', to: '/about' },
