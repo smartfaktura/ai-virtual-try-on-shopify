@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
+import { Check, Upload, Palette, Sparkles, Wand2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
