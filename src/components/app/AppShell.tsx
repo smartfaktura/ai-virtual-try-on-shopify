@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff,
+  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -260,13 +260,22 @@ export function AppShell({ children }: AppShellProps) {
                   Account settings
                 </button>
                 {isRealAdmin && (
-                  <button
-                    onClick={() => { toggleAdminView(); }}
-                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
-                  >
-                    {isAdminView ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    {isAdminView ? 'View as visitor' : 'View as admin'}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { toggleAdminView(); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      {isAdminView ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      {isAdminView ? 'View as visitor' : 'View as admin'}
+                    </button>
+                    <button
+                      onClick={() => { navigate('/app/admin/chat-sessions'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Chat Sessions
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => { handleSignOut(); setUserMenuOpen(false); }}

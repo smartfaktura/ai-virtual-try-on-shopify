@@ -1,41 +1,52 @@
 
 
-## Plan: Admin Chat Sessions Panel
+## Product Perspectives — Implemented ✅
 
-### Problem
-Chat sessions store `user_id` (UUID) but you can't see which user (email) sent the messages. Need an admin page to browse chat sessions with user info, pagination, and filtering.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
+
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
 ### Changes
-
-**1. New page: `src/pages/AdminChatSessions.tsx`**
-- Admin-only page at `/app/admin/chat-sessions`
-- Fetches `chat_sessions` joined with user emails via the existing `get_user_emails_for_admin` DB function (already exists, takes UUID array, returns emails — admin-only via `has_role`)
-- Two-step fetch: get paginated chat sessions, then resolve user emails in batch
-- Features:
-  - **Paginated table** (20 per page) sorted by `updated_at DESC`
-  - **Search filter** by email (client-side filter on loaded batch, or fetch profiles matching email then filter)
-  - **Each row shows**: user email, message count, last message preview, page URL, created/updated dates
-  - **Expandable row** or click-to-open modal showing full message thread in chat-bubble style
-  - **Delete button** per session (admins already have DELETE RLS)
-- Uses existing RLS: "Admins can view all sessions" + "Admins can delete sessions"
-
-**2. Register route in `src/App.tsx`**
-- Add lazy import for `AdminChatSessions`
-- Add route: `/admin/chat-sessions`
-
-**3. Add nav link in `src/components/app/AppShell.tsx`**
-- Add "Chat Sessions" link in admin-only section (similar to how AdminScenes is accessed)
-
-### Data flow
-```text
-chat_sessions (paginated, ordered by updated_at DESC)
-  → collect user_ids
-  → get_user_emails_for_admin(user_ids[])
-  → merge email into each session row
-  → render table
-```
-
-### No database changes needed
-- `chat_sessions` table already has admin SELECT/DELETE RLS
-- `get_user_emails_for_admin` function already exists and is admin-gated
-
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
