@@ -1110,6 +1110,9 @@ serve(async (req) => {
             } catch (fallbackErr) {
               console.error(`Fallback model also failed:`, fallbackErr);
             }
+            // 429 with failed fallback — treat as soft error, continue with remaining images
+            errors.push(`Image ${i + 1}: Rate limited on both models`);
+            continue;
           }
 
           if (isQueueInternal && body.job_id) {
