@@ -742,11 +742,16 @@ async function completeQueueJob(
 
   const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
 
-  await supabase.from("generation_queue").update({
+  const { error: completeErr } = await supabase.from("generation_queue").update({
     status: "completed",
     result,
     completed_at: new Date().toISOString(),
   }).eq("id", jobId);
+  if (completeErr) {
+    console.error(`[generate-freestyle] Queue update (completed) failed for ${jobId}:`, completeErr.message);
+    const { error: retryErr } = await supabase.from("generation_queue").update({ status: "completed", result, completed_at: new Date().toISOString() }).eq("id", jobId);
+    if (retryErr) console.error(`[generate-freestyle] Queue update retry also failed for ${jobId}:`, retryErr.message);
+  }
 
   // Freestyle saves its own records in freestyle_generations (done inline),
   // but we still need a generation_jobs record for credit tracking
