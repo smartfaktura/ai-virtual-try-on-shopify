@@ -82,7 +82,9 @@ export default function AdminStatus() {
       <PageHeader
         title="System Status"
         subtitle="Generation pipeline health & metrics"
-      />
+      >
+        {null}
+      </PageHeader>
 
       {/* Time range toggle */}
       <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
