@@ -52,6 +52,7 @@ export function MissingRequestBanner({
       type: 'feature',
       message: `[${category}-request] ${message.trim()}`,
       page_url: location.pathname,
+      email: user.email,
     });
     setSubmitting(false);
     if (error) {

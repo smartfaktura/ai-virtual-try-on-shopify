@@ -465,6 +465,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           created_at: string
+          email: string | null
           id: string
           message: string
           page_url: string | null
@@ -475,6 +476,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           message: string
           page_url?: string | null
@@ -485,6 +487,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           message?: string
           page_url?: string | null
