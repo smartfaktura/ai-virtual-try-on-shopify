@@ -229,10 +229,9 @@ export function RecentCreationsGallery() {
   );
 }
 
-function PresetDetailOverlay({ preset, onClose, onCopyPrompt, onUseStyle, navigate }: {
+function PresetDetailOverlay({ preset, onClose, onUseStyle, navigate }: {
   preset: DiscoverPreset;
   onClose: () => void;
-  onCopyPrompt: (prompt: string) => void;
   onUseStyle: (preset: DiscoverPreset) => void;
   navigate: ReturnType<typeof useNavigate>;
 }) {
