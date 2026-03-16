@@ -7,6 +7,7 @@ export interface ActiveJob {
   started_at: string | null;
   workflow_name: string | null;
   workflow_id: string | null;
+  workflow_slug?: string | null;
   error_message: string | null;
   product_name?: string | null;
   credits_reserved?: number;
@@ -20,6 +21,7 @@ export interface BatchGroup {
   key: string;
   workflow_id: string | null;
   workflow_name: string | null;
+  workflow_slug: string | null;
   product_name: string | null;
   jobs: ActiveJob[];
   totalCount: number;
@@ -76,6 +78,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       key: `batch-${batchId}`,
       workflow_id: anchor.workflow_id,
       workflow_name: anchor.workflow_name,
+      workflow_slug: anchor.workflow_slug ?? null,
       product_name: anchor.product_name ?? null,
       jobs: batch,
       totalCount: batch.length,
@@ -124,6 +127,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       key: `${anchor.workflow_id}-${anchor.product_name}-${anchorTime}`,
       workflow_id: anchor.workflow_id,
       workflow_name: anchor.workflow_name,
+      workflow_slug: anchor.workflow_slug ?? null,
       product_name: anchor.product_name ?? null,
       jobs: batch,
       totalCount: batch.length,

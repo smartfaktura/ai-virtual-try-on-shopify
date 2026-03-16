@@ -826,6 +826,8 @@ export default function Generate() {
 
         const payload: Record<string, unknown> = {
           workflow_id: activeWorkflow!.id,
+          workflow_name: activeWorkflow!.name,
+          workflow_slug: activeWorkflow!.slug,
           product: { ...productData, imageUrl: base64Image },
           product_name: product.title,
           brand_profile: selectedBrandProfile ? {
@@ -931,6 +933,8 @@ export default function Generate() {
 
     const payload: Record<string, unknown> = {
       workflow_id: activeWorkflow!.id,
+      workflow_name: activeWorkflow!.name,
+      workflow_slug: activeWorkflow!.slug,
       product: { ...productData, imageUrl: base64Image },
       brand_profile: selectedBrandProfile ? {
         tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
