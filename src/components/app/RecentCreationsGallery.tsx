@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Eye, Compass, X, Copy, Sparkles, Workflow } from 'lucide-react';
+import { ArrowRight, Eye, Compass, X, Sparkles, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
-import { toast } from 'sonner';
+
 
 interface CreationItem {
   id: string;
@@ -154,10 +154,6 @@ export function RecentCreationsGallery() {
     }
   };
 
-  const handleCopyPrompt = (prompt: string) => {
-    navigator.clipboard.writeText(prompt);
-    toast.success('Prompt copied to clipboard');
-  };
 
   const handleUseStyle = (preset: DiscoverPreset) => {
     setSelectedPreset(null);
@@ -173,7 +169,7 @@ export function RecentCreationsGallery() {
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
             {isPlaceholder
-              ? 'Copy any style, scene, or prompt to create your own.'
+              ? 'Explore scenes and styles to get started.'
               : 'Your latest generated visuals.'}
           </p>
         </div>
@@ -228,15 +224,14 @@ export function RecentCreationsGallery() {
       </div>
 
       {/* Preset preview — Discover-style split modal */}
-      {selectedPreset && <PresetDetailOverlay preset={selectedPreset} onClose={() => setSelectedPreset(null)} onCopyPrompt={handleCopyPrompt} onUseStyle={handleUseStyle} navigate={navigate} />}
+      {selectedPreset && <PresetDetailOverlay preset={selectedPreset} onClose={() => setSelectedPreset(null)} onUseStyle={handleUseStyle} navigate={navigate} />}
     </div>
   );
 }
 
-function PresetDetailOverlay({ preset, onClose, onCopyPrompt, onUseStyle, navigate }: {
+function PresetDetailOverlay({ preset, onClose, onUseStyle, navigate }: {
   preset: DiscoverPreset;
   onClose: () => void;
-  onCopyPrompt: (prompt: string) => void;
   onUseStyle: (preset: DiscoverPreset) => void;
   navigate: ReturnType<typeof useNavigate>;
 }) {
@@ -298,11 +293,6 @@ function PresetDetailOverlay({ preset, onClose, onCopyPrompt, onUseStyle, naviga
               </div>
             </div>
 
-            {/* Prompt */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">Prompt</p>
-              <p className="text-sm leading-relaxed text-muted-foreground">{preset.prompt}</p>
-            </div>
 
             {/* Tags */}
             {preset.tags && preset.tags.length > 0 && (
@@ -320,7 +310,7 @@ function PresetDetailOverlay({ preset, onClose, onCopyPrompt, onUseStyle, naviga
               onClick={() => onUseStyle(preset)}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              <Sparkles className="w-4 h-4 mr-2" /> Use This Style
+              <Sparkles className="w-4 h-4 mr-2" /> Try in Freestyle
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 
@@ -337,15 +327,6 @@ function PresetDetailOverlay({ preset, onClose, onCopyPrompt, onUseStyle, naviga
               </Button>
             )}
 
-            {/* Secondary actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => onCopyPrompt(preset.prompt)}
-                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
-              >
-                <Copy className="w-3.5 h-3.5" /> Copy Prompt
-              </button>
-            </div>
           </div>
         </div>
       </div>
