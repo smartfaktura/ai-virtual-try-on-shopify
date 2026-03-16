@@ -467,7 +467,7 @@ export function useGeneratePerspectives() {
       return null;
     }
 
-    toast.success(`${jobs.length} perspective${jobs.length > 1 ? 's' : ''} queued!`);
+    
     return { jobs, batchId, newBalance: lastNewBalance };
   }, [user]);
 
