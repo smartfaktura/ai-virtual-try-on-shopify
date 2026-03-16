@@ -327,15 +327,6 @@ function PresetDetailOverlay({ preset, onClose, onUseStyle, navigate }: {
               </Button>
             )}
 
-            {/* Secondary actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => onCopyPrompt(preset.prompt)}
-                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
-              >
-                <Copy className="w-3.5 h-3.5" /> Copy Prompt
-              </button>
-            </div>
           </div>
         </div>
       </div>
