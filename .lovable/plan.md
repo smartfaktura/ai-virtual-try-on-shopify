@@ -1,45 +1,52 @@
 
 
-## Plan: Fix Dashboard "Images Generated" count
+## Product Perspectives — Implemented ✅
 
-### Problem
-The "Images Generated" metric counts **generation job rows** (134 jobs) instead of **actual images produced**. Each job can generate multiple images (`requested_count` field), so the displayed number is significantly lower than reality. Additionally, freestyle generations (stored in `freestyle_generations` table) are not counted at all.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
+
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
 ### Changes
-
-**File: `src/pages/Dashboard.tsx`** (lines 178-193)
-
-Replace the current `head: true` row-count query with two queries that sum actual image counts:
-
-1. **Generation jobs**: Select `requested_count` from completed jobs in last 30 days, then sum them client-side (Supabase JS client doesn't support `SUM()` aggregates directly without RPC).
-2. **Freestyle generations**: Count rows from `freestyle_generations` in last 30 days (each row = 1 image).
-3. Combine both totals for the displayed metric.
-
-```tsx
-queryFn: async () => {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const iso = thirtyDaysAgo.toISOString();
-
-  // Sum requested_count from completed generation jobs
-  const { data: jobs, error: e1 } = await supabase
-    .from('generation_jobs')
-    .select('requested_count')
-    .eq('status', 'completed')
-    .gte('created_at', iso);
-  if (e1) throw e1;
-  const jobImages = (jobs || []).reduce((sum, j) => sum + (j.requested_count || 0), 0);
-
-  // Count freestyle generations (1 row = 1 image)
-  const { count: freestyleCount, error: e2 } = await supabase
-    .from('freestyle_generations')
-    .select('*', { count: 'exact', head: true })
-    .gte('created_at', iso);
-  if (e2) throw e2;
-
-  return jobImages + (freestyleCount ?? 0);
-},
-```
-
-This gives the true number of images generated across both workflows and freestyle in the last 30 days.
-
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
