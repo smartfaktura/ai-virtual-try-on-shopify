@@ -20,8 +20,6 @@ export default function AdminScenes() {
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
 
-  if (adminLoading) return null;
-  if (!isAdmin) return <Navigate to="/app" replace />;
 
   // Stable deps: serialize hiddenIds and sortMap to avoid recreating allPoses on every render
   const hiddenKey = JSON.stringify(hiddenIds);
