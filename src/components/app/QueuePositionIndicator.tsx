@@ -12,15 +12,15 @@ interface QueuePositionIndicatorProps {
 }
 
 function estimateSeconds(meta?: GenerationMeta): number {
-  if (!meta) return 90; // Pro model default
-  let estimate = 20; // base
-  estimate += meta.imageCount * 12;
-  if (meta.quality === 'high') estimate += 20;
-  if (meta.hasModel) estimate += 30; // Pro model is much slower
-  if (meta.hasScene) estimate += 8;
-  if (meta.hasProduct) estimate += 8;
+  if (!meta) return 70; // Pro model default
+  let estimate = 15; // base
+  estimate += meta.imageCount * 10;
+  if (meta.quality === 'high') estimate += 15;
+  if (meta.hasModel) estimate += 20; // Pro model is slower
+  if (meta.hasScene) estimate += 5;
+  if (meta.hasProduct) estimate += 5;
   const refCount = [meta.hasModel, meta.hasScene, meta.hasProduct].filter(Boolean).length;
-  if (refCount >= 2) estimate += 15;
+  if (refCount >= 2) estimate += 10;
   return estimate;
 }
 
