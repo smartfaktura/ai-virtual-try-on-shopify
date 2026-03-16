@@ -1,22 +1,17 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Eye } from 'lucide-react';
+import { ArrowRight, Eye, Compass, X, Copy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { toSignedUrl } from '@/lib/signedUrl';
-
-const PLACEHOLDER_IMAGES = [
-  getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
-  getLandingAssetUrl('showcase/skincare-serum-marble.jpg'),
-  getLandingAssetUrl('showcase/food-coffee-artisan.jpg'),
-  getLandingAssetUrl('showcase/home-candle-evening.jpg'),
-  getLandingAssetUrl('showcase/fashion-activewear-studio.jpg'),
-];
+import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
+import { toast } from 'sonner';
 
 interface CreationItem {
   id: string;
@@ -30,6 +25,9 @@ interface CreationItem {
 export function RecentCreationsGallery() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [selectedPreset, setSelectedPreset] = useState<DiscoverPreset | null>(null);
+
+  const { data: presets = [] } = useDiscoverPresets();
 
   const { data: creations = [], isLoading } = useQuery({
     queryKey: ['recent-creations', user?.id],
@@ -131,18 +129,41 @@ export function RecentCreationsGallery() {
     );
   }
 
-  // Use placeholder images when no real creations exist
-  const displayItems: CreationItem[] = creations.length > 0
-    ? creations
-    : PLACEHOLDER_IMAGES.map((img, i) => ({
-        id: `placeholder-${i}`,
-        imageUrl: img,
-        label: ['Product Shot', 'Lifestyle', 'Ad Creative', 'Editorial', 'On-Model'][i],
-        date: 'Sample',
-        rawDate: '',
-      }));
-
   const isPlaceholder = creations.length === 0;
+
+  // Use featured discover presets for new users
+  const featuredPresets = presets.filter(p => p.is_featured).slice(0, 10);
+  const discoverPresets = featuredPresets.length > 0 ? featuredPresets : presets.slice(0, 10);
+
+  const displayItems: CreationItem[] = isPlaceholder
+    ? discoverPresets.map((p) => ({
+        id: p.id,
+        imageUrl: p.image_url,
+        label: p.category.charAt(0).toUpperCase() + p.category.slice(1),
+        subtitle: p.title,
+        date: '',
+        rawDate: '',
+      }))
+    : creations;
+
+  const handleCardClick = (item: CreationItem) => {
+    if (isPlaceholder) {
+      const preset = discoverPresets.find(p => p.id === item.id);
+      if (preset) setSelectedPreset(preset);
+    } else {
+      navigate('/app/library');
+    }
+  };
+
+  const handleCopyPrompt = (prompt: string) => {
+    navigator.clipboard.writeText(prompt);
+    toast.success('Prompt copied to clipboard');
+  };
+
+  const handleUseStyle = (preset: DiscoverPreset) => {
+    setSelectedPreset(null);
+    navigate('/app/freestyle', { state: { prefillPrompt: preset.prompt } });
+  };
 
   return (
     <div className="space-y-4">
@@ -152,10 +173,16 @@ export function RecentCreationsGallery() {
             {isPlaceholder ? 'What You Can Create' : 'Recent Creations'}
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {isPlaceholder ? 'AI-generated product photography examples.' : 'Your latest generated visuals.'}
+            {isPlaceholder
+              ? 'Copy any style, scene, or prompt to create your own.'
+              : 'Your latest generated visuals.'}
           </p>
         </div>
-        {!isPlaceholder && (
+        {isPlaceholder ? (
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate('/app/discover')}>
+            <Compass className="w-3.5 h-3.5" /> View More
+          </Button>
+        ) : (
           <Button variant="link" className="text-sm font-medium gap-1" onClick={() => navigate('/app/library')}>
             View all <ArrowRight className="w-3.5 h-3.5" />
           </Button>
@@ -173,39 +200,81 @@ export function RecentCreationsGallery() {
           {displayItems.map((item) => (
             <div
               key={item.id}
-              className="flex-shrink-0 w-[180px] group"
+              className="flex-shrink-0 w-[180px] group cursor-pointer"
+              onClick={() => handleCardClick(item)}
             >
               <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
                 <ShimmerImage
-                   src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
-                   alt={item.label}
-                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                   loading="lazy"
-                   aspectRatio="4/5"
-                   onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
-                 />
-                {/* Always-visible label bar */}
+                  src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
+                  alt={item.label}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  aspectRatio="4/5"
+                  onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
+                />
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
                   <p className="text-xs font-semibold text-white">{item.label}</p>
                   {item.subtitle && <p className="text-[10px] text-white/70 truncate">{item.subtitle}</p>}
-                  <p className="text-[10px] text-white/50">{item.date}</p>
+                  {item.date && <p className="text-[10px] text-white/50">{item.date}</p>}
                 </div>
-                {/* Intentional View button overlay */}
-                {!isPlaceholder && (
-                  <button
-                    onClick={() => navigate('/app/library')}
-                    className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 active:opacity-100"
-                  >
-                    <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-                      <Eye className="w-3.5 h-3.5" /> View
-                    </span>
-                  </button>
-                )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+                    <Eye className="w-3.5 h-3.5" /> {isPlaceholder ? 'Preview' : 'View'}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Preset preview dialog */}
+      <Dialog open={!!selectedPreset} onOpenChange={(open) => !open && setSelectedPreset(null)}>
+        <DialogContent className="max-w-md p-0 overflow-hidden">
+          {selectedPreset && (
+            <>
+              <div className="relative aspect-[3/4] w-full">
+                <ShimmerImage
+                  src={getOptimizedUrl(selectedPreset.image_url, { quality: 80 })}
+                  alt={selectedPreset.title}
+                  className="w-full h-full object-cover"
+                  aspectRatio="3/4"
+                />
+              </div>
+              <div className="p-5 space-y-3">
+                <DialogHeader>
+                  <DialogTitle className="text-base">{selectedPreset.title}</DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground capitalize">
+                    {selectedPreset.category}
+                    {selectedPreset.model_name && ` · ${selectedPreset.model_name}`}
+                    {selectedPreset.scene_name && ` · ${selectedPreset.scene_name}`}
+                  </DialogDescription>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                  {selectedPreset.prompt}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => handleCopyPrompt(selectedPreset.prompt)}
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy Prompt
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 flex-1"
+                    onClick={() => handleUseStyle(selectedPreset)}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> Use This Style
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
