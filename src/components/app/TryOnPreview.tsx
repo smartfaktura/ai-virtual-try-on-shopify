@@ -16,7 +16,7 @@ interface TryOnPreviewProps {
 export function TryOnPreview({ product, scratchUpload, model, pose, poses, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
   const allPoses = poses && poses.length > 0 ? poses : pose ? [pose] : [];
   const firstPose = allPoses[0] || null;
-  const poseImage = selectedGender === 'male' && firstPose?.previewUrlMale ? firstPose.previewUrlMale : firstPose?.previewUrl;
+  const poseImage = firstPose?.previewUrl;
   const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
   const productTitle = product?.title || scratchUpload?.productInfo.title || '';
   const hasProduct = !!(product || scratchUpload);
