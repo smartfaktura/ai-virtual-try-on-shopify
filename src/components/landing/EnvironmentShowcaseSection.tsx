@@ -12,26 +12,26 @@ const e = (name: string, file: string): EnvironmentCard => ({ name, image: getLa
 
 const ROW_1: EnvironmentCard[] = [
   e('Studio Classic', 'pose-studio-front.jpg'),
-  e('Beach', 'pose-lifestyle-beach.jpg'),
+  e('Gym', 'pose-lifestyle-gym.jpg'),
   e('Editorial Dark', 'pose-editorial-dramatic.jpg'),
-  e('Neon Night', 'pose-streetwear-neon.jpg'),
+  e('Resort', 'pose-lifestyle-resort.jpg'),
   e('Coffee Shop', 'pose-lifestyle-coffee.jpg'),
-  e('Studio Profile', 'pose-studio-profile.jpg'),
-  e('Garden', 'pose-lifestyle-garden.jpg'),
+  e('Gallery', 'pose-editorial-gallery.jpg'),
+  e('Urban Male', 'pose-streetwear-urban-male.jpg'),
   e('Window Light', 'pose-editorial-window.jpg'),
-  e('Urban Street', 'pose-streetwear-urban.jpg'),
+  e('Autumn', 'pose-lifestyle-autumn.jpg'),
 ];
 
 const ROW_2: EnvironmentCard[] = [
-  e('Rooftop', 'pose-lifestyle-rooftop.jpg'),
+  e('Studio Profile Male', 'pose-studio-profile-male.jpg'),
   e('Minimal White', 'pose-editorial-minimal.jpg'),
-  e('Industrial', 'pose-streetwear-stairs.jpg'),
-  e('Studio Motion', 'pose-studio-movement.jpg'),
+  e('Shopping', 'pose-streetwear-shopping.jpg'),
+  e('Warehouse', 'pose-editorial-warehouse.jpg'),
   e('Park', 'pose-lifestyle-park.jpg'),
   e('Moody Editorial', 'pose-editorial-moody.jpg'),
-  e('Basketball Court', 'pose-streetwear-basketball.jpg'),
+  e('Beach Male', 'pose-lifestyle-beach-male.jpg'),
   e('Café Seated', 'pose-lifestyle-seated.jpg'),
-  e('Underpass', 'pose-streetwear-underpass.jpg'),
+  e('Garden Male', 'pose-lifestyle-garden-male.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; direction?: 'left' | 'right' }) {
