@@ -51,7 +51,7 @@ export function TryOnPreview({ product, scratchUpload, model, pose, poses, credi
           {isMultiScene ? (
             <div className="flex items-center gap-1.5">
               {allPoses.slice(0, 3).map((p, i) => {
-                const img = selectedGender === 'male' && p.previewUrlMale ? p.previewUrlMale : p.previewUrl;
+                const img = p.previewUrl;
                 return (
                   <div key={p.poseId} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0">
                     <img src={img} alt={p.name} className="w-full h-full object-cover" />
