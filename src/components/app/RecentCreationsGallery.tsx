@@ -227,74 +227,128 @@ export function RecentCreationsGallery() {
         </div>
       </div>
 
-      {/* Preset preview dialog */}
-      <Dialog open={!!selectedPreset} onOpenChange={(open) => !open && setSelectedPreset(null)}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
-          {selectedPreset && (
-            <>
-              <div className="relative aspect-[3/4] w-full">
-                <ShimmerImage
-                  src={getOptimizedUrl(selectedPreset.image_url, { quality: 80 })}
-                  alt={selectedPreset.title}
-                  className="w-full h-full object-cover"
-                  aspectRatio="3/4"
-                />
-              </div>
-              <div className="p-5 space-y-3">
-                <DialogHeader>
-                  <DialogTitle className="text-base">{selectedPreset.title}</DialogTitle>
-                  <DialogDescription className="text-xs text-muted-foreground capitalize">
-                    {selectedPreset.category}
-                    {selectedPreset.model_name && ` · ${selectedPreset.model_name}`}
-                    {selectedPreset.scene_name && ` · ${selectedPreset.scene_name}`}
-                    {selectedPreset.workflow_name && (
-                      <span className="inline-flex items-center gap-1 text-primary ml-1">
-                        · <Workflow className="w-3 h-3 inline" /> {selectedPreset.workflow_name}
-                      </span>
-                    )}
-                  </DialogDescription>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                  {selectedPreset.prompt}
+      {/* Preset preview — Discover-style split modal */}
+      {selectedPreset && <PresetDetailOverlay preset={selectedPreset} onClose={() => setSelectedPreset(null)} onCopyPrompt={handleCopyPrompt} onUseStyle={handleUseStyle} navigate={navigate} />}
+    </div>
+  );
+}
+
+function PresetDetailOverlay({ preset, onClose, onCopyPrompt, onUseStyle, navigate }: {
+  preset: DiscoverPreset;
+  onClose: () => void;
+  onCopyPrompt: (prompt: string) => void;
+  onUseStyle: (preset: DiscoverPreset) => void;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
+      style={{ margin: 0, padding: 0 }}
+      onClick={onClose}
+    >
+      <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" />
+      <div
+        className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Left — Image */}
+        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
+          <ShimmerImage
+            src={getOptimizedUrl(preset.image_url, { quality: 80 })}
+            alt={preset.title}
+            wrapperClassName="flex items-center justify-center"
+            className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
+          />
+        </div>
+
+        {/* Right — Controls */}
+        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+          <button onClick={onClose} className="absolute top-5 right-5 z-20 text-foreground/70 hover:text-foreground transition-colors">
+            <X className="w-7 h-7" strokeWidth={2} />
+          </button>
+
+          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
+            {/* Category + Title */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+                  {preset.category}
                 </p>
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => handleCopyPrompt(selectedPreset.prompt)}
-                    >
-                      <Copy className="w-3.5 h-3.5" /> Copy Prompt
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="gap-1.5 flex-1"
-                      onClick={() => handleUseStyle(selectedPreset)}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" /> Use This Style
-                    </Button>
-                  </div>
-                  {selectedPreset.workflow_slug && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 w-full border-primary/20 hover:bg-primary/5"
-                      onClick={() => {
-                        setSelectedPreset(null);
-                        navigate(`/app/generate?workflow=${selectedPreset.workflow_slug}`);
-                      }}
-                    >
-                      <Workflow className="w-3.5 h-3.5" /> Try {selectedPreset.workflow_name || 'This Workflow'}
-                      <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-                    </Button>
-                  )}
-                </div>
+                {preset.workflow_name && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
+                    · <Workflow className="w-3 h-3" /> {preset.workflow_name}
+                  </span>
+                )}
               </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{preset.title}</h2>
+              <div className="flex items-center gap-2 pt-0.5">
+                {preset.model_name && <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{preset.model_name}</span>}
+                {preset.scene_name && <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· {preset.scene_name}</span>}
+              </div>
+            </div>
+
+            {/* Prompt */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">Prompt</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{preset.prompt}</p>
+            </div>
+
+            {/* Tags */}
+            {preset.tags && preset.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {preset.tags.map((tag) => (
+                  <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Primary CTA */}
+            <Button
+              onClick={() => onUseStyle(preset)}
+              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+            >
+              <Sparkles className="w-4 h-4 mr-2" /> Use This Style
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+
+            {/* Workflow CTA */}
+            {preset.workflow_slug && (
+              <Button
+                variant="outline"
+                onClick={() => { onClose(); navigate(`/app/generate?workflow=${preset.workflow_slug}`); }}
+                className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
+              >
+                <Workflow className="w-4 h-4" />
+                Try {preset.workflow_name || 'This Workflow'}
+                <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+              </Button>
+            )}
+
+            {/* Secondary actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => onCopyPrompt(preset.prompt)}
+                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
+              >
+                <Copy className="w-3.5 h-3.5" /> Copy Prompt
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
