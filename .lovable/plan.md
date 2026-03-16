@@ -1,30 +1,43 @@
 
 
-## Product Perspectives — Implemented ✅
+## Save user email with feedback submissions
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Current state
+- Both `FeedbackBanner` and `MissingRequestBanner` insert into the **same `feedback` table** — correct, all submissions go to one place.
+- The table stores `user_id` but not the user's email directly. The email exists in `profiles.email` and can be joined via `user_id`.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Decision: Add email column vs. join on profiles
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+Adding a denormalized `email` column to the `feedback` table is simpler for admin queries and future email notifications — no join needed. This is the approach I recommend.
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+### Changes
+
+**1. Database migration** — Add `email` column to `feedback` table:
+```sql
+ALTER TABLE public.feedback ADD COLUMN email text;
+```
+
+**2. `src/components/app/FeedbackBanner.tsx`** — Include `user.email` in the insert:
+```tsx
+const { error } = await supabase.from('feedback').insert({
+  user_id: user.id,
+  type: selectedType,
+  message: message.trim(),
+  page_url: location.pathname,
+  email: user.email,
+});
+```
+
+**3. `src/components/app/MissingRequestBanner.tsx`** — Same change:
+```tsx
+const { error } = await supabase.from('feedback').insert({
+  user_id: user.id,
+  type: 'feature',
+  message: `[${category}-request] ${message.trim()}`,
+  page_url: location.pathname,
+  email: user.email,
+});
+```
+
+Both components already have access to `user` from `useAuth()`, and `user.email` is available from the auth session — no extra queries needed.
+
