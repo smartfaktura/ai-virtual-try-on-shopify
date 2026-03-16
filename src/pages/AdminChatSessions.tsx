@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,6 @@ interface ChatSession {
 
 export default function AdminChatSessions() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
@@ -101,10 +100,7 @@ export default function AdminChatSessions() {
   const totalPages = Math.ceil((data?.total || 0) / PAGE_SIZE);
 
   if (adminLoading) return null;
-  if (!isAdmin) {
-    navigate('/app');
-    return null;
-  }
+  if (!isAdmin) return <Navigate to="/app" replace />;
 
   const getLastUserMessage = (messages: ChatMessage[]) => {
     const userMsgs = messages.filter(m => m.role === 'user');
