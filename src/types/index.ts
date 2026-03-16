@@ -162,6 +162,7 @@ export interface TryOnPose {
   previewUrl: string;
   previewUrlMale?: string;
   optimizedImageUrl?: string;
+  created_at?: string;
 }
 
 // Dashboard metrics

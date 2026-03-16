@@ -213,8 +213,12 @@ export default function PublicDiscover() {
     });
   }, [allItems, selectedCategory, searchQuery]);
 
-  // Sort: featured items first
+  // Sort: featured items first, then newest first
   const sorted = useMemo(() => {
+    const getDate = (item: DiscoverItem): number => {
+      const d = item.type === 'preset' ? item.data.created_at : item.data.created_at;
+      return d ? new Date(d).getTime() : 0;
+    };
     return [...filtered].sort((a, b) => {
       const aKey = `${a.type}:${getItemId(a)}`;
       const bKey = `${b.type}:${getItemId(b)}`;
@@ -223,7 +227,7 @@ export default function PublicDiscover() {
       if (aFeat && !bFeat) return -1;
       if (!aFeat && bFeat) return 1;
       if (aFeat && bFeat) return new Date(bFeat.created_at).getTime() - new Date(aFeat.created_at).getTime();
-      return 0;
+      return getDate(b) - getDate(a);
     });
   }, [filtered, featuredMap]);
 

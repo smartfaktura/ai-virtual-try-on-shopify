@@ -33,6 +33,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     promptHint: scene.description,
     previewUrl: scene.image_url,
     optimizedImageUrl: scene.optimized_image_url || undefined,
+    created_at: scene.created_at,
   };
 }
 
