@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
