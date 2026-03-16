@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X, Maximize, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
@@ -9,6 +9,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { UpscaleModal } from '@/components/app/UpscaleModal';
 
 interface WorkflowPreviewModalProps {
   open: boolean;
@@ -40,6 +41,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
   const [downloading, setDownloading] = useState(false);
   const [downloadPct, setDownloadPct] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [upscaleOpen, setUpscaleOpen] = useState(false);
 
   const rawUrls = job ? extractUrls(job.results) : [];
   const count = rawUrls.length;
@@ -274,6 +276,30 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
               </button>
             )}
 
+            {/* Upscale & Perspectives */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => !isLoading && setUpscaleOpen(true)}
+                disabled={isLoading}
+                className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all disabled:opacity-50"
+              >
+                <Maximize className="w-3.5 h-3.5" />
+                Upscale
+              </button>
+              <button
+                onClick={() => {
+                  if (!currentUrl) return;
+                  onClose();
+                  navigate(`/app/perspectives?source=${encodeURIComponent(currentUrl)}`);
+                }}
+                disabled={isLoading}
+                className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all disabled:opacity-50"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                Perspectives
+              </button>
+            </div>
+
             {/* View in Library */}
             <button
               onClick={() => {
@@ -288,6 +314,20 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
           </div>
         </div>
       </div>
+
+      {/* Upscale modal */}
+      {currentUrl && job && (
+        <UpscaleModal
+          open={upscaleOpen}
+          onClose={() => setUpscaleOpen(false)}
+          items={[{
+            imageUrl: currentUrl,
+            sourceType: 'generation',
+            sourceId: job.id,
+          }]}
+          onComplete={() => setUpscaleOpen(false)}
+        />
+      )}
     </div>
   );
 }
