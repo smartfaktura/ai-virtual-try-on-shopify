@@ -643,7 +643,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const bgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-muted" key={isActive ? iteration : 'static'}>
+    <div className="relative w-full h-full overflow-hidden bg-muted">
       {/* Shimmer placeholder while background loads */}
       {!bgLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
