@@ -1,30 +1,45 @@
 
 
-## Product Perspectives — Implemented ✅
+## Audit: All `/app/generate/` Navigation Patterns
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Summary
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+Everything is correctly using slug-based URLs **except one remaining legacy pattern**.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### What's correct ✅
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| Location | Pattern | Status |
+|----------|---------|--------|
+| `Workflows.tsx` | `navigate(\`/app/generate/${workflow.slug}\`)` | ✅ Slug |
+| `Dashboard.tsx` workflow cards | `navigate(\`/app/generate/${slug}\`)` | ✅ Slug |
+| `Dashboard.tsx` retry / empty CTA | `navigate('/app/generate')` (no workflow) | ✅ Intentional |
+| `GenerationModeCards.tsx` | `navigate('/app/generate/virtual-try-on-set')` | ✅ Slug |
+| `Templates.tsx` | `navigate(\`/app/generate?template=${templateId}\`)` | ✅ Different system (template IDs, not workflow IDs) |
+| `Generate.tsx` | Reads `workflowSlug` from `useParams`, falls back to `?workflow=` | ✅ Backward-compatible |
+
+### One remaining legacy pattern
+
+| File | Line | Current | Issue |
+|------|------|---------|-------|
+| `WorkflowActivityCard.tsx` | 251 | `` `/app/generate?workflow=${group.workflow_id}` `` | Uses legacy query param with UUID |
+
+This is the "Retry" button on failed workflow activity cards. The `BatchGroup` type only has `workflow_id` (UUID) and `workflow_name`, but no slug.
+
+### Plan
+
+**Option A (simple, no data model change):** Derive the slug from `workflow_name` using the same slugification logic (lowercase, replace spaces with hyphens). Add a `workflow_slug` field to `BatchGroup` and populate it by looking up the slug from the workflows list already fetched on the Workflows page.
+
+**Option B (minimal, keep fallback working):** Leave as-is. `Generate.tsx` already has a fallback that reads `?workflow=` and looks up by UUID. The URL is uglier but functional.
+
+### Recommended: Option A
+
+| File | Change |
+|------|--------|
+| `src/lib/batchGrouping.ts` | Add `workflow_slug: string \| null` to `BatchGroup` interface |
+| `src/pages/Workflows.tsx` | When mapping queue jobs to `ActiveJob`, also extract `workflow_slug` from payload (add it to the payload in Generate.tsx) |
+| `src/pages/Generate.tsx` | Add `workflow_slug: activeWorkflow?.slug` to the payload sent to `enqueue-generation` (for both single and multi-product paths) |
+| `src/components/app/WorkflowActivityCard.tsx` | Use slug-based URL: `` `/app/generate/${group.workflow_slug}` `` with fallback to `?workflow=` if slug is missing |
+| `src/components/app/GlobalGenerationBar.tsx` | Extract `workflow_slug` from payload alongside `workflow_name` |
+
+This ensures all future queue jobs carry the slug in their payload, and the retry button uses clean URLs. Existing jobs without a slug in their payload will fall back to the legacy `?workflow=` pattern gracefully.
+
