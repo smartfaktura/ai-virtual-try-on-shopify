@@ -259,14 +259,14 @@ async function generateImage(
         { type: "text", text: "[PRODUCT IMAGE]:" },
         { type: "image_url", image_url: { url: productImageUrl } },
         { type: "text", text: "[MODEL IMAGE]:" },
-        { type: "image_url", image_url: { url: modelImageUrl } },
+        { type: "image_url", image_url: { url: optimizeImageForAI(modelImageUrl) } },
       ];
 
       // Add scene image as third reference if provided
       if (sceneImageUrl) {
         contentParts.push(
           { type: "text", text: "[SCENE IMAGE]:" },
-          { type: "image_url", image_url: { url: sceneImageUrl } }
+          { type: "image_url", image_url: { url: optimizeImageForAI(sceneImageUrl) } }
         );
       }
 
