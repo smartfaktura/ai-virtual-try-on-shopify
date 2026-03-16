@@ -258,6 +258,19 @@ export function DiscoverDetailModal({
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 
+            {/* Workflow CTA */}
+            {isPreset && item.data.workflow_slug && (
+              <Button
+                variant="outline"
+                onClick={() => { onClose(); navigate(`/app/generate?workflow=${item.data.workflow_slug}`); }}
+                className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
+              >
+                <Workflow className="w-4 h-4" />
+                Try {item.data.workflow_name || 'This Workflow'}
+                <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+              </Button>
+            )}
+
             {/* Secondary actions */}
             <div className="flex gap-2">
               {isPreset && (

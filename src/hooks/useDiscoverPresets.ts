@@ -15,6 +15,8 @@ export interface DiscoverPreset {
   tags: string[] | null;
   sort_order: number;
   is_featured: boolean;
+  workflow_slug: string | null;
+  workflow_name: string | null;
   created_at: string;
 }
 
