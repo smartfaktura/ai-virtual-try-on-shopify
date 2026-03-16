@@ -14,6 +14,7 @@ interface WorkflowRowProps {
   workflow: Workflow;
   onSelect: () => void;
   reversed?: boolean;
+  id?: string;
 }
 
 const featureMap: Record<string, string[]> = {
