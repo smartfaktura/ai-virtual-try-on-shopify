@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
-import { toast } from 'sonner';
+
 
 interface CreationItem {
   id: string;
