@@ -491,7 +491,13 @@ serve(async (req) => {
             ? prompt
             : `${prompt}\n\nVariation ${i + 1}: Slightly different angle and lighting while maintaining the same high quality.`;
 
-        const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", body.pose.imageUrl);
+        let base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", body.pose.imageUrl);
+
+        // Fallback: if Pro model returned null, retry once with Flash model
+        if (base64Url === null) {
+          console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview for image ${i + 1}`);
+          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
+        }
 
         if (base64Url) {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
