@@ -664,7 +664,7 @@ export default function Generate() {
     toast.success(`"${template.name}" selected! Click Continue when ready.`);
   };
 
-  const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); toast.success(`Model "${model.name}" selected!`); };
+  const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); };
   const handleSelectPose = (pose: TryOnPose) => {
     const maxScenes = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
     setSelectedPoses(prev => {
