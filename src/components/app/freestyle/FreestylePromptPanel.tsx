@@ -311,11 +311,11 @@ export function FreestylePromptPanel({
                     <p className="text-xs text-muted-foreground mr-auto truncate">
                       Type a prompt or add a reference to start
                     </p>
-                  ) : showInsufficientCredits ? (
-                    <p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
-                      <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
-                      <span className="sm:hidden">Not enough credits</span>
-                    </p>
+                   ) : showInsufficientCredits ? (
+                     <p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
+                       <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
+                       <span className="sm:hidden">Need {creditCost - (creditBalance ?? 0)} more credits ({creditBalance ?? 0}/{creditCost})</span>
+                     </p>
                   ) : null}
 
                   <TooltipProvider delayDuration={300}>
