@@ -293,11 +293,6 @@ function PresetDetailOverlay({ preset, onClose, onUseStyle, navigate }: {
               </div>
             </div>
 
-            {/* Prompt */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">Prompt</p>
-              <p className="text-sm leading-relaxed text-muted-foreground">{preset.prompt}</p>
-            </div>
 
             {/* Tags */}
             {preset.tags && preset.tags.length > 0 && (
