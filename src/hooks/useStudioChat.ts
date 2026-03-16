@@ -188,17 +188,18 @@ export function useStudioChat(pageUrl?: string) {
     } finally {
       setIsLoading(false);
       abortRef.current = null;
-
-      // Persist session to database
-      setMessages(prev => {
-        if (prev.length > 0) {
-          persistSession(sessionIdRef.current, prev, pageUrl ?? null).then(id => {
-            sessionIdRef.current = id;
-          });
-        }
-        return prev;
-      });
     }
+
+    // Persist session to database (outside React state updater)
+    setMessages(prev => {
+      const currentMessages = prev;
+      if (currentMessages.length > 0) {
+        persistSession(sessionIdRef.current, currentMessages, pageUrl ?? null).then(id => {
+          if (id) sessionIdRef.current = id;
+        }).catch(e => console.error('persistSession failed:', e));
+      }
+      return prev;
+    });
   }, [messages, pageUrl]);
 
   const cancelStream = useCallback(() => {
