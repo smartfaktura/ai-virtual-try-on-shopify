@@ -2862,7 +2862,7 @@ export default function Generate() {
 
         {/* Model Selection */}
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-20">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
@@ -2880,7 +2880,9 @@ export default function Generate() {
                   <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
                 ))}
               </div>
-              <div className="flex justify-between">
+            </CardContent></Card>
+            <div className="fixed bottom-0 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 bg-background/95 backdrop-blur-sm border-t border-border">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
                 <Button variant="outline" onClick={() => {
                   if (isMirrorSelfie) {
                     setMirrorSettingsPhase('scenes');
@@ -2897,13 +2899,13 @@ export default function Generate() {
                   <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
                 )}
               </div>
-            </CardContent></Card>
+            </div>
           </div>
         )}
 
         {/* Pose Selection */}
         {currentStep === 'pose' && selectedModel && (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-20">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
@@ -2930,11 +2932,13 @@ export default function Generate() {
                 placeholder="Describe the scene or environment you'd like…"
               />
             </CardContent></Card>
-            <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-5 py-3 flex justify-between rounded-b-lg">
-              <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
-              <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
-                Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
-              </Button>
+            <div className="fixed bottom-0 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 bg-background/95 backdrop-blur-sm border-t border-border">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
+                <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
+                  Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
+                </Button>
+              </div>
             </div>
           </div>
         )}
