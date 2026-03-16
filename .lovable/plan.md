@@ -1,75 +1,52 @@
 
 
-## Audit: Studio Chat — What It Has vs What's Missing
+## Product Perspectives — Implemented ✅
 
-### Current State
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-**System prompt covers these routes/CTAs:**
-- ✅ `/app/workflows` — Browse Workflows
-- ✅ `/app/freestyle` — Try Freestyle
-- ✅ `/app/brand-profiles` — Set Up Brand Profile
-- ✅ `/app/products` — Upload/Manage Products
-- ✅ `/app/creative-drops` — Creative Drops
-- ✅ `/app/library` — View Library (aliased as Jobs)
-- ✅ `/app/discover` — Browse Discover
-- ✅ `/app/video` — Generate Video
-- ✅ `/app/settings` — Upgrade Plan / Buy Credits
-- ✅ `__contact__` — Talk to a Human (inline contact form)
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**Missing routes — features that exist but chat can't link to:**
-- ❌ `/app/perspectives` — Perspectives (multi-angle generation)
-- ❌ `/app/` — Dashboard
-- ❌ `/app/products/new` — Add new product directly
-- ❌ `/pricing` — Public pricing page (for non-logged-in context)
-- ❌ `/team` — Meet the team page
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-**Missing platform knowledge in system prompt:**
-- ❌ **Perspectives** — no mention at all. Users can generate 4-angle views (front, back, left, right) of products. This is a key feature.
-- ❌ **Upscale pricing** — prompt mentions upscale exists but doesn't state the credit cost
-- ❌ **Mobile Upload** — mentioned under Product Management but no CTA
-- ❌ **Shopify Import** — mentioned but no direct CTA to trigger it
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-**UI/UX gaps:**
-- ❌ No page-context awareness — chat doesn't know which page the user is currently on (the `pageUrl` is stored in session but not sent to the AI)
-- ❌ No user context — doesn't know user's plan, credit balance, or product count
-- ❌ Starter chips are static — same 3 chips regardless of which page the user is on
-- ❌ No "suggested follow-ups" after assistant responses — user has to type everything
-- ❌ No typing indicator text — just dots, no "Sophia is typing..." flavor
 
----
+## Image Optimization for AI Generation — Implemented ✅
 
-### Suggested Improvements Plan
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-**1. Add Perspectives to system prompt**
-- Add `/app/perspectives` route knowledge and CTA: `[[Generate Perspectives|/app/perspectives]]`
-- Describe it: "Generate front, back, left-side, right-side views of any product from a single image. Great for marketplace listings that need multi-angle shots."
-- Add pricing info (if applicable)
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
-**2. Send current page context to the AI**
-- Pass `pageUrl` (already tracked in `useStudioChat`) as part of the request body to the edge function
-- Inject it into the system prompt as: `"The user is currently on: {pageUrl}"`
-- This lets the AI give contextual advice (e.g., on `/app/freestyle` → suggest prompt tips; on `/app/workflows` → help pick a workflow)
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
-**3. Add upscale pricing to system prompt**
-- Include credit cost for upscale (check current pricing logic and add it)
-
-**4. Context-aware starter chips**
-- Replace static `STARTER_CHIPS` with page-aware chips:
-  - Dashboard → "What should I create first?", "How do credits work?"
-  - Workflows → "Which workflow fits my product?", "Try-on vs Product Listing?"
-  - Freestyle → "Help me write a prompt", "What quality should I pick?"
-  - Perspectives → "How do perspectives work?", "Best source image tips?"
-  - Library → "How do I upscale?", "Can I generate video from this?"
-  - Settings → "Which plan is right for me?", "How do top-ups work?"
-
-**5. Add Dashboard CTA to system prompt**
-- `[[Go to Dashboard|/app/]]` — for when users ask "where do I start?" or want an overview
-
-**6. Add "Sophia is typing..." indicator**
-- Replace the bouncing dots with a subtle text like "Sophia is thinking..." above the dots for more personality
-
-### Files to change:
-- `supabase/functions/studio-chat/index.ts` — update system prompt (add Perspectives, upscale pricing, dashboard CTA, page context injection)
-- `src/hooks/useStudioChat.ts` — send `pageUrl` in the request body
-- `src/components/app/StudioChat.tsx` — context-aware starter chips, typing indicator text
-
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
