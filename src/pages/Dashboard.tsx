@@ -175,19 +175,31 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Fetch 30-day generation count
+  // Fetch 30-day generation count (actual images, not job rows)
   const { data: generatedCount = 0, isLoading: generatedLoading } = useQuery({
     queryKey: ['dashboard-generated-30d', user?.id],
     queryFn: async () => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const { count, error } = await supabase
+      const iso = thirtyDaysAgo.toISOString();
+
+      // Sum requested_count from completed generation jobs
+      const { data: jobs, error: e1 } = await supabase
         .from('generation_jobs')
-        .select('*', { count: 'exact', head: true })
+        .select('requested_count')
         .eq('status', 'completed')
-        .gte('created_at', thirtyDaysAgo.toISOString());
-      if (error) throw error;
-      return count ?? 0;
+        .gte('created_at', iso);
+      if (e1) throw e1;
+      const jobImages = (jobs || []).reduce((sum, j) => sum + (j.requested_count || 0), 0);
+
+      // Count freestyle generations (1 row = 1 image)
+      const { count: freestyleCount, error: e2 } = await supabase
+        .from('freestyle_generations')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', iso);
+      if (e2) throw e2;
+
+      return jobImages + (freestyleCount ?? 0);
     },
     enabled: !!user,
   });
