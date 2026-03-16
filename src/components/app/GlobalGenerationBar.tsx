@@ -97,6 +97,7 @@ export function GlobalGenerationBar() {
             key,
             workflow_id: original?.workflow_id ?? null,
             workflow_name: original?.workflow_name ?? 'Generation',
+            workflow_slug: original?.workflow_slug ?? null,
             product_name: original?.product_name ?? null,
             jobs: [],
             totalCount: original?.totalCount ?? 0,

@@ -148,6 +148,7 @@ export default function Workflows() {
             error_message: j.error_message,
             workflow_id: (p?.workflow_id as string) ?? null,
             workflow_name: (p?.workflow_name as string) ?? null,
+            workflow_slug: (p?.workflow_slug as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,

@@ -127,6 +127,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       key: `${anchor.workflow_id}-${anchor.product_name}-${anchorTime}`,
       workflow_id: anchor.workflow_id,
       workflow_name: anchor.workflow_name,
+      workflow_slug: anchor.workflow_slug ?? null,
       product_name: anchor.product_name ?? null,
       jobs: batch,
       totalCount: batch.length,
