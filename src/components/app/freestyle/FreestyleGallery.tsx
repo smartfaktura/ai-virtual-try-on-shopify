@@ -409,7 +409,7 @@ function ImageCard({
         src={getOptimizedUrl(img.url, { quality: 75 })}
         alt={`Generated ${idx + 1}`}
         className={cn(
-          'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
+          'w-auto h-auto max-w-full max-h-[50vh] sm:max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
           loading="eager"
