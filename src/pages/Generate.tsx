@@ -2881,8 +2881,8 @@ export default function Generate() {
                 ))}
               </div>
             </CardContent></Card>
-            <div className="fixed bottom-0 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 bg-background/95 backdrop-blur-sm border-t border-border">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
+            <div className="sticky bottom-4 z-50 max-w-3xl mx-auto">
+              <div className="bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
                 <Button variant="outline" onClick={() => {
                   if (isMirrorSelfie) {
                     setMirrorSettingsPhase('scenes');
