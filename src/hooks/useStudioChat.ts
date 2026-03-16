@@ -89,7 +89,7 @@ export function useStudioChat(pageUrl?: string) {
           Authorization: `Bearer ${session.access_token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ messages: updatedMessages, pageUrl: pageUrl ?? null }),
         signal: controller.signal,
       });
 

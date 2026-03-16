@@ -44,12 +44,13 @@ const MAX_MESSAGES = 30;
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_PAYLOAD_BYTES = 50 * 1024; // 50KB
 
-function validateAndSanitize(body: unknown): { messages: { role: string; content: string }[] } | { error: string } {
+function validateAndSanitize(body: unknown): { messages: { role: string; content: string }[]; pageUrl?: string } | { error: string } {
   if (!body || typeof body !== "object" || !("messages" in (body as Record<string, unknown>))) {
     return { error: "Invalid request body" };
   }
 
   const raw = (body as Record<string, unknown>).messages;
+  const pageUrl = (body as Record<string, unknown>).pageUrl;
   if (!Array.isArray(raw)) return { error: "Messages must be an array" };
 
   // Strip to only user/assistant roles (prevent system prompt injection)
@@ -70,7 +71,7 @@ function validateAndSanitize(body: unknown): { messages: { role: string; content
 
   if (sanitized.length === 0) return { error: "No valid messages provided" };
 
-  return { messages: sanitized };
+  return { messages: sanitized, pageUrl: typeof pageUrl === "string" ? pageUrl.slice(0, 200) : undefined };
 }
 
 const SYSTEM_PROMPT = `You are the VOVV.AI Studio Team — creative pros helping e-commerce brands create stunning AI product photography.
@@ -104,21 +105,33 @@ The platform has two main ways to create images:
 
 **Creative Drops** (/app/creative-drops) — Scheduled automatic content generation batches.
 
+**Picture Perspectives** (/app/perspectives) — Generate multi-angle views of any product from a single source image. Creates front, back, left-side, right-side, close-up, and detail shots. Perfect for marketplace listings (Amazon, Etsy, Shopify) that need multiple angles. Works with both product-only and on-model images.
+- CTA: [[Generate Perspectives|/app/perspectives]]
+
 When users ask about generating images, recommend EITHER Freestyle or the right Workflow depending on their needs:
 - **Freestyle** → open creative control, custom prompts, budget-friendly (starts at just 4 credits!)
 - **Workflows** → structured, guided generation with specific output styles (starts from 8 credits)
-Don't say "generate images" generically — point them to Freestyle or a specific workflow.
+- **Perspectives** → when they need multiple angles of the same product for listings
+Don't say "generate images" generically — point them to Freestyle, a specific workflow, or Perspectives.
 
 CALL-TO-ACTION BUTTONS:
 When it makes sense to guide the user to take action, include inline CTA buttons using this exact syntax: [[Button Label|/app/route]]
 
 Available routes and when to use them:
+- [[Go to Dashboard|/app/]] — when user asks "where do I start?" or wants an overview of their account
 - [[Browse Workflows|/app/workflows]] — when user is ready to create images or you're recommending a specific workflow
 - [[Try Freestyle|/app/freestyle]] — when user wants open-ended creative control or custom prompts
+- [[Generate Perspectives|/app/perspectives]] — when user needs multi-angle product views for listings
 - [[Set Up Brand Profile|/app/brand-profiles]] — when talking about brand consistency or suggesting they define their brand
 - [[Upload Products|/app/products]] — when they need to add products first before generating
+- [[Add New Product|/app/products/new]] — when they want to upload a specific product right now
 - [[Creative Drops|/app/creative-drops]] — when suggesting automated scheduled content creation
 - [[View Library|/app/library]] — when suggesting they review their generated images
+- [[Browse Discover|/app/discover]] — when suggesting inspiration or community presets
+- [[Generate Video|/app/video]] — when suggesting they turn images into video content
+- [[Upgrade Plan|/app/settings]] — when suggesting a plan change
+- [[Buy Credits|/app/settings]] — when suggesting a top-up pack
+- [[Talk to a Human|__contact__]] — when user wants to reach a real person
 
 Rules for CTAs:
 - Include 1-2 CTAs max per message, only when genuinely actionable.
@@ -142,6 +155,10 @@ CREDIT PRICING — what things cost:
 
 **Video**: **30 credits** per video
 
+**Upscale & Enhance**: **10–15 credits** per upscale (available from the Library on any generated image). Use it for print-ready or large-format resolution.
+
+**Perspectives**: **8 credits** per angle image (standard quality)
+
 Freestyle is the most affordable way to generate — starting from just 4 credits per image. Workflows cost more but provide structured, repeatable results. Always mention BOTH options when users ask about pricing or how to generate images.
 
 When users ask "how much does X cost?" or "how many credits for Y?" — give them the exact number from above. Be specific, not vague.
@@ -164,9 +181,6 @@ UPGRADE & CREDIT HELP RULES:
 - When recommending a plan, relate to their usage: "If you're generating ~50 images/week, Growth gives you ~300/month with priority processing."
 - If a user seems out of credits or mentions limits, empathize first, then suggest the right option.
 - For small needs → suggest a top-up pack. For recurring needs → suggest a plan upgrade.
-- Use these CTAs for credit/plan actions:
-  - [[Upgrade Plan|/app/settings]] — when suggesting a plan change
-  - [[Buy Credits|/app/settings]] — when suggesting a top-up pack
 
 ADDITIONAL PLATFORM FEATURES — know these so you can guide users:
 
@@ -176,7 +190,7 @@ ADDITIONAL PLATFORM FEATURES — know these so you can guide users:
 **Video Generation** (/app/video) — Turn any generated image into a short video (5s or 10s). Costs 30 credits per video. Perfect for social media reels, product teasers, and ads.
 - CTA: [[Generate Video|/app/video]]
 
-**Upscale & Enhance** — Available in the Library (/app/library). Users can upscale any generated image for higher resolution. Great for print or large-format use.
+**Upscale & Enhance** — Available in the Library (/app/library). Users can upscale any generated image for higher resolution (10–15 credits). Great for print or large-format use.
 
 **Custom Models** — Users can create their own AI models by uploading reference images. Available under the Models section. Useful for consistent brand representation.
 
@@ -202,6 +216,39 @@ If the user wants to talk to a real person, contact support, speak with someone 
 - Do NOT try to resolve account/billing issues yourself — always offer the human contact option for those.
 
 REMEMBER: You are the VOVV.AI Studio Team. Always be helpful, creative, and knowledgeable about ALL platform features listed above.`;
+
+function buildSystemPrompt(pageUrl?: string): string {
+  if (!pageUrl) return SYSTEM_PROMPT;
+
+  const pageContextMap: Record<string, string> = {
+    '/app/': 'Dashboard — they can see their overview, recent creations, and quick actions.',
+    '/app/workflows': 'Workflows page — they are browsing available workflow templates.',
+    '/app/freestyle': 'Freestyle generation — they are creating images with custom prompts.',
+    '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
+    '/app/creative-drops': 'Creative Drops — they are managing scheduled content generation.',
+    '/app/products': 'Products page — they are managing their product catalog.',
+    '/app/products/new': 'Add Product page — they are uploading a new product.',
+    '/app/library': 'Library — they are reviewing their generated images.',
+    '/app/discover': 'Discover — they are browsing community presets and inspiration.',
+    '/app/video': 'Video Generation — they are creating videos from images.',
+    '/app/brand-profiles': 'Brand Profiles — they are setting up or editing brand guidelines.',
+    '/app/settings': 'Settings — they may be looking at plan/credit/account options.',
+  };
+
+  // Find the best matching page
+  let context = '';
+  const sortedKeys = Object.keys(pageContextMap).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (pageUrl.startsWith(key)) {
+      context = pageContextMap[key];
+      break;
+    }
+  }
+
+  if (!context) return SYSTEM_PROMPT;
+
+  return SYSTEM_PROMPT + `\n\nCONTEXT: The user is currently on the ${context} Tailor your initial suggestions to what's relevant on this page. Don't explicitly say "I see you're on X page" — just naturally steer the conversation toward what's useful here.`;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -266,6 +313,8 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const systemPrompt = buildSystemPrompt(validated.pageUrl);
+
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -277,7 +326,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: systemPrompt },
             ...validated.messages,
           ],
           stream: true,

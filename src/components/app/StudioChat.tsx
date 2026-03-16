@@ -14,11 +14,36 @@ const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
 const avatarKenji = getLandingAssetUrl('team/avatar-kenji.jpg');
 const avatarZara = getLandingAssetUrl('team/avatar-zara.jpg');
 
-const STARTER_CHIPS = [
+const PAGE_CHIPS: Record<string, string[]> = {
+  '/app/': ['What should I create first?', 'How do credits work?', 'Show me workflows'],
+  '/app/workflows': ['Which workflow fits my product?', 'Try-on vs Product Listing?', 'How much does it cost?'],
+  '/app/freestyle': ['Help me write a prompt', 'What quality should I pick?', 'Tips for better results'],
+  '/app/perspectives': ['How do perspectives work?', 'Best source image tips?', 'How many credits per angle?'],
+  '/app/creative-drops': ['How do Creative Drops work?', 'Set up my first drop', 'How much does a drop cost?'],
+  '/app/products': ['How do I upload products?', 'Can I import from Shopify?', 'Upload from my phone'],
+  '/app/library': ['How do I upscale?', 'Can I generate video from this?', 'Submit to Discover'],
+  '/app/discover': ['How do I use a preset?', 'What are featured items?', 'Save to my collection'],
+  '/app/video': ['How much does video cost?', 'Best images for video?', 'What lengths are available?'],
+  '/app/brand-profiles': ['What goes in a brand profile?', 'How does it affect my images?', 'Set up my brand'],
+  '/app/settings': ['Which plan is right for me?', 'How do top-ups work?', 'Compare plans'],
+};
+
+const DEFAULT_CHIPS = [
   'What style works for skincare?',
   'Best shots for fashion brands?',
   'How much does it cost?',
 ];
+
+function getChipsForPage(pathname: string): string[] {
+  // Try exact match first, then prefix match
+  if (PAGE_CHIPS[pathname]) return PAGE_CHIPS[pathname];
+  const sortedKeys = Object.keys(PAGE_CHIPS).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (pathname.startsWith(key) && key !== '/app/') return PAGE_CHIPS[key];
+  }
+  if (pathname.startsWith('/app/')) return PAGE_CHIPS['/app/'] || DEFAULT_CHIPS;
+  return DEFAULT_CHIPS;
+}
 
 const WELCOME_MESSAGE =
   "Hey! 👋 The VOVV.AI studio team is here. Tell us about your product and we'll suggest the perfect visual strategy — or ask us about credits, plans, and features. What are you working on?";
