@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
@@ -125,6 +126,7 @@ export default function Freestyle() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { filterVisible } = useHiddenScenes();
+  const { asPoses: customScenePoses } = useCustomScenes();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),
@@ -162,6 +164,7 @@ export default function Freestyle() {
   }, [activeJob]);
 
   // Pre-fill from Discover page URL params
+  const initialSceneParam = useRef(searchParams.get('scene'));
   useEffect(() => {
     const p = searchParams.get('prompt');
     const r = searchParams.get('ratio');
@@ -176,6 +179,7 @@ export default function Freestyle() {
       const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
       if (matchedScene) {
         setSelectedScene(matchedScene);
+        initialSceneParam.current = null; // consumed
         if (!localStorage.getItem('hideSceneAppliedHint')) {
           setShowSceneHint(true);
         }
@@ -186,6 +190,20 @@ export default function Freestyle() {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Deferred custom scene matching (custom scenes load async)
+  useEffect(() => {
+    const sceneParam = initialSceneParam.current;
+    if (!sceneParam || !sceneParam.startsWith('custom-') || customScenePoses.length === 0) return;
+    const matched = customScenePoses.find((s) => s.poseId === sceneParam);
+    if (matched) {
+      setSelectedScene(matched);
+      initialSceneParam.current = null;
+      if (!localStorage.getItem('hideSceneAppliedHint')) {
+        setShowSceneHint(true);
+      }
+    }
+  }, [customScenePoses]); // eslint-disable-line react-hooks/exhaustive-deps
   const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages, fetchNextPage, hasNextPage, isFetchingNextPage } = useFreestyleImages();
   const [isSaving, setIsSaving] = useState(false);
 

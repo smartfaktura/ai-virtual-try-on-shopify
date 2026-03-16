@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Eye, Compass, X, Sparkles, Workflow } from 'lucide-react';
+import { ArrowRight, Eye, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -9,8 +9,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toSignedUrl } from '@/lib/signedUrl';
-import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 
+const CURATED_SCENE_IDS = [
+  '5401494e-1aae-4953-8a10-bf90e525d980', // Urban Dusk Portrait
+  '038e7ba5-0f3e-4679-8a1f-8a63a54b3baf', // Earthy Woodland Product
+  '83eda438-1afe-4bef-9250-1fc580a1affc', // Gym Loft Light
+  'ead64b8c-31eb-4427-9e1c-974021e5b7d8', // Skatepark Golden Hour
+  'bf507e3a-ccd5-41b8-af12-f920e565cc60', // Wavy Metallic Surface
+  '5c6c138a-3097-47cb-beaf-36fef3e6fb2c', // Natural Glow Interior
+  'ff2ff0f9-535b-40a2-ba6f-75c846112123', // Sun-Kissed Living
+];
 
 interface CreationItem {
   id: string;
@@ -24,9 +32,25 @@ interface CreationItem {
 export function RecentCreationsGallery() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [selectedPreset, setSelectedPreset] = useState<DiscoverPreset | null>(null);
 
-  const { data: presets = [] } = useDiscoverPresets();
+  // Fetch curated scenes for placeholder state
+  const { data: curatedScenes = [] } = useQuery({
+    queryKey: ['curated-scenes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('custom_scenes')
+        .select('id, name, category, image_url, optimized_image_url')
+        .in('id', CURATED_SCENE_IDS)
+        .eq('is_active', true);
+      if (error) throw error;
+      // Preserve the order from CURATED_SCENE_IDS
+      const ordered = CURATED_SCENE_IDS
+        .map(id => (data as any[]).find(s => s.id === id))
+        .filter(Boolean);
+      return ordered;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   const { data: creations = [], isLoading } = useQuery({
     queryKey: ['recent-creations', user?.id],
@@ -130,16 +154,12 @@ export function RecentCreationsGallery() {
 
   const isPlaceholder = creations.length === 0;
 
-  // Use featured discover presets for new users
-  const featuredPresets = presets.filter(p => p.is_featured).slice(0, 10);
-  const discoverPresets = featuredPresets.length > 0 ? featuredPresets : presets.slice(0, 10);
-
   const displayItems: CreationItem[] = isPlaceholder
-    ? discoverPresets.map((p) => ({
-        id: p.id,
-        imageUrl: p.image_url,
-        label: p.category.charAt(0).toUpperCase() + p.category.slice(1),
-        subtitle: p.title,
+    ? curatedScenes.map((s: any) => ({
+        id: s.id,
+        imageUrl: s.optimized_image_url || s.image_url,
+        label: s.name,
+        subtitle: s.category.charAt(0).toUpperCase() + s.category.slice(1),
         date: '',
         rawDate: '',
       }))
@@ -147,17 +167,10 @@ export function RecentCreationsGallery() {
 
   const handleCardClick = (item: CreationItem) => {
     if (isPlaceholder) {
-      const preset = discoverPresets.find(p => p.id === item.id);
-      if (preset) setSelectedPreset(preset);
+      navigate(`/app/freestyle?scene=custom-${item.id}`);
     } else {
       navigate('/app/library');
     }
-  };
-
-
-  const handleUseStyle = (preset: DiscoverPreset) => {
-    setSelectedPreset(null);
-    navigate('/app/freestyle', { state: { prefillPrompt: preset.prompt } });
   };
 
   return (
@@ -214,120 +227,12 @@ export function RecentCreationsGallery() {
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-                    <Eye className="w-3.5 h-3.5" /> {isPlaceholder ? 'Preview' : 'View'}
+                    <Eye className="w-3.5 h-3.5" /> {isPlaceholder ? 'Use Scene' : 'View'}
                   </span>
                 </div>
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Preset preview — Discover-style split modal */}
-      {selectedPreset && <PresetDetailOverlay preset={selectedPreset} onClose={() => setSelectedPreset(null)} onUseStyle={handleUseStyle} navigate={navigate} />}
-    </div>
-  );
-}
-
-function PresetDetailOverlay({ preset, onClose, onUseStyle, navigate }: {
-  preset: DiscoverPreset;
-  onClose: () => void;
-  onUseStyle: (preset: DiscoverPreset) => void;
-  navigate: ReturnType<typeof useNavigate>;
-}) {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
-      style={{ margin: 0, padding: 0 }}
-      onClick={onClose}
-    >
-      <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" />
-      <div
-        className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Left — Image */}
-        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
-          <ShimmerImage
-            src={getOptimizedUrl(preset.image_url, { quality: 80 })}
-            alt={preset.title}
-            wrapperClassName="flex items-center justify-center"
-            className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
-          />
-        </div>
-
-        {/* Right — Controls */}
-        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
-          <button onClick={onClose} className="absolute top-5 right-5 z-20 text-foreground/70 hover:text-foreground transition-colors">
-            <X className="w-7 h-7" strokeWidth={2} />
-          </button>
-
-          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
-            {/* Category + Title */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {preset.category}
-                </p>
-                {preset.workflow_name && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
-                    · <Workflow className="w-3 h-3" /> {preset.workflow_name}
-                  </span>
-                )}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{preset.title}</h2>
-              <div className="flex items-center gap-2 pt-0.5">
-                {preset.model_name && <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{preset.model_name}</span>}
-                {preset.scene_name && <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· {preset.scene_name}</span>}
-              </div>
-            </div>
-
-
-            {/* Tags */}
-            {preset.tags && preset.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {preset.tags.map((tag) => (
-                  <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Primary CTA */}
-            <Button
-              onClick={() => onUseStyle(preset)}
-              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
-            >
-              <Sparkles className="w-4 h-4 mr-2" /> Try in Freestyle
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-
-            {/* Workflow CTA */}
-            {preset.workflow_slug && (
-              <Button
-                variant="outline"
-                onClick={() => { onClose(); navigate(`/app/generate?workflow=${preset.workflow_slug}`); }}
-                className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
-              >
-                <Workflow className="w-4 h-4" />
-                Try {preset.workflow_name || 'This Workflow'}
-                <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-              </Button>
-            )}
-
-          </div>
         </div>
       </div>
     </div>
