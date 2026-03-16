@@ -219,9 +219,9 @@ export default function AdminFeedback() {
               <TableHead>User</TableHead>
               <TableHead className="w-24">Type</TableHead>
               <TableHead className="hidden sm:table-cell">Message</TableHead>
-              <TableHead className="hidden md:table-cell">Page</TableHead>
-              <TableHead className="w-28">Status</TableHead>
-              <TableHead className="hidden sm:table-cell w-32">Date</TableHead>
+              <TableHead className="hidden md:table-cell w-28">Page</TableHead>
+              <TableHead className="w-24">Status</TableHead>
+              <TableHead className="hidden sm:table-cell w-28">Date</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -250,8 +250,8 @@ export default function AdminFeedback() {
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    <span className="text-sm text-muted-foreground line-clamp-1 max-w-[250px]">
-                      {item.message.slice(0, 100)}
+                    <span className="text-sm text-muted-foreground line-clamp-2">
+                      {item.message.slice(0, 200)}
                     </span>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
