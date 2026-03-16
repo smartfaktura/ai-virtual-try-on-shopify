@@ -86,7 +86,7 @@ export default function TryOnSettingsPanel({
           {Array.from(selectedPoses).map(poseId => {
             const p = selectedPoseMap.get(poseId);
             if (!p) return null;
-            const img = selectedModel?.gender === 'male' && p.previewUrlMale ? p.previewUrlMale : p.previewUrl;
+            const img = p.previewUrl;
             return (
               <div key={poseId} className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-primary/20">

@@ -13,9 +13,7 @@ interface PoseSelectorCardProps {
 }
 
 export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender, selectionIndex }: PoseSelectorCardProps) {
-  const displayImage = selectedGender === 'male' && pose.previewUrlMale
-    ? pose.previewUrlMale
-    : pose.previewUrl;
+  const displayImage = pose.previewUrl;
 
   return (
     <div
