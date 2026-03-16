@@ -9,6 +9,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { UpscaleModal } from '@/components/app/UpscaleModal';
 
 interface WorkflowPreviewModalProps {
   open: boolean;
