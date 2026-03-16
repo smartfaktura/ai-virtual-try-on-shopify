@@ -250,8 +250,8 @@ export default function AdminFeedback() {
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    <span className="text-sm text-muted-foreground line-clamp-1 max-w-[250px]">
-                      {item.message.slice(0, 100)}
+                    <span className="text-sm text-muted-foreground line-clamp-2">
+                      {item.message.slice(0, 200)}
                     </span>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
