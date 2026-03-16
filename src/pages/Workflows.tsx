@@ -340,7 +340,7 @@ export default function Workflows() {
       navigate('/app/perspectives');
       return;
     }
-    navigate(`/app/generate/${workflow.slug}`);
+    navigate(workflow.slug ? `/app/generate/${workflow.slug}` : `/app/workflows`);
   };
 
   return (

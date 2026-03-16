@@ -75,7 +75,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
         <Button
           size="sm"
           className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
-          onClick={() => onNavigate(workflow.slug)}
+          onClick={() => onNavigate(workflow.slug || '')}
         >
           Create Set
           <ArrowRight className="w-3 h-3" />
@@ -327,7 +327,7 @@ export default function Dashboard() {
                 <DashboardWorkflowCard
                   key={workflow.id}
                   workflow={workflow}
-                  onNavigate={(slug) => navigate(`/app/generate/${slug}`)}
+                  onNavigate={(slug) => navigate(slug ? `/app/generate/${slug}` : `/app/workflows`)}
                 />
               ))}
             </div>
