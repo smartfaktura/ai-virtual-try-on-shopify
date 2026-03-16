@@ -51,7 +51,6 @@ const typeColors: Record<string, string> = {
 
 export default function AdminFeedback() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
