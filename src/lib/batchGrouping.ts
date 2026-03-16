@@ -7,6 +7,7 @@ export interface ActiveJob {
   started_at: string | null;
   workflow_name: string | null;
   workflow_id: string | null;
+  workflow_slug?: string | null;
   error_message: string | null;
   product_name?: string | null;
   credits_reserved?: number;
