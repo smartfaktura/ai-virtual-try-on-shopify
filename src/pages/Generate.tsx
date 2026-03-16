@@ -71,6 +71,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload, FramingOption } from '@/types';
 import { toast } from 'sonner';
 import type { Workflow } from '@/types/workflow';
@@ -102,6 +104,8 @@ export default function Generate() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { filterVisible } = useHiddenScenes();
+  const { asPoses: customPoses } = useCustomScenes();
+  const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
   const { workflowSlug } = useParams<{ workflowSlug: string }>();
   const [searchParams] = useSearchParams();
   // Support both slug-based routes and legacy query param
@@ -538,7 +542,8 @@ export default function Generate() {
   });
 
   const onModelCategories: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
-  const posesByCategory = filterVisible(mockTryOnPoses).reduce((acc, pose) => {
+  const allScenePoses = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]));
+  const posesByCategory = allScenePoses.reduce((acc, pose) => {
     // For Virtual Try-On, only show on-model categories
     if (activeWorkflow?.uses_tryon && !onModelCategories.includes(pose.category)) return acc;
     if (!acc[pose.category]) acc[pose.category] = [];
@@ -546,7 +551,7 @@ export default function Generate() {
     return acc;
   }, {} as Record<PoseCategory, TryOnPose[]>);
 
-  const popularCombinations = createPopularCombinations(mockModels, mockTryOnPoses);
+  const popularCombinations = createPopularCombinations(mockModels, allScenePoses);
 
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
