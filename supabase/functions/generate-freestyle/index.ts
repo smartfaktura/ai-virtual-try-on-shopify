@@ -1088,8 +1088,9 @@ serve(async (req) => {
               : "google/gemini-3.1-flash-image-preview";
             console.warn(`429 on ${aiModel} — trying fallback model ${fallbackModel}`);
             try {
+              const fallbackPrompt = `${aspectPrompt}${batchConsistency}`;
               const contentArray = buildContentArray(
-                finalPrompt,
+                fallbackPrompt,
                 isPerspective ? undefined : body.sourceImage,
                 body.productImage,
                 body.modelImage,
