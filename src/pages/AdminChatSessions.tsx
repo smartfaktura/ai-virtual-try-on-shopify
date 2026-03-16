@@ -32,7 +32,6 @@ interface ChatSession {
 
 export default function AdminChatSessions() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
