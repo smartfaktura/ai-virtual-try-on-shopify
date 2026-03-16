@@ -310,7 +310,7 @@ function PresetDetailOverlay({ preset, onClose, onUseStyle, navigate }: {
               onClick={() => onUseStyle(preset)}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              <Sparkles className="w-4 h-4 mr-2" /> Use This Style
+              <Sparkles className="w-4 h-4 mr-2" /> Try in Freestyle
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 
