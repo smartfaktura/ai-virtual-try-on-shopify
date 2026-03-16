@@ -182,6 +182,15 @@ function polishUserPrompt(
         parts.push(`${num}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
       }
     }
+    // Gender enforcement for condensed path
+    if (modelContext) {
+      const lowerCtx = modelContext.toLowerCase();
+      if (lowerCtx.startsWith('male')) {
+        parts.push("GENDER RULE: A male model has been selected. ALL people in this image MUST be male. Do NOT generate any female figures, women, or feminine-presenting people — even if the scene reference image contains women.");
+      } else if (lowerCtx.startsWith('female')) {
+        parts.push("GENDER RULE: A female model has been selected. ALL people in this image MUST be female. Do NOT generate any male figures, men, or masculine-presenting people — even if the scene reference image contains men.");
+      }
+    }
     if (context.hasScene) {
       const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct, context.hasModel].filter(Boolean).length + 1;
       parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective throughout.`);
