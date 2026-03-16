@@ -238,15 +238,16 @@ async function uploadBase64ToStorage(
   return urlData.publicUrl;
 }
 
-async function generateImage(
+async function generateImageWithModel(
   prompt: string,
   productImageUrl: string,
   modelImageUrl: string,
   apiKey: string,
   aspectRatio: string,
+  aiModel: string,
   sceneImageUrl?: string
 ): Promise<string | null> {
-  const maxRetries = 2;
+  const maxRetries = 0;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
