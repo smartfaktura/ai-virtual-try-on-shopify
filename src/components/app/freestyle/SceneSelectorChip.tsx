@@ -185,6 +185,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                     src={getOptimizedUrl(pose.previewUrl, { quality: 60 })}
                     alt={pose.name}
                     className="w-full aspect-[4/5] object-cover"
+                    wrapperClassName="h-auto"
                     aspectRatio="4/5"
                     loading="lazy"
                   />
