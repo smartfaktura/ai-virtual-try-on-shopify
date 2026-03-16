@@ -957,7 +957,13 @@ serve(async (req) => {
           contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
         }
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+
+        // Fallback: if Pro model returned null (no image), try Flash model once
+        if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
+          console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
+          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0);
+        }
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
