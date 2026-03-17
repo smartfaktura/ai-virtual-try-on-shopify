@@ -2357,7 +2357,8 @@ export default function Generate() {
                       Upload Instead
                     </Button>
                   </div>
-                </div>
+                </div>);
+                })()
               )
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
