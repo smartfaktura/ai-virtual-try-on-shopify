@@ -111,6 +111,19 @@ const SAMPLE_UGC_PRODUCT: Product = {
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };
+
+const SAMPLE_MIRROR_PRODUCT: Product = {
+  id: 'sample_mirror_sweater',
+  title: 'Ribbed Knit Sweater',
+  vendor: 'Sample',
+  productType: 'Knitwear',
+  tags: ['sweater', 'knit', 'beige', 'cozy'],
+  description: 'Chunky ribbed knit sweater in warm beige. Relaxed cropped fit.',
+  images: [{ id: 'img_sample_mirror', url: '/images/samples/sample-sweater.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
@@ -2288,7 +2301,9 @@ export default function Generate() {
                     </Button>
                   </div>
                 </div>);
-                })() : (
+                })() : (() => {
+                const nonTryOnSample = isMirrorSelfie ? SAMPLE_MIRROR_PRODUCT : SAMPLE_LISTING_PRODUCT;
+                return (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Sample</Badge>
@@ -2298,33 +2313,33 @@ export default function Generate() {
                   {/* Sample product card */}
                   <div
                     className={`relative rounded-lg border-2 cursor-pointer transition-all overflow-hidden ${
-                      selectedProductIds.has(SAMPLE_LISTING_PRODUCT.id)
+                      selectedProductIds.has(nonTryOnSample.id)
                         ? 'border-primary ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/40'
                     }`}
                     onClick={() => {
                       const next = new Set(selectedProductIds);
-                      if (next.has(SAMPLE_LISTING_PRODUCT.id)) {
-                        next.delete(SAMPLE_LISTING_PRODUCT.id);
+                      if (next.has(nonTryOnSample.id)) {
+                        next.delete(nonTryOnSample.id);
                         setSelectedProduct(null);
                       } else {
                         next.clear();
-                        next.add(SAMPLE_LISTING_PRODUCT.id);
-                        setSelectedProduct(SAMPLE_LISTING_PRODUCT);
+                        next.add(nonTryOnSample.id);
+                        setSelectedProduct(nonTryOnSample);
                       }
                       setSelectedProductIds(next);
                     }}
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img src={SAMPLE_LISTING_PRODUCT.images[0].url} alt={SAMPLE_LISTING_PRODUCT.title} className="w-full h-full object-cover" loading="eager" />
+                        <img src={nonTryOnSample.images[0].url} alt={nonTryOnSample.title} className="w-full h-full object-cover" loading="eager" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{SAMPLE_LISTING_PRODUCT.title}</p>
-                        <p className="text-xs text-muted-foreground">{SAMPLE_LISTING_PRODUCT.productType}</p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{SAMPLE_LISTING_PRODUCT.description}</p>
+                        <p className="text-sm font-medium truncate">{nonTryOnSample.title}</p>
+                        <p className="text-xs text-muted-foreground">{nonTryOnSample.productType}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{nonTryOnSample.description}</p>
                       </div>
-                      {selectedProductIds.has(SAMPLE_LISTING_PRODUCT.id) && (
+                      {selectedProductIds.has(nonTryOnSample.id) && (
                         <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
                       )}
                     </div>
@@ -2342,8 +2357,8 @@ export default function Generate() {
                       Upload Instead
                     </Button>
                   </div>
-                </div>
-              )
+                </div>);
+                })()
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
                 {/* Toolbar: Search + Actions */}
@@ -2693,7 +2708,7 @@ export default function Generate() {
                 if (activeWorkflow?.uses_tryon) {
                   // Build candidate list: DB products + sample product
                   const dbMapped = userProducts.filter(p => selectedProductIds.has(p.id)).map(up => mapUserProductToProduct(up));
-                  const sampleSelected = [SAMPLE_TRYON_PRODUCT, SAMPLE_UGC_PRODUCT].filter(sp => selectedProductIds.has(sp.id));
+                  const sampleSelected = [SAMPLE_TRYON_PRODUCT, SAMPLE_UGC_PRODUCT, SAMPLE_MIRROR_PRODUCT].filter(sp => selectedProductIds.has(sp.id));
                   const candidates = [...dbMapped, ...sampleSelected];
                   if (candidates.length > 0) {
                     setSelectedProduct(candidates[0]);
@@ -2714,9 +2729,10 @@ export default function Generate() {
                     }
                   }
                 } else {
+                  const nonTryOnSample = isMirrorSelfie ? SAMPLE_MIRROR_PRODUCT : SAMPLE_LISTING_PRODUCT;
                   const mappedProducts = userProducts.length > 0
                     ? userProducts.map(up => mapUserProductToProduct(up))
-                    : [SAMPLE_LISTING_PRODUCT];
+                    : [nonTryOnSample];
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   
                   // Flat Lay: store all selected products and go to brand/surfaces
