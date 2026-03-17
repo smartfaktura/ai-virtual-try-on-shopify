@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface CategoryCardProps {
   label: string;
@@ -47,9 +48,10 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       {images.map((img, i) => (
          <ShimmerImage
            key={i}
-           src={img}
-           alt={`${label} AI-generated product shot`}
-           decoding="async"
+            src={getOptimizedUrl(img, { width: 600, quality: 60 })}
+            alt={`${label} AI-generated product shot`}
+            loading="lazy"
+            decoding="async"
            wrapperClassName="absolute inset-0"
            wrapperStyle={{
              opacity: i === currentIndex ? 1 : 0,
@@ -68,42 +70,42 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
     images: [
-      '/images/showcase/fashion-camel-coat.png',
-      '/images/showcase/fashion-white-suit.png',
-      '/images/showcase/fashion-knit-loft.png',
-      '/images/showcase/fashion-activewear-gym.png',
+      s('fashion-camel-coat.png'),
+      s('fashion-white-suit.png'),
+      s('fashion-knit-loft.png'),
+      s('fashion-activewear-gym.png'),
     ],
     cycleDuration: 7000,
   },
   {
     label: 'Skincare',
     images: [
-      '/images/showcase/skincare-serum-model.png',
-      '/images/showcase/skincare-serum-marble.png',
-      '/images/showcase/skincare-model-light.png',
-      '/images/showcase/skincare-perfume-vanity.png',
+      s('skincare-serum-model.png'),
+      s('skincare-serum-marble.png'),
+      s('skincare-model-light.png'),
+      s('skincare-perfume-vanity.png'),
     ],
     cycleDuration: 8500,
   },
   {
     label: 'Food & Drinks',
     images: [
-      '/images/showcase/food-cocktail-bar.png',
-      '/images/showcase/food-avocado-toast.png',
-      '/images/showcase/food-pavlova-berries.png',
-      '/images/showcase/food-raspberry-dessert.png',
-      '/images/showcase/food-cocktail-rocks.png',
+      s('food-cocktail-bar.png'),
+      s('food-avocado-toast.png'),
+      s('food-pavlova-berries.png'),
+      s('food-raspberry-dessert.png'),
+      s('food-cocktail-rocks.png'),
     ],
     cycleDuration: 6000,
   },
   {
     label: 'Home & Living',
     images: [
-      '/images/showcase/home-candle-evening.png',
-      '/images/showcase/home-vases-shelf.png',
-      '/images/showcase/home-lamp-evening.png',
-      '/images/showcase/home-bedroom-morning.png',
-      '/images/showcase/home-pendant-kitchen.png',
+      s('home-candle-evening.png'),
+      s('home-vases-shelf.png'),
+      s('home-lamp-evening.png'),
+      s('home-bedroom-morning.png'),
+      s('home-pendant-kitchen.png'),
     ],
     cycleDuration: 7500,
   },
