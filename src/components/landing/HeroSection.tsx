@@ -423,23 +423,26 @@ export function HeroSection() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-1.5 mt-3">
-                {showcases.map((sc, i) => (
-                  <button
-                    key={i}
-                    onClick={() => selectScene(i)}
-                    onMouseEnter={() => preloadScene(i)}
-                    className={`px-4 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
-                      activeScene === i
-                        ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
-                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-accent/50 ${
-                            !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
-                          }`
-                    }`}
-                  >
-                    {sc.product.label}
-                  </button>
-                ))}
+              <div className="flex flex-col items-center gap-1 mt-3">
+                <span className="text-xs text-muted-foreground">Try different products</span>
+                <div className="flex items-center justify-center gap-2">
+                  {showcases.map((sc, i) => (
+                    <button
+                      key={i}
+                      onClick={() => selectScene(i)}
+                      onMouseEnter={() => preloadScene(i)}
+                      className={`px-5 py-2 rounded-full border text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                        activeScene === i
+                          ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                          : `bg-card text-muted-foreground border-border/80 hover:border-primary/40 hover:text-foreground hover:bg-accent/50 ${
+                              !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
+                            }`
+                      }`}
+                    >
+                      {sc.product.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
