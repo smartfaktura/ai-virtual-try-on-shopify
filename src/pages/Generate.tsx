@@ -75,6 +75,19 @@ import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses
 
 const SAMPLE_PRODUCT_IDS = ['prod_fashion_001', 'prod_fashion_003', 'prod_cosmetics_003', 'prod_food_002', 'prod_home_003', 'prod_supp_003'];
 const sampleProducts = mockProducts.filter(p => SAMPLE_PRODUCT_IDS.includes(p.id));
+
+const SAMPLE_TRYON_PRODUCT: import('@/types').Product = {
+  id: 'sample_tryon_crop_top',
+  title: 'Ribbed Crop Top',
+  vendor: 'Sample',
+  productType: 'Tops',
+  tags: ['crop-top', 'ribbed', 'basics', 'white'],
+  description: 'Classic ribbed crop top in white. Soft stretch fabric with a clean, minimal silhouette.',
+  images: [{ id: 'img_sample_tryon', url: '/images/samples/sample-crop-top.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
@@ -2196,12 +2209,55 @@ export default function Generate() {
               </div>
             ) : userProducts.length === 0 ? (
               activeWorkflow?.uses_tryon ? (
-                <div className="text-center py-10 space-y-3">
-                  <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">No products in your library yet.</p>
-                  <p className="text-xs text-muted-foreground">Add clothing items to your product library, or upload a photo directly.</p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Sample</Badge>
+                    <span className="text-xs text-muted-foreground">Try with a sample product, or add your own</span>
+                  </div>
+
+                  {/* Sample try-on product card */}
+                  <div
+                    className={`relative rounded-lg border-2 cursor-pointer transition-all overflow-hidden ${
+                      selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id)
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-border hover:border-primary/40'
+                    }`}
+                    onClick={() => {
+                      const next = new Set(selectedProductIds);
+                      if (next.has(SAMPLE_TRYON_PRODUCT.id)) {
+                        next.delete(SAMPLE_TRYON_PRODUCT.id);
+                        setSelectedProduct(null);
+                      } else {
+                        next.clear();
+                        next.add(SAMPLE_TRYON_PRODUCT.id);
+                        setSelectedProduct(SAMPLE_TRYON_PRODUCT);
+                      }
+                      setSelectedProductIds(next);
+                    }}
+                  >
+                    <div className="flex items-center gap-4 p-3">
+                      <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                        <img src={SAMPLE_TRYON_PRODUCT.images[0].url} alt={SAMPLE_TRYON_PRODUCT.title} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{SAMPLE_TRYON_PRODUCT.title}</p>
+                        <p className="text-xs text-muted-foreground">{SAMPLE_TRYON_PRODUCT.productType}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{SAMPLE_TRYON_PRODUCT.description}</p>
+                      </div>
+                      {selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id) && (
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 border-t border-border" />
+                    <span className="text-xs text-muted-foreground">or</span>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
+
                   <div className="flex items-center justify-center gap-3">
-                    <Button variant="outline" size="sm" onClick={() => setShowAddProduct(true)}>Add Products</Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowAddProduct(true)}>Add Your Products</Button>
                     <Button variant="secondary" size="sm" onClick={() => { setSourceType('scratch'); setCurrentStep('upload'); }}>
                       Upload Instead
                     </Button>
