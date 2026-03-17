@@ -811,6 +811,11 @@ export default function Generate() {
         const result = await response.json();
         jobMap.set(src.sourceId, result.jobId);
         lastBalance = result.newBalance;
+        injectActiveJob(queryClient, {
+          jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: src.title,
+          job_type: 'upscale', quality: 'standard', resolution: upscaleResolution,
+        });
       }
 
       if (jobMap.size === 0) {
