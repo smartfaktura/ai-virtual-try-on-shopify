@@ -876,6 +876,7 @@ export type Database = {
           current_period_end: string | null
           display_name: string | null
           email: string
+          feature_email_sent_at: string | null
           first_name: string | null
           id: string
           last_low_credits_email_at: string | null
@@ -901,6 +902,7 @@ export type Database = {
           current_period_end?: string | null
           display_name?: string | null
           email: string
+          feature_email_sent_at?: string | null
           first_name?: string | null
           id?: string
           last_low_credits_email_at?: string | null
@@ -926,6 +928,7 @@ export type Database = {
           current_period_end?: string | null
           display_name?: string | null
           email?: string
+          feature_email_sent_at?: string | null
           first_name?: string | null
           id?: string
           last_low_credits_email_at?: string | null
@@ -1223,6 +1226,7 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
       }
+      send_feature_highlight_emails: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
