@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -61,16 +62,17 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   const handleDownload = async () => {
     try {
       const response = await fetch(item.imageUrl);
+      const contentType = response.headers.get('content-type');
+      const ext = getExtensionFromContentType(contentType);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}.png`;
+      a.download = `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
     } catch {
       toast.error('Download failed');
     }

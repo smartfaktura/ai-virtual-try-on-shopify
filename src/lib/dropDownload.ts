@@ -7,7 +7,7 @@ export interface DropImage {
   product_title?: string;
 }
 
-function getExtensionFromContentType(contentType: string | null): string {
+export function getExtensionFromContentType(contentType: string | null): string {
   if (!contentType) return '.png';
   const ct = contentType.toLowerCase();
   if (ct.includes('image/png')) return '.png';
