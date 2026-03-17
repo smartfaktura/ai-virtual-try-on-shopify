@@ -623,11 +623,11 @@ export default function Generate() {
     } else if (activeWorkflow?.uses_tryon || uiConfig?.show_model_picker) {
       // Go to model step for try-on or selfie/UGC workflows
       setCurrentStep('model');
-    } else if (isClothingProduct(product)) {
-      setCurrentStep('mode');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       // Workflow config skips template — go straight to settings
       setCurrentStep('settings');
+    } else if (isClothingProduct(product)) {
+      setCurrentStep('mode');
     } else {
       setCurrentStep('template');
     }
