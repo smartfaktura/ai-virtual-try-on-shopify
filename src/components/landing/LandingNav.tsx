@@ -83,9 +83,12 @@ export function LandingNav() {
         </button>
       </nav>
 
-      {/* Mobile menu with smooth animation */}
+      {/* Backdrop — blocks page interaction when menu is open, does NOT close menu */}
+      {mobileOpen && <div className="fixed inset-0 z-[-1] lg:hidden" />}
+
+      {/* Mobile menu — no backdrop-blur, fully opaque */}
       <div
-        className={`lg:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out will-change-[max-height] mt-1 rounded-2xl bg-sidebar/95 backdrop-blur-xl ${
+        className={`lg:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out will-change-[max-height] mt-1 rounded-2xl bg-sidebar ${
           mobileOpen ? 'max-h-80 border border-white/[0.06] shadow-2xl shadow-black/20' : 'max-h-0'
         }`}
       >
@@ -103,7 +106,7 @@ export function LandingNav() {
             <Button
               size="sm"
               className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
-              onClick={() => navigate(user ? '/app' : '/auth')}
+              onClick={() => { setMobileOpen(false); navigate(user ? '/app' : '/auth'); }}
             >
               {user ? 'My Dashboard' : 'Start Free'}
             </Button>
