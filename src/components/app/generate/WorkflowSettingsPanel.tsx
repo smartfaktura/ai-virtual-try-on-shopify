@@ -155,6 +155,11 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
     openBuyModal, handleGenerateClick, handleGenerateScenePreviews, setCurrentStep,
   } = props;
 
+  // Force high quality for Selfie / UGC workflows
+  useEffect(() => {
+    if (isSelfieUgc) setQuality('high');
+  }, [isSelfieUgc, setQuality]);
+
   return (
     <div className="space-y-4">
       {/* Product summary — hidden in mirror selfie final phase */}
