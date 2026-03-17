@@ -1,33 +1,52 @@
 
 
-## Increase Flat Lay Surface Limit and Adjust Credit Scaling
+## Product Perspectives — Implemented ✅
 
-### Problem
-1. **Only 1 image generated** — The user selected multiple *products* but only 1 *surface*, so only 1 image was created. The number of images = number of surfaces selected, not number of products.
-2. **Max 3 surfaces** — `PAID_SCENE_LIMIT = 3` caps all paid workflows at 3 surfaces/scenes per generation. The user wants more for flat lay.
-3. **Credit scaling** — Currently there's a +2 credits per extra product per image. The user wants this to be clearer and scale properly.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
+
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
 ### Changes
-
-**File: `src/components/app/generate/WorkflowSettingsPanel.tsx`**
-
-- Add a new constant `FLAT_LAY_SURFACE_LIMIT = 6` (or similar) to allow flat lay to select more surfaces than the standard `PAID_SCENE_LIMIT = 3`.
-- In the surface selection click handler (line ~362-369), use `FLAT_LAY_SURFACE_LIMIT` when `isFlatLay` instead of `PAID_SCENE_LIMIT`.
-- Update the "Select All" / "Deselect All" button (line ~280) to use the flat lay limit when applicable.
-
-**File: `src/pages/Generate.tsx`**
-
-- Update the credit calculation (lines 1559-1567) to make flat lay credits scale more clearly:
-  - Base: `workflowImageCount × 8` (per surface)
-  - Extra products: `extraProductCount × 2 × workflowImageCount` (already exists, keeps working)
-- The credit display in the generate button should show the breakdown (e.g., "24 credits — 3 surfaces × 2 products").
-
-### Credit Example
-- 1 product, 1 surface = 8 credits
-- 2 products, 1 surface = 8 + 2 = 10 credits  
-- 2 products, 3 surfaces = 24 + 6 = 30 credits
-- 3 products, 6 surfaces = 48 + 24 = 72 credits
-
-### Summary
-Single constant change + selection logic update in WorkflowSettingsPanel, no changes to edge functions or credit deduction logic (the extra product credit calc already works correctly).
-
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
