@@ -121,7 +121,17 @@ export default function Auth() {
         if (data?.user?.id) {
           supabase.from('profiles').update({ marketing_emails_opted_in: marketingOptIn }).eq('user_id', data.user.id).then(() => {});
           supabase.functions.invoke('sync-resend-contact', {
-            body: { email, first_name: displayName || email.split('@')[0], opted_in: marketingOptIn },
+            body: {
+              email,
+              first_name: displayName || email.split('@')[0],
+              opted_in: marketingOptIn,
+              properties: {
+                plan: 'free',
+                credits_balance: 20,
+                has_generated: false,
+                signup_date: new Date().toISOString(),
+              },
+            },
           }).catch(() => {});
         }
         setSignupComplete(true);
