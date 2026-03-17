@@ -41,7 +41,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
   if (teamMember) {
     return (
       <Card className="border-0 bg-transparent shadow-none">
-        <CardContent className="py-20 sm:py-28 flex flex-col items-center text-center space-y-3">
+        <CardContent className="py-12 sm:py-28 flex flex-col items-center text-center space-y-3">
           {icon && (
             <div className="text-muted-foreground/40 mb-1">
               {icon}
