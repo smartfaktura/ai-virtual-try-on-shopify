@@ -1,52 +1,24 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix: Freestyle generation hijacking workflow setup
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Root Cause
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+When you navigate from Freestyle (with a generation running) to a Workflow page (`/app/generate/...`), the Generate page mounts a new `useGenerationQueue` hook. On mount, this hook runs `restoreActiveJob` (line 349 of `useGenerationQueue.ts`) which picks up **any** active job for the user — including the freestyle job still in progress. When that freestyle job completes, the `useEffect` in `Generate.tsx` (line 1221) fires unconditionally, calling `setCurrentStep('results')` and showing the "Generated 1 images!" toast, hijacking the workflow UI.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### Fix (2 changes)
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+1. **`useGenerationQueue.ts` — Add optional `jobType` filter to `restoreActiveJob`**
+   - Add an optional `jobType` parameter to `UseGenerationQueueOptions`
+   - In the `restoreActiveJob` query (line 358), add a `job_type` filter when specified: `&job_type=eq.${jobType}`
+   - This prevents the workflow page from restoring a freestyle job and vice versa
 
+2. **`Generate.tsx` — Pass `jobType` filter when initializing the queue hook**
+   - Determine the expected job type based on the current workflow context (e.g., `'workflow'` or `'tryon'`)
+   - Pass it to `useGenerationQueue({ jobType: 'workflow' })` so only workflow jobs are restored
+   - Also add a guard in the completion `useEffect` (line 1225): skip if `activeJob.job_type` doesn't match the expected type for this page
 
-## Image Optimization for AI Generation — Implemented ✅
+3. **`Freestyle.tsx` — Pass `jobType: 'freestyle'`** to its own `useGenerationQueue` call so it only restores freestyle jobs
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+This ensures each page only picks up and reacts to its own generation jobs, preventing cross-contamination between Freestyle and Workflow flows.
 
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
-
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
-
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
