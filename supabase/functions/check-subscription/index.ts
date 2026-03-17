@@ -12,6 +12,15 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${d}`);
 };
 
+function safeISODate(value: any): string | null {
+  if (!value) return null;
+  try {
+    const ts = typeof value === 'number' ? value * 1000 : Date.parse(value);
+    const d = new Date(ts);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  } catch { return null; }
+}
+
 // Map Stripe price IDs to our plan names, credits, and billing interval
 const PRICE_TO_PLAN: Record<string, { plan: string; credits: number; interval: 'monthly' | 'annual' }> = {
   // Monthly
@@ -102,7 +111,6 @@ serve(async (req) => {
     logStep("Found Stripe customer", { customerId });
 
     // Check for completed one-time payments (credit packs) that haven't been fulfilled
-    // We look at recent checkout sessions
     const sessions = await stripe.checkout.sessions.list({
       customer: customerId,
       limit: 10,
@@ -111,10 +119,8 @@ serve(async (req) => {
     let creditsToAdd = 0;
     for (const session of sessions.data) {
       if (session.mode === "payment" && session.payment_status === "paid") {
-        // Check if already processed by looking at metadata
         if (session.metadata?.fulfilled === "true") continue;
 
-        // Get line items to determine which credit pack
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
         for (const item of lineItems.data) {
           const priceId = item.price?.id;
@@ -124,14 +130,12 @@ serve(async (req) => {
           }
         }
 
-        // Mark as fulfilled
         await stripe.checkout.sessions.update(session.id, {
           metadata: { ...session.metadata, fulfilled: "true" },
         });
       }
     }
 
-    // Add purchased credits if any
     if (creditsToAdd > 0) {
       logStep("Adding purchased credits", { amount: creditsToAdd });
       await supabaseAdmin.rpc("add_purchased_credits", {
@@ -147,7 +151,6 @@ serve(async (req) => {
       limit: 5,
     });
 
-    // Find the most relevant subscription
     const activeSub = subscriptions.data.find(s => s.status === "active" || s.status === "trialing");
     const cancelingSub = subscriptions.data.find(s => s.status === "active" && s.cancel_at_period_end);
 
@@ -162,10 +165,11 @@ serve(async (req) => {
     let subscriptionId: string | null = null;
     let periodEnd: string | null = null;
     let billingInterval: string | null = null;
+    let planInfo: { plan: string; credits: number; interval: string } | null = null;
 
     if (activeSub) {
       const priceId = activeSub.items.data[0]?.price?.id;
-      const planInfo = priceId ? PRICE_TO_PLAN[priceId] : null;
+      planInfo = priceId ? PRICE_TO_PLAN[priceId] : null;
 
       if (planInfo) {
         plan = planInfo.plan;
@@ -174,14 +178,32 @@ serve(async (req) => {
 
       subscriptionStatus = cancelingSub ? "canceling" : "active";
       subscriptionId = activeSub.id;
-      periodEnd = new Date(activeSub.current_period_end * 1000).toISOString();
+
+      // Safe date conversion — handle both number and string formats
+      logStep("current_period_end raw value", { value: activeSub.current_period_end, type: typeof activeSub.current_period_end });
+      periodEnd = safeISODate(activeSub.current_period_end);
 
       logStep("Active subscription found", { plan, subscriptionStatus, periodEnd, billingInterval });
     } else {
+      plan = "free";
       logStep("No active subscription — free plan");
     }
 
-    // Sync to database
+    // Grant credits when plan changes (e.g. free → starter)
+    if (plan !== currentProfile?.plan && plan !== "free" && planInfo) {
+      logStep("Plan changed, granting credits via change_user_plan", {
+        from: currentProfile?.plan,
+        to: plan,
+        credits: planInfo.credits,
+      });
+      await supabaseAdmin.rpc("change_user_plan", {
+        p_user_id: userId,
+        p_new_plan: plan,
+        p_new_credits: planInfo.credits,
+      });
+    }
+
+    // Sync metadata to database
     const updateData: Record<string, any> = {
       stripe_customer_id: customerId,
       subscription_status: subscriptionStatus,

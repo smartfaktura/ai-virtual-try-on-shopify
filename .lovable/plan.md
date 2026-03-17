@@ -1,59 +1,52 @@
 
 
-## Fix: Credits and Plan Not Updating After Stripe Payment
+## Product Perspectives — Implemented ✅
 
-### Root Cause (from edge function logs)
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-The `check-subscription` function crashes with **"Invalid time value"** for user `tsimkus@inbox.lt` every time it runs. The Stripe customer (`cus_UAHnYye2Id2e12`) and active Starter subscription ARE found, but the function crashes at line 177 when converting `current_period_end` to a Date — before it can update the plan or credits in the database.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-Log sequence:
-```
-User authenticated → Found Stripe customer → ERROR: "Invalid time value"
-```
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-There is also a second bug: even without the crash, the function updates the `plan` column but **never grants subscription credits**. A `change_user_plan` DB function exists that does this, but the code doesn't call it.
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-### Fixes in `supabase/functions/check-subscription/index.ts`
 
-**1. Fix the crash — safe date conversion:**
-- Wrap `new Date(activeSub.current_period_end * 1000)` in a try-catch or validate the value first
-- The basil API version may return `current_period_end` differently; handle both number and string formats
+## Image Optimization for AI Generation — Implemented ✅
 
-**2. Grant credits when plan changes:**
-- When the detected plan differs from the current DB plan (e.g. free → starter), call the existing `change_user_plan` RPC instead of a raw profile update
-- `change_user_plan` does `GREATEST(credits_balance, p_new_credits)`, ensuring the user gets their subscription credits
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-**3. Better error resilience:**
-- Ensure the profile sync (`plan`, `stripe_customer_id`, etc.) still happens even if the date conversion fails
-- Add more granular logging around the subscription period end value
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
-### Code Changes
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
-```typescript
-// Safe date conversion helper
-function safeISODate(value: any): string | null {
-  if (!value) return null;
-  try {
-    const ts = typeof value === 'number' ? value * 1000 : Date.parse(value);
-    const d = new Date(ts);
-    return isNaN(d.getTime()) ? null : d.toISOString();
-  } catch { return null; }
-}
-
-// When plan changes, use change_user_plan RPC to grant credits
-if (plan !== currentProfile?.plan && plan !== 'free') {
-  const planCredits = planInfo?.credits || 0;
-  await supabaseAdmin.rpc("change_user_plan", {
-    p_user_id: userId,
-    p_new_plan: plan,
-    p_new_credits: planCredits,
-  });
-}
-```
-
-### File
-- `supabase/functions/check-subscription/index.ts`
-
-### Immediate Fix for This User
-After deploying, the next `check-subscription` call (automatic every 60s) will detect the active Starter subscription, update the plan from whatever it currently is to "starter", and grant 500 credits.
-
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
