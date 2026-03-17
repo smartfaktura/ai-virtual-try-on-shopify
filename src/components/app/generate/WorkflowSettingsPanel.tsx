@@ -159,8 +159,8 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
 
   // Force high quality for Selfie / UGC workflows
   useEffect(() => {
-    if (isSelfieUgc) setQuality('high');
-  }, [isSelfieUgc, setQuality]);
+    if (isSelfieUgc || isFlatLay) setQuality('high');
+  }, [isSelfieUgc, isFlatLay, setQuality]);
 
   return (
     <div className="space-y-4">
