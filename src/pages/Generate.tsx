@@ -70,6 +70,7 @@ import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal'
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
+import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 
