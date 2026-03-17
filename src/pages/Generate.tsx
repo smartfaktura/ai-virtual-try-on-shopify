@@ -2812,7 +2812,7 @@ export default function Generate() {
                 if (activeWorkflow?.uses_tryon) {
                   // Build candidate list: DB products + sample product
                   const dbMapped = userProducts.filter(p => selectedProductIds.has(p.id)).map(up => mapUserProductToProduct(up));
-                  const sampleSelected = selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id) ? [SAMPLE_TRYON_PRODUCT] : [];
+                  const sampleSelected = [SAMPLE_TRYON_PRODUCT, SAMPLE_UGC_PRODUCT].filter(sp => selectedProductIds.has(sp.id));
                   const candidates = [...dbMapped, ...sampleSelected];
                   if (candidates.length > 0) {
                     setSelectedProduct(candidates[0]);
