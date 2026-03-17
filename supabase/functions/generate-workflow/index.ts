@@ -1010,8 +1010,21 @@ serve(async (req) => {
               aspect_ratio: aspectRatio,
             });
             console.log(
-              `[generate-workflow] ✓ "${imageLabel}" generated`
+              `[generate-workflow] ✓ "${imageLabel}" generated (${images.length}/${totalToGenerate})`
             );
+
+            // Write progress to queue row so UI can show x/y and refresh heartbeat
+            if (isQueueInternal && body.job_id) {
+              try {
+                const progressSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+                await progressSupabase.from("generation_queue").update({
+                  result: { generatedCount: images.length, requestedCount: totalToGenerate, currentLabel: imageLabel },
+                  timeout_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+                }).eq("id", body.job_id);
+              } catch (progressErr) {
+                console.warn("[generate-workflow] Progress update failed:", progressErr);
+              }
+            }
           } else {
             errors.push(`"${imageLabel}" failed to generate`);
           }
