@@ -278,24 +278,22 @@ export default function Workflows() {
   // ── Cancel stuck job handler ──
   const handleCancelJob = useCallback(async (jobId: string, creditsReserved: number) => {
     try {
-      // Mark job as failed via service — use direct REST update since RLS only allows
-      // updating queued jobs; for processing jobs we call the cleanup function
-      const { error: updateError } = await supabase
+      // RLS policy allows updating queued/processing → cancelled
+      const { data, error: updateError } = await supabase
         .from('generation_queue')
-        .update({ status: 'failed', error_message: 'Cancelled by user', completed_at: new Date().toISOString() } as never)
-        .eq('id', jobId);
+        .update({ status: 'cancelled' } as never)
+        .eq('id', jobId)
+        .select('id')
+        .single();
 
-      if (updateError) {
-        // If RLS blocks it (processing status), trigger cleanup instead
+      if (updateError || !data) {
+        // Fallback: trigger cleanup for stuck processing jobs
         await supabase.functions.invoke('retry-queue');
+        toast.info('Cleanup triggered — job will be cancelled shortly.');
+      } else {
+        // Refund is handled server-side by trg_queue_cancel trigger
+        toast.success(`Generation cancelled. ${creditsReserved} credits refunded.`);
       }
-
-      // Refund credits
-      if (creditsReserved > 0) {
-        await supabase.rpc('refund_credits', { p_user_id: user!.id, p_amount: creditsReserved });
-      }
-
-      toast.success(`Generation cancelled. ${creditsReserved} credits refunded.`);
 
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
@@ -305,7 +303,7 @@ export default function Workflows() {
       console.error('Cancel job error:', err);
       toast.error('Failed to cancel job. Try again.');
     }
-  }, [user, queryClient]);
+  }, [queryClient]);
 
   // ── Dismissed activity (localStorage-backed) ──
   const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(() => {
