@@ -365,8 +365,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                           toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
                           return prev;
                         }
-                        if (!isFreeUser && next.size >= PAID_SCENE_LIMIT) {
-                          toast.error(`Maximum ${PAID_SCENE_LIMIT} scenes per generation.`);
+                        const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT;
+                        if (!isFreeUser && next.size >= paidLimit) {
+                          toast.error(`Maximum ${paidLimit} ${isFlatLay ? 'surfaces' : 'scenes'} per generation.`);
                           return prev;
                         }
                         next.add(i);
