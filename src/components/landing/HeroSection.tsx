@@ -397,16 +397,20 @@ export function HeroSection() {
             <div className="flex-shrink-0 w-[200px]">
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="relative aspect-[3/4]">
-                  <ShimmerImage
-                    src={optimizeProduct(current.product.img)}
-                    alt={current.product.label}
-                    className="w-full h-full object-cover transition-all duration-500"
-                    aspectRatio="3/4"
-                    width={200}
-                    height={267}
-                    fetchPriority="high"
-                  />
-                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
+                  {showcases.map((sc, scIdx) => (
+                    <ShimmerImage
+                      key={scIdx}
+                      src={optimizeProduct(sc.product.img)}
+                      alt={sc.product.label}
+                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+                      aspectRatio="3/4"
+                      width={200}
+                      height={267}
+                      fetchPriority={scIdx === 0 ? 'high' : undefined}
+                      style={{ opacity: scIdx === activeScene ? 1 : 0 }}
+                    />
+                  ))}
+                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm z-10">
                     Your Upload
                   </span>
                 </div>
