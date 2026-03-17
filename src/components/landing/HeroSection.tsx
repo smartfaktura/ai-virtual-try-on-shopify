@@ -41,12 +41,12 @@ const showcases: ProductShowcase[] = [
     product: { img: '/images/hero/hero-product-ring-new.png', label: 'Ring', subtitle: '1 product photo' },
     outputs: [
       { img: '/images/hero/hero-ring-fabric.png', label: 'Linen Close-Up' },
+      { img: '/images/hero/hero-ring-portrait.png', label: 'Model Portrait' },
       { img: '/images/hero/hero-ring-hand.png', label: 'On the Hand' },
       { img: '/images/hero/hero-ring-concrete.png', label: 'Concrete Block' },
       { img: '/images/hero/hero-ring-eucalyptus.png', label: 'Stone & Eucalyptus' },
       { img: '/images/hero/hero-ring-floating.png', label: 'Studio Floating' },
       { img: '/images/hero/hero-ring-golden-light.png', label: 'Golden Light' },
-      { img: '/images/hero/hero-ring-portrait.png', label: 'Model Portrait' },
       { img: '/images/hero/hero-ring-ugc.png', label: 'Selfie / UGC' },
     ],
     caption: 'Same ring ∞ scenes in under 2 minutes',
@@ -362,17 +362,17 @@ export function HeroSection() {
                   <span className="text-[11px] font-bold text-primary whitespace-nowrap">∞ results</span>
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                  {showcases.map((scene, i) => (
+                  {showcases.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => selectScene(i)}
-                      className={`text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
+                      className={`w-6 h-6 rounded-full border text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${
                         activeScene === i
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-card text-muted-foreground border-border'
                       }`}
                     >
-                      {scene.product.label}
+                      {i + 1}
                     </button>
                   ))}
                 </div>
@@ -411,11 +411,11 @@ export function HeroSection() {
 
               {/* Scene switcher pills */}
               <div className="flex items-center justify-center gap-2 mt-3">
-                {showcases.map((scene, i) => (
+                {showcases.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => selectScene(i)}
-                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                    className={`w-7 h-7 rounded-full border text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
                       activeScene === i
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
@@ -423,13 +423,10 @@ export function HeroSection() {
                           }`
                     }`}
                   >
-                    {scene.product.label}
+                    {i + 1}
                   </button>
                 ))}
               </div>
-              <p className="text-[9px] text-muted-foreground/60 text-center mt-1.5">
-                ↑ Tap to switch product
-              </p>
             </div>
 
             {/* Flow arrow */}
