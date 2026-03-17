@@ -115,9 +115,19 @@ export default function Settings() {
     if (error) {
       toast.error('Failed to save settings');
     } else {
-      // Sync marketing preference to Resend audience
+      // Sync marketing preference + properties to Resend audience
       supabase.functions.invoke('sync-resend-contact', {
-        body: { email: user.email, first_name: undefined, opted_in: marketingOptIn },
+        body: {
+          email: user.email,
+          first_name: undefined,
+          opted_in: marketingOptIn,
+          properties: {
+            plan,
+            credits_balance: balance,
+            has_generated: true,
+            signup_date: user.created_at || new Date().toISOString(),
+          },
+        },
       }).catch(() => {});
       toast.success('Settings saved successfully!');
     }

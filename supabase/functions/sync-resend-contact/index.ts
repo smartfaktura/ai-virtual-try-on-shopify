@@ -34,10 +34,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email, first_name, opted_in } = await req.json();
+    const { email, first_name, opted_in, properties } = await req.json();
 
     if (opted_in) {
-      // Add or update contact in audience
+      // Build contact payload with optional properties
+      const contactPayload: Record<string, unknown> = {
+        email,
+        first_name: first_name || undefined,
+        unsubscribed: false,
+      };
+
+      // Forward custom properties for Resend audience segmentation
+      if (properties && typeof properties === "object") {
+        contactPayload.properties = properties;
+      }
+
       const res = await fetch(
         `https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`,
         {
@@ -46,11 +57,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email,
-            first_name: first_name || undefined,
-            unsubscribed: false,
-          }),
+          body: JSON.stringify(contactPayload),
         }
       );
       if (!res.ok) {

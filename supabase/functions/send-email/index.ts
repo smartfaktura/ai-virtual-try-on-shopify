@@ -192,80 +192,8 @@ function contactFormEmail(data: { name?: string; email?: string; message?: strin
   `);
 }
 
-function featuresHighlightEmail(data: { displayName?: string; creditsBalance?: number; hasGenerated?: boolean }): string {
-  const name = data.displayName || "there";
-  const credits = data.creditsBalance ?? 0;
-  const hasGenerated = data.hasGenerated ?? false;
-  const isLow = credits < 4;
 
-  // Determine hero line and CTA based on credit tier + engagement
-  let heroLine: string;
-  let ctaText: string;
-  let ctaHref: string;
 
-  if (isLow && hasGenerated) {
-    heroLine = "You've already seen what VOVV.AI can do — upgrade to keep creating.";
-    ctaText = "Get Credits";
-    ctaHref = "https://vovv.ai/pricing";
-  } else if (isLow) {
-    heroLine = "Top up a few more credits to unlock your first AI photoshoot.";
-    ctaText = "Get Credits";
-    ctaHref = "https://vovv.ai/pricing";
-  } else {
-    heroLine = "Your free credits are waiting. Here's what you can create.";
-    ctaText = "Open Your Studio";
-    ctaHref = "https://vovv.ai/app";
-  }
-
-  const STORAGE = "https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/landing-assets";
-  const img = (path: string) =>
-    `<td style="width:33%;padding:0 4px;"><img src="${STORAGE}/${path}" alt="" width="170" style="width:100%;max-width:170px;border-radius:12px;display:block;" /></td>`;
-
-  const featureCard = (title: string, desc: string) =>
-    `<div style="background-color:${BRAND.stone};border-radius:8px;padding:16px 20px;margin:0 0 8px 0;">
-      <p style="font-family:'Inter',sans-serif;font-size:14px;color:${BRAND.navy};margin:0 0 4px 0;font-weight:600;">✦ ${title}</p>
-      <p style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};line-height:1.5;margin:0;">${desc}</p>
-    </div>`;
-
-  return emailWrapper(`
-    <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
-      Your AI studio is ready
-    </h1>
-    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.navy};line-height:1.6;margin:0 0 8px 0;">
-      Hey ${name},
-    </p>
-    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
-      ${heroLine}
-    </p>
-
-    <!-- Showcase images -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;">
-      <tr>
-        ${img("showcase/fashion-knit-loft.png")}
-        ${img("showcase/skincare-serum-marble.png")}
-        ${img("showcase/food-cocktail-bar.png")}
-      </tr>
-    </table>
-    <p style="font-family:'Inter',sans-serif;font-size:12px;color:${BRAND.muted};margin:0 0 24px 0;text-align:center;">
-      All generated with VOVV.AI — no photographer, no studio, no editing.
-    </p>
-
-    <!-- Feature cards -->
-    ${featureCard("Freestyle Studio", "Describe any scene in plain English and get a photo-real result. \"A coral handbag on marble at golden hour in a Parisian café.\"")}
-    ${featureCard("Virtual Try-On", "See your clothes on real-looking models — diverse body types, instant results.")}
-    ${featureCard("One-Click Workflows", "Upload once → get listing-ready photos across scenes &amp; angles. The shoot that runs itself.")}
-    ${featureCard("4× AI Upscale", "Print-resolution quality. One click.")}
-
-    ${isLow
-      ? `<p style="font-family:'Inter',sans-serif;font-size:14px;color:${BRAND.muted};margin:24px 0 0 0;text-align:center;">Top up credits to start creating.</p>`
-      : `<p style="font-family:'Inter',sans-serif;font-size:14px;color:${BRAND.muted};margin:24px 0 0 0;text-align:center;">You have <strong style="color:${BRAND.navy};">${credits} credits</strong> ready to use.</p>`
-    }
-    ${ctaButton(ctaText, ctaHref)}
-    <p style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};line-height:1.6;margin:0;">
-      P.S. Every generation gets better as you teach VOVV your brand style.
-    </p>
-  `);
-}
 
 function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string; prompt?: string; productName?: string; modelName?: string; sceneName?: string; workflowName?: string }): string {
   const typeMap: Record<string, string> = {
@@ -377,10 +305,6 @@ serve(async (req) => {
       case "contact_form":
         subject = `[VOVV.AI Contact] Message from ${(data?.name || "a user")}`;
         html = contactFormEmail(data || {});
-        break;
-      case "features_highlight":
-        subject = "Your AI studio is ready — here's what you can create";
-        html = featuresHighlightEmail(data || {});
         break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
