@@ -293,35 +293,38 @@ export function HeroSection() {
                 <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none rounded-r-xl" />
               )}
 
-              <div
-                ref={scrollRef}
-                onScroll={updateScrollState}
-                data-hero-carousel
-                className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory px-4"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-              >
-                {current.outputs.map((output, idx) => (
-                  <div key={output.label} className="flex-shrink-0 w-[155px] snap-start">
-                    <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
-                      <div className="relative aspect-[3/4]">
-                        <ShimmerImage
-                          src={optimizeOutput(output.img)}
-                          alt={output.label}
-                          className="w-full h-full object-cover"
-                          aspectRatio="3/4"
-                          width={155}
-                          height={207}
-                          loading={idx < 3 ? 'eager' : 'lazy'}
-                          fetchPriority={idx < 2 ? 'high' : undefined}
-                        />
-                        <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
-                          {output.label}
-                        </span>
+              {showcases.map((showcase, sceneIdx) => (
+                <div
+                  key={sceneIdx}
+                  ref={el => { scrollRefs.current[sceneIdx] = el; }}
+                  onScroll={sceneIdx === activeScene ? updateScrollState : undefined}
+                  data-hero-carousel
+                  className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory px-4"
+                  style={{ display: sceneIdx === activeScene ? 'flex' : 'none', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+                >
+                  {showcase.outputs.map((output, idx) => (
+                    <div key={output.label} className="flex-shrink-0 w-[155px] snap-start">
+                      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                        <div className="relative aspect-[3/4]">
+                          <ShimmerImage
+                            src={optimizeOutput(output.img)}
+                            alt={output.label}
+                            className="w-full h-full object-cover"
+                            aspectRatio="3/4"
+                            width={155}
+                            height={207}
+                            loading={sceneIdx === 0 && idx < 3 ? 'eager' : 'lazy'}
+                            fetchPriority={sceneIdx === 0 && idx < 2 ? 'high' : undefined}
+                          />
+                          <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
+                            {output.label}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ))}
             </div>
 
             {/* Dot indicators */}
