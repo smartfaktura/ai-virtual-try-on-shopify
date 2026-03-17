@@ -9,9 +9,22 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-type TimeRange = 24 | 168 | 720;
+type TimeRange = 'today' | 'yesterday' | 24 | 168 | 720;
+
+function getRangeHours(range: TimeRange): number {
+  if (range === 'today') {
+    const now = new Date();
+    return Math.max(1, now.getHours() + Math.round(now.getMinutes() / 60));
+  }
+  if (range === 'yesterday') {
+    const now = new Date();
+    return now.getHours() + 24 + Math.round(now.getMinutes() / 60);
+  }
+  return range;
+}
 
 interface StatsData {
   total: number;
@@ -31,10 +44,14 @@ interface StatsData {
 }
 
 const RANGE_LABELS: Record<TimeRange, string> = {
+  today: 'Today',
+  yesterday: 'Yesterday',
   24: '24 hours',
   168: '7 days',
   720: '30 days',
 };
+
+const RANGE_OPTIONS: TimeRange[] = ['today', 'yesterday', 24, 168, 720];
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -55,13 +72,13 @@ function formatTimeAgo(dateStr: string): string {
 
 export default function AdminStatus() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const [range, setRange] = useState<TimeRange>(24);
+  const [range, setRange] = useState<TimeRange>('today');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['admin-status', range],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('admin_generation_stats', {
-        p_hours: range,
+        p_hours: getRangeHours(range),
       });
       if (error) throw error;
       return data as unknown as StatsData;
@@ -86,21 +103,40 @@ export default function AdminStatus() {
         {null}
       </PageHeader>
 
-      {/* Time range toggle */}
-      <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
-        {([24, 168, 720] as TimeRange[]).map((r) => (
-          <button
-            key={r}
-            onClick={() => setRange(r)}
-            className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
-              range === r
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+      {/* Time range toggle + refresh */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
+          {RANGE_OPTIONS.map((r) => (
+            <button
+              key={String(r)}
+              onClick={() => setRange(r)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                range === r
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {RANGE_LABELS[r]}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="gap-1.5"
           >
-            {RANGE_LABELS[r]}
-          </button>
-        ))}
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          {dataUpdatedAt > 0 && (
+            <span className="text-xs text-muted-foreground">
+              Updated {formatTimeAgo(new Date(dataUpdatedAt).toISOString())}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Metrics grid */}
