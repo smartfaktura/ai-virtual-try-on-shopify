@@ -872,6 +872,8 @@ serve(async (req) => {
     // Force Pro model for interior design (architectural preservation needs highest fidelity)
     const isInterior = (config.ui_config as Record<string, unknown>)?.show_room_type_picker === true;
     if (isInterior) model = "google/gemini-3-pro-image-preview";
+    // Force Pro model for multi-product flat lay (multiple reference images need highest fidelity)
+    if ((body as Record<string, unknown>).flatlay_products && Array.isArray((body as Record<string, unknown>).flatlay_products) && ((body as Record<string, unknown>).flatlay_products as unknown[]).length > 0) model = "google/gemini-3-pro-image-preview";
 
     // Inject interior design fields into the product object so buildVariationPrompt can access them
     const productWithExtras = {
