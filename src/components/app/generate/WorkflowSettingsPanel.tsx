@@ -243,10 +243,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 </>
               )}
               {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && activeWorkflow?.name !== 'Mirror Selfie Set' && (
-                <>
-                  <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
-                  <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
-                </>
+                <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
               )}
               {variationStrategy?.type === 'scene' && activeWorkflow?.name === 'Mirror Selfie Set' && (
                 <>
