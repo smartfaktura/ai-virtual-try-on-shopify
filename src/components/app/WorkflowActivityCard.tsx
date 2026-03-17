@@ -230,8 +230,8 @@ export function WorkflowActivityCard({
                       {group.product_name ? ` — ${group.product_name}` : ''}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {isBatch
-                        ? `${group.totalCount} ${isStagingWorkflow ? 'styles' : 'images'} complete`
+                      {totalImages > 1
+                        ? `${totalImages} ${isStagingWorkflow ? 'styles' : 'images'} complete`
                         : '1 image complete'}
                     </p>
                   </div>
