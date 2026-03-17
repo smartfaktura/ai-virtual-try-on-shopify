@@ -1,52 +1,35 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix: Downloaded images missing previews due to wrong file extension
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Root cause
+The download handlers in **Freestyle** and **LibraryDetailModal** hardcode `.png` as the file extension:
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+```typescript
+// Freestyle.tsx line 552
+a.download = `freestyle-${index + 1}.png`;
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+// LibraryDetailModal.tsx line 68  
+a.download = `...${item.id.slice(0, 8)}.png`;
+```
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+The actual generated images are typically **WebP** (returned by the AI generation APIs). When a WebP file is saved with a `.png` extension, macOS Finder can't generate a thumbnail preview — it shows the generic icon instead.
 
+The existing `dropDownload.ts` already solves this correctly by reading the `content-type` header and choosing the right extension. The other download handlers just need to do the same.
 
-## Image Optimization for AI Generation — Implemented ✅
+### Fix
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+**File 1: `src/pages/Freestyle.tsx`** — Update `handleDownload` to detect content type from the fetch response and use the correct extension.
 
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
+**File 2: `src/components/app/LibraryDetailModal.tsx`** — Same fix for `handleDownload`.
 
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
+**File 3: `src/components/app/ImageLightbox.tsx`** — Check if it also has a download handler that hardcodes `.png`.
 
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
+The logic is simple — after `fetch`, read `response.headers.get('content-type')` and map it to the correct extension (`.webp`, `.jpg`, `.png`), same as `getExtensionFromContentType` in `dropDownload.ts`. We can import and reuse that function by exporting it.
+
+### Changes summary
+1. Export `getExtensionFromContentType` from `src/lib/dropDownload.ts`
+2. Update `Freestyle.tsx` `handleDownload` to use detected extension
+3. Update `LibraryDetailModal.tsx` `handleDownload` to use detected extension
+4. Check and fix any other download handlers (ImageLightbox, etc.)
+
