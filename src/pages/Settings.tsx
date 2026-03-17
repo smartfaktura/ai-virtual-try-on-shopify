@@ -258,10 +258,11 @@ export default function Settings() {
 
             {plan !== 'free' && billingInterval !== 'annual' && (
               <button
-                className="text-xs text-primary hover:underline underline-offset-2 font-medium -mt-1"
-                onClick={openCustomerPortal}
+                className="text-xs text-primary hover:underline underline-offset-2 font-medium -mt-1 disabled:opacity-50"
+                onClick={handlePortal}
+                disabled={portalLoading}
               >
-                Switch to annual & save 20% →
+                {portalLoading ? 'Redirecting…' : 'Switch to annual & save 20% →'}
               </button>
             )}
 
