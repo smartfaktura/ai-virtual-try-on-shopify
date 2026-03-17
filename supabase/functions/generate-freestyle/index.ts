@@ -193,7 +193,7 @@ function polishUserPrompt(
     }
     if (context.hasScene) {
       const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct, context.hasModel].filter(Boolean).length + 1;
-      parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective throughout.`);
+      parts.push(`${num}. SCENE: Use [SCENE IMAGE] for environment, lighting, and atmosphere ONLY. If the scene contains any products, bottles, accessories, or commercial items, IGNORE them completely — the ONLY product in the final image must be from [PRODUCT IMAGE].`);
     }
 
     parts.push("");
