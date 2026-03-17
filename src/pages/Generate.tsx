@@ -1242,6 +1242,11 @@ export default function Generate() {
       });
       if (enqueueResult) {
         setBalanceFromServer(enqueueResult.newBalance);
+        injectActiveJob(queryClient, {
+          jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: selectedProduct?.title || productData?.title,
+          job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+        });
         queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       } else {
         setCurrentStep('settings');
