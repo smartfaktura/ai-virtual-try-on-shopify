@@ -251,7 +251,7 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground -mt-1">
                   {displayPrice !== null && displayPrice > 0 && <>${displayPrice}/mo • </>}
                   {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
-                  {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                  {currentPeriodEnd && plan !== 'free' && ` • ${subscriptionStatus === 'canceling' ? 'Access until' : 'Renews'} ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
                 </p>
               );
             })()}
