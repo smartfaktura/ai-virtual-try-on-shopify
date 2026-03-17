@@ -113,7 +113,7 @@ export default function Generate() {
   const workflowIdFromQuery = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
-  const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue();
+  const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({ jobTypes: ['workflow', 'tryon'] });
   const { startBatch, batchState, isBatching, resetBatch } = useGenerationBatch();
   const isFreeUser = plan === 'free';
   const { isAdmin } = useIsAdmin();

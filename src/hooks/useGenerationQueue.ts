@@ -46,6 +46,8 @@ interface EnqueueResult {
 export type FailedErrorType = 'timeout' | 'rate_limit' | 'generic';
 
 interface UseGenerationQueueOptions {
+  /** When set, restoreActiveJob only picks up jobs matching these types */
+  jobTypes?: Array<'tryon' | 'freestyle' | 'workflow' | 'upscale'>;
   onContentBlocked?: (jobId: string, reason: string) => void;
   onGenerationFailed?: (jobId: string, message: string, errorType: FailedErrorType) => void;
   onCreditRefresh?: () => Promise<void> | void;
@@ -71,7 +73,7 @@ async function getRestHeaders() {
 }
 
 export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
-  const { onContentBlocked, onGenerationFailed, onCreditRefresh } = options || {};
+  const { jobTypes: filterJobTypes, onContentBlocked, onGenerationFailed, onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
@@ -355,8 +357,9 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
       const { SUPABASE_URL, SUPABASE_KEY, token } = await getRestHeaders();
 
+      const jobTypeFilter = filterJobTypes?.length ? `&job_type=in.(${filterJobTypes.join(',')})` : '';
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at,job_type`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)${jobTypeFilter}&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at,job_type`,
         {
           headers: {
             apikey: SUPABASE_KEY,

@@ -144,6 +144,7 @@ export default function Freestyle() {
   }, []);
 
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
+    jobTypes: ['freestyle'],
     onContentBlocked: handleContentBlocked,
     onGenerationFailed: handleGenerationFailed,
     onCreditRefresh: refreshBalance,
