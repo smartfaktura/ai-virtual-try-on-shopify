@@ -545,11 +545,13 @@ export default function Freestyle() {
   const handleDownload = useCallback(async (imageUrl: string, index: number) => {
     try {
       const response = await fetch(imageUrl);
+      const contentType = response.headers.get('content-type');
+      const ext = getExtensionFromContentType(contentType);
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
-      a.download = `freestyle-${index + 1}.png`;
+      a.download = `freestyle-${index + 1}${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
