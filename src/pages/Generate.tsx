@@ -1180,7 +1180,7 @@ export default function Generate() {
           workflow_id: activeWorkflow?.id || null,
           workflow_name: activeWorkflow?.name || null,
           workflow_slug: activeWorkflow?.slug || null,
-          product_id: selectedProduct?.id || null,
+          product_id: selectedProduct && userProducts.some(up => up.id === selectedProduct.id) ? selectedProduct.id : null,
           product_name: selectedProduct?.title || productData.title,
           brand_profile_id: selectedBrandProfileId || null,
         },
