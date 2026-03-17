@@ -1499,7 +1499,7 @@ export default function Generate() {
   const getSteps = () => {
     if (isUpscale) {
       return [
-        { name: sourceType === 'scratch' ? 'Upload' : 'Product(s)' },
+        { name: sourceType === 'scratch' ? 'Upload' : sourceType === 'library' ? 'Library' : 'Product(s)' },
         { name: 'Settings' },
         { name: 'Results' },
       ];
