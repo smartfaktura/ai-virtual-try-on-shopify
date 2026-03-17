@@ -328,11 +328,11 @@ export default function Jobs() {
                   <EmptyStateCard
                     heading="No images yet"
                     description=""
-                    icon={<Image className="w-12 h-12" />}
+                    icon={<Sparkles className="w-10 h-10" />}
                     teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals with workflows or freestyle generation." }}
                     actions={[
-                      { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline' },
-                      { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default' },
+                      { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline', icon: <Layers className="w-4 h-4" /> },
+                      { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
                     ]}
                   />
                 ) : (
