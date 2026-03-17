@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
