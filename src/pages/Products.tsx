@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Package, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, ImagePlus, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
