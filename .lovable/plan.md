@@ -1,52 +1,40 @@
 
 
-## Product Perspectives — Implemented ✅
+## Show Ice Roller Sample for Selfie/UGC, Keep Crop Top for Virtual Try-On
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+The sample product section (lines 2211-2261 in `Generate.tsx`) currently shows for all `uses_tryon` workflows. The user wants different sample products per workflow.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Changes in `src/pages/Generate.tsx`
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+1. **Add a second sample product constant** (~line 90):
+   ```ts
+   const SAMPLE_UGC_PRODUCT: Product = {
+     id: 'sample_ugc_ice_roller',
+     title: 'Ice Roller',
+     vendor: 'Sample',
+     productType: 'Skincare Tools',
+     tags: ['ice-roller', 'skincare', 'beauty'],
+     description: 'Cooling ice roller for face and body. Soothes skin and reduces puffiness.',
+     images: [{ id: 'img_sample_ugc', url: '/images/samples/sample-ice-roller.png' }],
+     status: 'active',
+     createdAt: '2024-01-01T00:00:00Z',
+     updatedAt: '2024-01-01T00:00:00Z',
+   };
+   ```
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+2. **Copy the uploaded ice roller image** to `public/images/samples/sample-ice-roller.png`.
 
+3. **Make sample product dynamic** (~line 2211): Replace the hardcoded `SAMPLE_TRYON_PRODUCT` reference in the empty-state branch with a computed value:
+   ```ts
+   const sampleProduct = isSelfieUgc ? SAMPLE_UGC_PRODUCT : SAMPLE_TRYON_PRODUCT;
+   ```
+   Then use `sampleProduct` everywhere in that block instead of `SAMPLE_TRYON_PRODUCT`.
 
-## Image Optimization for AI Generation — Implemented ✅
+4. **Update the continue handler** (~line 2799): Add `SAMPLE_UGC_PRODUCT` to the sample selection check:
+   ```ts
+   const sampleSelected = [SAMPLE_TRYON_PRODUCT, SAMPLE_UGC_PRODUCT]
+     .filter(sp => selectedProductIds.has(sp.id));
+   ```
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+5. **Update the product_id sanitization** in enqueue payloads to also recognize the UGC sample as non-DB (already handled — it checks against `userProducts`).
 
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
-
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
-
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
