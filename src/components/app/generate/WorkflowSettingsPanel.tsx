@@ -432,6 +432,11 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           })}
         </div>
 
+        <MissingRequestBanner
+          category="scene"
+          title="Missing a scene? Tell us and we'll add it."
+        />
+
         {/* Info note */}
         <div className="flex items-start gap-2 px-1">
           <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
