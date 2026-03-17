@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const PROMPT_TEXT_FULL = 'Shoot my white crop top on a basketball court, in a clean studio, and a sunny café';
+const PROMPT_TEXT_FULL = 'Shoot my crop top on a basketball court, in a clean studio, and a sunny café';
 const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
