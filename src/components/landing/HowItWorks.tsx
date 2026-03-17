@@ -180,7 +180,7 @@ export function HowItWorks() {
                         transitionDelay: '900ms',
                       } : { opacity: 0, transform: 'translateX(-8px)' }}
                     >
-                      <p className="text-sm font-semibold text-foreground truncate">White Crop Top</p>
+                      <p className="text-sm font-semibold text-foreground truncate">Crop Top</p>
                       <p className="text-[11px] text-muted-foreground">Clothing · Activewear</p>
                     </div>
                     <div
