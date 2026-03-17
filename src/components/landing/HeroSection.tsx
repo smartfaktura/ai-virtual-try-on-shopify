@@ -423,15 +423,15 @@ export function HeroSection() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center gap-1 mt-3">
-                <span className="text-xs text-muted-foreground">Try different products</span>
-                <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-col items-center gap-1.5 mt-3">
+                <span className="text-[11px] text-muted-foreground">Try different products</span>
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
                   {showcases.map((sc, i) => (
                     <button
                       key={i}
                       onClick={() => selectScene(i)}
                       onMouseEnter={() => preloadScene(i)}
-                      className={`px-5 py-2 rounded-full border text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                         activeScene === i
                           ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
                           : `bg-card text-muted-foreground border-border/80 hover:border-primary/40 hover:text-foreground hover:bg-accent/50 ${
