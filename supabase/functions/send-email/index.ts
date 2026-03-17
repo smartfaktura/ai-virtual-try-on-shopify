@@ -191,8 +191,25 @@ function contactFormEmail(data: { name?: string; email?: string; message?: strin
     </div>
   `);
 }
-
-
+function leadWelcomeEmail(): string {
+  return emailWrapper(`
+    <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
+      You're in
+    </h1>
+    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
+      We'll only send you creative inspiration — AI photography tips, new features, and the occasional behind-the-scenes look. No spam, ever.
+    </p>
+    <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
+      <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.navy};line-height:1.6;margin:0;">
+        Ready to create? Sign up now and get <strong>20 free credits</strong> to generate your first AI product photos.
+      </p>
+    </div>
+    ${ctaButton("Create Your Account", "https://vovv.ai/auth")}
+    <p style="font-family:'Inter',sans-serif;font-size:12px;color:${BRAND.muted};line-height:1.5;margin:24px 0 0 0;">
+      You can unsubscribe anytime by replying to this email.
+    </p>
+  `);
+}
 
 
 function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string; prompt?: string; productName?: string; modelName?: string; sceneName?: string; workflowName?: string }): string {
