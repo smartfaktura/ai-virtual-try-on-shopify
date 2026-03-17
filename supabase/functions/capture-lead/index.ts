@@ -59,55 +59,89 @@ serve(async (req) => {
       });
     }
 
-    // 1. Add to Resend audience
-    const audienceRes = await fetch(
-      `https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: cleanEmail,
-          unsubscribed: false,
-          properties: {
-            plan: "visitor",
-            signup_date: new Date().toISOString(),
+    // 1. Add to Resend audience (best-effort, don't block on failure)
+    let audienceOk = false;
+    try {
+      const audienceRes = await fetch(
+        `https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
           },
-        }),
+          body: JSON.stringify({
+            email: cleanEmail,
+            unsubscribed: false,
+          }),
+        }
+      );
+      if (audienceRes.ok) {
+        audienceOk = true;
+      } else {
+        const errBody = await audienceRes.text();
+        console.error("[capture-lead] Resend audience error:", audienceRes.status, errBody);
       }
-    );
-    if (!audienceRes.ok) {
-      const errBody = await audienceRes.text();
-      console.error("[capture-lead] Resend audience error:", audienceRes.status, errBody);
+    } catch (err) {
+      console.error("[capture-lead] Audience request failed:", err);
     }
 
     // 2. Send lead_welcome email via send-email function
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    let emailOk = false;
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${serviceRoleKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        type: "lead_welcome",
-        to: cleanEmail,
-        data: {},
-      }),
-    });
+      const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "lead_welcome",
+          to: cleanEmail,
+          data: {},
+        }),
+      });
 
-    if (!emailRes.ok) {
-      const errBody = await emailRes.text();
-      console.error("[capture-lead] send-email error:", emailRes.status, errBody);
+      if (emailRes.ok) {
+        const emailResult = await emailRes.json();
+        if (emailResult.success) {
+          emailOk = true;
+        } else {
+          console.error("[capture-lead] send-email returned error:", JSON.stringify(emailResult));
+        }
+      } else {
+        const errBody = await emailRes.text();
+        console.error("[capture-lead] send-email error:", emailRes.status, errBody);
+      }
+    } catch (err) {
+      console.error("[capture-lead] Email request failed:", err);
     }
 
-    console.log(`[capture-lead] ✓ Captured lead: ${cleanEmail}`);
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
+    // 3. Return truthful status
+    if (emailOk) {
+      console.log(`[capture-lead] ✓ Captured lead + sent email: ${cleanEmail}`);
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (audienceOk) {
+      // Lead captured to audience but welcome email failed
+      console.log(`[capture-lead] ⚠ Lead added to audience but email failed: ${cleanEmail}`);
+      return new Response(JSON.stringify({ success: true, emailSkipped: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Both failed
+    console.error(`[capture-lead] ✗ Both audience and email failed for: ${cleanEmail}`);
+    return new Response(JSON.stringify({ error: "Could not process your request right now. Please try again later." }), {
+      status: 502,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

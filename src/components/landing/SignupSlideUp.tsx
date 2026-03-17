@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Sparkles, Check, Loader2 } from 'lucide-react';
+import { X, Sparkles, Check, Loader2, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-type Phase = 'hidden' | 'visible' | 'success';
+type Phase = 'hidden' | 'visible' | 'submitting' | 'success' | 'error';
 
 export function SignupSlideUp() {
   const [phase, setPhase] = useState<Phase>('hidden');
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const autoHideRef = useRef<ReturnType<typeof setTimeout>>();
 
   const shouldSkip = useCallback(() => {
@@ -36,10 +35,10 @@ export function SignupSlideUp() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [shouldSkip]);
 
-  // Auto-hide after 12s
+  // Auto-hide after 15s
   useEffect(() => {
     if (phase === 'visible') {
-      autoHideRef.current = setTimeout(() => dismiss(), 12000);
+      autoHideRef.current = setTimeout(() => dismiss(), 15000);
       return () => clearTimeout(autoHideRef.current);
     }
   }, [phase]);
@@ -51,14 +50,16 @@ export function SignupSlideUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrorMsg('');
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setError('Enter a valid email');
+      setErrorMsg('Enter a valid email');
       return;
     }
 
-    setLoading(true);
+    setPhase('submitting');
+    clearTimeout(autoHideRef.current);
+
     try {
       const { data, error: fnError } = await supabase.functions.invoke('capture-lead', {
         body: { email: trimmed },
@@ -69,81 +70,113 @@ export function SignupSlideUp() {
 
       localStorage.setItem('lead_captured', 'true');
       setPhase('success');
-      setTimeout(() => setPhase('hidden'), 3000);
-    } catch (err) {
+      setTimeout(() => setPhase('hidden'), 4000);
+    } catch (err: any) {
       console.error('capture-lead error:', err);
-      setError('Something went wrong. Try again.');
-    } finally {
-      setLoading(false);
+      setErrorMsg(
+        err?.message?.includes('Too many')
+          ? 'Too many attempts. Please try again later.'
+          : 'Something went wrong. Please try again.'
+      );
+      setPhase('error');
     }
   };
 
   if (phase === 'hidden') return null;
 
+  const isIdle = phase === 'visible' || phase === 'error';
+
   return (
-    <div
-      className={`fixed bottom-4 right-4 left-4 sm:left-auto sm:w-[340px] z-50 animate-in slide-in-from-bottom-4 fade-in duration-500`}
-    >
-      <div className="bg-card border border-border rounded-xl shadow-lg overflow-hidden">
-        {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-primary/[0.03]">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[11px] font-semibold tracking-tight text-primary">VOVV.AI</span>
-          </div>
-          <button
-            onClick={dismiss}
-            className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
-            aria-label="Dismiss"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      {/* Backdrop — only on desktop centered mode */}
+      <div
+        className="hidden sm:block fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-auto animate-in fade-in duration-300"
+        onClick={dismiss}
+      />
 
-        <div className="px-4 pb-4 pt-3">
-          {phase === 'success' ? (
-            <div className="flex items-center gap-2 py-2">
-              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-                <Check className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">You're in!</p>
-                <p className="text-xs text-muted-foreground">Check your inbox</p>
-              </div>
+      {/* Card */}
+      <div
+        className="relative w-full sm:max-w-[420px] pointer-events-auto animate-in slide-in-from-bottom-6 fade-in duration-500"
+      >
+        <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3 bg-primary/[0.04] border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold tracking-tight text-primary">VOVV.AI</span>
             </div>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-foreground leading-snug mb-0.5">
-                Get 20 free credits
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                AI product photography — tips, new features & creative inspiration. No spam.
-              </p>
+            <button
+              onClick={dismiss}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/50"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-              <form onSubmit={handleSubmit} className="flex gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  disabled={loading}
-                  autoComplete="email"
-                />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Get Started'}
-                </button>
-              </form>
+          <div className="px-5 pb-5 pt-4">
+            {phase === 'success' ? (
+              <div className="flex items-center gap-3 py-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">You're in!</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Check your inbox for a welcome email.</p>
+                </div>
+              </div>
+            ) : phase === 'submitting' ? (
+              <div className="flex items-center gap-3 py-6 justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Signing you up…</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-semibold text-foreground leading-snug">
+                      Get 20 free credits
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                      AI product photography tips, new features & creative inspiration. No spam.
+                    </p>
+                  </div>
+                </div>
 
-              {error && (
-                <p className="text-xs text-destructive mt-1.5">{error}</p>
-              )}
-            </>
-          )}
+                <form onSubmit={handleSubmit} className="space-y-2.5">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMsg) setErrorMsg('');
+                      if (phase === 'error') setPhase('visible');
+                    }}
+                    placeholder="you@example.com"
+                    className="w-full h-11 rounded-xl border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 transition-shadow"
+                    autoComplete="email"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Get Started Free
+                  </button>
+                </form>
+
+                {errorMsg && (
+                  <p className="text-xs text-destructive mt-2 text-center">{errorMsg}</p>
+                )}
+
+                <p className="text-[11px] text-muted-foreground/60 text-center mt-3">
+                  Unsubscribe anytime. We respect your inbox.
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
