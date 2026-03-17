@@ -24,7 +24,7 @@ interface ProductShowcase {
 
 const showcases: ProductShowcase[] = [
   {
-    product: { img: h('hero-product-croptop.jpg'), label: 'White Crop Top', subtitle: '1 product photo' },
+    product: { img: h('hero-product-croptop.jpg'), label: 'Crop Top', subtitle: '1 product photo' },
     outputs: [
       { img: h('hero-croptop-studio-lookbook.png'), label: 'Studio Lookbook' },
       { img: h('hero-croptop-golden-hour.png'), label: 'Golden Hour' },
