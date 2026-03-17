@@ -1268,6 +1268,7 @@ const sceneLinenFabric = `${WORKFLOW_PREVIEW_BASE}/scene-8.png`;
 const sceneBathroomShelf = `${WORKFLOW_PREVIEW_BASE}/scene-10.png`;
 
 const sceneFloatingLevitation = `${WORKFLOW_PREVIEW_BASE}/scene-20.png`;
+const sceneWhiteStudio = '/images/hero/hero-hp-white.png';
 
 export const mockModels: ModelProfile[] = [
   // Priority sequence matching landing page marquee ROW_1
