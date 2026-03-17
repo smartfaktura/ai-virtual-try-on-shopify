@@ -2301,7 +2301,9 @@ export default function Generate() {
                     </Button>
                   </div>
                 </div>);
-                })() : (
+                })() : (() => {
+                const nonTryOnSample = isMirrorSelfie ? SAMPLE_MIRROR_PRODUCT : SAMPLE_LISTING_PRODUCT;
+                return (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Sample</Badge>
@@ -2311,7 +2313,7 @@ export default function Generate() {
                   {/* Sample product card */}
                   <div
                     className={`relative rounded-lg border-2 cursor-pointer transition-all overflow-hidden ${
-                      selectedProductIds.has(SAMPLE_LISTING_PRODUCT.id)
+                      selectedProductIds.has(nonTryOnSample.id)
                         ? 'border-primary ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/40'
                     }`}
