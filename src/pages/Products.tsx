@@ -166,10 +166,12 @@ export default function Products() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <Button onClick={() => navigate('/app/products/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Products
-            </Button>
+            {products.length > 0 && (
+              <Button onClick={() => navigate('/app/products/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Products
+              </Button>
+            )}
           </div>
         </div>
 
