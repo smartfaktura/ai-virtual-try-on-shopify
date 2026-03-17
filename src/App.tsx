@@ -103,6 +103,7 @@ const App = () => (
             <Route path="/features/shopify-image-generator" element={<ShopifyImageGenerator />} />
             <Route path="/features/upscale" element={<UpscaleFeature />} />
             <Route path="/features/perspectives" element={<PerspectivesFeature />} />
+            <Route path="/features/real-estate-staging" element={<RealEstateStagingFeature />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/try" element={<TryFree />} />
 
