@@ -183,7 +183,8 @@ export default function Workflows() {
       }));
     },
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 10_000,
+    refetchInterval: 30_000,
   });
 
   // ── Recent Picture Perspectives from freestyle_generations ──
