@@ -53,8 +53,8 @@ function ActiveGroupCard({
   onCancelJob?: (jobId: string, creditsReserved: number) => void;
 }) {
   const navigate = useNavigate();
-  const isBatch = group.totalCount > 1;
-  const progressPct = isBatch ? Math.round((group.completedCount / group.totalCount) * 100) : 0;
+  const hasMultipleImages = group.totalImageCount > 1;
+  const progressPct = hasMultipleImages ? Math.round((group.generatedImageCount / group.totalImageCount) * 100) : 0;
   const isProcessing = group.processingCount > 0;
   const elapsed = elapsedLabel(group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at);
 
