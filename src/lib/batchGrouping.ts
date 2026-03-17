@@ -15,6 +15,10 @@ export interface ActiveJob {
   quality?: string | null;
   batch_id?: string | null;
   resolution?: string | null;
+  /** From payload.imageCount or payload.image_count — total images this job should produce */
+  imageCount?: number;
+  /** From result.generatedCount — images generated so far */
+  generatedCount?: number;
 }
 
 export interface BatchGroup {
