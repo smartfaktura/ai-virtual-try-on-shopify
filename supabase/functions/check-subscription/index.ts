@@ -180,8 +180,9 @@ serve(async (req) => {
       subscriptionId = activeSub.id;
 
       // Safe date conversion — handle both number and string formats
-      logStep("current_period_end raw value", { value: activeSub.current_period_end, type: typeof activeSub.current_period_end });
-      periodEnd = safeISODate(activeSub.current_period_end);
+      const rawPeriodEnd = activeSub.items?.data?.[0]?.current_period_end ?? activeSub.current_period_end;
+      logStep("current_period_end raw value", { value: rawPeriodEnd, type: typeof rawPeriodEnd });
+      periodEnd = safeISODate(rawPeriodEnd);
 
       logStep("Active subscription found", { plan, subscriptionStatus, periodEnd, billingInterval });
     } else {
