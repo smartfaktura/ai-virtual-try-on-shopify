@@ -48,7 +48,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       {images.map((img, i) => (
          <ShimmerImage
            key={i}
-            src={getOptimizedUrl(img, { width: 600, quality: 60 })}
+            src={getOptimizedUrl(img, { quality: 60 })}
             alt={`${label} AI-generated product shot`}
             loading="lazy"
             decoding="async"
@@ -70,42 +70,42 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
     images: [
-      s('fashion-camel-coat.png'),
-      s('fashion-white-suit.png'),
-      s('fashion-knit-loft.png'),
-      s('fashion-activewear-gym.png'),
+      s('fashion-blazer-golden.jpg'),
+      s('fashion-dress-botanical.jpg'),
+      s('fashion-cashmere-cafe.jpg'),
+      s('fashion-streetwear-urban.jpg'),
     ],
     cycleDuration: 7000,
   },
   {
     label: 'Skincare',
     images: [
-      s('skincare-serum-model.png'),
-      s('skincare-serum-marble.png'),
-      s('skincare-model-light.png'),
-      s('skincare-perfume-vanity.png'),
+      s('skincare-serum-marble.jpg'),
+      s('skincare-cream-botanical.jpg'),
+      s('skincare-retinol-model.jpg'),
+      s('skincare-oil-lifestyle.jpg'),
     ],
     cycleDuration: 8500,
   },
   {
     label: 'Food & Drinks',
     images: [
-      s('food-cocktail-bar.png'),
-      s('food-avocado-toast.png'),
-      s('food-pavlova-berries.png'),
-      s('food-raspberry-dessert.png'),
-      s('food-cocktail-rocks.png'),
+      s('food-coffee-artisan.jpg'),
+      s('food-pasta-rustic.jpg'),
+      s('food-honey-golden.jpg'),
+      s('food-smoothie-bright.jpg'),
+      s('food-acai-bright.jpg'),
     ],
     cycleDuration: 6000,
   },
   {
     label: 'Home & Living',
     images: [
-      s('home-candle-evening.png'),
-      s('home-vases-shelf.png'),
-      s('home-lamp-evening.png'),
-      s('home-bedroom-morning.png'),
-      s('home-pendant-kitchen.png'),
+      s('home-candle-evening.jpg'),
+      s('home-vases-shelf.jpg'),
+      s('home-lamp-evening.jpg'),
+      s('home-bedroom-morning.jpg'),
+      s('home-pendant-kitchen.jpg'),
     ],
     cycleDuration: 7500,
   },

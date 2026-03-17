@@ -1,29 +1,52 @@
 
 
-## Fix: Showcase images broken + zoomed
+## Product Perspectives — Implemented ✅
 
-### Root cause
-The images referenced in `ProductCategoryShowcase.tsx` (e.g., `fashion-camel-coat.png`, `skincare-serum-model.png`, `food-cocktail-bar.png`) **do not exist** in the `landing-assets` storage bucket. The bucket contains completely different filenames. The previous edit switched from working local paths to non-existent storage URLs.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Available images in storage (`showcase/` folder)
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-| Category | Available files |
-|----------|----------------|
-| Fashion | `fashion-activewear-bright.jpg`, `fashion-activewear-studio.jpg`, `fashion-blazer-golden.jpg`, `fashion-blazer-street.jpg`, `fashion-cashmere-cafe.jpg`, `fashion-dress-botanical.jpg`, `fashion-dress-garden.jpg`, `fashion-street-denim.jpg`, `fashion-streetwear-urban.jpg` |
-| Skincare | `skincare-cream-botanical.jpg`, `skincare-cream-moody.jpg`, `skincare-oil-bathroom.jpg`, `skincare-oil-lifestyle.jpg`, `skincare-retinol-model.jpg`, `skincare-serum-marble.jpg`, `skincare-serum-morning.jpg`, `skincare-set-minimal.jpg` |
-| Food | `food-acai-bright.jpg`, `food-bread-bakery.jpg`, `food-bread-countertop.png`, `food-coffee-artisan.jpg`, `food-coffee-pourover.jpg`, `food-honey-farmhouse.jpg`, `food-honey-golden.jpg`, `food-pasta-artisan.jpg`, `food-pasta-rustic.jpg`, `food-smoothie-bright.jpg` |
-| Home | `home-bedroom-morning.jpg`, `home-candle-evening.jpg`, `home-candle-scandi.jpg`, `home-lamp-desk.jpg`, `home-lamp-evening.jpg`, `home-pendant-kitchen.jpg`, `home-textiles-bedroom.jpg`, `home-vases-japandi.jpg`, `home-vases-shelf.jpg` |
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-### Fix (single file: `ProductCategoryShowcase.tsx`)
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-1. **Update all image paths** in `CATEGORIES` to use the actual filenames from storage (`.jpg` not `.png`)
-2. **Remove `width: 600`** from `getOptimizedUrl` — use quality-only compression (`{ quality: 60 }`) to prevent server-side cropping/zooming, per existing project convention
-3. Keep `object-cover` on the images for proper card fill without distortion
 
-Selected images (4 per category, visually diverse):
+## Image Optimization for AI Generation — Implemented ✅
 
-- **Fashion**: `fashion-blazer-golden.jpg`, `fashion-dress-botanical.jpg`, `fashion-cashmere-cafe.jpg`, `fashion-streetwear-urban.jpg`
-- **Skincare**: `skincare-serum-marble.jpg`, `skincare-cream-botanical.jpg`, `skincare-retinol-model.jpg`, `skincare-oil-lifestyle.jpg`
-- **Food**: `food-coffee-artisan.jpg`, `food-pasta-rustic.jpg`, `food-honey-golden.jpg`, `food-smoothie-bright.jpg`, `food-acai-bright.jpg`
-- **Home**: `home-candle-evening.jpg`, `home-vases-shelf.jpg`, `home-lamp-evening.jpg`, `home-bedroom-morning.jpg`, `home-pendant-kitchen.jpg`
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
