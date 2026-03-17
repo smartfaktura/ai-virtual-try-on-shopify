@@ -193,7 +193,7 @@ function polishUserPrompt(
     }
     if (context.hasScene) {
       const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct, context.hasModel].filter(Boolean).length + 1;
-      parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective throughout.`);
+      parts.push(`${num}. SCENE: Use [SCENE IMAGE] for environment, lighting, and atmosphere ONLY. If the scene contains any products, bottles, accessories, or commercial items, IGNORE them completely — the ONLY product in the final image must be from [PRODUCT IMAGE].`);
     }
 
     parts.push("");
@@ -384,7 +384,7 @@ function polishUserPrompt(
   // Scene / environment layer
   if (context.hasScene) {
     layers.push(
-      "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background elements, props, foliage, architecture, and atmosphere. Match the lighting direction, color temperature, and time of day. The final image should look like it was photographed in that exact location. Do NOT substitute a different environment or background."
+      "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background architecture, foliage, surfaces, and atmosphere. Match the lighting direction, color temperature, and time of day. CRITICAL: If the scene image contains any products, bottles, accessories, or commercial items, IGNORE them completely — do NOT reproduce them. The ONLY product in the final image must be the one from [PRODUCT IMAGE]. Use the scene ONLY for its environment, setting, and mood. Do NOT substitute a different environment or background."
     );
   }
 
