@@ -1449,7 +1449,7 @@ export default function Generate() {
 
   const getStepNumber = () => {
     if (isUpscale) {
-      const map: Record<string, number> = { source: 1, product: 1, upload: 1, settings: 2, generating: 3, results: 3 };
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, library: 1, settings: 2, generating: 3, results: 3 };
       return map[currentStep] || 1;
     }
     if (isFlatLay) {
