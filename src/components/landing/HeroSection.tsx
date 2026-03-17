@@ -354,7 +354,8 @@ export function HeroSection() {
                     key={scIdx}
                     src={optimizeProduct(sc.product.img)}
                     alt={sc.product.label}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    wrapperClassName="absolute inset-0"
+                    className="w-full h-full object-cover"
                     width={48}
                     height={64}
                     fetchPriority={scIdx === 0 ? 'high' : undefined}
@@ -402,8 +403,8 @@ export function HeroSection() {
                       key={scIdx}
                       src={optimizeProduct(sc.product.img)}
                       alt={sc.product.label}
-                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-                      aspectRatio="3/4"
+                      wrapperClassName="absolute inset-0"
+                      className="w-full h-full object-cover transition-opacity duration-500"
                       width={200}
                       height={267}
                       fetchPriority={scIdx === 0 ? 'high' : undefined}
