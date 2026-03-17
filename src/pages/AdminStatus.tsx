@@ -44,10 +44,14 @@ interface StatsData {
 }
 
 const RANGE_LABELS: Record<TimeRange, string> = {
+  today: 'Today',
+  yesterday: 'Yesterday',
   24: '24 hours',
   168: '7 days',
   720: '30 days',
 };
+
+const RANGE_OPTIONS: TimeRange[] = ['today', 'yesterday', 24, 168, 720];
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
