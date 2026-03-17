@@ -2319,13 +2319,13 @@ export default function Generate() {
                     }`}
                     onClick={() => {
                       const next = new Set(selectedProductIds);
-                      if (next.has(SAMPLE_LISTING_PRODUCT.id)) {
-                        next.delete(SAMPLE_LISTING_PRODUCT.id);
+                      if (next.has(nonTryOnSample.id)) {
+                        next.delete(nonTryOnSample.id);
                         setSelectedProduct(null);
                       } else {
                         next.clear();
-                        next.add(SAMPLE_LISTING_PRODUCT.id);
-                        setSelectedProduct(SAMPLE_LISTING_PRODUCT);
+                        next.add(nonTryOnSample.id);
+                        setSelectedProduct(nonTryOnSample);
                       }
                       setSelectedProductIds(next);
                     }}
