@@ -161,11 +161,11 @@ function ActiveGroupCard({
         </div>
 
         {/* Batch progress bar */}
-        {isBatch && (
+        {hasMultipleImages && (
           <div className="relative">
             <Progress value={progressPct} className="h-1.5" />
             <span className="absolute right-0 -top-4 text-[10px] text-muted-foreground font-medium">
-              {group.completedCount}/{group.totalCount}
+              {group.generatedImageCount}/{group.totalImageCount}
             </span>
           </div>
         )}
