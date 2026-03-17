@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { LandingNav } from './LandingNav';
 import { LandingFooter } from './LandingFooter';
+import { SignupSlideUp } from './SignupSlideUp';
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -12,6 +13,7 @@ export function PageLayout({ children }: PageLayoutProps) {
       <LandingNav />
       <main className="flex-1 pt-16">{children}</main>
       <LandingFooter />
+      <SignupSlideUp />
     </div>
   );
 }
