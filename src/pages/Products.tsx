@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Package, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, ImagePlus, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -241,7 +241,11 @@ export default function Products() {
                 heading={isFiltered ? 'No products match your filters' : 'No products yet'}
                 description={isFiltered ? 'Try a different search term or clear filters.' : ''}
                 action={!isFiltered ? { content: 'Add Products', onAction: () => navigate('/app/products/new') } : undefined}
-                icon={<Package className="w-12 h-12" />}
+                icon={
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                    <ImagePlus className="w-8 h-8 text-primary/60" />
+                  </div>
+                }
                 teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
               />
             );
