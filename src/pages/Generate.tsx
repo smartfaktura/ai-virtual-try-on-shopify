@@ -72,6 +72,9 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
+
+const SAMPLE_PRODUCT_IDS = ['prod_fashion_001', 'prod_fashion_003', 'prod_cosmetics_003', 'prod_food_002', 'prod_home_003', 'prod_supp_003'];
+const sampleProducts = mockProducts.filter(p => SAMPLE_PRODUCT_IDS.includes(p.id));
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
@@ -2205,7 +2208,19 @@ export default function Generate() {
                   </div>
                 </div>
               ) : (
-                <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Samples</Badge>
+                      <span className="text-xs text-muted-foreground">Sample products — upload yours to get started</span>
+                    </div>
+                    <Button size="sm" onClick={() => setShowAddProduct(true)} className="gap-1.5">
+                      <UploadIcon className="w-3.5 h-3.5" />
+                      Upload Product
+                    </Button>
+                  </div>
+                  <ProductMultiSelect products={sampleProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+                </div>
               )
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
@@ -2576,7 +2591,7 @@ export default function Generate() {
                 } else {
                   const mappedProducts = userProducts.length > 0
                     ? userProducts.map(up => mapUserProductToProduct(up))
-                    : mockProducts;
+                    : sampleProducts;
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   
                   // Flat Lay: store all selected products and go to brand/surfaces
@@ -3671,7 +3686,7 @@ export default function Generate() {
       <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}
         selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])} product={selectedProduct} existingImages={selectedProduct?.images || []} />
       <ProductAssignmentModal open={productAssignmentModalOpen} onClose={() => setProductAssignmentModalOpen(false)}
-        products={mockProducts} selectedProduct={assignToProduct} onSelectProduct={setAssignToProduct}
+        products={userProducts.length > 0 ? userProducts.map(up => mapUserProductToProduct(up)) : sampleProducts} selectedProduct={assignToProduct} onSelectProduct={setAssignToProduct}
         onPublish={(product, mode) => { toast.success(`${selectedForPublish.size} image(s) ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`); setProductAssignmentModalOpen(false); navigate('/app/library'); }}
         selectedImageCount={selectedForPublish.size} />
       <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
