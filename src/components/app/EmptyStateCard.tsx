@@ -25,6 +25,7 @@ interface EmptyStateCardProps {
     content: string;
     onAction: () => void;
     variant?: 'default' | 'outline';
+    icon?: React.ReactNode;
   }>;
   image?: string;
   icon?: React.ReactNode;
