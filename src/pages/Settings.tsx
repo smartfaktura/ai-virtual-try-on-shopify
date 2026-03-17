@@ -227,59 +227,66 @@ export default function Settings() {
       <div className="space-y-6">
         {/* ─── Current Plan ─── */}
         <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold">Current Plan</h3>
-                <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
-                {plan !== 'free' && (
-                  <Badge variant="outline" className="text-[10px]">
-                    {billingInterval === 'annual' ? 'Billed annually' : 'Billed monthly'}
-                  </Badge>
-                )}
-              </div>
-              {(() => {
-                const currentPlanData = pricingPlans.find(p => p.planId === plan);
-                const displayPrice = currentPlanData
-                  ? billingInterval === 'annual'
-                    ? Math.round(currentPlanData.annualPrice / 12)
-                    : currentPlanData.monthlyPrice
-                  : null;
-                return (
-                  <p className="text-sm text-muted-foreground">
-                    {displayPrice !== null && displayPrice > 0 && <>${displayPrice}/mo • </>}
-                    {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
-                    {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                  </p>
-                );
-              })()}
-              {plan !== 'free' && billingInterval !== 'annual' && (
-                <button
-                  className="text-xs text-primary hover:underline underline-offset-2 mt-1 font-medium"
-                  onClick={openCustomerPortal}
-                >
-                  Switch to annual & save 20% →
-                </button>
+          <CardContent className="p-5 space-y-3">
+            {/* Plan header */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-semibold">Current Plan</h3>
+              <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
+              {plan !== 'free' && (
+                <Badge variant="outline" className="text-[10px]">
+                  {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
+                </Badge>
               )}
             </div>
-            <Separator />
-            <div className="space-y-2">
+
+            {/* Price · credits · renewal — single line */}
+            {(() => {
+              const currentPlanData = pricingPlans.find(p => p.planId === plan);
+              const displayPrice = currentPlanData
+                ? billingInterval === 'annual'
+                  ? Math.round(currentPlanData.annualPrice / 12)
+                  : currentPlanData.monthlyPrice
+                : null;
+              return (
+                <p className="text-sm text-muted-foreground -mt-1">
+                  {displayPrice !== null && displayPrice > 0 && <>${displayPrice}/mo • </>}
+                  {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
+                  {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                </p>
+              );
+            })()}
+
+            {plan !== 'free' && billingInterval !== 'annual' && (
+              <button
+                className="text-xs text-primary hover:underline underline-offset-2 font-medium -mt-1"
+                onClick={openCustomerPortal}
+              >
+                Switch to annual & save 20% →
+              </button>
+            )}
+
+            {/* Credits — compact row + bar */}
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Credits Remaining</span>
-                <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
+                <span className="text-sm text-muted-foreground">Credits</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {subscriptionStatus === 'canceling' && currentPeriodEnd
+                      ? `· ends ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                      : currentPeriodEnd && plan !== 'free'
+                        ? `· resets ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                        : '· resets monthly'}
+                  </span>
+                </div>
               </div>
-              <Progress value={creditsPercentage} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {subscriptionStatus === 'canceling' && currentPeriodEnd
-                  ? `Access until ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                  : currentPeriodEnd && plan !== 'free'
-                    ? `Resets ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                    : 'Resets on the 1st of each month'}
-              </p>
+              <Progress value={creditsPercentage} className="h-1.5" />
             </div>
+
+            {/* Billing CTA */}
             {plan !== 'free' ? (
-              <Button variant="secondary" className="w-full" onClick={openCustomerPortal}>
-                <ExternalLink className="w-4 h-4 mr-2" />
+              <Button variant="secondary" size="sm" className="w-full" onClick={openCustomerPortal}>
+                <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                 Manage Billing & Invoices
               </Button>
             ) : (
