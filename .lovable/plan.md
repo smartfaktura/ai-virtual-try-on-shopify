@@ -1,39 +1,52 @@
 
 
-## Replace 6 Sample Products with Single Ring Sample for Non-Try-On Workflows
+## Product Perspectives — Implemented ✅
 
-### What changes
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-**File: `src/pages/Generate.tsx`**
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-1. **Add a new sample product constant** (next to existing `SAMPLE_TRYON_PRODUCT` and `SAMPLE_UGC_PRODUCT`):
-   ```ts
-   const SAMPLE_LISTING_PRODUCT: Product = {
-     id: 'sample_listing_ring',
-     title: 'Diamond Engagement Ring',
-     vendor: 'Sample',
-     productType: 'Jewelry',
-     tags: ['ring', 'diamond', 'jewelry', 'engagement'],
-     description: 'Pavé-set diamond engagement ring in white gold with signature ruby accent.',
-     images: [{ id: 'img_sample_listing', url: '/images/samples/sample-ring.png' }],
-     status: 'active',
-     createdAt: '2024-01-01T00:00:00Z',
-     updatedAt: '2024-01-01T00:00:00Z',
-   };
-   ```
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-2. **Copy the uploaded ring image** to `public/images/samples/sample-ring.png`.
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-3. **Replace the 6-product sample grid** (lines ~2282-2463) with a single-card layout matching the try-on sample pattern — one card with image, title, description, checkmark, plus "Add Your Products" / "Upload Instead" buttons below.
 
-4. **Update the continue handler** (line ~2837): replace `sampleProducts` fallback with `[SAMPLE_LISTING_PRODUCT]` so the single sample is recognized as a valid selection.
+## Image Optimization for AI Generation — Implemented ✅
 
-5. **Add `SAMPLE_LISTING_PRODUCT`** to the sample ID check in the `product_id` sanitization for generation payloads (ensures `null` is sent for the sample to avoid FK errors).
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-6. **Remove the `SAMPLE_PRODUCT_IDS` / `sampleProducts`** constants (lines 76-77) since they're no longer used.
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
-### Result
-- Non-try-on workflows (Product Listing Set, etc.) show a single ring sample card when the user has no products
-- Try-on workflows continue showing crop top / ice roller as before
-- The ring image is optimized as a static asset under `/images/samples/`
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
