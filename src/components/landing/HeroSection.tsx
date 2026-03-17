@@ -179,19 +179,18 @@ export function HeroSection() {
   }, []);
 
   const updateScrollState = useCallback(() => {
-    const el = scrollRef.current;
+    const el = scrollRefs.current[activeScene];
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    // Update active dot based on scroll position
-    const itemWidth = 196; // ~180px + gap
+    const itemWidth = 196;
     const idx = Math.round(el.scrollLeft / itemWidth);
     setVisibleDot(Math.min(idx, current.outputs.length - 1));
-  }, [current.outputs.length]);
+  }, [activeScene, current.outputs.length]);
 
   // Reset scroll when switching scenes
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = scrollRefs.current[activeScene];
     if (el) {
       el.scrollTo({ left: 0 });
       setVisibleDot(0);
@@ -200,7 +199,7 @@ export function HeroSection() {
   }, [activeScene, updateScrollState]);
 
   const scroll = (direction: 'left' | 'right') => {
-    const el = scrollRef.current;
+    const el = scrollRefs.current[activeScene];
     if (!el) return;
     const amount = 220;
     el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
