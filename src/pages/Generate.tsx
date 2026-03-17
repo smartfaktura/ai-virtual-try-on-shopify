@@ -2730,9 +2730,10 @@ export default function Generate() {
                     }
                   }
                 } else {
+                  const nonTryOnSample = isMirrorSelfie ? SAMPLE_MIRROR_PRODUCT : SAMPLE_LISTING_PRODUCT;
                   const mappedProducts = userProducts.length > 0
                     ? userProducts.map(up => mapUserProductToProduct(up))
-                    : [SAMPLE_LISTING_PRODUCT];
+                    : [nonTryOnSample];
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   
                   // Flat Lay: store all selected products and go to brand/surfaces
