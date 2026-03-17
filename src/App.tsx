@@ -60,6 +60,7 @@ const AIModelsBackgroundsFeature = lazy(() => import('@/pages/features/AIModelsB
 const ShopifyImageGenerator = lazy(() => import('@/pages/features/ShopifyImageGenerator'));
 const UpscaleFeature = lazy(() => import('@/pages/features/UpscaleFeature'));
 const PerspectivesFeature = lazy(() => import('@/pages/features/PerspectivesFeature'));
+const RealEstateStagingFeature = lazy(() => import('@/pages/features/RealEstateStagingFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
 
