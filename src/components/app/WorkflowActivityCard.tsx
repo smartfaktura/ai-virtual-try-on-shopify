@@ -63,7 +63,7 @@ function ActiveGroupCard({
 
   const team = useMemo(() => pickTeamForGroup(group.key), [group.key]);
 
-  // Cycle through status messages
+  // Cycle through team members
   const [msgIdx, setMsgIdx] = useState(0);
   useEffect(() => {
     if (!isProcessing) return;
@@ -78,59 +78,68 @@ function ActiveGroupCard({
 
   return (
     <Card className="border-primary/20 bg-gradient-to-r from-primary/[0.04] to-primary/[0.08] overflow-hidden">
-      <CardContent className="py-4 px-5 space-y-3">
-        {/* Header row */}
-        <div className="flex items-center gap-4">
-          {/* Animated avatar stack */}
-          <div className="relative flex items-center shrink-0">
-            {team.slice(0, 3).map((member, i) => (
-              <div
-                key={member.name}
-                className="relative rounded-full ring-2 ring-background"
-                style={{ marginLeft: i > 0 ? '-8px' : 0, zIndex: 3 - i }}
-              >
-                <Avatar className={`w-9 h-9 ${i === msgIdx % team.length && isProcessing ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}`}>
-                  <AvatarImage src={member.avatar} alt={member.name} />
-                  <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
-                </Avatar>
-                {i === 0 && isProcessing && (
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background animate-pulse" />
-                )}
+      <CardContent className="py-3 px-4 sm:py-4 sm:px-5 space-y-2.5">
+        {/* Header row — stacks on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
+          {/* Avatar + agent name row */}
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Single rotating avatar */}
+            <div className="relative shrink-0">
+              <div className="relative w-10 h-10">
+                {team.map((member, i) => (
+                  <Avatar
+                    key={member.name}
+                    className={`w-10 h-10 absolute inset-0 transition-opacity duration-500 ${
+                      i === msgIdx % team.length ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    <AvatarImage src={member.avatar} alt={member.name} />
+                    <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
+                  </Avatar>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">
-              {group.workflow_name ?? 'Workflow generation'}
-              {group.product_name ? ` — ${group.product_name}` : ''}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isBatch ? (
-                <>{group.completedCount} of {group.totalCount} {unitLabel} generated · {elapsed}</>
-              ) : isProcessing ? (
-                <>1 image · Generating… {elapsed}</>
-              ) : (
-                <>1 image · Queued · waiting {elapsed}</>
+              {isProcessing && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background animate-pulse z-10" />
               )}
-            </p>
-            {/* Animated agent status message */}
-            {isProcessing && (
-              <p className="text-[11px] text-primary/80 font-medium mt-0.5 flex items-center gap-1 animate-fade-in" key={currentAgent.name}>
-                <Sparkles className="w-3 h-3" />
-                {currentAgent.name}: "{currentAgent.statusMessage}"
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">
+                {group.workflow_name ?? 'Workflow generation'}
+                {group.product_name ? ` — ${group.product_name}` : ''}
               </p>
-            )}
+              <p className="text-xs text-muted-foreground">
+                {isBatch ? (
+                  <>{group.completedCount}/{group.totalCount} {unitLabel} · {elapsed}</>
+                ) : isProcessing ? (
+                  <>Generating… {elapsed}</>
+                ) : (
+                  <>Queued · {elapsed}</>
+                )}
+                {isProcessing && (
+                  <span className="hidden sm:inline text-muted-foreground/60">
+                    {' '}· est. ~{isProModel ? '60-120s' : '15-30s'}/{isStagingWorkflow ? 'style' : 'img'}
+                  </span>
+                )}
+              </p>
+              {/* Agent status message */}
+              {isProcessing && (
+                <p className="text-[11px] text-primary/80 font-medium mt-0.5 flex items-center gap-1 animate-fade-in" key={currentAgent.name}>
+                  <Sparkles className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{currentAgent.name}: "{currentAgent.statusMessage}"</span>
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Actions & badges */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 pl-[52px] sm:pl-0">
             {hasStuckJobs && onCancelJob && (
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+                className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 h-7 text-xs"
                 onClick={() => stuckJobs.forEach((j) => onCancelJob(j.id, j.credits_reserved ?? 0))}
               >
                 <X className="w-3.5 h-3.5" />
@@ -139,7 +148,7 @@ function ActiveGroupCard({
             )}
             {isProcessing && isProModel && (
               <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold bg-primary/10 text-primary hover:bg-primary/10">
-                Pro Model
+                Pro
               </Badge>
             )}
             <Badge
@@ -150,14 +159,6 @@ function ActiveGroupCard({
             </Badge>
           </div>
         </div>
-
-        {/* Time estimate */}
-        {isProcessing && (
-          <p className="text-[11px] text-muted-foreground/60 pl-[calc(3*2.25rem-16px+16px)]">
-            {isProModel ? 'Pro' : 'Standard'} model — est. ~{isProModel ? '60-120s' : '15-30s'} per {isStagingWorkflow ? 'style' : 'image'}
-            {isBatch && group.totalCount > 1 && ` · ~${Math.ceil(group.totalCount * (isProModel ? 1 : 0.25))}-${Math.ceil(group.totalCount * (isProModel ? 2 : 0.5))} min total`}
-          </p>
-        )}
 
         {/* Batch progress bar */}
         {isBatch && (
@@ -198,109 +199,130 @@ export function WorkflowActivityCard({
     <div className="space-y-3">
       <p className="section-label">Activity</p>
 
-      {/* Active / in-progress batch groups */}
+      {/* Active groups */}
       {batchGroups.map((group) => (
         <ActiveGroupCard key={group.key} group={group} onCancelJob={onCancelJob} />
       ))}
 
-      {/* Recently completed groups */}
+      {/* Completed groups */}
       {completedGroups.map((group) => {
         const isBatch = group.totalCount > 1;
         const team = pickTeamForGroup(group.key);
+        const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
         return (
           <Card key={group.key} className="border-emerald-500/20 bg-emerald-500/[0.04]">
-            <CardContent className="flex items-center gap-4 py-4 px-5">
-              <div className="relative flex items-center shrink-0">
-                {team.slice(0, 2).map((member, i) => (
-                  <div key={member.name} className="rounded-full ring-2 ring-background" style={{ marginLeft: i > 0 ? '-8px' : 0, zIndex: 2 - i }}>
-                    <Avatar className="w-9 h-9">
-                      <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
+            <CardContent className="py-3 px-4 sm:py-4 sm:px-5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
+                {/* Avatar + info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="relative shrink-0">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={team[0].avatar} alt={team[0].name} />
+                      <AvatarFallback className="text-[10px] font-bold">{team[0].name[0]}</AvatarFallback>
                     </Avatar>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-background">
+                      <CheckCircle2 className="w-3 h-3 text-white" />
+                    </div>
                   </div>
-                ))}
-                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-background">
-                  <CheckCircle2 className="w-3 h-3 text-white" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {group.workflow_name ?? 'Workflow generation'}
+                      {group.product_name ? ` — ${group.product_name}` : ''}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {isBatch
+                        ? `${group.totalCount} ${isStagingWorkflow ? 'styles' : 'images'} complete`
+                        : '1 image complete'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0 pl-[52px] sm:pl-0">
+                  <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                    Completed
+                  </Badge>
+                  <Button size="sm" variant="ghost" className="gap-1.5 h-7 text-xs" onClick={() => navigate('/app/library')}>
+                    View
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                  {onDismiss && (
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onDismiss(group.key)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {group.workflow_name ?? 'Workflow generation'}
-                  {group.product_name ? ` — ${group.product_name}` : ''}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {(() => {
-                    const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
-                    return isBatch
-                      ? `${group.totalCount} of ${group.totalCount} ${isStagingWorkflow ? 'styles' : 'images'} complete`
-                      : '1 image complete';
-                  })()}
-                </p>
-              </div>
-              <Badge variant="secondary" className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
-                Completed
-              </Badge>
-              <Button size="sm" variant="ghost" className="shrink-0 gap-1.5" onClick={() => navigate('/app/library')}>
-                View Results
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-              {onDismiss && (
-                <Button size="icon" variant="ghost" className="shrink-0 h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onDismiss(group.key)}>
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              )}
             </CardContent>
           </Card>
         );
       })}
 
       {/* Failed groups */}
-      {failedGroups.map((group) => (
-        <Card key={group.key} className="border-destructive/20 bg-destructive/[0.04]">
-          <CardContent className="flex items-center gap-4 py-4 px-5">
-            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-destructive/10 shrink-0">
-              <XCircle className="w-4.5 h-4.5 text-destructive" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {group.workflow_name ?? 'Workflow generation'}
-                {group.product_name ? ` — ${group.product_name}` : ''}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {group.totalCount > 1
-                  ? `${group.failedCount} of ${group.totalCount} images failed`
-                  : '1 image failed'}
-                {group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 60)}` : ''}
-              </p>
-            </div>
-            <Badge variant="destructive" className="shrink-0 text-[10px] uppercase tracking-wider font-semibold">
-              Failed
-            </Badge>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="shrink-0 gap-1.5"
-              onClick={() =>
-                navigate(
-                  group.workflow_slug
-                    ? `/app/generate/${group.workflow_slug}`
-                    : group.workflow_id
-                      ? `/app/generate?workflow=${group.workflow_id}`
-                      : '/app/generate',
-                )
-              }
-            >
-              Retry
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-            {onDismiss && (
-              <Button size="icon" variant="ghost" className="shrink-0 h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onDismiss(group.key)}>
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+      {failedGroups.map((group) => {
+        const team = pickTeamForGroup(group.key);
+        return (
+          <Card key={group.key} className="border-destructive/20 bg-destructive/[0.04]">
+            <CardContent className="py-3 px-4 sm:py-4 sm:px-5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
+                {/* Avatar + info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="relative shrink-0">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={team[0].avatar} alt={team[0].name} />
+                      <AvatarFallback className="text-[10px] font-bold">{team[0].name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-destructive flex items-center justify-center border-2 border-background">
+                      <XCircle className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {group.workflow_name ?? 'Workflow generation'}
+                      {group.product_name ? ` — ${group.product_name}` : ''}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {group.totalCount > 1
+                        ? `${group.failedCount}/${group.totalCount} failed`
+                        : '1 image failed'}
+                      {group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 50)}` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0 pl-[52px] sm:pl-0">
+                  <Badge variant="destructive" className="text-[10px] uppercase tracking-wider font-semibold">
+                    Failed
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1.5 h-7 text-xs"
+                    onClick={() =>
+                      navigate(
+                        group.workflow_slug
+                          ? `/app/generate/${group.workflow_slug}`
+                          : group.workflow_id
+                            ? `/app/generate?workflow=${group.workflow_id}`
+                            : '/app/generate',
+                      )
+                    }
+                  >
+                    Retry
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                  {onDismiss && (
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onDismiss(group.key)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
