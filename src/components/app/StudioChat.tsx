@@ -257,6 +257,16 @@ export function StudioChat() {
         </div>
       </div>
 
+      {/* Contact Form Dialog */}
+      <ContactFormDialog
+        open={showContactForm}
+        onOpenChange={setShowContactForm}
+        onSuccess={(sentEmail) => {
+          setShowContactForm(false);
+          addSystemMessage(`✅ Your message has been sent to our team! We'll get back to you within 24 hours at ${sentEmail}.`);
+        }}
+      />
+
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
