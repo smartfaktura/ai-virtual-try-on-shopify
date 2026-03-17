@@ -306,6 +306,10 @@ serve(async (req) => {
         subject = `[VOVV.AI Contact] Message from ${(data?.name || "a user")}`;
         html = contactFormEmail(data || {});
         break;
+      case "lead_welcome":
+        subject = "You're in — VOVV.AI";
+        html = leadWelcomeEmail();
+        break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
           status: 400,
