@@ -100,7 +100,7 @@ export function CreativeDropsSection() {
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0">
                    <ShimmerImage
                      src={whiteCropTop}
-                     alt="White Crop Top"
+                     alt="Crop Top"
                      className="w-full h-full object-cover object-top"
                      aspectRatio="1/1"
                    />
