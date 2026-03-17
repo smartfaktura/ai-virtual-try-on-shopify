@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, X, Eye, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
@@ -21,6 +22,7 @@ export function PublicDiscoverDetailModal({
   onSelectRelated,
 }: PublicDiscoverDetailModalProps) {
   const navigate = useNavigate();
+  const [promptExpanded, setPromptExpanded] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -110,13 +112,19 @@ export function PublicDiscoverDetailModal({
 
             {/* Prompt (presets only) */}
             {isPreset && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Prompt
                 </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
+                <p className={cn("text-sm leading-relaxed text-muted-foreground", !promptExpanded && "line-clamp-4")}>
                   {description}
                 </p>
+                <button
+                  onClick={() => setPromptExpanded(!promptExpanded)}
+                  className="text-xs text-primary/70 hover:text-primary font-medium transition-colors"
+                >
+                  {promptExpanded ? 'Show less' : 'Show more'}
+                </button>
               </div>
             )}
 

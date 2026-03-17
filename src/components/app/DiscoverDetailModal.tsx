@@ -45,6 +45,7 @@ export function DiscoverDetailModal({
   const navigate = useNavigate();
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [promptExpanded, setPromptExpanded] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -228,13 +229,19 @@ export function DiscoverDetailModal({
 
             {/* Prompt (presets only) */}
             {isPreset && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Prompt
                 </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
+                <p className={cn("text-sm leading-relaxed text-muted-foreground", !promptExpanded && "line-clamp-4")}>
                   {description}
                 </p>
+                <button
+                  onClick={() => setPromptExpanded(!promptExpanded)}
+                  className="text-xs text-primary/70 hover:text-primary font-medium transition-colors"
+                >
+                  {promptExpanded ? 'Show less' : 'Show more'}
+                </button>
               </div>
             )}
 
