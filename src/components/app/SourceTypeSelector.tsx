@@ -2,7 +2,7 @@ import { Package, Upload, ImageIcon } from 'lucide-react';
 import type { GenerationSourceType } from '@/types';
 
 interface SourceTypeSelectorProps {
-  sourceType: GenerationSourceType;
+  sourceType: GenerationSourceType | null;
   onChange: (sourceType: GenerationSourceType) => void;
   showLibrary?: boolean;
 }
