@@ -2794,13 +2794,15 @@ export default function Generate() {
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={selectedProductIds.size === 0} onClick={() => {
                 if (activeWorkflow?.uses_tryon) {
-                  const selectedUps = userProducts.filter(p => selectedProductIds.has(p.id));
-                  if (selectedUps.length > 0) {
-                    const mappedProducts = selectedUps.map(up => mapUserProductToProduct(up));
-                    setSelectedProduct(mappedProducts[0]);
-                    setSelectedSourceImages(new Set([mappedProducts[0].images[0].id]));
-                    if (mappedProducts.length > 1) {
-                      setProductQueue(mappedProducts);
+                  // Build candidate list: DB products + sample product
+                  const dbMapped = userProducts.filter(p => selectedProductIds.has(p.id)).map(up => mapUserProductToProduct(up));
+                  const sampleSelected = selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id) ? [SAMPLE_TRYON_PRODUCT] : [];
+                  const candidates = [...dbMapped, ...sampleSelected];
+                  if (candidates.length > 0) {
+                    setSelectedProduct(candidates[0]);
+                    setSelectedSourceImages(new Set([candidates[0].images[0].id]));
+                    if (candidates.length > 1) {
+                      setProductQueue(candidates);
                       setCurrentProductIndex(0);
                       setMultiProductResults(new Map());
                       if (isMirrorSelfie) {
@@ -2810,6 +2812,7 @@ export default function Generate() {
                         setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                       }
                     } else {
+                      setProductQueue([]);
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     }
                   }
