@@ -223,7 +223,7 @@ export default function Generate() {
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
-  const [sourceType, setSourceType] = useState<GenerationSourceType>('product');
+  const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
