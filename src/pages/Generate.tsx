@@ -1091,6 +1091,11 @@ export default function Generate() {
         imageCount: workflowImageCount,
         hasModel: !!needsModel,
         hasScene: false,
+        onJobEnqueued: (jobId) => injectActiveJob(queryClient, {
+          jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
+          job_type: 'workflow', quality: 'high', imageCount: workflowImageCount,
+        }),
       });
       if (!success) {
         setCurrentStep('settings');
