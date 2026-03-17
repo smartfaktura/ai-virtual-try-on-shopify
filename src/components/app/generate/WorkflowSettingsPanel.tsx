@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -153,6 +154,11 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
     isAdmin, isGeneratingPreviews,
     openBuyModal, handleGenerateClick, handleGenerateScenePreviews, setCurrentStep,
   } = props;
+
+  // Force high quality for Selfie / UGC workflows
+  useEffect(() => {
+    if (isSelfieUgc) setQuality('high');
+  }, [isSelfieUgc, setQuality]);
 
   return (
     <div className="space-y-4">
@@ -712,17 +718,19 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
         <>
           <Card><CardContent className="p-5 space-y-4">
             <h3 className="text-base font-semibold">Generation Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Quality</Label>
-                <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard — Fast generation</SelectItem>
-                    <SelectItem value="high">High — Best quality</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className={cn("grid gap-4", isSelfieUgc ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
+              {!isSelfieUgc && (
+                <div className="space-y-2">
+                  <Label>Quality</Label>
+                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard — Fast generation</SelectItem>
+                      <SelectItem value="high">High — Best quality</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Aspect Ratio</Label>
                 {isInteriorDesign ? (
