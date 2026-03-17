@@ -9,9 +9,22 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-type TimeRange = 24 | 168 | 720;
+type TimeRange = 'today' | 'yesterday' | 24 | 168 | 720;
+
+function getRangeHours(range: TimeRange): number {
+  if (range === 'today') {
+    const now = new Date();
+    return Math.max(1, now.getHours() + Math.round(now.getMinutes() / 60));
+  }
+  if (range === 'yesterday') {
+    const now = new Date();
+    return now.getHours() + 24 + Math.round(now.getMinutes() / 60);
+  }
+  return range;
+}
 
 interface StatsData {
   total: number;
