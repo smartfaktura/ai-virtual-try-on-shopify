@@ -1226,7 +1226,6 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
       }
-      send_feature_highlight_emails: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
