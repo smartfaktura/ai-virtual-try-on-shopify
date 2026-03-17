@@ -1,39 +1,52 @@
 
 
-## Fix Freestyle Gallery Layout for Few Images on Mobile
+## Product Perspectives — Implemented ✅
 
-### Problem
-When there are only 1-3 items (generating cards + images), the gallery uses a special flex layout (lines 569-586) with `flex-col sm:flex-row` and max-width/max-height constraints. On mobile, this causes the GeneratingCard avatar box to render at an awkward small size because the `max-h-[50vh]` combined with the aspect-ratio creates a cramped card.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Fix — `src/components/app/freestyle/FreestyleGallery.tsx`
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**Remove the special `count <= 3` branch on mobile.** Instead, always use the 2-column masonry grid on mobile regardless of item count. Keep the special centered flex layout only for desktop with ≤3 items.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-**Lines 569-587** — Change the condition from `count <= 3` to `count <= 3 && !isMobile`:
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-```tsx
-if (count <= 3 && !isMobile) {
-  return (
-    <>
-      <div className="flex flex-row items-stretch justify-center gap-2 px-3 lg:px-1">
-        {generatingCards.map((card, i) => (
-          <div key={`gen-wrap-${i}`} className="w-auto max-w-[45%] max-h-[calc(100vh-400px)]">{card}</div>
-        ))}
-        {blockedCards.map((card, i) => (
-          <div key={`block-wrap-${i}`} className="w-auto max-w-[45%] max-h-[calc(100vh-400px)]">{card}</div>
-        ))}
-        {failedCards.map((card, i) => (
-          <div key={`fail-wrap-${i}`} className="w-auto max-w-[45%] max-h-[calc(100vh-400px)]">{card}</div>
-        ))}
-        {imageCards(true)}
-      </div>
-      {modals}
-    </>
-  );
-}
-```
 
-On mobile, it falls through to the masonry grid (lines 589+) which already uses `columnCount = isMobile ? 2 : 3` — so mobile always gets a clean 2-column layout regardless of image count.
+## Image Optimization for AI Generation — Implemented ✅
 
-Single file, minimal change.
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
