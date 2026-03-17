@@ -1,52 +1,43 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix Product Switcher Pills Overflowing on Desktop/Tablet
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The switcher pills container sits below the 200px-wide upload card but the pills with `px-5 py-2 text-sm` are too wide to fit within that column, causing them to overflow or look misaligned.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Fix in `src/components/landing/HeroSection.tsx`
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**Desktop pills (lines 426-446):**
+- Reduce pill sizing back to `px-3 py-1.5 text-xs` so all 3 fit within the ~200px card width
+- Allow wrapping with `flex-wrap` as a safety net
+- Remove the "Try different products" label to save vertical space — the pills are now large enough to look interactive on their own
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
-
-
-## Image Optimization for AI Generation — Implemented ✅
-
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
-
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
-
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
+**Tablet check:** At `md` breakpoint (~768px), the same desktop layout applies. The card is `w-[200px]` so smaller pills will fit fine. No separate tablet fix needed.
 
 ### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
+```tsx
+// Lines 426-446 — shrink pills to fit card width
+<div className="flex flex-col items-center gap-1.5 mt-3">
+  <span className="text-[11px] text-muted-foreground">Try different products</span>
+  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+    {showcases.map((sc, i) => (
+      <button
+        key={i}
+        onClick={() => selectScene(i)}
+        onMouseEnter={() => preloadScene(i)}
+        className={`px-3 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+          activeScene === i
+            ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+            : 'bg-card text-muted-foreground border-border/80 hover:border-primary/40 hover:text-foreground hover:bg-accent/50'
+        }`}
+      >
+        {sc.product.label}
+      </button>
+    ))}
+  </div>
+</div>
+```
+
+### File
+- `src/components/landing/HeroSection.tsx` — one location (~line 426-446)
+
