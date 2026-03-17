@@ -113,7 +113,7 @@ export function LandingNav() {
               className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
               onClick={() => { setMobileOpen(false); navigate(user ? '/app' : '/auth'); }}
             >
-              {user ? 'My Dashboard' : 'Start Free'}
+              {user ? 'My Dashboard' : hasAccount ? 'Sign In' : 'Start Free'}
             </Button>
           </div>
         </div>
