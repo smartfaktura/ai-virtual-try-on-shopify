@@ -266,7 +266,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                'Workflow-specific variations'}
             </p>
             {variationStrategy?.type === 'scene' && (
-              <p className="text-xs text-muted-foreground/70 mt-1">
+              <p className="text-xs text-muted-foreground/70 mt-1 hidden sm:block">
                 Products shown are reference examples only. Our VOVV Studio AI team will generate each scene with your selected product.
               </p>
             )}
