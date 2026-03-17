@@ -9,6 +9,7 @@ const footerLinks = {
     { label: 'Brand Profiles', to: '/features/brand-profiles' },
     { label: 'Image Upscaling', to: '/features/upscale' },
     { label: 'Perspectives', to: '/features/perspectives' },
+    { label: 'Real Estate Staging', to: '/features/real-estate-staging' },
   ],
   Company: [
     { label: 'About', to: '/about' },
