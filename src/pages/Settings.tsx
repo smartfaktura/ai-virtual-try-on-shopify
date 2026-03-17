@@ -269,16 +269,7 @@ export default function Settings() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Credits</span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {subscriptionStatus === 'canceling' && currentPeriodEnd
-                      ? `· ends ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                      : currentPeriodEnd && plan !== 'free'
-                        ? `· resets ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                        : '· resets monthly'}
-                  </span>
-                </div>
+                <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
               </div>
               <Progress value={creditsPercentage} className="h-1.5" />
             </div>
