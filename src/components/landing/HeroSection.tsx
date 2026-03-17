@@ -369,15 +369,17 @@ export function HeroSection() {
                   <ArrowRight className="w-3 h-3 text-primary flex-shrink-0" />
                   <span className="text-[11px] font-bold text-primary whitespace-nowrap">∞ results</span>
                 </div>
+                <span className="text-[10px] text-muted-foreground">Switch product ↓</span>
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
                   {showcases.map((sc, i) => (
                     <button
                       key={i}
                       onClick={() => selectScene(i)}
-                      className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                      onMouseEnter={() => preloadScene(i)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                         activeScene === i
-                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                          : 'bg-card text-muted-foreground border-border'
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-105'
+                          : 'bg-card text-muted-foreground border-border/80 hover:border-primary/40'
                       }`}
                     >
                       {sc.product.label}
