@@ -2332,14 +2332,14 @@ export default function Generate() {
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img src={SAMPLE_LISTING_PRODUCT.images[0].url} alt={SAMPLE_LISTING_PRODUCT.title} className="w-full h-full object-cover" loading="eager" />
+                        <img src={nonTryOnSample.images[0].url} alt={nonTryOnSample.title} className="w-full h-full object-cover" loading="eager" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{SAMPLE_LISTING_PRODUCT.title}</p>
-                        <p className="text-xs text-muted-foreground">{SAMPLE_LISTING_PRODUCT.productType}</p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{SAMPLE_LISTING_PRODUCT.description}</p>
+                        <p className="text-sm font-medium truncate">{nonTryOnSample.title}</p>
+                        <p className="text-xs text-muted-foreground">{nonTryOnSample.productType}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{nonTryOnSample.description}</p>
                       </div>
-                      {selectedProductIds.has(SAMPLE_LISTING_PRODUCT.id) && (
+                      {selectedProductIds.has(nonTryOnSample.id) && (
                         <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
                       )}
                     </div>
