@@ -315,7 +315,7 @@ export function HowItWorks() {
                         <ShimmerImage src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-foreground">White Crop Top</p>
+                        <p className="text-xs font-semibold text-foreground">Crop Top</p>
                         <p className="text-[10px] text-muted-foreground">6 scenes generated</p>
                       </div>
                     </div>

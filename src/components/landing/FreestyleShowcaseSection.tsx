@@ -23,7 +23,7 @@ const CHIPS = [
   {
     key: 'product' as const,
     icon: Package,
-    label: 'White Crop Top',
+    label: 'Crop Top',
     mobileLabel: 'Crop Top',
     thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50 }),
     delay: 1500,

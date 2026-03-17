@@ -106,7 +106,7 @@ export function CreativeDropsSection() {
                    />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">White Crop Top</p>
+                  <p className="text-sm font-bold text-foreground">Crop Top</p>
                   <p className="text-[11px] text-muted-foreground">Scheduled for monthly drops</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
