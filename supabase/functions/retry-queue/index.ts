@@ -38,25 +38,8 @@ serve(async (req) => {
     }
     const userId = user.id;
 
-    // Verify user has a queued job
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
-
-    const { count } = await supabase
-      .from("generation_queue")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("status", "queued");
-
-    if (!count || count === 0) {
-      return new Response(
-        JSON.stringify({ message: "No queued jobs found" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Trigger process-queue with service role key
+    // Always trigger process-queue (it runs cleanup_stale_jobs first)
+    // This handles both queued jobs AND stuck processing jobs
     const res = await fetch(`${supabaseUrl}/functions/v1/process-queue`, {
       method: "POST",
       headers: {
@@ -64,14 +47,14 @@ serve(async (req) => {
         "Content-Type": "application/json",
         "x-queue-internal": "true",
       },
-      body: JSON.stringify({ trigger: "retry-queue" }),
+      body: JSON.stringify({ trigger: "retry-queue", user_id: userId }),
       signal: AbortSignal.timeout(5000),
     });
 
     console.log(`[retry-queue] Triggered process-queue for user ${userId}, status=${res.status}`);
 
     return new Response(
-      JSON.stringify({ triggered: true, status: res.status }),
+      JSON.stringify({ triggered: true, cleanup_triggered: true, status: res.status }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

@@ -15,6 +15,10 @@ export interface ActiveJob {
   quality?: string | null;
   batch_id?: string | null;
   resolution?: string | null;
+  /** From payload.imageCount or payload.image_count — total images this job should produce */
+  imageCount?: number;
+  /** From result.generatedCount — images generated so far */
+  generatedCount?: number;
 }
 
 export interface BatchGroup {
@@ -39,6 +43,10 @@ export interface BatchGroup {
   quality: string | null;
   /** Upscale resolution ('2k' or '4k') when job_type is 'upscale' */
   resolution: string | null;
+  /** Total images expected across all jobs in group (image-level, not job-level) */
+  totalImageCount: number;
+  /** Images generated so far across all jobs in group */
+  generatedImageCount: number;
 }
 
 /**
@@ -74,6 +82,9 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
     const processingCount = batch.filter((j) => j.status === 'processing').length;
     const queuedCount = batch.filter((j) => j.status === 'queued').length;
 
+    const totalImageCount = batch.reduce((sum, j) => sum + (j.imageCount || 1), 0);
+    const generatedImageCount = batch.reduce((sum, j) => sum + (j.generatedCount || (j.status === 'completed' ? (j.imageCount || 1) : 0)), 0);
+
     groups.push({
       key: `batch-${batchId}`,
       workflow_id: anchor.workflow_id,
@@ -91,6 +102,8 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       job_type: anchor.job_type ?? null,
       quality: anchor.quality ?? null,
       resolution: anchor.resolution ?? null,
+      totalImageCount,
+      generatedImageCount,
     });
   }
 
@@ -123,6 +136,9 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
     const processingCount = batch.filter((j) => j.status === 'processing').length;
     const queuedCount = batch.filter((j) => j.status === 'queued').length;
 
+    const totalImageCount = batch.reduce((sum, j) => sum + (j.imageCount || 1), 0);
+    const generatedImageCount = batch.reduce((sum, j) => sum + (j.generatedCount || (j.status === 'completed' ? (j.imageCount || 1) : 0)), 0);
+
     groups.push({
       key: `${anchor.workflow_id}-${anchor.product_name}-${anchorTime}`,
       workflow_id: anchor.workflow_id,
@@ -140,6 +156,8 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       job_type: anchor.job_type ?? null,
       quality: anchor.quality ?? null,
       resolution: anchor.resolution ?? null,
+      totalImageCount,
+      generatedImageCount,
     });
   }
 

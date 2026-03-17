@@ -1,68 +1,52 @@
 
-Goal: Fix the Product Listing Set workflow so cancel works reliably, progress shows “generated/total images,” and stuck jobs self-recover without misleading toasts.
 
-What I found (root cause)
-- Your two Product Listing queue jobs were stuck in `processing` and later auto-marked `failed` with `Timed out after 5 minutes`:
-  - `1a0cada5-698d-4259-836e-10d6765648a1`
-  - `23623046-b062-49b5-9c71-bb192ff6a83a`
-- Both jobs actually generated partial output (2 images each) in storage, but the queue row had `result = null`, so UI could not show progress.
-- Cancel from Workflows is currently broken by logic mismatch:
-  - UI tries to update status to `failed` (not `cancelled`).
-  - If that fails, it calls `retry-queue`, but `retry-queue` exits early when there are no queued jobs.
-  - UI still shows success toast + manual refund, so users see “cancelled/refunded” while cards stay processing.
-- `generate-workflow` has no per-request timeout and no in-flight progress writes, so long provider latency can leave jobs appearing stuck and not show “x/y”.
+## Product Perspectives — Implemented ✅
 
-Implementation plan
-1) Fix cancellation path (immediate user-visible fix)
-- File: `src/pages/Workflows.tsx`
-- Change cancel update from `status: 'failed'` to `status: 'cancelled'`.
-- Remove manual `refund_credits` call from client (refund should stay server-driven via cancellation trigger).
-- Show success toast only when DB update actually returns cancelled row.
-- If cancelling multiple stuck jobs in one card, show one consolidated toast (avoid duplicate toasts).
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-2) Make retry endpoint actually recover stuck processing jobs
-- File: `supabase/functions/retry-queue/index.ts`
-- Remove “must have queued jobs” gate.
-- Always trigger `process-queue`, because `process-queue` already runs `cleanup_stale_jobs` first.
-- Return structured response (`cleanup_triggered`, `process_status`) for better debugging.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-3) Add real progress metadata for workflow jobs
-- File: `supabase/functions/generate-workflow/index.ts`
-- After each successfully generated image, update queue row `result` with:
-  - `generatedCount`
-  - `requestedCount`
-  - `currentLabel`
-- Also refresh `timeout_at` heartbeat on each progress update to avoid false stale cleanup while work is actively progressing.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-4) Make workflow generation resilient to long provider hangs
-- File: `supabase/functions/generate-workflow/index.ts`
-- Add `AbortSignal.timeout(...)` to AI calls.
-- Add bounded retry strategy with shorter retries and a global per-job deadline guard.
-- On deadline/timeout, finalize queue row via `completeQueueJob` with partial success instead of leaving stale processing.
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-5) Show “x of y images” correctly in Activity cards
-- Files:
-  - `src/pages/Workflows.tsx`
-  - `src/lib/batchGrouping.ts`
-  - `src/components/app/WorkflowActivityCard.tsx`
-- Include `result` in active job query mapping.
-- Derive total from `payload.imageCount` / `result.requestedCount`.
-- Derive generated from `result.generatedCount` (fallback 0).
-- Update active/completed/failed card labels and progress bar to use image units (not queue-row count), so single workflow job with 3 images displays `2/3`, `3/3`, etc.
 
-6) Improve stuck cleanup re-trigger behavior on the page
-- File: `src/pages/Workflows.tsx`
-- Replace one-time `autoCleanupTriggeredRef` with a throttled “stuck signature” check, so newly stuck jobs can trigger cleanup again in the same session.
-- Add a manual Activity refresh button to force refetch of queue + failures + credits when user wants immediate sync.
+## Image Optimization for AI Generation — Implemented ✅
 
-Technical details
-- No schema migration is required for core fix (existing queue JSON `result` is enough).
-- Existing cancellation policy already supports updating queued/processing jobs to `cancelled`; UI just needs to use the correct status.
-- This removes the current misleading state where toast says cancelled/refunded but card remains processing.
-- This also prevents client-side double-refund behavior by eliminating direct client refund RPC from Workflows cancel flow.
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-Validation checklist after implementation
-- Cancel a stuck Product Listing job → status changes to `cancelled` quickly, card leaves active section, one correct toast.
-- Start 3-image Product Listing run → Activity shows `0/3 → 1/3 → 2/3 → 3/3`.
-- If one variation hangs, job ends with partial result/failure state and never lingers forever in `processing`.
-- Retry/cleanup works even when user has no queued jobs (only stale processing jobs).
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

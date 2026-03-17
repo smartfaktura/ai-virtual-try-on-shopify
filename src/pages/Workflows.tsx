@@ -23,7 +23,6 @@ export default function Workflows() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const prevActiveCountRef = useRef(0);
-  const autoCleanupTriggeredRef = useRef(false);
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
@@ -46,7 +45,7 @@ export default function Workflows() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, payload, error_message, job_type, credits_reserved')
+        .select('id, status, created_at, started_at, payload, error_message, job_type, credits_reserved, result')
         .in('status', ['queued', 'processing'])
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -58,6 +57,7 @@ export default function Workflows() {
         })
         .map((j): ActiveJob => {
           const p = j.payload as Record<string, unknown> | null;
+          const r = j.result as Record<string, unknown> | null;
           return {
             id: j.id,
             status: j.status,
@@ -72,6 +72,8 @@ export default function Workflows() {
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
             batch_id: (p?.batch_id as string) ?? null,
+            imageCount: ((p?.image_count as number) || (p?.imageCount as number)) ?? undefined,
+            generatedCount: (r?.generatedCount as number) ?? undefined,
           };
         });
     },
@@ -256,16 +258,19 @@ export default function Workflows() {
     prevActiveCountRef.current = activeJobs.length;
   }, [activeJobs.length, queryClient]);
 
-  // ── Auto-cleanup: trigger retry-queue for stuck processing jobs ──
+  // ── Auto-cleanup: trigger retry-queue for stuck processing jobs (throttled) ──
+  const lastCleanupSignatureRef = useRef('');
   useEffect(() => {
-    if (autoCleanupTriggeredRef.current) return;
     const stuckJobs = activeJobs.filter(
       (j) => j.status === 'processing' && j.started_at &&
         Date.now() - new Date(j.started_at).getTime() > 5 * 60 * 1000,
     );
     if (stuckJobs.length === 0) return;
 
-    autoCleanupTriggeredRef.current = true;
+    const signature = stuckJobs.map((j) => j.id).sort().join(',');
+    if (signature === lastCleanupSignatureRef.current) return;
+    lastCleanupSignatureRef.current = signature;
+
     console.log('[Workflows] Auto-triggering cleanup for', stuckJobs.length, 'stuck jobs');
 
     supabase.functions.invoke('retry-queue').then(() => {
@@ -278,24 +283,22 @@ export default function Workflows() {
   // ── Cancel stuck job handler ──
   const handleCancelJob = useCallback(async (jobId: string, creditsReserved: number) => {
     try {
-      // Mark job as failed via service — use direct REST update since RLS only allows
-      // updating queued jobs; for processing jobs we call the cleanup function
-      const { error: updateError } = await supabase
+      // RLS policy allows updating queued/processing → cancelled
+      const { data, error: updateError } = await supabase
         .from('generation_queue')
-        .update({ status: 'failed', error_message: 'Cancelled by user', completed_at: new Date().toISOString() } as never)
-        .eq('id', jobId);
+        .update({ status: 'cancelled' } as never)
+        .eq('id', jobId)
+        .select('id')
+        .single();
 
-      if (updateError) {
-        // If RLS blocks it (processing status), trigger cleanup instead
+      if (updateError || !data) {
+        // Fallback: trigger cleanup for stuck processing jobs
         await supabase.functions.invoke('retry-queue');
+        toast.info('Cleanup triggered — job will be cancelled shortly.');
+      } else {
+        // Refund is handled server-side by trg_queue_cancel trigger
+        toast.success(`Generation cancelled. ${creditsReserved} credits refunded.`);
       }
-
-      // Refund credits
-      if (creditsReserved > 0) {
-        await supabase.rpc('refund_credits', { p_user_id: user!.id, p_amount: creditsReserved });
-      }
-
-      toast.success(`Generation cancelled. ${creditsReserved} credits refunded.`);
 
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
@@ -305,7 +308,7 @@ export default function Workflows() {
       console.error('Cancel job error:', err);
       toast.error('Failed to cancel job. Try again.');
     }
-  }, [user, queryClient]);
+  }, [queryClient]);
 
   // ── Dismissed activity (localStorage-backed) ──
   const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(() => {

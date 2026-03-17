@@ -53,8 +53,8 @@ function ActiveGroupCard({
   onCancelJob?: (jobId: string, creditsReserved: number) => void;
 }) {
   const navigate = useNavigate();
-  const isBatch = group.totalCount > 1;
-  const progressPct = isBatch ? Math.round((group.completedCount / group.totalCount) * 100) : 0;
+  const hasMultipleImages = group.totalImageCount > 1;
+  const progressPct = hasMultipleImages ? Math.round((group.generatedImageCount / group.totalImageCount) * 100) : 0;
   const isProcessing = group.processingCount > 0;
   const elapsed = elapsedLabel(group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at);
 
@@ -110,8 +110,8 @@ function ActiveGroupCard({
                 {group.product_name ? ` — ${group.product_name}` : ''}
               </p>
               <p className="text-xs text-muted-foreground">
-                {isBatch ? (
-                  <>{group.completedCount}/{group.totalCount} {unitLabel} · {elapsed}</>
+                {hasMultipleImages ? (
+                  <>{group.generatedImageCount}/{group.totalImageCount} {unitLabel} · {elapsed}</>
                 ) : isProcessing ? (
                   <>Generating… {elapsed}</>
                 ) : (
@@ -161,11 +161,11 @@ function ActiveGroupCard({
         </div>
 
         {/* Batch progress bar */}
-        {isBatch && (
+        {hasMultipleImages && (
           <div className="relative">
             <Progress value={progressPct} className="h-1.5" />
             <span className="absolute right-0 -top-4 text-[10px] text-muted-foreground font-medium">
-              {group.completedCount}/{group.totalCount}
+              {group.generatedImageCount}/{group.totalImageCount}
             </span>
           </div>
         )}
@@ -206,7 +206,7 @@ export function WorkflowActivityCard({
 
       {/* Completed groups */}
       {completedGroups.map((group) => {
-        const isBatch = group.totalCount > 1;
+        const totalImages = group.totalImageCount > 1 ? group.totalImageCount : group.totalCount;
         const team = pickTeamForGroup(group.key);
         const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
         return (
@@ -230,8 +230,8 @@ export function WorkflowActivityCard({
                       {group.product_name ? ` — ${group.product_name}` : ''}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {isBatch
-                        ? `${group.totalCount} ${isStagingWorkflow ? 'styles' : 'images'} complete`
+                      {totalImages > 1
+                        ? `${totalImages} ${isStagingWorkflow ? 'styles' : 'images'} complete`
                         : '1 image complete'}
                     </p>
                   </div>
