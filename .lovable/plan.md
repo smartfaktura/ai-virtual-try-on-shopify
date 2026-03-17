@@ -1,52 +1,32 @@
 
 
-## Product Perspectives — Implemented ✅
+## Unify Product Selection UI Across All Workflows
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+Non-try-on workflows (Product Listing Set, Flat Lay, Mirror Selfie, Upscale, etc.) use the old `ProductMultiSelect` component when showing sample products — which has a different style (square checkboxes, category enforcement, 4-column grid) compared to the try-on workflow's cleaner UI (circular checkmarks, grid/list toggle, 6-column grid, "Add New" card). The category restriction also blocks selecting products from different categories, which the user wants removed.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Plan
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**1. Replace the sample-products block (lines ~2210-2223 in Generate.tsx)**
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+Instead of rendering `<ProductMultiSelect>`, render the same try-on-style grid inline — adapted for sample products (mock `Product` type → needs image/title mapping). This block should include:
+- Search bar + Select All + Clear + Grid/List toggle (same toolbar as try-on)
+- Selected count badge
+- Grid view: `grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6` with circular checkmarks
+- List view: compact rows with circular selection indicators
+- "Upload Product" card at the end (dashed border, like the try-on "Add New" card)
+- Keep the SAMPLES badge + label above the toolbar
 
+The sample products from `mockProducts` use `Product` type (with `product.images[0].url`), so the grid cards need to handle that format (vs `user_products` which use `image_url`).
 
-## Image Optimization for AI Generation — Implemented ✅
+**2. Replace the has-products non-try-on block (lines ~2404-2562)**
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+This block already uses the try-on style — confirm it's consistent. It currently duplicates the try-on grid code. No changes needed here since it already matches.
 
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
+**3. Remove category enforcement**
 
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
+Remove `enforceSameCategory` logic entirely from the sample products flow. The `ProductMultiSelect` component itself can remain in the codebase (it may be used elsewhere), but the Generate page will no longer use it for workflows. Users should be able to freely mix product categories.
 
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
+### Files to modify
+- `src/pages/Generate.tsx` — Replace the sample-products empty-state block (lines 2210-2223) with the try-on-style grid that renders `sampleProducts` using the same card layout, search, grid/list toggle, and "Upload Product" card.
+
