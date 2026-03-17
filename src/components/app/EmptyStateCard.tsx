@@ -59,7 +59,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
                   key={i}
                   variant={a.variant === 'outline' ? 'outline' : 'default'}
                   onClick={a.onAction}
-                  className="rounded-full px-6"
+                  className="rounded-full px-6 w-full sm:w-auto"
                 >
                   {a.icon}
                   {a.content}
