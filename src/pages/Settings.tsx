@@ -277,9 +277,9 @@ export default function Settings() {
 
             {/* Billing CTA */}
             {plan !== 'free' ? (
-              <Button variant="secondary" size="sm" className="w-full" onClick={openCustomerPortal}>
-                <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                Manage Billing & Invoices
+              <Button variant="secondary" size="sm" className="w-full" onClick={handlePortal} disabled={portalLoading}>
+                {portalLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5 mr-1.5" />}
+                {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
               </Button>
             ) : (
               <button
