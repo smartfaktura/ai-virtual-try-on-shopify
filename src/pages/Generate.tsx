@@ -75,6 +75,19 @@ import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses
 
 const SAMPLE_PRODUCT_IDS = ['prod_fashion_001', 'prod_fashion_003', 'prod_cosmetics_003', 'prod_food_002', 'prod_home_003', 'prod_supp_003'];
 const sampleProducts = mockProducts.filter(p => SAMPLE_PRODUCT_IDS.includes(p.id));
+
+const SAMPLE_TRYON_PRODUCT: import('@/types').Product = {
+  id: 'sample_tryon_crop_top',
+  title: 'Ribbed Crop Top',
+  vendor: 'Sample',
+  productType: 'Tops',
+  tags: ['crop-top', 'ribbed', 'basics', 'white'],
+  description: 'Classic ribbed crop top in white. Soft stretch fabric with a clean, minimal silhouette.',
+  images: [{ id: 'img_sample_tryon', url: '/images/samples/sample-crop-top.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
