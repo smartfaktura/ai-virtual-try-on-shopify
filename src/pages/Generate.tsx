@@ -2639,10 +2639,10 @@ export default function Generate() {
                        setCurrentStep('brand-profile');
                      } else if (uiConfig?.show_model_picker) {
                        setCurrentStep('model');
-                     } else if (isClothingProduct(product)) {
-                       setCurrentStep('mode');
                      } else if (uiConfig?.skip_template && hasWorkflowConfig) {
                        setCurrentStep('settings');
+                     } else if (isClothingProduct(product)) {
+                       setCurrentStep('mode');
                      } else {
                        setCurrentStep('template');
                      }
