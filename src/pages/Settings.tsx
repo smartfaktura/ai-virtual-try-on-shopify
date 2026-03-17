@@ -50,7 +50,12 @@ export default function Settings() {
   useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Settings', 'settings_page'); }, []);
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal } = useCredits();
 
-  // Asset preview generation state (admin only)
+  const [portalLoading, setPortalLoading] = useState(false);
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try { await openCustomerPortal(); } finally { setPortalLoading(false); }
+  };
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
   
