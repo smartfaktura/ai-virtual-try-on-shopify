@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
@@ -1421,11 +1422,14 @@ export default function Generate() {
     const url = generatedImages[index];
     try {
       const response = await fetch(url);
+      const contentType = response.headers.get('content-type');
+      const ext = getExtensionFromContentType(contentType);
+      const baseName = buildFileName(index).replace(/\.[^.]+$/, '');
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = buildFileName(index);
+      link.download = `${baseName}${ext}`;
       link.click();
       URL.revokeObjectURL(blobUrl);
     } catch {
