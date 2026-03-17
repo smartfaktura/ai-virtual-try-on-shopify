@@ -72,6 +72,9 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
+
+const SAMPLE_PRODUCT_IDS = ['prod_fashion_001', 'prod_fashion_003', 'prod_cosmetics_003', 'prod_food_002', 'prod_home_003', 'prod_supp_003'];
+const sampleProducts = mockProducts.filter(p => SAMPLE_PRODUCT_IDS.includes(p.id));
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
