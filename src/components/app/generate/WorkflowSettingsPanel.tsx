@@ -278,7 +278,8 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             variant="ghost"
             size="sm"
             onClick={() => {
-              const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
+              const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT;
+              const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : paidLimit;
               const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
               if (selectedVariationIndices.size > 0) {
                 setSelectedVariationIndices(new Set());
@@ -287,7 +288,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               }
             }}
           >
-            {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : `Select ${PAID_SCENE_LIMIT}`}
+            {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : `Select ${isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT}`}
           </Button>
           )}
         </div>
