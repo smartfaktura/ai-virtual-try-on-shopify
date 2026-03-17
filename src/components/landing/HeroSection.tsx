@@ -362,17 +362,17 @@ export function HeroSection() {
                   <span className="text-[11px] font-bold text-primary whitespace-nowrap">∞ results</span>
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                  {showcases.map((_, i) => (
+                  {showcases.map((sc, i) => (
                     <button
                       key={i}
                       onClick={() => selectScene(i)}
-                      className={`w-6 h-6 rounded-full border text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${
+                      className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                         activeScene === i
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-card text-muted-foreground border-border'
                       }`}
                     >
-                      {i + 1}
+                      {sc.product.label}
                     </button>
                   ))}
                 </div>
