@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
-import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
+import { Building2, Check, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { AdminFeedbackPanel } from '@/components/app/AdminFeedbackPanel';
@@ -50,7 +50,12 @@ export default function Settings() {
   useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Settings', 'settings_page'); }, []);
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal } = useCredits();
 
-  // Asset preview generation state (admin only)
+  const [portalLoading, setPortalLoading] = useState(false);
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try { await openCustomerPortal(); } finally { setPortalLoading(false); }
+  };
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
   
@@ -258,10 +263,11 @@ export default function Settings() {
 
             {plan !== 'free' && billingInterval !== 'annual' && (
               <button
-                className="text-xs text-primary hover:underline underline-offset-2 font-medium -mt-1"
-                onClick={openCustomerPortal}
+                className="text-xs text-primary hover:underline underline-offset-2 font-medium -mt-1 disabled:opacity-50"
+                onClick={handlePortal}
+                disabled={portalLoading}
               >
-                Switch to annual & save 20% →
+                {portalLoading ? 'Redirecting…' : 'Switch to annual & save 20% →'}
               </button>
             )}
 
@@ -276,9 +282,9 @@ export default function Settings() {
 
             {/* Billing CTA */}
             {plan !== 'free' ? (
-              <Button variant="secondary" size="sm" className="w-full" onClick={openCustomerPortal}>
-                <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                Manage Billing & Invoices
+              <Button variant="secondary" size="sm" className="w-full" onClick={handlePortal} disabled={portalLoading}>
+                {portalLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5 mr-1.5" />}
+                {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
               </Button>
             ) : (
               <button
