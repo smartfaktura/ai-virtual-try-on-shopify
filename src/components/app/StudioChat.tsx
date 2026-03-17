@@ -229,15 +229,7 @@ export function StudioChat() {
               </div>
             )}
 
-            {/* Inline contact form */}
-            {showContactForm && (
-              <div className="pt-1">
-                <ChatContactForm onSent={(sentEmail) => {
-                  setShowContactForm(false);
-                  addSystemMessage(`✅ Your message has been sent to our team! We'll get back to you within 24 hours at ${sentEmail}.`);
-                }} />
-              </div>
-            )}
+            {/* Contact form dialog rendered outside scroll area */}
           </div>
         </ScrollArea>
 
