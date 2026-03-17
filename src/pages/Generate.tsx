@@ -88,6 +88,19 @@ const SAMPLE_TRYON_PRODUCT: import('@/types').Product = {
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };
+
+const SAMPLE_UGC_PRODUCT: Product = {
+  id: 'sample_ugc_ice_roller',
+  title: 'Ice Roller',
+  vendor: 'Sample',
+  productType: 'Skincare Tools',
+  tags: ['ice-roller', 'skincare', 'beauty'],
+  description: 'Cooling ice roller for face and body. Soothes skin and reduces puffiness.',
+  images: [{ id: 'img_sample_ugc', url: '/images/samples/sample-ice-roller.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
@@ -2208,43 +2221,45 @@ export default function Generate() {
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : userProducts.length === 0 ? (
-              activeWorkflow?.uses_tryon ? (
+              activeWorkflow?.uses_tryon ? (() => {
+                const sampleProduct = isSelfieUgc ? SAMPLE_UGC_PRODUCT : SAMPLE_TRYON_PRODUCT;
+                return (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Sample</Badge>
                     <span className="text-xs text-muted-foreground">Try with a sample product, or add your own</span>
                   </div>
 
-                  {/* Sample try-on product card */}
+                  {/* Sample product card */}
                   <div
                     className={`relative rounded-lg border-2 cursor-pointer transition-all overflow-hidden ${
-                      selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id)
+                      selectedProductIds.has(sampleProduct.id)
                         ? 'border-primary ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/40'
                     }`}
                     onClick={() => {
                       const next = new Set(selectedProductIds);
-                      if (next.has(SAMPLE_TRYON_PRODUCT.id)) {
-                        next.delete(SAMPLE_TRYON_PRODUCT.id);
+                      if (next.has(sampleProduct.id)) {
+                        next.delete(sampleProduct.id);
                         setSelectedProduct(null);
                       } else {
                         next.clear();
-                        next.add(SAMPLE_TRYON_PRODUCT.id);
-                        setSelectedProduct(SAMPLE_TRYON_PRODUCT);
+                        next.add(sampleProduct.id);
+                        setSelectedProduct(sampleProduct);
                       }
                       setSelectedProductIds(next);
                     }}
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img src={SAMPLE_TRYON_PRODUCT.images[0].url} alt={SAMPLE_TRYON_PRODUCT.title} className="w-full h-full object-cover" />
+                        <img src={sampleProduct.images[0].url} alt={sampleProduct.title} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{SAMPLE_TRYON_PRODUCT.title}</p>
-                        <p className="text-xs text-muted-foreground">{SAMPLE_TRYON_PRODUCT.productType}</p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{SAMPLE_TRYON_PRODUCT.description}</p>
+                        <p className="text-sm font-medium truncate">{sampleProduct.title}</p>
+                        <p className="text-xs text-muted-foreground">{sampleProduct.productType}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{sampleProduct.description}</p>
                       </div>
-                      {selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id) && (
+                      {selectedProductIds.has(sampleProduct.id) && (
                         <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
                       )}
                     </div>
@@ -2262,8 +2277,8 @@ export default function Generate() {
                       Upload Instead
                     </Button>
                   </div>
-                </div>
-              ) : (
+                </div>);
+                })() : (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -2796,7 +2811,7 @@ export default function Generate() {
                 if (activeWorkflow?.uses_tryon) {
                   // Build candidate list: DB products + sample product
                   const dbMapped = userProducts.filter(p => selectedProductIds.has(p.id)).map(up => mapUserProductToProduct(up));
-                  const sampleSelected = selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id) ? [SAMPLE_TRYON_PRODUCT] : [];
+                  const sampleSelected = [SAMPLE_TRYON_PRODUCT, SAMPLE_UGC_PRODUCT].filter(sp => selectedProductIds.has(sp.id));
                   const candidates = [...dbMapped, ...sampleSelected];
                   if (candidates.length > 0) {
                     setSelectedProduct(candidates[0]);
