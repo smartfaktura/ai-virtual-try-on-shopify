@@ -8,7 +8,7 @@ import type { Product, GenerationSourceType, ScratchUpload } from '@/types';
 interface UpscaleSettingsPanelProps {
   selectedProduct: Product | null;
   scratchUpload: ScratchUpload | null;
-  sourceType: GenerationSourceType;
+  sourceType: GenerationSourceType | null;
   isMultiProductMode: boolean;
   productQueue: Product[];
   upscaleResolution: '2k' | '4k';
