@@ -1,52 +1,32 @@
 
 
-## Product Perspectives — Implemented ✅
-
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
-
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
-
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
-
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
-
-
-## Image Optimization for AI Generation — Implemented ✅
-
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
-
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
-
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
+## Add Library Source Option to Image Upscaling & Remove Pre-selection
 
 ### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
+
+**1. `src/pages/Generate.tsx`**
+- Change `sourceType` initial state from `'product'` to `null` (need to update type to allow null, or use a sentinel). Actually, since `GenerationSourceType` may not include `null`, we'll initialize to `''` or handle it differently. Simplest: keep type but don't highlight any option initially — change initial value logic so that for the source step, nothing is pre-selected. We can use a new state like `sourceChosen` boolean, or just set initial to `'product'` but not show "Selected" indicator until user clicks. Cleanest: initialize `sourceType` to `null` with a cast, and disable the Continue button until a source is chosen.
+
+- Update line 1728: pass `showLibrary={isAngleWorkflow || isUpscale}` so the upscale workflow also shows the "From Library" option.
+
+- Update the step map for upscale (line 1452) to include `library: 1`.
+
+- Update the Continue button (line 1731) — already handles `library` source type.
+
+- In the library step (line 2937+), when upscale is active and user selects library items, navigate to `'settings'` instead of the default next step (it already does this for single items via `setCurrentStep('settings')` — need to confirm multi-select path).
+
+**2. `src/pages/Generate.tsx` — Remove pre-selection**
+- Change initial state: `useState<GenerationSourceType | null>(null)` 
+- Update the Continue button to be disabled when `sourceType` is null
+- Update `SourceTypeSelector` to accept `null` and not highlight anything initially
+- The try-on inline buttons also need the same treatment
+
+**3. `src/components/app/SourceTypeSelector.tsx`**
+- Update prop type to accept `GenerationSourceType | null`
+- No option will have the selected styling when `sourceType` is `null`
+
+### Summary
+- 2 files modified: `Generate.tsx`, `SourceTypeSelector.tsx`
+- Adds "From Library" as 3rd source option for upscale workflow
+- Removes auto-selection of "From Product(s)" on page load
+
