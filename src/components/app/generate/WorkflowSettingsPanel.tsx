@@ -299,7 +299,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           const cats = Array.from(new Set(scopeFilteredVars.map(v => v.category).filter(Boolean))) as string[];
           if (cats.length <= 1) return null;
           return (
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-1.5 flex-nowrap overflow-x-auto scrollbar-hide sm:flex-wrap sm:overflow-visible">
               <button
                 onClick={() => setSceneFilterCategory('all')}
                 className={cn(
