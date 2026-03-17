@@ -256,16 +256,19 @@ export default function Workflows() {
     prevActiveCountRef.current = activeJobs.length;
   }, [activeJobs.length, queryClient]);
 
-  // ── Auto-cleanup: trigger retry-queue for stuck processing jobs ──
+  // ── Auto-cleanup: trigger retry-queue for stuck processing jobs (throttled) ──
+  const lastCleanupSignatureRef = useRef('');
   useEffect(() => {
-    if (autoCleanupTriggeredRef.current) return;
     const stuckJobs = activeJobs.filter(
       (j) => j.status === 'processing' && j.started_at &&
         Date.now() - new Date(j.started_at).getTime() > 5 * 60 * 1000,
     );
     if (stuckJobs.length === 0) return;
 
-    autoCleanupTriggeredRef.current = true;
+    const signature = stuckJobs.map((j) => j.id).sort().join(',');
+    if (signature === lastCleanupSignatureRef.current) return;
+    lastCleanupSignatureRef.current = signature;
+
     console.log('[Workflows] Auto-triggering cleanup for', stuckJobs.length, 'stuck jobs');
 
     supabase.functions.invoke('retry-queue').then(() => {
