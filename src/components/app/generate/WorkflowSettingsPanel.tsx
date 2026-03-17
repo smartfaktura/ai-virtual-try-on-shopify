@@ -243,10 +243,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 </>
               )}
               {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && activeWorkflow?.name !== 'Mirror Selfie Set' && (
-                <>
-                  <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
-                  <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
-                </>
+                <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
               )}
               {variationStrategy?.type === 'scene' && activeWorkflow?.name === 'Mirror Selfie Set' && (
                 <>
@@ -258,7 +255,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             <p className="text-sm text-muted-foreground mt-1">
               {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
                isInteriorDesign ? 'Choose 1 design style to generate for your room' :
-               variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
+               variationStrategy?.type === 'scene' ? 'Pick at least 1 scene' :
                variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
                variationStrategy?.type === 'layout' ? 'Different layout compositions' :
@@ -269,7 +266,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                'Workflow-specific variations'}
             </p>
             {variationStrategy?.type === 'scene' && (
-              <p className="text-xs text-muted-foreground/70 mt-1">
+              <p className="text-xs text-muted-foreground/70 mt-1 hidden sm:block">
                 Products shown are reference examples only. Our VOVV Studio AI team will generate each scene with your selected product.
               </p>
             )}
@@ -302,7 +299,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           const cats = Array.from(new Set(scopeFilteredVars.map(v => v.category).filter(Boolean))) as string[];
           if (cats.length <= 1) return null;
           return (
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-1.5 flex-nowrap overflow-x-auto scrollbar-hide sm:flex-wrap sm:overflow-visible">
               <button
                 onClick={() => setSceneFilterCategory('all')}
                 className={cn(
