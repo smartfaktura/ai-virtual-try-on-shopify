@@ -139,7 +139,7 @@ export function HeroSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
@@ -149,6 +149,7 @@ export function HeroSection() {
   const visitedScenes = useRef(new Set([0]));
 
   const current = showcases[activeScene];
+  const activeScrollEl = scrollRefs.current[activeScene];
 
   // Product image preload is handled by <link rel="preload"> in index.html
 
@@ -178,19 +179,18 @@ export function HeroSection() {
   }, []);
 
   const updateScrollState = useCallback(() => {
-    const el = scrollRef.current;
+    const el = scrollRefs.current[activeScene];
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    // Update active dot based on scroll position
-    const itemWidth = 196; // ~180px + gap
+    const itemWidth = 196;
     const idx = Math.round(el.scrollLeft / itemWidth);
     setVisibleDot(Math.min(idx, current.outputs.length - 1));
-  }, [current.outputs.length]);
+  }, [activeScene, current.outputs.length]);
 
   // Reset scroll when switching scenes
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = scrollRefs.current[activeScene];
     if (el) {
       el.scrollTo({ left: 0 });
       setVisibleDot(0);
@@ -199,7 +199,7 @@ export function HeroSection() {
   }, [activeScene, updateScrollState]);
 
   const scroll = (direction: 'left' | 'right') => {
-    const el = scrollRef.current;
+    const el = scrollRefs.current[activeScene];
     if (!el) return;
     const amount = 220;
     el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
@@ -293,35 +293,38 @@ export function HeroSection() {
                 <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none rounded-r-xl" />
               )}
 
-              <div
-                ref={scrollRef}
-                onScroll={updateScrollState}
-                data-hero-carousel
-                className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory px-4"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-              >
-                {current.outputs.map((output, idx) => (
-                  <div key={output.label} className="flex-shrink-0 w-[155px] snap-start">
-                    <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
-                      <div className="relative aspect-[3/4]">
-                        <ShimmerImage
-                          src={optimizeOutput(output.img)}
-                          alt={output.label}
-                          className="w-full h-full object-cover"
-                          aspectRatio="3/4"
-                          width={155}
-                          height={207}
-                          loading={idx < 3 ? 'eager' : 'lazy'}
-                          fetchPriority={idx < 2 ? 'high' : undefined}
-                        />
-                        <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
-                          {output.label}
-                        </span>
+              {showcases.map((showcase, sceneIdx) => (
+                <div
+                  key={sceneIdx}
+                  ref={el => { scrollRefs.current[sceneIdx] = el; }}
+                  onScroll={sceneIdx === activeScene ? updateScrollState : undefined}
+                  data-hero-carousel
+                  className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory px-4"
+                  style={{ display: sceneIdx === activeScene ? 'flex' : 'none', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+                >
+                  {showcase.outputs.map((output, idx) => (
+                    <div key={output.label} className="flex-shrink-0 w-[155px] snap-start">
+                      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                        <div className="relative aspect-[3/4]">
+                          <ShimmerImage
+                            src={optimizeOutput(output.img)}
+                            alt={output.label}
+                            className="w-full h-full object-cover"
+                            aspectRatio="3/4"
+                            width={155}
+                            height={207}
+                            loading={sceneIdx === 0 && idx < 3 ? 'eager' : 'lazy'}
+                            fetchPriority={sceneIdx === 0 && idx < 2 ? 'high' : undefined}
+                          />
+                          <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
+                            {output.label}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ))}
             </div>
 
             {/* Dot indicators */}
@@ -330,7 +333,7 @@ export function HeroSection() {
                 <button
                   key={i}
                   onClick={() => {
-                    const el = scrollRef.current;
+                    const el = scrollRefs.current[activeScene];
                     if (el) el.scrollTo({ left: i * 168, behavior: 'smooth' });
                   }}
                   className={`rounded-full transition-all duration-200 ${
@@ -345,15 +348,19 @@ export function HeroSection() {
 
             {/* Bottom product strip: thumbnail + text + scene pills */}
             <div className="flex items-center gap-2.5 px-2">
-              <div className="flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                <ShimmerImage
-                  src={optimizeProduct(current.product.img)}
-                  alt={current.product.label}
-                  className="w-full h-full object-cover"
-                  width={48}
-                  height={64}
-                  fetchPriority="high"
-                />
+              <div className="relative flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                {showcases.map((sc, scIdx) => (
+                  <ShimmerImage
+                    key={scIdx}
+                    src={optimizeProduct(sc.product.img)}
+                    alt={sc.product.label}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    width={48}
+                    height={64}
+                    fetchPriority={scIdx === 0 ? 'high' : undefined}
+                    style={{ opacity: scIdx === activeScene ? 1 : 0, transition: 'opacity 0.3s' }}
+                  />
+                ))}
               </div>
               <div className="flex flex-col gap-1.5 min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -390,16 +397,20 @@ export function HeroSection() {
             <div className="flex-shrink-0 w-[200px]">
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="relative aspect-[3/4]">
-                  <ShimmerImage
-                    src={optimizeProduct(current.product.img)}
-                    alt={current.product.label}
-                    className="w-full h-full object-cover transition-all duration-500"
-                    aspectRatio="3/4"
-                    width={200}
-                    height={267}
-                    fetchPriority="high"
-                  />
-                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
+                  {showcases.map((sc, scIdx) => (
+                    <ShimmerImage
+                      key={scIdx}
+                      src={optimizeProduct(sc.product.img)}
+                      alt={sc.product.label}
+                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+                      aspectRatio="3/4"
+                      width={200}
+                      height={267}
+                      fetchPriority={scIdx === 0 ? 'high' : undefined}
+                      style={{ opacity: scIdx === activeScene ? 1 : 0 }}
+                    />
+                  ))}
+                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm z-10">
                     Your Upload
                   </span>
                 </div>
@@ -409,16 +420,16 @@ export function HeroSection() {
                 </div>
               </div>
 
-              {/* Scene switcher pills */}
-              <div className="flex items-center justify-center gap-2 mt-3">
+              <div className="flex items-center justify-center gap-1.5 mt-3">
                 {showcases.map((sc, i) => (
                   <button
                     key={i}
                     onClick={() => selectScene(i)}
-                    className={`px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    onMouseEnter={() => preloadScene(i)}
+                    className={`px-4 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       activeScene === i
-                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-accent/50 ${
                             !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
                           }`
                     }`}
@@ -463,36 +474,39 @@ export function HeroSection() {
                 <div className="absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
               )}
 
-              <div
-                ref={scrollRef}
-                onScroll={updateScrollState}
-                data-hero-carousel
-                className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-              >
-                {current.outputs.map((output, idx) => (
-                  <div key={output.label} className="flex-shrink-0 w-[180px] snap-start group">
-                    <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
-                      <div className="relative aspect-[3/4]">
-                        <ShimmerImage
-                          src={optimizeOutput(output.img)}
-                          alt={output.label}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          decoding="async"
-                          loading={idx < 3 ? 'eager' : 'lazy'}
-                          fetchPriority={idx < 2 ? 'high' : undefined}
-                          aspectRatio="3/4"
-                          width={180}
-                          height={240}
-                        />
-                        <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                          {output.label}
-                        </span>
+              {showcases.map((showcase, sceneIdx) => (
+                <div
+                  key={sceneIdx}
+                  ref={el => { scrollRefs.current[sceneIdx] = el; }}
+                  onScroll={sceneIdx === activeScene ? updateScrollState : undefined}
+                  data-hero-carousel
+                  className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+                  style={{ display: sceneIdx === activeScene ? 'flex' : 'none', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+                >
+                  {showcase.outputs.map((output, idx) => (
+                    <div key={output.label} className="flex-shrink-0 w-[180px] snap-start group">
+                      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
+                        <div className="relative aspect-[3/4]">
+                          <ShimmerImage
+                            src={optimizeOutput(output.img)}
+                            alt={output.label}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            decoding="async"
+                            loading={sceneIdx === 0 && idx < 3 ? 'eager' : 'lazy'}
+                            fetchPriority={sceneIdx === 0 && idx < 2 ? 'high' : undefined}
+                            aspectRatio="3/4"
+                            width={180}
+                            height={240}
+                          />
+                          <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                            {output.label}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ))}
 
               <div className="flex items-center justify-center gap-1.5 mt-2">
                 {current.outputs.map((_, idx) => (
