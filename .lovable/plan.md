@@ -1,52 +1,32 @@
 
 
-## Product Perspectives — Implemented ✅
+## Validated Plan — Add Headphones Images + Fix Product Switcher
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### 1. Copy 9 headphones images to `public/images/hero/`
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+| Uploaded file | Target name | Label |
+|---|---|---|
+| yourupload-2.png | hero-product-headphones.png | Product source |
+| freestyle-1_42_copy.png | hero-hp-desert.png | Desert Portrait |
+| freestyle-1_42-3.png | hero-hp-studio-seated.png | Studio Seated |
+| freestyle-1_43-2.png | hero-hp-elevator.png | Elevator Selfie |
+| freestyle-2_3.png | hero-hp-linen.png | Linen Editorial |
+| freestyle-5_1.png | hero-hp-cozy.png | Cozy Knit |
+| freestyle-6_3.png | hero-hp-pilates.png | Pilates Studio |
+| freestyle-7_2.png | hero-hp-white.png | White Studio |
+| home-lamp-evening.png | hero-hp-home.png | Home Lifestyle |
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### 2. Update Headphones showcase data (lines 54-67)
+Replace placeholder ring images with new headphones paths. Use `hero-product-headphones.png` as product image.
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+### 3. Fix product switcher — restore short product labels
+Replace the numbered `1, 2, 3` circles with compact text pills showing "Crop Top", "Ring", "Headphones". These names are short enough to fit. Active = primary fill, inactive = outline with hover.
 
+**Mobile** (lines 364-378): `text-[10px] px-2 py-0.5 rounded-full`
+**Desktop** (lines 413-429): `text-xs px-3 py-1 rounded-full`
 
-## Image Optimization for AI Generation — Implemented ✅
+### File: `src/components/landing/HeroSection.tsx`
+- Lines 54-67: swap headphones image paths + labels
+- Lines 364-378: mobile switcher — numbered circles → text pills with `showcase.product.label`
+- Lines 413-429: desktop switcher — same change
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
-
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
-
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
-
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
