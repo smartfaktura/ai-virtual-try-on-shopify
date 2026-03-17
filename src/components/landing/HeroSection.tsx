@@ -411,11 +411,11 @@ export function HeroSection() {
 
               {/* Scene switcher pills */}
               <div className="flex items-center justify-center gap-2 mt-3">
-                {showcases.map((scene, i) => (
+                {showcases.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => selectScene(i)}
-                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                    className={`w-7 h-7 rounded-full border text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
                       activeScene === i
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
@@ -423,13 +423,10 @@ export function HeroSection() {
                           }`
                     }`}
                   >
-                    {scene.product.label}
+                    {i + 1}
                   </button>
                 ))}
               </div>
-              <p className="text-[9px] text-muted-foreground/60 text-center mt-1.5">
-                ↑ Tap to switch product
-              </p>
             </div>
 
             {/* Flow arrow */}
