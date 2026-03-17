@@ -2716,7 +2716,7 @@ export default function Generate() {
                 } else {
                   const mappedProducts = userProducts.length > 0
                     ? userProducts.map(up => mapUserProductToProduct(up))
-                    : sampleProducts;
+                    : [SAMPLE_LISTING_PRODUCT];
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   
                   // Flat Lay: store all selected products and go to brand/surfaces
