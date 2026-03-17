@@ -4,8 +4,10 @@ import { ArrowRight, Check, Calendar, Clock, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const whiteCropTop = '/images/source-crop-top.jpg';
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
+const whiteCropTop = s('products/source-crop-top.jpg');
 
 const drops = [
   {

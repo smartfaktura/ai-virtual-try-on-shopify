@@ -1,37 +1,52 @@
 
 
-## Unoptimized Images on the Landing Page
+## Product Perspectives — Implemented ✅
 
-I found **3 components** still serving heavy images directly from `public/` (uncompressed PNGs, ~1-2MB each) instead of the optimized storage bucket:
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### 1. `HowItWorks.tsx` — 7 local images
-- `/images/source-crop-top.jpg` (source product)
-- `/images/try-showcase/studio-lookbook.png`
-- `/images/try-showcase/cafe-lifestyle.png`
-- `/images/try-showcase/golden-hour.png`
-- `/images/try-showcase/garden-editorial.png`
-- `/images/try-showcase/studio-back-detail.png`
-- `/images/try-showcase/at-home-editorial.png`
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### 2. `ChannelShowcase.tsx` — 13 local images
-- `/images/source-crop-top.jpg`
-- 12 images from `/images/try-showcase/*.png`
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-### 3. `CreativeDropsSection.tsx` — 1 local image
-- `/images/source-crop-top.jpg`
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-**Total: ~19 unique unoptimized images** (some shared across components).
 
-All other landing sections (HeroSection, FeatureGrid, ModelShowcase, EnvironmentShowcase, FreestyleShowcase, StudioTeam) already use `getLandingAssetUrl()` with optimized storage URLs.
+## Image Optimization for AI Generation — Implemented ✅
 
----
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-### Fix Plan
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
-1. **Upload** the ~15 unique files from `public/images/try-showcase/` and `public/images/source-crop-top.jpg` to the `landing-assets` storage bucket (under `try-showcase/` and `products/` folders)
-2. **Update `HowItWorks.tsx`** — replace all 7 local paths with `getLandingAssetUrl()` calls + wrap in `getOptimizedUrl({ quality: 60 })`
-3. **Update `ChannelShowcase.tsx`** — replace all 13 local paths with `getLandingAssetUrl()` calls + wrap in `getOptimizedUrl({ quality: 60 })`
-4. **Update `CreativeDropsSection.tsx`** — replace the 1 local path with `getLandingAssetUrl()` call + wrap in `getOptimizedUrl({ quality: 60 })`
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
-This will reduce total page weight by roughly **20-30MB** on full scroll, with each image going from ~1-2MB PNG to ~200-400KB compressed JPG.
-
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
