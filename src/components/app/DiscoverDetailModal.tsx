@@ -45,6 +45,7 @@ export function DiscoverDetailModal({
   const navigate = useNavigate();
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [promptExpanded, setPromptExpanded] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {

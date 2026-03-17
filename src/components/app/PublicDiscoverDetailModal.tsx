@@ -22,6 +22,7 @@ export function PublicDiscoverDetailModal({
   onSelectRelated,
 }: PublicDiscoverDetailModalProps) {
   const navigate = useNavigate();
+  const [promptExpanded, setPromptExpanded] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
