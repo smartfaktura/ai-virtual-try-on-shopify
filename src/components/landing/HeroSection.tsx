@@ -52,16 +52,16 @@ const showcases: ProductShowcase[] = [
     caption: 'Same ring ∞ scenes in under 2 minutes',
   },
   {
-    product: { img: '/images/hero/hero-product-ring-new.png', label: 'Headphones', subtitle: '1 product photo' },
+    product: { img: '/images/hero/hero-product-headphones.png', label: 'Headphones', subtitle: '1 product photo' },
     outputs: [
-      { img: '/images/hero/hero-ring-fabric.png', label: 'Studio Lighting' },
-      { img: '/images/hero/hero-ring-hand.png', label: 'Lifestyle' },
-      { img: '/images/hero/hero-ring-concrete.png', label: 'Urban' },
-      { img: '/images/hero/hero-ring-eucalyptus.png', label: 'Nature' },
-      { img: '/images/hero/hero-ring-floating.png', label: 'Floating' },
-      { img: '/images/hero/hero-ring-golden-light.png', label: 'Golden Light' },
-      { img: '/images/hero/hero-ring-portrait.png', label: 'Portrait' },
-      { img: '/images/hero/hero-ring-ugc.png', label: 'UGC' },
+      { img: '/images/hero/hero-hp-desert.png', label: 'Desert Portrait' },
+      { img: '/images/hero/hero-hp-studio-seated.png', label: 'Studio Seated' },
+      { img: '/images/hero/hero-hp-elevator.png', label: 'Elevator Selfie' },
+      { img: '/images/hero/hero-hp-linen.png', label: 'Linen Editorial' },
+      { img: '/images/hero/hero-hp-cozy.png', label: 'Cozy Knit' },
+      { img: '/images/hero/hero-hp-pilates.png', label: 'Pilates Studio' },
+      { img: '/images/hero/hero-hp-white.png', label: 'White Studio' },
+      { img: '/images/hero/hero-hp-home.png', label: 'Home Lifestyle' },
     ],
     caption: 'Same headphones ∞ shots in under 2 minutes',
   },
@@ -362,17 +362,17 @@ export function HeroSection() {
                   <span className="text-[11px] font-bold text-primary whitespace-nowrap">∞ results</span>
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                  {showcases.map((_, i) => (
+                  {showcases.map((sc, i) => (
                     <button
                       key={i}
                       onClick={() => selectScene(i)}
-                      className={`w-6 h-6 rounded-full border text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${
+                      className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                         activeScene === i
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-card text-muted-foreground border-border'
                       }`}
                     >
-                      {i + 1}
+                      {sc.product.label}
                     </button>
                   ))}
                 </div>
@@ -411,11 +411,11 @@ export function HeroSection() {
 
               {/* Scene switcher pills */}
               <div className="flex items-center justify-center gap-2 mt-3">
-                {showcases.map((_, i) => (
+                {showcases.map((sc, i) => (
                   <button
                     key={i}
                     onClick={() => selectScene(i)}
-                    className={`w-7 h-7 rounded-full border text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                       activeScene === i
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
@@ -423,7 +423,7 @@ export function HeroSection() {
                           }`
                     }`}
                   >
-                    {i + 1}
+                    {sc.product.label}
                   </button>
                 ))}
               </div>
