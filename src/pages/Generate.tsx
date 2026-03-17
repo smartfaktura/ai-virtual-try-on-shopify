@@ -223,7 +223,7 @@ export default function Generate() {
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
-  const [sourceType, setSourceType] = useState<GenerationSourceType>('product');
+  const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
@@ -1449,7 +1449,7 @@ export default function Generate() {
 
   const getStepNumber = () => {
     if (isUpscale) {
-      const map: Record<string, number> = { source: 1, product: 1, upload: 1, settings: 2, generating: 3, results: 3 };
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, library: 1, settings: 2, generating: 3, results: 3 };
       return map[currentStep] || 1;
     }
     if (isFlatLay) {
@@ -1499,7 +1499,7 @@ export default function Generate() {
   const getSteps = () => {
     if (isUpscale) {
       return [
-        { name: sourceType === 'scratch' ? 'Upload' : 'Product(s)' },
+        { name: sourceType === 'scratch' ? 'Upload' : sourceType === 'library' ? 'Library' : 'Product(s)' },
         { name: 'Settings' },
         { name: 'Results' },
       ];
@@ -1725,10 +1725,10 @@ export default function Generate() {
                 </button>
               </div>
             ) : (
-              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); setSelectedLibraryIds(new Set()); }} showLibrary={isAngleWorkflow} />
+              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); setSelectedLibraryIds(new Set()); }} showLibrary={isAngleWorkflow || isUpscale} />
             )}
             <div className="flex justify-end">
-              <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : sourceType === 'library' ? 'library' as Step : 'upload')}>Continue</Button>
+              <Button disabled={!sourceType} onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : sourceType === 'library' ? 'library' as Step : 'upload')}>Continue</Button>
             </div>
           </CardContent></Card>
         )}
