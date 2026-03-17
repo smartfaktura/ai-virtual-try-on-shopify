@@ -7,7 +7,7 @@ import { useStudioChat } from '@/hooks/useStudioChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
-import { ChatContactForm } from './ChatContactForm';
+import { ContactFormDialog } from './ContactFormDialog';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
@@ -229,15 +229,7 @@ export function StudioChat() {
               </div>
             )}
 
-            {/* Inline contact form */}
-            {showContactForm && (
-              <div className="pt-1">
-                <ChatContactForm onSent={(sentEmail) => {
-                  setShowContactForm(false);
-                  addSystemMessage(`✅ Your message has been sent to our team! We'll get back to you within 24 hours at ${sentEmail}.`);
-                }} />
-              </div>
-            )}
+            {/* Contact form dialog rendered outside scroll area */}
           </div>
         </ScrollArea>
 
@@ -264,6 +256,16 @@ export function StudioChat() {
           </div>
         </div>
       </div>
+
+      {/* Contact Form Dialog */}
+      <ContactFormDialog
+        open={showContactForm}
+        onOpenChange={setShowContactForm}
+        onSuccess={(sentEmail) => {
+          setShowContactForm(false);
+          addSystemMessage(`✅ Your message has been sent to our team! We'll get back to you within 24 hours at ${sentEmail}.`);
+        }}
+      />
 
       {/* Floating Button */}
       <button
