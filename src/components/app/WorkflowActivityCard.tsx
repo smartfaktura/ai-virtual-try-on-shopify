@@ -206,7 +206,7 @@ export function WorkflowActivityCard({
 
       {/* Completed groups */}
       {completedGroups.map((group) => {
-        const isBatch = group.totalCount > 1;
+        const totalImages = group.totalImageCount > 1 ? group.totalImageCount : group.totalCount;
         const team = pickTeamForGroup(group.key);
         const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
         return (
