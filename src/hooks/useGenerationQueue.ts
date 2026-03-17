@@ -73,7 +73,7 @@ async function getRestHeaders() {
 }
 
 export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
-  const { onContentBlocked, onGenerationFailed, onCreditRefresh } = options || {};
+  const { jobType: filterJobType, onContentBlocked, onGenerationFailed, onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
