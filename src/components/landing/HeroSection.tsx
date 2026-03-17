@@ -139,7 +139,7 @@ export function HeroSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
@@ -149,6 +149,7 @@ export function HeroSection() {
   const visitedScenes = useRef(new Set([0]));
 
   const current = showcases[activeScene];
+  const activeScrollEl = scrollRefs.current[activeScene];
 
   // Product image preload is handled by <link rel="preload"> in index.html
 
