@@ -2208,7 +2208,19 @@ export default function Generate() {
                   </div>
                 </div>
               ) : (
-                <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Samples</Badge>
+                      <span className="text-xs text-muted-foreground">Sample products — upload yours to get started</span>
+                    </div>
+                    <Button size="sm" onClick={() => setShowAddProduct(true)} className="gap-1.5">
+                      <UploadIcon className="w-3.5 h-3.5" />
+                      Upload Product
+                    </Button>
+                  </div>
+                  <ProductMultiSelect products={sampleProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+                </div>
               )
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
