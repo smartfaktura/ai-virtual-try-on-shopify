@@ -41,7 +41,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
   if (teamMember) {
     return (
       <Card className="border-0 bg-transparent shadow-none">
-        <CardContent className="py-20 sm:py-28 flex flex-col items-center text-center space-y-3">
+        <CardContent className="py-12 sm:py-28 flex flex-col items-center text-center space-y-3">
           {icon && (
             <div className="text-muted-foreground/40 mb-1">
               {icon}
@@ -53,13 +53,13 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
           </p>
 
           {renderedActions.length > 0 && (
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-1 w-full sm:w-auto">
               {renderedActions.map((a, i) => (
                 <Button
                   key={i}
                   variant={a.variant === 'outline' ? 'outline' : 'default'}
                   onClick={a.onAction}
-                  className="rounded-full px-6"
+                  className="rounded-full px-6 w-full sm:w-auto"
                 >
                   {a.icon}
                   {a.content}
