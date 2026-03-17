@@ -18,7 +18,7 @@ const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
 export default function Auth() {
   const navigate = useNavigate();
   const { signUp, signIn, user, isLoading } = useAuth();
-  const [mode, setMode] = useState<'login' | 'signup'>('signup');
+  const [mode, setMode] = useState<'login' | 'signup'>(() => localStorage.getItem('has_account') === 'true' ? 'login' : 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
