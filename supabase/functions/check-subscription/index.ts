@@ -54,16 +54,16 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !user) {
-      logStep("Auth failed", { error: userError?.message });
+    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      logStep("Auth failed", { error: claimsError?.message });
       return new Response(JSON.stringify({ error: "Auth session missing or expired" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = user.id;
-    const userEmail = user.email;
+    const userId = claimsData.claims.sub as string;
+    const userEmail = claimsData.claims.email as string;
     if (!userId || !userEmail) {
       return new Response(JSON.stringify({ error: "Invalid token claims" }), {
         status: 401,
