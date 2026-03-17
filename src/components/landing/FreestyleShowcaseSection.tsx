@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const PROMPT_TEXT_FULL = 'Shoot my white crop top on a basketball court, in a clean studio, and a sunny café';
+const PROMPT_TEXT_FULL = 'Shoot my crop top on a basketball court, in a clean studio, and a sunny café';
 const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
@@ -23,7 +23,7 @@ const CHIPS = [
   {
     key: 'product' as const,
     icon: Package,
-    label: 'White Crop Top',
+    label: 'Crop Top',
     mobileLabel: 'Crop Top',
     thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50 }),
     delay: 1500,

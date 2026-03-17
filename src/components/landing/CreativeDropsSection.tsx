@@ -100,13 +100,13 @@ export function CreativeDropsSection() {
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0">
                    <ShimmerImage
                      src={whiteCropTop}
-                     alt="White Crop Top"
+                     alt="Crop Top"
                      className="w-full h-full object-cover object-top"
                      aspectRatio="1/1"
                    />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">White Crop Top</p>
+                  <p className="text-sm font-bold text-foreground">Crop Top</p>
                   <p className="text-[11px] text-muted-foreground">Scheduled for monthly drops</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">

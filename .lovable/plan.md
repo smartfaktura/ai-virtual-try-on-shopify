@@ -1,44 +1,52 @@
 
 
-## Update Hero Product Pills and Ring Images
+## Product Perspectives — Implemented ✅
 
-### Changes Overview
-1. **Rename** "White Crop Top" → "Crop Top" (pill label only)
-2. **Replace** "Face Serum" showcase → "Ring" with your uploaded images
-3. **Replace** "Gold Ring" showcase → "Headphones" with placeholder images (you'll provide real ones later)
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Image Mapping (Ring)
-Your uploaded images will be copied to `public/images/hero/` with clean names, then referenced directly:
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-| Uploaded file | Target name | Role |
-|---|---|---|
-| yourupload.png | hero-product-ring-new.png | Product source |
-| 02707975...png | hero-ring-fabric.png | Output: Linen Close-Up |
-| abc37921...png | hero-ring-hand.png | Output: On the Hand |
-| freestyle-1_42-2.png | hero-ring-concrete.png | Output: Concrete Block |
-| freestyle-1_43_copy_2.png | hero-ring-eucalyptus.png | Output: Stone & Eucalyptus |
-| freestyle-1_43_copy.png | hero-ring-floating.png | Output: Studio Floating |
-| freestyle-1_43.png | hero-ring-golden-light.png | Output: Golden Light |
-| freestyle-1_44.png | hero-ring-portrait.png | Output: Model Portrait |
-| Selfie_UGC_Set_2.png | hero-ring-ugc.png | Output: Selfie / UGC |
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-### Code Changes
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-**File: `src/components/landing/HeroSection.tsx`**
-- Line 27: `'White Crop Top'` → `'Crop Top'`
-- Lines 40-52: Replace Face Serum showcase with Ring (using `/images/hero/hero-ring-*` local paths)
-- Lines 54-67: Replace Gold Ring showcase with Headphones (keep existing ring images as temporary placeholders, update labels)
-- Update captions accordingly
 
-**File: `src/components/landing/FreestyleShowcaseSection.tsx`**
-- Line 26: `'White Crop Top'` → `'Crop Top'`
+## Image Optimization for AI Generation — Implemented ✅
 
-**Files: `src/components/landing/HowItWorks.tsx`** and **`CreativeDropsSection.tsx`**
-- Update "White Crop Top" references to "Crop Top"
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-### Optimization Note
-Since these images are served from `public/` (not the landing-assets storage bucket), `getOptimizedUrl()` won't apply server-side compression. I'll ensure the images are reasonably sized for the hero carousel cards (~400-600px display width). For full optimization parity with the other hero assets, they should eventually be uploaded to the landing-assets storage bucket — I can help with that as a follow-up.
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
-### Headphones Placeholder
-The third pill will show "Headphones" with the existing ring images as temporary placeholders until you provide the real headphones images.
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

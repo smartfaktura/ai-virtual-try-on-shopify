@@ -171,7 +171,7 @@ export function HowItWorks() {
                         animation: 'drag-drop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both',
                       } : { opacity: 0 }}
                     >
-                      <ShimmerImage src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
+                      <ShimmerImage src={cropTopProduct} alt="Crop Top" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                     </div>
                     <div
                       className="flex-1 min-w-0 transition-all duration-500"
@@ -180,7 +180,7 @@ export function HowItWorks() {
                         transitionDelay: '900ms',
                       } : { opacity: 0, transform: 'translateX(-8px)' }}
                     >
-                      <p className="text-sm font-semibold text-foreground truncate">White Crop Top</p>
+                      <p className="text-sm font-semibold text-foreground truncate">Crop Top</p>
                       <p className="text-[11px] text-muted-foreground">Clothing · Activewear</p>
                     </div>
                     <div
@@ -315,7 +315,7 @@ export function HowItWorks() {
                         <ShimmerImage src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-foreground">White Crop Top</p>
+                        <p className="text-xs font-semibold text-foreground">Crop Top</p>
                         <p className="text-[10px] text-muted-foreground">6 scenes generated</p>
                       </div>
                     </div>
