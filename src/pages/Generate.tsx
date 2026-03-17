@@ -1725,7 +1725,7 @@ export default function Generate() {
                 </button>
               </div>
             ) : (
-              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); setSelectedLibraryIds(new Set()); }} showLibrary={isAngleWorkflow} />
+              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); setSelectedLibraryIds(new Set()); }} showLibrary={isAngleWorkflow || isUpscale} />
             )}
             <div className="flex justify-end">
               <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : sourceType === 'library' ? 'library' as Step : 'upload')}>Continue</Button>
