@@ -40,6 +40,7 @@ interface BatchParams {
   imageCount: number; // total expected images
   hasModel?: boolean;
   hasScene?: boolean;
+  onJobEnqueued?: (jobId: string) => void;
 }
 
 const INITIAL_BATCH_STATE: BatchState = {
