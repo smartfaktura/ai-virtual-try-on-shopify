@@ -61,6 +61,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
                   onClick={a.onAction}
                   className="rounded-full px-6"
                 >
+                  {a.icon}
                   {a.content}
                 </Button>
               ))}
