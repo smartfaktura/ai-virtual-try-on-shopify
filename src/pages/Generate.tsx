@@ -73,8 +73,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 
-const SAMPLE_PRODUCT_IDS = ['prod_fashion_001', 'prod_fashion_003', 'prod_cosmetics_003', 'prod_food_002', 'prod_home_003', 'prod_supp_003'];
-const sampleProducts = mockProducts.filter(p => SAMPLE_PRODUCT_IDS.includes(p.id));
+const SAMPLE_LISTING_PRODUCT: Product = {
+  id: 'sample_listing_ring',
+  title: 'Diamond Engagement Ring',
+  vendor: 'Sample',
+  productType: 'Jewelry',
+  tags: ['ring', 'diamond', 'jewelry', 'engagement'],
+  description: 'Pavé-set diamond engagement ring in white gold with signature ruby accent.',
+  images: [{ id: 'img_sample_listing', url: '/images/samples/sample-ring.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 
 const SAMPLE_TRYON_PRODUCT: import('@/types').Product = {
   id: 'sample_tryon_crop_top',
