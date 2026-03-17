@@ -53,7 +53,7 @@ interface WorkflowSettingsPanelProps {
   // Product
   selectedProduct: Product | null;
   scratchUpload: ScratchUpload | null;
-  sourceType: GenerationSourceType;
+  sourceType: GenerationSourceType | null;
   isMultiProductMode: boolean;
   productQueue: Product[];
   userProducts: UserProduct[];
