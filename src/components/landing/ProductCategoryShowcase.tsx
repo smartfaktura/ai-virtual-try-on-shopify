@@ -48,7 +48,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       {images.map((img, i) => (
          <ShimmerImage
            key={i}
-            src={getOptimizedUrl(img, { width: 600, quality: 60 })}
+            src={getOptimizedUrl(img, { quality: 60 })}
             alt={`${label} AI-generated product shot`}
             loading="lazy"
             decoding="async"
