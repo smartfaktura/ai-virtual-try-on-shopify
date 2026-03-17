@@ -41,12 +41,12 @@ const showcases: ProductShowcase[] = [
     product: { img: '/images/hero/hero-product-ring-new.png', label: 'Ring', subtitle: '1 product photo' },
     outputs: [
       { img: '/images/hero/hero-ring-fabric.png', label: 'Linen Close-Up' },
+      { img: '/images/hero/hero-ring-portrait.png', label: 'Model Portrait' },
       { img: '/images/hero/hero-ring-hand.png', label: 'On the Hand' },
       { img: '/images/hero/hero-ring-concrete.png', label: 'Concrete Block' },
       { img: '/images/hero/hero-ring-eucalyptus.png', label: 'Stone & Eucalyptus' },
       { img: '/images/hero/hero-ring-floating.png', label: 'Studio Floating' },
       { img: '/images/hero/hero-ring-golden-light.png', label: 'Golden Light' },
-      { img: '/images/hero/hero-ring-portrait.png', label: 'Model Portrait' },
       { img: '/images/hero/hero-ring-ugc.png', label: 'Selfie / UGC' },
     ],
     caption: 'Same ring ∞ scenes in under 2 minutes',
