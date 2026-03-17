@@ -235,10 +235,13 @@ The person in this image MUST be the EXACT same person shown in [MODEL IMAGE].
     : "";
 
   // Additional products block for flat lay multi-product
+  const totalProductCount = 1 + (additionalProducts?.length || 0);
   const additionalProductsBlock = (additionalProducts && additionalProducts.length > 0)
-    ? `\nADDITIONAL PRODUCTS IN COMPOSITION:
-${additionalProducts.map((p, idx) => `- Product ${idx + 2}: ${p.title} (${p.productType})${p.description ? ` — ${p.description}` : ''}`).join('\n')}
-Arrange ALL products together in a cohesive flat lay composition. Each product should be clearly visible and identifiable.\n`
+    ? `\nADDITIONAL PRODUCTS IN COMPOSITION (${totalProductCount} TOTAL PRODUCTS — ALL MUST APPEAR):
+- Product 1 (PRIMARY): ${product.title} (${product.productType}) — see [PRODUCT IMAGE 1]
+${additionalProducts.map((p, idx) => `- Product ${idx + 2}: ${p.title} (${p.productType})${p.description ? ` — ${p.description}` : ''} — see [PRODUCT IMAGE ${idx + 2}]`).join('\n')}
+
+This flat lay MUST contain EXACTLY ${totalProductCount} distinct products. Each product must be clearly visible, separately identifiable, and occupy meaningful space in the composition. Do NOT omit any product. Missing any product is a generation failure.\n`
     : "";
 
   // Styling notes for flat lay aesthetics
