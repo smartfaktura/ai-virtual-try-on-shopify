@@ -2359,7 +2359,6 @@ export default function Generate() {
                   </div>
                 </div>);
                 })()
-              )
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
                 {/* Toolbar: Search + Actions */}
