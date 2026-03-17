@@ -255,7 +255,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             <p className="text-sm text-muted-foreground mt-1">
               {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
                isInteriorDesign ? 'Choose 1 design style to generate for your room' :
-               variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
+               variationStrategy?.type === 'scene' ? 'Pick at least 1 scene' :
                variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
                variationStrategy?.type === 'layout' ? 'Different layout compositions' :
