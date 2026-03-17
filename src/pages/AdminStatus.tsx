@@ -72,13 +72,13 @@ function formatTimeAgo(dateStr: string): string {
 
 export default function AdminStatus() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const [range, setRange] = useState<TimeRange>(24);
+  const [range, setRange] = useState<TimeRange>('today');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['admin-status', range],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('admin_generation_stats', {
-        p_hours: range,
+        p_hours: getRangeHours(range),
       });
       if (error) throw error;
       return data as unknown as StatsData;
