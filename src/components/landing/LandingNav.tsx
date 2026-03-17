@@ -17,6 +17,11 @@ export function LandingNav() {
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hasAccount, setHasAccount] = useState(false);
+
+  useEffect(() => {
+    setHasAccount(localStorage.getItem('has_account') === 'true');
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -69,7 +74,7 @@ export function LandingNav() {
         {/* Desktop CTA */}
         <div className="hidden lg:block">
           <Button size="sm" className="rounded-full px-6 font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90" onClick={() => navigate(user ? '/app' : '/auth')}>
-            {user ? 'My Dashboard' : 'Start Free'}
+            {user ? 'My Dashboard' : hasAccount ? 'Sign In' : 'Start Free'}
           </Button>
         </div>
 
@@ -108,7 +113,7 @@ export function LandingNav() {
               className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
               onClick={() => { setMobileOpen(false); navigate(user ? '/app' : '/auth'); }}
             >
-              {user ? 'My Dashboard' : 'Start Free'}
+              {user ? 'My Dashboard' : hasAccount ? 'Sign In' : 'Start Free'}
             </Button>
           </div>
         </div>

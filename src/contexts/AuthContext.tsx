@@ -31,6 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+      if (session?.user) {
+        localStorage.setItem('has_account', 'true');
+      }
     });
 
     // THEN check for existing session
