@@ -110,8 +110,8 @@ function ActiveGroupCard({
                 {group.product_name ? ` — ${group.product_name}` : ''}
               </p>
               <p className="text-xs text-muted-foreground">
-                {isBatch ? (
-                  <>{group.completedCount}/{group.totalCount} {unitLabel} · {elapsed}</>
+                {hasMultipleImages ? (
+                  <>{group.generatedImageCount}/{group.totalImageCount} {unitLabel} · {elapsed}</>
                 ) : isProcessing ? (
                   <>Generating… {elapsed}</>
                 ) : (
