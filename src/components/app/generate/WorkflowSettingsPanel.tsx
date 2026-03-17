@@ -613,7 +613,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               <p className="text-xs text-muted-foreground">
                 {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
                 {' '}× {quality === 'high' ? 16 : 8} credits
-                {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
+                {selectedFlatLayProductIds.size > 1 && ` + ${(selectedFlatLayProductIds.size - 1) * 2 * selectedVariationIndices.size} extra (${selectedFlatLayProductIds.size} products)`}
               </p>
             </div>
             {balance >= creditCost ? (
