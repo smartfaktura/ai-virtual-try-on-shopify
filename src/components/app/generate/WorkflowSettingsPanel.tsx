@@ -597,13 +597,17 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Quality</Label>
-                <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard — Fast generation</SelectItem>
-                    <SelectItem value="high">High — Best quality</SelectItem>
-                  </SelectContent>
-                </Select>
+                {isFlatLay ? (
+                  <p className="text-sm text-muted-foreground mt-1">High — Best quality</p>
+                ) : (
+                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard — Fast generation</SelectItem>
+                      <SelectItem value="high">High — Best quality</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Aspect Ratio</Label>
