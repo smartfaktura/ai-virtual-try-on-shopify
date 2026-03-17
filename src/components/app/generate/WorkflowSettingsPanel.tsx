@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -430,6 +431,11 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             );
           })}
         </div>
+
+        <MissingRequestBanner
+          category="scene"
+          title="Missing a scene? Tell us and we'll add it."
+        />
 
         {/* Info note */}
         <div className="flex items-start gap-2 px-1">
