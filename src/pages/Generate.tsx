@@ -2169,7 +2169,7 @@ export default function Generate() {
                  </h2>
                  <p className="text-sm text-muted-foreground">
                    {isFlatLay
-                     ? 'Select 1–5 products to arrange together in your flat lay composition'
+                     ? 'Select 1–3 products to arrange together in your flat lay composition'
                      : isMirrorSelfie
                      ? 'Choose the product(s) your model will wear or hold in the mirror selfie'
                      : activeWorkflow?.uses_tryon
