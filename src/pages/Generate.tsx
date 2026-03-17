@@ -2245,7 +2245,7 @@ export default function Generate() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{SAMPLE_TRYON_PRODUCT.description}</p>
                       </div>
                       {selectedProductIds.has(SAMPLE_TRYON_PRODUCT.id) && (
-                        <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
                       )}
                     </div>
                   </div>
