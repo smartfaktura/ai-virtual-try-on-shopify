@@ -136,6 +136,9 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
     const processingCount = batch.filter((j) => j.status === 'processing').length;
     const queuedCount = batch.filter((j) => j.status === 'queued').length;
 
+    const totalImageCount = batch.reduce((sum, j) => sum + (j.imageCount || 1), 0);
+    const generatedImageCount = batch.reduce((sum, j) => sum + (j.generatedCount || (j.status === 'completed' ? (j.imageCount || 1) : 0)), 0);
+
     groups.push({
       key: `${anchor.workflow_id}-${anchor.product_name}-${anchorTime}`,
       workflow_id: anchor.workflow_id,
@@ -153,6 +156,8 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       job_type: anchor.job_type ?? null,
       quality: anchor.quality ?? null,
       resolution: anchor.resolution ?? null,
+      totalImageCount,
+      generatedImageCount,
     });
   }
 
