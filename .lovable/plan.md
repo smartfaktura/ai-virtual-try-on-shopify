@@ -1,52 +1,52 @@
 
-Goal: fix Virtual Try-On so the “Continue” button works when the sample crop top is selected, and ensure sample generations don’t fail later.
 
-1) Confirm and isolate root cause
-- File: `src/pages/Generate.tsx` (product step continue handler around `2795+`).
-- Current try-on branch only builds selection from `userProducts`:
-  - `const selectedUps = userProducts.filter(...)`
-  - If no DB products exist (sample-only state), `selectedUps.length === 0`, so click does nothing.
-- This matches the reported behavior.
+## Product Perspectives — Implemented ✅
 
-2) Fix selection logic for try-on sample flow
-- In the same continue handler, replace try-on selection logic with a unified candidate list:
-  - If user has products: mapped DB products.
-  - If user has none: `[SAMPLE_TRYON_PRODUCT]`.
-- Filter candidates by `selectedProductIds`.
-- If selected list is empty, show a toast and return.
-- If one selected:
-  - `setSelectedProduct(selected[0])`
-  - set source image id
-  - clear stale multi-product state (`setProductQueue([])`, reset index/results).
-- If multiple selected:
-  - keep existing queue setup behavior.
-- Keep existing navigation behavior to `brand-profile` or `model`.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-3) Prevent downstream DB FK/type failure for sample product
-- In try-on payload creation (`enqueueTryOnForProduct` and single-scene enqueue path), only send `product_id` when it corresponds to a real user product id.
-- Add a small helper in `Generate.tsx`:
-  - e.g. `getPersistedProductId(product?: Product | null): string | null`
-  - returns `product.id` only if found in `userProducts`; otherwise `null`.
-- Use this helper for all try-on payload `product_id` fields.
-- Reason: sample product is not in `user_products`, and `generation_jobs.product_id` has FK to `user_products(id)`.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-4) Keep UX consistent
-- Button label logic can remain unchanged.
-- Ensure sample selection still visually toggles as today.
-- No backend schema/policy changes needed for this fix.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-Technical details
-- Primary file to update: `src/pages/Generate.tsx`
-- Key areas:
-  - Product step continue button `onClick` (try-on branch)
-  - `enqueueTryOnForProduct(...)` payload
-  - Single-scene try-on enqueue payload
-- No migration, no auth change, no cloud function contract change.
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-Validation checklist (end-to-end)
-1. Go to `/app/generate/virtual-try-on-set` with zero user products.
-2. Select sample crop top → click Continue.
-3. Verify navigation advances to Brand/Model step.
-4. Complete model + scene + generate.
-5. Verify job is queued and completes (no silent failure on save).
-6. Re-test with real user product to ensure existing path still works.
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
