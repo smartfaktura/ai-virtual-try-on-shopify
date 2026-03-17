@@ -420,16 +420,16 @@ export function HeroSection() {
                 </div>
               </div>
 
-              {/* Scene switcher pills */}
-              <div className="flex items-center justify-center gap-2 mt-3">
+              <div className="flex items-center justify-center gap-1.5 mt-3">
                 {showcases.map((sc, i) => (
                   <button
                     key={i}
                     onClick={() => selectScene(i)}
-                    className={`px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    onMouseEnter={() => preloadScene(i)}
+                    className={`px-4 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       activeScene === i
-                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-accent/50 ${
                             !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
                           }`
                     }`}
