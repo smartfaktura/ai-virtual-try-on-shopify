@@ -111,6 +111,19 @@ const SAMPLE_UGC_PRODUCT: Product = {
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };
+
+const SAMPLE_MIRROR_PRODUCT: Product = {
+  id: 'sample_mirror_sweater',
+  title: 'Ribbed Knit Sweater',
+  vendor: 'Sample',
+  productType: 'Knitwear',
+  tags: ['sweater', 'knit', 'beige', 'cozy'],
+  description: 'Chunky ribbed knit sweater in warm beige. Relaxed cropped fit.',
+  images: [{ id: 'img_sample_mirror', url: '/images/samples/sample-sweater.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
