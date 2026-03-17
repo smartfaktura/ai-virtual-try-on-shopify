@@ -45,7 +45,7 @@ export default function Workflows() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, payload, error_message, job_type, credits_reserved')
+        .select('id, status, created_at, started_at, payload, error_message, job_type, credits_reserved, result')
         .in('status', ['queued', 'processing'])
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -57,6 +57,7 @@ export default function Workflows() {
         })
         .map((j): ActiveJob => {
           const p = j.payload as Record<string, unknown> | null;
+          const r = j.result as Record<string, unknown> | null;
           return {
             id: j.id,
             status: j.status,
@@ -71,6 +72,8 @@ export default function Workflows() {
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
             batch_id: (p?.batch_id as string) ?? null,
+            imageCount: ((p?.image_count as number) || (p?.imageCount as number)) ?? undefined,
+            generatedCount: (r?.generatedCount as number) ?? undefined,
           };
         });
     },
