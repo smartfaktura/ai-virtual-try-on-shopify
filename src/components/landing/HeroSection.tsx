@@ -348,15 +348,19 @@ export function HeroSection() {
 
             {/* Bottom product strip: thumbnail + text + scene pills */}
             <div className="flex items-center gap-2.5 px-2">
-              <div className="flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                <ShimmerImage
-                  src={optimizeProduct(current.product.img)}
-                  alt={current.product.label}
-                  className="w-full h-full object-cover"
-                  width={48}
-                  height={64}
-                  fetchPriority="high"
-                />
+              <div className="relative flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                {showcases.map((sc, scIdx) => (
+                  <ShimmerImage
+                    key={scIdx}
+                    src={optimizeProduct(sc.product.img)}
+                    alt={sc.product.label}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    width={48}
+                    height={64}
+                    fetchPriority={scIdx === 0 ? 'high' : undefined}
+                    style={{ opacity: scIdx === activeScene ? 1 : 0, transition: 'opacity 0.3s' }}
+                  />
+                ))}
               </div>
               <div className="flex flex-col gap-1.5 min-w-0">
                 <div className="flex items-center gap-1.5">
