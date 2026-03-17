@@ -566,25 +566,6 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     </>
   );
 
-  if (count <= 3 && !isMobile) {
-    return (
-      <>
-        <div className="flex flex-row items-stretch justify-center gap-2 px-3 lg:px-1">
-          {generatingCards.map((card, i) => (
-            <div key={`gen-wrap-${i}`} className="w-auto max-w-[45%] max-h-[calc(100vh-400px)]">{card}</div>
-          ))}
-          {blockedCards.map((card, i) => (
-            <div key={`block-wrap-${i}`} className="w-auto max-w-[45%] max-h-[calc(100vh-400px)]">{card}</div>
-          ))}
-          {failedCards.map((card, i) => (
-            <div key={`fail-wrap-${i}`} className="w-auto max-w-[45%] max-h-[calc(100vh-400px)]">{card}</div>
-          ))}
-          {imageCards(true)}
-        </div>
-        {modals}
-      </>
-    );
-  }
 
   // Masonry layout: distribute all cards into 3 columns
   const allCards: React.ReactNode[] = [
