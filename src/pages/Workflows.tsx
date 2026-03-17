@@ -23,7 +23,6 @@ export default function Workflows() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const prevActiveCountRef = useRef(0);
-  const autoCleanupTriggeredRef = useRef(false);
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
