@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, X, Eye, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
