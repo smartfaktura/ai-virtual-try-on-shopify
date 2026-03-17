@@ -3686,7 +3686,7 @@ export default function Generate() {
       <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}
         selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])} product={selectedProduct} existingImages={selectedProduct?.images || []} />
       <ProductAssignmentModal open={productAssignmentModalOpen} onClose={() => setProductAssignmentModalOpen(false)}
-        products={mockProducts} selectedProduct={assignToProduct} onSelectProduct={setAssignToProduct}
+        products={userProducts.length > 0 ? userProducts.map(up => mapUserProductToProduct(up)) : sampleProducts} selectedProduct={assignToProduct} onSelectProduct={setAssignToProduct}
         onPublish={(product, mode) => { toast.success(`${selectedForPublish.size} image(s) ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`); setProductAssignmentModalOpen(false); navigate('/app/library'); }}
         selectedImageCount={selectedForPublish.size} />
       <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
