@@ -24,8 +24,17 @@ export function LandingNav() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
@@ -47,10 +56,10 @@ export function LandingNav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 p-3">
       <nav
-        className={`transition-all duration-300 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
+        className={`transition-colors duration-300 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 bg-sidebar lg:backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
           scrolled
-            ? 'bg-sidebar/95'
-            : 'bg-sidebar/90'
+            ? 'lg:bg-sidebar/95'
+            : 'lg:bg-sidebar/90'
         }`}
       >
         {/* Logo */}
