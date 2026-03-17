@@ -935,6 +935,11 @@ export default function Generate() {
           const result = await response.json();
           jobMap.set(product.id, result.jobId);
           lastBalance = result.newBalance;
+          injectActiveJob(queryClient, {
+            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+            workflow_slug: activeWorkflow?.slug, product_name: product.title,
+            job_type: 'workflow', quality, imageCount: workflowImageCount,
+          });
         } else {
           const err = await response.json().catch(() => ({}));
           toast.error(err.error || `Failed to queue "${product.title}"`);
