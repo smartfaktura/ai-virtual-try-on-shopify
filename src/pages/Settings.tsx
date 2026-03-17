@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
-import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
+import { Building2, Check, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { AdminFeedbackPanel } from '@/components/app/AdminFeedbackPanel';
