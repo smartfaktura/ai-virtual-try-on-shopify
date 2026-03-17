@@ -1271,6 +1271,11 @@ export default function Generate() {
         if (result) {
           jobMap.set(pose.poseId, result.jobId);
           lastBalance = result.newBalance;
+          injectActiveJob(queryClient, {
+            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+            workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+            job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+          });
         }
       }
 
