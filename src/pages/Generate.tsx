@@ -88,6 +88,19 @@ const SAMPLE_TRYON_PRODUCT: import('@/types').Product = {
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };
+
+const SAMPLE_UGC_PRODUCT: Product = {
+  id: 'sample_ugc_ice_roller',
+  title: 'Ice Roller',
+  vendor: 'Sample',
+  productType: 'Skincare Tools',
+  tags: ['ice-roller', 'skincare', 'beauty'],
+  description: 'Cooling ice roller for face and body. Soothes skin and reduces puffiness.',
+  images: [{ id: 'img_sample_ugc', url: '/images/samples/sample-ice-roller.png' }],
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
