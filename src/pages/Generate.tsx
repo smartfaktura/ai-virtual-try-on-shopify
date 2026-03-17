@@ -3534,6 +3534,18 @@ export default function Generate() {
                   </div>
                 );
               }
+              if (isFlatLay && selectedFlatLayProductIds.size > 1) {
+                const flatLayProducts = userProducts.filter(p => selectedFlatLayProductIds.has(p.id));
+                return (
+                  <div className="flex -space-x-3 mb-2">
+                    {flatLayProducts.map((p) => (
+                      <div key={p.id} className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-primary/20 border-2 border-background animate-pulse-subtle">
+                        <img src={p.images?.[0]?.url || p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
               if (productImg) {
                 return (
                   <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
