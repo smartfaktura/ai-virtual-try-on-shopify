@@ -46,8 +46,8 @@ interface EnqueueResult {
 export type FailedErrorType = 'timeout' | 'rate_limit' | 'generic';
 
 interface UseGenerationQueueOptions {
-  /** When set, restoreActiveJob only picks up jobs matching this type */
-  jobType?: 'tryon' | 'freestyle' | 'workflow' | 'upscale';
+  /** When set, restoreActiveJob only picks up jobs matching these types */
+  jobTypes?: Array<'tryon' | 'freestyle' | 'workflow' | 'upscale'>;
   onContentBlocked?: (jobId: string, reason: string) => void;
   onGenerationFailed?: (jobId: string, message: string, errorType: FailedErrorType) => void;
   onCreditRefresh?: () => Promise<void> | void;
