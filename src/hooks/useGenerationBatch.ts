@@ -40,6 +40,7 @@ interface BatchParams {
   imageCount: number; // total expected images
   hasModel?: boolean;
   hasScene?: boolean;
+  onJobEnqueued?: (jobId: string) => void;
 }
 
 const INITIAL_BATCH_STATE: BatchState = {
@@ -252,6 +253,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
         const result = await response.json();
         jobIds.push(result.jobId);
         if (firstNewBalance === null) firstNewBalance = result.newBalance;
+        params.onJobEnqueued?.(result.jobId);
       } catch (err) {
         console.error(`Batch ${c + 1} enqueue error:`, err);
         toast.error(`Failed to enqueue batch ${c + 1}`);

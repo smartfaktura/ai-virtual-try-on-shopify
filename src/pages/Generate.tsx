@@ -70,6 +70,7 @@ import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal'
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
+import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 
@@ -810,6 +811,11 @@ export default function Generate() {
         const result = await response.json();
         jobMap.set(src.sourceId, result.jobId);
         lastBalance = result.newBalance;
+        injectActiveJob(queryClient, {
+          jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: src.title,
+          job_type: 'upscale', quality: 'standard', resolution: upscaleResolution,
+        });
       }
 
       if (jobMap.size === 0) {
@@ -929,6 +935,11 @@ export default function Generate() {
           const result = await response.json();
           jobMap.set(product.id, result.jobId);
           lastBalance = result.newBalance;
+          injectActiveJob(queryClient, {
+            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+            workflow_slug: activeWorkflow?.slug, product_name: product.title,
+            job_type: 'workflow', quality, imageCount: workflowImageCount,
+          });
         } else {
           const err = await response.json().catch(() => ({}));
           toast.error(err.error || `Failed to queue "${product.title}"`);
@@ -1062,6 +1073,11 @@ export default function Generate() {
       });
       if (enqueueResult) {
         setBalanceFromServer(enqueueResult.newBalance);
+        injectActiveJob(queryClient, {
+          jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
+          job_type: 'workflow', quality: 'high', imageCount: workflowImageCount,
+        });
       } else {
         setCurrentStep('settings');
       }
@@ -1075,6 +1091,11 @@ export default function Generate() {
         imageCount: workflowImageCount,
         hasModel: !!needsModel,
         hasScene: false,
+        onJobEnqueued: (jobId) => injectActiveJob(queryClient, {
+          jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
+          job_type: 'workflow', quality: 'high', imageCount: workflowImageCount,
+        }),
       });
       if (!success) {
         setCurrentStep('settings');
@@ -1165,6 +1186,11 @@ export default function Generate() {
           if (result) {
             jobMap.set(`${product.id}_${pose.poseId}`, result.jobId);
             lastBalance = result.newBalance;
+            injectActiveJob(queryClient, {
+              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+              workflow_slug: activeWorkflow?.slug, product_name: product.title,
+              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+            });
           }
         }
       }
@@ -1231,6 +1257,11 @@ export default function Generate() {
       });
       if (enqueueResult) {
         setBalanceFromServer(enqueueResult.newBalance);
+        injectActiveJob(queryClient, {
+          jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+          workflow_slug: activeWorkflow?.slug, product_name: selectedProduct?.title || productData?.title,
+          job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+        });
         queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       } else {
         setCurrentStep('settings');
@@ -1250,6 +1281,11 @@ export default function Generate() {
         if (result) {
           jobMap.set(pose.poseId, result.jobId);
           lastBalance = result.newBalance;
+          injectActiveJob(queryClient, {
+            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+            workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+            job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+          });
         }
       }
 
