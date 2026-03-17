@@ -28,6 +28,7 @@ type UserProduct = Tables<'user_products'>;
 const MAX_IMAGES_PER_JOB = 4;
 const FREE_SCENE_LIMIT = 1;
 const PAID_SCENE_LIMIT = 3;
+const FLAT_LAY_SURFACE_LIMIT = 6;
 
 const FLAT_LAY_AESTHETICS = [
   { id: 'minimal', label: 'Minimal', hint: 'clean, few props, whitespace' },
