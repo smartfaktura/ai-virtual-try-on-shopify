@@ -25,6 +25,7 @@ interface EmptyStateCardProps {
     content: string;
     onAction: () => void;
     variant?: 'default' | 'outline';
+    icon?: React.ReactNode;
   }>;
   image?: string;
   icon?: React.ReactNode;
@@ -60,6 +61,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
                   onClick={a.onAction}
                   className="rounded-full px-6"
                 >
+                  {a.icon}
                   {a.content}
                 </Button>
               ))}
@@ -98,6 +100,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
           <div className="flex items-center gap-3">
             {renderedActions.map((a, i) => (
               <Button key={i} variant={a.variant === 'outline' ? 'outline' : 'default'} onClick={a.onAction}>
+                {a.icon}
                 {a.content}
               </Button>
             ))}

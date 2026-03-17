@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -328,11 +328,11 @@ export default function Jobs() {
                   <EmptyStateCard
                     heading="No images yet"
                     description=""
-                    icon={<Image className="w-12 h-12" />}
+                    icon={<Sparkles className="w-10 h-10" />}
                     teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals with workflows or freestyle generation." }}
                     actions={[
-                      { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline' },
-                      { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default' },
+                      { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline', icon: <Layers className="w-4 h-4" /> },
+                      { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default', icon: <Sparkles className="w-4 h-4" /> },
                     ]}
                   />
                 ) : (
