@@ -548,6 +548,7 @@ async function generateImage(
   aspectRatio?: string
 ): Promise<string | null> {
   const maxRetries = 2;
+  const PER_IMAGE_TIMEOUT = 150_000; // 150s per image
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
@@ -581,6 +582,7 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
+          signal: AbortSignal.timeout(PER_IMAGE_TIMEOUT),
         }
       );
 
@@ -637,7 +639,8 @@ async function generateImage(
       ) {
         throw error;
       }
-      console.error(`Generation attempt ${attempt + 1} failed:`, error);
+      const isTimeout = error instanceof DOMException && error.name === 'TimeoutError';
+      console.error(`Generation attempt ${attempt + 1} failed${isTimeout ? ' (timeout)' : ''}:`, error);
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
         continue;
