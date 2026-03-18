@@ -398,7 +398,11 @@ export default function PublicDiscover() {
                   </div>
                 ))}
               </div>
-            );
+              {/* Sentinel for loading more items */}
+              {visibleCount < sorted.length && (
+                <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
+              )}
+            </>;
           })()
         )}
 
