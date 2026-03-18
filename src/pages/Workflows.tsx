@@ -130,7 +130,7 @@ export default function Workflows() {
         .from('generation_queue')
         .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
         .eq('status', 'failed')
-        .gte('created_at', oneDayAgo)
+        .gte('created_at', fourHoursAgo)
         .order('created_at', { ascending: false })
         .limit(5);
       if (error) throw error;
