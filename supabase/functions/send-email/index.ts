@@ -341,7 +341,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "VOVV.AI <notifications@notify.vovv.ai>",
+        from: "VOVV.AI <notifications@vovv.ai>",
         to: [to],
         subject,
         html,
