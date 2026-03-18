@@ -1,63 +1,49 @@
 
 
-## Monthly Credit Reset for Paid Plans — Implemented ✅
+## Fix: Upscale Loading Indicators and Stuck Workflow
 
-### What was built
-Billing cycle rollover detection in `check-subscription` that resets credits to the plan's monthly allotment when Stripe renews. Use-it-or-lose-it model — old unused credits expire.
+Two separate bugs need to be fixed:
 
-### Changes
-- **Database**: Added `credits_renewed_at` column to `profiles`, created `reset_plan_credits` RPC
-- **`check-subscription`**: Compares new `periodEnd` from Stripe against stored `current_period_end`. If plan unchanged but period differs → `reset_plan_credits(allotment)`
-- **Free plan**: Unaffected (20 credits at signup, no renewal)
+### Bug 1: No upscale loading indicator on Freestyle page
 
+The Freestyle page (`FreestyleGallery`) never tracks upscale jobs. The Jobs (Library) page has a `useQuery` that polls `generation_queue` for active upscale jobs and passes `isUpscaling` to each `LibraryImageCard`. The Freestyle page doesn't do this at all.
 
-## Product Perspectives — Implemented ✅
+**Fix in `src/pages/Freestyle.tsx`:**
+- Add the same upscale job tracking query (poll `generation_queue` for `job_type='upscale'` with `status in (queued, processing)` every 4s)
+- Extract `upscalingSourceIds` set
+- Pass `isUpscaling` prop through to `FreestyleGallery` and down to the image cards
+- Also pass it to `LibraryDetailModal` when it opens
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+**Fix in `src/components/app/freestyle/FreestyleGallery.tsx`:**
+- Accept an `upscalingSourceIds` prop (or `isUpscaling` callback)
+- Pass `isUpscaling` to each image card rendered in the gallery (the gallery renders its own cards, not `LibraryImageCard`, so the overlay effect needs to be added to the freestyle image cards as well, or the existing card overlay pattern needs to be reused)
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Bug 2: Upscale workflow stuck on "Enhancing" screen
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**Root cause:** In `src/pages/Generate.tsx`, the `multiProductJobIds` polling effect (line 1376) aggregates results by iterating over `productQueue` (line 1436). For single-image upscale (especially scratch uploads), `productQueue` is empty, so the aggregation loop finds no matching entries. When all jobs are terminal, `allImages` is empty and the code shows "All products failed" then resets to settings -- but the user may not see this correctly, or for non-scratch single product the `productQueue` has entries but the key mismatch (`product.id` vs `src.sourceId`) causes the same problem.
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+**Fix in `src/pages/Generate.tsx` (~line 1426-1462):**
+- Instead of iterating `productQueue` to aggregate results, iterate `multiProductJobIds` directly. The `completedResults` map is keyed by the same keys used in `multiProductJobIds` (e.g. `'scratch'`, or `product.id`), so iterate the map's entries:
 
+```tsx
+// Replace productQueue iteration with multiProductJobIds iteration
+const allImages: string[] = [];
+const allLabels: string[] = [];
+for (const [key] of multiProductJobIds) {
+  const r = completedResults.get(key);
+  if (r) {
+    allImages.push(...r.images);
+    allLabels.push(...r.labels);
+  }
+}
+```
 
-## Image Optimization for AI Generation — Implemented ✅
+This ensures single-image scratch uploads and any key format work correctly. The upscale job will complete, show results, and transition away from the "Enhancing" screen.
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+### Technical details
 
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
+- The `multiProductJobIds` map uses `src.sourceId` as keys (line 812: `jobMap.set(src.sourceId, result.jobId)`), which is `'scratch'` for scratch uploads or `product.id` for selected products
+- The polling at line 1400-1411 correctly maps results back using the same `multiProductJobIds.entries()` keys
+- Only the aggregation at line 1436 incorrectly uses `productQueue` instead of `multiProductJobIds`
+- For Freestyle upscale indicators, we replicate the pattern from `src/pages/Jobs.tsx` lines 100-122
 
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
-
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
