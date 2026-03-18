@@ -1,5 +1,16 @@
 
 
+## Monthly Credit Reset for Paid Plans — Implemented ✅
+
+### What was built
+Billing cycle rollover detection in `check-subscription` that resets credits to the plan's monthly allotment when Stripe renews. Use-it-or-lose-it model — old unused credits expire.
+
+### Changes
+- **Database**: Added `credits_renewed_at` column to `profiles`, created `reset_plan_credits` RPC
+- **`check-subscription`**: Compares new `periodEnd` from Stripe against stored `current_period_end`. If plan unchanged but period differs → `reset_plan_credits(allotment)`
+- **Free plan**: Unaffected (20 credits at signup, no renewal)
+
+
 ## Product Perspectives — Implemented ✅
 
 ### What was built
