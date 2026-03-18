@@ -528,14 +528,12 @@ export default function Freestyle() {
         resetQueueRef.current();
         toast('Credits refunded', { description: 'Your prompt was flagged — credits have been returned to your balance.' });
       } else {
-        // Show immediate feedback while DB propagates
-        toast.success('Generation complete!', { description: 'Syncing to your library…' });
         // Delay to ensure DB write has propagated, then refetch
         setTimeout(() => {
           refreshImagesRef.current();
           refreshBalanceRef.current();
           resetQueueRef.current();
-        }, 1200);
+        }, 800);
       }
     }
 
