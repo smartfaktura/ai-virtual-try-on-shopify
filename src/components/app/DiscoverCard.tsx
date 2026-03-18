@@ -32,7 +32,7 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
       <ShimmerImage
         src={getOptimizedUrl(imageUrl, { quality: 60 })}
         alt={isScene ? item.data.name : item.data.title}
-        className="w-full h-auto block group-hover:scale-[1.03] transition-transform duration-500"
+        className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
         loading="lazy"
         aspectRatio="3/4"
       />
@@ -45,7 +45,7 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
             'absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
             isSaved
               ? 'bg-destructive text-destructive-foreground'
-              : 'bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100'
+              : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
           )}
         >
           <Heart className={cn('w-4 h-4', isSaved && 'fill-current')} />
@@ -60,7 +60,7 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
             'absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
             isFeatured
               ? 'bg-amber-500 text-white'
-              : 'bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100'
+              : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
           )}
         >
           <Star className={cn('w-4 h-4', isFeatured && 'fill-current')} />
@@ -83,14 +83,14 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
 
       {/* Scene badge */}
       {isScene && !hideLabels && (
-        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium">
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 text-white text-[10px] font-medium">
           Scene
         </div>
       )}
 
       {/* Workflow badge */}
       {!isScene && !hideLabels && item.data.workflow_name && (
-        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-primary/80 backdrop-blur-sm text-primary-foreground text-[10px] font-medium">
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-primary/80 text-primary-foreground text-[10px] font-medium">
           {item.data.workflow_name}
         </div>
       )}

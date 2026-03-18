@@ -1,34 +1,63 @@
 
 
-## Fix Discover Page Mobile Scroll Lag
+## Monthly Credit Reset for Paid Plans — Implemented ✅
 
-### Root Causes
+### What was built
+Billing cycle rollover detection in `check-subscription` that resets credits to the plan's monthly allotment when Stripe renews. Use-it-or-lose-it model — old unused credits expire.
 
-After reviewing the code, the scroll jank on mobile comes from several compounding performance issues:
+### Changes
+- **Database**: Added `credits_renewed_at` column to `profiles`, created `reset_plan_credits` RPC
+- **`check-subscription`**: Compares new `periodEnd` from Stripe against stored `current_period_end`. If plan unchanged but period differs → `reset_plan_credits(allotment)`
+- **Free plan**: Unaffected (20 credits at signup, no renewal)
 
-1. **`backdrop-blur-sm` on overlays** — Every `DiscoverCard` has 2-3 elements with `backdrop-blur-sm` (save button, featured button, scene/workflow badge). Backdrop blur is extremely expensive on mobile GPUs, especially when dozens of cards are in the DOM simultaneously.
 
-2. **`group-hover:scale-[1.03] transition-transform duration-500`** — Every card image has an active CSS transition declaration. Even though it only triggers on hover, the browser still monitors and composites these elements, adding overhead during scroll.
+## Product Perspectives — Implemented ✅
 
-3. **All items rendered at once** — The masonry grid renders every single card immediately (presets + scenes, potentially 100+ items). No virtualization or lazy rendering means the DOM is massive on load.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-4. **Shimmer animation on off-screen images** — `ShimmerImage` runs a `bg-[length:200%_100%] animate-shimmer` CSS animation on every unloaded image placeholder, even ones far below the fold.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Proposed Changes
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-**`src/components/app/DiscoverCard.tsx`** (~5 lines):
-- Remove `backdrop-blur-sm` from all overlay elements — replace with solid `bg-black/50` backgrounds (visually identical at small sizes, dramatically cheaper)
-- Change `transition-transform duration-500` to only apply on hover-capable devices: `[@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500` — this removes the transition entirely on touch devices
-- Add `will-change-transform` only on hover-capable devices to hint compositing
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-**`src/pages/PublicDiscover.tsx`** (~15 lines):
-- Add a simple "render budget" — only render the first ~30 items initially, then load more on scroll using an `IntersectionObserver` sentinel at the bottom of the grid
-- This dramatically reduces initial DOM node count on mobile
 
-**`src/components/ui/shimmer-image.tsx`** (~2 lines):
-- Add `loading="lazy"` as default (already passed from DiscoverCard but good to enforce)
-- No other changes needed since the shimmer div is conditionally rendered
+## Image Optimization for AI Generation — Implemented ✅
 
-### Impact
-These changes eliminate the three most expensive GPU operations (backdrop blur, scale transitions, massive DOM) while preserving the exact visual design on desktop. Mobile users will see smooth 60fps scrolling.
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

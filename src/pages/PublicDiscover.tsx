@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Compass } from 'lucide-react';
@@ -231,6 +231,35 @@ export default function PublicDiscover() {
     });
   }, [filtered, featuredMap]);
 
+  // Progressive rendering: render in batches for mobile perf
+  const INITIAL_RENDER_COUNT = 30;
+  const LOAD_MORE_COUNT = 20;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(INITIAL_RENDER_COUNT);
+  }, [selectedCategory, searchQuery]);
+
+  // IntersectionObserver to load more items
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, sorted.length));
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sorted.length]);
+
+  const visibleItems = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+
   // Related items for modal
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
@@ -341,34 +370,39 @@ export default function PublicDiscover() {
         ) : (
           (() => {
             const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
-            sorted.forEach((item, i) => {
+            visibleItems.forEach((item, i) => {
               columns[i % columnCount].push(item);
             });
             return (
-              <div className="flex gap-1">
-                {columns.map((col, colIdx) => (
-                  <div key={colIdx} className="flex-1 flex flex-col gap-1">
-                    {col.map((item) => {
-                      const itemId = getItemId(item);
-                      return (
-                        <DiscoverCard
-                          key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-                          item={item}
-                          onClick={() => handleCardClick(item)}
-                          hideLabels
-                          {...(user ? {
-                            isSaved: isSaved(item.type, itemId),
-                            onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
-                            isFeatured: isFeatured(item.type, itemId),
-                            isAdmin,
-                            onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
-                          } : {})}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="flex gap-1">
+                  {columns.map((col, colIdx) => (
+                    <div key={colIdx} className="flex-1 flex flex-col gap-1">
+                      {col.map((item) => {
+                        const itemId = getItemId(item);
+                        return (
+                          <DiscoverCard
+                            key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                            item={item}
+                            onClick={() => handleCardClick(item)}
+                            hideLabels
+                            {...(user ? {
+                              isSaved: isSaved(item.type, itemId),
+                              onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
+                              isFeatured: isFeatured(item.type, itemId),
+                              isAdmin,
+                              onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
+                            } : {})}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                {visibleCount < sorted.length && (
+                  <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
+                )}
+              </>
             );
           })()
         )}
