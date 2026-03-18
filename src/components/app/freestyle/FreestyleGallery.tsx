@@ -296,6 +296,7 @@ function ImageCard({
   onAddToDiscover,
   className,
   natural,
+  isUpscaling,
 }: {
   img: GalleryImage;
   idx: number;
@@ -309,6 +310,7 @@ function ImageCard({
   onAddToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
+  isUpscaling?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const prevSrcRef = useRef(img.url);
