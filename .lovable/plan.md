@@ -1,66 +1,56 @@
 
+Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-## Investigation: What Caused the "Crashed" Dashboard
+What I found
+- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
+- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
+- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
+- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
+- Dashboard queries don’t present a clear recovery UI when core queries fail.
 
-### Root Causes Identified
+Implementation plan
+1) Harden route-gating so it cannot hang
+- File: `src/components/app/ProtectedRoute.tsx`
+- Replace current onboarding check with guarded async flow:
+  - reset `onboardingChecked` before request
+  - use `.maybeSingle()` (not `.single()`) for profile lookup
+  - handle network/query errors explicitly
+  - set `onboardingChecked` in `finally` so route never stays blocked
+  - keep onboarding redirect logic for valid `onboarding_completed === false`
 
-**1. Unguarded `getSession()` in CreditContext (the main culprit)**
-- File: `src/contexts/CreditContext.tsx`, line 127
-- `checkSubscription` calls `await supabase.auth.getSession()` **before** the try/catch block
-- Edge function logs confirm this exact failure: `"Auth failed - Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"` — the auth endpoint returned an HTML error page instead of JSON
-- When `getSession()` throws, it's an unhandled rejection that can crash the React tree
-- This runs every 60 seconds (line 194), so it repeatedly destabilizes the app
+2) Harden auth bootstrap
+- File: `src/contexts/AuthContext.tsx`
+- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
+- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
 
-**2. No global ErrorBoundary**
-- Confirmed: zero `ErrorBoundary` components exist in the project
-- When any unhandled error crashes the React tree, the entire app (including `AuthProvider`) unmounts
-- Subsequent re-renders of `Auth` or any page calling `useAuth()` fail with `"useAuth must be used within an AuthProvider"` — the exact error from the console logs
-- Result: permanent blank screen with no recovery path
+3) Harden credit bootstrap + noisy failure path
+- File: `src/contexts/CreditContext.tsx`
+- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
+- Keep defaults when profile is missing/unreachable.
+- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
 
-**3. Stale session from multi-device logout**
-- Auth logs show token refresh (`token_revoked`) happening during the same window as the crashes
-- When a user logs out on one device, the other device's refresh token becomes invalid
-- Supabase tries to refresh → gets an error → `getSession()` throws or returns corrupted data
-- Without error handling, this cascades into the crash described above
+4) Add dashboard recovery UI for failed core queries
+- File: `src/pages/Dashboard.tsx`
+- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
+- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
 
-### What's Already Fixed
-The previous patches correctly hardened:
-- `ProtectedRoute` — now uses `try/catch/finally` with `.maybeSingle()` (confirmed working)
-- `AuthContext` — has `.catch()` on `getSession()` and a 10s safety timeout (confirmed working)
-- `CreditContext.fetchCredits` — uses `try/catch/finally` (confirmed working)
-- Dashboard — has `hasCriticalError` recovery UI with retry button (confirmed working)
-- QueryClient — has retry config with exponential backoff (confirmed working)
+5) Improve global query resilience
+- File: `src/App.tsx`
+- Update QueryClient defaults for flaky connections:
+  - `retry` + bounded `retryDelay`
+  - `refetchOnReconnect: true`
+  - keep current `refetchOnWindowFocus: false`
+- This reduces “one failed request = stuck state” cases.
 
-### What Still Needs Fixing
+Technical notes
+- No database schema changes needed.
+- This is a client resilience patch, not a business-logic change.
+- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
 
-**Fix 1: Guard `getSession()` in `checkSubscription`** (`src/contexts/CreditContext.tsx`)
-- Move the `getSession()` call on line 127 **inside** the existing try/catch block (lines 129-144)
-- This is the last unguarded async call that can produce an unhandled rejection
-
-**Fix 2: Add a global ErrorBoundary** (`src/components/ErrorBoundary.tsx` + `src/App.tsx`)
-- Create a class component that catches render errors via `componentDidCatch`
-- Shows a "Something went wrong" screen with a "Reload" button
-- Clears stale auth tokens from localStorage on crash (prevents crash loops on reload)
-- Wrap the entire app tree in `App.tsx` with this boundary
-
-These two changes close the remaining crash vectors. The `getSession()` fix prevents the trigger, and the ErrorBoundary prevents any future unhandled error from resulting in a permanent blank screen.
-
-### Technical Details
-
-**CreditContext fix** (line 127-128 moves inside try block):
-```tsx
-// Before (crashes if getSession throws):
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) { checkingRef.current = false; return; }
-try { ... }
-
-// After:
-try {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-  // ... rest of check-subscription logic
-} catch (err) { ... } finally { checkingRef.current = false; }
-```
-
-**ErrorBoundary** — standard React class component pattern wrapping `<App>` content inside `BrowserRouter`.
-
+Validation checklist (end-to-end)
+1. Open `/app` with normal network: dashboard loads normally.
+2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
+3. Reconnect network: dashboard should recover via retry/reconnect.
+4. User with `onboarding_completed=false`: still redirects to onboarding.
+5. User with missing profile row: app should still load safely (no deadlock).
+6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
