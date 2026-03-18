@@ -304,7 +304,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
             {/* Video — Coming Soon */}
             <button
               disabled
-              className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground/50 bg-muted/20 border border-border/20 cursor-not-allowed"
+              className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 cursor-not-allowed disabled:opacity-50"
             >
               <Video className="w-3.5 h-3.5" />
               Generate Video

@@ -247,7 +247,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                 <Button
                   variant="outline"
                   disabled
-                  className="w-full h-11 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed"
+                  className="w-full h-11 rounded-xl text-sm font-medium"
                 >
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
