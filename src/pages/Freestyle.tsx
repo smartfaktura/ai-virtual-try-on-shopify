@@ -771,6 +771,7 @@ export default function Freestyle() {
               onLoadMore={hasNextPage ? fetchNextPage : undefined}
               hasMore={hasNextPage}
               isFetchingMore={isFetchingNextPage}
+              upscalingSourceIds={upscalingSourceIds}
             />
           </>
         ) : (
