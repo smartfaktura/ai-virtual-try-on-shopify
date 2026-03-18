@@ -833,12 +833,13 @@ export default function Freestyle() {
 
       {savedImages.length > 0 && lightboxOpen && savedImages[lightboxIndex] && (() => {
         const img = savedImages[lightboxIndex];
+        const displayPrompt = img.userPrompt || img.prompt;
         const lightboxItem: LibraryItem = {
           id: img.id,
           imageUrl: img.url,
           source: 'freestyle',
           label: 'Freestyle',
-          prompt: img.prompt?.startsWith('Generate a photorealistic') ? 'Perspectives generation' : img.prompt,
+          prompt: displayPrompt?.startsWith('Generate a photorealistic') ? 'Perspectives generation' : displayPrompt,
           date: new Date(img.createdAt).toLocaleDateString(),
           createdAt: new Date(img.createdAt).toISOString(),
           aspectRatio: img.aspectRatio,
