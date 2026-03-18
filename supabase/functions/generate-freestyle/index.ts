@@ -47,6 +47,7 @@ interface BrandProfileContext {
 
 interface FreestyleRequest {
   prompt: string;
+  userPrompt?: string;
   sourceImage?: string;
   productImage?: string;
   modelImage?: string;
@@ -1055,6 +1056,7 @@ serve(async (req) => {
                 user_id: userId,
                 image_url: publicUrl,
                 prompt: body.prompt || '',
+                user_prompt: body.userPrompt || null,
                 aspect_ratio: body.aspectRatio || '1:1',
                 quality: body.quality || 'standard',
                 model_id: body.modelId || null,

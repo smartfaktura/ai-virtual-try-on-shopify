@@ -9,6 +9,7 @@ export interface FreestyleImage {
   id: string;
   url: string;
   prompt: string;
+  userPrompt?: string | null;
   aspectRatio: string;
   quality: string;
   createdAt: number;
@@ -19,6 +20,7 @@ export interface FreestyleImage {
 
 export interface SaveImageMeta {
   prompt: string;
+  userPrompt?: string | null;
   aspectRatio: string;
   quality: string;
   modelId?: string | null;
@@ -60,6 +62,7 @@ export function useFreestyleImages() {
         id: row.id,
         url: signedUrls[i],
         prompt: row.prompt,
+        userPrompt: row.user_prompt ?? null,
         aspectRatio: row.aspect_ratio,
         quality: row.quality,
         createdAt: new Date(row.created_at).getTime(),

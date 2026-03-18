@@ -483,6 +483,7 @@ export default function Freestyle() {
     // Build the payload for the queue — URLs instead of base64
     const queuePayload = {
       prompt: finalPrompt,
+      userPrompt: prompt.trim() || null,
       sourceImage: sourceImageUrl,
       productImage: productImageUrl,
       modelImage: modelImageUrl,
@@ -623,6 +624,7 @@ export default function Freestyle() {
     id: img.id,
     url: img.url,
     prompt: img.prompt,
+    userPrompt: img.userPrompt,
     aspectRatio: img.aspectRatio,
   }));
 
@@ -831,12 +833,13 @@ export default function Freestyle() {
 
       {savedImages.length > 0 && lightboxOpen && savedImages[lightboxIndex] && (() => {
         const img = savedImages[lightboxIndex];
+        const displayPrompt = img.userPrompt || img.prompt;
         const lightboxItem: LibraryItem = {
           id: img.id,
           imageUrl: img.url,
           source: 'freestyle',
           label: 'Freestyle',
-          prompt: img.prompt?.startsWith('Generate a photorealistic') ? 'Perspectives generation' : img.prompt,
+          prompt: displayPrompt?.startsWith('Generate a photorealistic') ? 'Perspectives generation' : displayPrompt,
           date: new Date(img.createdAt).toLocaleDateString(),
           createdAt: new Date(img.createdAt).toISOString(),
           aspectRatio: img.aspectRatio,
