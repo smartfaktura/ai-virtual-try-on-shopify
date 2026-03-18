@@ -34,8 +34,12 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
   const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
+  const [promptExpanded, setPromptExpanded] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
+
+  // Reset prompt expanded when item changes
+  useEffect(() => { setPromptExpanded(false); }, [item?.id]);
 
   // Lock body scroll
   useEffect(() => {
@@ -161,16 +165,28 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               </div>
 
               {/* Prompt */}
-              {item.prompt && !isUpscaled && (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                    Prompt
-                  </p>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {item.prompt}
-                  </p>
-                </div>
-              )}
+              {item.prompt && !isUpscaled && (() => {
+                const isLong = item.prompt!.length > 150;
+                const displayText = isLong && !promptExpanded ? `${item.prompt!.slice(0, 150)}…` : item.prompt;
+                return (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                      Prompt
+                    </p>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {displayText}
+                      {isLong && (
+                        <button
+                          onClick={() => setPromptExpanded(!promptExpanded)}
+                          className="ml-1 text-primary hover:text-primary/80 text-xs font-medium transition-colors"
+                        >
+                          {promptExpanded ? 'Show less' : 'Show more'}
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Upscaling in-progress state */}
               {isUpscaling && (() => {
