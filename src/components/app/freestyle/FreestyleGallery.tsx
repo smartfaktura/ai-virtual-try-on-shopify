@@ -283,6 +283,19 @@ function GenerationFailedCard({
   );
 }
 
+function UpscalingOverlay() {
+  const luna = STUDIO_CREW.find(m => m.name === 'Luna')!;
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-[3px] rounded-xl">
+      <img src={luna.avatar} alt="Luna" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30 mb-2" />
+      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+        <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+        <span className="text-[11px] font-medium text-primary">Luna is enhancing…</span>
+      </div>
+    </div>
+  );
+}
+
 function ImageCard({
   img,
   idx,
