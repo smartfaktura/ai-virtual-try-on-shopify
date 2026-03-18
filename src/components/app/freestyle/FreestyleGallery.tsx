@@ -78,6 +78,7 @@ interface FreestyleGalleryProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isFetchingMore?: boolean;
+  upscalingSourceIds?: Set<string>;
 }
 
 function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: number; aspectRatio?: string; className?: string }) {
