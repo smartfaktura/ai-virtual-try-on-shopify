@@ -39,7 +39,7 @@ export function TryOnConfirmModal({
   if (!product || !model || !pose) return null;
 
   const displaySourceImage = sourceImageUrl || product.images[0]?.url || '/placeholder.svg';
-  const creditsPerImage = 8;
+  const creditsPerImage = 6;
   const totalCredits = imageCount * creditsPerImage;
   const hasEnoughCredits = creditsRemaining >= totalCredits;
 

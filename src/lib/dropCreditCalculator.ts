@@ -32,7 +32,7 @@ const MODEL_WORKFLOW_IDS = new Set([
 ]);
 
 function getCostPerImage(_workflowId: string, _hasModel: boolean, _hasCustomScene: boolean): number {
-  return 8; // All workflows cost 8 credits per image
+  return 6; // All workflows cost 6 credits per image
 }
 
 export function calculateDropCredits(

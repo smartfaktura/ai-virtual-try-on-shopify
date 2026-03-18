@@ -72,6 +72,6 @@ export function calculateBulkCredits(
   imagesPerProduct: number,
   mode: GenerationMode
 ): number {
-  const creditsPerImage = mode === 'virtual-try-on' ? 8 : 4;
+  const creditsPerImage = mode === 'virtual-try-on' ? 6 : 4;
   return productCount * imagesPerProduct * creditsPerImage;
 }

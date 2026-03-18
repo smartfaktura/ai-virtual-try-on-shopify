@@ -143,21 +143,19 @@ CREDIT PRICING — what things cost:
 
 **Freestyle pricing** (open-ended prompt-based generation):
 - Standard quality: **4 credits** per image
-- High quality: **10 credits** per image
+- High quality (or with model/scene): **6 credits** per image
 
 **Workflow pricing** (guided structured generation):
-- Standard quality: **8 credits** per image
-- High quality: **16 credits** per image
-- With AI model reference: **12 credits** per image
-- Model + Scene combo: **15 credits** per image
-- High-complexity (custom model + custom scene): **20 credits** per image
-- Virtual Try-On: **16 credits** per image
+- Standard quality: **4 credits** per image
+- High quality: **6 credits** per image
+- With AI model reference: **6 credits** per image
+- Virtual Try-On: **6 credits** per image
 
 **Video**: **30 credits** per video
 
 **Upscale & Enhance**: **10–15 credits** per upscale (available from the Library on any generated image). Use it for print-ready or large-format resolution.
 
-**Perspectives**: **8 credits** per angle image (standard quality)
+**Perspectives**: **6 credits** per angle image
 
 Freestyle is the most affordable way to generate — starting from just 4 credits per image. Workflows cost more but provide structured, repeatable results. Always mention BOTH options when users ask about pricing or how to generate images.
 

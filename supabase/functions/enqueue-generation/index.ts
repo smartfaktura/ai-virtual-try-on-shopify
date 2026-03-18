@@ -31,9 +31,9 @@ function calculateCreditCost(
   if (jobType === "upscale") {
     perImage = resolution === "4k" ? 15 : 10;
   } else if (jobType === "workflow" || jobType === "tryon") {
-    perImage = 8;
+    perImage = 6;
   } else {
-    perImage = (hasModel || hasScene || quality === 'high') ? 8 : 4;
+    perImage = (hasModel || hasScene || quality === 'high') ? 6 : 4;
   }
 
   return imageCount * perImage;

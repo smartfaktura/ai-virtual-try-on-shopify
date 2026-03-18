@@ -167,7 +167,7 @@ serve(async (req) => {
       const models = (wfSceneConfig.models || []) as Record<string, unknown>[];
       const hasModel = (wf.uses_tryon as boolean) || models.length > 0;
       const hasCustomScene = false; // Future: detect custom scenes
-      const costPerImage = hasModel && hasCustomScene ? 15 : hasModel ? 12 : 4;
+      const costPerImage = hasModel ? 6 : 4;
 
       const variationIndices = (wfSceneConfig.selected_variation_indices || []) as number[];
       const aspectRatio = (wfSceneConfig.aspect_ratio || "1:1") as string;
