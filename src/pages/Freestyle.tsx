@@ -801,40 +801,27 @@ export default function Freestyle() {
         </div>
       </div>
 
-      {savedImages.length > 0 && (
-        <>
-          <ImageLightbox
-            images={savedImages.map(i => i.url)}
-            currentIndex={lightboxIndex}
+      {savedImages.length > 0 && lightboxOpen && savedImages[lightboxIndex] && (() => {
+        const img = savedImages[lightboxIndex];
+        const lightboxItem: LibraryItem = {
+          id: img.id,
+          imageUrl: img.url,
+          source: 'freestyle',
+          label: 'Freestyle',
+          prompt: img.prompt,
+          date: new Date(img.createdAt).toLocaleDateString(),
+          createdAt: new Date(img.createdAt).toISOString(),
+          aspectRatio: img.aspectRatio,
+          quality: img.quality,
+        };
+        return (
+          <LibraryDetailModal
+            item={lightboxItem}
             open={lightboxOpen}
             onClose={() => setLightboxOpen(false)}
-            onNavigate={setLightboxIndex}
-            onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
-            onDelete={(idx) => {
-              handleDelete(savedImages[idx].id);
-              setLightboxOpen(false);
-            }}
-            onCopyPrompt={(idx) => {
-              setPrompt(savedImages[idx].prompt);
-              setLightboxOpen(false);
-              import('sonner').then(({ toast }) => toast.success('Prompt copied to editor'));
-            }}
-            onShare={(idx) => {
-              setShareImageIndex(idx);
-              setLightboxOpen(false);
-            }}
           />
-          {shareImageIndex !== null && (
-            <SubmitToDiscoverModal
-              open
-              onClose={() => setShareImageIndex(null)}
-              imageUrl={savedImages[shareImageIndex].url}
-              prompt={savedImages[shareImageIndex].prompt}
-              aspectRatio={savedImages[shareImageIndex].aspectRatio}
-            />
-          )}
-        </>
-      )}
+        );
+      })()}
       
     </div>
   );
