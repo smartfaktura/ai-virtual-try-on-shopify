@@ -121,11 +121,11 @@ export default function Workflows() {
     refetchInterval: 10_000,
   });
 
-  // ── Recently failed workflow queue jobs (last 24h) ──
+  // ── Recently failed workflow queue jobs (last 4h, auto-expire) ──
   const { data: recentlyFailedJobs = [] } = useQuery({
     queryKey: ['workflow-failed-jobs'],
     queryFn: async () => {
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
         .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
