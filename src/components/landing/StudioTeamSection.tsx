@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +7,6 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 
 export function StudioTeamSection() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -185,7 +183,7 @@ export function StudioTeamSection() {
           <Button
             size="lg"
             className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
-            onClick={() => navigate(user ? '/team' : '/auth')}
+            onClick={() => navigate('/team')}
           >
             Meet Your Team <ArrowRight className="w-4 h-4" />
           </Button>
