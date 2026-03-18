@@ -38,7 +38,7 @@ const steps = [
   {
     number: '03',
     title: 'Get Cohesive Results',
-    description: 'Receive a matching set of product angles with consistent lighting, background, and styling. 8 credits per angle.',
+    description: 'Receive a matching set of product angles with consistent lighting, background, and styling. 6 credits per angle.',
   },
 ];
 
