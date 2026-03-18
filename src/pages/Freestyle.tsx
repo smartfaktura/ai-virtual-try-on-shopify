@@ -847,6 +847,7 @@ export default function Freestyle() {
             item={lightboxItem}
             open={lightboxOpen}
             onClose={() => setLightboxOpen(false)}
+            isUpscaling={upscalingSourceIds.has(img.id)}
           />
         );
       })()}

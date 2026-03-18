@@ -1430,14 +1430,17 @@ export default function Generate() {
           multiProductPollingRef.current = null;
         }
 
-        // Aggregate results
+        // Aggregate results — iterate multiProductJobIds keys (not productQueue)
+        // to handle scratch uploads and key mismatches
         const allImages: string[] = [];
         const allLabels: string[] = [];
-        for (const product of productQueue) {
-          const r = completedResults.get(product.id);
+        for (const [key] of multiProductJobIds) {
+          const r = completedResults.get(key);
           if (r) {
+            const product = productQueue.find(p => p.id === key);
+            const prefix = product ? product.title : '';
             allImages.push(...r.images);
-            allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
+            allLabels.push(...r.labels.map(l => prefix ? `${prefix} — ${l}` : l));
           }
         }
 
