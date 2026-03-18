@@ -374,35 +374,36 @@ export default function PublicDiscover() {
               columns[i % columnCount].push(item);
             });
             return (
-              <div className="flex gap-1">
-                {columns.map((col, colIdx) => (
-                  <div key={colIdx} className="flex-1 flex flex-col gap-1">
-                    {col.map((item) => {
-                      const itemId = getItemId(item);
-                      return (
-                        <DiscoverCard
-                          key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-                          item={item}
-                          onClick={() => handleCardClick(item)}
-                          hideLabels
-                          {...(user ? {
-                            isSaved: isSaved(item.type, itemId),
-                            onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
-                            isFeatured: isFeatured(item.type, itemId),
-                            isAdmin,
-                            onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
-                          } : {})}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-              {/* Sentinel for loading more items */}
-              {visibleCount < sorted.length && (
-                <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
-              )}
-            </>;
+              <>
+                <div className="flex gap-1">
+                  {columns.map((col, colIdx) => (
+                    <div key={colIdx} className="flex-1 flex flex-col gap-1">
+                      {col.map((item) => {
+                        const itemId = getItemId(item);
+                        return (
+                          <DiscoverCard
+                            key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                            item={item}
+                            onClick={() => handleCardClick(item)}
+                            hideLabels
+                            {...(user ? {
+                              isSaved: isSaved(item.type, itemId),
+                              onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
+                              isFeatured: isFeatured(item.type, itemId),
+                              isAdmin,
+                              onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
+                            } : {})}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                {visibleCount < sorted.length && (
+                  <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
+                )}
+              </>
+            );
           })()
         )}
 
