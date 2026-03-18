@@ -57,6 +57,7 @@ interface GalleryImage {
   id: string;
   url: string;
   prompt: string;
+  userPrompt?: string | null;
   aspectRatio?: string;
 }
 
