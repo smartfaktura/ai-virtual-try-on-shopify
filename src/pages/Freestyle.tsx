@@ -624,6 +624,7 @@ export default function Freestyle() {
     id: img.id,
     url: img.url,
     prompt: img.prompt,
+    userPrompt: img.userPrompt,
     aspectRatio: img.aspectRatio,
   }));
 
