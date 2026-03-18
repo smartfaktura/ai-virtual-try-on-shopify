@@ -1,0 +1,1 @@
+ALTER TABLE public.freestyle_generations ADD COLUMN user_prompt text;

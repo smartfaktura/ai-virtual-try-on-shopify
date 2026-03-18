@@ -548,6 +548,7 @@ export type Database = {
           quality: string
           scene_id: string | null
           user_id: string
+          user_prompt: string | null
           workflow_label: string | null
         }
         Insert: {
@@ -561,6 +562,7 @@ export type Database = {
           quality?: string
           scene_id?: string | null
           user_id: string
+          user_prompt?: string | null
           workflow_label?: string | null
         }
         Update: {
@@ -574,6 +576,7 @@ export type Database = {
           quality?: string
           scene_id?: string | null
           user_id?: string
+          user_prompt?: string | null
           workflow_label?: string | null
         }
         Relationships: [
