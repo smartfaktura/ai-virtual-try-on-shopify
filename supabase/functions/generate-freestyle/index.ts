@@ -47,6 +47,7 @@ interface BrandProfileContext {
 
 interface FreestyleRequest {
   prompt: string;
+  userPrompt?: string;
   sourceImage?: string;
   productImage?: string;
   modelImage?: string;
