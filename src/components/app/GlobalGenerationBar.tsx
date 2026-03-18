@@ -142,9 +142,18 @@ export function GlobalGenerationBar() {
   }, [activeGroups.length]);
 
   const isHiddenPage = HIDDEN_PATHS.some((p) => location.pathname.startsWith(p));
+  const isFreestylePage = location.pathname.startsWith('/app/freestyle');
 
-  const visibleActive = activeGroups.filter((g) => !dismissedKeys.has(g.key));
-  const visibleCompleted = completedGroups.filter((g) => !dismissedKeys.has(g.key));
+  // On Freestyle, only show upscale groups (freestyle has its own generation progress)
+  const filteredActive = isFreestylePage
+    ? activeGroups.filter((g) => g.job_type === 'upscale')
+    : activeGroups;
+  const filteredCompleted = isFreestylePage
+    ? completedGroups.filter((g) => g.job_type === 'upscale')
+    : completedGroups;
+
+  const visibleActive = filteredActive.filter((g) => !dismissedKeys.has(g.key));
+  const visibleCompleted = filteredCompleted.filter((g) => !dismissedKeys.has(g.key));
 
   if (isHiddenPage || (visibleActive.length === 0 && visibleCompleted.length === 0)) return null;
 
