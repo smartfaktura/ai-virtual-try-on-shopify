@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -242,6 +242,16 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                 >
                   <Layers className="w-4 h-4 mr-2" />
                   Generate Perspectives
+                </Button>
+
+                <Button
+                  variant="outline"
+                  disabled
+                  className="w-full h-11 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed"
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  Generate Video
+                  <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
                 </Button>
 
                 {item.source === 'freestyle' && (

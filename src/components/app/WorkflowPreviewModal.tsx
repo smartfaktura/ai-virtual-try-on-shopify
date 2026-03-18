@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X, Maximize, Layers } from 'lucide-react';
+import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X, Maximize, Layers, Video } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -299,7 +299,17 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
                 <Layers className="w-3.5 h-3.5" />
                 Perspectives
               </button>
-            </div>
+              </div>
+
+            {/* Video — Coming Soon */}
+            <button
+              disabled
+              className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground/50 bg-muted/20 border border-border/20 cursor-not-allowed"
+            >
+              <Video className="w-3.5 h-3.5" />
+              Generate Video
+              <span className="ml-1 text-[9px] uppercase tracking-wider font-semibold">Soon</span>
+            </button>
 
             {/* View in Library */}
             <button
