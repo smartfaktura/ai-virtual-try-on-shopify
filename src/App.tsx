@@ -78,6 +78,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
     <AuthProvider>
@@ -182,6 +183,7 @@ const App = () => (
       </AdminViewProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
