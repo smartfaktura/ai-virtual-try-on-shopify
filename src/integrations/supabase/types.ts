@@ -873,6 +873,7 @@ export type Database = {
           company_url: string | null
           created_at: string
           credits_balance: number
+          credits_renewed_at: string
           current_period_end: string | null
           display_name: string | null
           email: string
@@ -899,6 +900,7 @@ export type Database = {
           company_url?: string | null
           created_at?: string
           credits_balance?: number
+          credits_renewed_at?: string
           current_period_end?: string | null
           display_name?: string | null
           email: string
@@ -925,6 +927,7 @@ export type Database = {
           company_url?: string | null
           created_at?: string
           credits_balance?: number
+          credits_renewed_at?: string
           current_period_end?: string | null
           display_name?: string | null
           email?: string
@@ -1225,6 +1228,10 @@ export type Database = {
       refund_credits: {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
+      }
+      reset_plan_credits: {
+        Args: { p_plan_credits: number; p_user_id: string }
+        Returns: Json
       }
     }
     Enums: {
