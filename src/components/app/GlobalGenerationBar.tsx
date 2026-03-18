@@ -235,7 +235,13 @@ export function GlobalGenerationBar() {
                       size="sm"
                       variant="ghost"
                       className="shrink-0 gap-1 h-6 text-[11px] px-2"
-                      onClick={() => navigate('/app/library')}
+                      onClick={() => {
+                        if (location.pathname.startsWith('/app/library')) {
+                          window.dispatchEvent(new CustomEvent('library:focus-grid'));
+                        } else {
+                          navigate('/app/library');
+                        }
+                      }}
                     >
                       View
                       <ArrowRight className="w-3 h-3" />
