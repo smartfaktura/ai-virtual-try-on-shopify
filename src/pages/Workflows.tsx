@@ -330,7 +330,9 @@ export default function Workflows() {
   // ── Batch grouping ──
   const activeBatchGroups = groupJobsIntoBatches(activeJobs);
   const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs).filter((g) => !dismissedKeys.has(g.key));
-  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs).filter((g) => !dismissedKeys.has(g.key));
+  const twoHoursAgoMs = Date.now() - 2 * 60 * 60 * 1000;
+  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs)
+    .filter((g) => !dismissedKeys.has(g.key) && new Date(g.created_at).getTime() > twoHoursAgoMs);
 
   const hasActivity =
     activeBatchGroups.length > 0 ||
