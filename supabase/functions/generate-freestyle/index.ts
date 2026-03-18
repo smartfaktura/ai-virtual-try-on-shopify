@@ -1101,10 +1101,39 @@ serve(async (req) => {
                 contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
               }
               const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0);
-              if (typeof fallbackResult === "string") {
+            if (typeof fallbackResult === "string") {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
                 console.log(`Fallback model succeeded for image ${i + 1}`);
+
+                // Persist to freestyle_generations (same as primary path)
+                if (isQueueInternal) {
+                  try {
+                    const fbClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+                    const insertData: Record<string, unknown> = {
+                      user_id: userId,
+                      image_url: publicUrl,
+                      prompt: body.prompt || '',
+                      aspect_ratio: body.aspectRatio || '1:1',
+                      quality: body.quality || 'standard',
+                      model_id: body.modelId || null,
+                      scene_id: body.sceneId || null,
+                      product_id: body.productId || null,
+                    };
+                    if ((body as Record<string, unknown>).workflow_label) {
+                      insertData.workflow_label = (body as Record<string, unknown>).workflow_label;
+                    }
+                    const { error: fbInsertErr } = await fbClient.from('freestyle_generations').insert(insertData);
+                    if (fbInsertErr) {
+                      console.error(`[429-fallback] Failed to save freestyle_generations:`, fbInsertErr.message);
+                    } else {
+                      console.log(`[429-fallback] Saved freestyle_generations record for image ${i + 1}`);
+                    }
+                  } catch (fbDbErr) {
+                    console.error(`[429-fallback] Failed to save freestyle_generations record:`, fbDbErr);
+                  }
+                }
+
                 continue;
               }
             } catch (fallbackErr) {
