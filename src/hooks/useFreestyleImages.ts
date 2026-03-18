@@ -9,6 +9,7 @@ export interface FreestyleImage {
   id: string;
   url: string;
   prompt: string;
+  userPrompt?: string | null;
   aspectRatio: string;
   quality: string;
   createdAt: number;
