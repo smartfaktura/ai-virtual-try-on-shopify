@@ -93,6 +93,11 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
     setDeleting(false);
   };
 
+  const [promptExpanded, setPromptExpanded] = useState(false);
+
+  // Reset prompt expanded when item changes
+  useEffect(() => { setPromptExpanded(false); }, [item?.id]);
+
   const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
   const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : item.quality === 'upscaled' ? 'HD' : null;
 

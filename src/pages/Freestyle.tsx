@@ -808,7 +808,7 @@ export default function Freestyle() {
           imageUrl: img.url,
           source: 'freestyle',
           label: 'Freestyle',
-          prompt: img.prompt,
+          prompt: img.prompt?.startsWith('Generate a photorealistic') ? 'Perspectives generation' : img.prompt,
           date: new Date(img.createdAt).toLocaleDateString(),
           createdAt: new Date(img.createdAt).toISOString(),
           aspectRatio: img.aspectRatio,
