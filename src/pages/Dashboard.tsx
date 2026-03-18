@@ -3,7 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers } from 'lucide-react';
+import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
@@ -91,14 +91,14 @@ export default function Dashboard() {
   const { balance, openBuyModal } = useCredits();
 
   // Fetch user profile (first_name)
-  const { data: profile } = useQuery({
+  const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ['dashboard-profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('first_name, display_name')
         .eq('user_id', user!.id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -146,7 +146,7 @@ export default function Dashboard() {
   });
 
   // Fetch recent jobs (generation_jobs + Picture Perspectives from freestyle_generations)
-  const { data: recentJobs = [], isLoading: jobsLoading } = useQuery({
+  const { data: recentJobs = [], isLoading: jobsLoading, isError: jobsError, refetch: refetchJobs } = useQuery({
     queryKey: ['dashboard-recent-jobs', user?.id],
     queryFn: async () => {
       const [jobsRes, perspRes] = await Promise.all([
@@ -245,6 +245,29 @@ export default function Dashboard() {
     },
     enabled: !!user,
   });
+
+  // Critical error state — show recovery UI instead of blank skeletons
+  const hasCriticalError = profileError && jobsError;
+
+  const handleRetry = () => {
+    refetchProfile();
+    refetchJobs();
+  };
+
+  if (hasCriticalError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+          <RefreshCw className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <p className="text-muted-foreground text-center">Something went wrong loading your dashboard.</p>
+        <Button onClick={handleRetry} variant="outline" className="rounded-full gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   // Total job count determines first-run vs returning
   const totalJobCount = recentJobs.length;

@@ -37,13 +37,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error('AuthProvider: getSession failed', err);
+        setIsLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+    // Safety timeout — never stay loading for more than 10s
+    const timeout = setTimeout(() => {
+      setIsLoading((prev) => {
+        if (prev) console.warn('AuthProvider: safety timeout triggered');
+        return false;
+      });
+    }, 10000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, displayName?: string): Promise<SignUpResult> => {

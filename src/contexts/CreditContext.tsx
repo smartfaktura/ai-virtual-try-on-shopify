@@ -100,20 +100,25 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setIsLoading(false);
       return;
     }
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('credits_balance, plan, subscription_status, current_period_end, billing_interval')
-      .eq('user_id', user.id)
-      .single();
-    
-    if (!error && data) {
-      setBalance(data.credits_balance);
-      setPlan(data.plan || 'free');
-      setSubscriptionStatus((data.subscription_status as SubscriptionStatus) || 'none');
-      setCurrentPeriodEnd(data.current_period_end ? new Date(data.current_period_end) : null);
-      setBillingInterval((data as any).billing_interval as 'monthly' | 'annual' | null);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits_balance, plan, subscription_status, current_period_end, billing_interval')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!error && data) {
+        setBalance(data.credits_balance);
+        setPlan(data.plan || 'free');
+        setSubscriptionStatus((data.subscription_status as SubscriptionStatus) || 'none');
+        setCurrentPeriodEnd(data.current_period_end ? new Date(data.current_period_end) : null);
+        setBillingInterval((data as any).billing_interval as 'monthly' | 'annual' | null);
+      }
+    } catch (err) {
+      console.error('CreditProvider: fetchCredits failed', err);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, [user]);
   
   const checkSubscription = useCallback(async () => {
