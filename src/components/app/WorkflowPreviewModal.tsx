@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X, Maximize, Layers } from 'lucide-react';
+import { Download, Loader2, ExternalLink, ChevronLeft, ChevronRight, X, Maximize, Layers, Video } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
