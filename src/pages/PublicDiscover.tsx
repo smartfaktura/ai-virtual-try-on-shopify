@@ -231,6 +231,35 @@ export default function PublicDiscover() {
     });
   }, [filtered, featuredMap]);
 
+  // Progressive rendering: render in batches for mobile perf
+  const INITIAL_RENDER_COUNT = 30;
+  const LOAD_MORE_COUNT = 20;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(INITIAL_RENDER_COUNT);
+  }, [selectedCategory, searchQuery]);
+
+  // IntersectionObserver to load more items
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, sorted.length));
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sorted.length]);
+
+  const visibleItems = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+
   // Related items for modal
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
