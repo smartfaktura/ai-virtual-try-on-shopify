@@ -1,56 +1,52 @@
 
-Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
+## Plan to fix Freestyle upscaling visibility + broken “View in Library” behavior
 
-What I found
-- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
-- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
-- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
-- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
-- Dashboard queries don’t present a clear recovery UI when core queries fail.
+### What I found
+1. The upscaling status UI from your screenshot is the global progress widget (`GlobalGenerationBar`), and it is intentionally hidden on `/app/freestyle`.
+2. In Library, clicking “View in Library” can appear broken when a detail modal is open, because navigation goes to the same route and does not close modal state (`selectedItem` stays set).
 
-Implementation plan
-1) Harden route-gating so it cannot hang
-- File: `src/components/app/ProtectedRoute.tsx`
-- Replace current onboarding check with guarded async flow:
-  - reset `onboardingChecked` before request
-  - use `.maybeSingle()` (not `.single()`) for profile lookup
-  - handle network/query errors explicitly
-  - set `onboardingChecked` in `finally` so route never stays blocked
-  - keep onboarding redirect logic for valid `onboarding_completed === false`
+## Implementation plan
 
-2) Harden auth bootstrap
-- File: `src/contexts/AuthContext.tsx`
-- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
-- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
+### 1) Show the upscaling progress widget in Freestyle
+**File:** `src/components/app/GlobalGenerationBar.tsx`
 
-3) Harden credit bootstrap + noisy failure path
-- File: `src/contexts/CreditContext.tsx`
-- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
-- Keep defaults when profile is missing/unreachable.
-- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
+- Remove `/app/freestyle` from the hard-hidden route list.
+- On Freestyle specifically, only show **upscale** groups (not freestyle generation groups) to avoid duplicate progress UI (Freestyle already has its own generation status card).
+- Keep existing behavior on all other routes.
 
-4) Add dashboard recovery UI for failed core queries
-- File: `src/pages/Dashboard.tsx`
-- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
-- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
+Result: when user upscales from Freestyle, they’ll see the same “Luna is upscaling…” screen and running pill.
 
-5) Improve global query resilience
-- File: `src/App.tsx`
-- Update QueryClient defaults for flaky connections:
-  - `retry` + bounded `retryDelay`
-  - `refetchOnReconnect: true`
-  - keep current `refetchOnWindowFocus: false`
-- This reduces “one failed request = stuck state” cases.
+---
 
-Technical notes
-- No database schema changes needed.
-- This is a client resilience patch, not a business-logic change.
-- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
+### 2) Fix “View in Library” so it always does something useful
+**Files:**  
+- `src/components/app/GlobalGenerationBar.tsx`  
+- `src/pages/Jobs.tsx` (Library page)
 
-Validation checklist (end-to-end)
-1. Open `/app` with normal network: dashboard loads normally.
-2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
-3. Reconnect network: dashboard should recover via retry/reconnect.
-4. User with `onboarding_completed=false`: still redirects to onboarding.
-5. User with missing profile row: app should still load safely (no deadlock).
-6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
+- Add a shared “go to library” behavior in `GlobalGenerationBar`:
+  - If user is **not** in Library: navigate to `/app/library`.
+  - If user is **already** in Library: trigger a “focus library grid” action instead of no-op.
+- In `Jobs.tsx`, listen for that action and:
+  - close any open image detail modal (`selectedItem = null`),
+  - refresh library data,
+  - optionally scroll to top so the user sees the library grid immediately.
+
+Result: the “View in Library” button won’t feel dead anymore, even when already on Library.
+
+---
+
+### 3) Keep current Freestyle upscale flow intact
+No backend/database changes needed.  
+No queue logic rewrite needed.  
+This is a UI/state routing fix only.
+
+## Technical details (implementation-level)
+- `GlobalGenerationBar` currently uses route-based hiding; we’ll change this to conditional filtering for Freestyle.
+- Add a lightweight window event (e.g. `library:focus-grid`) to bridge the global widget and Library page local state.
+- Reuse existing query invalidation (`['library']`) so refreshed upscaled images appear quickly.
+
+## Validation checklist
+1. In Freestyle, open image → click Upscale → confirm upscaling widget appears.
+2. From Freestyle widget, click “View in Library” → confirm navigation to Library works.
+3. In Library with detail modal open, click widget “View in Library” → confirm modal closes and grid is shown/refreshed.
+4. Confirm Freestyle generation progress UI is not duplicated by global widget (only upscale shown there).
