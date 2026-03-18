@@ -251,7 +251,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                 >
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
-                  <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
+                  <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
                 </Button>
 
                 {item.source === 'freestyle' && (
