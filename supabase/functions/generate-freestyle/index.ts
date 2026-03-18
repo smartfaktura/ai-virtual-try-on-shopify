@@ -778,6 +778,40 @@ async function completeQueueJob(
 
   console.log(`[generate-freestyle] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
 
+  // ── Safety reconciliation: ensure every image URL has a freestyle_generations row ──
+  try {
+    for (const imgUrl of images) {
+      const { data: existing } = await supabase
+        .from("freestyle_generations")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("image_url", imgUrl)
+        .maybeSingle();
+
+      if (!existing) {
+        const reconData: Record<string, unknown> = {
+          user_id: userId,
+          image_url: imgUrl,
+          prompt: (payload.prompt as string) || '',
+          aspect_ratio: (payload.aspectRatio as string) || '1:1',
+          quality: (payload.quality as string) || 'standard',
+          model_id: (payload.modelId as string) || null,
+          scene_id: (payload.sceneId as string) || null,
+          product_id: (payload.productId as string) || null,
+        };
+        if (payload.workflow_label) reconData.workflow_label = payload.workflow_label as string;
+        const { error: reconErr } = await supabase.from("freestyle_generations").insert(reconData);
+        if (reconErr) {
+          console.error(`[reconciliation] Failed to backfill freestyle_generations for ${imgUrl}:`, reconErr.message);
+        } else {
+          console.log(`[reconciliation] Backfilled missing freestyle_generations row for job ${jobId}`);
+        }
+      }
+    }
+  } catch (reconErr) {
+    console.error(`[reconciliation] Error during safety reconciliation:`, reconErr);
+  }
+
   // Fire-and-forget: send generation complete email (only if user opted in)
   try {
     const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
