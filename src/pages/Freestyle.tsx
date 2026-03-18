@@ -584,8 +584,11 @@ export default function Freestyle() {
     setFailedEntries(prev => prev.filter(e => e.id !== id));
   }, []);
 
-  const handleRetryFailed = useCallback((failedPrompt: string) => {
+  const handleRetryFailed = useCallback((id: string, failedPrompt: string) => {
+    setFailedEntries(prev => prev.filter(e => e.id !== id));
     setPrompt(failedPrompt);
+    setIsPromptCollapsed(false);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }, []);
 
   const hasImages = savedImages.length > 0;

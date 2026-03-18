@@ -513,7 +513,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       key={`failed-${entry.id}`}
       entry={entry}
       onDismiss={onDismissFailed}
-      onRetry={onRetryFailed}
+      onRetry={(prompt) => onRetryFailed?.(entry.id, prompt)}
     />
   ));
 
