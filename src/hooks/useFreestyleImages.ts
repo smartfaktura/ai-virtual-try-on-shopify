@@ -20,6 +20,7 @@ export interface FreestyleImage {
 
 export interface SaveImageMeta {
   prompt: string;
+  userPrompt?: string | null;
   aspectRatio: string;
   quality: string;
   modelId?: string | null;
