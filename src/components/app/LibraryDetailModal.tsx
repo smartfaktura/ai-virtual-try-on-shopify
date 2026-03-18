@@ -244,6 +244,16 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                   Generate Perspectives
                 </Button>
 
+                <Button
+                  variant="outline"
+                  disabled
+                  className="w-full h-11 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed"
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  Generate Video
+                  <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
+                </Button>
+
                 {item.source === 'freestyle' && (
                   <Button
                     variant="ghost"
