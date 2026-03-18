@@ -107,6 +107,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         }
 
         for (const f of fsData) {
+          if (!f.image_url || f.image_url.startsWith('data:') || f.image_url === 'saved_to_storage') continue;
           const wfLabel = (f as any).workflow_label as string | null;
           const displayLabel = wfLabel || 'Freestyle';
           if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
