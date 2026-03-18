@@ -62,6 +62,7 @@ export function useFreestyleImages() {
         id: row.id,
         url: signedUrls[i],
         prompt: row.prompt,
+        userPrompt: row.user_prompt ?? null,
         aspectRatio: row.aspect_ratio,
         quality: row.quality,
         createdAt: new Date(row.created_at).getTime(),
