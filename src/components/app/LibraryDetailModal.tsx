@@ -34,8 +34,12 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
   const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
+  const [promptExpanded, setPromptExpanded] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
+
+  // Reset prompt expanded when item changes
+  useEffect(() => { setPromptExpanded(false); }, [item?.id]);
 
   // Lock body scroll
   useEffect(() => {
@@ -92,11 +96,6 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
     }
     setDeleting(false);
   };
-
-  const [promptExpanded, setPromptExpanded] = useState(false);
-
-  // Reset prompt expanded when item changes
-  useEffect(() => { setPromptExpanded(false); }, [item?.id]);
 
   const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
   const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : item.quality === 'upscaled' ? 'HD' : null;
