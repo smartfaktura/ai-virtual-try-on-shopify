@@ -483,6 +483,7 @@ export default function Freestyle() {
     // Build the payload for the queue — URLs instead of base64
     const queuePayload = {
       prompt: finalPrompt,
+      userPrompt: prompt.trim() || null,
       sourceImage: sourceImageUrl,
       productImage: productImageUrl,
       modelImage: modelImageUrl,
