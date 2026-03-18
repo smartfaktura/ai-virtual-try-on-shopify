@@ -1,36 +1,63 @@
 
 
-## Change All Generation Credits from 8 → 6
+## Monthly Credit Reset for Paid Plans — Implemented ✅
 
-Uniform change: every place that currently charges or displays "8 credits" for generations (workflows, freestyle with model/scene, try-on, perspectives) becomes **6 credits**. Standard freestyle without model/scene stays at **4 credits**. Upscale and video pricing unchanged.
+### What was built
+Billing cycle rollover detection in `check-subscription` that resets credits to the plan's monthly allotment when Stripe renews. Use-it-or-lose-it model — old unused credits expire.
 
-### Files to Update
+### Changes
+- **Database**: Added `credits_renewed_at` column to `profiles`, created `reset_plan_credits` RPC
+- **`check-subscription`**: Compares new `periodEnd` from Stripe against stored `current_period_end`. If plan unchanged but period differs → `reset_plan_credits(allotment)`
+- **Free plan**: Unaffected (20 credits at signup, no renewal)
 
-**Backend billing (3 files):**
-1. `supabase/functions/enqueue-generation/index.ts` — lines 33-36: change `perImage = 8` to `6` for workflow/tryon, and `8 : 4` to `6 : 4` for freestyle
-2. `supabase/functions/trigger-creative-drop/index.ts` — line 170: update cost calculation from `15/12/4` pattern to use `6`
-3. `src/lib/dropCreditCalculator.ts` — line 35: `return 6` instead of `return 8`
 
-**Frontend credit calculations (6 files):**
-4. `src/contexts/CreditContext.tsx` — lines 255-256: `count * 6` instead of `count * 8`
-5. `src/pages/Freestyle.tsx` — line 275: `6 : 4` instead of `8 : 4`
-6. `src/pages/Generate.tsx` — lines 1650-1651: `6` instead of `8` (workflow and tryon costs)
-7. `src/pages/Perspectives.tsx` — line 333: `perImageCost = 6`
-8. `src/components/app/TryOnConfirmModal.tsx` — line 42: `creditsPerImage = 6`
-9. `src/types/bulk.ts` — line 75: `6 : 4` instead of `8 : 4`
+## Product Perspectives — Implemented ✅
 
-**UI text / copy (8 files):**
-10. `src/components/app/GenerationModeCards.tsx` — "6 credits per image"
-11. `src/components/app/GenerationModeToggle.tsx` — lines 21-22: update credit text
-12. `src/components/app/generate/TryOnSettingsPanel.tsx` — "6 credits each"
-13. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — two occurrences: "6 credits/image"
-14. `src/pages/Perspectives.tsx` — line 1019: "6 credits/image" text
-15. `src/pages/features/PerspectivesFeature.tsx` — lines 41, 52: "6 credits per angle"
-16. `src/pages/HelpCenter.tsx` — line 36: update FAQ text
-17. `src/components/landing/LandingFAQ.tsx` — line 37: update FAQ text
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-**AI chat instructions (1 file):**
-18. `supabase/functions/studio-chat/index.ts` — lines 148-160: update all pricing references to 6
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**Total: ~18 files, all simple 8→6 replacements. No structural or database changes needed.**
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

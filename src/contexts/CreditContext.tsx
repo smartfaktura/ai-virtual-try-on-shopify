@@ -252,8 +252,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
       const multiplier = duration === '10' ? 2 : 1;
       return count * baseCost * multiplier;
     }
-    if (mode === 'virtual-try-on') return count * 8;
-    if (hasModel || hasScene || quality === 'high') return count * 8;
+    if (mode === 'virtual-try-on') return count * 6;
+    if (hasModel || hasScene || quality === 'high') return count * 6;
     return count * 4;
   }, []);
   

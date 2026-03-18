@@ -330,7 +330,7 @@ export default function Perspectives() {
         ? selectedLibraryIds.size
         : 0;
 
-  const perImageCost = 8;
+  const perImageCost = 6;
   const totalImages = sourceCount * selectedVariations.size * selectedRatios.size;
   const totalCost = totalImages * perImageCost;
   const canGenerate = sourceCount > 0 && selectedVariations.size > 0 && selectedRatios.size > 0 && !isGenerating;
@@ -1016,7 +1016,7 @@ export default function Perspectives() {
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
           <Sparkles className="w-4 h-4 text-primary shrink-0" />
           <p className="text-xs text-muted-foreground">
-            All perspectives are generated in <span className="font-semibold text-foreground">High Quality</span> (8 credits/image) for maximum product fidelity.
+            All perspectives are generated in <span className="font-semibold text-foreground">High Quality</span> (6 credits/image) for maximum product fidelity.
           </p>
         </div>
 

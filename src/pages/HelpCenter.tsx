@@ -33,7 +33,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each image generation costs credits based on the mode you use. Freestyle costs 4 credits per image (or 8 credits when using a model or scene). Workflows and Virtual Try-On cost 8 credits per image. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
+        a: 'Each image generation costs credits based on the mode you use. Freestyle costs 4 credits per image (or 6 credits when using a model or scene). Workflows and Virtual Try-On cost 6 credits per image. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
       },
       {
         q: 'What happens if I run out of credits?',

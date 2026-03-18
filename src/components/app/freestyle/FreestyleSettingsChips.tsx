@@ -164,7 +164,7 @@ export function FreestyleSettingsChips({
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-[220px] text-center">
-        Pro model is required for model-reference generations to preserve identity. 8 credits/image.
+        Pro model is required for model-reference generations to preserve identity. 6 credits/image.
       </TooltipContent>
     </Tooltip>
   ) : (
@@ -183,7 +183,7 @@ export function FreestyleSettingsChips({
       <PopoverContent className="w-56 p-1.5" align="start">
         {([
           { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
-          { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 8 credits per image.' },
+          { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 6 credits per image.' },
         ]).map(opt => (
           <button
             key={opt.value}
