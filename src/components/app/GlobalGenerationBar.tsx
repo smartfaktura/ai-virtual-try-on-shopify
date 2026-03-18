@@ -13,7 +13,7 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { cn } from '@/lib/utils';
 
 /** Pages where dedicated activity UI already exists */
-const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/freestyle', '/app/perspectives'];
+const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/perspectives'];
 
 function elapsedLabel(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
