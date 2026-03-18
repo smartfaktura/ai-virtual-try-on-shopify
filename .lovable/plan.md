@@ -1,52 +1,36 @@
 
 
-## Product Perspectives — Implemented ✅
+## Monthly Credit Reset for Paid Plans
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+Credits are only granted on plan *change* (e.g. free → growth). When Stripe renews the subscription each month, `check-subscription` sees the plan is unchanged and skips credit granting. Paid users never get fresh credits after their first month.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
-
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
-
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
-
-
-## Image Optimization for AI Generation — Implemented ✅
-
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
-
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
-
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
+### Solution
+Detect billing cycle rollover in `check-subscription` by comparing the new `current_period_end` from Stripe against the stored value in the database. When it differs → new billing cycle → reset credits.
 
 ### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
+
+**1. Database migration**
+- Add `credits_renewed_at` column to `profiles` (default `now()`)
+- Create `reset_plan_credits(p_user_id uuid, p_plan_credits int)` function that sets `credits_balance = p_plan_credits` and updates `credits_renewed_at = now()`
+
+**2. `supabase/functions/check-subscription/index.ts`**
+- Fetch `current_period_end` from DB profile (already fetched as `currentProfile`)
+- After resolving `activeSub` from Stripe, compare new `periodEnd` vs stored `currentProfile.current_period_end`
+- If plan is unchanged AND `periodEnd` differs (new cycle): call `reset_plan_credits` with the plan's monthly allotment (e.g. 1500 for growth)
+- This resets credits to the plan amount — old unused credits expire
+
+### Flow after fix
+
+```text
+Day 1:  free → growth  →  change_user_plan → 1,500 credits
+Day 30: growth → growth, period_end changed → reset_plan_credits → 1,500 credits
+Day 60: growth → growth, period_end changed → reset_plan_credits → 1,500 credits
+```
+
+### What stays the same
+- Free plan: 20 credits at signup, no renewal (as you requested)
+- Plan upgrades/downgrades: handled by existing `change_user_plan`
+- Purchased credit packs: added on top, but reset at next cycle (use-it-or-lose-it)
+- Dismiss (X) button for failed notifications still works
+
