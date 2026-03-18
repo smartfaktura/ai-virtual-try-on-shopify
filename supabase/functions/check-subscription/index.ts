@@ -154,9 +154,9 @@ serve(async (req) => {
     const activeSub = subscriptions.data.find(s => s.status === "active" || s.status === "trialing");
     const cancelingSub = subscriptions.data.find(s => s.status === "active" && s.cancel_at_period_end);
 
-    // Read current DB plan as fallback
+    // Read current DB plan + period end as fallback
     const { data: currentProfile } = await supabaseAdmin.from("profiles")
-      .select("plan")
+      .select("plan, current_period_end")
       .eq("user_id", userId)
       .single();
 
@@ -190,7 +190,7 @@ serve(async (req) => {
       logStep("No active subscription — free plan");
     }
 
-    // Grant credits when plan changes (e.g. free → starter)
+    // Detect plan change (e.g. free → starter) → grant credits via change_user_plan
     if (plan !== currentProfile?.plan && plan !== "free" && planInfo) {
       logStep("Plan changed, granting credits via change_user_plan", {
         from: currentProfile?.plan,
@@ -201,6 +201,27 @@ serve(async (req) => {
         p_user_id: userId,
         p_new_plan: plan,
         p_new_credits: planInfo.credits,
+      });
+    }
+
+    // Detect billing cycle rollover → reset credits (use-it-or-lose-it)
+    // Only when plan is UNCHANGED but current_period_end has changed (new billing cycle)
+    if (
+      plan === currentProfile?.plan &&
+      plan !== "free" &&
+      planInfo &&
+      periodEnd &&
+      periodEnd !== currentProfile?.current_period_end
+    ) {
+      logStep("Billing cycle rolled over — resetting credits", {
+        plan,
+        oldPeriodEnd: currentProfile?.current_period_end,
+        newPeriodEnd: periodEnd,
+        allotment: planInfo.credits,
+      });
+      await supabaseAdmin.rpc("reset_plan_credits", {
+        p_user_id: userId,
+        p_plan_credits: planInfo.credits,
       });
     }
 
