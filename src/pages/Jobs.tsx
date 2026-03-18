@@ -121,6 +121,17 @@ export default function Jobs() {
     refetchInterval: 4000,
   });
 
+  // Listen for library:focus-grid event from GlobalGenerationBar
+  useEffect(() => {
+    const handler = () => {
+      setSelectedItem(null);
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('library:focus-grid', handler);
+    return () => window.removeEventListener('library:focus-grid', handler);
+  }, [queryClient]);
+
   const [showIncomingBanner, setShowIncomingBanner] = useState(false);
 
   useEffect(() => {
