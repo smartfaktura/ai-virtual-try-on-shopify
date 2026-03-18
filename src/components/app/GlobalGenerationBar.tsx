@@ -13,7 +13,7 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { cn } from '@/lib/utils';
 
 /** Pages where dedicated activity UI already exists */
-const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/freestyle', '/app/perspectives'];
+const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/perspectives'];
 
 function elapsedLabel(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -142,9 +142,18 @@ export function GlobalGenerationBar() {
   }, [activeGroups.length]);
 
   const isHiddenPage = HIDDEN_PATHS.some((p) => location.pathname.startsWith(p));
+  const isFreestylePage = location.pathname.startsWith('/app/freestyle');
 
-  const visibleActive = activeGroups.filter((g) => !dismissedKeys.has(g.key));
-  const visibleCompleted = completedGroups.filter((g) => !dismissedKeys.has(g.key));
+  // On Freestyle, only show upscale groups (freestyle has its own generation progress)
+  const filteredActive = isFreestylePage
+    ? activeGroups.filter((g) => g.job_type === 'upscale')
+    : activeGroups;
+  const filteredCompleted = isFreestylePage
+    ? completedGroups.filter((g) => g.job_type === 'upscale')
+    : completedGroups;
+
+  const visibleActive = filteredActive.filter((g) => !dismissedKeys.has(g.key));
+  const visibleCompleted = filteredCompleted.filter((g) => !dismissedKeys.has(g.key));
 
   if (isHiddenPage || (visibleActive.length === 0 && visibleCompleted.length === 0)) return null;
 
@@ -226,7 +235,13 @@ export function GlobalGenerationBar() {
                       size="sm"
                       variant="ghost"
                       className="shrink-0 gap-1 h-6 text-[11px] px-2"
-                      onClick={() => navigate('/app/library')}
+                      onClick={() => {
+                        if (location.pathname.startsWith('/app/library')) {
+                          window.dispatchEvent(new CustomEvent('library:focus-grid'));
+                        } else {
+                          navigate('/app/library');
+                        }
+                      }}
                     >
                       View
                       <ArrowRight className="w-3 h-3" />
