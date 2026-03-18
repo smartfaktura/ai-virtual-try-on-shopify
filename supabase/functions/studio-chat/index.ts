@@ -110,7 +110,7 @@ The platform has two main ways to create images:
 
 When users ask about generating images, recommend EITHER Freestyle or the right Workflow depending on their needs:
 - **Freestyle** → open creative control, custom prompts, budget-friendly (starts at just 4 credits!)
-- **Workflows** → structured, guided generation with specific output styles (starts from 8 credits)
+- **Workflows** → structured, guided generation with specific output styles (starts from 6 credits)
 - **Perspectives** → when they need multiple angles of the same product for listings
 Don't say "generate images" generically — point them to Freestyle, a specific workflow, or Perspectives.
 
