@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe } from 'lucide-react';
+import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Progress } from '@/components/ui/progress';
@@ -78,6 +78,7 @@ interface FreestyleGalleryProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isFetchingMore?: boolean;
+  upscalingSourceIds?: Set<string>;
 }
 
 function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: number; aspectRatio?: string; className?: string }) {
@@ -282,6 +283,19 @@ function GenerationFailedCard({
   );
 }
 
+function UpscalingOverlay() {
+  const luna = STUDIO_CREW.find(m => m.name === 'Luna')!;
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-[3px] rounded-xl">
+      <img src={luna.avatar} alt="Luna" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30 mb-2" />
+      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+        <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+        <span className="text-[11px] font-medium text-primary">Luna is enhancing…</span>
+      </div>
+    </div>
+  );
+}
+
 function ImageCard({
   img,
   idx,
@@ -295,6 +309,7 @@ function ImageCard({
   onAddToDiscover,
   className,
   natural,
+  isUpscaling,
 }: {
   img: GalleryImage;
   idx: number;
@@ -308,6 +323,7 @@ function ImageCard({
   onAddToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
+  isUpscaling?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const prevSrcRef = useRef(img.url);
@@ -417,6 +433,7 @@ function ImageCard({
           onLoad={() => setLoaded(true)}
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        {isUpscaling && <UpscalingOverlay />}
         {actionButtons}
       </div>
     );
@@ -444,12 +461,13 @@ function ImageCard({
         onLoad={() => setLoaded(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      {isUpscaling && <UpscalingOverlay />}
       {actionButtons}
     </div>
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore }: FreestyleGalleryProps) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore, upscalingSourceIds }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -533,6 +551,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onShareToDiscover={shareHandler}
       onAddToDiscover={addToDiscoverHandler}
       natural={natural}
+      isUpscaling={upscalingSourceIds?.has(img.id)}
     />
   ));
 

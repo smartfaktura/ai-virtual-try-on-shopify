@@ -270,6 +270,30 @@ export default function Freestyle() {
     enabled: !!user?.id,
   });
 
+  // Track which images are currently being upscaled
+  const { data: upscalingSourceIds = new Set<string>() } = useQuery({
+    queryKey: ['upscaling-jobs', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return new Set<string>();
+      const { data } = await supabase
+        .from('generation_queue')
+        .select('payload')
+        .eq('user_id', user.id)
+        .eq('job_type', 'upscale')
+        .in('status', ['queued', 'processing']);
+      if (!data || data.length === 0) return new Set<string>();
+      const ids = new Set<string>();
+      for (const row of data) {
+        const payload = row.payload as Record<string, unknown> | null;
+        const sourceId = payload?.sourceId as string | undefined;
+        if (sourceId) ids.add(sourceId);
+      }
+      return ids;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 4000,
+  });
+
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
   const creditCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
@@ -747,6 +771,7 @@ export default function Freestyle() {
               onLoadMore={hasNextPage ? fetchNextPage : undefined}
               hasMore={hasNextPage}
               isFetchingMore={isFetchingNextPage}
+              upscalingSourceIds={upscalingSourceIds}
             />
           </>
         ) : (
@@ -822,6 +847,7 @@ export default function Freestyle() {
             item={lightboxItem}
             open={lightboxOpen}
             onClose={() => setLightboxOpen(false)}
+            isUpscaling={upscalingSourceIds.has(img.id)}
           />
         );
       })()}
