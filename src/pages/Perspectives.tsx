@@ -1021,15 +1021,15 @@ export default function Perspectives() {
         </div>
 
         {/* Generate bar */}
-        <div className="sticky bottom-4 z-50 max-w-3xl mx-auto">
-          <div className="bg-background/95 backdrop-blur-xl border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+        <div className="sticky bottom-2 sm:bottom-4 z-50 max-w-3xl mx-auto">
+          <div className="bg-background/95 backdrop-blur-xl border border-border rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4">
               <div className="text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">{totalImages}</span> images ·{' '}
                 <span className="font-semibold text-foreground">{totalCost}</span> credits
               </div>
               {sourceCount > 0 && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
                   {sourceCount} source{sourceCount !== 1 ? 's' : ''} × {selectedVariations.size} angle{selectedVariations.size !== 1 ? 's' : ''} × {selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''}
                 </Badge>
               )}
@@ -1038,7 +1038,7 @@ export default function Perspectives() {
             <Button
               onClick={handleGenerate}
               disabled={!canGenerate || totalCost > credits}
-              className="h-11 px-6 rounded-xl shadow-lg shadow-primary/10"
+              className="h-11 px-6 rounded-xl shadow-lg shadow-primary/10 w-full sm:w-auto"
             >
               {isGenerating ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</>
