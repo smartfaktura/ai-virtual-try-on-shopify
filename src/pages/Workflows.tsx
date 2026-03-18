@@ -121,16 +121,16 @@ export default function Workflows() {
     refetchInterval: 10_000,
   });
 
-  // ── Recently failed workflow queue jobs (last 24h) ──
+  // ── Recently failed workflow queue jobs (last 4h, auto-expire) ──
   const { data: recentlyFailedJobs = [] } = useQuery({
     queryKey: ['workflow-failed-jobs'],
     queryFn: async () => {
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
         .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
         .eq('status', 'failed')
-        .gte('created_at', oneDayAgo)
+        .gte('created_at', fourHoursAgo)
         .order('created_at', { ascending: false })
         .limit(5);
       if (error) throw error;
@@ -330,7 +330,9 @@ export default function Workflows() {
   // ── Batch grouping ──
   const activeBatchGroups = groupJobsIntoBatches(activeJobs);
   const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs).filter((g) => !dismissedKeys.has(g.key));
-  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs).filter((g) => !dismissedKeys.has(g.key));
+  const twoHoursAgoMs = Date.now() - 2 * 60 * 60 * 1000;
+  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs)
+    .filter((g) => !dismissedKeys.has(g.key) && new Date(g.created_at).getTime() > twoHoursAgoMs);
 
   const hasActivity =
     activeBatchGroups.length > 0 ||
