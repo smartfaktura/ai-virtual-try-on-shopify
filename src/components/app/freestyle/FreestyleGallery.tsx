@@ -262,19 +262,10 @@ function GenerationFailedCard({
 
       {/* Actions */}
       <div className="flex flex-col items-center gap-2 mt-1">
-        {onRetry && (
-          <button
-            onClick={() => onRetry(entry.prompt)}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold bg-white text-[#0f172a] hover:bg-white/90 transition-colors shadow-md"
-          >
-            <Wand2 className="w-3 h-3" />
-            Try again
-          </button>
-        )}
         {onDismiss && (
           <button
             onClick={() => onDismiss(entry.id)}
-            className="text-[10px] sm:text-xs text-white/30 hover:text-white/50 transition-colors"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
           >
             Dismiss
           </button>

@@ -409,6 +409,10 @@ export default function Freestyle() {
     let sceneImageUrl: string | undefined;
     if (selectedScene) {
       sceneImageUrl = selectedScene.previewUrl;
+      // Ensure absolute URL for the AI provider (relative paths like /images/... can't be fetched externally)
+      if (sceneImageUrl && sceneImageUrl.startsWith('/')) {
+        sceneImageUrl = `${window.location.origin}${sceneImageUrl}`;
+      }
     }
 
     // Auto-build prompt from assets if user left it empty
