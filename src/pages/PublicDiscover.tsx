@@ -370,7 +370,7 @@ export default function PublicDiscover() {
         ) : (
           (() => {
             const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
-            sorted.forEach((item, i) => {
+            visibleItems.forEach((item, i) => {
               columns[i % columnCount].push(item);
             });
             return (
