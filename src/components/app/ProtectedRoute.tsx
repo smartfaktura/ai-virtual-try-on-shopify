@@ -15,15 +15,30 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        setNeedsOnboarding(data?.onboarding_completed === false);
-        setOnboardingChecked(true);
-      });
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!cancelled) {
+          setNeedsOnboarding(data?.onboarding_completed === false);
+        }
+      } catch (err) {
+        console.error('ProtectedRoute: profile check failed', err);
+        // Don't block the app — allow through
+      } finally {
+        if (!cancelled) {
+          setOnboardingChecked(true);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [user]);
 
   if (isLoading || !onboardingChecked) {
