@@ -209,9 +209,9 @@ function polishUserPrompt(
       const identityDetails = modelContext ? ` (${modelContext})` : "";
       const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
       if (framing && noFaceFramings.includes(framing)) {
-        parts.push(`${stepNum}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
+        parts.push(`${stepNum}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL REFERENCE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
       } else {
-        parts.push(`${stepNum}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
+        parts.push(`${stepNum}. MODEL: The person must match the individual in [MODEL REFERENCE] — same face, features, skin tone, hair, and body${identityDetails}. This is a specific person, not a generic model. Ignore any person in the product image.`);
       }
       stepNum++;
     }
