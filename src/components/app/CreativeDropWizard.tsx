@@ -516,15 +516,49 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           <h2 className="text-xl font-semibold tracking-tight">
             {editingScheduleId ? 'Edit Drop' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
           </h2>
-          <span className="text-xs text-muted-foreground font-mono">
+          <span className="text-xs text-muted-foreground font-mono sm:hidden">
             {step + 1}/{totalSteps}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <Progress value={progressPercent} className="h-1.5 mb-3" />
+        {/* Step breadcrumb stepper */}
+        <div className="hidden sm:flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+          {Array.from({ length: totalSteps }, (_, i) => {
+            const isCompleted = i < step;
+            const isCurrent = i === step;
+            const label = (() => {
+              if (i === 0) return 'Details';
+              if (i === 1) return 'Products';
+              if (i === 2) return 'Workflows';
+              if (i >= 3 && i < scheduleStepIndex) return `Config ${i - 2}`;
+              if (i === scheduleStepIndex) return 'Delivery';
+              if (i === reviewStepIndex) return 'Review';
+              return '';
+            })();
+            return (
+              <div key={i} className="flex items-center gap-1 flex-shrink-0">
+                {i > 0 && <div className={cn('w-4 h-px', isCompleted ? 'bg-primary' : 'bg-border')} />}
+                <div
+                  className={cn(
+                    'flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium transition-colors',
+                    isCurrent && 'bg-primary text-primary-foreground',
+                    isCompleted && 'bg-primary/10 text-primary',
+                    !isCurrent && !isCompleted && 'text-muted-foreground'
+                  )}
+                >
+                  {isCompleted && <Check className="w-3 h-3" />}
+                  {label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-        {/* Current step label */}
+        {/* Mobile: progress bar + label */}
+        <div className="sm:hidden">
+          <Progress value={progressPercent} className="h-1.5 mb-3" />
+        </div>
+
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{getStepLabel(step)}</span>
           {isConfigStep && configStepCount > 1 && (
