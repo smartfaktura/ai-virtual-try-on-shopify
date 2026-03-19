@@ -225,7 +225,7 @@ function polishUserPrompt(
       }
     }
     if (context.hasScene) {
-      parts.push(`${stepNum}. SCENE: Use [SCENE IMAGE] for environment, lighting, and atmosphere ONLY. If the scene contains any products, bottles, accessories, or commercial items, IGNORE them completely — the ONLY product in the final image must be from [PRODUCT IMAGE].`);
+      parts.push(`${stepNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, and atmosphere only. If the scene contains any products or commercial items, ignore them — the only product must be from [PRODUCT REFERENCE].`);
       stepNum++;
     }
 
