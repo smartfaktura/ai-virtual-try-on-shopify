@@ -622,10 +622,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
               {productsLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="rounded-2xl border-2 border-border p-2">
-                      <div className="aspect-square rounded-xl bg-muted animate-pulse mb-2" />
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                    <div key={i} className="rounded-xl border-2 border-border p-1.5">
+                      <div className="aspect-square rounded-lg bg-muted animate-pulse mb-1" />
                       <div className="h-3 bg-muted animate-pulse rounded w-2/3" />
                     </div>
                   ))}
