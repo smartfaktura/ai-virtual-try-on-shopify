@@ -475,7 +475,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           toast.error('Failed to trigger generation');
         }
       } else {
-        toast.success(editingScheduleId ? 'Schedule updated!' : 'Schedule created successfully!');
+        toast.success(editingScheduleId ? 'Drop updated!' : 'Drop saved — it will run on the scheduled date');
       }
       onClose();
     },
