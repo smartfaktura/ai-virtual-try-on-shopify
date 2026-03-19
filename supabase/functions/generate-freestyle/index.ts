@@ -762,19 +762,9 @@ serve(async (req) => {
       }
       // Framing instructions for unpolished path
       if (body.framing) {
-        const hasModel = !!body.modelImage;
-        const framingPrompts: Record<string, string> = {
-          full_body: `FRAMING: Full body shot, head to toe.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-          upper_body: `FRAMING: Upper body, waist up.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-          close_up: `FRAMING: Close-up portrait from shoulders up.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-          hand_wrist: `FRAMING: Hand and wrist only. No face.${hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-          neck_shoulders: `FRAMING: Collarbone area, jewelry display.${hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-          lower_body: `FRAMING: Lower body, hips to feet.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-          back_view: `FRAMING: Back view, facing away.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-          side_profile: `FRAMING: Side profile, ear and jawline.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-        };
-        if (framingPrompts[body.framing]) {
-          unpolished += `\n\n${framingPrompts[body.framing]}`;
+        const instruction = buildFramingInstruction(body.framing, !!body.modelImage);
+        if (instruction) {
+          unpolished += `\n\n${instruction}`;
         }
       }
       finalPrompt = unpolished;
