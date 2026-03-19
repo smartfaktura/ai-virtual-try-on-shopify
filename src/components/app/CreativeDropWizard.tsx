@@ -583,7 +583,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 <Input
                   placeholder="e.g. Summer 2026 Collection"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => { setName(e.target.value); markDirty(); }}
                   className={cn('h-12 rounded-xl text-sm', attempted && !name.trim() && 'border-destructive')}
                 />
                 {attempted && !name.trim() && (
