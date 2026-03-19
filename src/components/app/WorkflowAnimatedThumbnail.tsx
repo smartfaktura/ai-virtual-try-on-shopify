@@ -149,7 +149,11 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
 /* ── Carousel mode component ── */
 
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
-  const backgrounds = scene.backgrounds ?? [scene.background];
+  const rawBackgrounds = scene.backgrounds ?? [scene.background];
+  const backgrounds = useMemo(
+    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { width: 600, quality: 60 })),
+    [rawBackgrounds],
+  );
   const INTERVAL = 1000;
   const [current, setCurrent] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
@@ -241,7 +245,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const [bgLoaded, setBgLoaded] = useState(false);
   const [phase, setPhase] = useState<'blur' | 'wiping' | 'sharp'>('blur');
-  const bgSrc = scene.background;
+  const bgSrc = useMemo(() => getOptimizedUrl(scene.background, { width: 600, quality: 60 }), [scene.background]);
 
   useEffect(() => {
     if (!isActive) {
@@ -640,7 +644,8 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
   if (isStaging) return <StagingThumbnail scene={scene} isActive={isActive} />;
 
-  const bgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
+  const rawBgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
+  const bgSrc = useMemo(() => getOptimizedUrl(rawBgSrc, { width: 600, quality: 60 }), [rawBgSrc]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
