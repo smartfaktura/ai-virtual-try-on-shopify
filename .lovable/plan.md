@@ -1,49 +1,40 @@
 
 
-# Fix: Uploaded Scene Image Ignored When Scene Chip Also Selected
+# Fix: Model + Scene Realistic Integration
 
-## Root Cause
+## Problem
 
-When the user uploads an image and sets "Using image as: Scene", AND also has a scene chip selected (e.g. "White Seamless"), two conflicts occur:
+When a user uploads an image as "Scene" and selects a model, the generated result looks disjointed — the model doesn't appear naturally placed in the scene. The current prompt instruction for scenes is too generic:
 
-1. **Duplicate scene references** — Both the uploaded image (via `sourceImage` labeled `[SCENE REFERENCE]`) and the scene chip image (via `sceneImage` also labeled `[SCENE REFERENCE]`) are sent to the AI. The model sees two conflicting environments and picks one arbitrarily (usually the simpler white one).
+> "SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image."
 
-2. **Auto-prompt conflict** — The auto-generated prompt appends "set in a White Seamless environment — Pure white infinity backdrop..." from the scene chip's `promptHint`, which directly contradicts the uploaded scene.
+This tells the AI what to reference but not HOW to integrate the model into it realistically.
 
 ## Fix
 
-When the user uploads an image as "Scene", the uploaded image should take priority — automatically clear the selected scene chip.
+### `supabase/functions/generate-freestyle/index.ts` — `polishUserPrompt()`
 
-### `src/pages/Freestyle.tsx`
+Update the SCENE reference instruction (around line 207) to include explicit compositing directives when a model is also present:
 
-In the `imageRole` change handler (or wherever `imageRole` is set to `'scene'`), auto-clear `selectedScene`:
-
-- When `imageRole` changes to `'scene'`: set `selectedScene` to `null`
-- This prevents the duplicate `[SCENE REFERENCE]` and conflicting prompt text
-- The uploaded scene image becomes the sole scene reference
-
-Also apply the reverse: when the user selects a scene chip while `imageRole === 'scene'`, switch `imageRole` back to the default (e.g. `'product'`), OR simply clear the uploaded source image's scene role.
-
-### Simpler alternative (recommended)
-
-Just auto-clear `selectedScene` when `imageRole === 'scene'` in the `handleGenerate` function, right before building the payload. This is the minimal fix:
-
-```typescript
-// If user uploaded image as scene, their upload takes priority over scene chip
-if (imageRole === 'scene' && sourceImage) {
-  // Clear scene chip to avoid duplicate [SCENE REFERENCE] conflict
-  sceneImageUrl = undefined;
-  // Also skip scene promptHint from auto-prompt
-}
+**Current:**
+```
+SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.
 ```
 
-This ensures:
-- Only one `[SCENE REFERENCE]` is sent (the uploaded image)
-- The auto-prompt doesn't inject conflicting white background instructions from the scene chip
-- The scene chip remains visually selected but doesn't interfere with generation
+**New (when model + scene together):**
+```
+SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. 
+Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. 
+The person must appear physically present in this space — correct perspective, scale relative to surroundings, 
+feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.
+```
 
-### Files to change
+When scene is present without a model (product-only), keep the simpler version:
+```
+SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.
+```
 
-1. **`src/pages/Freestyle.tsx`** — In `handleGenerate`, when `imageRole === 'scene'` and `sourceImage` exists, skip `sceneImageUrl` and skip scene promptHint in auto-prompt building
-2. Optionally: auto-clear `selectedScene` when user sets `imageRole` to `'scene'` for better UX clarity
+### Single file change
+
+- **`supabase/functions/generate-freestyle/index.ts`** — Lines ~206-209: Conditional SCENE prompt based on whether `context.hasModel` is true, adding realistic compositing instructions for model+scene combinations.
 
