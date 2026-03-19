@@ -481,8 +481,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
     onError: (error: Error) => toast.error(
       editingScheduleId
-        ? `Failed to update schedule: ${error.message}`
-        : `Failed to create schedule: ${error.message}`
+        ? `Failed to update drop: ${error.message}`
+        : `Failed to create drop: ${error.message}`
     ),
   });
 
