@@ -1,25 +1,46 @@
 
 
-## Improve White Studio Scene Image & Reposition It
+## White Studio: Prompt-Only Mode (No Scene Image)
 
-### What needs to happen
+### Problem
+Sending a scene image for "White Studio" can cause visual bleeding — the AI picks up unwanted elements from the reference photo. A plain white background is better described purely through prompt engineering.
 
-1. **Generate a better White Studio image** — The current one looks strange at the top. Generate a clean white studio backdrop with a subtle gradient shadow on the floor, similar in style to the "Shadow Play" scene (directional light creating soft geometric shadows on a white surface). This will be a professional-looking empty white cyclorama with a gentle shadow gradient, no objects or people.
-
-2. **Upload to storage** — Replace the existing file at `landing-assets/scenes/scene-white-studio.png` with the new higher-quality version. No code URL changes needed since the path stays the same.
-
-3. **Move White Studio to first position in the product scenes list** — It's already first in the `clean-studio` category in `mockData.ts` (line 1363), so it should already appear first under the "Product" tab. No reordering needed unless admin sort overrides have changed the position — will verify and ensure it stays at position 1 in `clean-studio`.
+### Solution
+When White Studio (`scene_038`) is selected, **skip sending the scene image** and instead inject a strong prompt directive for a clean white background. This applies only to this specific scene.
 
 ### Changes
 
-**Asset generation & upload**
-- Generate via `google/gemini-3-pro-image-preview`: "Professional empty white photography studio cyclorama with subtle gradient shadow on the floor from soft directional window light, clean minimal commercial product photography backdrop, no objects, no people, elegant shadow play on white surface"
-- Upload to `landing-assets/scenes/scene-white-studio.png` (overwrites current)
+**1. `src/pages/Freestyle.tsx`** — Skip scene image for White Studio
+In the generation handler (~line 409-412), add a check: if `selectedScene.poseId === 'scene_038'`, don't set `sceneImageUrl`. The scene's `promptHint` will still be included in the auto-built prompt text.
 
-**`src/data/mockData.ts`** — No changes needed
-- White Studio (`scene_038`) is already the first entry under `// === PRODUCT ENVIRONMENT SCENES ===`
-- URL already uses `getLandingAssetUrl('scenes/scene-white-studio.png')`
+**2. `src/data/mockData.ts`** — Strengthen the White Studio `promptHint`
+Update `scene_038`'s `promptHint` to a much more explicit directive:
 
-### Summary
-This is purely an asset quality fix — regenerate a cleaner, more professional white studio image with gradient shadow styling, and upload it to the same storage path.
+```
+"Pure clean white background, seamless white infinity backdrop, bright even studio lighting, no environment, no room, no walls visible, no props, no shadows except subtle product shadow, isolated product on solid white, e-commerce hero shot style"
+```
+
+**3. `supabase/functions/generate-freestyle/index.ts`** — Add scene-ID-based override
+Pass `sceneId` from the frontend payload. In the edge function, if `sceneId === 'scene_038'` and `sceneImage` is present, clear `sceneImage` and append the white-background directive to the prompt. This acts as a backend safety net.
+
+### Flow
+
+```text
+User selects White Studio
+  ↓
+Frontend: sets sceneImageUrl = undefined (no image sent)
+Frontend: auto-prompt includes strong white-bg directive from promptHint
+  ↓
+Backend: double-checks sceneId, ensures no scene image leaks through
+Backend: appends white background instruction to enriched prompt
+  ↓
+AI receives: product image + strong "white background only" text prompt
+Result: clean white background, no bleeding
+```
+
+### Why this works
+- White backgrounds are trivially described in text — no reference image needed
+- Eliminates all possible visual contamination from scene images
+- Other scenes continue using reference images as before
+- The White Studio thumbnail still shows in the UI for selection
 
