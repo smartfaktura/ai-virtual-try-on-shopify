@@ -165,6 +165,45 @@ export function FreestyleSettingsChips({
     </Popover>
   );
 
+  const qualityChip = (
+    <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+          quality === 'high'
+            ? 'border-primary/30 bg-primary/10 text-primary'
+            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+        )}>
+          {quality === 'high' ? <Diamond className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+          {quality === 'high' ? 'Pro' : 'Standard'}
+          <ChevronDown className="w-3 h-3 opacity-40" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1.5" align="start">
+        {([
+          { value: 'standard' as const, icon: Zap, label: 'Standard', desc: '4 credits/image. Fast generation, great for drafts and iteration.' },
+          { value: 'high' as const, icon: Diamond, label: 'Pro', desc: '6 credits/image. Higher detail and polish for final assets.' },
+        ]).map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
+            className={cn(
+              'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+              quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+            )}
+          >
+            <opt.icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-[13px]">{opt.label}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
+            </div>
+            {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+
   // --- Chip wrappers for model/scene/product with disabled + highlight support ---
   const productChip = (
     <div className={cn(
