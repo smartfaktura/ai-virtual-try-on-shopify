@@ -392,8 +392,12 @@ export default function Freestyle() {
       modelImageUrl = selectedModel.previewUrl;
     }
 
+    // If user uploaded image as scene, their upload takes priority over scene chip
     let sceneImageUrl: string | undefined;
-    if (selectedScene && selectedScene.poseId !== 'scene_038') {
+    if (sourceImage && imageRole === 'scene') {
+      // Skip scene chip — uploaded scene image is the sole scene reference
+      sceneImageUrl = undefined;
+    } else if (selectedScene && selectedScene.poseId !== 'scene_038') {
       sceneImageUrl = selectedScene.previewUrl;
     }
 
@@ -436,7 +440,8 @@ export default function Freestyle() {
         }
       }
 
-      if (selectedScene) {
+      // Skip scene chip prompt hints when uploaded image is the scene
+      if (selectedScene && !(sourceImage && imageRole === 'scene')) {
         parts.push(`set in a ${selectedScene.name} environment`);
         if (selectedScene.promptHint) parts.push(`— ${selectedScene.promptHint}`);
       }
@@ -665,7 +670,11 @@ export default function Freestyle() {
     onReset: handleReset,
     isDirty,
     imageRole,
-    onImageRoleChange: setImageRole,
+    onImageRoleChange: (role: ImageRole) => {
+      setImageRole(role);
+      // Auto-clear scene chip when user designates uploaded image as scene
+      if (role === 'scene') setSelectedScene(null);
+    },
     editIntent,
     onEditIntentChange: setEditIntent,
     disabledChips: sourceImagePreview ? {
