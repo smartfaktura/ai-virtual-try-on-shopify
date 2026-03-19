@@ -796,22 +796,20 @@ export default function Freestyle() {
         const displayPrompt = img.userPrompt || img.prompt;
         const libraryItem: LibraryItem = {
           id: img.id,
-          url: img.url,
+          imageUrl: img.url,
+          source: 'freestyle',
+          label: displayPrompt || 'Freestyle',
           prompt: displayPrompt,
+          date: '',
+          createdAt: '',
           aspectRatio: img.aspectRatio || '1:1',
           quality: 'standard',
-          createdAt: '',
-          sourceType: 'freestyle',
         };
         return (
           <LibraryDetailModal
             open={lightboxOpen}
-            onOpenChange={setLightboxOpen}
+            onClose={() => setLightboxOpen(false)}
             item={libraryItem}
-            onDownload={() => handleDownload(img.url, lightboxIndex)}
-            onDelete={() => handleDelete(img.id)}
-            onPrevious={lightboxIndex > 0 ? () => setLightboxIndex(i => i - 1) : undefined}
-            onNext={lightboxIndex < savedImages.length - 1 ? () => setLightboxIndex(i => i + 1) : undefined}
             isUpscaling={upscalingSourceIds.has(img.id)}
           />
         );
