@@ -1,106 +1,129 @@
 
-## What’s actually wrong (based on logs + DB)
-- We have **queue rows stuck in `processing`** (example: `b4bffd24-...`), while `generate-freestyle` logs show it **generated a fallback image and saved it**, but the queue row **never got marked `completed`**.
-- That means the generation function can **finish the expensive part** (AI + upload + DB insert) but still **fail to run the final “completeQueueJob” update**—likely due to:
-  1) **Edge runtime shutdown / time limit** happening right after image generation, before the final queue update runs
-  2) **429 retry/fallback path** not finalizing early, so completion happens “later” and is vulnerable to shutdown
 
-Also, the start delay is amplified by:
-- `enqueue-generation` calling `process-queue` with **2× 5s timeouts**, which frequently times out on cold starts and leaves jobs idle longer.
+# Image Role Intent System for Freestyle Editor
 
-“nanobanan” note:
-- There is **no “nanobanan” model** referenced anywhere in the frontend or `generate-freestyle`. The image model selection is internal (Gemini Flash/Pro). The issue is not “sending the wrong model,” it’s **queue finalization reliability**.
+## What We're Building
 
----
+A 2-step intent selector that appears when a user uploads an image in the Freestyle editor. It removes ambiguity about what the uploaded image represents and (if editing) what should change.
 
-## Goal (final fix)
-Make Freestyle queue jobs **always** transition out of `processing`:
-- If an image gets generated (primary or fallback), the queue row must be updated **immediately** (not at the end).
-- Increase queue timeout headroom so cleanup doesn’t kill legitimate slow runs.
-- Remove trigger timeouts that delay queue pickup.
+```text
+┌─────────────────────────────────────────────┐
+│ [image thumb]  What do you want to do?      │
+│                                             │
+│ [● Edit this image] [○ Product] [○ Model]   │
+│ [○ Scene]                                   │
+│                                             │
+│ What do you want to change?                 │
+│ [□ Replace product] [□ Change background]   │
+│ [□ Change model]    [□ Improve quality]     │
+└─────────────────────────────────────────────┘
+```
 
----
+After selection, both steps collapse into a compact summary line.
 
-## Implementation plan
+## Files to Create / Edit
 
-### 1) Fix slow start: make queue trigger fire-and-forget
-**File:** `supabase/functions/enqueue-generation/index.ts`
+### 1. New: `src/components/app/freestyle/ImageRoleSelector.tsx`
 
-- Replace the current `triggerQueue()` retry loop (2 attempts with `AbortSignal.timeout(5000)`) with **one fire-and-forget fetch** that is not awaited and has no timeout.
-- Reason: the goal is only to “wake” the dispatcher; waiting for a response is unnecessary and fails during cold boots.
+Single component containing both steps:
 
-**Expected effect:** “Your job is next in queue…” should start faster and more consistently.
+**Step 1 — Image Role** (single-select chips):
+- "Edit this image" (default) — "Change something in this photo"
+- "Use as product" — "This is the product to include"
+- "Use as model" — "Use this person's face/body"
+- "Use as scene" — "Use this background or location"
 
----
+**Step 2 — Edit Intent** (multi-select chips, only visible when role = "edit"):
+- Replace product → `replace_product`
+- Change background → `change_background`
+- Change model → `change_model`
+- Improve quality → `enhance`
 
-### 2) Fix “generation happens but queue never completes” (core reliability patch)
-**File:** `supabase/functions/generate-freestyle/index.ts`
+Default if no edit intent selected: `["enhance"]`
 
-#### 2.1 Extend timeout_at at the start of a queue job
-- When `isQueueInternal && body.job_id`, immediately update `generation_queue.timeout_at` to **now + 10–12 minutes**.
-- Reason: current DB function `claim_next_job()` sets `timeout_at = now() + 5 minutes`, which is too tight for cold boots + 429 + fallback.
+**Collapsed state**: After selection, collapse into a summary:
+- "Using image as: Edit" [Change] → re-expands Step 1
+- "Editing: Replace product, Change background" [Edit] → re-expands Step 2
 
-#### 2.2 Finalize early for queue mode (especially since queue caps to 1 image)
-Queue mode already forces:
-- `effectiveImageCount = 1`
-- `maxRetries = 1`
+Smooth transitions using Tailwind animate classes.
 
-So we should:
-- After the **first successful upload** (whether primary model or fallback), call:
-  - `completeQueueJob(job_id, user_id, credits_reserved, images, requestedCount=1, errors, payload, ...)`
-  - and then **return immediately** (or break out and finalize right away).
-  
-This removes reliance on “end-of-function” completion, which is the part most likely to be skipped if the runtime shuts down.
+### 2. Edit: `src/pages/Freestyle.tsx`
 
-#### 2.3 Add a progress/heartbeat queue update after upload (belt-and-suspenders)
-Even before marking completed, after each successful upload:
-- Update `generation_queue.result` with partial progress:
-  - `{ images: [...], generatedCount, requestedCount }`
-- This makes the system resilient even if it dies before final completion—`cleanup_stale_jobs()` already has logic to treat partial results as partial success.
+**New state:**
+```typescript
+const [imageRole, setImageRole] = useState<'edit' | 'product' | 'model' | 'scene'>('edit');
+const [editIntent, setEditIntent] = useState<string[]>([]);
+```
 
-#### 2.4 Fix the 429 fallback success path to also finalize immediately
-Right now fallback success logs show the image gets saved, but the queue row can remain `processing`.
-- In the `status===429` catch block, when fallback succeeds, in queue mode:
-  - immediately call `completeQueueJob(...)` and exit.
+**Reset on image removal:** When `removeSourceImage` is called, reset `imageRole` to `'edit'` and `editIntent` to `[]`.
 
-#### 2.5 Reduce 429 backoff to switch models faster
-In `generateImage()`, change:
-- `setTimeout(3000 * (attempt + 1))`
-to:
-- a flat **1500ms** (or even 0–500ms for queue mode)
-Reason: rate limits are often per-model; waiting longer doesn’t help as much as switching models.
+**Include in `handleReset`:** Also reset both new fields.
 
-#### 2.6 Add correlation logs (job_id + queue internal)
-Add logs at start:
-- `job_id`, `user_id`, chosen model, refCount
-Add logs when:
-- uploading finished
-- queue updated (completed/failed)
+**Chip muting logic:**
+- `imageRole === 'product'` → visually mute/disable ProductSelectorChip
+- `imageRole === 'model'` → visually mute/disable ModelSelectorChip  
+- `imageRole === 'scene'` → visually mute/disable SceneSelectorChip
 
-This makes future debugging immediate.
+Pass a new `disabledChips` prop (or individual `disabled` booleans) down through `FreestylePromptPanel` → `FreestyleSettingsChips`.
 
----
+**Payload update** in `handleGenerate`:
+```typescript
+const queuePayload = {
+  ...existing,
+  imageRole: sourceImage ? imageRole : undefined,
+  editIntent: sourceImage && imageRole === 'edit' 
+    ? (editIntent.length > 0 ? editIntent : ['enhance']) 
+    : undefined,
+};
+```
 
-### 3) Verify end-to-end with real queue rows (no UI guessing)
-Use backend queries/logs to confirm the fix:
+### 3. Edit: `src/components/app/freestyle/FreestylePromptPanel.tsx`
 
-1. Create a Freestyle generation from the UI (product + scene is fine).
-2. Confirm the queue row transitions:
-   - `queued → processing → completed`
-3. Confirm `generation_queue.result.images[0]` exists and matches an entry in `freestyle_generations.image_url`.
-4. Force a few runs quickly to increase chance of 429 and verify fallback still completes the queue row.
+- Accept new props: `imageRole`, `onImageRoleChange`, `editIntent`, `onEditIntentChange`, `sourceImagePreview`
+- Render `<ImageRoleSelector>` between the image preview and the prompt textarea (only when `sourceImagePreview` is present)
+- Pass `disabledChips` down to `FreestyleSettingsChips`
 
----
+### 4. Edit: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
 
-## Files to change
-- `supabase/functions/enqueue-generation/index.ts`
-- `supabase/functions/generate-freestyle/index.ts`
+- Accept optional `disabledChips?: { product?: boolean; model?: boolean; scene?: boolean }` prop
+- When a chip is disabled: reduce opacity, show lock icon, prevent popover from opening
 
-No database migrations required (we’ll extend `timeout_at` from the generation function itself).
+### 5. Edit: `supabase/functions/generate-freestyle/index.ts`
 
----
+**FreestyleRequest interface** — add:
+```typescript
+imageRole?: 'edit' | 'product' | 'model' | 'scene';
+editIntent?: string[];
+```
 
-## Why this solves “not generating”
-Even if the AI call succeeds and the image is uploaded, the user currently sees “stuck” because the **queue status never flips**. Early completion + heartbeat updates ensure:
-- If image exists → queue completes (or at least has partial result)
-- No more “generated but UI never receives completion”
+**`buildContentArray`** — change sourceImage label based on `imageRole`:
+- `imageRole === 'product'` → label as `[PRODUCT IMAGE]` (same as productImage)
+- `imageRole === 'model'` → label as `[MODEL REFERENCE]`
+- `imageRole === 'scene'` → label as `[SCENE REFERENCE]`
+- `imageRole === 'edit'` or undefined → keep current `[REFERENCE IMAGE]`
+
+**`polishUserPrompt`** — light wording adjustment:
+- When `imageRole === 'edit'`: replace "Create a NEW photograph" phrasing with "Edit the provided image. Preserve composition unless specified."
+- When `editIntent` includes specific values, append targeted instructions:
+  - `replace_product` → "Replace the product in the image while preserving everything else"
+  - `change_background` → "Keep the subject, change the background/environment"
+  - `change_model` → "Replace the person while preserving composition and product placement"
+  - `enhance` → "Improve image quality, lighting, and details without changing content"
+
+### 6. Edit: `src/pages/Freestyle.tsx` — Auto-build prompt adjustment
+
+In the "Auto-build prompt from assets if user left it empty" block (~line 396):
+- When `imageRole === 'edit'` and no user prompt: auto-generate based on `editIntent` values instead of the current generic product photography prompt
+- When `imageRole === 'product'`: treat sourceImage the same as a selected product for prompt building
+
+## What This Does NOT Change
+
+- No changes to queue system, credits, or generation architecture
+- No AI planner
+- No changes to how Product/Model/Scene selector chips work internally
+- No database migrations needed (imageRole/editIntent are payload fields only)
+
+## Risk
+
+Very low — UI-only changes plus light payload/prompt adjustments. All existing generation paths remain intact. The new fields are optional and backward-compatible.
+
