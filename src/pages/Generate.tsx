@@ -530,10 +530,7 @@ export default function Generate() {
           setAspectRatio(firstRatio);
         }
       }
-      // Set quality from workflow config
-      if (workflowConfig?.fixed_settings?.quality) {
-        setQuality(workflowConfig.fixed_settings.quality as ImageQuality);
-      }
+      // Quality is user-controlled — workflow defaults no longer override it
       // Start with none selected for scene-type workflows, auto-select all for others
       if (variationStrategy?.variations?.length && variationInitRef.current !== activeWorkflow.id) {
         variationInitRef.current = activeWorkflow.id;
