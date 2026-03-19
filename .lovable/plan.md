@@ -1,30 +1,29 @@
 
 
-# Optimize Workflow Animation Background Images
+# Workflow Image Quality Investigation
 
-## Problem
-The workflow card animations load full-size, unoptimized background images. Three out of four animation modes skip `getOptimizedUrl` on their backgrounds, causing unnecessarily large downloads and slow loading on the Workflows page.
+## Findings
 
-| Mode | Background optimized? |
-|---|---|
-| Recipe (default) | No — line 654 uses raw `bgSrc` |
-| Carousel (UGC, Perspectives) | No — line 188 uses raw `backgrounds[current]` |
-| Upscale | No — line 279 uses raw `bgSrc` |
-| Staging | Yes — already optimized (lines 422-425) |
+After tracing the full generation pipeline for "Product Listing Set," here's what I found:
 
-These are thumbnail-sized previews inside cards (~45% of card width), so they only need ~500px wide images at quality 60, not the full 2K originals.
+### What's working correctly
+- Your "high" quality selection IS reaching the edge function (confirmed in logs: `using google/gemini-3-pro-image-preview`)
+- The image config already requests `image_size: '2K'` and `output_format: 'png'`
+- The raw image bytes are uploaded to storage without any re-compression
 
-## Changes — `src/components/app/WorkflowAnimatedThumbnail.tsx`
+### Why the file size differs (500KB workflow vs 5MB try-on)
+PNG compression is lossless and content-dependent. A product on a clean/simple background has large uniform color areas that PNG compresses extremely well (~500KB). A try-on image with a full person, clothing textures, and detailed background has far more visual data (~5MB). Both are 2K resolution — the file size difference is purely about image complexity, not quality reduction.
 
-### 1. CarouselThumbnail — optimize background URLs
-Add a `useMemo` to map all `backgrounds` through `getOptimizedUrl({ width: 600, quality: 60 })`, then use the optimized array for rendering.
+### One actual issue found
+The "Product Listing Set" workflow has `fixed_settings.quality: "standard"` in its database config. When the workflow loads, this resets your quality selector to "standard" (line 533-536 in Generate.tsx). If you changed it back to "high" manually before generating, it worked correctly (as logs confirm). But this auto-reset could be confusing.
 
-### 2. Recipe mode (main component) — optimize bgSrc
-Wrap `bgSrc` with `getOptimizedUrl({ width: 600, quality: 60 })` before passing to the `<img>`.
+## Proposed Fix
 
-### 3. UpscaleThumbnail — optimize background
-The upscale demo uses the same image for both blur and sharp layers. Optimize it with `getOptimizedUrl({ width: 600, quality: 60 })`. The "blur vs sharp" visual effect is CSS-only (blur filter), so a smaller source image works fine.
+### `src/pages/Generate.tsx` — Don't override quality to "standard" when workflow has it as default
+Remove the auto-set of quality from workflow fixed_settings, or only apply it when quality hasn't been explicitly set by the user. This way the user's quality choice is always respected.
 
-### Summary
-Single file change. Add `getOptimizedUrl` calls to three locations that currently serve raw full-size images as card thumbnails. This should dramatically reduce initial payload on the Workflows page.
+Alternatively, we can simply **remove the `quality: "standard"` from the Product Listing Set workflow's fixed_settings** in the database, so it stops resetting the selector.
+
+### No backend changes needed
+The generation pipeline correctly handles quality — the pro model is used for "high", and 2K + PNG output is already configured. The ~500KB file size for a product listing PNG at 2K is normal and expected.
 
