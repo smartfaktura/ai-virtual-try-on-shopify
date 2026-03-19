@@ -1,24 +1,18 @@
 
 
-# Compact Product Grid in Creative Drops Wizard
+# Fix Product Image Cropping in Creative Drops Wizard (Step 3/5)
 
 ## Problem
-The product selection grid (step 2) uses large cards with `grid-cols-2 sm:grid-cols-3` and big `aspect-square` thumbnails. With many products, they don't fit and require excessive scrolling. The Workflows page uses a more compact layout.
+Product images in the Creative Drops wizard use `object-cover` inside `aspect-square` containers. Products with non-square aspect ratios (tall bottles, wide items) get heavily cropped/zoomed, cutting off important parts of the image.
 
 ## Fix
 
 **File: `src/components/app/CreativeDropWizard.tsx`**
 
-### Grid view (lines 667-696)
-- Change grid from `grid-cols-2 sm:grid-cols-3` → `grid-cols-3 sm:grid-cols-4 md:grid-cols-5`
-- Reduce card padding from `p-2` → `p-1.5`
-- Reduce border radius from `rounded-2xl` → `rounded-xl`
-- Reduce image corner radius from `rounded-xl` → `rounded-lg`
-- Reduce margin below image from `mb-2` → `mb-1`
-- Keep `aspect-square` but the smaller grid cells will naturally shrink the images
+Change `object-cover` to `object-contain` for product images in both grid and list views so the full product is always visible within the thumbnail:
 
-### Skeleton loading (lines 625-626)
-- Match the new grid: `grid-cols-3 sm:grid-cols-4 md:grid-cols-5`
+1. **Grid view product image** (line ~690): Change `object-cover` → `object-contain` on the `<img>` tag
+2. **List view product image** (line ~720 area): Same change if applicable
 
-This matches the compact card density used in Workflow scene selection (`grid-cols-3 sm:grid-cols-4 lg:grid-cols-5`).
+This keeps the `aspect-square` container and `bg-muted` background but shows the entire product image fitted inside, matching how product thumbnails typically work in e-commerce UIs.
 
