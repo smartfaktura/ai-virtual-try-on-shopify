@@ -5,11 +5,11 @@ interface AspectRatioPreviewProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string; useCase: string }> = {
-  '1:1': { width: 1, height: 1, label: 'Square', useCase: 'Instagram & Listings' },
-  '4:5': { width: 4, height: 5, label: 'Portrait', useCase: 'Stories & Pinterest' },
-  '9:16': { width: 9, height: 16, label: 'Story', useCase: 'Reels & TikTok' },
-  '16:9': { width: 16, height: 9, label: 'Wide', useCase: 'Banners & Facebook' },
+const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string }> = {
+  '1:1': { width: 1, height: 1, label: 'Square' },
+  '4:5': { width: 4, height: 5, label: 'Portrait' },
+  '9:16': { width: 9, height: 16, label: 'Story' },
+  '16:9': { width: 16, height: 9, label: 'Wide' },
 };
 
 const sizeConfig = { small: 44, medium: 60, large: 80 };
@@ -27,10 +27,7 @@ export function AspectRatioPreview({ ratio, size = 'medium' }: AspectRatioPrevie
       <div className="border-2 border-primary rounded-sm bg-primary/10 flex items-center justify-center" style={{ width: `${width}px`, height: `${height}px` }}>
         <span className="text-xs font-semibold">{ratio}</span>
       </div>
-      <div className="text-center">
-        <p className="text-xs font-medium">{config.label}</p>
-        <p className="text-xs text-muted-foreground">{config.useCase}</p>
-      </div>
+      <p className="text-xs font-medium text-center">{config.label}</p>
     </div>
   );
 }
@@ -44,10 +41,7 @@ export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProp
   const ratios: AspectRatio[] = ['1:1', '4:5', '9:16', '16:9'];
   return (
     <div className="space-y-3">
-      <div>
-        <p className="text-sm font-semibold">Image Size</p>
-        <p className="text-xs text-muted-foreground">Choose the best size for where you'll use the image</p>
-      </div>
+      <p className="text-sm font-semibold">Image Size</p>
       <div className="flex gap-3 flex-wrap">
         {ratios.map((ratio) => (
           <button key={ratio} onClick={() => onChange(ratio)}
