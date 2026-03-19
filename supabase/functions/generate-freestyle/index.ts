@@ -854,6 +854,14 @@ serve(async (req) => {
       body.sceneImage = undefined;
     }
 
+    // White Studio override: prompt-only mode — no scene image to prevent bleeding
+    if (body.sceneId === 'scene_038') {
+      body.sceneImage = undefined;
+      const whiteStudioDirective = "BACKGROUND REQUIREMENT: Pure solid white background (#ffffff). Seamless white infinity backdrop with bright even studio lighting. No environment, no room, no walls, no props. Only a subtle natural product shadow on the white surface. Isolated product on solid white, e-commerce hero shot style.";
+      enrichedPrompt = `${enrichedPrompt}\n\n${whiteStudioDirective}`;
+      console.log(`[FREESTYLE] White Studio (scene_038) — prompt-only mode, scene image cleared`);
+    }
+
     // Queue-mode optimizations: cap to 1 image, reduce retries
     const maxRetries = isQueueInternal ? 1 : 2;
     const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);

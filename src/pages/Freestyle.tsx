@@ -499,6 +499,7 @@ export default function Freestyle() {
       cameraStyle,
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
+      sceneId: selectedScene?.poseId || undefined,
     };
 
     // Enqueue via priority queue
