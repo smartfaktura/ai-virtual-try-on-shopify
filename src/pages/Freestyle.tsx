@@ -28,6 +28,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
+import type { ImageRole, EditIntent } from '@/components/app/freestyle/ImageRoleSelector';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
@@ -76,6 +77,8 @@ export default function Freestyle() {
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+  const [imageRole, setImageRole] = useState<ImageRole>('edit');
+  const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
@@ -110,9 +113,11 @@ export default function Freestyle() {
     setCameraStyle('pro');
     setFraming(null);
     setSelectedBrandProfile(null);
+    setImageRole('edit');
+    setEditIntent([]);
   }, []);
 
-  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null;
+  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null || imageRole !== 'edit' || editIntent.length > 0;
 
   const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
 
@@ -311,6 +316,8 @@ export default function Freestyle() {
   const removeSourceImage = useCallback(() => {
     setSourceImage(null);
     setSourceImagePreview(null);
+    setImageRole('edit');
+    setEditIntent([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -397,7 +404,23 @@ export default function Freestyle() {
     if (!basePrompt) {
       const parts: string[] = [];
 
-      if (selectedProduct) {
+      // Edit mode: build prompt from edit intents
+      if (sourceImage && imageRole === 'edit') {
+        const effectiveIntents = editIntent.length > 0 ? editIntent : ['enhance'];
+        const intentPhrases: Record<string, string> = {
+          replace_product: 'Replace the product in this image with a new one',
+          change_background: 'Change the background/environment while keeping the subject',
+          change_model: 'Replace the person while preserving composition and product placement',
+          enhance: 'Improve image quality, lighting, and details without changing content',
+        };
+        parts.push(effectiveIntents.map(i => intentPhrases[i] || i).join('. '));
+      } else if (sourceImage && imageRole === 'product') {
+        parts.push("High-end product photography featuring the item shown in the uploaded image. Use a fresh angle, creative composition, and professional lighting");
+      } else if (sourceImage && imageRole === 'model') {
+        parts.push("Professional portrait photography using the person from the uploaded image as the model");
+      } else if (sourceImage && imageRole === 'scene') {
+        parts.push("Professional photography set in the environment shown in the uploaded image");
+      } else if (selectedProduct) {
         parts.push(`High-end product photography of "${selectedProduct.title}"`);
         if (selectedProduct.product_type) parts.push(`(${selectedProduct.product_type})`);
       } else if (sourceImage) {
@@ -407,8 +430,8 @@ export default function Freestyle() {
       if (selectedModel) {
         const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
           .filter(Boolean).join(', ');
-        if (selectedProduct) {
-          const interaction = getProductModelInteraction(selectedProduct.product_type);
+        if (selectedProduct || (sourceImage && imageRole === 'product')) {
+          const interaction = selectedProduct ? getProductModelInteraction(selectedProduct.product_type) : 'showcased/held by';
           parts.push(`${interaction} a ${modelDesc} model`);
         } else {
           parts.push(`Portrait of a ${modelDesc} model`);
@@ -467,6 +490,10 @@ export default function Freestyle() {
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
       sceneId: selectedScene?.poseId || undefined,
+      imageRole: sourceImage ? imageRole : undefined,
+      editIntent: sourceImage && imageRole === 'edit'
+        ? (editIntent.length > 0 ? editIntent : ['enhance'])
+        : undefined,
     };
 
     // Enqueue via priority queue
@@ -646,6 +673,15 @@ export default function Freestyle() {
     highlightedChip,
     onReset: handleReset,
     isDirty,
+    imageRole,
+    onImageRoleChange: setImageRole,
+    editIntent,
+    onEditIntentChange: setEditIntent,
+    disabledChips: sourceImagePreview ? {
+      product: imageRole === 'product',
+      model: imageRole === 'model',
+      scene: imageRole === 'scene',
+    } : undefined,
   };
 
   return (

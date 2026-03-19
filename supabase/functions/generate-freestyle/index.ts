@@ -62,11 +62,13 @@ interface FreestyleRequest {
   negatives?: string[];
   cameraStyle?: "pro" | "natural";
   framing?: string;
-  user_id?: string; // Injected by process-queue for queue-internal calls
+  user_id?: string;
   modelId?: string;
   sceneId?: string;
   productId?: string;
   productDimensions?: string;
+  imageRole?: "edit" | "product" | "model" | "scene";
+  editIntent?: string[];
 }
 
 // ── Editing intent detection — skip heavy polish for simple edits ─────────
@@ -159,8 +161,37 @@ function polishUserPrompt(
   modelContext?: string,
   cameraStyle?: "pro" | "natural",
   framing?: string,
-  productDimensions?: string
+  productDimensions?: string,
+  imageRole?: string,
+  editIntent?: string[],
 ): string {
+  // ── Image edit mode: lightweight edit-safe prompt ──
+  if (imageRole === 'edit' && context.hasSource) {
+    const editLayers: string[] = [
+      "Edit the provided image. Preserve composition unless specified.",
+    ];
+    if (rawPrompt.trim()) editLayers.unshift(rawPrompt);
+
+    const intentInstructions: Record<string, string> = {
+      replace_product: "Replace the product in the image while preserving everything else.",
+      change_background: "Keep the subject intact, change the background/environment.",
+      change_model: "Replace the person while preserving composition and product placement.",
+      enhance: "Improve image quality, lighting, and details without changing content.",
+    };
+    const effectiveIntents = editIntent && editIntent.length > 0 ? editIntent : ['enhance'];
+    for (const intent of effectiveIntents) {
+      if (intentInstructions[intent]) editLayers.push(intentInstructions[intent]);
+    }
+
+    editLayers.push("High resolution, clean result, no AI artifacts, no collage layouts.");
+    if (userNegatives && userNegatives.length > 0) {
+      editLayers.push(`Avoid: ${userNegatives.join(", ")}`);
+    }
+    if (brandProfile?.doNotRules?.length) {
+      editLayers.push(`Also avoid: ${brandProfile.doNotRules.join(", ")}`);
+    }
+    return editLayers.join("\n");
+  }
   // ── Editing intent bypass: simple single-image edits skip all heavy layers ──
   const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
   const isEditingRequest = detectEditingIntent(rawPrompt);
@@ -640,6 +671,7 @@ function buildContentArray(
   productImage?: string,
   modelImage?: string,
   sceneImage?: string,
+  imageRole?: string,
 ): ContentItem[] {
   const content: ContentItem[] = [];
 
@@ -652,9 +684,13 @@ function buildContentArray(
     content.push({ type: "image_url", image_url: { url: productImage } });
   }
 
-  // Source/reference image (user-uploaded) — NEVER labeled as product
+  // Source/reference image (user-uploaded) — label based on imageRole
   if (sourceImage) {
-    content.push({ type: "text", text: "[REFERENCE IMAGE]" });
+    const label = imageRole === 'product' ? '[PRODUCT IMAGE]'
+      : imageRole === 'model' ? '[MODEL REFERENCE]'
+      : imageRole === 'scene' ? '[SCENE REFERENCE]'
+      : '[REFERENCE IMAGE]';
+    content.push({ type: "text", text: label });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
@@ -895,9 +931,9 @@ serve(async (req) => {
 
     const polishContext = {
       hasSource: !!body.sourceImage,
-      hasProduct: !!body.productImage,
-      hasModel: !!body.modelImage,
-      hasScene: !!body.sceneImage,
+      hasProduct: !!body.productImage || (!!body.sourceImage && body.imageRole === 'product'),
+      hasModel: !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model'),
+      hasScene: !!body.sceneImage || (!!body.sourceImage && body.imageRole === 'scene'),
     };
 
     let finalPrompt: string;
@@ -905,7 +941,7 @@ serve(async (req) => {
       // Perspective jobs: prompt is fully built by the hook — use as-is
       finalPrompt = enrichedPrompt;
     } else if (body.polishPrompt) {
-      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions);
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions, body.imageRole, body.editIntent);
     } else {
       let unpolished = enrichedPrompt;
       if (body.brandProfile) {
@@ -1027,6 +1063,7 @@ serve(async (req) => {
           body.productImage,
           body.modelImage,
           body.sceneImage,
+          body.imageRole,
         );
 
         // Append referenceAngleImage as [REFERENCE IMAGE] for perspective jobs
@@ -1152,6 +1189,7 @@ serve(async (req) => {
                 body.productImage,
                 body.modelImage,
                 body.sceneImage,
+                body.imageRole,
               );
               if (isPerspective && referenceAngleImage) {
                 contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });

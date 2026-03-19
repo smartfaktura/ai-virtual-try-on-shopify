@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { GuideStepKey } from './FreestyleGuide';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
+import { ImageRoleSelector, type ImageRole, type EditIntent } from './ImageRoleSelector';
 import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
@@ -59,6 +60,12 @@ interface FreestylePromptPanelProps {
   onFramingPopoverChange: (open: boolean) => void;
   onFileDrop?: (file: File) => void;
   creditBalance?: number;
+  // Image role intent
+  imageRole: ImageRole;
+  onImageRoleChange: (role: ImageRole) => void;
+  editIntent: EditIntent[];
+  onEditIntentChange: (intents: EditIntent[]) => void;
+  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -87,6 +94,11 @@ export function FreestylePromptPanel({
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
   creditBalance,
+  imageRole,
+  onImageRoleChange,
+  editIntent,
+  onEditIntentChange,
+  disabledChips,
   isCollapsed,
   onToggleCollapse,
   highlightedChip,
@@ -258,6 +270,21 @@ export function FreestylePromptPanel({
             )}
           </div>
 
+          {/* Image Role Selector (only when image is uploaded) */}
+          {sourceImagePreview && (
+            <>
+              <div className="border-t border-border/40 mx-4 sm:mx-5" />
+              <div className="px-4 sm:px-5 py-3">
+                <ImageRoleSelector
+                  imageRole={imageRole}
+                  onImageRoleChange={onImageRoleChange}
+                  editIntent={editIntent}
+                  onEditIntentChange={onEditIntentChange}
+                />
+              </div>
+            </>
+          )}
+
           {/* Divider */}
           <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
@@ -284,6 +311,7 @@ export function FreestylePromptPanel({
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
               highlightedChip={highlightedChip}
+              disabledChips={disabledChips}
             />
           </div>
 
