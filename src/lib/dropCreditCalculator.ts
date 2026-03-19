@@ -6,6 +6,8 @@ export interface WorkflowCostConfig {
   hasModel: boolean;
   hasCustomScene: boolean;
   formatCount?: number;
+  imageCountOverride?: number;
+  productCount?: number;
 }
 
 export interface CreditBreakdown {
@@ -15,6 +17,7 @@ export interface CreditBreakdown {
   costPerImage: number;
   subtotal: number;
   formatCount?: number;
+  productCount?: number;
 }
 
 export interface DropCostEstimate {
@@ -24,33 +27,34 @@ export interface DropCostEstimate {
   monthlyProjection: number;
 }
 
-// Known workflow IDs from the system
-const MODEL_WORKFLOW_IDS = new Set([
-  '021146a4-a037-4418-98f8-7910b36e91fe', // Virtual Try-On
-  '3b54d43a-a03a-49a6-a64e-bf2dd999abc8', // Selfie / UGC Set
-  '6ae70d95-78ec-4e3a-b62b-9c3f8d1e2a5b', // Mirror Selfie
-]);
-
-function getCostPerImage(_workflowId: string, _hasModel: boolean, _hasCustomScene: boolean): number {
+function getCostPerImage(): number {
   return 6; // All workflows cost 6 credits per image
 }
 
+/**
+ * Calculate drop credits with per-workflow image counts and product counts.
+ * @param workflows - array of workflow configs, each can have its own imageCountOverride and productCount
+ * @param defaultImagesPerDrop - fallback image count when imageCountOverride is not set
+ * @param frequency - 'weekly' | 'biweekly' | 'monthly' | 'one-time'
+ * @param defaultProductCount - fallback product count when workflow doesn't specify its own
+ */
 export function calculateDropCredits(
   workflows: WorkflowCostConfig[],
-  imagesPerDrop: number,
+  defaultImagesPerDrop: number,
   frequency: string,
-  productCount: number = 1
+  defaultProductCount: number = 1
 ): DropCostEstimate {
   if (workflows.length === 0) {
     return { breakdown: [], totalCredits: 0, totalImages: 0, monthlyProjection: 0 };
   }
 
-  const effectiveProductCount = Math.max(productCount, 1);
+  const costPerImage = getCostPerImage();
 
   const breakdown: CreditBreakdown[] = workflows.map((wf) => {
-    const costPerImage = getCostPerImage(wf.workflowId, wf.hasModel, wf.hasCustomScene);
+    const effectiveProductCount = Math.max(wf.productCount ?? defaultProductCount, 1);
+    const effectiveImageCount = wf.imageCountOverride ?? defaultImagesPerDrop;
     const formatCount = Math.max(wf.formatCount || 1, 1);
-    const imageCount = imagesPerDrop * effectiveProductCount;
+    const imageCount = effectiveImageCount * effectiveProductCount;
     return {
       workflowId: wf.workflowId,
       workflowName: wf.workflowName,
@@ -58,6 +62,7 @@ export function calculateDropCredits(
       costPerImage,
       subtotal: imageCount * costPerImage * formatCount,
       formatCount,
+      productCount: effectiveProductCount,
     };
   });
 
