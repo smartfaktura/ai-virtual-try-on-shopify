@@ -868,7 +868,14 @@ serve(async (req) => {
       enrichedPrompt = `${enrichedPrompt}\n\nModel reference: ${body.modelContext}`;
     }
 
-    if (body.stylePresets && body.stylePresets.length > 0) {
+    // White Studio override: prompt-only mode — no scene image to prevent bleeding
+    if (body.sceneId === 'scene_038') {
+      body.sceneImage = undefined;
+      const whiteStudioDirective = "BACKGROUND REQUIREMENT: Pure solid white background (#ffffff). Seamless white infinity backdrop with bright even studio lighting. No environment, no room, no walls, no props. Only a subtle natural product shadow on the white surface. Isolated product on solid white, e-commerce hero shot style.";
+      enrichedPrompt = `${enrichedPrompt}\n\n${whiteStudioDirective}`;
+      console.log(`[FREESTYLE] White Studio (scene_038) — prompt-only mode, scene image cleared`);
+    }
+
       if (body.cameraStyle === 'natural') {
         const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
         const filtered = body.stylePresets.filter((kw: string) =>
