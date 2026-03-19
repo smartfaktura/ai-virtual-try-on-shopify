@@ -1,23 +1,47 @@
 
 
-# Fix Tablet Prompt Bar Overlapping Livechat Widget
+# Add Credit Refund Info to Failed Activity Cards
 
 ## Problem
-At tablet width (768px), the prompt panel container has no right-side padding — `lg:pr-20` only kicks in at 1024px+. The livechat widget sits in the bottom-right corner, causing overlap.
+When images fail, credits are automatically refunded, but the UI doesn't communicate this — users have no way to know their credits were returned.
 
-## Change — `src/pages/Freestyle.tsx` (line 809)
+## Change — `src/components/app/WorkflowActivityCard.tsx`
 
-Add right padding at the `md` breakpoint so the prompt bar clears the livechat widget on tablets:
+In the failed groups section (lines 262-325), add a credit refund message below the existing failure text. The data is already available: each job has `credits_reserved` and we know `failedCount`.
 
-**Before:**
+### Update the failed group info text (line 284-289)
+
+Add a line showing refunded credits, calculated from the failed jobs' `credits_reserved`:
+
+```tsx
+<div className="min-w-0">
+  <p className="text-sm font-medium truncate">
+    {group.workflow_name ?? 'Workflow generation'}
+    {group.product_name ? ` — ${group.product_name}` : ''}
+  </p>
+  <p className="text-xs text-muted-foreground truncate">
+    {group.totalCount > 1
+      ? `${group.failedCount}/${group.totalCount} failed`
+      : '1 image failed'}
+    {group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 50)}` : ''}
+  </p>
+  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+    {refundedCredits} credit{refundedCredits !== 1 ? 's' : ''} refunded
+  </p>
+</div>
 ```
-lg:px-4 lg:sm:px-8 lg:pb-5 lg:sm:pb-6 lg:pt-2 lg:pointer-events-none lg:pr-20
+
+Where `refundedCredits` is computed from the failed jobs in the group:
+```tsx
+const refundedCredits = group.jobs
+  .filter(j => j.status === 'failed')
+  .reduce((sum, j) => sum + (j.credits_reserved ?? 0), 0);
 ```
 
-**After:**
-```
-px-4 sm:px-8 pb-5 sm:pb-6 lg:pt-2 lg:pointer-events-none pr-16 lg:pr-20
-```
+Also update the `QueuePositionIndicator.tsx` failed state (line 162) to be more explicit about per-image refunds, and the `ActivityFeed.tsx` failed job text to mention refund.
 
-This adds `pr-16` (64px) padding on all sizes to clear the chat widget, and keeps the existing `lg:pr-20` for larger screens. The `px-4` and `pb-5` are also applied universally instead of only at `lg` to give tablets proper spacing.
+### Files changed
+1. `src/components/app/WorkflowActivityCard.tsx` — add refund line to failed group cards
+2. `src/components/app/QueuePositionIndicator.tsx` — already says "Credits have been refunded" (no change needed)
+3. `src/components/app/ActivityFeed.tsx` — append "· credits refunded" to failed job text
 
