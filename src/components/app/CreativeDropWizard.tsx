@@ -622,10 +622,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
               {productsLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="rounded-2xl border-2 border-border p-2">
-                      <div className="aspect-square rounded-xl bg-muted animate-pulse mb-2" />
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                    <div key={i} className="rounded-xl border-2 border-border p-1.5">
+                      <div className="aspect-square rounded-lg bg-muted animate-pulse mb-1" />
                       <div className="h-3 bg-muted animate-pulse rounded w-2/3" />
                     </div>
                   ))}
@@ -665,7 +665,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   )}
 
                   {productViewMode === 'grid' && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                       {filteredProducts.map(product => {
                         const isSelected = selectedProductIds.has(product.id);
                         return (
@@ -677,16 +677,16 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                               setSelectedProductIds(next);
                             }}
                             className={cn(
-                              'relative rounded-2xl border-2 p-2 transition-all text-left group',
+                              'relative rounded-xl border-2 p-1.5 transition-all text-left group',
                               isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
                             )}
                           >
                             {isSelected && (
-                              <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                              <div className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
                                 <Check className="w-3 h-3 text-primary-foreground" />
                               </div>
                             )}
-                            <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
+                            <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-1">
                               <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                             <p className="text-xs font-medium truncate px-0.5">{product.title}</p>
