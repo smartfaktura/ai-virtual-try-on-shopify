@@ -58,6 +58,15 @@ export default function Freestyle() {
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
+
+  // Auto-select Pro quality when model or scene is selected
+  useEffect(() => {
+    if (selectedModel || selectedScene) {
+      setQuality('high');
+    } else {
+      setQuality('standard');
+    }
+  }, [selectedModel, selectedScene]);
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
