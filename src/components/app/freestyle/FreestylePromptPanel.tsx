@@ -281,10 +281,10 @@ export function FreestylePromptPanel({
           )}
 
           {/* Divider */}
-          <div className="border-t border-border/40 mx-4 sm:mx-5" />
+          <div className="border-t border-border/40 mx-3 sm:mx-5" />
 
           {/* Row 2 — Settings Chips */}
-          <div className="px-4 sm:px-5 py-3">
+          <div className="px-3 sm:px-5 py-3">
             <FreestyleSettingsChips
               uploadButton={uploadButton}
               selectedProduct={selectedProduct} onProductSelect={onProductSelect}
