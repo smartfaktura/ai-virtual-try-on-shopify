@@ -260,6 +260,13 @@ function GenerationFailedCard({
         </p>
       </div>
 
+      {/* Admin-only raw error detail */}
+      {isAdminFlag && entry.message && (
+        <div className="w-full max-w-[260px] text-[9px] font-mono bg-white/5 rounded p-2 text-white/30 break-all leading-relaxed">
+          {entry.message}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex flex-col items-center gap-2 mt-1">
         {onDismiss && (
