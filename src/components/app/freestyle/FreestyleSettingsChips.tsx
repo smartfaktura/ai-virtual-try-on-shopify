@@ -181,8 +181,8 @@ export function FreestyleSettingsChips({
       </PopoverTrigger>
       <PopoverContent className="w-56 p-1.5" align="start">
         {([
-          { value: 'standard' as const, icon: Zap, label: 'Standard', desc: '4 credits/image. Fast generation, great for drafts and iteration.' },
-          { value: 'high' as const, icon: Diamond, label: 'Pro', desc: '6 credits/image. Higher detail and polish for final assets.' },
+          { value: 'standard' as const, icon: Gauge, label: 'Standard', desc: '4 credits/image. Fast generation, great for drafts and iteration.' },
+          { value: 'high' as const, icon: Sparkles, label: 'Pro', desc: '6 credits/image. Higher detail and polish for final assets.' },
         ]).map(opt => (
           <button
             key={opt.value}
