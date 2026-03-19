@@ -60,6 +60,12 @@ interface FreestylePromptPanelProps {
   onFramingPopoverChange: (open: boolean) => void;
   onFileDrop?: (file: File) => void;
   creditBalance?: number;
+  // Image role intent
+  imageRole: ImageRole;
+  onImageRoleChange: (role: ImageRole) => void;
+  editIntent: EditIntent[];
+  onEditIntentChange: (intents: EditIntent[]) => void;
+  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
