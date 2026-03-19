@@ -48,6 +48,8 @@ interface FreestylePromptPanelProps {
   isLoadingBrandProfiles: boolean;
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
+  quality: 'standard' | 'high';
+  onQualityChange: (q: 'standard' | 'high') => void;
   framing: FramingOption | null;
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
