@@ -268,7 +268,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const wf = selectedWorkflowsList[s - 3];
       return wf ? wf.name : 'Configure';
     }
-    if (s === scheduleStepIndex) return 'Schedule';
+    if (s === scheduleStepIndex) return 'Delivery';
     if (s === reviewStepIndex) return 'Review';
     return '';
   };
