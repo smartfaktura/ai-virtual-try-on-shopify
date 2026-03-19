@@ -1055,8 +1055,8 @@ export default function Generate() {
       };
     }
 
-    // Decide: single job or batch
-    if (workflowImageCount <= MAX_IMAGES_PER_JOB) {
+    // Decide: single job or batch — always batch when multiple images for parallel processing
+    if (workflowImageCount <= 1) {
       // Single job — existing behavior
       const enqueueResult = await enqueue({
         jobType: 'workflow',
