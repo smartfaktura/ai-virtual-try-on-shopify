@@ -364,6 +364,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       return;
     }
     setAttempted(false);
+    markDirty();
     setStep(s => s + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
