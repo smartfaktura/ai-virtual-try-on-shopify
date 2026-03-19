@@ -1063,6 +1063,7 @@ serve(async (req) => {
           body.productImage,
           body.modelImage,
           body.sceneImage,
+          body.imageRole,
         );
 
         // Append referenceAngleImage as [REFERENCE IMAGE] for perspective jobs
