@@ -284,6 +284,17 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                 </Button>
               </div>
 
+              {/* Social tag promo */}
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <AtSign className="w-5 h-5 text-amber-500" />
+                  <h3 className="text-base font-semibold text-foreground">Tag Us, Win a Free Year</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Post your creation on social media with <span className="font-semibold text-foreground">@vovv.ai</span> and <span className="font-semibold text-foreground">#vovvai</span> — we pick winners every month for a full year of free access.
+                </p>
+              </div>
+
               {/* Admin actions */}
               {isAdmin && (
                 <div className="pt-5 border-t border-border/30">
