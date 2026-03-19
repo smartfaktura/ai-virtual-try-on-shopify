@@ -838,8 +838,7 @@ serve(async (req) => {
     // Extend timeout_at for queue jobs — 5 min default is too tight for cold boot + 429 + fallback
     if (isQueueInternal && body.job_id) {
       try {
-        const supabaseTimeout = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-        await supabaseTimeout.from('generation_queue')
+        await supabase.from('generation_queue')
           .update({ timeout_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() })
           .eq('id', body.job_id);
         console.log(`[generate-freestyle] Extended timeout_at to 10min for job ${body.job_id}`);
@@ -905,8 +904,7 @@ serve(async (req) => {
           // Heartbeat: update queue with partial progress so cleanup_stale_jobs can recover
           if (isQueueInternal && body.job_id) {
             try {
-              const supabaseHb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-              await supabaseHb.from('generation_queue')
+              await supabase.from('generation_queue')
                 .update({ result: { images, generatedCount: images.length, requestedCount: effectiveImageCount } })
                 .eq('id', body.job_id);
               console.log(`[generate-freestyle] Heartbeat: saved ${images.length} images to queue result`);
@@ -919,8 +917,7 @@ serve(async (req) => {
           if (isQueueInternal) {
             // Check if job was cancelled before saving
             if (body.job_id) {
-              const cancelCheck = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-              const { data: jobCheck } = await cancelCheck
+              const { data: jobCheck } = await supabase
                 .from('generation_queue')
                 .select('status')
                 .eq('id', body.job_id)
@@ -933,8 +930,7 @@ serve(async (req) => {
                   const pathParts = urlObj.pathname.split('/freestyle-images/');
                   if (pathParts[1]) {
                     const storagePath = decodeURIComponent(pathParts[1]);
-                    const storageClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-                    await storageClient.storage.from('freestyle-images').remove([storagePath]);
+                    await supabase.storage.from('freestyle-images').remove([storagePath]);
                   }
                 } catch (_e) {}
                 // Remove this URL from images array so completeQueueJob cleanup is accurate
@@ -943,34 +939,12 @@ serve(async (req) => {
               }
             }
             try {
-              const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-                auth: { persistSession: false },
-              });
-              const insertData: Record<string, unknown> = {
-                user_id: userId,
-                image_url: publicUrl,
-                prompt: body.prompt || '',
-                user_prompt: body.userPrompt || null,
-                aspect_ratio: body.aspectRatio || '1:1',
-                quality: body.quality || 'standard',
-                model_id: body.modelId || null,
-                scene_id: body.sceneId || null,
-                product_id: body.productId || null,
-              };
-              if (body.workflow_label) {
-                insertData.workflow_label = body.workflow_label;
-              }
-              const { error: insertErr } = await supabase.from('freestyle_generations').insert(insertData);
-              if (insertErr) {
-                console.error(`Failed to save freestyle_generations:`, insertErr.message);
-              } else {
-                console.log(`[generate-freestyle] Saved freestyle_generations record for image ${i + 1}`);
-              }
+              await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
 
               // Early finalize: in queue mode (1 image), complete immediately after first success
               if (body.job_id && images.length > 0) {
                 console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
-                await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
                 return new Response(
                   JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
                   { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1011,38 +985,16 @@ serve(async (req) => {
               if (typeof fallbackResult === "string") {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
-            console.log(`[generate-freestyle] Fallback model succeeded for image ${i + 1}`);
+                console.log(`[generate-freestyle] Fallback model succeeded for image ${i + 1}`);
 
                 // Save to freestyle_generations so image appears in gallery
                 try {
-                  const supabaseFb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-                    auth: { persistSession: false },
-                  });
-                  const insertDataFb: Record<string, unknown> = {
-                    user_id: userId,
-                    image_url: publicUrl,
-                    prompt: body.prompt || '',
-                    user_prompt: body.userPrompt || null,
-                    aspect_ratio: body.aspectRatio || '1:1',
-                    quality: body.quality || 'standard',
-                    model_id: body.modelId || null,
-                    scene_id: body.sceneId || null,
-                    product_id: body.productId || null,
-                  };
-                  if (body.workflow_label) {
-                    insertDataFb.workflow_label = body.workflow_label;
-                  }
-                  const { error: insertErrFb } = await supabaseFb.from('freestyle_generations').insert(insertDataFb);
-                  if (insertErrFb) {
-                    console.error(`[generate-freestyle] Failed to save freestyle_generations (fallback):`, insertErrFb.message);
-                  } else {
-                    console.log(`[generate-freestyle] Saved freestyle_generations record for fallback image ${i + 1}`);
-                  }
+                  await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
 
                   // Early finalize in queue mode after fallback success
                   if (isQueueInternal && body.job_id && images.length > 0) {
                     console.log(`[generate-freestyle] Early finalize (fallback): completing queue job ${body.job_id}`);
-                    await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                    await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
                     return new Response(
                       JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
                       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1063,7 +1015,7 @@ serve(async (req) => {
           }
 
           if (isQueueInternal && body.job_id) {
-            await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
+            await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
           }
           return new Response(
             JSON.stringify({ error: statusError.message }),
@@ -1080,7 +1032,7 @@ serve(async (req) => {
 
     // Queue self-completion
     if (isQueueInternal && body.job_id) {
-      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, contentBlocked, blockReason);
+      await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, contentBlocked, blockReason);
     }
 
     if (contentBlocked && images.length === 0) {
@@ -1118,9 +1070,10 @@ serve(async (req) => {
   } catch (error) {
     console.error("Freestyle edge function error:", error);
     try {
-      const body = await req.clone().json().catch(() => ({}));
-      if (isQueueInternal && body.job_id) {
-        await completeQueueJob(body.job_id, body.user_id, body.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], body);
+      const errorBody = await req.clone().json().catch(() => ({}));
+      if (isQueueInternal && errorBody.job_id) {
+        const supabaseErr = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+        await completeQueueJob(supabaseErr, Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, errorBody.job_id, errorBody.user_id, errorBody.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], errorBody);
       }
     } catch (_e) { /* best effort */ }
     return new Response(
