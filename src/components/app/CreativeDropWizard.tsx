@@ -26,7 +26,7 @@ import {
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
-  Settings2, Wallet,
+  Settings2, Wallet, Users,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -85,6 +85,8 @@ export interface CreativeDropWizardInitialData {
   workflowModelSelections?: Record<string, string[]>;
   workflowPoseSelections?: Record<string, string[]>;
   workflowCustomSettings?: Record<string, Record<string, string>>;
+  imagesPerWorkflow?: Record<string, number>;
+  workflowProductIds?: Record<string, string[]>;
 }
 
 interface CreativeDropWizardProps {
@@ -181,6 +183,29 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [randomModels, setRandomModels] = useState<Record<string, boolean>>({});
   const [randomScenes, setRandomScenes] = useState<Record<string, boolean>>({});
 
+  // Per-workflow image counts and product assignments
+  const [imagesPerWorkflow, setImagesPerWorkflow] = useState<Record<string, number>>(() => {
+    if (initialData?.imagesPerWorkflow) return initialData.imagesPerWorkflow;
+    return {};
+  });
+  const [workflowProductIds, setWorkflowProductIds] = useState<Record<string, Set<string>>>(() => {
+    if (initialData?.workflowProductIds) {
+      const init: Record<string, Set<string>> = {};
+      for (const [wfId, ids] of Object.entries(initialData.workflowProductIds)) {
+        init[wfId] = new Set(ids);
+      }
+      return init;
+    }
+    return {};
+  });
+  const [customImageCounts, setCustomImageCounts] = useState<Record<string, string>>({});
+
+  const getWorkflowImageCount = (wfId: string) => imagesPerWorkflow[wfId] ?? 25;
+  const getWorkflowProducts = (wfId: string): Set<string> => {
+    const override = workflowProductIds[wfId];
+    return override && override.size > 0 ? override : selectedProductIds;
+  };
+
   // Freestyle
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
   const [freestylePrompts, setFreestylePrompts] = useState<string[]>(
@@ -191,8 +216,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [deliveryMode, setDeliveryMode] = useState<'now' | 'scheduled'>(initialData?.deliveryMode || 'now');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [frequency, setFrequency] = useState(initialData?.frequency || 'monthly');
-  const [imagesPerDrop, setImagesPerDrop] = useState(initialData?.imagesPerDrop || 25);
-  const [customImageCount, setCustomImageCount] = useState('');
 
   // Queries
   const { data: profile } = useQuery({
@@ -289,17 +312,22 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
   const progressPercent = totalSteps > 1 ? Math.round((step / (totalSteps - 1)) * 100) : 0;
 
-  // Credit calculation
-  const workflowConfigs: WorkflowCostConfig[] = selectedWorkflowsList.map(w => ({
-    workflowId: w.id,
-    workflowName: w.name,
-    hasModel: w.uses_tryon || (workflowModelSelections[w.id]?.length > 0),
-    hasCustomScene: false,
-    formatCount: getWorkflowFormats(w.id).length,
-  }));
+  // Credit calculation — now per-workflow
+  const workflowConfigs: WorkflowCostConfig[] = selectedWorkflowsList.map(w => {
+    const wfProducts = getWorkflowProducts(w.id);
+    return {
+      workflowId: w.id,
+      workflowName: w.name,
+      hasModel: w.uses_tryon || (workflowModelSelections[w.id]?.length > 0),
+      hasCustomScene: false,
+      formatCount: getWorkflowFormats(w.id).length,
+      imageCountOverride: imagesPerWorkflow[w.id],
+      productCount: wfProducts.size,
+    };
+  });
 
   const effectiveFrequency = deliveryMode === 'now' ? 'one-time' : frequency;
-  const costEstimate = calculateDropCredits(workflowConfigs, imagesPerDrop, effectiveFrequency, selectedProductIds.size);
+  const costEstimate = calculateDropCredits(workflowConfigs, 25, effectiveFrequency, selectedProductIds.size);
 
   const handleSeasonalPreset = (presetId: string) => {
     setSeasonalPreset(presetId);
@@ -324,9 +352,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       if (wf.uses_tryon || uiConfig?.show_model_picker) {
         if (!randomModels[wf.id] && !workflowModelSelections[wf.id]?.length) return false;
       }
+      if (getWorkflowImageCount(wf.id) <= 0) return false;
       return true;
     }
-    if (step === scheduleStepIndex) return imagesPerDrop > 0 && (deliveryMode === 'now' || !!startDate);
+    if (step === scheduleStepIndex) return deliveryMode === 'now' || !!startDate;
     if (step === reviewStepIndex) return true;
     return false;
   };
@@ -350,9 +379,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           return `Select at least one model or enable Random`;
         }
       }
+      if (getWorkflowImageCount(wf.id) <= 0) return 'Set the number of images for this workflow';
     }
     if (step === scheduleStepIndex) {
-      if (imagesPerDrop <= 0) return 'Choose how many images per drop';
       if (deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
     }
     return null;
@@ -417,6 +446,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
         const formats = getWorkflowFormats(id);
 
+        // Per-workflow product IDs
+        const wfProducts = getWorkflowProducts(id);
+        const wfProductIdsArray = Array.from(wfProducts);
+
         sceneConfig[id] = {
           aspect_ratios: formats,
           aspect_ratio: formats[0],
@@ -429,10 +462,19 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           mapped_settings: mappedSettings,
           random_models: !!randomModels[id],
           random_scenes: !!randomScenes[id],
+          // Per-workflow overrides
+          image_count: getWorkflowImageCount(id),
+          product_ids: wfProductIdsArray.length < selectedProductIds.size ? wfProductIdsArray : undefined,
         };
       });
 
       const cleanPrompts = freestylePrompts.filter(p => p.trim().length > 0);
+
+      // Compute max image count for backward compat
+      const maxImageCount = Math.max(
+        ...Array.from(selectedWorkflowIds).map(id => getWorkflowImageCount(id)),
+        25
+      );
 
       const payload = {
         name,
@@ -448,7 +490,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           )
         )),
         brand_profile_id: brandProfileId || null,
-        images_per_drop: imagesPerDrop,
+        images_per_drop: maxImageCount, // backward compat
         estimated_credits: costEstimate.totalCredits,
         active: true,
         start_date: effectiveStartDate.toISOString(),
@@ -917,6 +959,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             const isRandomModels = !!randomModels[wf.id];
             const isRandomScenes = !!randomScenes[wf.id];
             const currentFormats = getWorkflowFormats(wf.id);
+            const wfImageCount = getWorkflowImageCount(wf.id);
+            const wfProducts = getWorkflowProducts(wf.id);
+            const isAllProducts = wfProducts.size === selectedProductIds.size || !workflowProductIds[wf.id]?.size;
 
             return (
               <div className="space-y-8 animate-fade-in" key={wf.id}>
@@ -931,10 +976,121 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   </div>
                 </div>
 
-                {/* Guidance text + images-per-workflow chip */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm text-muted-foreground">Pick scenes, models & formats for this workflow.</p>
-                  <Badge variant="outline" className="text-[10px] rounded-full">{imagesPerDrop} images/workflow</Badge>
+                {/* Guidance text */}
+                <p className="text-sm text-muted-foreground">Pick scenes, models & formats for this workflow.</p>
+
+                {/* ── Product Assignment (collapsible) ── */}
+                <Collapsible>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="section-label flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5" /> Products for This Workflow
+                      </p>
+                      <CollapsibleTrigger asChild>
+                        <button className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium">
+                          {isAllProducts ? `All ${selectedProductIds.size} products` : `${wfProducts.size} of ${selectedProductIds.size} products`}
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </CollapsibleTrigger>
+                    </div>
+                    <CollapsibleContent className="space-y-3 animate-fade-in">
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant={isAllProducts ? 'default' : 'outline'}
+                          size="sm"
+                          className="text-xs rounded-full h-8"
+                          onClick={() => {
+                            setWorkflowProductIds(prev => {
+                              const next = { ...prev };
+                              delete next[wf.id];
+                              return next;
+                            });
+                          }}
+                        >
+                          All Products
+                        </Button>
+                        {!isAllProducts && (
+                          <Badge variant="secondary" className="text-[10px] rounded-full">{wfProducts.size} selected</Badge>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+                        {products.filter(p => selectedProductIds.has(p.id)).map(product => {
+                          const isInWf = wfProducts.has(product.id);
+                          return (
+                            <button
+                              key={product.id}
+                              onClick={() => {
+                                setWorkflowProductIds(prev => {
+                                  const current = new Set(prev[wf.id] || selectedProductIds);
+                                  if (isInWf) {
+                                    current.delete(product.id);
+                                  } else {
+                                    current.add(product.id);
+                                  }
+                                  // If all selected, clear override
+                                  if (current.size === selectedProductIds.size) {
+                                    const next = { ...prev };
+                                    delete next[wf.id];
+                                    return next;
+                                  }
+                                  return { ...prev, [wf.id]: current };
+                                });
+                              }}
+                              className={cn(
+                                'relative rounded-lg border-2 p-1 transition-all',
+                                isInWf ? 'border-primary bg-primary/5' : 'border-border opacity-40 hover:opacity-70'
+                              )}
+                            >
+                              {isInWf && (
+                                <div className="absolute -top-1 -right-1 z-10 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                  <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                </div>
+                              )}
+                              <div className="aspect-square rounded overflow-hidden bg-muted">
+                                <img src={product.image_url} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                              </div>
+                              <p className="text-[9px] font-medium truncate mt-0.5 px-0.5">{product.title}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+
+                {/* ── Images for This Workflow ── */}
+                <div className="space-y-3">
+                  <p className="section-label">Images for This Workflow</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {IMAGE_PRESETS.map(n => (
+                      <Button
+                        key={n}
+                        variant={wfImageCount === n && !customImageCounts[wf.id] ? 'default' : 'outline'}
+                        onClick={() => {
+                          setImagesPerWorkflow(prev => ({ ...prev, [wf.id]: n }));
+                          setCustomImageCounts(prev => ({ ...prev, [wf.id]: '' }));
+                          markDirty();
+                        }}
+                        className="h-11 rounded-xl"
+                      >
+                        {n}
+                      </Button>
+                    ))}
+                  </div>
+                  <Input
+                    type="number"
+                    placeholder="Custom amount"
+                    value={customImageCounts[wf.id] || ''}
+                    onChange={e => {
+                      setCustomImageCounts(prev => ({ ...prev, [wf.id]: e.target.value }));
+                      const val = parseInt(e.target.value);
+                      if (val > 0) {
+                        setImagesPerWorkflow(prev => ({ ...prev, [wf.id]: val }));
+                        markDirty();
+                      }
+                    }}
+                    className="h-11 rounded-xl"
+                  />
                 </div>
 
                 {/* ── Formats ── */}
@@ -1134,7 +1290,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     <div className="flex items-center justify-between">
                       <p className="section-label">Models</p>
                       <Badge variant="secondary" className="text-[10px] rounded-full">
-                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected${wfModels.length > 0 ? ` · ~${Math.round(imagesPerDrop / wfModels.length)} img each` : ''}`}
+                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected${wfModels.length > 0 ? ` · ~${Math.round(wfImageCount / wfModels.length)} img each` : ''}`}
                       </Badge>
                     </div>
 
@@ -1193,7 +1349,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         </div>
                         {wfModels.length > 0 && (
                           <p className="text-xs text-muted-foreground">
-                            {imagesPerDrop} images distributed across {wfModels.length} model{wfModels.length !== 1 ? 's' : ''} (~{Math.round(imagesPerDrop / wfModels.length)} each)
+                            {wfImageCount} images distributed across {wfModels.length} model{wfModels.length !== 1 ? 's' : ''} (~{Math.round(wfImageCount / wfModels.length)} each)
                           </p>
                         )}
                       </>
@@ -1315,7 +1471,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 {/* ── Credit Summary for this workflow ── */}
                 {(() => {
                   const formatCount = Math.max(currentFormats.length, 1);
-                  const workflowImages = selectedProductIds.size * imagesPerDrop * formatCount;
+                  const workflowProductCount = wfProducts.size;
+                  const workflowImages = workflowProductCount * wfImageCount * formatCount;
                   const workflowCredits = workflowImages * 6;
                   return (
                     <Card className="p-4 bg-muted/30 border-dashed space-y-2">
@@ -1324,7 +1481,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         <p className="text-sm font-semibold">Credit Estimate</p>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} × {imagesPerDrop} image{imagesPerDrop !== 1 ? 's' : ''} × {formatCount} format{formatCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{workflowImages} images</span>
+                        {workflowProductCount} product{workflowProductCount !== 1 ? 's' : ''} × {wfImageCount} image{wfImageCount !== 1 ? 's' : ''} × {formatCount} format{formatCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{workflowImages} images</span>
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {workflowImages} × 6 credits = <span className="font-semibold text-foreground">{workflowCredits} credits</span>
@@ -1342,7 +1499,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             );
           })()}
 
-          {/* ─── Schedule & Volume ─── */}
+          {/* ─── Schedule & Delivery ─── */}
           {step === scheduleStepIndex && (
             <div className="space-y-8 animate-fade-in">
               <div className="space-y-3">
@@ -1436,32 +1593,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 </div>
               )}
 
-              <Separator />
-
-              <div className="space-y-3">
-                <p className="section-label">Images Per Workflow</p>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {IMAGE_PRESETS.map(n => (
-                      <Button key={n} variant={imagesPerDrop === n && !customImageCount ? 'default' : 'outline'} onClick={() => { setImagesPerDrop(n); setCustomImageCount(''); }} className="h-11 rounded-xl">
-                        {n}
-                      </Button>
-                    ))}
-                  </div>
-                  <Input
-                    type="number"
-                    placeholder="Custom amount"
-                    value={customImageCount}
-                    onChange={e => {
-                      setCustomImageCount(e.target.value);
-                      const val = parseInt(e.target.value);
-                      if (val > 0) setImagesPerDrop(val);
-                    }}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-              </div>
-
               <Card className="rounded-2xl border shadow-sm">
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-center gap-2">
@@ -1474,9 +1605,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         {costEstimate.breakdown.map(b => (
                           <div key={b.workflowId} className="flex justify-between text-xs">
                             <span className="text-muted-foreground">
-                              {b.workflowName}: {b.imageCount} × {b.costPerImage} cr{b.formatCount && b.formatCount > 1 ? ` × ${b.formatCount} formats` : ''}
+                              {b.workflowName}: {b.productCount ?? selectedProductIds.size} prod × {imagesPerWorkflow[b.workflowId] ?? 25} img{b.formatCount && b.formatCount > 1 ? ` × ${b.formatCount} fmt` : ''} × {b.costPerImage} cr
                             </span>
-                            <span className="font-medium">{b.subtotal} credits</span>
+                            <span className="font-medium">{b.subtotal}</span>
                           </div>
                         ))}
                       </div>
@@ -1563,8 +1694,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       )}
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Images Per Workflow</p>
-                      <p className="font-semibold">{imagesPerDrop} × {selectedWorkflowIds.size} workflows</p>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Workflows</p>
+                      <p className="font-semibold">{selectedWorkflowIds.size} workflows</p>
                     </div>
                   </div>
                   {includeFreestyle && freestylePrompts.filter(p => p.trim()).length > 0 && (
@@ -1613,6 +1744,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   const settingEntries = Object.entries(wfSettings);
                   const selectedSceneNames = randomScenes[wf.id] ? [] : Array.from(workflowSceneSelections[wf.id] || []);
                   const formats = getWorkflowFormats(wf.id);
+                  const wfImageCount = getWorkflowImageCount(wf.id);
+                  const wfProductCount = getWorkflowProducts(wf.id).size;
+                  const isSubset = workflowProductIds[wf.id]?.size > 0 && workflowProductIds[wf.id].size < selectedProductIds.size;
 
                   return (
                     <div key={wf.id} className="p-3 rounded-xl bg-card border space-y-2">
@@ -1624,11 +1758,16 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             <Badge key={f} variant="outline" className="text-xs rounded-full">{f}</Badge>
                           ))}
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {costEstimate.breakdown.find(b => b.workflowId === wf.id)?.imageCount ?? 0} imgs
-                        </span>
                       </div>
                       <div className="flex flex-wrap gap-1.5 pl-6">
+                        <Badge variant="secondary" className="text-[10px] rounded-full">
+                          {wfImageCount} img × {wfProductCount} prod
+                        </Badge>
+                        {isSubset && (
+                          <Badge variant="outline" className="text-[10px] rounded-full">
+                            {wfProductCount}/{selectedProductIds.size} products
+                          </Badge>
+                        )}
                         {variations.length > 0 && !wf.uses_tryon && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">
                             {randomScenes[wf.id] ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random scenes</> : <>{sceneCount}/{variations.length} scenes</>}

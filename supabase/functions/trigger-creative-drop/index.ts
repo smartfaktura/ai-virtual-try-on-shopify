@@ -173,23 +173,26 @@ serve(async (req) => {
       const aspectRatio = (wfSceneConfig.aspect_ratio || "1:1") as string;
       const mappedSettings = (wfSceneConfig.mapped_settings || {}) as Record<string, string>;
 
-      // Issue 5 fix: Use actual variation count, not imagesPerDrop
-      const actualImageCount = getVariationCount(wf, wfSceneConfig);
+      // Per-workflow image count override from scene_config, fallback to schedule-level
+      const perWfImageCount = (wfSceneConfig.image_count as number | undefined);
+      const actualImageCount = perWfImageCount ?? getVariationCount(wf, wfSceneConfig);
+
+      // Per-workflow product filtering from scene_config
+      const wfProductIdOverrides = (wfSceneConfig.product_ids as string[] | undefined);
+      const effectiveProductIds = (wfProductIdOverrides && wfProductIdOverrides.length > 0)
+        ? wfProductIdOverrides.filter(pid => productIds.includes(pid))
+        : productIds;
 
       // For model-based workflows, generate per-model; otherwise just once per product
       const modelList = models.length > 0 ? models : [null];
 
-      for (const productId of productIds) {
-        // Issue 3 fix: Resolve full product data
+      for (const productId of effectiveProductIds) {
         const productData = productMap.get(productId);
         if (!productData) {
           console.warn(`[trigger-creative-drop] Product ${productId} not found, skipping`);
           continue;
         }
 
-        // Build the full product object expected by generate-workflow
-        // Issue 4: Using public URL directly (product-uploads bucket is private,
-        // but the image_url stored in user_products is already a public/signed URL from upload flow)
         const productObject = {
           title: productData.title,
           productType: productData.product_type,
@@ -203,13 +206,12 @@ serve(async (req) => {
 
           const payload: Record<string, unknown> = {
             workflow_id: wfId,
-            product: productObject, // Issue 3: Full product object
-            imageCount: actualImageCount, // Issue 5: Actual variation count
+            product: productObject,
+            imageCount: actualImageCount,
             quality: "standard",
             aspectRatio,
             selected_variations: variationIndices.length > 0 ? variationIndices : undefined,
-            brand_profile: brandProfile, // Issue 2: Full brand profile object
-            // Issue 1: Theme injection
+            brand_profile: brandProfile,
             theme: schedule.theme || undefined,
             theme_notes: schedule.theme_notes || undefined,
             ...mappedSettings,
