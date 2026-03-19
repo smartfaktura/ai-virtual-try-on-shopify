@@ -23,19 +23,42 @@ import { cn } from '@/lib/utils';
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'saved', label: 'Saved' },
-  { id: 'cinematic', label: 'Cinematic' },
+  { id: 'editorial', label: 'Editorial' },
   { id: 'commercial', label: 'Commercial' },
-  { id: 'photography', label: 'Photography' },
-  { id: 'styling', label: 'Styling' },
-  { id: 'ads', label: 'Ads' },
   { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'campaign', label: 'Campaign' },
 ] as const;
 
+// Map old preset categories to new ones for backward compat
+const CATEGORY_ALIAS: Record<string, string> = {
+  cinematic: 'editorial',
+  photography: 'commercial',
+  styling: 'fashion',
+  ads: 'campaign',
+};
+
 const SCENE_CATEGORY_MAP: Record<string, string[]> = {
-  studio: ['commercial', 'photography'],
+  studio: ['commercial', 'editorial'],
   lifestyle: ['lifestyle'],
-  editorial: ['cinematic', 'photography'],
-  streetwear: ['styling', 'lifestyle'],
+  editorial: ['editorial'],
+  streetwear: ['fashion', 'lifestyle'],
+  fitness: ['lifestyle', 'campaign'],
+  athletic: ['lifestyle', 'campaign'],
+  gym: ['lifestyle', 'campaign'],
+  beauty: ['fashion', 'commercial'],
+  desert: ['lifestyle', 'editorial'],
+  outdoor: ['lifestyle', 'editorial'],
+  beach: ['lifestyle'],
+  garden: ['lifestyle'],
+  industrial: ['editorial', 'campaign'],
+  urban: ['fashion', 'lifestyle'],
+  rooftop: ['lifestyle', 'editorial'],
+  cafe: ['lifestyle'],
+  mirror: ['lifestyle', 'fashion'],
+  casual: ['lifestyle'],
+  cozy: ['lifestyle', 'fashion'],
+  professional: ['commercial'],
 };
 
 // Stop words for keyword extraction
@@ -75,26 +98,35 @@ function extractKeywords(text: string): string[] {
     .filter((w) => w.length > 3 && !STOP_WORDS.has(w));
 }
 
+function resolveCategory(cat: string): string {
+  return CATEGORY_ALIAS[cat] ?? cat;
+}
+
 function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   let score = 0;
-  const aCat = getItemCategory(a);
-  const bCat = getItemCategory(b);
+  const aCat = resolveCategory(getItemCategory(a));
+  const bCat = resolveCategory(getItemCategory(b));
   if (aCat === bCat) score += 2;
   if (a.type === b.type) score += 1;
 
   // Scene-to-scene bonus
   if (a.type === 'scene' && b.type === 'scene') score += 3;
 
-  // Tag overlap
+  // Tag overlap (weighted)
   const aTags = getItemTags(a);
   const bTags = getItemTags(b);
   for (const t of aTags) {
-    if (bTags.includes(t)) score += 1;
+    if (bTags.includes(t)) score += 1.5;
+  }
+
+  // Workflow slug match
+  if (a.type === 'preset' && b.type === 'preset') {
+    if (a.data.workflow_slug && a.data.workflow_slug === b.data.workflow_slug) score += 2;
   }
 
   // Cross-type category overlap via scene mapping
   if (a.type !== b.type) {
-    const sceneCat = a.type === 'scene' ? aCat : bCat;
+    const sceneCat = a.type === 'scene' ? getItemCategory(a) : getItemCategory(b);
     const presetCat = a.type === 'preset' ? aCat : bCat;
     const mapped = SCENE_CATEGORY_MAP[sceneCat] ?? [];
     if (mapped.includes(presetCat)) score += 2;
@@ -107,7 +139,7 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   for (const w of aWords) {
     if (bWords.has(w)) kwOverlap++;
   }
-  score += Math.min(kwOverlap * 0.5, 4); // cap at 4 to prevent domination
+  score += Math.min(kwOverlap * 0.5, 4);
 
   return score;
 }
@@ -288,7 +320,7 @@ export default function Discover() {
           const mappedCategories = SCENE_CATEGORY_MAP[sceneCat] ?? [];
           if (!mappedCategories.includes(selectedCategory)) return false;
         } else {
-          if (item.data.category !== selectedCategory) return false;
+          if (resolveCategory(item.data.category) !== selectedCategory) return false;
         }
       }
 

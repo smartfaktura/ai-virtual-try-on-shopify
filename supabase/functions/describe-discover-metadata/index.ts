@@ -13,7 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // Auth check — prevent unauthorized AI API usage
     const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -50,7 +49,16 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const systemPrompt = `You are a creative director for a fashion AI platform called VOVV.AI. Given an AI-generated image (and optionally the prompt used to create it), suggest metadata for publishing it to a public Discover feed. Be concise and catchy.`;
+    const systemPrompt = `You are a creative director for a fashion AI platform called VOVV.AI. Given an AI-generated image (and optionally the prompt used to create it), suggest metadata for publishing it to a public Discover feed.
+
+CATEGORY DEFINITIONS — pick the single best match:
+• editorial — Moody, artistic, dramatic lighting, film-like color grading, dark tones, cinematic compositions
+• commercial — Clean product photography, studio lighting, e-commerce ready, brand campaign shots, catalog-style
+• lifestyle — Natural settings, outdoor, casual, candid moments, everyday context, relatable
+• fashion — Fashion-forward, outfit-centric, styling focus, streetwear, model showcasing clothes/accessories
+• campaign — Social media ad style, bold compositions, eye-catching, promotional feel, marketing-ready
+
+Be concise and catchy.`;
 
     const userContent: any[] = [
       {
@@ -97,14 +105,14 @@ serve(async (req) => {
                     category: {
                       type: "string",
                       enum: [
-                        "cinematic",
+                        "editorial",
                         "commercial",
-                        "photography",
-                        "styling",
-                        "ads",
                         "lifestyle",
+                        "fashion",
+                        "campaign",
                       ],
-                      description: "The single best-matching category.",
+                      description:
+                        "The single best-matching category. editorial=moody/dramatic/cinematic, commercial=clean product/studio/e-commerce, lifestyle=natural/outdoor/casual, fashion=outfit-centric/styling/streetwear, campaign=ad-style/bold/promotional.",
                     },
                     tags: {
                       type: "array",
@@ -157,7 +165,6 @@ serve(async (req) => {
 
     const metadata = JSON.parse(toolCall.function.arguments);
 
-    // Enforce constraints
     if (metadata.title && metadata.title.length > 40) {
       metadata.title = metadata.title.slice(0, 40);
     }
