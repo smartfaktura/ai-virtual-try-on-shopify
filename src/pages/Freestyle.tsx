@@ -407,7 +407,7 @@ export default function Freestyle() {
     }
 
     let sceneImageUrl: string | undefined;
-    if (selectedScene) {
+    if (selectedScene && selectedScene.poseId !== 'scene_038') {
       sceneImageUrl = selectedScene.previewUrl;
     }
 
@@ -499,6 +499,7 @@ export default function Freestyle() {
       cameraStyle,
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
+      sceneId: selectedScene?.poseId || undefined,
     };
 
     // Enqueue via priority queue

@@ -1,46 +1,56 @@
 
+Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-## White Studio: Prompt-Only Mode (No Scene Image)
+What I found
+- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
+- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
+- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
+- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
+- Dashboard queries don’t present a clear recovery UI when core queries fail.
 
-### Problem
-Sending a scene image for "White Studio" can cause visual bleeding — the AI picks up unwanted elements from the reference photo. A plain white background is better described purely through prompt engineering.
+Implementation plan
+1) Harden route-gating so it cannot hang
+- File: `src/components/app/ProtectedRoute.tsx`
+- Replace current onboarding check with guarded async flow:
+  - reset `onboardingChecked` before request
+  - use `.maybeSingle()` (not `.single()`) for profile lookup
+  - handle network/query errors explicitly
+  - set `onboardingChecked` in `finally` so route never stays blocked
+  - keep onboarding redirect logic for valid `onboarding_completed === false`
 
-### Solution
-When White Studio (`scene_038`) is selected, **skip sending the scene image** and instead inject a strong prompt directive for a clean white background. This applies only to this specific scene.
+2) Harden auth bootstrap
+- File: `src/contexts/AuthContext.tsx`
+- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
+- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
 
-### Changes
+3) Harden credit bootstrap + noisy failure path
+- File: `src/contexts/CreditContext.tsx`
+- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
+- Keep defaults when profile is missing/unreachable.
+- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
 
-**1. `src/pages/Freestyle.tsx`** — Skip scene image for White Studio
-In the generation handler (~line 409-412), add a check: if `selectedScene.poseId === 'scene_038'`, don't set `sceneImageUrl`. The scene's `promptHint` will still be included in the auto-built prompt text.
+4) Add dashboard recovery UI for failed core queries
+- File: `src/pages/Dashboard.tsx`
+- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
+- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
 
-**2. `src/data/mockData.ts`** — Strengthen the White Studio `promptHint`
-Update `scene_038`'s `promptHint` to a much more explicit directive:
+5) Improve global query resilience
+- File: `src/App.tsx`
+- Update QueryClient defaults for flaky connections:
+  - `retry` + bounded `retryDelay`
+  - `refetchOnReconnect: true`
+  - keep current `refetchOnWindowFocus: false`
+- This reduces “one failed request = stuck state” cases.
 
-```
-"Pure clean white background, seamless white infinity backdrop, bright even studio lighting, no environment, no room, no walls visible, no props, no shadows except subtle product shadow, isolated product on solid white, e-commerce hero shot style"
-```
+Technical notes
+- No database schema changes needed.
+- This is a client resilience patch, not a business-logic change.
+- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
 
-**3. `supabase/functions/generate-freestyle/index.ts`** — Add scene-ID-based override
-Pass `sceneId` from the frontend payload. In the edge function, if `sceneId === 'scene_038'` and `sceneImage` is present, clear `sceneImage` and append the white-background directive to the prompt. This acts as a backend safety net.
-
-### Flow
-
-```text
-User selects White Studio
-  ↓
-Frontend: sets sceneImageUrl = undefined (no image sent)
-Frontend: auto-prompt includes strong white-bg directive from promptHint
-  ↓
-Backend: double-checks sceneId, ensures no scene image leaks through
-Backend: appends white background instruction to enriched prompt
-  ↓
-AI receives: product image + strong "white background only" text prompt
-Result: clean white background, no bleeding
-```
-
-### Why this works
-- White backgrounds are trivially described in text — no reference image needed
-- Eliminates all possible visual contamination from scene images
-- Other scenes continue using reference images as before
-- The White Studio thumbnail still shows in the UI for selection
-
+Validation checklist (end-to-end)
+1. Open `/app` with normal network: dashboard loads normally.
+2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
+3. Reconnect network: dashboard should recover via retry/reconnect.
+4. User with `onboarding_completed=false`: still redirects to onboarding.
+5. User with missing profile row: app should still load safely (no deadlock).
+6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
