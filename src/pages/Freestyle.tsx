@@ -820,13 +820,12 @@ export default function Freestyle() {
 
       {savedImages.length > 0 && lightboxOpen && savedImages[lightboxIndex] && (() => {
         const img = savedImages[lightboxIndex];
-        const displayPrompt = img.userPrompt || img.prompt;
         const libraryItem: LibraryItem = {
           id: img.id,
           imageUrl: img.url,
           source: 'freestyle',
-          label: displayPrompt || 'Freestyle',
-          prompt: displayPrompt,
+          label: 'Freestyle',
+          prompt: img.userPrompt || undefined,
           date: '',
           createdAt: '',
           aspectRatio: img.aspectRatio || '1:1',

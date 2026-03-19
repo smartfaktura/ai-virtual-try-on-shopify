@@ -39,7 +39,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         // Build freestyle query
         let fsQuery = supabase
           .from('freestyle_generations')
-          .select('id, image_url, prompt, aspect_ratio, quality, created_at, workflow_label')
+          .select('id, image_url, prompt, user_prompt, aspect_ratio, quality, created_at, workflow_label')
           .order('created_at', { ascending })
           .limit(FS_FETCH_LIMIT);
 
@@ -110,6 +110,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           if (!f.image_url || f.image_url.startsWith('data:') || f.image_url === 'saved_to_storage') continue;
           const wfLabel = (f as any).workflow_label as string | null;
           const displayLabel = wfLabel || 'Freestyle';
+          const userPrompt = (f as any).user_prompt as string | null;
           if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
 
           rawItems.push({
@@ -120,7 +121,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
               id: f.id,
               source: wfLabel ? 'generation' : 'freestyle',
               label: displayLabel,
-              prompt: wfLabel ? undefined : f.prompt,
+              prompt: userPrompt || undefined,
               date: new Date(f.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
               createdAt: f.created_at,
               status: 'completed',
