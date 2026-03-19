@@ -1,40 +1,30 @@
 
 
-# Remove Auto-Preselected Aspect Ratio + Add Validation
+# Optimize Workflow Animation Background Images
 
 ## Problem
-Perspectives page auto-selects "1:1" on load (`new Set(['1:1'])`). User wants no preselection and proper error handling when none are selected.
+The workflow card animations load full-size, unoptimized background images. Three out of four animation modes skip `getOptimizedUrl` on their backgrounds, causing unnecessarily large downloads and slow loading on the Workflows page.
 
-## Changes — `src/pages/Perspectives.tsx`
+| Mode | Background optimized? |
+|---|---|
+| Recipe (default) | No — line 654 uses raw `bgSrc` |
+| Carousel (UGC, Perspectives) | No — line 188 uses raw `backgrounds[current]` |
+| Upscale | No — line 279 uses raw `bgSrc` |
+| Staging | Yes — already optimized (lines 422-425) |
 
-### 1. Initialize with empty set (line 86)
-```
-new Set(['1:1']) → new Set()
-```
+These are thumbnail-sized previews inside cards (~45% of card width), so they only need ~500px wide images at quality 60, not the full 2K originals.
 
-### 2. Allow deselecting all ratios (lines 352-357)
-Remove the `next.size > 1` guard so users can deselect the last ratio:
-```typescript
-const toggleRatio = (ratio: string) => {
-  const next = new Set(selectedRatios);
-  if (next.has(ratio)) next.delete(ratio);
-  else next.add(ratio);
-  setSelectedRatios(next);
-};
-```
+## Changes — `src/components/app/WorkflowAnimatedThumbnail.tsx`
 
-### 3. Add validation toast on generate (line 425-426)
-Before the existing `if (!canGenerate) return`, add specific error messages:
-```typescript
-if (selectedRatios.size === 0) {
-  toast.error('Please select at least one aspect ratio.');
-  return;
-}
-if (selectedVariations.size === 0) {
-  toast.error('Please select at least one perspective angle.');
-  return;
-}
-```
+### 1. CarouselThumbnail — optimize background URLs
+Add a `useMemo` to map all `backgrounds` through `getOptimizedUrl({ width: 600, quality: 60 })`, then use the optimized array for rendering.
 
-`canGenerate` already checks `selectedRatios.size > 0`, so the button stays disabled — the toast is a safety net if somehow triggered.
+### 2. Recipe mode (main component) — optimize bgSrc
+Wrap `bgSrc` with `getOptimizedUrl({ width: 600, quality: 60 })` before passing to the `<img>`.
+
+### 3. UpscaleThumbnail — optimize background
+The upscale demo uses the same image for both blur and sharp layers. Optimize it with `getOptimizedUrl({ width: 600, quality: 60 })`. The "blur vs sharp" visual effect is CSS-only (blur filter), so a smaller source image works fine.
+
+### Summary
+Single file change. Add `getOptimizedUrl` calls to three locations that currently serve raw full-size images as card thumbnails. This should dramatically reduce initial payload on the Workflows page.
 
