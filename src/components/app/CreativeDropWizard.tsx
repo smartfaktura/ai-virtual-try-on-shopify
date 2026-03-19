@@ -1336,6 +1336,17 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   )}
                 </div>
               )}
+              {/* Credit renewal info */}
+              {deliveryMode === 'scheduled' && profile?.credits_renewed_at && profile.plan !== 'free' && (
+                <div className="flex items-start gap-2 text-xs bg-muted/50 rounded-xl px-4 py-3">
+                  <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-primary" />
+                  <p className="text-muted-foreground">
+                    Your credits renew on <span className="font-medium text-foreground">{format(new Date(profile.credits_renewed_at), 'MMM d, yyyy')}</span>. 
+                    Schedule your drop after this date to use fresh credits.
+                    <span className="block mt-0.5">Current balance: <span className="font-medium text-foreground">{profile.credits_balance} credits</span></span>
+                  </p>
+                </div>
+              )}
 
               <Separator />
 
