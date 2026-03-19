@@ -237,11 +237,14 @@ export function FreestyleSettingsChips({
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="flex items-center gap-2 flex-wrap">
               {uploadButton}
-              <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+              <div className={cn(
+                highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
+                disabledChips?.product && 'opacity-40 pointer-events-none'
+              )}>
                 <ProductSelectorChip
                   selectedProduct={selectedProduct}
-                  open={productPopoverOpen}
-                  onOpenChange={onProductPopoverChange}
+                  open={disabledChips?.product ? false : productPopoverOpen}
+                  onOpenChange={disabledChips?.product ? () => {} : onProductPopoverChange}
                   onSelect={onProductSelect}
                   products={products}
                   isLoading={isLoadingProducts}
