@@ -984,7 +984,21 @@ serve(async (req) => {
       polished: body.polishPrompt,
       isPerspective,
       isQueueInternal,
+      jobId: body.job_id || null,
     });
+
+    // Extend timeout_at for queue jobs — 5 min default is too tight for cold boot + 429 + fallback
+    if (isQueueInternal && body.job_id) {
+      try {
+        const supabaseTimeout = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+        await supabaseTimeout.from('generation_queue')
+          .update({ timeout_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() })
+          .eq('id', body.job_id);
+        console.log(`[generate-freestyle] Extended timeout_at to 10min for job ${body.job_id}`);
+      } catch (e) {
+        console.warn(`[generate-freestyle] Failed to extend timeout_at:`, e);
+      }
+    }
 
     const images: string[] = [];
     const errors: string[] = [];
