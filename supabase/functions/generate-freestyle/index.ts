@@ -646,31 +646,25 @@ function buildContentArray(
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Product image (from selected product) — always labeled [PRODUCT IMAGE]
+  // Product image (from selected product)
   if (productImage) {
-    content.push({ type: "text", text: "[PRODUCT IMAGE]" });
+    content.push({ type: "text", text: "[PRODUCT REFERENCE]" });
     content.push({ type: "image_url", image_url: { url: productImage } });
   }
 
-  // Source/reference image (user-uploaded) — labeled based on whether product also exists
+  // Source/reference image (user-uploaded) — NEVER labeled as product
   if (sourceImage) {
-    if (productImage) {
-      // Both present: source is the reference/inspiration image
-      content.push({ type: "text", text: "[REFERENCE IMAGE]" });
-    } else {
-      // No product selected: source acts as the product image (backward compat)
-      content.push({ type: "text", text: "[PRODUCT IMAGE]" });
-    }
+    content.push({ type: "text", text: "[REFERENCE IMAGE]" });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
   if (modelImage) {
-    content.push({ type: "text", text: "[MODEL IMAGE]" });
+    content.push({ type: "text", text: "[MODEL REFERENCE]" });
     content.push({ type: "image_url", image_url: { url: optimizeImageForAI(modelImage) } });
   }
 
   if (sceneImage) {
-    content.push({ type: "text", text: "[SCENE IMAGE]" });
+    content.push({ type: "text", text: "[SCENE REFERENCE]" });
     content.push({ type: "image_url", image_url: { url: optimizeImageForAI(sceneImage) } });
   }
 
