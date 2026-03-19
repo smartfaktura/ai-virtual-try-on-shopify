@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { GuideStepKey } from './FreestyleGuide';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
+import { ImageRoleSelector, type ImageRole, type EditIntent } from './ImageRoleSelector';
 import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
