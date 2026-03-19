@@ -860,7 +860,7 @@ serve(async (req) => {
         // Fallback: if Pro model returned null (no image), try Flash model once
         if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
           console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
-          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0);
+          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
         }
 
         if (result && typeof result === "object" && "blocked" in result) {
