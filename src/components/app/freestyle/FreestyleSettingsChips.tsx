@@ -2,23 +2,16 @@ import React from 'react';
 import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Wand2,
-  Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
+  Smartphone, Camera, Lock, SlidersHorizontal,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-const avatarLuna = getLandingAssetUrl('team/avatar-luna.jpg');
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import { ProductSelectorChip } from './ProductSelectorChip';
-import { StylePresetChips, STYLE_PRESETS } from './StylePresetChips';
 import { BrandProfileChip } from './BrandProfileChip';
 import { NegativesChip } from './NegativesChip';
 import { FramingSelectorChip } from '@/components/app/FramingSelectorChip';
@@ -68,10 +61,6 @@ interface FreestyleSettingsChipsProps {
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
   quality: 'standard' | 'high';
   onQualityChange: (q: 'standard' | 'high') => void;
-  polishPrompt: boolean;
-  onPolishChange: (v: boolean) => void;
-  stylePresets: string[];
-  onStylePresetsChange: (ids: string[]) => void;
   selectedBrandProfile: BrandProfile | null;
   onBrandProfileSelect: (profile: BrandProfile | null) => void;
   brandProfilePopoverOpen: boolean;
@@ -100,9 +89,6 @@ export function FreestyleSettingsChips({
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
   quality, onQualityChange,
-  polishPrompt, onPolishChange,
-  
-  stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
@@ -115,15 +101,12 @@ export function FreestyleSettingsChips({
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
-  const [presetsPopoverOpen, setPresetsPopoverOpen] = React.useState(false);
   const [advancedOpen, setAdvancedOpen] = React.useState(false);
 
-  // Count active style settings for badge
+  // Count active advanced settings for badge
   const advancedActiveCount = [
     selectedBrandProfile !== null,
     negatives.length > 0,
-    !polishPrompt, // non-default
-    stylePresets.length > 0,
   ].filter(Boolean).length;
 
   // --- Shared chip renderers ---
@@ -243,74 +226,6 @@ export function FreestyleSettingsChips({
     </Popover>
   );
 
-  const polishChip = (
-    <HoverCard openDelay={200} closeDelay={100}>
-      <HoverCardTrigger asChild>
-        <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 cursor-default">
-          <Wand2 className="w-3.5 h-3.5" />
-          Polish
-          <Switch
-            checked={polishPrompt}
-            onCheckedChange={onPolishChange}
-            className="scale-75 -my-1"
-          />
-        </div>
-      </HoverCardTrigger>
-      <HoverCardContent side="top" align="center" className="w-72 p-4">
-        <div className="flex items-start gap-3">
-          <Avatar className="w-12 h-12 flex-shrink-0 ring-2 ring-primary/20">
-            <AvatarImage src={avatarLuna} alt="Luna" />
-            <AvatarFallback className="text-sm">L</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold">Luna</p>
-            <p className="text-xs text-primary font-medium">Retouch Specialist</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Refines your prompt with professional photography lighting, composition, and mood techniques for studio-quality results.
-            </p>
-          </div>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
-  );
-
-  const presetsChip = (
-    <Popover open={presetsPopoverOpen} onOpenChange={setPresetsPopoverOpen}>
-      <PopoverTrigger asChild>
-        <button className={cn(
-          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-          stylePresets.length > 0
-            ? 'border-primary/30 bg-primary/10 text-primary'
-            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-        )}>
-          <Sparkles className="w-3.5 h-3.5" />
-          Presets{stylePresets.length > 0 ? ` (${stylePresets.length})` : ''}
-          <ChevronDown className="w-3 h-3 opacity-40" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-48 p-1.5" align="start">
-        {STYLE_PRESETS.map(preset => (
-          <button
-            key={preset.id}
-            onClick={() => {
-              const next = stylePresets.includes(preset.id)
-                ? stylePresets.filter(s => s !== preset.id)
-                : [...stylePresets, preset.id];
-              onStylePresetsChange(next);
-            }}
-            className={cn(
-              'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between',
-              stylePresets.includes(preset.id) ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-            )}
-          >
-            {preset.label}
-            {stylePresets.includes(preset.id) && <span className="text-primary">✓</span>}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-
   // --- Mobile: inline flow layout ---
   if (isMobile) {
     return (
@@ -394,8 +309,6 @@ export function FreestyleSettingsChips({
                   open={negativesPopoverOpen}
                   onOpenChange={onNegativesPopoverChange}
                 />
-                {polishChip}
-                {presetsChip}
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -465,7 +378,6 @@ export function FreestyleSettingsChips({
           open={negativesPopoverOpen}
           onOpenChange={onNegativesPopoverChange}
         />
-        {presetsChip}
 
         {/* Divider */}
         <div className="h-5 w-px bg-border/60 mx-1" />
@@ -474,7 +386,6 @@ export function FreestyleSettingsChips({
         {aspectRatioChip}
         {qualityChip}
         {cameraStyleChip}
-        {polishChip}
 
       </div>
     </TooltipProvider>
