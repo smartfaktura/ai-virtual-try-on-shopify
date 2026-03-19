@@ -1,56 +1,51 @@
 
-Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-What I found
-- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
-- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
-- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
-- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
-- Dashboard queries don’t present a clear recovery UI when core queries fail.
+## Investigation: Why Selfie/UGC Set (3 images) Is Slow vs Perspectives (20 images)
 
-Implementation plan
-1) Harden route-gating so it cannot hang
-- File: `src/components/app/ProtectedRoute.tsx`
-- Replace current onboarding check with guarded async flow:
-  - reset `onboardingChecked` before request
-  - use `.maybeSingle()` (not `.single()`) for profile lookup
-  - handle network/query errors explicitly
-  - set `onboardingChecked` in `finally` so route never stays blocked
-  - keep onboarding redirect logic for valid `onboarding_completed === false`
+### Root Cause
 
-2) Harden auth bootstrap
-- File: `src/contexts/AuthContext.tsx`
-- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
-- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
+The two features use fundamentally different architectures:
 
-3) Harden credit bootstrap + noisy failure path
-- File: `src/contexts/CreditContext.tsx`
-- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
-- Keep defaults when profile is missing/unreachable.
-- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
+**Perspectives (fast, 20 images):** Each angle is enqueued as a **separate job** via `enqueue-generation` with `jobType: 'freestyle'`. Each job generates exactly 1 image in its own edge function invocation. 20 jobs run with natural parallelism through the queue system — multiple can be dispatched concurrently by `process-queue`.
 
-4) Add dashboard recovery UI for failed core queries
-- File: `src/pages/Dashboard.tsx`
-- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
-- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
+**Workflow / Selfie UGC Set (slow, 3 images):** All 3 images are generated **sequentially inside a single edge function call** (`generate-workflow`). Each image uses `google/gemini-3-pro-image-preview` (forced because `body.model?.imageUrl` is present) with a 150s per-image timeout + 2 retries. Worst case: 3 images × 150s = 450s, which far exceeds the ~150s platform runtime limit. Even in the happy path, if each image takes ~50s, that's 150s total — right at the edge.
 
-5) Improve global query resilience
-- File: `src/App.tsx`
-- Update QueryClient defaults for flaky connections:
-  - `retry` + bounded `retryDelay`
-  - `refetchOnReconnect: true`
-  - keep current `refetchOnWindowFocus: false`
-- This reduces “one failed request = stuck state” cases.
+Additionally, each generated image is a base64 blob that gets uploaded to storage inline, adding more time per image.
 
-Technical notes
-- No database schema changes needed.
-- This is a client resilience patch, not a business-logic change.
-- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
+### Fix: Split Workflow Jobs Into 1-Image-Per-Job (Like Perspectives)
 
-Validation checklist (end-to-end)
-1. Open `/app` with normal network: dashboard loads normally.
-2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
-3. Reconnect network: dashboard should recover via retry/reconnect.
-4. User with `onboarding_completed=false`: still redirects to onboarding.
-5. User with missing profile row: app should still load safely (no deadlock).
-6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
+Refactor `generate-workflow` so that when it receives a multi-image request, **each variation is enqueued as a separate queue job** — the same pattern Perspectives uses. This way:
+- Each image gets its own edge function invocation with a full runtime budget
+- Multiple images can generate in parallel via `process-queue`
+- No single function call needs to survive long enough for all images
+
+### Implementation
+
+**1. Change enqueue flow on the client side (`Generate.tsx` / `useGenerationBatch.ts`)**
+- When a workflow has N variations selected, enqueue N separate jobs (1 image each) instead of 1 job with N images
+- Each job payload includes a single `selected_variations: [i]` entry
+- Use `batch_id` to group them for the UI (same pattern as Perspectives)
+
+**2. Simplify `generate-workflow/index.ts`**
+- Remove the sequential loop over multiple variations (it will only ever process 1 variation per invocation)
+- Keep the wall-clock guard as a safety net but it should rarely trigger now
+- Remove `maxImages` slicing since each job is 1 image
+
+**3. Update progress/polling**
+- The existing `MultiProductProgressBanner` and queue polling already handle multiple jobs per batch
+- Credit calculation stays the same (N credits for N jobs)
+
+**4. Keep backward compatibility**
+- If `selected_variations` has multiple entries (legacy), still process them sequentially with the existing loop
+- New enqueue path always sends 1 variation per job
+
+### Files Changed
+- `src/pages/Generate.tsx` — split workflow enqueue into per-variation jobs
+- `src/hooks/useGenerationBatch.ts` — ensure batch splitting works for workflow type
+- `supabase/functions/generate-workflow/index.ts` — minor cleanup, no functional changes needed since it already handles `selected_variations` of any size
+
+### Impact
+- 3-image Selfie/UGC Set will complete in ~50s (parallel) instead of ~150s+ (sequential)
+- Eliminates timeout risk for workflow generation entirely
+- Same architecture as Perspectives, which already proves this pattern works at 20 images
+
