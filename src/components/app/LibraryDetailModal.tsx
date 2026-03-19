@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -35,6 +35,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(false);
+  const [captionCopied, setCaptionCopied] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -285,14 +286,33 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               </div>
 
               {/* Social tag promo */}
-              <div className="rounded-xl border border-border/40 bg-muted/30 p-5 space-y-2">
+              <div className="rounded-xl border border-border/40 bg-muted/30 p-5 space-y-3">
                 <div className="flex items-center gap-2.5">
                   <AtSign className="w-5 h-5 text-muted-foreground/70" />
                   <h3 className="text-base font-semibold text-foreground">Tag Us, Win a Free Year</h3>
                 </div>
                 <p className="text-sm text-muted-foreground/80 leading-relaxed">
-                  Post your creation on social media with <span className="font-medium text-foreground">@vovv.ai</span> and <span className="font-medium text-foreground">#vovvai</span> — we pick winners every month for a full year of free access.
+                  Post your creation on social media with{' '}
+                  <a href="https://www.instagram.com/vovv.ai" target="_blank" rel="noopener noreferrer"
+                     className="font-medium text-foreground underline underline-offset-2 hover:text-primary transition-colors">
+                    @vovv.ai
+                  </a>{' '}
+                  and <span className="font-medium text-foreground">#vovvai</span> — we pick winners every month for a full year of free access.
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-lg text-xs font-medium gap-1.5"
+                  onClick={() => {
+                    navigator.clipboard.writeText('Created with @vovv.ai #vovvai');
+                    setCaptionCopied(true);
+                    setTimeout(() => setCaptionCopied(false), 2000);
+                    toast.success('Caption copied!');
+                  }}
+                >
+                  {captionCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {captionCopied ? 'Copied!' : 'Copy Caption'}
+                </Button>
               </div>
 
               {/* Admin actions */}
