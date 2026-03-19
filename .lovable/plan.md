@@ -1,29 +1,43 @@
 
 
-# Workflow Image Quality Investigation
+# Fix Slow Loading in Recent Creations Gallery
 
-## Findings
+## Problem
+The `RecentCreationsGallery` component calls `toSignedUrl()` **sequentially inside loops** (lines 96 and 130). Each call is an individual network request to create a signed URL. With 5 jobs × multiple result images + 5 freestyle images, this creates a waterfall of 10-20+ sequential API calls before any image can render.
 
-After tracing the full generation pipeline for "Product Listing Set," here's what I found:
+Additionally, no `width` parameter is passed to `getOptimizedUrl` — only `quality: 60` — so the browser still downloads near-full-size images for 180px-wide thumbnails.
 
-### What's working correctly
-- Your "high" quality selection IS reaching the edge function (confirmed in logs: `using google/gemini-3-pro-image-preview`)
-- The image config already requests `image_size: '2K'` and `output_format: 'png'`
-- The raw image bytes are uploaded to storage without any re-compression
+## Root Cause
+```
+// Current: sequential await inside for-loop
+for (const job of jobs) {
+  for (const r of results) {
+    const signedUrl = await toSignedUrl(url);  // ← blocks next iteration
+  }
+}
+```
 
-### Why the file size differs (500KB workflow vs 5MB try-on)
-PNG compression is lossless and content-dependent. A product on a clean/simple background has large uniform color areas that PNG compresses extremely well (~500KB). A try-on image with a full person, clothing textures, and detailed background has far more visual data (~5MB). Both are 2K resolution — the file size difference is purely about image complexity, not quality reduction.
+The batch helper `toSignedUrls()` already exists and groups URLs by bucket into a single API call per bucket, but it's not being used here.
 
-### One actual issue found
-The "Product Listing Set" workflow has `fixed_settings.quality: "standard"` in its database config. When the workflow loads, this resets your quality selector to "standard" (line 533-536 in Generate.tsx). If you changed it back to "high" manually before generating, it worked correctly (as logs confirm). But this auto-reset could be confusing.
+## Changes — `src/components/app/RecentCreationsGallery.tsx`
 
-## Proposed Fix
+### 1. Collect all URLs first, then batch-sign
+Restructure `queryFn` to:
+1. Build the items array with raw URLs (no signing)
+2. Collect all URLs into a flat array
+3. Call `toSignedUrls(allUrls)` once at the end
+4. Map signed URLs back onto items
 
-### `src/pages/Generate.tsx` — Don't override quality to "standard" when workflow has it as default
-Remove the auto-set of quality from workflow fixed_settings, or only apply it when quality hasn't been explicitly set by the user. This way the user's quality choice is always respected.
+This replaces 10-20 sequential network calls with 1-2 batch calls (one per private bucket).
 
-Alternatively, we can simply **remove the `quality: "standard"` from the Product Listing Set workflow's fixed_settings** in the database, so it stops resetting the selector.
+### 2. Add `width: 400` to `getOptimizedUrl`
+On line 273, add a width parameter for the thumbnail render:
+```
+getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })
+```
+Cards are 180px CSS but ~360px on retina — 400px is sufficient.
 
-### No backend changes needed
-The generation pipeline correctly handles quality — the pro model is used for "high", and 2K + PNG output is already configured. The ~500KB file size for a product listing PNG at 2K is normal and expected.
+## Expected Impact
+- **Network calls**: ~15 sequential → 1-2 batch (major latency reduction)
+- **Image payload**: ~60-80% smaller per thumbnail with width constraint
 
