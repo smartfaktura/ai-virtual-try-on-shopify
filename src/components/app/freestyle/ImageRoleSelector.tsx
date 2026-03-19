@@ -13,7 +13,7 @@ const ROLE_OPTIONS: { value: ImageRole; label: string; description: string; icon
 ];
 
 const EDIT_INTENT_OPTIONS: { value: EditIntent; label: string }[] = [
-  { value: 'replace_product', label: 'Replace product' },
+  { value: 'replace_product', label: 'Replace/edit product' },
   { value: 'change_background', label: 'Change background' },
   { value: 'change_model', label: 'Change model' },
   { value: 'enhance', label: 'Improve quality' },
