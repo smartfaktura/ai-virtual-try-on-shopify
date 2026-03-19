@@ -16,7 +16,6 @@ import type { BlockedEntry, FailedEntry } from '@/components/app/freestyle/Frees
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
 import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
-import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 
@@ -58,17 +57,14 @@ export default function Freestyle() {
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
-  const [polishPrompt, setPolishPrompt] = useState(true);
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
-  // productSourced removed — product and reference image are now independent
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [shareImageIndex] = useState<number | null>(null); // kept for type compat
-  const [stylePresets, setStylePresets] = useState<string[]>([]);
+  const [shareImageIndex] = useState<number | null>(null);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
   const [negatives, setNegatives] = useState<string[]>([]);
@@ -110,15 +106,13 @@ export default function Freestyle() {
     setSelectedProduct(null);
     setAspectRatio('1:1');
     setQuality('standard');
-    setPolishPrompt(true);
-    setStylePresets([]);
     setNegatives([]);
     setCameraStyle('pro');
     setFraming(null);
     setSelectedBrandProfile(null);
   }, []);
 
-  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || !polishPrompt || stylePresets.length > 0 || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null;
+  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null;
 
   const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
 
@@ -181,13 +175,12 @@ export default function Freestyle() {
       const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
       if (matchedScene) {
         setSelectedScene(matchedScene);
-        initialSceneParam.current = null; // consumed
+        initialSceneParam.current = null;
         if (!localStorage.getItem('hideSceneAppliedHint')) {
           setShowSceneHint(true);
         }
       }
     }
-    // Clean URL params after reading
     if (p || r || q || sceneParam) {
       setSearchParams({}, { replace: true });
     }
@@ -219,11 +212,7 @@ export default function Freestyle() {
     if (!isProcessing) return;
     const interval = setInterval(async () => {
       await refreshImages();
-      // Check after refresh — if new images appeared, the queue likely completed
-      // We use a small delay to let React state settle
-      setTimeout(() => {
-        // Re-read from ref since state may not be updated yet in this closure
-      }, 500);
+      setTimeout(() => {}, 500);
     }, 30_000);
     return () => clearInterval(interval);
   }, [isProcessing, refreshImages]);
@@ -332,7 +321,6 @@ export default function Freestyle() {
     }
     setSelectedProduct(product);
 
-    // Auto-detect framing based on product type
     const { detectDefaultFraming } = await import('@/lib/framingUtils');
     const detected = detectDefaultFraming(product.product_type, product.tags || []);
     if (detected) setFraming(detected);
@@ -341,10 +329,8 @@ export default function Freestyle() {
   // Helper: upload a base64 image to generation-inputs bucket, return storage path URL
   const uploadImageToStorage = useCallback(async (base64Data: string, prefix: string): Promise<string> => {
     if (!user) throw new Error('Not authenticated');
-    // If it's already a URL (not base64), return as-is
     if (!base64Data.startsWith('data:')) return base64Data;
 
-    // Convert base64 to blob using non-blocking browser-native fetch
     const response = await fetch(base64Data);
     const blob = await response.blob();
 
@@ -357,7 +343,6 @@ export default function Freestyle() {
 
     if (error) throw new Error(`Upload failed: ${error.message}`);
 
-    // Use signed URL since bucket is now private
     const { data: signedData, error: signError } = await supabase.storage
       .from('generation-inputs')
       .createSignedUrl(data.path, 3600);
@@ -375,9 +360,6 @@ export default function Freestyle() {
     setIsUploading(true);
     try {
 
-    // Upload images to storage instead of embedding base64 in payload
-    // sourceImage = user-uploaded reference image (independent)
-    // productImage = selected product's image (independent)
     let sourceImageUrl: string | undefined;
     if (sourceImage) {
       try {
@@ -397,7 +379,6 @@ export default function Freestyle() {
           : selectedProduct.image_url;
       } catch (err) {
         console.error('Failed to upload product image:', err);
-        // Non-fatal — continue without product image
       }
     }
 
@@ -416,7 +397,6 @@ export default function Freestyle() {
     if (!basePrompt) {
       const parts: string[] = [];
 
-      // Product context
       if (selectedProduct) {
         parts.push(`High-end product photography of "${selectedProduct.title}"`);
         if (selectedProduct.product_type) parts.push(`(${selectedProduct.product_type})`);
@@ -424,7 +404,6 @@ export default function Freestyle() {
         parts.push("Create a new professional product photograph featuring the item shown in the reference image. Use a fresh angle, creative composition, and professional lighting");
       }
 
-      // Model context
       if (selectedModel) {
         const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
           .filter(Boolean).join(', ');
@@ -436,18 +415,15 @@ export default function Freestyle() {
         }
       }
 
-      // Scene context
       if (selectedScene) {
         parts.push(`set in a ${selectedScene.name} environment`);
         if (selectedScene.promptHint) parts.push(`— ${selectedScene.promptHint}`);
       }
 
-      // Brand tone hint
       if (selectedBrandProfile?.tone) {
         parts.push(`with a ${selectedBrandProfile.tone} visual tone`);
       }
 
-      // Fallback
       if (parts.length === 0) {
         parts.push("Professional commercial photography");
       }
@@ -455,20 +431,12 @@ export default function Freestyle() {
       basePrompt = parts.join(' ');
     }
 
-    // Scene instructions are handled by polishUserPrompt in the backend
-    // No need to duplicate them here — avoids conflicting scene directives
     const finalPrompt = basePrompt;
 
-    // Build model text context
     let modelContext: string | undefined;
     if (selectedModel) {
       modelContext = `${selectedModel.gender}, ${selectedModel.bodyType} build, ${selectedModel.ethnicity}`;
     }
-
-    // Gather active style preset keywords
-    const activePresetKeywords = stylePresets
-      .map(id => STYLE_PRESETS.find(p => p.id === id)?.keywords)
-      .filter(Boolean) as string[];
 
     // Build brand profile context for the edge function
     const brandContext = selectedBrandProfile ? {
@@ -491,9 +459,8 @@ export default function Freestyle() {
       aspectRatio,
       imageCount: 1,
       quality,
-      polishPrompt,
+      polishPrompt: true, // Always polish — toggle removed from UI
       modelContext,
-      stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
       brandProfile: brandContext,
       negatives: negatives.length > 0 ? negatives : undefined,
       cameraStyle,
@@ -517,13 +484,12 @@ export default function Freestyle() {
     });
 
     if (enqueueResult) {
-      // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, setBalanceFromServer, saveImages, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -554,7 +520,6 @@ export default function Freestyle() {
         resetQueueRef.current();
         toast('Credits refunded', { description: 'Your prompt was flagged — credits have been returned to your balance.' });
       } else {
-        // Delay to ensure DB write has propagated, then refetch
         setTimeout(() => {
           refreshImagesRef.current();
           refreshBalanceRef.current();
@@ -564,7 +529,7 @@ export default function Freestyle() {
     }
 
     if (activeJob.status === 'failed' && prevStatus !== 'failed') {
-      refreshBalanceRef.current(); // Credits were refunded server-side
+      refreshBalanceRef.current();
       resetQueueRef.current();
     }
   }, [activeJob]);
@@ -584,7 +549,6 @@ export default function Freestyle() {
       document.body.removeChild(a);
       URL.revokeObjectURL(objectUrl);
     } catch {
-      // Fallback: open in new tab
       window.open(imageUrl, '_blank');
     }
   }, []);
@@ -660,10 +624,6 @@ export default function Freestyle() {
     onAspectRatioChange: setAspectRatio,
     quality,
     onQualityChange: setQuality,
-    polishPrompt,
-    onPolishChange: setPolishPrompt,
-    stylePresets,
-    onStylePresetsChange: setStylePresets,
     selectedBrandProfile,
     onBrandProfileSelect: setSelectedBrandProfile,
     brandProfilePopoverOpen,
@@ -691,7 +651,6 @@ export default function Freestyle() {
   return (
     <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-24 lg:-mt-8 bg-muted/30 overflow-hidden flex flex-col lg:block" style={{ minHeight: '100%' }}>
       <SEOHead title="Freestyle Studio — VOVV AI" description="Create AI product photography with freestyle prompts." noindex />
-      {/* On lg+ the sidebar is beside content so we reclaim the full height */}
       <style>{`@media (min-width: 1024px) { .freestyle-root { height: 100dvh !important; margin-top: -2rem; } }`}</style>
       <style>{`@media (max-width: 1023px) { .freestyle-root { height: 100dvh !important; } }`}</style>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
@@ -835,27 +794,28 @@ export default function Freestyle() {
       {savedImages.length > 0 && lightboxOpen && savedImages[lightboxIndex] && (() => {
         const img = savedImages[lightboxIndex];
         const displayPrompt = img.userPrompt || img.prompt;
-        const lightboxItem: LibraryItem = {
+        const libraryItem: LibraryItem = {
           id: img.id,
-          imageUrl: img.url,
-          source: 'freestyle',
-          label: 'Freestyle',
-          prompt: displayPrompt?.startsWith('Generate a photorealistic') ? 'Perspectives generation' : displayPrompt,
-          date: new Date(img.createdAt).toLocaleDateString(),
-          createdAt: new Date(img.createdAt).toISOString(),
-          aspectRatio: img.aspectRatio,
-          quality: img.quality,
+          url: img.url,
+          prompt: displayPrompt,
+          aspectRatio: img.aspectRatio || '1:1',
+          quality: 'standard',
+          createdAt: '',
+          sourceType: 'freestyle',
         };
         return (
           <LibraryDetailModal
-            item={lightboxItem}
             open={lightboxOpen}
-            onClose={() => setLightboxOpen(false)}
+            onOpenChange={setLightboxOpen}
+            item={libraryItem}
+            onDownload={() => handleDownload(img.url, lightboxIndex)}
+            onDelete={() => handleDelete(img.id)}
+            onPrevious={lightboxIndex > 0 ? () => setLightboxIndex(i => i - 1) : undefined}
+            onNext={lightboxIndex < savedImages.length - 1 ? () => setLightboxIndex(i => i + 1) : undefined}
             isUpscaling={upscalingSourceIds.has(img.id)}
           />
         );
       })()}
-      
     </div>
   );
 }

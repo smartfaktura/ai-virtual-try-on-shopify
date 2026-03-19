@@ -41,10 +41,6 @@ interface FreestylePromptPanelProps {
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
   quality: 'standard' | 'high';
   onQualityChange: (q: 'standard' | 'high') => void;
-  polishPrompt: boolean;
-  onPolishChange: (v: boolean) => void;
-  stylePresets: string[];
-  onStylePresetsChange: (ids: string[]) => void;
   selectedBrandProfile: BrandProfile | null;
   onBrandProfileSelect: (profile: BrandProfile | null) => void;
   brandProfilePopoverOpen: boolean;
@@ -84,9 +80,6 @@ export function FreestylePromptPanel({
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
   quality, onQualityChange,
-  polishPrompt, onPolishChange,
-  
-  stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
@@ -281,8 +274,6 @@ export function FreestylePromptPanel({
               scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
               aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
               quality={quality} onQualityChange={onQualityChange}
-              polishPrompt={polishPrompt} onPolishChange={onPolishChange}
-              stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
               selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
               brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
               brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
