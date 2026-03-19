@@ -848,6 +848,12 @@ serve(async (req) => {
       );
     }
 
+    // Safety guard: skip scene images that aren't publicly accessible https:// URLs
+    if (body.sceneImage && !body.sceneImage.startsWith('https://')) {
+      console.warn(`[FREESTYLE] Invalid scene URL skipped (not https): ${body.sceneImage}`);
+      body.sceneImage = undefined;
+    }
+
     // Queue-mode optimizations: cap to 1 image, reduce retries
     const maxRetries = isQueueInternal ? 1 : 2;
     const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
