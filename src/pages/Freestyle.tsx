@@ -113,9 +113,11 @@ export default function Freestyle() {
     setCameraStyle('pro');
     setFraming(null);
     setSelectedBrandProfile(null);
+    setImageRole('edit');
+    setEditIntent([]);
   }, []);
 
-  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null;
+  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null || imageRole !== 'edit' || editIntent.length > 0;
 
   const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
 
