@@ -889,60 +889,64 @@ export default function Generate() {
           needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
         ]);
 
-        const payload: Record<string, unknown> = {
-          workflow_id: activeWorkflow!.id,
-          workflow_name: activeWorkflow!.name,
-          workflow_slug: activeWorkflow!.slug,
-          product: { ...productData, imageUrl: base64Image },
-          product_name: product.title,
-          brand_profile: selectedBrandProfile ? {
-            tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
-            lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
-            brand_keywords: selectedBrandProfile.brand_keywords, color_palette: selectedBrandProfile.color_palette,
-            target_audience: selectedBrandProfile.target_audience, do_not_rules: selectedBrandProfile.do_not_rules,
-            composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
-            photography_reference: selectedBrandProfile.photography_reference,
-          } : undefined,
-          selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
-          product_angles: productAngle !== 'front' ? productAngle : undefined,
-          quality, aspectRatio,
-          framing: framing || undefined,
-          ugc_mood: isSelfieUgc ? ugcMood : undefined,
-        };
-        if (needsModel && base64ModelImage) {
-          payload.model = {
-            name: selectedModel!.name, gender: selectedModel!.gender, ethnicity: selectedModel!.ethnicity,
-            bodyType: selectedModel!.bodyType, ageRange: selectedModel!.ageRange, imageUrl: base64ModelImage,
+        const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
+
+        for (const varIdx of variationIndices) {
+          const payload: Record<string, unknown> = {
+            workflow_id: activeWorkflow!.id,
+            workflow_name: activeWorkflow!.name,
+            workflow_slug: activeWorkflow!.slug,
+            product: { ...productData, imageUrl: base64Image },
+            product_name: product.title,
+            brand_profile: selectedBrandProfile ? {
+              tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
+              lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
+              brand_keywords: selectedBrandProfile.brand_keywords, color_palette: selectedBrandProfile.color_palette,
+              target_audience: selectedBrandProfile.target_audience, do_not_rules: selectedBrandProfile.do_not_rules,
+              composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
+              photography_reference: selectedBrandProfile.photography_reference,
+            } : undefined,
+            selected_variations: [varIdx],
+            product_angles: productAngle !== 'front' ? productAngle : undefined,
+            quality, aspectRatio,
+            framing: framing || undefined,
+            ugc_mood: isSelfieUgc ? ugcMood : undefined,
           };
-        }
+          if (needsModel && base64ModelImage) {
+            payload.model = {
+              name: selectedModel!.name, gender: selectedModel!.gender, ethnicity: selectedModel!.ethnicity,
+              bodyType: selectedModel!.bodyType, ageRange: selectedModel!.ageRange, imageUrl: base64ModelImage,
+            };
+          }
 
-        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            jobType: 'workflow',
-            payload,
-            imageCount: workflowImageCount,
-            quality,
-            additionalProductCount: 0,
-            hasModel: !!needsModel,
-            hasScene: false,
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          jobMap.set(product.id, result.jobId);
-          lastBalance = result.newBalance;
-          injectActiveJob(queryClient, {
-            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-            workflow_slug: activeWorkflow?.slug, product_name: product.title,
-            job_type: 'workflow', quality, imageCount: workflowImageCount,
+          const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              jobType: 'workflow',
+              payload,
+              imageCount: angleMultiplier,
+              quality,
+              additionalProductCount: 0,
+              hasModel: !!needsModel,
+              hasScene: false,
+            }),
           });
-        } else {
-          const err = await response.json().catch(() => ({}));
-          toast.error(err.error || `Failed to queue "${product.title}"`);
+
+          if (response.ok) {
+            const result = await response.json();
+            jobMap.set(`${product.id}_${varIdx}`, result.jobId);
+            lastBalance = result.newBalance;
+            injectActiveJob(queryClient, {
+              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+              workflow_slug: activeWorkflow?.slug, product_name: product.title,
+              job_type: 'workflow', quality, imageCount: angleMultiplier,
+            });
+          } else {
+            const err = await response.json().catch(() => ({}));
+            toast.error(err.error || `Failed to queue "${product.title}"`);
+          }
         }
       }
 
@@ -1055,8 +1059,8 @@ export default function Generate() {
       };
     }
 
-    // Decide: single job or batch
-    if (workflowImageCount <= MAX_IMAGES_PER_JOB) {
+    // Decide: single job or batch — always batch when multiple images for parallel processing
+    if (workflowImageCount <= 1) {
       // Single job — existing behavior
       const enqueueResult = await enqueue({
         jobType: 'workflow',
