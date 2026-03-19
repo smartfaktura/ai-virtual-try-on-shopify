@@ -79,6 +79,7 @@ interface FreestyleSettingsChipsProps {
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
+  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
 }
 
 export function FreestyleSettingsChips({
@@ -96,6 +97,7 @@ export function FreestyleSettingsChips({
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
   highlightedChip,
+  disabledChips,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
