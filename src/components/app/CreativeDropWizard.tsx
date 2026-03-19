@@ -181,6 +181,18 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [customImageCount, setCustomImageCount] = useState('');
 
   // Queries
+  const { data: profile } = useQuery({
+    queryKey: ['profile-renewal'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits_renewed_at, plan, credits_balance')
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: brandProfiles = [], isLoading: brandProfilesLoading } = useQuery({
     queryKey: ['brand-profiles'],
     queryFn: async () => {
