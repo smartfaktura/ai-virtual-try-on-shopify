@@ -912,12 +912,21 @@ serve(async (req) => {
     }> = [];
     const errors: string[] = [];
 
-    for (let i = 0; i < variationsToGenerate.length; i++) {
+    let wallClockBreak = false;
+
+    for (let i = 0; i < variationsToGenerate.length && !wallClockBreak; i++) {
       const variation = variationsToGenerate[i];
       const aspectRatio = (body as Record<string, unknown>).aspectRatio as string || getAspectRatioForVariation(config, variation);
 
       for (let a = 0; a < angleInstructions.length; a++) {
         const angle = angleInstructions[a];
+
+        // Wall-clock guard: break early if we're running out of time
+        if (Date.now() - FUNCTION_START > MAX_WALL_CLOCK_MS) {
+          console.warn(`[generate-workflow] Wall-clock limit approaching (${Math.round((Date.now() - FUNCTION_START) / 1000)}s), breaking after ${images.length}/${totalToGenerate} images`);
+          wallClockBreak = true;
+          break;
+        }
 
         try {
           // Build variation with angle instruction appended
