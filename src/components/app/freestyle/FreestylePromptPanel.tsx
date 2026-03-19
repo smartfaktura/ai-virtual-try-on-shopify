@@ -270,6 +270,21 @@ export function FreestylePromptPanel({
             )}
           </div>
 
+          {/* Image Role Selector (only when image is uploaded) */}
+          {sourceImagePreview && (
+            <>
+              <div className="border-t border-border/40 mx-4 sm:mx-5" />
+              <div className="px-4 sm:px-5 py-3">
+                <ImageRoleSelector
+                  imageRole={imageRole}
+                  onImageRoleChange={onImageRoleChange}
+                  editIntent={editIntent}
+                  onEditIntentChange={onEditIntentChange}
+                />
+              </div>
+            </>
+          )}
+
           {/* Divider */}
           <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
