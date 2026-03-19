@@ -1035,7 +1035,13 @@ serve(async (req) => {
               try {
                 const progressSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
                 await progressSupabase.from("generation_queue").update({
-                  result: { generatedCount: images.length, requestedCount: totalToGenerate, currentLabel: imageLabel },
+                  result: {
+                    generatedCount: images.length,
+                    requestedCount: totalToGenerate,
+                    currentLabel: imageLabel,
+                    // Persist images so cleanup_stale_jobs can recover partial results
+                    images: images.map((img) => img.url),
+                  },
                   timeout_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
                 }).eq("id", body.job_id);
               } catch (progressErr) {
