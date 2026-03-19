@@ -57,7 +57,7 @@ export default function Freestyle() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
-  // quality removed — always 'high'
+  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
