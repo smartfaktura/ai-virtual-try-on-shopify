@@ -687,7 +687,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                               </div>
                             )}
                             <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-1">
-                              <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                               <img src={product.image_url} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                             <p className="text-xs font-medium truncate px-0.5">{product.title}</p>
                           </button>
