@@ -264,11 +264,14 @@ export function FreestyleSettingsChips({
                   modal={isMobile}
                 />
               </div>
-              <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+              <div className={cn(
+                highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
+                disabledChips?.scene && 'opacity-40 pointer-events-none'
+              )}>
                 <SceneSelectorChip
                   selectedScene={selectedScene}
-                  open={scenePopoverOpen}
-                  onOpenChange={onScenePopoverChange}
+                  open={disabledChips?.scene ? false : scenePopoverOpen}
+                  onOpenChange={disabledChips?.scene ? () => {} : onScenePopoverChange}
                   onSelect={onSceneSelect}
                   modal={isMobile}
                 />
