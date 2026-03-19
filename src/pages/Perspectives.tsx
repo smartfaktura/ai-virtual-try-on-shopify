@@ -351,7 +351,7 @@ export default function Perspectives() {
 
   const toggleRatio = (ratio: string) => {
     const next = new Set(selectedRatios);
-    if (next.has(ratio) && next.size > 1) next.delete(ratio);
+    if (next.has(ratio)) next.delete(ratio);
     else next.add(ratio);
     setSelectedRatios(next);
   };
