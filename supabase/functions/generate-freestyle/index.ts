@@ -355,8 +355,8 @@ function polishUserPrompt(
         "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
       );
     }
-    // Product-only framing (no model involved)
-    if (!context.hasModel) {
+    // Product-only framing (no model involved) — suppressed when explicit framing is set
+    if (!context.hasModel && !framing) {
       layers.push(
         "FRAMING: Use a creative product photography angle — overhead, 45-degree, low-angle, or dramatic perspective. Professional composition with intentional negative space. Do NOT simply center the product straight-on like the reference."
       );
