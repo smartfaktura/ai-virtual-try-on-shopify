@@ -392,8 +392,12 @@ export default function Freestyle() {
       modelImageUrl = selectedModel.previewUrl;
     }
 
+    // If user uploaded image as scene, their upload takes priority over scene chip
     let sceneImageUrl: string | undefined;
-    if (selectedScene && selectedScene.poseId !== 'scene_038') {
+    if (sourceImage && imageRole === 'scene') {
+      // Skip scene chip — uploaded scene image is the sole scene reference
+      sceneImageUrl = undefined;
+    } else if (selectedScene && selectedScene.poseId !== 'scene_038') {
       sceneImageUrl = selectedScene.previewUrl;
     }
 
