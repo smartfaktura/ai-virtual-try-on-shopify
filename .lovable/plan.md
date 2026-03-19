@@ -1,18 +1,33 @@
 
 
-# Add Enter Key Shortcut to Generate in Freestyle
+# Fix Aspect Ratio Icon in Freestyle Chip
 
-## Current State
-The textarea already supports **Cmd/Ctrl+Enter** to generate. The user wants plain **Enter** to also trigger generation (since this is a prompt field, not a multi-line text editor).
+## Problem
+Line 106 in `FreestyleSettingsChips.tsx` hardcodes the `Square` icon for the aspect ratio trigger button. When user selects 9:16, the chip still shows a square icon instead of the narrow rectangle (`AspectIcon916`).
 
-## Change
+## Fix
+**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx` (line ~102-108)**
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 250-255)**
+Replace the hardcoded `<Square>` with a dynamic lookup from the `ASPECT_RATIOS` array:
 
-Update the `onKeyDown` handler:
-- **Enter** (no modifier): prevent default newline, call `onGenerate()` if `canGenerate` is true and not already loading
-- **Shift+Enter**: allow newline (standard convention for multi-line input)
-- Keep existing **Cmd/Ctrl+Enter** as an additional shortcut
+```tsx
+const aspectRatioChip = (() => {
+  const currentAr = ASPECT_RATIOS.find(ar => ar.value === aspectRatio) ?? ASPECT_RATIOS[0];
+  const ArIcon = currentAr.icon;
+  return (
+    <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
+      <PopoverTrigger asChild>
+        <button className="...">
+          <ArIcon className="w-3.5 h-3.5" />
+          {aspectRatio}
+          <ChevronDown className="w-3 h-3 opacity-40" />
+        </button>
+      </PopoverTrigger>
+      ...
+    </Popover>
+  );
+})();
+```
 
-This is a single 5-line change in one file. Add a small hint in the placeholder text like "Press Enter to generate" so users discover the shortcut.
+Single line change: swap `<Square className="w-3.5 h-3.5" />` → dynamically resolved icon from the selected ratio. One file, one line.
 
