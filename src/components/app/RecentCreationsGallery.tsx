@@ -8,7 +8,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { toSignedUrl } from '@/lib/signedUrl';
+import { toSignedUrls } from '@/lib/signedUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
