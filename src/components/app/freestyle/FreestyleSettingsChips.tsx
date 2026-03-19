@@ -252,11 +252,14 @@ export function FreestyleSettingsChips({
                 />
               </div>
               {aspectRatioChip}
-              <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+              <div className={cn(
+                highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
+                disabledChips?.model && 'opacity-40 pointer-events-none'
+              )}>
                 <ModelSelectorChip
                   selectedModel={selectedModel}
-                  open={modelPopoverOpen}
-                  onOpenChange={onModelPopoverChange}
+                  open={disabledChips?.model ? false : modelPopoverOpen}
+                  onOpenChange={disabledChips?.model ? () => {} : onModelPopoverChange}
                   onSelect={onModelSelect}
                   modal={isMobile}
                 />
