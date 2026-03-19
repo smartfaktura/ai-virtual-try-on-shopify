@@ -240,13 +240,13 @@ export function FreestylePromptPanel({
       {!(isMobile && isCollapsed) && (
         <>
           {/* Row 1 — Prompt Input */}
-          <div className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-3`}>
+          <div className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-2 sm:pb-3`}>
             <textarea
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
-              placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create… (Enter to generate)"}
-              rows={isMobile ? 3 : 3}
-              className="w-full bg-transparent border-none text-base leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[80px] lg:min-h-[72px] pr-8"
+              placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create…"}
+              rows={isMobile ? 2 : 3}
+              className="w-full bg-transparent border-none text-base leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[56px] sm:min-h-[80px] lg:min-h-[72px] pr-8"
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -284,7 +284,7 @@ export function FreestylePromptPanel({
           <div className="border-t border-border/40 mx-3 sm:mx-5" />
 
           {/* Row 2 — Settings Chips */}
-          <div className="px-3 sm:px-5 py-3">
+          <div className="px-3 sm:px-5 py-2 sm:py-3">
             <FreestyleSettingsChips
               uploadButton={uploadButton}
               selectedProduct={selectedProduct} onProductSelect={onProductSelect}
@@ -309,10 +309,10 @@ export function FreestylePromptPanel({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-border/40 mx-3 sm:mx-5" />
+          <div className="border-t border-border/40 mx-3 sm:mx-5 hidden sm:block" />
 
           {/* Row 3 — Action Bar */}
-          <div className="px-3 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <div className="px-3 sm:px-5 py-2 sm:py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             {(() => {
               const hasEnoughCredits = creditBalance === undefined || creditBalance >= creditCost;
               const showInsufficientCredits = canGenerate && !hasEnoughCredits;
@@ -320,7 +320,7 @@ export function FreestylePromptPanel({
               return (
                 <>
                   {!canGenerate && !isLoading ? (
-                    <p className="text-xs text-muted-foreground mr-auto truncate">
+                    <p className="text-xs text-muted-foreground mr-auto truncate hidden sm:block">
                       Type a prompt or add a reference to start
                     </p>
                    ) : showInsufficientCredits ? (
