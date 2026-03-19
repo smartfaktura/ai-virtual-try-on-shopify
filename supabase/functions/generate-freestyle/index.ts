@@ -187,7 +187,7 @@ function polishUserPrompt(
   const expert = isExpertPrompt(rawPrompt);
 
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
-  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
+  // refCount already declared above (line 169)
   if (refCount >= 2 && !isSelfie) {
     const parts: string[] = [
       `Professional photography: ${rawPrompt}`,
