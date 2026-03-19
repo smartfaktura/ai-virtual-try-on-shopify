@@ -930,6 +930,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   </div>
                 </div>
 
+                {/* Guidance text + images-per-workflow chip */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm text-muted-foreground">Pick scenes, models & formats for this workflow.</p>
+                  <Badge variant="outline" className="text-[10px] rounded-full">{imagesPerDrop} images/workflow</Badge>
+                </div>
+
                 {/* ── Formats ── */}
                 <div className="space-y-3">
                   <p className="section-label">Aspect Ratios</p>
