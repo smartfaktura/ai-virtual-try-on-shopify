@@ -85,6 +85,7 @@ export function FreestylePromptPanel({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   cameraStyle, onCameraStyleChange,
+  quality, onQualityChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
   creditBalance,
