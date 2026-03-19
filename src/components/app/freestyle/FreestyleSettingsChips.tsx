@@ -256,29 +256,33 @@ export function FreestyleSettingsChips({
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={300}>
-        <div className="flex items-center gap-2 flex-wrap">
-          {uploadButton}
-          {productChip}
-          {aspectRatioChip}
-          {modelChip}
-          {sceneChip}
-          <FramingSelectorChip
-            framing={framing}
-            onFramingChange={onFramingChange}
-            open={framingPopoverOpen}
-            onOpenChange={onFramingPopoverChange}
-            modal={isMobile}
-          />
-          {cameraStyleChip}
-          {qualityChip}
-          <BrandProfileChip
-            selectedProfile={selectedBrandProfile}
-            open={brandProfilePopoverOpen}
-            onOpenChange={onBrandProfilePopoverChange}
-            onSelect={onBrandProfileSelect}
-            profiles={brandProfiles}
-            isLoading={isLoadingBrandProfiles}
-          />
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {uploadButton}
+            {productChip}
+            {modelChip}
+            {sceneChip}
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <FramingSelectorChip
+              framing={framing}
+              onFramingChange={onFramingChange}
+              open={framingPopoverOpen}
+              onOpenChange={onFramingPopoverChange}
+              modal={isMobile}
+            />
+            <BrandProfileChip
+              selectedProfile={selectedBrandProfile}
+              open={brandProfilePopoverOpen}
+              onOpenChange={onBrandProfilePopoverChange}
+              onSelect={onBrandProfileSelect}
+              profiles={brandProfiles}
+              isLoading={isLoadingBrandProfiles}
+            />
+            {aspectRatioChip}
+            {cameraStyleChip}
+            {qualityChip}
+          </div>
         </div>
       </TooltipProvider>
     );
@@ -287,41 +291,33 @@ export function FreestyleSettingsChips({
   // --- Desktop: grouped chips with subtle dividers ---
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {/* Group 1: References — what goes INTO the image */}
-        {uploadButton}
-        {productChip}
-        {modelChip}
-        {sceneChip}
-
-        {/* Divider */}
-        <div className="h-5 w-px bg-border/60 mx-1" />
-
-        {/* Group 2: Creative — HOW it looks */}
-        <FramingSelectorChip
-          framing={framing}
-          onFramingChange={onFramingChange}
-          open={framingPopoverOpen}
-          onOpenChange={onFramingPopoverChange}
-          modal={false}
-        />
-        <BrandProfileChip
-          selectedProfile={selectedBrandProfile}
-          open={brandProfilePopoverOpen}
-          onOpenChange={onBrandProfilePopoverChange}
-          onSelect={onBrandProfileSelect}
-          profiles={brandProfiles}
-          isLoading={isLoadingBrandProfiles}
-        />
-
-        {/* Divider */}
-        <div className="h-5 w-px bg-border/60 mx-1" />
-
-        {/* Group 3: Output — technical settings */}
-        {aspectRatioChip}
-        {cameraStyleChip}
-        {qualityChip}
-
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {uploadButton}
+          {productChip}
+          {modelChip}
+          {sceneChip}
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <FramingSelectorChip
+            framing={framing}
+            onFramingChange={onFramingChange}
+            open={framingPopoverOpen}
+            onOpenChange={onFramingPopoverChange}
+            modal={false}
+          />
+          <BrandProfileChip
+            selectedProfile={selectedBrandProfile}
+            open={brandProfilePopoverOpen}
+            onOpenChange={onBrandProfilePopoverChange}
+            onSelect={onBrandProfileSelect}
+            profiles={brandProfiles}
+            isLoading={isLoadingBrandProfiles}
+          />
+          {aspectRatioChip}
+          {cameraStyleChip}
+          {qualityChip}
+        </div>
       </div>
     </TooltipProvider>
   );
