@@ -15,7 +15,7 @@ function optimizeImageForAI(url: string): string {
   if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return url || '';
   const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
   const sep = transformed.includes('?') ? '&' : '?';
-  return `${transformed}${sep}quality=85`;
+  return `${transformed}${sep}width=1536&quality=85`;
 }
 
 // Color Feel mapping (matches brandPromptBuilder.ts)
