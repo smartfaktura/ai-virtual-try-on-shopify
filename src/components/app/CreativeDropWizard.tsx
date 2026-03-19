@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
@@ -16,6 +16,10 @@ import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Progress } from '@/components/ui/progress';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import {
   ArrowLeft, ArrowRight, Check, CalendarIcon,
@@ -120,6 +124,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+
+  const markDirty = useCallback(() => { if (!isDirty) setIsDirty(true); }, [isDirty]);
 
   // Step 1: Details
   const [name, setName] = useState(initialData?.name || '');
@@ -356,6 +364,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       return;
     }
     setAttempted(false);
+    markDirty();
     setStep(s => s + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -508,15 +517,49 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           <h2 className="text-xl font-semibold tracking-tight">
             {editingScheduleId ? 'Edit Drop' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
           </h2>
-          <span className="text-xs text-muted-foreground font-mono">
+          <span className="text-xs text-muted-foreground font-mono sm:hidden">
             {step + 1}/{totalSteps}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <Progress value={progressPercent} className="h-1.5 mb-3" />
+        {/* Step breadcrumb stepper */}
+        <div className="hidden sm:flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+          {Array.from({ length: totalSteps }, (_, i) => {
+            const isCompleted = i < step;
+            const isCurrent = i === step;
+            const label = (() => {
+              if (i === 0) return 'Details';
+              if (i === 1) return 'Products';
+              if (i === 2) return 'Workflows';
+              if (i >= 3 && i < scheduleStepIndex) return `Config ${i - 2}`;
+              if (i === scheduleStepIndex) return 'Delivery';
+              if (i === reviewStepIndex) return 'Review';
+              return '';
+            })();
+            return (
+              <div key={i} className="flex items-center gap-1 flex-shrink-0">
+                {i > 0 && <div className={cn('w-4 h-px', isCompleted ? 'bg-primary' : 'bg-border')} />}
+                <div
+                  className={cn(
+                    'flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium transition-colors',
+                    isCurrent && 'bg-primary text-primary-foreground',
+                    isCompleted && 'bg-primary/10 text-primary',
+                    !isCurrent && !isCompleted && 'text-muted-foreground'
+                  )}
+                >
+                  {isCompleted && <Check className="w-3 h-3" />}
+                  {label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-        {/* Current step label */}
+        {/* Mobile: progress bar + label */}
+        <div className="sm:hidden">
+          <Progress value={progressPercent} className="h-1.5 mb-3" />
+        </div>
+
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{getStepLabel(step)}</span>
           {isConfigStep && configStepCount > 1 && (
@@ -541,7 +584,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 <Input
                   placeholder="e.g. Summer 2026 Collection"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => { setName(e.target.value); markDirty(); }}
                   className={cn('h-12 rounded-xl text-sm', attempted && !name.trim() && 'border-destructive')}
                 />
                 {attempted && !name.trim() && (
@@ -886,6 +929,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     <p className="text-base font-semibold">{wf.name}</p>
                     <p className="text-xs text-muted-foreground">{wf.description}</p>
                   </div>
+                </div>
+
+                {/* Guidance text + images-per-workflow chip */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm text-muted-foreground">Pick scenes, models & formats for this workflow.</p>
+                  <Badge variant="outline" className="text-[10px] rounded-full">{imagesPerDrop} images/workflow</Badge>
                 </div>
 
                 {/* ── Formats ── */}
@@ -1456,6 +1505,13 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
           {/* ─── Review ─── */}
           {step === reviewStepIndex && (
+            <>
+            {profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2 text-sm mb-4 animate-fade-in">
+                <Wallet className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>This drop costs <strong>{costEstimate.totalCredits}</strong> credits but you only have <strong>{profile.credits_balance}</strong>.</span>
+              </div>
+            )}
             <div className="space-y-6 animate-fade-in">
               <Card className="rounded-2xl border-2 border-primary/20 bg-primary/[0.03] shadow-sm">
                 <CardContent className="p-5 flex items-center gap-4">
@@ -1622,7 +1678,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 })}
               </div>
             </div>
-          )}
+          </>)}
         </div>
       </div>
 
@@ -1634,20 +1690,15 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={step === 0 ? onClose : handleBack}
+            onClick={step === 0 ? () => { if (isDirty) setShowExitDialog(true); else onClose(); } : handleBack}
             className="rounded-full min-h-[44px] h-11 px-5 sm:px-6"
           >
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
           </Button>
 
-          <div className="hidden sm:flex flex-col items-center gap-1">
-            <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">
-              Powered by VOVV.AI
-            </span>
-            {validationHint && (
-              <p className="text-[11px] text-destructive animate-fade-in">{validationHint}</p>
-            )}
-          </div>
+          {validationHint && (
+            <p className="hidden sm:block text-[11px] text-destructive animate-fade-in">{validationHint}</p>
+          )}
 
           {!isLastStep ? (
             <Button
@@ -1670,6 +1721,19 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           )}
         </div>
       </div>
+      {/* Unsaved changes guard */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>You have unsaved changes. Are you sure you want to leave?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={onClose} className="rounded-full">Discard</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
