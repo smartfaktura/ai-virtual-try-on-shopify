@@ -1,4 +1,4 @@
-// Force redeploy: image optimization v1 (2026-03-16)
+// Force redeploy: cleanup v2 — single client, shared helpers, width-capped AI images (2026-03-19)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
