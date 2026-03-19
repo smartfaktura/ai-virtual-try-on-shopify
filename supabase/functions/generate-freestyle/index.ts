@@ -1191,7 +1191,7 @@ serve(async (req) => {
       if (isQueueInternal && body.job_id) {
         await completeQueueJob(body.job_id, body.user_id, body.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], body);
       }
-    } catch { /* best effort */ }
+    } catch (_e) { /* best effort */ }
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
