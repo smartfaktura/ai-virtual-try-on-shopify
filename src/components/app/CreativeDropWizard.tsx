@@ -1689,7 +1689,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={step === 0 ? onClose : handleBack}
+            onClick={step === 0 ? () => { if (isDirty) setShowExitDialog(true); else onClose(); } : handleBack}
             className="rounded-full min-h-[44px] h-11 px-5 sm:px-6"
           >
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
