@@ -1,55 +1,46 @@
 
 
-# Reduce Discover Categories to 5 & Fix Categorization
+# Rename "Schedule" to "Drop" & Clarify Scheduling as Optional Feature
 
-## Problem
-Currently there are 6 categories (cinematic, commercial, photography, styling, ads, lifestyle) which is too granular, causing miscategorization. The AI can't reliably distinguish between them, and "More Like This" matching breaks because it depends on these categories.
+## What Changes
 
-## New Categories (5 total)
-| Category | Covers | Description for AI |
-|----------|--------|-------------------|
-| **Editorial** | Cinematic + editorial + dramatic | Moody, artistic, dramatic lighting, film-like |
-| **Commercial** | Product shots, studio, e-commerce | Clean product photography, studio lighting |
-| **Lifestyle** | Everyday, outdoor, casual, candid | Natural settings, relatable, casual |
-| **Fashion** | Styling, streetwear, outfit focus | Fashion-forward, outfit details, model-centric |
-| **Campaign** | Ads, social media, promotional | Bold, eye-catching, ad-ready compositions |
+### 1. Rename labels throughout the wizard
+**File: `src/components/app/CreativeDropWizard.tsx`**
 
-## Files Changed
+- "Schedule Name" → "Drop Name" (line 534)
+- Placeholder "e.g. Summer 2026 Collection" stays (still relevant)
+- Step label "Schedule" → "Delivery" in `getStepLabel` (line 271)
+- "Schedule" button card description: "Pick a date & recur" → "Schedule for later (e.g. after credit renewal)"
+- Success toast: "Schedule created successfully!" → "Drop saved — it will run on the scheduled date"
+- Error messages: "schedule" → "drop" where appropriate
+- Review step text references to "schedule" → "drop"
 
-### 1. `src/pages/Discover.tsx`
-- Replace CATEGORIES array: remove cinematic/photography/styling/ads, add editorial/fashion/campaign
-- Expand SCENE_CATEGORY_MAP to cover all scene types:
-  - studio → commercial, editorial
-  - lifestyle → lifestyle
-  - editorial → editorial
-  - streetwear → fashion, lifestyle
-  - fitness/athletic/gym → lifestyle, campaign
-  - beauty → fashion, commercial
-  - desert/outdoor/beach/garden → lifestyle, editorial
-  - industrial/urban/rooftop → editorial, campaign
-  - mirror/casual/cozy → lifestyle, fashion
-  - professional → commercial
-- Update `scoreSimilarity()`: increase tag weight to +1.5, add workflow_slug matching bonus (+2)
+### 2. Reframe the Schedule option as a secondary feature
+Currently "Generate Now" and "Schedule" are presented as equal options. The Schedule option should be repositioned as the fallback for users who lack credits now:
 
-### 2. `src/pages/PublicDiscover.tsx`
-- Same CATEGORIES and SCENE_CATEGORY_MAP changes as Discover.tsx
+- Add a subtle helper under the "Schedule" card: "Ideal when waiting for your monthly credit renewal"
+- Keep "Generate Now" as the default/primary option (already is)
 
-### 3. `supabase/functions/describe-discover-metadata/index.ts`
-- Update enum to `["editorial", "commercial", "lifestyle", "fashion", "campaign"]`
-- Add explicit definitions to the system prompt so AI understands each category
-- Add description per enum value in the tool schema
+### 3. Season/theme transfer — already working, no code change needed
+The flow is already complete:
+1. User picks a seasonal preset (e.g. "Spring") → its `instructions` text is stored in `themeNotes` state
+2. The preset `id` (e.g. "spring") is stored in the `theme` field
+3. On save, both `theme` and `theme_notes` go into `creative_schedules` table
+4. `trigger-creative-drop` passes them into each job payload
+5. `generate-workflow` injects them as a `SEASONAL DIRECTION:` block in the image generation prompt
 
-### 4. `src/components/app/SubmitToDiscoverModal.tsx`
-- Update CATEGORIES const to match the new 5 categories
-
-### 5. `src/components/app/DiscoverDetailModal.tsx` (admin re-categorize)
-- Add a category dropdown for admin users to manually fix miscategorized presets
-- Simple UPDATE call on `discover_presets` table
-
-### 6. DB migration
-- Add UPDATE RLS policy on `discover_presets` for admins so re-categorization works
+No changes needed here — the system already transfers seasonal/campaign context to generation.
 
 ## Technical Details
-- Existing presets with old categories (cinematic→editorial, photography→commercial, styling→fashion, ads→campaign) will still render — the filter just won't match them until re-categorized. The admin dropdown enables quick fixes.
-- No data migration needed — old categories gracefully fall through to "All" tab.
+
+All changes are in a single file: `src/components/app/CreativeDropWizard.tsx`
+
+- Line 271: `getStepLabel` — change "Schedule" to "Delivery"
+- Line 534: Label text "Schedule Name" → "Drop Name"
+- Line 1258: Section header stays "Delivery" (already correct)
+- Line 1283-1284: "Schedule" card description update
+- Lines 464/478: Success toast wording
+- Line 503: Header "Edit Schedule" → "Edit Drop"
+
+No database changes needed — the table is still `creative_schedules` internally, only the user-facing labels change.
 
