@@ -478,7 +478,7 @@ async function getAuthUserId(authHeader: string | null): Promise<string | null> 
     const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
     if (error || !user) return null;
     return user.id;
-  } catch {
+  } catch (_e) {
     return null;
   }
 }
