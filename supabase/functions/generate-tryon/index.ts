@@ -213,7 +213,10 @@ async function uploadBase64ToStorage(
     bytes[i] = binaryStr.charCodeAt(i);
   }
 
-  const fileName = `${userId}/${crypto.randomUUID()}.png`;
+  const mimeMatch = base64Url.match(/^data:(image\/[^;]+);/);
+  const mimeType = mimeMatch?.[1] || "image/png";
+  const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+  const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
@@ -222,7 +225,7 @@ async function uploadBase64ToStorage(
   const { error } = await supabase.storage
     .from("tryon-images")
     .upload(fileName, bytes, {
-      contentType: "image/png",
+      contentType: mimeType,
       upsert: false,
     });
 
@@ -300,7 +303,7 @@ async function generateImageWithModel(
             ],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            image_config: { aspect_ratio: aspectRatio, image_size: '2K' },
+            image_config: { aspect_ratio: aspectRatio, image_size: '2K', output_format: 'png' },
           }),
         }
       );

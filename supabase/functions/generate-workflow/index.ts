@@ -583,7 +583,7 @@ async function generateImage(
               },
             ],
             modalities: ["image", "text"],
-            image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
+            image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K', output_format: 'png' },
           }),
           signal: AbortSignal.timeout(PER_IMAGE_TIMEOUT),
         }
