@@ -1,56 +1,35 @@
 
-Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-What I found
-- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
-- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
-- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
-- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
-- Dashboard queries don’t present a clear recovery UI when core queries fail.
+## Root Cause: 429 Fallback Path Skips Database Save
 
-Implementation plan
-1) Harden route-gating so it cannot hang
-- File: `src/components/app/ProtectedRoute.tsx`
-- Replace current onboarding check with guarded async flow:
-  - reset `onboardingChecked` before request
-  - use `.maybeSingle()` (not `.single()`) for profile lookup
-  - handle network/query errors explicitly
-  - set `onboardingChecked` in `finally` so route never stays blocked
-  - keep onboarding redirect logic for valid `onboarding_completed === false`
+When the primary AI model returns a 429 (rate limit), the code enters the `catch` block and tries a fallback model. If the fallback succeeds, it uploads the image and does `continue` — which **skips the `freestyle_generations` insert** that only exists in the normal `try` path.
 
-2) Harden auth bootstrap
-- File: `src/contexts/AuthContext.tsx`
-- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
-- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
+This is why the generation "completes" (queue shows `completed` with 1 image) but nothing appears in the gallery — the image exists in storage but has no database record.
 
-3) Harden credit bootstrap + noisy failure path
-- File: `src/contexts/CreditContext.tsx`
-- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
-- Keep defaults when profile is missing/unreachable.
-- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
+From the logs of your last generation:
+- Primary model (gemini-3.1-flash-image-preview) hit 429 twice
+- Fallback model (gemini-3-pro-image-preview) succeeded
+- Image uploaded to storage — but DB insert was skipped due to `continue`
 
-4) Add dashboard recovery UI for failed core queries
-- File: `src/pages/Dashboard.tsx`
-- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
-- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
+### Fix
 
-5) Improve global query resilience
-- File: `src/App.tsx`
-- Update QueryClient defaults for flaky connections:
-  - `retry` + bounded `retryDelay`
-  - `refetchOnReconnect: true`
-  - keep current `refetchOnWindowFocus: false`
-- This reduces “one failed request = stuck state” cases.
+**File: `supabase/functions/generate-freestyle/index.ts`** (lines 1157-1161)
 
-Technical notes
-- No database schema changes needed.
-- This is a client resilience patch, not a business-logic change.
-- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
+After the fallback image is uploaded and pushed to `images[]`, add the same `freestyle_generations` insert logic that exists in the normal path (lines 1102-1128). Then `continue`.
 
-Validation checklist (end-to-end)
-1. Open `/app` with normal network: dashboard loads normally.
-2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
-3. Reconnect network: dashboard should recover via retry/reconnect.
-4. User with `onboarding_completed=false`: still redirects to onboarding.
-5. User with missing profile row: app should still load safely (no deadlock).
-6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
+This is a ~25-line addition duplicating the existing insert block into the fallback success path. No other files need changes. The fix is isolated to the `catch (429)` fallback branch.
+
+### Why this is safe
+- Only affects the 429 fallback path — the normal generation path is untouched
+- Uses the same service-role client and insert logic already proven to work
+- The `continue` still fires after the save, preserving loop flow
+
+### Technical Detail
+```text
+Current flow (broken):
+  catch 429 → fallback model → upload → images.push → continue (skips DB save)
+
+Fixed flow:
+  catch 429 → fallback model → upload → images.push → DB save → continue
+```
+
