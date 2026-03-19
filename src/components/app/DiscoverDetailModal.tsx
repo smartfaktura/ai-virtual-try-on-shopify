@@ -165,9 +165,33 @@ export function DiscoverDetailModal({
             {/* Category label + title */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {category}
-                </p>
+                {isAdmin && isPreset ? (
+                  <Select
+                    value={category}
+                    onValueChange={async (val) => {
+                      const { error } = await supabase
+                        .from('discover_presets')
+                        .update({ category: val })
+                        .eq('id', item.data.id);
+                      if (error) { toast.error('Failed to update category'); return; }
+                      (item.data as any).category = val;
+                      toast.success(`Category → ${val}`);
+                    }}
+                  >
+                    <SelectTrigger className="h-6 w-auto px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 border-dashed">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300]">
+                      {DISCOVER_CATEGORIES.map(c => (
+                        <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+                    {category}
+                  </p>
+                )}
                 {!isPreset && (
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
                 )}
