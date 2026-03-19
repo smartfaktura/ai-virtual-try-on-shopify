@@ -240,7 +240,7 @@ export function FreestylePromptPanel({
       {!(isMobile && isCollapsed) && (
         <>
           {/* Row 1 — Prompt Input */}
-          <div className={`relative px-4 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-3`}>
+          <div className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-3`}>
             <textarea
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
