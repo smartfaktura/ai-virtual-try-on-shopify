@@ -407,7 +407,7 @@ export default function Freestyle() {
     }
 
     let sceneImageUrl: string | undefined;
-    if (selectedScene) {
+    if (selectedScene && selectedScene.poseId !== 'scene_038') {
       sceneImageUrl = selectedScene.previewUrl;
     }
 
