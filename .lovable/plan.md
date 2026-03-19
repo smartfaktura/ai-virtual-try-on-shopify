@@ -1,56 +1,96 @@
 
-Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-What I found
-- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
-- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
-- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
-- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
-- Dashboard queries don’t present a clear recovery UI when core queries fail.
+## Phase 0: Cleanup — Simplify Freestyle Before Architecture Changes
 
-Implementation plan
-1) Harden route-gating so it cannot hang
-- File: `src/components/app/ProtectedRoute.tsx`
-- Replace current onboarding check with guarded async flow:
-  - reset `onboardingChecked` before request
-  - use `.maybeSingle()` (not `.single()`) for profile lookup
-  - handle network/query errors explicitly
-  - set `onboardingChecked` in `finally` so route never stays blocked
-  - keep onboarding redirect logic for valid `onboarding_completed === false`
+### Summary
+Remove UI clutter (Polish toggle, Style Presets from main row), fix dangerous `sourceImage` labeling, and shorten the prompt builder. No new architecture — just reduce confusion.
 
-2) Harden auth bootstrap
-- File: `src/contexts/AuthContext.tsx`
-- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
-- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
+---
 
-3) Harden credit bootstrap + noisy failure path
-- File: `src/contexts/CreditContext.tsx`
-- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
-- Keep defaults when profile is missing/unreachable.
-- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
+### 1. Remove Polish toggle from UI
 
-4) Add dashboard recovery UI for failed core queries
-- File: `src/pages/Dashboard.tsx`
-- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
-- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
+**Files:** `FreestyleSettingsChips.tsx`, `FreestylePromptPanel.tsx`, `Freestyle.tsx`
 
-5) Improve global query resilience
-- File: `src/App.tsx`
-- Update QueryClient defaults for flaky connections:
-  - `retry` + bounded `retryDelay`
-  - `refetchOnReconnect: true`
-  - keep current `refetchOnWindowFocus: false`
-- This reduces “one failed request = stuck state” cases.
+- Remove `polishChip` from both mobile and desktop chip layouts
+- Remove `polishPrompt` / `onPolishChange` props from `FreestyleSettingsChips` and `FreestylePromptPanel`
+- In `Freestyle.tsx`: remove `polishPrompt` state, hardcode `polishPrompt: true` in the enqueue payload
+- Remove from `isDirty` check and `handleReset`
 
-Technical notes
-- No database schema changes needed.
-- This is a client resilience patch, not a business-logic change.
-- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
+### 2. Remove Style Presets chip from main row
 
-Validation checklist (end-to-end)
-1. Open `/app` with normal network: dashboard loads normally.
-2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
-3. Reconnect network: dashboard should recover via retry/reconnect.
-4. User with `onboarding_completed=false`: still redirects to onboarding.
-5. User with missing profile row: app should still load safely (no deadlock).
-6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
+**Files:** `FreestyleSettingsChips.tsx`, `FreestylePromptPanel.tsx`, `Freestyle.tsx`
+
+- Remove `presetsChip` from both mobile and desktop layouts
+- Remove `stylePresets` / `onStylePresetsChange` props from settings chips and prompt panel
+- In `Freestyle.tsx`: remove `stylePresets` state, stop sending `stylePresets` in payload
+- Remove `StylePresetChips` import (file itself can stay for now)
+
+### 3. Fix `buildContentArray()` — stop treating sourceImage as `[PRODUCT IMAGE]`
+
+**File:** `generate-freestyle/index.ts`, lines 682-691
+
+Current dangerous fallback:
+```
+if (productImage) { label = "[REFERENCE IMAGE]" }
+else { label = "[PRODUCT IMAGE]" }  // ← wrong
+```
+
+Replace with:
+- If `productImage` exists and `sourceImage` exists → source = `[REFERENCE IMAGE]`
+- If `productImage` exists, no source → just product
+- If no `productImage`, source exists → `[REFERENCE IMAGE]` (not product)
+- Never label an uploaded image as `[PRODUCT IMAGE]` unless it came from the product selector
+
+### 4. Shorten `polishUserPrompt()` — reduce prompt bloat
+
+**File:** `generate-freestyle/index.ts`
+
+Changes within the existing function (no new architecture):
+
+a. **Remove "Create a NEW photograph" wording** from product identity layers (lines 202, 209, 346). Replace with neutral: "Generate a photograph of this exact product with professional lighting and fresh composition."
+
+b. **Soften model identity wording** (line 376). Current is 5 lines of aggressive caps-lock matching. Replace with: "The person must match the individual in [MODEL IMAGE] — same face, features, skin tone, hair, and body. This is a specific person, not a generic model."
+
+c. **Shorten negative prompt** (`buildNegativePrompt`). Current is 8+ rules. Reduce to 4 essentials:
+   - Anatomy rule (keep concise)
+   - No AI smoothing
+   - No collage/split-screen
+   - No black borders
+
+d. **Shorten iPhone/natural camera block** (lines 431-438). Current is a massive 10-line block. Replace with 3 concise lines:
+   - "Shot on iPhone. Deep depth of field, everything sharp. True-to-life colors, no grading. Natural ambient light, no studio lighting. Ultra-sharp detail."
+
+e. **Shorten selfie composition** (lines 296-298). Current is a wall of text. Reduce to 3 key instructions.
+
+f. **Shorten portrait quality** (line 404). Reduce from dense paragraph to 2 lines.
+
+g. **Update prompt references** — change `[PRODUCT IMAGE]` to `[PRODUCT REFERENCE]` in polishUserPrompt to match new content array labeling. Similarly `[MODEL IMAGE]` → `[MODEL REFERENCE]`, `[SCENE IMAGE]` → `[SCENE REFERENCE]`.
+
+### 5. Update `buildContentArray()` labels
+
+Change labels to be clearer:
+- `[PRODUCT IMAGE]` → `[PRODUCT REFERENCE]` (for product from selector)
+- `[MODEL IMAGE]` → `[MODEL REFERENCE]`
+- `[SCENE IMAGE]` → `[SCENE REFERENCE]`
+- `[REFERENCE IMAGE]` stays (for uploaded source when product also exists)
+
+### 6. Deduplicate `freestyle_generations` insert
+
+Extract the duplicated DB insert (lines 1102-1128 and 1162-1189) into a `saveFreestyleRecord()` helper. Called from both normal and 429-fallback paths.
+
+### 7. Deduplicate Supabase client creation in loop
+
+Create the service-role client once before the generation loop instead of creating new clients at lines 1079, 1103, 1164.
+
+---
+
+### Files changed
+- `supabase/functions/generate-freestyle/index.ts` — prompt shortening, label fixes, deduplication
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — remove Polish + Presets chips
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` — remove Polish + Presets props
+- `src/pages/Freestyle.tsx` — remove Polish + Presets state, hardcode polish=true
+- `public/generate-freestyle-logic.txt` — update with new logic
+
+### Risk
+Low — no queue/credit/storage changes. Polish was already defaulting to `true`. Presets were rarely used. Prompt shortening is the main behavioral change but keeps the same intent with less noise.
+
