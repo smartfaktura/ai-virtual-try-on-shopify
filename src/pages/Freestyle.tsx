@@ -490,6 +490,10 @@ export default function Freestyle() {
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
       sceneId: selectedScene?.poseId || undefined,
+      imageRole: sourceImage ? imageRole : undefined,
+      editIntent: sourceImage && imageRole === 'edit'
+        ? (editIntent.length > 0 ? editIntent : ['enhance'])
+        : undefined,
     };
 
     // Enqueue via priority queue
