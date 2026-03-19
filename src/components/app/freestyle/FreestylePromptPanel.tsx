@@ -40,18 +40,12 @@ interface FreestylePromptPanelProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
-  quality: 'standard' | 'high';
-  onQualityChange: (q: 'standard' | 'high') => void;
   selectedBrandProfile: BrandProfile | null;
   onBrandProfileSelect: (profile: BrandProfile | null) => void;
   brandProfilePopoverOpen: boolean;
   onBrandProfilePopoverChange: (open: boolean) => void;
   brandProfiles: BrandProfile[];
   isLoadingBrandProfiles: boolean;
-  negatives: string[];
-  onNegativesChange: (negatives: string[]) => void;
-  negativesPopoverOpen: boolean;
-  onNegativesPopoverChange: (open: boolean) => void;
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
   framing: FramingOption | null;
