@@ -83,7 +83,7 @@ export default function Perspectives() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
-  const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['1:1']));
+  const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set());
   const quality = 'high' as const;
   const [productSearch, setProductSearch] = useState('');
   const [librarySearch, setLibrarySearch] = useState('');
@@ -351,7 +351,7 @@ export default function Perspectives() {
 
   const toggleRatio = (ratio: string) => {
     const next = new Set(selectedRatios);
-    if (next.has(ratio) && next.size > 1) next.delete(ratio);
+    if (next.has(ratio)) next.delete(ratio);
     else next.add(ratio);
     setSelectedRatios(next);
   };
@@ -423,6 +423,14 @@ export default function Perspectives() {
   }, [sourceType, directUploadUrl, pasteTargetIndex, handleDirectFile]);
 
   const handleGenerate = async () => {
+    if (selectedRatios.size === 0) {
+      toast.error('Please select at least one aspect ratio.');
+      return;
+    }
+    if (selectedVariations.size === 0) {
+      toast.error('Please select at least one perspective angle.');
+      return;
+    }
     if (!canGenerate) return;
     if (totalCost > credits) {
       toast.error(`Not enough credits. Need ${totalCost}, have ${credits}.`);
