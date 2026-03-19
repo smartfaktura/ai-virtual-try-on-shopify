@@ -239,18 +239,9 @@ function polishUserPrompt(
   // ── 4. Framing ──
   const effectiveFraming = framing || (detectFullBodyIntent(rawPrompt) ? 'full_body' : null);
   if (effectiveFraming) {
-    const framingPrompts: Record<string, string> = {
-      full_body: `FRAMING: Full body shot, head to toe. Show complete figure.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-      upper_body: `FRAMING: Upper body, waist up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-      close_up: `FRAMING: Close-up portrait from shoulders up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-      hand_wrist: `FRAMING: Hand and wrist only. No face.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-      neck_shoulders: `FRAMING: Collarbone area, jewelry display.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-      lower_body: `FRAMING: Lower body, hips to feet.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-      back_view: `FRAMING: Back view, facing away.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-      side_profile: `FRAMING: Side profile, ear and jawline.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-    };
-    if (framingPrompts[effectiveFraming]) {
-      parts.push(framingPrompts[effectiveFraming]);
+    const instruction = buildFramingInstruction(effectiveFraming, context.hasModel);
+    if (instruction) {
+      parts.push(instruction);
     }
   } else if (context.hasModel && !isSelfie) {
     // Default framing for model shots without explicit selection
