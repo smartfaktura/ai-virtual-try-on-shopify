@@ -1051,7 +1051,20 @@ serve(async (req) => {
         } else if (typeof result === "string") {
           const publicUrl = await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
-          console.log(`Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
+          console.log(`[generate-freestyle] Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
+
+          // Heartbeat: update queue with partial progress so cleanup_stale_jobs can recover
+          if (isQueueInternal && body.job_id) {
+            try {
+              const supabaseHb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+              await supabaseHb.from('generation_queue')
+                .update({ result: { images, generatedCount: images.length, requestedCount: effectiveImageCount } })
+                .eq('id', body.job_id);
+              console.log(`[generate-freestyle] Heartbeat: saved ${images.length} images to queue result`);
+            } catch (hbErr) {
+              console.warn(`[generate-freestyle] Heartbeat update failed:`, hbErr);
+            }
+          }
 
           // Save to freestyle_generations DB when called from queue
           if (isQueueInternal) {
