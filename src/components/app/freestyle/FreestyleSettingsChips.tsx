@@ -174,7 +174,7 @@ export function FreestyleSettingsChips({
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          {quality === 'high' ? <Diamond className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+          {quality === 'high' ? <Sparkles className="w-3.5 h-3.5" /> : <Gauge className="w-3.5 h-3.5" />}
           {quality === 'high' ? 'Pro' : 'Standard'}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
