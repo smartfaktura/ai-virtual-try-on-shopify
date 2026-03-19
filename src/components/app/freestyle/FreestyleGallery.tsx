@@ -228,6 +228,7 @@ function GenerationFailedCard({
   className?: string;
 }) {
   const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
+  const { isAdmin: isAdminFlag } = useIsAdmin();
   const msg = FAILED_MESSAGES[entry.errorType](crew.name);
 
   return (
