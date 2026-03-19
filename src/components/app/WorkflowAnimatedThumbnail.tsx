@@ -644,7 +644,8 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
   if (isStaging) return <StagingThumbnail scene={scene} isActive={isActive} />;
 
-  const bgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
+  const rawBgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
+  const bgSrc = useMemo(() => getOptimizedUrl(rawBgSrc, { width: 600, quality: 60 }), [rawBgSrc]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
