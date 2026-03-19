@@ -83,7 +83,7 @@ export default function Perspectives() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
-  const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['1:1']));
+  const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set());
   const quality = 'high' as const;
   const [productSearch, setProductSearch] = useState('');
   const [librarySearch, setLibrarySearch] = useState('');
