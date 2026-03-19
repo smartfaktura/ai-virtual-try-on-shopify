@@ -161,8 +161,37 @@ function polishUserPrompt(
   modelContext?: string,
   cameraStyle?: "pro" | "natural",
   framing?: string,
-  productDimensions?: string
+  productDimensions?: string,
+  imageRole?: string,
+  editIntent?: string[],
 ): string {
+  // ── Image edit mode: lightweight edit-safe prompt ──
+  if (imageRole === 'edit' && context.hasSource) {
+    const editLayers: string[] = [
+      "Edit the provided image. Preserve composition unless specified.",
+    ];
+    if (rawPrompt.trim()) editLayers.unshift(rawPrompt);
+
+    const intentInstructions: Record<string, string> = {
+      replace_product: "Replace the product in the image while preserving everything else.",
+      change_background: "Keep the subject intact, change the background/environment.",
+      change_model: "Replace the person while preserving composition and product placement.",
+      enhance: "Improve image quality, lighting, and details without changing content.",
+    };
+    const effectiveIntents = editIntent && editIntent.length > 0 ? editIntent : ['enhance'];
+    for (const intent of effectiveIntents) {
+      if (intentInstructions[intent]) editLayers.push(intentInstructions[intent]);
+    }
+
+    editLayers.push("High resolution, clean result, no AI artifacts, no collage layouts.");
+    if (userNegatives && userNegatives.length > 0) {
+      editLayers.push(`Avoid: ${userNegatives.join(", ")}`);
+    }
+    if (brandProfile?.doNotRules?.length) {
+      editLayers.push(`Also avoid: ${brandProfile.doNotRules.join(", ")}`);
+    }
+    return editLayers.join("\n");
+  }
   // ── Editing intent bypass: simple single-image edits skip all heavy layers ──
   const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
   const isEditingRequest = detectEditingIntent(rawPrompt);
