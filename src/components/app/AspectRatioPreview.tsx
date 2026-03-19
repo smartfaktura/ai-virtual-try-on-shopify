@@ -41,10 +41,7 @@ export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProp
   const ratios: AspectRatio[] = ['1:1', '4:5', '9:16', '16:9'];
   return (
     <div className="space-y-3">
-      <div>
-        <p className="text-sm font-semibold">Image Size</p>
-        <p className="text-xs text-muted-foreground">Choose the best size for where you'll use the image</p>
-      </div>
+      <p className="text-sm font-semibold">Image Size</p>
       <div className="flex gap-3 flex-wrap">
         {ratios.map((ratio) => (
           <button key={ratio} onClick={() => onChange(ratio)}
