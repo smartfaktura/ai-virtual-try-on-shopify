@@ -670,7 +670,11 @@ export default function Freestyle() {
     onReset: handleReset,
     isDirty,
     imageRole,
-    onImageRoleChange: setImageRole,
+    onImageRoleChange: (role: ImageRole) => {
+      setImageRole(role);
+      // Auto-clear scene chip when user designates uploaded image as scene
+      if (role === 'scene') setSelectedScene(null);
+    },
     editIntent,
     onEditIntentChange: setEditIntent,
     disabledChips: sourceImagePreview ? {
