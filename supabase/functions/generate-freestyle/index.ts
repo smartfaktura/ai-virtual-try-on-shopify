@@ -1115,10 +1115,20 @@ serve(async (req) => {
               if (insertErr) {
                 console.error(`Failed to save freestyle_generations:`, insertErr.message);
               } else {
-                console.log(`Saved freestyle_generations record for image ${i + 1}`);
+                console.log(`[generate-freestyle] Saved freestyle_generations record for image ${i + 1}`);
+              }
+
+              // Early finalize: in queue mode (1 image), complete immediately after first success
+              if (body.job_id && images.length > 0) {
+                console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
+                await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                return new Response(
+                  JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
+                  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
               }
             } catch (dbErr) {
-              console.error(`Failed to save freestyle_generations record:`, dbErr);
+              console.error(`[generate-freestyle] Failed to save freestyle_generations record:`, dbErr);
             }
           }
         } else {
