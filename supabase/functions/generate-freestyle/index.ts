@@ -380,7 +380,10 @@ async function generateImage(
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
+            image_config: {
+              ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
+              image_size: quality === 'high' ? '2K' : '1K',
+            },
           }),
           signal: AbortSignal.timeout(timeoutMs),
         }
