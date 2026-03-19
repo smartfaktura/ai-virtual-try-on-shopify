@@ -292,12 +292,9 @@ export function FreestylePromptPanel({
               selectedScene={selectedScene} onSceneSelect={onSceneSelect}
               scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
               aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-              quality={quality} onQualityChange={onQualityChange}
               selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
               brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
               brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
-              negatives={negatives} onNegativesChange={onNegativesChange}
-              negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
               cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
