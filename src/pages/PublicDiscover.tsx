@@ -214,7 +214,7 @@ export default function PublicDiscover() {
           const mappedCategories = SCENE_CATEGORY_MAP[sceneCat] ?? [];
           if (!mappedCategories.includes(selectedCategory)) return false;
         } else {
-          if (item.data.category !== selectedCategory) return false;
+          if (resolveCategory(item.data.category) !== selectedCategory) return false;
         }
       }
 
