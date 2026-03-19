@@ -653,6 +653,15 @@ export default function Freestyle() {
     highlightedChip,
     onReset: handleReset,
     isDirty,
+    imageRole,
+    onImageRoleChange: setImageRole,
+    editIntent,
+    onEditIntentChange: setEditIntent,
+    disabledChips: sourceImagePreview ? {
+      product: imageRole === 'product',
+      model: imageRole === 'model',
+      scene: imageRole === 'scene',
+    } : undefined,
   };
 
   return (
