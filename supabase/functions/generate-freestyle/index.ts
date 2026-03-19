@@ -978,7 +978,7 @@ serve(async (req) => {
                 contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
                 contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
               }
-              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0);
+              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
               if (typeof fallbackResult === "string") {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
