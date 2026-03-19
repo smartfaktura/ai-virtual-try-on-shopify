@@ -326,16 +326,16 @@ function polishUserPrompt(
     }
   }
 
-  // Product / source image layer
+  // LEGACY — Product / source image layer
   const hasProductImage = context.hasProduct || context.hasSource;
   if (hasProductImage) {
-    const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
+    const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale.` : "";
     layers.push(
-      `PRODUCT IDENTITY: Identify the product from [PRODUCT IMAGE] — its exact shape, material, color, texture, and any brand details. Create a NEW professional photograph of this exact product. Preserve the product's identity (design, colors, proportions) but do NOT replicate the reference photo's composition, camera angle, or lighting setup. Reimagine it with fresh creative direction.${dimLayer}`
+      `PRODUCT IDENTITY: Identify the product from [PRODUCT REFERENCE] — its shape, material, color, texture, and brand details. Generate a photograph of this exact product with professional lighting and fresh composition.${dimLayer}`
     );
     if (context.hasSource && context.hasProduct) {
       layers.push(
-        "REFERENCE INSPIRATION: Use [REFERENCE IMAGE] as visual/style/scene inspiration. The product should be placed in a similar setting, mood, or style as shown in the reference image — but keep the product identity strictly from [PRODUCT IMAGE]."
+        "REFERENCE INSPIRATION: Use [REFERENCE IMAGE] for setting/mood/style inspiration. Place the product from [PRODUCT REFERENCE] in a similar setting."
       );
     }
     if (isSelfie) {
