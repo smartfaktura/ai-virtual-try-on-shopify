@@ -27,10 +27,7 @@ export function AspectRatioPreview({ ratio, size = 'medium' }: AspectRatioPrevie
       <div className="border-2 border-primary rounded-sm bg-primary/10 flex items-center justify-center" style={{ width: `${width}px`, height: `${height}px` }}>
         <span className="text-xs font-semibold">{ratio}</span>
       </div>
-      <div className="text-center">
-        <p className="text-xs font-medium">{config.label}</p>
-        <p className="text-xs text-muted-foreground">{config.useCase}</p>
-      </div>
+      <p className="text-xs font-medium text-center">{config.label}</p>
     </div>
   );
 }
