@@ -500,7 +500,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       <div className="pb-5">
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="text-xl font-semibold tracking-tight">
-            {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
+            {editingScheduleId ? 'Edit Drop' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
           </h2>
           <span className="text-xs text-muted-foreground font-mono">
             {step + 1}/{totalSteps}
