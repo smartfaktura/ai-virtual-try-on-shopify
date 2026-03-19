@@ -1,123 +1,94 @@
 
 
-# Creative Drops Wizard — UX Audit & Improvement Plan
+# Move Image Count & Product Assignment Into Per-Workflow Config Steps
 
-## Issues Found
+## Problem
 
-### 1. Missing "Images Per Workflow" context on config steps
-The user sets `imagesPerDrop` on the **Delivery step** (step 5+), but workflow config steps (steps 3+) already reference it for model distribution hints ("~8 img each"). Since they haven't set it yet, it defaults to 25 — which may not match their intent. The user has no way to know this number while configuring scenes/models.
+Currently, "Images Per Workflow" is a global setting buried in the Delivery step (step 5+), applied uniformly to all workflows. Users configure scenes, models, and formats per workflow in earlier steps without knowing how many images they're targeting. Worse, they can't:
+- Set different image counts per workflow (e.g., 50 for Flat Lay, 10 for Try-On)
+- Assign specific products to specific workflows (e.g., only dresses to Try-On, all products to Flat Lay)
 
-**Fix**: Show the current `imagesPerDrop` value as a subtle info chip at the top of each config step, e.g. "25 images per workflow". Make it tappable to jump to the delivery step or show an inline editor.
+## Design
 
-### 2. No step descriptions on config steps
-Steps 0-2 have clear descriptions ("Choose which visual styles to include"). Config steps just show the workflow name and description but no guidance on *what the user should do* on this page.
-
-**Fix**: Add a one-liner below the workflow identity header: "Configure scenes, models, and formats for this workflow."
-
-### 3. Review step missing workflow config details
-The review step shows scene counts and model counts as badges, but doesn't show which **aspect ratios** were selected per workflow, or the **aesthetic/mood** choices — important creative decisions that should be reviewable.
-
-**Fix**: Already partially there (formats shown as badges). Ensure aesthetic, mood, and pose selections are visible in the review summary.
-
-### 4. No "Select All / Deselect All" for products on large catalogs
-Products step has "Select All" but it's easy to miss. With many products, there's no category filter.
-
-**Fix**: Already exists — low priority. Skip.
-
-### 5. Freestyle prompts section is on the Workflows step — confusing placement
-Freestyle prompts are conceptually separate from workflow selection but appear under the same step. Users may not scroll down to see them.
-
-**Fix**: Move freestyle toggle to the Delivery/Schedule step or keep but add a visual separator with a clear header.
-
-### 6. No confirmation or warning when credit cost is very high
-A user could configure 100 images x 5 products x 3 workflows x 2 formats = 18,000 credits without any warning.
-
-**Fix**: Add a warning banner on the Review step when `costEstimate.totalCredits` exceeds the user's current balance.
-
-### 7. Step counter shows "3/7" but step names are hidden
-The progress indicator shows `{step+1}/{totalSteps}` but only the current step label is shown. Users can't see what's coming or where they've been.
-
-**Fix**: Add a horizontal step indicator or breadcrumb showing abbreviated step names with active/completed states.
-
-### 8. "Powered by VOVV.AI" in the footer wastes space
-The branding text between Back/Next is unnecessary inside the app and pushes validation hints into a cramped area.
-
-**Fix**: Remove "Powered by VOVV.AI" from the wizard footer.
-
-### 9. Missing back-navigation guard
-If a user is on step 5 and presses browser back or "Back to Schedules", all wizard state is lost with no confirmation.
-
-**Fix**: Add a confirmation dialog when closing the wizard if any state has been modified.
-
-### 10. Config step credit estimate is verbose and confusing
-The credit estimate card on each config step shows a formula like "2 products x 25 images x 2 formats = 100 images, 100 x 6 = 600 credits". This is useful but the math notation is dense.
-
-**Fix**: Simplify to a single bold number with an expandable breakdown.
-
----
-
-## Recommended Changes (Prioritized)
-
-### High Impact
-
-1. **Add step breadcrumb/stepper** — Replace the plain `3/7` counter with a horizontal dot/pill stepper showing step names. Completed steps get a checkmark, current step is highlighted. On mobile, show dots with the current label.
-
-2. **Add guidance text to config steps** — One-liner instruction below workflow header: "Pick scenes, models & formats for this workflow."
-
-3. **Credit balance warning on Review** — If `costEstimate.totalCredits > profile.credits_balance`, show a yellow warning: "This drop costs more than your current balance (X credits). You have Y credits."
-
-4. **Remove "Powered by VOVV.AI"** from wizard footer.
-
-### Medium Impact
-
-5. **Show images-per-workflow chip on config steps** — Small pill at top: "25 images/workflow" so users have context while picking scenes/models.
-
-6. **Unsaved changes guard** — When clicking "Cancel" or "Back to Schedules" after modifying state, show a confirm dialog.
-
-7. **Simplify config-step credit card** — Show just the total with a "See breakdown" toggle.
-
-### Low Impact
-
-8. **Review step: show mood/aesthetic selections** — Already shows scene/model counts; add the custom settings values too (already partially done with badges).
-
----
-
-## Technical Details
-
-**File**: `src/components/app/CreativeDropWizard.tsx`
-
-### Step breadcrumb (change 1)
-Replace lines 506-528 (progress header) with a horizontal stepper component:
-- Map step indices to short labels using `getStepLabel()`
-- Render as a flex row of dots/pills: completed = checkmark + muted, current = primary, future = muted
-- On mobile, collapse to dots with current label shown below
-
-### Guidance text on config steps (change 2)
-After the workflow identity div (line 889), add:
-```tsx
-<p className="text-sm text-muted-foreground">Pick scenes, models & formats for this workflow.</p>
+### New Flow
+```text
+Step 0: Details
+Step 1: Products (select ALL products you want to use)
+Step 2: Select Workflows
+Steps 3+: Config per workflow — now includes:
+  ├─ Product filter (default: all selected, can narrow down)
+  ├─ Images per workflow (moved here from Delivery)
+  ├─ Scenes / Models / Formats (existing)
+  └─ Credit estimate (updated per-workflow)
+Delivery step: Only delivery mode + schedule (no more image count)
+Review step: Shows per-workflow image counts + product assignments
 ```
 
-### Credit warning on Review (change 3)
-Before the review Card (line 1460), add conditional warning:
+### State Changes
+- Replace single `imagesPerDrop: number` with `imagesPerWorkflow: Record<string, number>` (keyed by workflow ID, default 25)
+- Add `workflowProductIds: Record<string, Set<string>>` (defaults to all selected products)
+- Keep `imagesPerDrop` as a fallback for backward compatibility in save payload (use max or first value)
+
+## Changes
+
+### File: `src/components/app/CreativeDropWizard.tsx`
+
+**1. State — replace global with per-workflow (lines ~194)**
 ```tsx
-{profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance && (
-  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2 text-sm">
-    <Wallet className="w-4 h-4 text-amber-600" />
-    <span>This drop costs <strong>{costEstimate.totalCredits}</strong> credits but you only have <strong>{profile.credits_balance}</strong>.</span>
-  </div>
-)}
+// Replace:
+const [imagesPerDrop, setImagesPerDrop] = useState(initialData?.imagesPerDrop || 25);
+// With:
+const [imagesPerWorkflow, setImagesPerWorkflow] = useState<Record<string, number>>(() => {
+  if (initialData?.imagesPerWorkflow) return initialData.imagesPerWorkflow;
+  return {};
+});
+const [workflowProductIds, setWorkflowProductIds] = useState<Record<string, Set<string>>>({});
+// Helper:
+const getWorkflowImageCount = (wfId: string) => imagesPerWorkflow[wfId] ?? 25;
+const getWorkflowProducts = (wfId: string) => workflowProductIds[wfId] ?? selectedProductIds;
 ```
 
-### Remove branding (change 4)
-Delete lines 1643-1650 (the "Powered by VOVV.AI" div).
+**2. Config step UI — add product filter + image count (line ~889)**
 
-### Images-per-workflow chip (change 5)
-After the workflow identity div on config steps (~line 889), add:
+After the guidance text, before scenes section, add two new sections:
+
+**Product Assignment**: Collapsible section defaulting to "All X products". Expandable to show thumbnails with toggles. Chip summary: "All 5 products" or "3 of 5 products".
+
+**Images for This Workflow**: Same preset buttons (10/25/50/100 + custom) but scoped to this workflow. Shows current value prominently.
+
+**3. Remove global "Images Per Workflow" from Delivery step (lines ~1441-1462)**
+Delete the entire `IMAGES PER WORKFLOW` section from the Delivery step. Keep only Delivery mode, schedule, and credit estimate.
+
+**4. Update credit calculator call (line ~302)**
+Change from single `imagesPerDrop` to per-workflow calculation:
 ```tsx
-<Badge variant="outline" className="text-xs rounded-full">{imagesPerDrop} images/workflow</Badge>
+const costEstimate = calculateDropCredits(
+  workflowConfigs, // add imageCount per config
+  effectiveFrequency,
+  // product counts are now per-workflow
+);
 ```
 
-### Unsaved changes guard (change 6)
-Track a `isDirty` boolean (true when any field changes from initial). On `onClose` or Cancel at step 0, show a confirm dialog if dirty.
+### File: `src/lib/dropCreditCalculator.ts`
+
+**5. Support per-workflow image counts**
+Add `imageCountOverride` and `productCount` to `WorkflowCostConfig`. Update `calculateDropCredits` to use per-workflow values instead of a single `imagesPerDrop`.
+
+**6. Save payload (line ~451)**
+- Store `images_per_drop` as the max value for backward compat
+- Store per-workflow counts in `scene_config[wfId].image_count`
+- Store per-workflow product IDs in `scene_config[wfId].product_ids`
+
+**7. Review step (lines ~1566-1568)**
+Update to show per-workflow image counts instead of global "25 × 3 workflows". Each workflow summary card shows its own image count and product count.
+
+### File: `supabase/functions/trigger-creative-drop/index.ts`
+
+**8. Read per-workflow image count from scene_config**
+In the orchestrator loop, check for `wfSceneConfig.image_count` to override the global `images_per_drop`. Check for `wfSceneConfig.product_ids` to filter products per workflow.
+
+### Backward Compatibility
+- If `imagesPerWorkflow` is empty (old data), fall back to `imagesPerDrop` or 25
+- If `workflowProductIds` is empty, use all selected products (current behavior)
+- Existing schedules continue to work unchanged
 
