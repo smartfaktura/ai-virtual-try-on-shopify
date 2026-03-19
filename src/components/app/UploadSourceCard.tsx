@@ -16,6 +16,8 @@ interface UploadSourceCardProps {
   onUpdateProductInfo: (info: ScratchUpload['productInfo']) => void;
   isUploading?: boolean;
   variant?: 'product' | 'room';
+  saveToLibrary?: boolean;
+  onSaveToLibraryChange?: (checked: boolean) => void;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
