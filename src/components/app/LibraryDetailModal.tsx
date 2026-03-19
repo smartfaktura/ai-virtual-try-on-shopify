@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -282,6 +282,17 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                 >
                   <Send className="w-4 h-4 mr-2" /> Submit for Review
                 </Button>
+              </div>
+
+              {/* Social tag promo */}
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <AtSign className="w-5 h-5 text-amber-500" />
+                  <h3 className="text-base font-semibold text-foreground">Tag Us, Win a Free Year</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Post your creation on social media with <span className="font-semibold text-foreground">@vovv.ai</span> and <span className="font-semibold text-foreground">#vovvai</span> — we pick winners every month for a full year of free access.
+                </p>
               </div>
 
               {/* Admin actions */}
