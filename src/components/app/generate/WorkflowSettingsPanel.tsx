@@ -773,7 +773,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                 {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                 {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                {' '}× {quality === 'high' ? 8 : 4} credits
+                {' '}× 6 credits
               </p>
             </div>
             {balance >= creditCost ? (
