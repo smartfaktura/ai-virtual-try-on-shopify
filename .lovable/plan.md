@@ -1,56 +1,31 @@
 
-Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-What I found
-- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
-- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
-- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
-- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
-- Dashboard queries don’t present a clear recovery UI when core queries fail.
+## Freestyle Scene URL Audit
 
-Implementation plan
-1) Harden route-gating so it cannot hang
-- File: `src/components/app/ProtectedRoute.tsx`
-- Replace current onboarding check with guarded async flow:
-  - reset `onboardingChecked` before request
-  - use `.maybeSingle()` (not `.single()`) for profile lookup
-  - handle network/query errors explicitly
-  - set `onboardingChecked` in `finally` so route never stays blocked
-  - keep onboarding redirect logic for valid `onboarding_completed === false`
+### How scenes work
+When a user selects a scene in Freestyle, the scene's `previewUrl` is sent to the backend edge function as a reference image. The AI provider (Google) must be able to **fetch** this URL. That means it must be an absolute, publicly accessible `https://` URL.
 
-2) Harden auth bootstrap
-- File: `src/contexts/AuthContext.tsx`
-- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
-- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
+### URL sources used by scenes
 
-3) Harden credit bootstrap + noisy failure path
-- File: `src/contexts/CreditContext.tsx`
-- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
-- Keep defaults when profile is missing/unreachable.
-- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
+| Source | Pattern | Publicly accessible? |
+|--------|---------|---------------------|
+| `getLandingAssetUrl(...)` | `https://{supabase}/storage/v1/object/public/landing-assets/...` | Yes |
+| `WORKFLOW_PREVIEW_BASE/...` | `https://{supabase}/storage/v1/object/public/workflow-previews/...` | Yes |
+| Relative path (`/images/...`) | Resolves to preview/published domain | No (AI provider cannot fetch) |
 
-4) Add dashboard recovery UI for failed core queries
-- File: `src/pages/Dashboard.tsx`
-- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
-- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
+### Results
 
-5) Improve global query resilience
-- File: `src/App.tsx`
-- Update QueryClient defaults for flaky connections:
-  - `retry` + bounded `retryDelay`
-  - `refetchOnReconnect: true`
-  - keep current `refetchOnWindowFocus: false`
-- This reduces “one failed request = stuck state” cases.
+**BAD — will cause generation failure:**
+- **White Studio** (`scene_038`): uses `'/images/hero/hero-hp-white.png'` — a relative path. This is the only broken scene.
 
-Technical notes
-- No database schema changes needed.
-- This is a client resilience patch, not a business-logic change.
-- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
+**GOOD — all other scenes (30+):** Every other scene uses either `getLandingAssetUrl()` or an absolute Supabase storage URL. These are all publicly fetchable and will work correctly.
 
-Validation checklist (end-to-end)
-1. Open `/app` with normal network: dashboard loads normally.
-2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
-3. Reconnect network: dashboard should recover via retry/reconnect.
-4. User with `onboarding_completed=false`: still redirects to onboarding.
-5. User with missing profile row: app should still load safely (no deadlock).
-6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
+### The fix (from approved but not yet fully applied plan)
+
+1. **`src/data/mockData.ts`**: Change `sceneWhiteStudio` from the relative path to a Supabase storage public URL (upload the image to `landing-assets/scenes/scene-white-studio.jpg` or similar)
+2. **`src/pages/Freestyle.tsx`**: Remove the `window.location.origin` workaround (it produces preview-domain URLs that are also inaccessible to AI providers)
+3. **`supabase/functions/generate-freestyle/index.ts`**: Add a safety guard — if a scene URL is not `https://`, log a warning and skip it instead of failing the entire job
+
+### Summary
+Only 1 scene out of ~35 is broken: **White Studio**. The root cause is a relative URL that can't be fetched by external AI services. All other scenes use proper absolute Supabase storage URLs and work fine.
+
