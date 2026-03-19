@@ -876,6 +876,7 @@ serve(async (req) => {
       console.log(`[FREESTYLE] White Studio (scene_038) — prompt-only mode, scene image cleared`);
     }
 
+    if (body.stylePresets?.length) {
       if (body.cameraStyle === 'natural') {
         const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
         const filtered = body.stylePresets.filter((kw: string) =>
