@@ -358,7 +358,8 @@ async function generateImage(
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  maxRetries = 2
+  maxRetries = 2,
+  quality: "standard" | "high" = "standard"
 ): Promise<GenerateResult> {
   // Pro models need longer timeouts — they regularly take 90-120s with multiple images
   const isProModel = /gemini-3-pro|gemini-3\.1-pro/i.test(model);
@@ -379,7 +380,10 @@ async function generateImage(
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
+            image_config: {
+              ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
+              image_size: quality === 'high' ? '2K' : '1K',
+            },
           }),
           signal: AbortSignal.timeout(timeoutMs),
         }
@@ -851,12 +855,12 @@ serve(async (req) => {
           contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
         }
 
-        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
 
         // Fallback: if Pro model returned null (no image), try Flash model once
         if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
           console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
-          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0);
+          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
         }
 
         if (result && typeof result === "object" && "blocked" in result) {
@@ -974,7 +978,7 @@ serve(async (req) => {
                 contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
                 contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
               }
-              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0);
+              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
               if (typeof fallbackResult === "string") {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
