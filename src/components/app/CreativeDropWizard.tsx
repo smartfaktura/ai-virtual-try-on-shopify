@@ -1504,6 +1504,13 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
           {/* ─── Review ─── */}
           {step === reviewStepIndex && (
+            <>
+            {profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2 text-sm mb-4 animate-fade-in">
+                <Wallet className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>This drop costs <strong>{costEstimate.totalCredits}</strong> credits but you only have <strong>{profile.credits_balance}</strong>.</span>
+              </div>
+            )}
             <div className="space-y-6 animate-fade-in">
               <Card className="rounded-2xl border-2 border-primary/20 bg-primary/[0.03] shadow-sm">
                 <CardContent className="p-5 flex items-center gap-4">
