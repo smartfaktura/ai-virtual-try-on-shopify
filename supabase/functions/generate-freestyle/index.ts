@@ -69,6 +69,21 @@ interface FreestyleRequest {
   productDimensions?: string;
 }
 
+// ── Editing intent detection — skip heavy polish for simple edits ─────────
+const EDITING_KEYWORDS = [
+  'extract', 'remove', 'isolate', 'cut out', 'erase', 'clean up',
+  'change background', 'replace background', 'swap background',
+  'replace', 'recolor', 'crop', 'make transparent', 'delete text',
+  'remove text', 'fix', 'enhance', 'sharpen', 'upscale', 'brighten',
+  'darken', 'desaturate', 'blur background', 'add shadow', 'remove shadow',
+  'straighten', 'rotate', 'flip', 'mirror', 'resize',
+];
+
+function detectEditingIntent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return EDITING_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 // ── Selfie / UGC intent detection ─────────────────────────────────────────
 const SELFIE_KEYWORDS = [
   'selfie', 'self-portrait', 'self portrait', 'front-facing', 'front facing',
