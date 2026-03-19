@@ -35,6 +35,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(false);
+  const [captionCopied, setCaptionCopied] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
