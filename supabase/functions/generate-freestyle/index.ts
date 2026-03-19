@@ -505,8 +505,41 @@ function buildContentArray(
   return content;
 }
 
+/** Save a freestyle_generations record + optionally early-finalize queue job */
+async function saveFreestyleGeneration(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  publicUrl: string,
+  body: FreestyleRequest & { job_id?: string; credits_reserved?: number; workflow_label?: string },
+  imageIndex: number,
+): Promise<void> {
+  const insertData: Record<string, unknown> = {
+    user_id: userId,
+    image_url: publicUrl,
+    prompt: body.prompt || '',
+    user_prompt: body.userPrompt || null,
+    aspect_ratio: body.aspectRatio || '1:1',
+    quality: body.quality || 'standard',
+    model_id: body.modelId || null,
+    scene_id: body.sceneId || null,
+    product_id: body.productId || null,
+  };
+  if (body.workflow_label) {
+    insertData.workflow_label = body.workflow_label;
+  }
+  const { error: insertErr } = await supabase.from('freestyle_generations').insert(insertData);
+  if (insertErr) {
+    console.error(`[generate-freestyle] Failed to save freestyle_generations:`, insertErr.message);
+  } else {
+    console.log(`[generate-freestyle] Saved freestyle_generations record for image ${imageIndex + 1}`);
+  }
+}
+
 /** Helper: update generation_queue and handle credits when called from the queue */
 async function completeQueueJob(
+  supabase: ReturnType<typeof createClient>,
+  supabaseUrl: string,
+  serviceRoleKey: string,
   jobId: string,
   userId: string,
   creditsReserved: number,
@@ -517,9 +550,6 @@ async function completeQueueJob(
   contentBlocked: boolean = false,
   blockReason: string | null = null,
 ) {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
   // Guard: if user already cancelled, skip completion to preserve refund
   const { data: currentJob } = await supabase
