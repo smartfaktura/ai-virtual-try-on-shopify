@@ -208,11 +208,11 @@ const FAILED_MESSAGES: Record<FailedErrorType, (name: string) => { title: string
   }),
   rate_limit: (name) => ({
     title: `${name} is handling a lot right now`,
-    body: 'Try again in a moment. Credits refunded.',
+    body: 'Our AI is processing a high volume of requests right now. Your credits have been refunded — try again in a minute or two.',
   }),
   generic: (name) => ({
     title: `${name} hit an unexpected issue`,
-    body: 'Credits have been refunded — give it another try.',
+    body: 'Something unexpected happened on our end. Credits refunded — try again shortly.',
   }),
 };
 
@@ -228,6 +228,7 @@ function GenerationFailedCard({
   className?: string;
 }) {
   const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
+  const { isAdmin: isAdminFlag } = useIsAdmin();
   const msg = FAILED_MESSAGES[entry.errorType](crew.name);
 
   return (
@@ -259,6 +260,13 @@ function GenerationFailedCard({
           {msg.body}
         </p>
       </div>
+
+      {/* Admin-only raw error detail */}
+      {isAdminFlag && entry.message && (
+        <div className="w-full max-w-[260px] text-[9px] font-mono bg-white/5 rounded p-2 text-white/30 break-all leading-relaxed">
+          {entry.message}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-col items-center gap-2 mt-1">
