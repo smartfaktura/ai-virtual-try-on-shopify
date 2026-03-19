@@ -22,7 +22,7 @@ import {
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
-  Settings2,
+  Settings2, Wallet,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1257,6 +1257,33 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     </div>
                   </div>
                 )}
+
+                {/* ── Credit Summary for this workflow ── */}
+                {(() => {
+                  const formatCount = Math.max(currentFormats.length, 1);
+                  const workflowImages = selectedProductIds.size * imagesPerDrop * formatCount;
+                  const workflowCredits = workflowImages * 6;
+                  return (
+                    <Card className="p-4 bg-muted/30 border-dashed space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-semibold">Credit Estimate</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} × {imagesPerDrop} image{imagesPerDrop !== 1 ? 's' : ''} × {formatCount} format{formatCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{workflowImages} images</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {workflowImages} × 6 credits = <span className="font-semibold text-foreground">{workflowCredits} credits</span>
+                      </p>
+                      {selectedWorkflowIds.size > 1 && (
+                        <>
+                          <Separator className="my-1" />
+                          <p className="text-xs font-semibold">All workflows total: {costEstimate.totalCredits} credits ({costEstimate.totalImages} images)</p>
+                        </>
+                      )}
+                    </Card>
+                  );
+                })()}
               </div>
             );
           })()}
