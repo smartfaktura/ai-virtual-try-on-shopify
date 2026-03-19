@@ -151,7 +151,7 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
-    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { width: 600, quality: 60 })),
+    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
     [rawBackgrounds],
   );
   const INTERVAL = 1000;
@@ -245,7 +245,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const [bgLoaded, setBgLoaded] = useState(false);
   const [phase, setPhase] = useState<'blur' | 'wiping' | 'sharp'>('blur');
-  const bgSrc = useMemo(() => getOptimizedUrl(scene.background, { width: 600, quality: 60 }), [scene.background]);
+  const bgSrc = useMemo(() => getOptimizedUrl(scene.background, { quality: 60 }), [scene.background]);
 
   useEffect(() => {
     if (!isActive) {
