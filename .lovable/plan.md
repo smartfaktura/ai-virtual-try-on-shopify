@@ -1,96 +1,106 @@
 
+## What’s actually wrong (based on logs + DB)
+- We have **queue rows stuck in `processing`** (example: `b4bffd24-...`), while `generate-freestyle` logs show it **generated a fallback image and saved it**, but the queue row **never got marked `completed`**.
+- That means the generation function can **finish the expensive part** (AI + upload + DB insert) but still **fail to run the final “completeQueueJob” update**—likely due to:
+  1) **Edge runtime shutdown / time limit** happening right after image generation, before the final queue update runs
+  2) **429 retry/fallback path** not finalizing early, so completion happens “later” and is vulnerable to shutdown
 
-## Phase 0: Cleanup — Simplify Freestyle Before Architecture Changes
+Also, the start delay is amplified by:
+- `enqueue-generation` calling `process-queue` with **2× 5s timeouts**, which frequently times out on cold starts and leaves jobs idle longer.
 
-### Summary
-Remove UI clutter (Polish toggle, Style Presets from main row), fix dangerous `sourceImage` labeling, and shorten the prompt builder. No new architecture — just reduce confusion.
-
----
-
-### 1. Remove Polish toggle from UI
-
-**Files:** `FreestyleSettingsChips.tsx`, `FreestylePromptPanel.tsx`, `Freestyle.tsx`
-
-- Remove `polishChip` from both mobile and desktop chip layouts
-- Remove `polishPrompt` / `onPolishChange` props from `FreestyleSettingsChips` and `FreestylePromptPanel`
-- In `Freestyle.tsx`: remove `polishPrompt` state, hardcode `polishPrompt: true` in the enqueue payload
-- Remove from `isDirty` check and `handleReset`
-
-### 2. Remove Style Presets chip from main row
-
-**Files:** `FreestyleSettingsChips.tsx`, `FreestylePromptPanel.tsx`, `Freestyle.tsx`
-
-- Remove `presetsChip` from both mobile and desktop layouts
-- Remove `stylePresets` / `onStylePresetsChange` props from settings chips and prompt panel
-- In `Freestyle.tsx`: remove `stylePresets` state, stop sending `stylePresets` in payload
-- Remove `StylePresetChips` import (file itself can stay for now)
-
-### 3. Fix `buildContentArray()` — stop treating sourceImage as `[PRODUCT IMAGE]`
-
-**File:** `generate-freestyle/index.ts`, lines 682-691
-
-Current dangerous fallback:
-```
-if (productImage) { label = "[REFERENCE IMAGE]" }
-else { label = "[PRODUCT IMAGE]" }  // ← wrong
-```
-
-Replace with:
-- If `productImage` exists and `sourceImage` exists → source = `[REFERENCE IMAGE]`
-- If `productImage` exists, no source → just product
-- If no `productImage`, source exists → `[REFERENCE IMAGE]` (not product)
-- Never label an uploaded image as `[PRODUCT IMAGE]` unless it came from the product selector
-
-### 4. Shorten `polishUserPrompt()` — reduce prompt bloat
-
-**File:** `generate-freestyle/index.ts`
-
-Changes within the existing function (no new architecture):
-
-a. **Remove "Create a NEW photograph" wording** from product identity layers (lines 202, 209, 346). Replace with neutral: "Generate a photograph of this exact product with professional lighting and fresh composition."
-
-b. **Soften model identity wording** (line 376). Current is 5 lines of aggressive caps-lock matching. Replace with: "The person must match the individual in [MODEL IMAGE] — same face, features, skin tone, hair, and body. This is a specific person, not a generic model."
-
-c. **Shorten negative prompt** (`buildNegativePrompt`). Current is 8+ rules. Reduce to 4 essentials:
-   - Anatomy rule (keep concise)
-   - No AI smoothing
-   - No collage/split-screen
-   - No black borders
-
-d. **Shorten iPhone/natural camera block** (lines 431-438). Current is a massive 10-line block. Replace with 3 concise lines:
-   - "Shot on iPhone. Deep depth of field, everything sharp. True-to-life colors, no grading. Natural ambient light, no studio lighting. Ultra-sharp detail."
-
-e. **Shorten selfie composition** (lines 296-298). Current is a wall of text. Reduce to 3 key instructions.
-
-f. **Shorten portrait quality** (line 404). Reduce from dense paragraph to 2 lines.
-
-g. **Update prompt references** — change `[PRODUCT IMAGE]` to `[PRODUCT REFERENCE]` in polishUserPrompt to match new content array labeling. Similarly `[MODEL IMAGE]` → `[MODEL REFERENCE]`, `[SCENE IMAGE]` → `[SCENE REFERENCE]`.
-
-### 5. Update `buildContentArray()` labels
-
-Change labels to be clearer:
-- `[PRODUCT IMAGE]` → `[PRODUCT REFERENCE]` (for product from selector)
-- `[MODEL IMAGE]` → `[MODEL REFERENCE]`
-- `[SCENE IMAGE]` → `[SCENE REFERENCE]`
-- `[REFERENCE IMAGE]` stays (for uploaded source when product also exists)
-
-### 6. Deduplicate `freestyle_generations` insert
-
-Extract the duplicated DB insert (lines 1102-1128 and 1162-1189) into a `saveFreestyleRecord()` helper. Called from both normal and 429-fallback paths.
-
-### 7. Deduplicate Supabase client creation in loop
-
-Create the service-role client once before the generation loop instead of creating new clients at lines 1079, 1103, 1164.
+“nanobanan” note:
+- There is **no “nanobanan” model** referenced anywhere in the frontend or `generate-freestyle`. The image model selection is internal (Gemini Flash/Pro). The issue is not “sending the wrong model,” it’s **queue finalization reliability**.
 
 ---
 
-### Files changed
-- `supabase/functions/generate-freestyle/index.ts` — prompt shortening, label fixes, deduplication
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — remove Polish + Presets chips
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` — remove Polish + Presets props
-- `src/pages/Freestyle.tsx` — remove Polish + Presets state, hardcode polish=true
-- `public/generate-freestyle-logic.txt` — update with new logic
+## Goal (final fix)
+Make Freestyle queue jobs **always** transition out of `processing`:
+- If an image gets generated (primary or fallback), the queue row must be updated **immediately** (not at the end).
+- Increase queue timeout headroom so cleanup doesn’t kill legitimate slow runs.
+- Remove trigger timeouts that delay queue pickup.
 
-### Risk
-Low — no queue/credit/storage changes. Polish was already defaulting to `true`. Presets were rarely used. Prompt shortening is the main behavioral change but keeps the same intent with less noise.
+---
 
+## Implementation plan
+
+### 1) Fix slow start: make queue trigger fire-and-forget
+**File:** `supabase/functions/enqueue-generation/index.ts`
+
+- Replace the current `triggerQueue()` retry loop (2 attempts with `AbortSignal.timeout(5000)`) with **one fire-and-forget fetch** that is not awaited and has no timeout.
+- Reason: the goal is only to “wake” the dispatcher; waiting for a response is unnecessary and fails during cold boots.
+
+**Expected effect:** “Your job is next in queue…” should start faster and more consistently.
+
+---
+
+### 2) Fix “generation happens but queue never completes” (core reliability patch)
+**File:** `supabase/functions/generate-freestyle/index.ts`
+
+#### 2.1 Extend timeout_at at the start of a queue job
+- When `isQueueInternal && body.job_id`, immediately update `generation_queue.timeout_at` to **now + 10–12 minutes**.
+- Reason: current DB function `claim_next_job()` sets `timeout_at = now() + 5 minutes`, which is too tight for cold boots + 429 + fallback.
+
+#### 2.2 Finalize early for queue mode (especially since queue caps to 1 image)
+Queue mode already forces:
+- `effectiveImageCount = 1`
+- `maxRetries = 1`
+
+So we should:
+- After the **first successful upload** (whether primary model or fallback), call:
+  - `completeQueueJob(job_id, user_id, credits_reserved, images, requestedCount=1, errors, payload, ...)`
+  - and then **return immediately** (or break out and finalize right away).
+  
+This removes reliance on “end-of-function” completion, which is the part most likely to be skipped if the runtime shuts down.
+
+#### 2.3 Add a progress/heartbeat queue update after upload (belt-and-suspenders)
+Even before marking completed, after each successful upload:
+- Update `generation_queue.result` with partial progress:
+  - `{ images: [...], generatedCount, requestedCount }`
+- This makes the system resilient even if it dies before final completion—`cleanup_stale_jobs()` already has logic to treat partial results as partial success.
+
+#### 2.4 Fix the 429 fallback success path to also finalize immediately
+Right now fallback success logs show the image gets saved, but the queue row can remain `processing`.
+- In the `status===429` catch block, when fallback succeeds, in queue mode:
+  - immediately call `completeQueueJob(...)` and exit.
+
+#### 2.5 Reduce 429 backoff to switch models faster
+In `generateImage()`, change:
+- `setTimeout(3000 * (attempt + 1))`
+to:
+- a flat **1500ms** (or even 0–500ms for queue mode)
+Reason: rate limits are often per-model; waiting longer doesn’t help as much as switching models.
+
+#### 2.6 Add correlation logs (job_id + queue internal)
+Add logs at start:
+- `job_id`, `user_id`, chosen model, refCount
+Add logs when:
+- uploading finished
+- queue updated (completed/failed)
+
+This makes future debugging immediate.
+
+---
+
+### 3) Verify end-to-end with real queue rows (no UI guessing)
+Use backend queries/logs to confirm the fix:
+
+1. Create a Freestyle generation from the UI (product + scene is fine).
+2. Confirm the queue row transitions:
+   - `queued → processing → completed`
+3. Confirm `generation_queue.result.images[0]` exists and matches an entry in `freestyle_generations.image_url`.
+4. Force a few runs quickly to increase chance of 429 and verify fallback still completes the queue row.
+
+---
+
+## Files to change
+- `supabase/functions/enqueue-generation/index.ts`
+- `supabase/functions/generate-freestyle/index.ts`
+
+No database migrations required (we’ll extend `timeout_at` from the generation function itself).
+
+---
+
+## Why this solves “not generating”
+Even if the AI call succeeds and the image is uploaded, the user currently sees “stuck” because the **queue status never flips**. Early completion + heartbeat updates ensure:
+- If image exists → queue completes (or at least has partial result)
+- No more “generated but UI never receives completion”
