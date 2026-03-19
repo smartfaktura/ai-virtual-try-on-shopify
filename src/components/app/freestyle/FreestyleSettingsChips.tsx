@@ -320,6 +320,7 @@ export function FreestyleSettingsChips({
         {/* Group 3: Output — technical settings */}
         {aspectRatioChip}
         {cameraStyleChip}
+        {qualityChip}
 
       </div>
     </TooltipProvider>
