@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { supabase } from '@/integrations/supabase/client';
+
+const DISCOVER_CATEGORIES = ['editorial', 'commercial', 'lifestyle', 'fashion', 'campaign'] as const;
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
