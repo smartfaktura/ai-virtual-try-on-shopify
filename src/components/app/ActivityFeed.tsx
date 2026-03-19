@@ -54,7 +54,7 @@ export function ActivityFeed() {
         .limit(5);
 
       for (const job of jobs ?? []) {
-        const status = job.status === 'completed' ? 'completed' : job.status === 'failed' ? 'failed' : 'started';
+        const status = job.status === 'completed' ? 'completed' : job.status === 'failed' ? 'failed · credits refunded' : 'started';
         const wfName = job.workflows?.name || 'Generation';
         items.push({
           id: `job-${job.id}`,
