@@ -1,56 +1,25 @@
 
-Goal: fix the “dashboard looks crashed / never loads” behavior so the app always recovers gracefully from backend/network failures.
 
-What I found
-- The latest client/network logs show a failed backend request (`check-subscription`: `Failed to fetch`).
-- Backend read queries are intermittently timing out (status 544), so transient backend instability is real.
-- `ProtectedRoute` can deadlock on loading: onboarding check uses `.single()` + `.then(...)` with no `.catch/.finally`; if request rejects, `onboardingChecked` may never flip to `true`, leaving infinite “Loading…”.
-- `AuthContext` and `CreditContext` have startup paths without strong `try/catch/finally` protection, so loading flags can get stuck during network failures.
-- Dashboard queries don’t present a clear recovery UI when core queries fail.
+## Show Raw Error to Admin + Friendly Public Messages on Generation Failure
 
-Implementation plan
-1) Harden route-gating so it cannot hang
-- File: `src/components/app/ProtectedRoute.tsx`
-- Replace current onboarding check with guarded async flow:
-  - reset `onboardingChecked` before request
-  - use `.maybeSingle()` (not `.single()`) for profile lookup
-  - handle network/query errors explicitly
-  - set `onboardingChecked` in `finally` so route never stays blocked
-  - keep onboarding redirect logic for valid `onboarding_completed === false`
+### What Changes
 
-2) Harden auth bootstrap
-- File: `src/contexts/AuthContext.tsx`
-- Wrap initial session restore in `try/catch/finally` and guarantee `isLoading` is cleared even on fetch/session restore errors.
-- Add a short safety timeout fallback (last-resort) so auth bootstrap cannot freeze the app.
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
 
-3) Harden credit bootstrap + noisy failure path
-- File: `src/contexts/CreditContext.tsx`
-- In `fetchCredits`, switch to `.maybeSingle()` and always clear `isLoading` in `finally`.
-- Keep defaults when profile is missing/unreachable.
-- Keep `checkSubscription` non-blocking; log failure once per interval cycle without impacting page render.
+1. **Admin error detail**: In the `GenerationFailedCard` component, after the existing body text, conditionally render the raw `entry.message` in a monospace/code block when `useIsAdmin().isAdmin` is true. This gives you visibility into the actual error (e.g., "AI Gateway error: 503, error code: 1102") without exposing it to regular users.
 
-4) Add dashboard recovery UI for failed core queries
-- File: `src/pages/Dashboard.tsx`
-- Track `isError`/`error` for critical queries (profile, recent jobs, generated count, schedules).
-- If critical load fails, render a clear inline error state with retry action (`refetch` or page reload), instead of “looks dead”.
+2. **Friendlier public messages**: Update the `FAILED_MESSAGES` map:
+   - `rate_limit`: Change body from "Try again in a moment. Credits refunded." to something like: "Our AI is processing a high volume of requests right now. Your credits have been refunded — try again in a minute or two."
+   - `generic`: Update to: "Something unexpected happened on our end. Credits refunded — try again shortly."
+   - `timeout`: Keep as-is (already friendly).
 
-5) Improve global query resilience
-- File: `src/App.tsx`
-- Update QueryClient defaults for flaky connections:
-  - `retry` + bounded `retryDelay`
-  - `refetchOnReconnect: true`
-  - keep current `refetchOnWindowFocus: false`
-- This reduces “one failed request = stuck state” cases.
+### Technical Detail
 
-Technical notes
-- No database schema changes needed.
-- This is a client resilience patch, not a business-logic change.
-- It preserves existing onboarding/auth behavior while preventing infinite loading states under transient outages.
+- `useIsAdmin()` is already imported in this file
+- `entry.message` already contains the raw `error_message` from the queue job (passed through `onGenerationFailed` callback)
+- The admin detail block will be a small `text-[9px] font-mono` section below the body, styled subtly (e.g., `bg-white/5 rounded p-2 text-white/30`) so it doesn't dominate the card
+- No database or backend changes needed
 
-Validation checklist (end-to-end)
-1. Open `/app` with normal network: dashboard loads normally.
-2. Simulate offline during `/app` load: app should not stay on infinite loader; show recoverable error state.
-3. Reconnect network: dashboard should recover via retry/reconnect.
-4. User with `onboarding_completed=false`: still redirects to onboarding.
-5. User with missing profile row: app should still load safely (no deadlock).
-6. Confirm no regressions in Freestyle/Generate/Library navigation from AppShell.
+### Files Changed
+- `src/components/app/freestyle/FreestyleGallery.tsx` only
+
