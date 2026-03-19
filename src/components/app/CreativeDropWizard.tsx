@@ -1281,7 +1281,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   >
                     <Clock className={cn('w-5 h-5', deliveryMode === 'scheduled' ? 'text-primary' : 'text-muted-foreground')} />
                     <span className="text-sm font-semibold">Schedule</span>
-                    <span className="text-xs text-muted-foreground">Pick a date & recur</span>
+                    <span className="text-xs text-muted-foreground">Schedule for later</span>
+                    <span className="text-[10px] text-muted-foreground/70 mt-0.5">Ideal when waiting for credit renewal</span>
                   </button>
                 </div>
               </div>
