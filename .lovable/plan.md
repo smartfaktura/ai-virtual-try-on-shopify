@@ -1,57 +1,23 @@
 
 
-# Fix Hardcoded .png Upload + Request PNG from Gateway
+# Widen Freestyle Prompt Panel + Fix Chip Layout
 
 ## Problem
-- **Freestyle** and **Try-On** upload functions hardcode `.png` extension and `image/png` content type, even when Gemini returns JPEG data
-- **Workflow** already correctly parses the MIME from the data URL — Freestyle and Try-On should match
-- To ensure consistently large, high-quality PNG output, we should also tell the gateway to return PNG via `output_format: 'png'`
+The prompt bar is constrained to `max-w-3xl` (768px) on desktop, leaving empty space on the right. With 9 chips across two rows, they look cramped and oddly spaced within this narrow container.
 
 ## Changes
 
-### 1. `supabase/functions/generate-tryon/index.ts` — Fix upload + request PNG
+### 1. `src/pages/Freestyle.tsx` (line 810)
+Widen the prompt panel container from `lg:max-w-3xl` to `lg:max-w-4xl` (896px). This gives chips more breathing room and fills the available space better.
 
-**Upload function** (lines 216-225): Parse MIME from data URL instead of hardcoding:
-```typescript
-const mimeMatch = base64Url.match(/^data:(image\/[^;]+);/);
-const mimeType = mimeMatch?.[1] || "image/png";
-const ext = mimeType === "image/jpeg" ? "jpg" : "png";
-const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
-// ...upload with contentType: mimeType
+```
+lg:max-w-3xl → lg:max-w-4xl
 ```
 
-**Gateway call** (line 303): Add `output_format: 'png'`:
-```typescript
-image_config: { aspect_ratio: aspectRatio, image_size: '2K', output_format: 'png' },
-```
+### 2. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — Desktop layout (lines 293-322)
+Change the second row of chips to spread evenly using `justify-between` or add slight spacing improvements so chips don't cluster on the left with empty space on the right. Increase gap from `gap-1.5` to `gap-2` for both rows to give chips more visual breathing room.
 
-### 2. `supabase/functions/generate-freestyle/index.ts` — Fix upload
-
-**Upload function** (lines 336-346): Same MIME parsing fix:
-```typescript
-const mimeMatch = base64Url.match(/^data:(image\/[^;]+);/);
-const mimeType = mimeMatch?.[1] || "image/png";
-const ext = mimeType === "image/jpeg" ? "jpg" : "png";
-const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
-// ...upload with contentType: mimeType
-```
-
-Freestyle already produces large images so no `output_format` change needed there, but the upload metadata should still be correct.
-
-### 3. `supabase/functions/generate-workflow/index.ts` — Request PNG
-
-Upload already parses MIME correctly. Just add `output_format: 'png'` to the gateway call (line 586):
-```typescript
-image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K', output_format: 'png' },
-```
-
-## Summary
-
-| File | Fix upload MIME? | Add `output_format: 'png'`? |
-|---|---|---|
-| generate-tryon | Yes | Yes |
-| generate-freestyle | Yes | No (already gets PNG from Pro model) |
-| generate-workflow | No (already correct) | Yes |
-
-Three files, small targeted edits. This ensures the gateway returns PNG data and the upload correctly labels whatever it receives.
+### Summary
+- One class change in Freestyle.tsx: `max-w-3xl` → `max-w-4xl`
+- Gap increase in FreestyleSettingsChips desktop rows: `gap-1.5` → `gap-2`
 
