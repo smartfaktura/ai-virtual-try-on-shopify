@@ -292,13 +292,13 @@ export function FreestyleSettingsChips({
   return (
     <TooltipProvider delayDuration={300}>
       <div className="space-y-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {uploadButton}
           {productChip}
           {modelChip}
           {sceneChip}
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <FramingSelectorChip
             framing={framing}
             onFramingChange={onFramingChange}
