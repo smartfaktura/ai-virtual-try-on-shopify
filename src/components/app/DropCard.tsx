@@ -104,24 +104,17 @@ export function DropCard(props: Props) {
 
   const runNowMutation = useMutation({
     mutationFn: async (schedule: CreativeSchedule) => {
-      const { error } = await supabase.from('creative_drops').insert({
-        user_id: schedule.user_id,
-        schedule_id: schedule.id,
-        run_date: new Date().toISOString(),
-        status: 'scheduled',
-        generation_job_ids: [],
-        images: [],
-        summary: {},
-        credits_charged: schedule.estimated_credits,
-        total_images: 0,
+      const res = await supabase.functions.invoke('trigger-creative-drop', {
+        body: { schedule_id: schedule.id },
       });
-      if (error) throw error;
+      if (res.error) throw new Error(res.error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
-      toast.success('Drop queued — will generate shortly');
+      queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
+      toast.success('Drop triggered — generating now!');
     },
-    onError: () => toast.error('Failed to queue drop'),
+    onError: (err: Error) => toast.error(`Failed to trigger drop: ${err.message}`),
   });
 
   // ── Schedule Card ──

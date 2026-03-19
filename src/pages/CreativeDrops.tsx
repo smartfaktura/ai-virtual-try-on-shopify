@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { toast } from 'sonner';
 
 export interface CreativeSchedule {
   id: string;
@@ -93,7 +94,28 @@ export default function CreativeDrops() {
       })) as CreativeDrop[];
     },
     enabled: !!user,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data?.some((d: CreativeDrop) => d.status === 'generating') ? 10_000 : false;
+    },
   });
+
+  // Track previous drop statuses and toast on completion
+  const prevDropStatusesRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    const prev = prevDropStatusesRef.current;
+    if (prev.size > 0) {
+      for (const drop of drops) {
+        const oldStatus = prev.get(drop.id);
+        if (oldStatus === 'generating' && drop.status === 'ready') {
+          toast.success(`Drop "${drop.schedule_name || new Date(drop.run_date).toLocaleDateString()}" is ready! 🎉`);
+        } else if (oldStatus === 'generating' && drop.status === 'failed') {
+          toast.error(`Drop "${drop.schedule_name || new Date(drop.run_date).toLocaleDateString()}" failed`);
+        }
+      }
+    }
+    prevDropStatusesRef.current = new Map(drops.map(d => [d.id, d.status]));
+  }, [drops]);
 
   const { data: workflows = [] } = useQuery({
     queryKey: ['workflows'],
@@ -403,6 +425,7 @@ export default function CreativeDrops() {
               drop={{
                 ...selectedDrop,
                 images: (selectedDrop.images || []) as { url: string; workflow_name?: string; scene_name?: string; product_title?: string }[],
+                generation_job_ids: selectedDrop.generation_job_ids || [],
               }}
             />
           )}
