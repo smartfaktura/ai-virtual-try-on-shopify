@@ -1,44 +1,49 @@
 
 
-# Fix Freestyle Detail Modal: Title and Prompt Display
+# Fix: Uploaded Scene Image Ignored When Scene Chip Also Selected
 
-## Problems
+## Root Cause
 
-1. **Title shows full prompt** — Line 828 in `Freestyle.tsx` sets `label: displayPrompt || 'Freestyle'`, which makes the h2 title display the entire prompt text instead of just "Freestyle".
+When the user uploads an image and sets "Using image as: Scene", AND also has a scene chip selected (e.g. "White Seamless"), two conflicts occur:
 
-2. **Prompt shows backend-engineered text** — Line 829 sets `prompt: displayPrompt` which falls back to the engineered prompt (`img.prompt`) when no user prompt exists. User wants: only show the user's own input, never the backend prompt.
+1. **Duplicate scene references** — Both the uploaded image (via `sourceImage` labeled `[SCENE REFERENCE]`) and the scene chip image (via `sceneImage` also labeled `[SCENE REFERENCE]`) are sent to the AI. The model sees two conflicting environments and picks one arbitrarily (usually the simpler white one).
 
-## Changes
+2. **Auto-prompt conflict** — The auto-generated prompt appends "set in a White Seamless environment — Pure white infinity backdrop..." from the scene chip's `promptHint`, which directly contradicts the uploaded scene.
 
-### `src/pages/Freestyle.tsx` (lines 823-833)
+## Fix
 
-Change the `libraryItem` construction:
+When the user uploads an image as "Scene", the uploaded image should take priority — automatically clear the selected scene chip.
+
+### `src/pages/Freestyle.tsx`
+
+In the `imageRole` change handler (or wherever `imageRole` is set to `'scene'`), auto-clear `selectedScene`:
+
+- When `imageRole` changes to `'scene'`: set `selectedScene` to `null`
+- This prevents the duplicate `[SCENE REFERENCE]` and conflicting prompt text
+- The uploaded scene image becomes the sole scene reference
+
+Also apply the reverse: when the user selects a scene chip while `imageRole === 'scene'`, switch `imageRole` back to the default (e.g. `'product'`), OR simply clear the uploaded source image's scene role.
+
+### Simpler alternative (recommended)
+
+Just auto-clear `selectedScene` when `imageRole === 'scene'` in the `handleGenerate` function, right before building the payload. This is the minimal fix:
 
 ```typescript
-const libraryItem: LibraryItem = {
-  id: img.id,
-  imageUrl: img.url,
-  source: 'freestyle',
-  label: 'Freestyle',                        // Always "Freestyle"
-  prompt: img.userPrompt || undefined,        // Only user input, never backend prompt
-  date: '',
-  createdAt: '',
-  aspectRatio: img.aspectRatio || '1:1',
-  quality: 'standard',
-};
+// If user uploaded image as scene, their upload takes priority over scene chip
+if (imageRole === 'scene' && sourceImage) {
+  // Clear scene chip to avoid duplicate [SCENE REFERENCE] conflict
+  sceneImageUrl = undefined;
+  // Also skip scene promptHint from auto-prompt
+}
 ```
 
-### `src/hooks/useLibraryItems.ts` (lines 109-131)
+This ensures:
+- Only one `[SCENE REFERENCE]` is sent (the uploaded image)
+- The auto-prompt doesn't inject conflicting white background instructions from the scene chip
+- The scene chip remains visually selected but doesn't interfere with generation
 
-Same fix for the Library page — freestyle items should also only show `user_prompt`:
+### Files to change
 
-- Update the freestyle query to include `user_prompt`: `.select('id, image_url, prompt, user_prompt, aspect_ratio, quality, created_at, workflow_label')`
-- Change label from `displayLabel` to always `'Freestyle'` when no `workflow_label`
-- Change prompt to use `f.user_prompt || undefined` instead of `f.prompt`
-
-## Result
-
-- Title always says "Freestyle"
-- Prompt section only shows what the user actually typed
-- If user left prompt empty (auto-generated), no prompt is shown at all
+1. **`src/pages/Freestyle.tsx`** — In `handleGenerate`, when `imageRole === 'scene'` and `sourceImage` exists, skip `sceneImageUrl` and skip scene promptHint in auto-prompt building
+2. Optionally: auto-clear `selectedScene` when user sets `imageRole` to `'scene'` for better UX clarity
 
