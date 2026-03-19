@@ -95,6 +95,7 @@ export function FreestyleSettingsChips({
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
+  const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
 
   // --- Shared chip renderers ---
 
