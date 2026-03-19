@@ -1720,6 +1720,19 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           )}
         </div>
       </div>
+      {/* Unsaved changes guard */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>You have unsaved changes. Are you sure you want to leave?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={onClose} className="rounded-full">Discard</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
