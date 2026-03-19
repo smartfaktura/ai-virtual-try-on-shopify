@@ -738,13 +738,10 @@ serve(async (req) => {
         }
         if (parts.length > 0) unpolished += `\n\nBrand style: ${parts.join(", ")}`;
       }
-      const allNeg: string[] = [
-        ...(body.brandProfile?.doNotRules || []),
-        ...(body.negatives || []),
-      ];
-      if (allNeg.length > 0) {
-        const dedupedNeg = [...new Set(allNeg.map(n => n.toLowerCase()))];
-        unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
+      // Brand do-not rules as positive reframing
+      const doNotRules = body.brandProfile?.doNotRules || [];
+      if (doNotRules.length > 0) {
+        unpolished += `\n\nBrand constraints: ${doNotRules.join(", ")}`;
       }
       if (body.cameraStyle === "natural") {
         unpolished += `\n\nCAMERA RENDERING STYLE — NATURAL (iPhone): Shot on a latest-generation iPhone. Ultra-sharp details across the entire frame with deep depth of field (everything in focus, minimal bokeh). True-to-life, unedited color reproduction — no color grading, no warm/cool push. Natural ambient lighting only. The image should feel authentic and unprocessed.`;
