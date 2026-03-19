@@ -247,14 +247,14 @@ function polishUserPrompt(
     const effectiveFramingCondensed = framing || (detectFullBodyIntent(rawPrompt) ? 'full_body' : null);
     if (effectiveFramingCondensed) {
       const framingPrompts: Record<string, string> = {
-        full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
-        upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
-        close_up: `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
-        hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
-        neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
-        lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
-        back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
-        side_profile: `FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+        full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+        upper_body: `FRAMING: Upper body shot, waist up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+        close_up: `FRAMING: Close-up portrait from shoulders upward.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+        hand_wrist: `FRAMING: Hand and wrist only. Product naturally worn. No face.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
+        neck_shoulders: `FRAMING: Collarbone area, jewelry display framing.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
+        lower_body: `FRAMING: Lower body, hips to feet.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+        back_view: `FRAMING: Back view, subject facing away.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+        side_profile: `FRAMING: Side profile, ear and jawline area.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
       };
       if (framingPrompts[effectiveFramingCondensed]) {
         parts.push(framingPrompts[effectiveFramingCondensed]);
