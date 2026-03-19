@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,8 @@ interface UploadSourceCardProps {
   onUpdateProductInfo: (info: ScratchUpload['productInfo']) => void;
   isUploading?: boolean;
   variant?: 'product' | 'room';
+  saveToLibrary?: boolean;
+  onSaveToLibraryChange?: (checked: boolean) => void;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -32,7 +35,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function UploadSourceCard({
-  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product',
+  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product', saveToLibrary = false, onSaveToLibraryChange,
 }: UploadSourceCardProps) {
   const isRoom = variant === 'room';
   const [dragOver, setDragOver] = useState(false);
@@ -146,6 +149,19 @@ export function UploadSourceCard({
                   <Label htmlFor="product-desc">Description (optional)</Label>
                   <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
                 </div>
+                {onSaveToLibraryChange && (
+                  <label className="flex items-start gap-2.5 pt-1 cursor-pointer group">
+                    <Checkbox
+                      checked={saveToLibrary}
+                      onCheckedChange={(checked) => onSaveToLibraryChange(!!checked)}
+                      className="mt-0.5"
+                    />
+                    <div className="space-y-0.5">
+                      <span className="text-sm font-medium group-hover:text-foreground transition-colors">Save to My Products</span>
+                      <p className="text-xs text-muted-foreground">Save this product to your library so you can reuse it across workflows without uploading again.</p>
+                    </div>
+                  </label>
+                )}
               </>
             )}
           </div>

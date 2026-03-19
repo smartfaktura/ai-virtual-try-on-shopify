@@ -275,6 +275,7 @@ export default function Generate() {
 
   const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
+  const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
@@ -1872,10 +1873,12 @@ export default function Generate() {
                   </Alert>
                 )}
 
-                <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
+                <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => { setScratchUpload(null); setSaveToLibrary(false); }}
                   onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
                   variant={isInteriorDesign ? 'room' : 'product'}
+                  saveToLibrary={saveToLibrary}
+                  onSaveToLibraryChange={isInteriorDesign ? undefined : setSaveToLibrary}
                 />
 
                 {/* Recent uploads as collapsible section below upload area */}
@@ -2226,6 +2229,20 @@ export default function Generate() {
                   }
                   if (finalUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
+                    // Save to library if checkbox was checked
+                    if (saveToLibrary && user) {
+                      supabase.from('user_products').insert({
+                        user_id: user.id,
+                        title: scratchUpload.productInfo.title,
+                        product_type: scratchUpload.productInfo.productType,
+                        description: scratchUpload.productInfo.description,
+                        image_url: finalUrl,
+                      }).then(({ error }) => {
+                        if (!error) {
+                          queryClient.invalidateQueries({ queryKey: ['user-products'] });
+                        }
+                      });
+                    }
                     if (isUpscale) {
                       setCurrentStep('settings');
                     } else if (activeWorkflow?.uses_tryon) {
