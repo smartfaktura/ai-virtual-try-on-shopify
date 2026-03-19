@@ -1695,14 +1695,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
           </Button>
 
-          <div className="hidden sm:flex flex-col items-center gap-1">
-            <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">
-              Powered by VOVV.AI
-            </span>
-            {validationHint && (
-              <p className="text-[11px] text-destructive animate-fade-in">{validationHint}</p>
-            )}
-          </div>
+          {validationHint && (
+            <p className="hidden sm:block text-[11px] text-destructive animate-fade-in">{validationHint}</p>
+          )}
 
           {!isLastStep ? (
             <Button
