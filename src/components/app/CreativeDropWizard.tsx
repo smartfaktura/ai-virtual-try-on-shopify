@@ -1677,7 +1677,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 })}
               </div>
             </div>
-          )}
+          </>)}
         </div>
       </div>
 
