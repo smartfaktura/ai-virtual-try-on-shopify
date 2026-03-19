@@ -2229,6 +2229,20 @@ export default function Generate() {
                   }
                   if (finalUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
+                    // Save to library if checkbox was checked
+                    if (saveToLibrary && user) {
+                      supabase.from('user_products').insert({
+                        user_id: user.id,
+                        title: scratchUpload.productInfo.title,
+                        product_type: scratchUpload.productInfo.productType,
+                        description: scratchUpload.productInfo.description,
+                        image_url: finalUrl,
+                      }).then(({ error }) => {
+                        if (!error) {
+                          queryClient.invalidateQueries({ queryKey: ['user-products'] });
+                        }
+                      });
+                    }
                     if (isUpscale) {
                       setCurrentStep('settings');
                     } else if (activeWorkflow?.uses_tryon) {
