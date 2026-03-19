@@ -258,33 +258,29 @@ export function FreestyleSettingsChips({
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={300}>
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {uploadButton}
-            {productChip}
-            {modelChip}
-            {sceneChip}
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <FramingSelectorChip
-              framing={framing}
-              onFramingChange={onFramingChange}
-              open={framingPopoverOpen}
-              onOpenChange={onFramingPopoverChange}
-              modal={isMobile}
-            />
-            <BrandProfileChip
-              selectedProfile={selectedBrandProfile}
-              open={brandProfilePopoverOpen}
-              onOpenChange={onBrandProfilePopoverChange}
-              onSelect={onBrandProfileSelect}
-              profiles={brandProfiles}
-              isLoading={isLoadingBrandProfiles}
-            />
-            {aspectRatioChip}
-            {cameraStyleChip}
-            {qualityChip}
-          </div>
+        <div className="flex items-center gap-1 flex-wrap">
+          {uploadButton}
+          {productChip}
+          {modelChip}
+          {sceneChip}
+          <FramingSelectorChip
+            framing={framing}
+            onFramingChange={onFramingChange}
+            open={framingPopoverOpen}
+            onOpenChange={onFramingPopoverChange}
+            modal={isMobile}
+          />
+          <BrandProfileChip
+            selectedProfile={selectedBrandProfile}
+            open={brandProfilePopoverOpen}
+            onOpenChange={onBrandProfilePopoverChange}
+            onSelect={onBrandProfileSelect}
+            profiles={brandProfiles}
+            isLoading={isLoadingBrandProfiles}
+          />
+          {aspectRatioChip}
+          {cameraStyleChip}
+          {qualityChip}
         </div>
       </TooltipProvider>
     );

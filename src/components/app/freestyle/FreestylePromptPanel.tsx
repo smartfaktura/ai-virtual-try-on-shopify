@@ -320,7 +320,7 @@ export function FreestylePromptPanel({
               return (
                 <>
                   {!canGenerate && !isLoading ? (
-                    <p className="text-xs text-muted-foreground mr-auto truncate">
+                    <p className="text-xs text-muted-foreground mr-auto truncate hidden sm:block">
                       Type a prompt or add a reference to start
                     </p>
                    ) : showInsufficientCredits ? (
