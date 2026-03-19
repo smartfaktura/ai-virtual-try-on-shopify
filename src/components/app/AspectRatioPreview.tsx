@@ -5,11 +5,11 @@ interface AspectRatioPreviewProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string; useCase: string }> = {
-  '1:1': { width: 1, height: 1, label: 'Square', useCase: 'Instagram & Listings' },
-  '4:5': { width: 4, height: 5, label: 'Portrait', useCase: 'Stories & Pinterest' },
-  '9:16': { width: 9, height: 16, label: 'Story', useCase: 'Reels & TikTok' },
-  '16:9': { width: 16, height: 9, label: 'Wide', useCase: 'Banners & Facebook' },
+const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string }> = {
+  '1:1': { width: 1, height: 1, label: 'Square' },
+  '4:5': { width: 4, height: 5, label: 'Portrait' },
+  '9:16': { width: 9, height: 16, label: 'Story' },
+  '16:9': { width: 16, height: 9, label: 'Wide' },
 };
 
 const sizeConfig = { small: 44, medium: 60, large: 80 };
