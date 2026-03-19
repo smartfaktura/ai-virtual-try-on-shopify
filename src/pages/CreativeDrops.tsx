@@ -93,7 +93,28 @@ export default function CreativeDrops() {
       })) as CreativeDrop[];
     },
     enabled: !!user,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data?.some((d: CreativeDrop) => d.status === 'generating') ? 10_000 : false;
+    },
   });
+
+  // Track previous drop statuses and toast on completion
+  const prevDropStatusesRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    const prev = prevDropStatusesRef.current;
+    if (prev.size > 0) {
+      for (const drop of drops) {
+        const oldStatus = prev.get(drop.id);
+        if (oldStatus === 'generating' && drop.status === 'ready') {
+          toast.success(`Drop "${drop.schedule_name || new Date(drop.run_date).toLocaleDateString()}" is ready! 🎉`);
+        } else if (oldStatus === 'generating' && drop.status === 'failed') {
+          toast.error(`Drop "${drop.schedule_name || new Date(drop.run_date).toLocaleDateString()}" failed`);
+        }
+      }
+    }
+    prevDropStatusesRef.current = new Map(drops.map(d => [d.id, d.status]));
+  }, [drops]);
 
   const { data: workflows = [] } = useQuery({
     queryKey: ['workflows'],
