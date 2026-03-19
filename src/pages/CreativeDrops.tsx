@@ -437,9 +437,9 @@ export default function CreativeDrops() {
 
 // Onboarding section for zero-state
 const onboardingSteps = [
-  { icon: Package, title: 'Pick Products', desc: 'Choose which products get fresh visuals.' },
-  { icon: Layers, title: 'Choose Workflows', desc: 'Select generation styles and formats.' },
-  { icon: RefreshCw, title: 'Set & Forget', desc: 'Schedule frequency. Images arrive on time.' },
+  { icon: Package, title: 'Select Products', desc: 'Pick the products that need fresh content.' },
+  { icon: Layers, title: 'Design Your Mix', desc: 'Choose styles, models & scenes per workflow.' },
+  { icon: RefreshCw, title: 'Schedule & Go', desc: 'Set the cadence. Visuals drop on autopilot.' },
 ];
 
 const previewImages = [
@@ -456,10 +456,10 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
       {/* Headline */}
       <div className="space-y-3">
         <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-          Automate Your Visual Content
+          Your Brand's Visual Engine
         </h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
-          Fresh, on-brand product visuals — delivered on schedule.
+          Bundle your products, styles & schedules into one drop — fresh visuals land automatically.
         </p>
       </div>
 
@@ -502,10 +502,10 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
           className="rounded-full px-8 gap-2"
         >
           <Calendar className="w-4 h-4" />
-          Create Your First Schedule
+          Create Your First Drop
         </Button>
         <p className="text-xs text-muted-foreground mt-2.5">
-          Set up in under 2 minutes · Pause or cancel anytime
+          Ready in 2 minutes · Pause or cancel anytime
         </p>
       </div>
     </div>
