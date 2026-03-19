@@ -502,7 +502,7 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
           className="rounded-full px-8 gap-2"
         >
           <Calendar className="w-4 h-4" />
-          Create Your First Schedule
+          Create Your First Drop
         </Button>
         <p className="text-xs text-muted-foreground mt-2.5">
           Set up in under 2 minutes · Pause or cancel anytime
