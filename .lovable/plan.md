@@ -1,46 +1,29 @@
 
 
-# Increase Freestyle Image Resolution
+# Auto-Select Pro Quality When Model or Scene Selected
 
-## Problem
+## Change
 
-Generated images are only ~700KB because Gemini defaults to **1K resolution (1024x1024)**. The API supports up to 4K but we never pass the `image_size` parameter.
+In `src/pages/Freestyle.tsx`, add a `useEffect` that watches `selectedModel` and `selectedScene`. When either becomes non-null, set `quality` to `'high'`. When both are cleared back to null, reset to `'standard'`.
 
-## What Gemini Supports
+This is a soft default — users can still manually switch back to Standard after the auto-selection.
 
-| Resolution | Size | Cost | Notes |
-|---|---|---|---|
-| 1K | 1024px | default | current behavior |
-| 2K | 2048px | ~1.5x cost | good balance |
-| 4K | 4096px | ~3.5x cost | only gemini-3.1-flash-image-preview |
+### Implementation
 
-The parameter goes inside `image_config` alongside `aspect_ratio`:
-```json
-{ "image_config": { "aspect_ratio": "1:1", "image_size": "2K" } }
+**File: `src/pages/Freestyle.tsx`** (around line 60-75)
+
+Add a `useEffect`:
+```typescript
+useEffect(() => {
+  if (selectedModel || selectedScene) {
+    setQuality('high');
+  } else {
+    setQuality('standard');
+  }
+}, [selectedModel, selectedScene]);
 ```
 
-Note: 4K is only available on `gemini-3.1-flash-image-preview` (Nano Banana 2). The Pro model (`gemini-3-pro-image-preview`) may not support 4K.
+This mirrors the existing pattern in `WorkflowSettingsPanel.tsx` (line 162) where Selfie/UGC workflows force `setQuality('high')`.
 
-## Proposed Change
-
-### File: `supabase/functions/generate-freestyle/index.ts`
-
-**In `generateImage()` function (line 377-383):**
-- Add `image_size` to the `image_config` object
-- Map quality setting: `standard` → `"1K"`, `high` → `"2K"`
-- This way Standard (4 credits) stays fast/cheap at 1K, and Pro (6 credits) produces 2K images (~2048px) — roughly 4x the pixel count and significantly larger file sizes
-
-```
-image_config: {
-  ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
-  image_size: quality === 'high' ? '2K' : '1K',
-}
-```
-
-### No frontend changes needed
-The `quality` field is already passed from the frontend to the edge function.
-
-## Risk
-- The Lovable AI gateway proxies to Gemini — need to confirm it passes `image_config.image_size` through. If it doesn't, this would silently have no effect (no breakage).
-- 2K images will be larger (~2-4MB PNGs) which increases storage costs and load times, but that's the expected tradeoff for "Pro" quality.
+Single file, ~5 lines added.
 
