@@ -440,7 +440,8 @@ export default function Freestyle() {
         }
       }
 
-      if (selectedScene) {
+      // Skip scene chip prompt hints when uploaded image is the scene
+      if (selectedScene && !(sourceImage && imageRole === 'scene')) {
         parts.push(`set in a ${selectedScene.name} environment`);
         if (selectedScene.promptHint) parts.push(`— ${selectedScene.promptHint}`);
       }
