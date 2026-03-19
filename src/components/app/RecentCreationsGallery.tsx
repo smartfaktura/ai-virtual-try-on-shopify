@@ -93,10 +93,9 @@ export function RecentCreationsGallery() {
               if (url) {
                 const isTryOn = url.includes('tryon-images');
                 const label = isTryOn ? 'Virtual Try-On' : (workflowName || 'Product Shot');
-                const signedUrl = await toSignedUrl(url);
                 items.push({
                   id: `${job.id}-${i}`,
-                  imageUrl: signedUrl,
+                  imageUrl: url,
                   label,
                   subtitle: productTitle || undefined,
                   date: new Date(job.created_at).toLocaleDateString(),
@@ -127,12 +126,11 @@ export function RecentCreationsGallery() {
 
       if (!freestyleResult.error) {
         for (const f of freestyleResult.data ?? []) {
-          const signedUrl = await toSignedUrl(f.image_url);
           const isUpscaled = f.quality?.startsWith('upscaled_');
           const resolution = f.quality?.includes('4k') ? '4K' : '2K';
           items.push({
             id: f.id,
-            imageUrl: signedUrl,
+            imageUrl: f.image_url,
             label: isUpscaled ? 'Enhanced' : 'Freestyle',
             subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
             date: new Date(f.created_at).toLocaleDateString(),
@@ -146,7 +144,16 @@ export function RecentCreationsGallery() {
       }
 
       items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
-      return items.slice(0, 10);
+      const top = items.slice(0, 10);
+
+      // Batch-sign all URLs in 1-2 calls instead of sequential
+      const rawUrls = top.map(i => i.imageUrl);
+      const signedUrls = await toSignedUrls(rawUrls);
+      for (let i = 0; i < top.length; i++) {
+        top[i].imageUrl = signedUrls[i];
+      }
+
+      return top;
     },
     enabled: !!user,
     refetchInterval: 15_000,
