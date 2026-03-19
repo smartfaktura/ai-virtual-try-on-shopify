@@ -664,6 +664,8 @@ export default function Freestyle() {
     onFileDrop: handleFileDrop,
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
+    quality,
+    onQualityChange: setQuality,
     framing,
     onFramingChange: setFraming,
     framingPopoverOpen,

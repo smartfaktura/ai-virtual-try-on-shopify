@@ -299,6 +299,7 @@ export function FreestylePromptPanel({
               brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
               brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
               cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
+              quality={quality} onQualityChange={onQualityChange}
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
