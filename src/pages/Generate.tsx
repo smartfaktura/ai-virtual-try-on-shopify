@@ -941,7 +941,7 @@ export default function Generate() {
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
-              job_type: 'workflow', quality, imageCount: angleMultiplier,
+              job_type: 'workflow', quality, imageCount: 1,
             });
           } else {
             const err = await response.json().catch(() => ({}));
@@ -1098,7 +1098,7 @@ export default function Generate() {
         onJobEnqueued: (jobId) => injectActiveJob(queryClient, {
           jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
           workflow_slug: activeWorkflow?.slug, product_name: productData.title,
-          job_type: 'workflow', quality: 'high', imageCount: workflowImageCount,
+          job_type: 'workflow', quality: 'high', imageCount: 1,
         }),
       });
       if (!success) {
