@@ -459,7 +459,7 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
           Your Brand's Visual Engine
         </h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
-          Fresh, on-brand product visuals — delivered on schedule.
+          Bundle your products, styles & schedules into one drop — fresh visuals land automatically.
         </p>
       </div>
 
