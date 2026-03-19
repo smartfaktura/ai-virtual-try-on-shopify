@@ -316,6 +316,8 @@ export default function Freestyle() {
   const removeSourceImage = useCallback(() => {
     setSourceImage(null);
     setSourceImagePreview(null);
+    setImageRole('edit');
+    setEditIntent([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
