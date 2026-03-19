@@ -1085,7 +1085,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     <div className="flex items-center justify-between">
                       <p className="section-label">Models</p>
                       <Badge variant="secondary" className="text-[10px] rounded-full">
-                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected`}
+                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected${wfModels.length > 0 ? ` · ~${Math.round(imagesPerDrop / wfModels.length)} img each` : ''}`}
                       </Badge>
                     </div>
 
@@ -1098,7 +1098,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         <p className="text-sm font-medium flex items-center gap-1.5">
                           <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
                         </p>
-                        <p className="text-xs text-muted-foreground">AI will randomly select from all available models</p>
+                        <p className="text-xs text-muted-foreground">Each image will feature a different model, selected randomly from all available</p>
                       </div>
                     </div>
 
@@ -1142,6 +1142,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             );
                           })}
                         </div>
+                        {wfModels.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {imagesPerDrop} images distributed across {wfModels.length} model{wfModels.length !== 1 ? 's' : ''} (~{Math.round(imagesPerDrop / wfModels.length)} each)
+                          </p>
+                        )}
                       </>
                     )}
                   </div>
