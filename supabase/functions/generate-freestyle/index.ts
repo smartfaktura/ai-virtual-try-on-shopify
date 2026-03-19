@@ -110,6 +110,21 @@ function detectFullBodyIntent(prompt: string): boolean {
   return FULL_BODY_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
+// ── Shared framing instruction builder ────────────────────────────────────
+function buildFramingInstruction(framing: string, hasModel: boolean): string | null {
+  const framingPrompts: Record<string, string> = {
+    full_body: `FRAMING: Full body shot, head to toe. Show complete figure.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+    upper_body: `FRAMING: Upper body, waist up.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+    close_up: `FRAMING: Close-up portrait from shoulders up.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+    hand_wrist: `FRAMING: Hand and wrist only. No face.${hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
+    neck_shoulders: `FRAMING: Collarbone area, jewelry display.${hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
+    lower_body: `FRAMING: Lower body, hips to feet.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+    back_view: `FRAMING: Back view, facing away.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+    side_profile: `FRAMING: Side profile, ear and jawline.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+  };
+  return framingPrompts[framing] || null;
+}
+
 // ── Unified prompt builder — positive framing, single path ───────────────
 function polishUserPrompt(
   rawPrompt: string,
