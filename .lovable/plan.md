@@ -1,29 +1,21 @@
 
 
-# Fix Copy Prompt: Only Copy User's Own Prompt
+# Fix Zoomed-In Dashboard Recent Creations Images
 
 ## Problem
-When a user clicks "Copy Prompt" on a freestyle image and they didn't write their own prompt, the system falls back to copying the full engineered/system prompt (`img.prompt`). The user wants it to only copy the user's original prompt — if there is none, show a toast saying there's nothing to copy.
+`getOptimizedUrl` is called with `width: 400` on line 280 of `RecentCreationsGallery.tsx`, triggering server-side cropping. Combined with `object-cover`, images appear zoomed in — same root cause as the workflow cards fix.
 
-## Change
+## Change — `src/components/app/RecentCreationsGallery.tsx`
 
-### `src/components/app/freestyle/FreestyleGallery.tsx` — Line 352-356
+**Line 280** — Remove `width: 400`, keep quality-only:
 
-Update the copy handler to skip copying when no `userPrompt` exists:
-
-```tsx
+```
 // Before:
-onCopyPrompt(img.userPrompt || img.prompt);
-toast.success('Prompt copied to editor');
+src={getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })}
 
 // After:
-if (img.userPrompt) {
-  onCopyPrompt(img.userPrompt);
-  toast.success('Prompt copied to editor');
-} else {
-  toast.info('No custom prompt to copy');
-}
+src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
 ```
 
-Single file, single change.
+Single line change, single file.
 
