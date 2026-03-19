@@ -531,7 +531,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {step === 0 && (
             <div className="space-y-8 animate-fade-in">
               <div className="space-y-2">
-                <p className="section-label">Schedule Name</p>
+                <p className="section-label">Drop Name</p>
                 <Input
                   placeholder="e.g. Summer 2026 Collection"
                   value={name}
