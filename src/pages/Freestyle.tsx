@@ -68,7 +68,7 @@ export default function Freestyle() {
   const [shareImageIndex] = useState<number | null>(null);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
-  const [negatives, setNegatives] = useState<string[]>([]);
+  // negatives removed — positive framing only
   const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
