@@ -697,6 +697,9 @@ serve(async (req) => {
       );
     }
 
+    // Single Supabase admin client for the entire request
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+
     const body: FreestyleRequest & { job_id?: string; credits_reserved?: number } = await req.json();
 
     const userId = body.user_id;
