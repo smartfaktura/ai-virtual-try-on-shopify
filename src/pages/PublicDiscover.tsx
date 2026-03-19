@@ -44,19 +44,45 @@ function toTryOnPose(scene: PublicCustomScene): TryOnPose {
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'cinematic', label: 'Cinematic' },
+  { id: 'editorial', label: 'Editorial' },
   { id: 'commercial', label: 'Commercial' },
-  { id: 'photography', label: 'Photography' },
-  { id: 'styling', label: 'Styling' },
-  { id: 'ads', label: 'Ads' },
   { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'campaign', label: 'Campaign' },
 ] as const;
 
+const CATEGORY_ALIAS: Record<string, string> = {
+  cinematic: 'editorial',
+  photography: 'commercial',
+  styling: 'fashion',
+  ads: 'campaign',
+};
+
+function resolveCategory(cat: string): string {
+  return CATEGORY_ALIAS[cat] ?? cat;
+}
+
 const SCENE_CATEGORY_MAP: Record<string, string[]> = {
-  studio: ['commercial', 'photography'],
+  studio: ['commercial', 'editorial'],
   lifestyle: ['lifestyle'],
-  editorial: ['cinematic', 'photography'],
-  streetwear: ['styling', 'lifestyle'],
+  editorial: ['editorial'],
+  streetwear: ['fashion', 'lifestyle'],
+  fitness: ['lifestyle', 'campaign'],
+  athletic: ['lifestyle', 'campaign'],
+  gym: ['lifestyle', 'campaign'],
+  beauty: ['fashion', 'commercial'],
+  desert: ['lifestyle', 'editorial'],
+  outdoor: ['lifestyle', 'editorial'],
+  beach: ['lifestyle'],
+  garden: ['lifestyle'],
+  industrial: ['editorial', 'campaign'],
+  urban: ['fashion', 'lifestyle'],
+  rooftop: ['lifestyle', 'editorial'],
+  cafe: ['lifestyle'],
+  mirror: ['lifestyle', 'fashion'],
+  casual: ['lifestyle'],
+  cozy: ['lifestyle', 'fashion'],
+  professional: ['commercial'],
 };
 
 function getItemId(item: DiscoverItem): string {
