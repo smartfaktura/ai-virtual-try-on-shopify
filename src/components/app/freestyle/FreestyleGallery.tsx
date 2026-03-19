@@ -351,8 +351,12 @@ function ImageCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onCopyPrompt(img.userPrompt || img.prompt);
-              toast.success('Prompt copied to editor');
+              if (img.userPrompt) {
+                onCopyPrompt(img.userPrompt);
+                toast.success('Prompt copied to editor');
+              } else {
+                toast.info('No custom prompt to copy');
+              }
             }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             title="Copy prompt to editor"
