@@ -1142,6 +1142,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             );
                           })}
                         </div>
+                        {wfModels.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {imagesPerDrop} images distributed across {wfModels.length} model{wfModels.length !== 1 ? 's' : ''} (~{Math.round(imagesPerDrop / wfModels.length)} each)
+                          </p>
+                        )}
                       </>
                     )}
                   </div>
