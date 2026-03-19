@@ -309,7 +309,7 @@ export function FreestylePromptPanel({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-border/40 mx-3 sm:mx-5" />
+          <div className="border-t border-border/40 mx-3 sm:mx-5 hidden sm:block" />
 
           {/* Row 3 — Action Bar */}
           <div className="px-3 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
