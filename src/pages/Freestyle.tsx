@@ -488,7 +488,7 @@ export default function Freestyle() {
       sceneImage: sceneImageUrl,
       aspectRatio,
       imageCount: 1,
-      quality: 'high',
+      quality,
       polishPrompt: true,
       modelContext,
       brandProfile: brandContext,
