@@ -1,25 +1,29 @@
 
 
-# Fix Zoomed-In Workflow Card Images
+# Fix Copy Prompt: Only Copy User's Own Prompt
 
 ## Problem
-The `width: 600` parameter in `getOptimizedUrl` calls inside `WorkflowAnimatedThumbnail.tsx` triggers server-side resizing/cropping via Supabase image transforms. The card container is larger than 600px, so the resized image gets stretched, appearing zoomed in.
+When a user clicks "Copy Prompt" on a freestyle image and they didn't write their own prompt, the system falls back to copying the full engineered/system prompt (`img.prompt`). The user wants it to only copy the user's original prompt — if there is none, show a toast saying there's nothing to copy.
 
-This contradicts the established convention: *avoid `width` parameters for result cards to prevent server-side cropping*.
+## Change
 
-## Changes — `src/components/app/WorkflowAnimatedThumbnail.tsx`
+### `src/components/app/freestyle/FreestyleGallery.tsx` — Line 352-356
 
-### 1. CarouselThumbnail (line 154)
-Remove `width: 600` — use quality-only optimization:
+Update the copy handler to skip copying when no `userPrompt` exists:
+
+```tsx
+// Before:
+onCopyPrompt(img.userPrompt || img.prompt);
+toast.success('Prompt copied to editor');
+
+// After:
+if (img.userPrompt) {
+  onCopyPrompt(img.userPrompt);
+  toast.success('Prompt copied to editor');
+} else {
+  toast.info('No custom prompt to copy');
+}
 ```
-getOptimizedUrl(bg, { width: 600, quality: 60 })  →  getOptimizedUrl(bg, { quality: 60 })
-```
 
-### 2. UpscaleThumbnail (line 248)
-Same fix:
-```
-getOptimizedUrl(scene.background, { width: 600, quality: 60 })  →  getOptimizedUrl(scene.background, { quality: 60 })
-```
-
-No other files affected. The `StagingThumbnail` (line 426-428) and `FloatingEl` (line 78-79) already use quality-only — those are correct.
+Single file, single change.
 
