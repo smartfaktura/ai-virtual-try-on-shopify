@@ -240,7 +240,15 @@ export default function AdminScenes() {
             <div className="border border-border rounded-lg divide-y divide-border bg-card">
               {poses.map((pose, idx) => (
                 <div key={pose.poseId} className="flex items-center gap-3 px-3 py-2">
-                  <img src={pose.previewUrl} alt={pose.name} className="w-10 h-12 rounded object-cover flex-shrink-0" />
+                  <div className="w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    <img
+                      src={pose.previewUrl}
+                      alt={pose.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <span className="absolute text-[10px] font-medium text-muted-foreground pointer-events-none">{pose.name.charAt(0)}</span>
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{pose.name}</p>
                     <Select value={pose.category} onValueChange={(val) => changePoseCategory(pose.poseId, val as PoseCategory)}>
