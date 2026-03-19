@@ -437,9 +437,9 @@ export default function CreativeDrops() {
 
 // Onboarding section for zero-state
 const onboardingSteps = [
-  { icon: Package, title: 'Pick Products', desc: 'Choose which products get fresh visuals.' },
-  { icon: Layers, title: 'Choose Workflows', desc: 'Select generation styles and formats.' },
-  { icon: RefreshCw, title: 'Set & Forget', desc: 'Schedule frequency. Images arrive on time.' },
+  { icon: Package, title: 'Select Products', desc: 'Pick the products that need fresh content.' },
+  { icon: Layers, title: 'Design Your Mix', desc: 'Choose styles, models & scenes per workflow.' },
+  { icon: RefreshCw, title: 'Schedule & Go', desc: 'Set the cadence. Visuals drop on autopilot.' },
 ];
 
 const previewImages = [
