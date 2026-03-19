@@ -1,129 +1,110 @@
 
 
-# Image Role Intent System for Freestyle Editor
+# Simplify Freestyle Editor + Improve Generation Quality
 
-## What We're Building
+## Problem
 
-A 2-step intent selector that appears when a user uploads an image in the Freestyle editor. It removes ambiguity about what the uploaded image represents and (if editing) what should change.
+The current editor has too many chips (Upload, Product, Model, Scene, Framing, Brand, Exclude, Aspect, Quality, Camera Style) and the prompt engine produces ~800-word prompts with contradictory negative instructions that confuse Gemini Nano Banana models. Results lack realistic skin texture, sharp details, and legible product text.
+
+## What Changes
+
+### UI Simplification (3 chips removed)
+
+**Remove:**
+- **"Exclude" (negatives) chip** — negative prompts ("AVOID: no X") confuse Nano Banana. Positive framing produces better results.
+- **"Quality: Standard/High" chip** — always use high quality. No reason to offer a worse option.
+- **"Aspect Ratio" chip label** — keep the chip but it stays as-is (already clean).
+
+**Keep (important):**
+- **Camera Style (Pro / iPhone)** — stays as a first-class chip, easy to toggle. Users want this.
+- Upload, Product, Model, Scene, Framing, Brand, Aspect Ratio — all stay.
+
+**Result:** 7 chips on desktop, cleaner "More" section on mobile (Brand only).
+
+### Prompt Engine Rewrite (backend)
+
+Replace the current 500-line dual-path `polishUserPrompt` with a single ~100-line builder using positive framing only.
+
+**Current problems:**
+- Two code paths (condensed for 2+ refs, layered for 1 ref) that duplicate 70% of logic
+- `buildNegativePrompt()` appends "AVOID: No AI skin smoothing" which triggers the model to think about smoothing
+- `buildPhotographyDNA()` and `buildGenericDNA()` are generic filler
+- Gender rules duplicated in both paths
+- Framing duplicated in 3 places
+- Prompts reach 800-1200 words — model deprioritizes later instructions
+
+**New approach — single path, ~150-250 words max:**
 
 ```text
-┌─────────────────────────────────────────────┐
-│ [image thumb]  What do you want to do?      │
-│                                             │
-│ [● Edit this image] [○ Product] [○ Model]   │
-│ [○ Scene]                                   │
-│                                             │
-│ What do you want to change?                 │
-│ [□ Replace product] [□ Change background]   │
-│ [□ Change model]    [□ Improve quality]     │
-└─────────────────────────────────────────────┘
+[Photography type]: [user prompt]
+
+REFERENCES:
+1. PRODUCT: [exact product matching instructions]
+2. MODEL: [identity matching instructions]  
+3. SCENE: [environment instructions]
+
+QUALITY: Photorealistic. Natural skin with visible pores and fine lines.
+Sharp micro-detail on textures, stitching, and product text/logos.
+Visible material grain. Single cohesive photograph, edge-to-edge.
+[Pro: Shot on 85mm f/2.8, sculpted studio lighting, subtle film grain]
+[iPhone: Shot on iPhone, deep DOF, everything sharp, true-to-life colors]
+
+[FRAMING: ...] (if selected)
+[BRAND: ...] (if selected)
 ```
 
-After selection, both steps collapse into a compact summary line.
+**Key quality keywords added (based on Nano Banana best practices):**
+- "natural skin texture with visible pores and fine lines" (not "no AI smoothing")
+- "sharp micro-detail on product text, logos, and labels" (for legible text)
+- "visible material grain and stitching detail" (for textures)
+- "single cohesive photograph" (not "no collage layouts")
+- Camera-specific quality block based on Pro vs iPhone selection
 
-## Files to Create / Edit
+### Model Selection Simplification
 
-### 1. New: `src/components/app/freestyle/ImageRoleSelector.tsx`
+Current logic has 5 conditions. Simplify to:
+- **Has model reference image → Pro** (`gemini-3-pro-image-preview`) — face matching needs Pro
+- **Everything else → Flash** (`gemini-3.1-flash-image-preview`) — faster, still excellent quality
+- Remove `quality === 'high'` branching (quality chip removed)
 
-Single component containing both steps:
+### Credit Cost Simplification
 
-**Step 1 — Image Role** (single-select chips):
-- "Edit this image" (default) — "Change something in this photo"
-- "Use as product" — "This is the product to include"
-- "Use as model" — "Use this person's face/body"
-- "Use as scene" — "Use this background or location"
+Current: 4 credits (standard) or 6 credits (high/model/scene).
+New: **Always 6 credits** — always high quality. Simpler, no confusion.
 
-**Step 2 — Edit Intent** (multi-select chips, only visible when role = "edit"):
-- Replace product → `replace_product`
-- Change background → `change_background`
-- Change model → `change_model`
-- Improve quality → `enhance`
+## Files to Change
 
-Default if no edit intent selected: `["enhance"]`
+### 1. `supabase/functions/generate-freestyle/index.ts`
+- Delete `buildNegativePrompt()`, `buildPhotographyDNA()`, `buildGenericDNA()`, `isExpertPrompt()`
+- Rewrite `polishUserPrompt()` as single-path ~100-line function with positive framing
+- Add skin texture, product text, and material detail keywords
+- Integrate camera style (Pro vs iPhone) as positive quality block
+- Simplify model selection to: hasModelImage → Pro, else → Flash
+- Remove `quality` from model selection logic
 
-**Collapsed state**: After selection, collapse into a summary:
-- "Using image as: Edit" [Change] → re-expands Step 1
-- "Editing: Replace product, Change background" [Edit] → re-expands Step 2
+### 2. `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+- Remove `NegativesChip` import and rendering (both mobile and desktop)
+- Remove `qualityChip` rendering (both mobile and desktop)
+- Remove quality/negatives from props interface
+- Move Brand chip from "More" collapsible into main chip row (desktop already has it; mobile moves it out of collapsible)
+- Remove the "More" collapsible entirely (nothing left in it)
 
-Smooth transitions using Tailwind animate classes.
+### 3. `src/components/app/freestyle/FreestylePromptPanel.tsx`
+- Remove negatives, quality props from interface and passthrough
 
-### 2. Edit: `src/pages/Freestyle.tsx`
+### 4. `src/pages/Freestyle.tsx`
+- Remove `negatives` state and setter
+- Remove `quality` state — hardcode to `'high'` in payload
+- Simplify `creditCost` to always be 6
+- Remove negatives/quality from `handleReset`, `isDirty`, and `queuePayload`
 
-**New state:**
-```typescript
-const [imageRole, setImageRole] = useState<'edit' | 'product' | 'model' | 'scene'>('edit');
-const [editIntent, setEditIntent] = useState<string[]>([]);
-```
-
-**Reset on image removal:** When `removeSourceImage` is called, reset `imageRole` to `'edit'` and `editIntent` to `[]`.
-
-**Include in `handleReset`:** Also reset both new fields.
-
-**Chip muting logic:**
-- `imageRole === 'product'` → visually mute/disable ProductSelectorChip
-- `imageRole === 'model'` → visually mute/disable ModelSelectorChip  
-- `imageRole === 'scene'` → visually mute/disable SceneSelectorChip
-
-Pass a new `disabledChips` prop (or individual `disabled` booleans) down through `FreestylePromptPanel` → `FreestyleSettingsChips`.
-
-**Payload update** in `handleGenerate`:
-```typescript
-const queuePayload = {
-  ...existing,
-  imageRole: sourceImage ? imageRole : undefined,
-  editIntent: sourceImage && imageRole === 'edit' 
-    ? (editIntent.length > 0 ? editIntent : ['enhance']) 
-    : undefined,
-};
-```
-
-### 3. Edit: `src/components/app/freestyle/FreestylePromptPanel.tsx`
-
-- Accept new props: `imageRole`, `onImageRoleChange`, `editIntent`, `onEditIntentChange`, `sourceImagePreview`
-- Render `<ImageRoleSelector>` between the image preview and the prompt textarea (only when `sourceImagePreview` is present)
-- Pass `disabledChips` down to `FreestyleSettingsChips`
-
-### 4. Edit: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
-
-- Accept optional `disabledChips?: { product?: boolean; model?: boolean; scene?: boolean }` prop
-- When a chip is disabled: reduce opacity, show lock icon, prevent popover from opening
-
-### 5. Edit: `supabase/functions/generate-freestyle/index.ts`
-
-**FreestyleRequest interface** — add:
-```typescript
-imageRole?: 'edit' | 'product' | 'model' | 'scene';
-editIntent?: string[];
-```
-
-**`buildContentArray`** — change sourceImage label based on `imageRole`:
-- `imageRole === 'product'` → label as `[PRODUCT IMAGE]` (same as productImage)
-- `imageRole === 'model'` → label as `[MODEL REFERENCE]`
-- `imageRole === 'scene'` → label as `[SCENE REFERENCE]`
-- `imageRole === 'edit'` or undefined → keep current `[REFERENCE IMAGE]`
-
-**`polishUserPrompt`** — light wording adjustment:
-- When `imageRole === 'edit'`: replace "Create a NEW photograph" phrasing with "Edit the provided image. Preserve composition unless specified."
-- When `editIntent` includes specific values, append targeted instructions:
-  - `replace_product` → "Replace the product in the image while preserving everything else"
-  - `change_background` → "Keep the subject, change the background/environment"
-  - `change_model` → "Replace the person while preserving composition and product placement"
-  - `enhance` → "Improve image quality, lighting, and details without changing content"
-
-### 6. Edit: `src/pages/Freestyle.tsx` — Auto-build prompt adjustment
-
-In the "Auto-build prompt from assets if user left it empty" block (~line 396):
-- When `imageRole === 'edit'` and no user prompt: auto-generate based on `editIntent` values instead of the current generic product photography prompt
-- When `imageRole === 'product'`: treat sourceImage the same as a selected product for prompt building
-
-## What This Does NOT Change
-
-- No changes to queue system, credits, or generation architecture
-- No AI planner
-- No changes to how Product/Model/Scene selector chips work internally
-- No database migrations needed (imageRole/editIntent are payload fields only)
+## What Does NOT Change
+- Camera Style chip (Pro/iPhone) — stays, user wants it
+- Image Role Selector (edit/product/model/scene) — stays
+- Queue system, credits flow, storage — unchanged
+- Framing, Brand, Product, Model, Scene selectors — unchanged
+- Edit intent system — unchanged
 
 ## Risk
-
-Very low — UI-only changes plus light payload/prompt adjustments. All existing generation paths remain intact. The new fields are optional and backward-compatible.
+Medium — prompt rewrite affects output quality. But current prompts are objectively too long and use negative framing which Google's own docs say hurts Nano Banana. The new approach follows their recommended pattern. Camera style remains user-controllable.
 
