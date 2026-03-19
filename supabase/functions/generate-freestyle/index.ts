@@ -165,6 +165,23 @@ function polishUserPrompt(
   framing?: string,
   productDimensions?: string
 ): string {
+  // ── Editing intent bypass: simple single-image edits skip all heavy layers ──
+  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
+  const isEditingRequest = detectEditingIntent(rawPrompt);
+  if (isEditingRequest && refCount <= 1 && !context.hasModel && !context.hasScene) {
+    const editLayers: string[] = [
+      rawPrompt,
+      "High resolution, clean result, no AI artifacts, no collage layouts.",
+    ];
+    if (userNegatives && userNegatives.length > 0) {
+      editLayers.push(`Avoid: ${userNegatives.join(", ")}`);
+    }
+    if (brandProfile?.doNotRules?.length) {
+      editLayers.push(`Also avoid: ${brandProfile.doNotRules.join(", ")}`);
+    }
+    return editLayers.join("\n");
+  }
+
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
   const expert = isExpertPrompt(rawPrompt);
