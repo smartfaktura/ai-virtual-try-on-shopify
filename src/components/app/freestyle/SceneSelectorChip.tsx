@@ -6,6 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobilePickerSheet } from './MobilePickerSheet';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
@@ -94,6 +96,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   const { asPoses: customPoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
+  const isMobile = useIsMobile();
 
   const rawPoses = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]);
   const allPoses = sortScenes(rawPoses);
@@ -169,7 +172,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
               {poseCategoryLabels[cat]}
             </p>
-            <div className={cn('grid gap-1.5', expanded ? `gap-2` : 'grid-cols-3 lg:gap-2')} style={expanded ? { gridTemplateColumns: `repeat(${expandedColumns}, minmax(0, 1fr))` } : undefined}>
+            <div className={cn('grid gap-1.5', expanded ? `gap-2` : isMobile ? 'grid-cols-2' : 'grid-cols-3 lg:gap-2')} style={expanded ? { gridTemplateColumns: `repeat(${expandedColumns}, minmax(0, 1fr))` } : undefined}>
               {poses.map(pose => (
                 <button
                   key={pose.poseId}
@@ -201,65 +204,93 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     </div>
   );
 
+  const triggerButton = (
+    <button
+      onClick={isMobile ? () => onOpenChange(!open) : undefined}
+      className={cn(
+        "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors min-w-0",
+        fullWidth ? "w-full max-w-none" : "max-w-[140px]"
+      )}
+    >
+      {selectedScene ? (
+        <>
+          <img src={selectedScene.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
+          <span className="truncate flex-1 min-w-0 text-left">{selectedScene.name}</span>
+          <span
+            role="button"
+            onClick={(e) => { e.stopPropagation(); onSelect(null); }}
+            className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5 shrink-0"
+          >
+            <X className="w-3 h-3" />
+          </span>
+        </>
+      ) : (
+        <>
+          <Camera className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate">Scene</span>
+        </>
+      )}
+      <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
+    </button>
+  );
+
+  const pickerContent = (
+    <>
+      <div className="flex items-center justify-between mb-2">
+        {!isMobile && (
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
+            Scene / Environment
+          </p>
+        )}
+        <div className="flex items-center gap-1.5">
+          {selectedScene && (
+            <button
+              onClick={() => handleSelect(null)}
+              className="text-[10px] text-primary hover:underline"
+            >
+              Clear selection
+            </button>
+          )}
+          {!isMobile && (
+            <button
+              onClick={handleExpand}
+              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Expand view"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {renderFilterTabs(false)}
+      {renderGrid(false)}
+
+      <div className="mt-2">
+        <MissingRequestBanner category="scene" compact />
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        {triggerButton}
+        <MobilePickerSheet open={open} onOpenChange={onOpenChange} title="Scene / Environment">
+          {pickerContent}
+        </MobilePickerSheet>
+      </>
+    );
+  }
+
   return (
     <>
       <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
         <PopoverTrigger asChild>
-          <button className={cn(
-            "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors min-w-0 max-w-[140px]",
-            fullWidth && "w-full"
-          )}>
-            {selectedScene ? (
-              <>
-                <img src={selectedScene.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
-                <span className="truncate flex-1 min-w-0 text-left">{selectedScene.name}</span>
-                <span
-                  role="button"
-                  onClick={(e) => { e.stopPropagation(); onSelect(null); }}
-                  className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5 shrink-0"
-                >
-                  <X className="w-3 h-3" />
-                </span>
-              </>
-            ) : (
-              <>
-                <Camera className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Scene</span>
-              </>
-            )}
-            <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
-          </button>
+          {triggerButton}
         </PopoverTrigger>
         <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 lg:w-[480px] p-3" align="start">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
-              Scene / Environment
-            </p>
-            <div className="flex items-center gap-1.5">
-              {selectedScene && (
-                <button
-                  onClick={() => handleSelect(null)}
-                  className="text-[10px] text-primary hover:underline"
-                >
-                  Clear selection
-                </button>
-              )}
-              <button
-                onClick={handleExpand}
-                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                title="Expand view"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {renderFilterTabs(false)}
-          {renderGrid(false)}
-
-          <div className="mt-2">
-            <MissingRequestBanner category="scene" compact />
-          </div>
+          {pickerContent}
         </PopoverContent>
       </Popover>
 

@@ -240,7 +240,7 @@ export function FreestylePromptPanel({
       {!(isMobile && isCollapsed) && (
         <>
           {/* Row 1 — Prompt Input */}
-          <div className={`relative px-4 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-3`}>
+          <div className={`relative px-3 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-3`}>
             <textarea
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
@@ -268,8 +268,8 @@ export function FreestylePromptPanel({
           {/* Image Role Selector (only when image is uploaded) */}
           {sourceImagePreview && (
             <>
-              <div className="border-t border-border/40 mx-4 sm:mx-5" />
-              <div className="px-4 sm:px-5 py-3">
+              <div className="border-t border-border/40 mx-3 sm:mx-5" />
+              <div className="px-3 sm:px-5 py-3">
                 <ImageRoleSelector
                   imageRole={imageRole}
                   onImageRoleChange={onImageRoleChange}
@@ -281,10 +281,10 @@ export function FreestylePromptPanel({
           )}
 
           {/* Divider */}
-          <div className="border-t border-border/40 mx-4 sm:mx-5" />
+          <div className="border-t border-border/40 mx-3 sm:mx-5" />
 
           {/* Row 2 — Settings Chips */}
-          <div className="px-4 sm:px-5 py-3">
+          <div className="px-3 sm:px-5 py-3">
             <FreestyleSettingsChips
               uploadButton={uploadButton}
               selectedProduct={selectedProduct} onProductSelect={onProductSelect}
@@ -309,10 +309,10 @@ export function FreestylePromptPanel({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-border/40 mx-4 sm:mx-5" />
+          <div className="border-t border-border/40 mx-3 sm:mx-5" />
 
           {/* Row 3 — Action Bar */}
-          <div className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <div className="px-3 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             {(() => {
               const hasEnoughCredits = creditBalance === undefined || creditBalance >= creditCost;
               const showInsufficientCredits = canGenerate && !hasEnoughCredits;
