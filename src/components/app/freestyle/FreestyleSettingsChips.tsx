@@ -86,6 +86,7 @@ export function FreestyleSettingsChips({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   cameraStyle, onCameraStyleChange,
+  quality, onQualityChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
   highlightedChip,
