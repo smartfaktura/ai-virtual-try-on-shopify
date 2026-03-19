@@ -1,58 +1,36 @@
 
-I reviewed the current Freestyle mobile code and your screenshots. The core issues are real and come from 3 places: (1) extra outer padding around the prompt panel, (2) chip buttons hard-capped at `max-w-[140px]`, and (3) mobile selectors still using popovers instead of proper mobile modals (no explicit close, bad keyboard behavior).
 
-## Implementation plan
+# Compact Mobile Prompt Bar
 
-### 1) Make the prompt bar truly full-width on mobile
-**Files:** `src/pages/Freestyle.tsx`, `src/components/app/freestyle/FreestylePromptPanel.tsx`
+## Changes
 
-- Remove mobile horizontal wrapper padding around `FreestylePromptPanel` (`px-4` / `pr-*`) so panel can go edge-to-edge.
-- Keep desktop spacing unchanged (`lg:max-w-2xl` remains desktop-only).
-- Keep internal content padding, but reduce it slightly on mobile for better usable width.
-- Use stable mobile height behavior (avoid forced `100dvh` jitter on keyboard open) to reduce flashing/reflow.
+### 1. Shorter mobile placeholder (no "Enter to generate")
+**File:** `FreestylePromptPanel.tsx` line 247
 
-### 2) Redesign mobile chip layout to fit more content + show previews
-**File:** `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+Change mobile placeholder from `"Describe what you want to create… (Enter to generate)"` to `"Describe what you want to create…"`. Keep desktop version as-is.
 
-- Rework mobile chips into a denser layout:
-  - Primary row/group: Upload, Product, Model, Scene (larger, clearer touch targets).
-  - Secondary row/group: Framing, Brand, Ratio, Camera, Quality (compact but readable).
-- Pass `fullWidth` intentionally where useful.
-- Ensure selected chips always show thumbnail/avatar clearly (not clipped/truncated too aggressively).
+### 2. Remove helper text before Generate on mobile
+**File:** `FreestylePromptPanel.tsx` lines 322-325
 
-### 3) Fix chip width logic so “fullWidth” actually works
-**Files:**  
-`src/components/app/freestyle/ProductSelectorChip.tsx`  
-`src/components/app/freestyle/ModelSelectorChip.tsx`  
-`src/components/app/freestyle/SceneSelectorChip.tsx`  
-`src/components/app/freestyle/BrandProfileChip.tsx`  
-`src/components/app/FramingSelectorChip.tsx`
+Hide the "Type a prompt or add a reference to start" text on mobile. Only show it on `sm:` and up. This removes the extra row that pushes the Generate button down.
 
-- Remove/override hard `max-w-[140px]` when `fullWidth` is enabled.
-- Add mobile-specific sizing classes so labels and selected image/avatar stay visible.
-- Keep desktop chip sizing as-is.
+### 3. Reduce textarea height on mobile
+**File:** `FreestylePromptPanel.tsx` line 249
 
-### 4) Replace mobile popovers for Product/Model/Scene with proper mobile modal/sheet UX
-**Files:** same selector chip files above (plus optional small shared mobile picker wrapper)
+Change mobile `min-h-[80px]` to `min-h-[56px]` and rows from 3 to 2 on mobile, keeping desktop at 3 rows / 72px.
 
-- On mobile only: use full-height bottom sheet/dialog style instead of anchored popover.
-- Add sticky header with clear title and explicit **Close (X)** button.
-- Keep desktop as popovers (no regression to desktop UX).
-- Product/model grids become larger (mobile-friendly, likely 2 columns) so images are easy to see.
-- Scene picker opens in mobile-friendly full view directly (no tiny cramped state).
+### 4. Tighter padding on mobile action bar
+**File:** `FreestylePromptPanel.tsx` line 315
 
-### 5) Stop zoom + flashing behavior in picker flows
-**Files:** selector chip files + `Freestyle.tsx`
+Reduce mobile padding from `py-3` to `py-2` on the action bar row, and `py-3` to `py-2` on the chips row (line 287).
 
-- Product search input: mobile font size at least 16px and disable aggressive autofocus on mobile.
-- Ensure modal content scroll is contained (`overflow-y-auto`, sticky header) so keyboard doesn’t break layout.
-- Reduce animation/positioning churn on mobile picker open/close to eliminate visible flashing.
+### 5. Fit all chips in fewer rows on mobile  
+**File:** `FreestyleSettingsChips.tsx` lines 258-290
 
-## Acceptance checklist (what I’ll verify after implementation)
+Reorganize mobile layout into a single wrapping container with `gap-1` instead of two separate groups with `space-y-1.5`. All 9 chips (Upload, Product, Model, Scene, Framing, Brand, Ratio, Camera, Quality) flow naturally in one `flex-wrap` container. With `gap-1` and smaller chips they'll fit in ~3 tight rows naturally.
 
-1. Prompt panel spans full usable width on mobile (no awkward left/right card gaps).
-2. Chips show more readable content and selected thumbnails/avatars.
-3. Product/Model/Scene pickers open in mobile sheet/dialog with visible close button.
-4. Picker content fits screen with keyboard open (no clipped top, no inaccessible controls).
-5. No iOS-style input zoom jump and no flashing/repaint effect during open/close.
-6. Desktop Freestyle layout and picker behavior remain unchanged.
+### 6. Remove bottom divider before action bar on mobile
+**File:** `FreestylePromptPanel.tsx` line 312
+
+Hide the divider between chips and the generate button on mobile to save vertical space.
+
