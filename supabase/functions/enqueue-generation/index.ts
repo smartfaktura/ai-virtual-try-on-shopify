@@ -158,28 +158,16 @@ serve(async (req) => {
       );
     }
 
-    // Trigger process-queue with retry (2 attempts, 5s timeout each)
-    const triggerQueue = async () => {
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          const res = await fetch(`${supabaseUrl}/functions/v1/process-queue`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${serviceRoleKey}`,
-              "Content-Type": "application/json",
-              "x-queue-internal": "true",
-            },
-            body: JSON.stringify({ trigger: "enqueue" }),
-            signal: AbortSignal.timeout(5000),
-          });
-          if (res.ok) break;
-          console.warn(`[enqueue] process-queue attempt ${attempt + 1} returned ${res.status}`);
-        } catch (e) {
-          console.warn(`[enqueue] process-queue attempt ${attempt + 1} failed:`, (e as Error).message);
-        }
-      }
-    };
-    triggerQueue().catch(() => {});
+    // Fire-and-forget: wake process-queue without waiting for response
+    fetch(`${supabaseUrl}/functions/v1/process-queue`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+        "x-queue-internal": "true",
+      },
+      body: JSON.stringify({ trigger: "enqueue" }),
+    }).catch((e) => console.warn(`[enqueue] process-queue wake failed:`, (e as Error).message));
 
     console.log(`[enqueue] Job ${result.job_id} enqueued for user ${userId}, type=${jobType}, cost=${creditsCost}, priority=${result.priority}`);
 

@@ -570,7 +570,7 @@ async function generateImage(
         if (response.status === 429) {
           console.warn(`AI Gateway 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
           if (attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+            await new Promise((r) => setTimeout(r, 1500));
             continue;
           }
           throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
@@ -984,7 +984,21 @@ serve(async (req) => {
       polished: body.polishPrompt,
       isPerspective,
       isQueueInternal,
+      jobId: body.job_id || null,
     });
+
+    // Extend timeout_at for queue jobs — 5 min default is too tight for cold boot + 429 + fallback
+    if (isQueueInternal && body.job_id) {
+      try {
+        const supabaseTimeout = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+        await supabaseTimeout.from('generation_queue')
+          .update({ timeout_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() })
+          .eq('id', body.job_id);
+        console.log(`[generate-freestyle] Extended timeout_at to 10min for job ${body.job_id}`);
+      } catch (e) {
+        console.warn(`[generate-freestyle] Failed to extend timeout_at:`, e);
+      }
+    }
 
     const images: string[] = [];
     const errors: string[] = [];
@@ -1037,7 +1051,20 @@ serve(async (req) => {
         } else if (typeof result === "string") {
           const publicUrl = await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
-          console.log(`Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
+          console.log(`[generate-freestyle] Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
+
+          // Heartbeat: update queue with partial progress so cleanup_stale_jobs can recover
+          if (isQueueInternal && body.job_id) {
+            try {
+              const supabaseHb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+              await supabaseHb.from('generation_queue')
+                .update({ result: { images, generatedCount: images.length, requestedCount: effectiveImageCount } })
+                .eq('id', body.job_id);
+              console.log(`[generate-freestyle] Heartbeat: saved ${images.length} images to queue result`);
+            } catch (hbErr) {
+              console.warn(`[generate-freestyle] Heartbeat update failed:`, hbErr);
+            }
+          }
 
           // Save to freestyle_generations DB when called from queue
           if (isQueueInternal) {
@@ -1088,10 +1115,20 @@ serve(async (req) => {
               if (insertErr) {
                 console.error(`Failed to save freestyle_generations:`, insertErr.message);
               } else {
-                console.log(`Saved freestyle_generations record for image ${i + 1}`);
+                console.log(`[generate-freestyle] Saved freestyle_generations record for image ${i + 1}`);
+              }
+
+              // Early finalize: in queue mode (1 image), complete immediately after first success
+              if (body.job_id && images.length > 0) {
+                console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
+                await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                return new Response(
+                  JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
+                  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
               }
             } catch (dbErr) {
-              console.error(`Failed to save freestyle_generations record:`, dbErr);
+              console.error(`[generate-freestyle] Failed to save freestyle_generations record:`, dbErr);
             }
           }
         } else {
@@ -1124,7 +1161,7 @@ serve(async (req) => {
               if (typeof fallbackResult === "string") {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
-                console.log(`Fallback model succeeded for image ${i + 1}`);
+            console.log(`[generate-freestyle] Fallback model succeeded for image ${i + 1}`);
 
                 // Save to freestyle_generations so image appears in gallery
                 try {
@@ -1147,12 +1184,22 @@ serve(async (req) => {
                   }
                   const { error: insertErrFb } = await supabaseFb.from('freestyle_generations').insert(insertDataFb);
                   if (insertErrFb) {
-                    console.error(`Failed to save freestyle_generations (fallback):`, insertErrFb.message);
+                    console.error(`[generate-freestyle] Failed to save freestyle_generations (fallback):`, insertErrFb.message);
                   } else {
-                    console.log(`Saved freestyle_generations record for fallback image ${i + 1}`);
+                    console.log(`[generate-freestyle] Saved freestyle_generations record for fallback image ${i + 1}`);
+                  }
+
+                  // Early finalize in queue mode after fallback success
+                  if (isQueueInternal && body.job_id && images.length > 0) {
+                    console.log(`[generate-freestyle] Early finalize (fallback): completing queue job ${body.job_id}`);
+                    await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                    return new Response(
+                      JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
+                      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                   }
                 } catch (dbErrFb) {
-                  console.error(`Failed to save freestyle_generations record (fallback):`, dbErrFb);
+                  console.error(`[generate-freestyle] Failed to save freestyle_generations record (fallback):`, dbErrFb);
                 }
 
                 continue;
