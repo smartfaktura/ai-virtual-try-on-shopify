@@ -876,6 +876,7 @@ serve(async (req) => {
       console.log(`[FREESTYLE] White Studio (scene_038) — prompt-only mode, scene image cleared`);
     }
 
+    if (body.stylePresets?.length) {
       if (body.cameraStyle === 'natural') {
         const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
         const filtered = body.stylePresets.filter((kw: string) =>
@@ -1056,7 +1057,7 @@ serve(async (req) => {
                     const storageClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
                     await storageClient.storage.from('freestyle-images').remove([storagePath]);
                   }
-                } catch {}
+                } catch (_e) {}
                 // Remove this URL from images array so completeQueueJob cleanup is accurate
                 images.pop();
                 break;
