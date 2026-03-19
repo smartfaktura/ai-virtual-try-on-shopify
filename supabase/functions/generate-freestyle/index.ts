@@ -62,11 +62,13 @@ interface FreestyleRequest {
   negatives?: string[];
   cameraStyle?: "pro" | "natural";
   framing?: string;
-  user_id?: string; // Injected by process-queue for queue-internal calls
+  user_id?: string;
   modelId?: string;
   sceneId?: string;
   productId?: string;
   productDimensions?: string;
+  imageRole?: "edit" | "product" | "model" | "scene";
+  editIntent?: string[];
 }
 
 // ── Editing intent detection — skip heavy polish for simple edits ─────────
