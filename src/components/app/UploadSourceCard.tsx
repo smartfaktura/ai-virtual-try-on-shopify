@@ -35,7 +35,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function UploadSourceCard({
-  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product',
+  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product', saveToLibrary = false, onSaveToLibraryChange,
 }: UploadSourceCardProps) {
   const isRoom = variant === 'room';
   const [dragOver, setDragOver] = useState(false);
