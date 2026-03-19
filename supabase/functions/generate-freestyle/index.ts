@@ -1056,7 +1056,7 @@ serve(async (req) => {
                     const storageClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
                     await storageClient.storage.from('freestyle-images').remove([storagePath]);
                   }
-                } catch {}
+                } catch (_e) {}
                 // Remove this URL from images array so completeQueueJob cleanup is accurate
                 images.pop();
                 break;
