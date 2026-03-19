@@ -1,22 +1,18 @@
 
 
-## Move White Studio to First Position in Product Studio
+## Fix Missing Images for Custom Scenes in Admin Scene Manager
 
 ### Problem
-White Studio (`scene_038`) doesn't appear first in the Product tab because the admin sort order table (`scene_sort_order`) doesn't have an entry for it — it defaults to sort position 9999. Shadow Play (`scene_019`) has sort position 61, so it shows first.
+Custom scenes stored in the database reference `image_url` values pointing to `freestyle-images` or `tryon-images` bucket files. When these files no longer exist (or fail to load for any reason), the `<img>` tag in AdminScenes silently breaks and collapses to a thin invisible line — no placeholder, no fallback.
+
+Built-in scenes from `mockData` work fine because their images are in the permanent `landing-assets` bucket.
 
 ### Solution
-Insert `scene_038` into the `scene_sort_order` table with `sort_order: 50` (before all other product scenes which start at 61). This is the simplest fix — a single database insert.
+Add a visual fallback for broken images in the AdminScenes scene rows:
 
-### Changes
+**`src/pages/AdminScenes.tsx`** — Replace the bare `<img>` with an error-handled version:
+- Add `onError` handler that swaps the `src` to a placeholder or hides the image and shows a colored fallback `<div>` with the scene's initial letter
+- Add a `bg-muted` background to the image container so even before load, there's a visible placeholder area
 
-**Database migration** — Insert White Studio sort order
-```sql
-INSERT INTO scene_sort_order (scene_id, sort_order, updated_by)
-VALUES ('scene_038', 50, (SELECT id FROM auth.users LIMIT 1));
-```
-
-This places White Studio at position 50, ahead of Shadow Play (61) and all other product scenes, making it the first item shown under **Product Studio** in the scene selector.
-
-No code changes needed.
+This is a small, self-contained UI fix — one file, ~10 lines changed.
 
