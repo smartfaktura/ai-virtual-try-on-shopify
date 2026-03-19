@@ -855,7 +855,7 @@ serve(async (req) => {
           contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
         }
 
-        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
 
         // Fallback: if Pro model returned null (no image), try Flash model once
         if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
