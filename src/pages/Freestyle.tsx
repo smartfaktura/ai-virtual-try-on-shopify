@@ -70,7 +70,7 @@ export default function Freestyle() {
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
   // negatives removed — positive framing only
   const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
-  const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
+  // negativesPopoverOpen removed
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
   const [failedEntries, setFailedEntries] = useState<FailedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
