@@ -1085,7 +1085,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     <div className="flex items-center justify-between">
                       <p className="section-label">Models</p>
                       <Badge variant="secondary" className="text-[10px] rounded-full">
-                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected`}
+                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected${wfModels.length > 0 ? ` · ~${Math.round(imagesPerDrop / wfModels.length)} img each` : ''}`}
                       </Badge>
                     </div>
 
