@@ -28,6 +28,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
+import type { ImageRole, EditIntent } from '@/components/app/freestyle/ImageRoleSelector';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
