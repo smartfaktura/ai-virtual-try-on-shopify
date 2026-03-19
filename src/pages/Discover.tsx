@@ -23,19 +23,42 @@ import { cn } from '@/lib/utils';
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'saved', label: 'Saved' },
-  { id: 'cinematic', label: 'Cinematic' },
+  { id: 'editorial', label: 'Editorial' },
   { id: 'commercial', label: 'Commercial' },
-  { id: 'photography', label: 'Photography' },
-  { id: 'styling', label: 'Styling' },
-  { id: 'ads', label: 'Ads' },
   { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'campaign', label: 'Campaign' },
 ] as const;
 
+// Map old preset categories to new ones for backward compat
+const CATEGORY_ALIAS: Record<string, string> = {
+  cinematic: 'editorial',
+  photography: 'commercial',
+  styling: 'fashion',
+  ads: 'campaign',
+};
+
 const SCENE_CATEGORY_MAP: Record<string, string[]> = {
-  studio: ['commercial', 'photography'],
+  studio: ['commercial', 'editorial'],
   lifestyle: ['lifestyle'],
-  editorial: ['cinematic', 'photography'],
-  streetwear: ['styling', 'lifestyle'],
+  editorial: ['editorial'],
+  streetwear: ['fashion', 'lifestyle'],
+  fitness: ['lifestyle', 'campaign'],
+  athletic: ['lifestyle', 'campaign'],
+  gym: ['lifestyle', 'campaign'],
+  beauty: ['fashion', 'commercial'],
+  desert: ['lifestyle', 'editorial'],
+  outdoor: ['lifestyle', 'editorial'],
+  beach: ['lifestyle'],
+  garden: ['lifestyle'],
+  industrial: ['editorial', 'campaign'],
+  urban: ['fashion', 'lifestyle'],
+  rooftop: ['lifestyle', 'editorial'],
+  cafe: ['lifestyle'],
+  mirror: ['lifestyle', 'fashion'],
+  casual: ['lifestyle'],
+  cozy: ['lifestyle', 'fashion'],
+  professional: ['commercial'],
 };
 
 // Stop words for keyword extraction
