@@ -1098,7 +1098,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         <p className="text-sm font-medium flex items-center gap-1.5">
                           <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
                         </p>
-                        <p className="text-xs text-muted-foreground">AI will randomly select from all available models</p>
+                        <p className="text-xs text-muted-foreground">Each image will feature a different model, selected randomly from all available</p>
                       </div>
                     </div>
 
