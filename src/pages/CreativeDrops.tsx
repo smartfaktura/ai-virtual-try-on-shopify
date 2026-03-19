@@ -505,7 +505,7 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
           Create Your First Drop
         </Button>
         <p className="text-xs text-muted-foreground mt-2.5">
-          Set up in under 2 minutes · Pause or cancel anytime
+          Ready in 2 minutes · Pause or cancel anytime
         </p>
       </div>
     </div>
