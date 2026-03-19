@@ -941,7 +941,7 @@ serve(async (req) => {
       // Perspective jobs: prompt is fully built by the hook — use as-is
       finalPrompt = enrichedPrompt;
     } else if (body.polishPrompt) {
-      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions);
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions, body.imageRole, body.editIntent);
     } else {
       let unpolished = enrichedPrompt;
       if (body.brandProfile) {
