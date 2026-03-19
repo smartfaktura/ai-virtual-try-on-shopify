@@ -311,6 +311,7 @@ export function FreestylePromptPanel({
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
               highlightedChip={highlightedChip}
+              disabledChips={disabledChips}
             />
           </div>
 
