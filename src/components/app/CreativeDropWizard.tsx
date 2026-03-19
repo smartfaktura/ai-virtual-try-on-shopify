@@ -717,7 +717,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                               {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
                             </div>
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                              <img src={product.image_url} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{product.title}</p>
