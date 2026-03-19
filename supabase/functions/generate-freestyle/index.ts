@@ -358,7 +358,8 @@ async function generateImage(
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  maxRetries = 2
+  maxRetries = 2,
+  quality: "standard" | "high" = "standard"
 ): Promise<GenerateResult> {
   // Pro models need longer timeouts — they regularly take 90-120s with multiple images
   const isProModel = /gemini-3-pro|gemini-3\.1-pro/i.test(model);
