@@ -29,15 +29,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditCalculator';
 import type { Workflow } from '@/types/workflow';
 import { useNavigate } from 'react-router-dom';
 import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 
+const opt = (url: string) => getOptimizedUrl(url, { width: 120, quality: 60 });
+
 const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
-  'Product Listing Set': getLandingAssetUrl('workflows/workflow-product-listing.jpg'),
-  'Selfie / UGC Set': getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg'),
-  'Flat Lay Set': getLandingAssetUrl('workflows/workflow-flat-lay.jpg'),
+  'Virtual Try-On Set': opt(getLandingAssetUrl('workflows/workflow-tryon-result.png')),
+  'Product Listing Set': opt(getLandingAssetUrl('workflows/workflow-product-listing.jpg')),
+  'Selfie / UGC Set': opt(getLandingAssetUrl('workflows/ugc-result-1.jpg')),
+  'Flat Lay Set': opt(getLandingAssetUrl('workflows/workflow-flat-lay.jpg')),
+  'Mirror Selfie Set': opt('https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png'),
+  'Picture Perspectives': '/images/perspectives/front.png',
 };
 
 const HIDDEN_WORKFLOW_NAMES = new Set([
