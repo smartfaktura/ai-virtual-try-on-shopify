@@ -289,11 +289,11 @@ export default function PublicDiscover() {
   // Related items for modal
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
-    const selCat = getItemCategory(selectedItem);
+    const selCat = resolveCategory(getItemCategory(selectedItem));
     return allItems
       .filter((i) => {
         if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
-        return getItemCategory(i) === selCat;
+        return resolveCategory(getItemCategory(i)) === selCat;
       })
       .slice(0, 9);
   }, [allItems, selectedItem]);
