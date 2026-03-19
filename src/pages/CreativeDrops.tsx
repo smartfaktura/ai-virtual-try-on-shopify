@@ -456,7 +456,7 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
       {/* Headline */}
       <div className="space-y-3">
         <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-          Automate Your Visual Content
+          Your Brand's Visual Engine
         </h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
           Fresh, on-brand product visuals — delivered on schedule.
