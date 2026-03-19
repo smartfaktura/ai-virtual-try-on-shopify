@@ -479,11 +479,10 @@ export default function Freestyle() {
       sceneImage: sceneImageUrl,
       aspectRatio,
       imageCount: 1,
-      quality,
-      polishPrompt: true, // Always polish — toggle removed from UI
+      quality: 'high',
+      polishPrompt: true,
       modelContext,
       brandProfile: brandContext,
-      negatives: negatives.length > 0 ? negatives : undefined,
       cameraStyle,
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
@@ -499,10 +498,10 @@ export default function Freestyle() {
       jobType: 'freestyle',
       payload: queuePayload,
       imageCount: 1,
-      quality,
+      quality: 'high',
     }, {
       imageCount: 1,
-      quality,
+      quality: 'high',
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
@@ -514,7 +513,7 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, setBalanceFromServer, saveImages, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, setBalanceFromServer, saveImages, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
