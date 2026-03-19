@@ -110,54 +110,12 @@ function detectFullBodyIntent(prompt: string): boolean {
   return FULL_BODY_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-// ── Expert prompt detection — skip photography DNA for detailed technical prompts ──
-function isExpertPrompt(prompt: string): boolean {
-  const lower = prompt.toLowerCase();
-  const signals = [
-    /\d+mm/, /f\/\d/, /iso\s*\d/i, /aperture/, /focal length/,
-    /shutter speed/, /depth of field/, /bokeh/, /lens\b/,
-    /color balance/, /color temperature/, /kelvin/,
-    /key light/, /rim light/, /fill light/, /backlight/,
-    /softbox/, /strobe/, /reflector/, /diffuser/,
-  ];
-  const matchCount = signals.filter(r => r.test(lower)).length;
-  return prompt.length > 300 && matchCount >= 2;
-}
-
-// ── Photography DNA (Pro camera style — for people/fashion shots) ─────────
-function buildPhotographyDNA(): string {
-  return `Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off.`;
-}
-
-// ── Generic DNA (for scene/architecture/product-only shots without people) ─
-function buildGenericDNA(): string {
-  return `Ultra high resolution, photorealistic, razor-sharp details, natural lighting, professional photography. Visible material textures, realistic surfaces. Subtle film grain, elegant highlight roll-off.`;
-}
-
-// ── Negative prompt (always appended when polish is on) ───────────────────
-// LEGACY — kept as fallback for Phase 1
-function buildNegativePrompt(cameraStyle?: 'pro' | 'natural', hasPeople = true): string {
-  const anatomyRule = hasPeople
-    ? '- Correct anatomy: exactly 2 arms, 2 hands with 5 fingers each, natural joint articulation, no extra or missing limbs'
-    : '- No people, no human figures, no body parts';
-  const blurRule = cameraStyle === 'natural'
-    ? '- No bokeh, no shallow depth of field — everything sharp foreground to background'
-    : '- No blurry or out-of-focus areas unless intentionally bokeh';
-
-  return `
-AVOID:
-${anatomyRule}
-${blurRule}
-- No AI skin smoothing or plastic textures
-- No collage layouts, split-screen, or black borders`;
-}
-
-// ── Context-aware prompt polish ───────────────────────────────────────────
+// ── Unified prompt builder — positive framing, single path ───────────────
 function polishUserPrompt(
   rawPrompt: string,
   context: { hasSource: boolean; hasProduct: boolean; hasModel: boolean; hasScene: boolean },
   brandProfile?: BrandProfileContext,
-  userNegatives?: string[],
+  _userNegatives?: string[],
   modelContext?: string,
   cameraStyle?: "pro" | "natural",
   framing?: string,
@@ -167,10 +125,9 @@ function polishUserPrompt(
 ): string {
   // ── Image edit mode: lightweight edit-safe prompt ──
   if (imageRole === 'edit' && context.hasSource) {
-    const editLayers: string[] = [
-      "Edit the provided image. Preserve composition unless specified.",
-    ];
-    if (rawPrompt.trim()) editLayers.unshift(rawPrompt);
+    const editLayers: string[] = [];
+    if (rawPrompt.trim()) editLayers.push(rawPrompt);
+    editLayers.push("Edit the provided image. Preserve composition unless specified.");
 
     const intentInstructions: Record<string, string> = {
       replace_product: "Replace the product in the image while preserving everything else.",
@@ -182,271 +139,104 @@ function polishUserPrompt(
     for (const intent of effectiveIntents) {
       if (intentInstructions[intent]) editLayers.push(intentInstructions[intent]);
     }
-
-    editLayers.push("High resolution, clean result, no AI artifacts, no collage layouts.");
-    if (userNegatives && userNegatives.length > 0) {
-      editLayers.push(`Avoid: ${userNegatives.join(", ")}`);
-    }
-    if (brandProfile?.doNotRules?.length) {
-      editLayers.push(`Also avoid: ${brandProfile.doNotRules.join(", ")}`);
-    }
+    editLayers.push("High resolution, clean result, single cohesive photograph.");
     return editLayers.join("\n");
   }
-  // ── Editing intent bypass: simple single-image edits skip all heavy layers ──
-  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
+
+  // ── Simple editing bypass (extract, remove bg, recolor, etc.) ──
   const isEditingRequest = detectEditingIntent(rawPrompt);
+  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
   if (isEditingRequest && refCount <= 1 && !context.hasModel && !context.hasScene) {
-    const editLayers: string[] = [
-      rawPrompt,
-      "High resolution, clean result, no AI artifacts, no collage layouts.",
-    ];
-    if (userNegatives && userNegatives.length > 0) {
-      editLayers.push(`Avoid: ${userNegatives.join(", ")}`);
-    }
-    if (brandProfile?.doNotRules?.length) {
-      editLayers.push(`Also avoid: ${brandProfile.doNotRules.join(", ")}`);
-    }
-    return editLayers.join("\n");
+    return `${rawPrompt}\nHigh resolution, clean result, single cohesive photograph.`;
   }
 
-  const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
-  const expert = isExpertPrompt(rawPrompt);
+  const parts: string[] = [];
 
-  // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
-  // refCount already declared above (line 169)
-  if (refCount >= 2 && !isSelfie) {
-    const parts: string[] = [
-      `Professional photography: ${rawPrompt}`,
-      "",
-      "REQUIREMENTS:",
-    ];
-
-    let stepNum = 1;
-
-    if (context.hasProduct) {
-      const dimNote = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
-      parts.push(`${stepNum}. PRODUCT: Identify the product from [PRODUCT REFERENCE] — its shape, material, color, texture, and brand details. Generate a photograph of this exact product with professional lighting and fresh composition.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
-      stepNum++;
-      if (context.hasSource) {
-        parts.push(`${stepNum}. REFERENCE: [REFERENCE IMAGE] is for setting/mood/style inspiration only. The final image must prominently feature the exact product from [PRODUCT REFERENCE] as the hero subject.`);
-        stepNum++;
-      }
-    } else if (context.hasSource) {
-      parts.push(`${stepNum}. PRODUCT: Identify the product from [PRODUCT REFERENCE] — its shape, material, color, texture, and brand details. Generate a photograph of this exact product with professional lighting and fresh composition.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : ""}`);
-      stepNum++;
-    }
-    if (context.hasModel) {
-      const identityDetails = modelContext ? ` (${modelContext})` : "";
-      const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
-      if (framing && noFaceFramings.includes(framing)) {
-        parts.push(`${stepNum}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL REFERENCE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
-      } else {
-        parts.push(`${stepNum}. MODEL: The person must match the individual in [MODEL REFERENCE] — same face, features, skin tone, hair, and body${identityDetails}. This is a specific person, not a generic model. Ignore any person in the product image.`);
-      }
-      stepNum++;
-    }
-    // Gender enforcement for condensed path
-    if (modelContext) {
-      const lowerCtx = modelContext.toLowerCase();
-      if (lowerCtx.startsWith('male')) {
-        parts.push("GENDER RULE: A male model has been selected. ALL people in this image MUST be male. Do NOT generate any female figures, women, or feminine-presenting people — even if the scene reference image contains women.");
-      } else if (lowerCtx.startsWith('female')) {
-        parts.push("GENDER RULE: A female model has been selected. ALL people in this image MUST be female. Do NOT generate any male figures, men, or masculine-presenting people — even if the scene reference image contains men.");
-      }
-    }
-    if (context.hasScene) {
-      parts.push(`${stepNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, and atmosphere only. If the scene contains any products or commercial items, ignore them — the only product must be from [PRODUCT REFERENCE].`);
-      stepNum++;
-    }
-
-    parts.push("");
-    parts.push("Quality: Photorealistic, natural skin texture, no AI artifacts, ultra high resolution.");
-
-    // Brand style (condensed)
-    if (brandProfile?.tone) {
-      const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
-      const colorDesc = brandProfile.colorFeel ? (COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel) : "";
-      parts.push(`Brand: ${toneDesc}${colorDesc ? `. Color: ${colorDesc}` : ""}`);
-    }
-
-    if (cameraStyle === "natural") {
-      parts.push("Shot on iPhone — deep depth of field, true-to-life colors, no retouching.");
-    }
-
-    // Framing override (condensed path)
-    const effectiveFramingCondensed = framing || (detectFullBodyIntent(rawPrompt) ? 'full_body' : null);
-    if (effectiveFramingCondensed) {
-      const framingPrompts: Record<string, string> = {
-        full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-        upper_body: `FRAMING: Upper body shot, waist up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-        close_up: `FRAMING: Close-up portrait from shoulders upward.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-        hand_wrist: `FRAMING: Hand and wrist only. Product naturally worn. No face.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-        neck_shoulders: `FRAMING: Collarbone area, jewelry display framing.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-        lower_body: `FRAMING: Lower body, hips to feet.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-        back_view: `FRAMING: Back view, subject facing away.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-        side_profile: `FRAMING: Side profile, ear and jawline area.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-      };
-      if (framingPrompts[effectiveFramingCondensed]) {
-        parts.push(framingPrompts[effectiveFramingCondensed]);
-      }
-    }
-
-    // Negatives
-    const allNeg: string[] = [];
-    if (brandProfile?.doNotRules?.length) allNeg.push(...brandProfile.doNotRules);
-    if (userNegatives?.length) allNeg.push(...userNegatives);
-    parts.push(buildNegativePrompt(cameraStyle));
-    if (allNeg.length > 0) {
-      const deduped = [...new Set(allNeg.map(n => n.toLowerCase()))];
-      parts.push(`Also avoid: ${deduped.join(", ")}`);
-    }
-
-    return parts.join("\n");
-  }
-
+  // ── 1. Core intent ──
   if (isSelfie) {
-    layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
-    layers.push(
+    parts.push(`Authentic selfie-style photo: ${rawPrompt}`);
+    parts.push(
       cameraStyle === 'natural'
-        ? "Shot on iPhone front camera. Sharp focus on face, natural ambient lighting, true-to-life colors. No Portrait Mode blur."
-        : "Shot on smartphone front camera. Sharp focus on face, natural ambient lighting, flattering soft light."
+        ? "Shot on iPhone front camera. Sharp focus on face, natural ambient lighting, true-to-life colors. Deep DOF, no bokeh."
+        : "Shot on smartphone front camera. Sharp focus on face, flattering soft light, subtle natural bokeh."
     );
-    layers.push(
-      `SELFIE COMPOSITION: Shot from the phone's front camera POV. Subject looking directly into the lens. Slight wide-angle distortion. One hand holding phone (phone itself never visible). ${cameraStyle === 'natural' ? 'Deep depth of field — background sharp, no bokeh.' : 'Soft natural bokeh in background.'} Authentic, candid expression.`
-    );
-    layers.push(
-      "SELFIE FRAMING: Full head and hair visible with natural headroom. Frame from mid-chest up. Face in upper-third of composition."
-    );
+    parts.push("SELFIE COMPOSITION: Front camera POV. Subject looking into lens. One hand holding phone (phone not visible). Full head and hair visible with headroom. Frame from mid-chest up.");
   } else {
-    if (expert) {
-      // Expert prompt: user already specified camera/lighting — don't override with generic DNA
-      layers.push(rawPrompt);
-    } else {
-      layers.push(`Professional photography: ${rawPrompt}`);
-      // If user typed a prompt, default to people-mode — anatomy constraints are harmless
-      // for non-people subjects, but "No people" negatives destroy people-describing prompts.
-      // Only suppress people when there's truly no prompt text and no assets.
-      const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
-      layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
-    }
+    parts.push(`Professional photography: ${rawPrompt}`);
   }
 
-  // Brand profile layer
-  if (brandProfile) {
-    const brandParts: string[] = [];
-    if (brandProfile.tone) {
-      const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
-      brandParts.push(`Visual tone: ${toneDesc}`);
+  // ── 2. References (numbered, concise) ──
+  const refs: string[] = [];
+  let refNum = 1;
+
+  if (context.hasProduct) {
+    const dimNote = productDimensions ? ` Dimensions: ${productDimensions} — render at realistic scale.` : "";
+    refs.push(`${refNum}. PRODUCT: Match the exact product from [PRODUCT REFERENCE] — shape, material, color, texture, brand details, and any text/logos.${context.hasModel ? " Ignore any person/mannequin in this image." : ""}${dimNote}`);
+    refNum++;
+    if (context.hasSource && !['product', 'model', 'scene'].includes(imageRole || '')) {
+      refs.push(`${refNum}. REFERENCE: Use [REFERENCE IMAGE] for setting/mood inspiration. The product from [PRODUCT REFERENCE] is the hero subject.`);
+      refNum++;
     }
-    if (brandProfile.colorFeel) {
-      const colorDesc = COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel;
-      brandParts.push(`Color direction: ${colorDesc}`);
-    }
-    if (brandProfile.brandKeywords && brandProfile.brandKeywords.length > 0) {
-      brandParts.push(`Brand DNA keywords: ${brandProfile.brandKeywords.join(", ")}`);
-    }
-    if (brandProfile.colorPalette && brandProfile.colorPalette.length > 0) {
-      brandParts.push(`Brand accent colors: ${brandProfile.colorPalette.join(", ")}`);
-    }
-    if (brandProfile.targetAudience) {
-      brandParts.push(`Target audience: ${brandProfile.targetAudience}`);
-    }
-    if (brandParts.length > 0) {
-      layers.push(`BRAND STYLE GUIDE:\n${brandParts.join(". ")}.`);
-    }
+  } else if (context.hasSource && imageRole !== 'model' && imageRole !== 'scene') {
+    refs.push(`${refNum}. PRODUCT: Match the exact item from [${imageRole === 'product' ? 'PRODUCT IMAGE' : 'REFERENCE IMAGE'}] — shape, material, color, texture, brand details, and any text/logos.${context.hasModel ? " Ignore any person/mannequin." : ""}`);
+    refNum++;
   }
 
-  // LEGACY — Product / source image layer
-  const hasProductImage = context.hasProduct || context.hasSource;
-  if (hasProductImage) {
-    const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale.` : "";
-    layers.push(
-      `PRODUCT IDENTITY: Identify the product from [PRODUCT REFERENCE] — its shape, material, color, texture, and brand details. Generate a photograph of this exact product with professional lighting and fresh composition.${dimLayer}`
-    );
-    if (context.hasSource && context.hasProduct) {
-      layers.push(
-        "REFERENCE INSPIRATION: Use [REFERENCE IMAGE] for setting/mood/style inspiration. Place the product from [PRODUCT REFERENCE] in a similar setting."
-      );
-    }
-    if (isSelfie) {
-      layers.push(
-        "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
-      );
-    }
-    // Product-only framing (no model involved) — suppressed when explicit framing is set
-    if (!context.hasModel && !framing) {
-      layers.push(
-        "FRAMING: Use a creative product photography angle — overhead, 45-degree, low-angle, or dramatic perspective. Professional composition with intentional negative space. Do NOT simply center the product straight-on like the reference."
-      );
-    }
-  }
-
-  // LEGACY — Model / portrait layer — identity matching
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
     const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
     if (framing && noFaceFramings.includes(framing)) {
-      layers.push(
-        `MODEL IDENTITY: Match the skin tone, body type, and physical characteristics of the person in [MODEL REFERENCE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`
-      );
+      refs.push(`${refNum}. MODEL: Match skin tone, body type, and physical characteristics of [MODEL REFERENCE]${identityDetails}. Face not visible in this framing.`);
     } else {
-      layers.push(
-        `MODEL IDENTITY: The person must match the individual in [MODEL REFERENCE]${identityDetails} — same face, features, skin tone, hair, and body. This is a specific person, not a generic model. Ignore any person in the product image.`
-      );
+      refs.push(`${refNum}. MODEL: The person must match [MODEL REFERENCE]${identityDetails} — same face, features, skin tone, hair, body. This is a specific individual.`);
     }
-    // Gender enforcement for layered path
+    refNum++;
+    // Gender enforcement
     if (modelContext) {
       const lowerCtx = modelContext.toLowerCase();
       if (lowerCtx.startsWith('male')) {
-        layers.push("GENDER: All people must be male. Do not generate female figures.");
+        refs.push("GENDER: All people must be male.");
       } else if (lowerCtx.startsWith('female')) {
-        layers.push("GENDER: All people must be female. Do not generate male figures.");
-      }
-    }
-    if (isSelfie) {
-      layers.push(
-        cameraStyle === 'natural'
-          ? "PORTRAIT QUALITY: Natural skin texture with realistic pores. Even ambient lighting, true-to-life skin tones, no color grading."
-          : "PORTRAIT QUALITY: Natural skin texture with realistic pores. Soft flattering natural light. Relaxed genuine expression."
-      );
-    } else {
-      layers.push(
-        "PORTRAIT QUALITY: Sharp eye detail, natural skin texture with visible pores. Realistic hair texture. Accurate body proportions, natural pose. No heavy retouching or plastic look."
-      );
-      // Framing for standard portrait/model shots (only if no explicit framing override and not expert prompt)
-      if (!framing && !expert) {
-        if (detectFullBodyIntent(rawPrompt)) {
-          layers.push(
-            `FRAMING: Full body shot, head to toe. Show the complete figure from head to feet with natural spacing. The entire body must be visible — do NOT crop at knees, waist, or shins.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`
-          );
-        } else {
-          layers.push(
-            "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
-          );
-        }
+        refs.push("GENDER: All people must be female.");
       }
     }
   }
 
-  // Scene / environment layer
   if (context.hasScene) {
-    layers.push(
-      "ENVIRONMENT: Place the subject in the environment shown in [SCENE REFERENCE]. Match the location, architecture, surfaces, lighting direction, and atmosphere. If the scene contains any products or commercial items, ignore them — the only product must be from [PRODUCT REFERENCE]."
-    );
+    refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.`);
+    refNum++;
   }
 
-  // Camera rendering style layer
-  if (cameraStyle === "natural") {
-    layers.push(
-      `CAMERA STYLE: Shot on iPhone. Deep depth of field, everything sharp. True-to-life colors, no grading. Natural ambient light, no studio lighting. Ultra-sharp detail across the entire frame.${isSelfie ? ' Front camera standard mode — no Portrait Mode, no bokeh.' : ''}`
-    );
+  if (refs.length > 0) {
+    parts.push("");
+    parts.push("REFERENCES:");
+    parts.push(...refs);
   }
 
-  // Explicit framing override
-  if (framing) {
+  // ── 3. Quality block (positive framing) ──
+  parts.push("");
+  const qualityLines: string[] = [
+    "Photorealistic. Natural skin with visible pores and fine lines.",
+    "Sharp micro-detail on textures, stitching, product text, and logos.",
+    "Visible material grain. Single cohesive photograph, edge-to-edge.",
+  ];
+
+  if (!isSelfie) {
+    if (cameraStyle === 'natural') {
+      qualityLines.push("Shot on iPhone. Deep depth of field, everything sharp foreground to background. True-to-life colors, natural ambient light, no retouching.");
+    } else {
+      qualityLines.push("Shot on 85mm f/2.8. Sculpted studio lighting, subtle film grain, elegant highlight roll-off.");
+    }
+  }
+
+  parts.push(`QUALITY: ${qualityLines.join(" ")}`);
+
+  // ── 4. Framing ──
+  const effectiveFraming = framing || (detectFullBodyIntent(rawPrompt) ? 'full_body' : null);
+  if (effectiveFraming) {
     const framingPrompts: Record<string, string> = {
-      full_body: `FRAMING: Full body shot, head to toe.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+      full_body: `FRAMING: Full body shot, head to toe. Show complete figure.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
       upper_body: `FRAMING: Upper body, waist up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
       close_up: `FRAMING: Close-up portrait from shoulders up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
       hand_wrist: `FRAMING: Hand and wrist only. No face.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
@@ -455,32 +245,26 @@ function polishUserPrompt(
       back_view: `FRAMING: Back view, facing away.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
       side_profile: `FRAMING: Side profile, ear and jawline.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
     };
-    if (framingPrompts[framing]) {
-      layers.push(framingPrompts[framing]);
+    if (framingPrompts[effectiveFraming]) {
+      parts.push(framingPrompts[effectiveFraming]);
     }
+  } else if (context.hasModel && !isSelfie) {
+    // Default framing for model shots without explicit selection
+    parts.push("FRAMING: Full head, hair, and upper body visible. Natural headroom. Face in upper third of composition.");
+  } else if (context.hasProduct && !context.hasModel && !isSelfie) {
+    // Product-only: creative angle
+    parts.push("FRAMING: Creative product photography angle — overhead, 45-degree, or dramatic perspective. Professional composition with intentional negative space.");
   }
 
-  // Build combined negatives list
-  const allNegatives: string[] = [];
-  if (brandProfile?.doNotRules && brandProfile.doNotRules.length > 0) {
-    allNegatives.push(...brandProfile.doNotRules);
-  }
-  if (userNegatives && userNegatives.length > 0) {
-    allNegatives.push(...userNegatives);
-  }
-
-  // Build final negative prompt
-  // Same safe default: if user typed a prompt, don't inject "No people" negatives
-  const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
-  let negativeBlock = buildNegativePrompt(cameraStyle, wantsPeople);
-  if (allNegatives.length > 0) {
-    const dedupedNegatives = [...new Set(allNegatives.map(n => n.toLowerCase()))];
-    negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
+  // ── 5. Brand (compact) ──
+  if (brandProfile?.tone) {
+    const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
+    const colorDesc = brandProfile.colorFeel ? (COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel) : "";
+    const brandKeywords = brandProfile.brandKeywords?.length ? `. Keywords: ${brandProfile.brandKeywords.join(", ")}` : "";
+    parts.push(`BRAND: ${toneDesc}${colorDesc ? `. Color: ${colorDesc}` : ""}${brandKeywords}`);
   }
 
-  layers.push(negativeBlock);
-
-  return layers.join("\n\n");
+  return parts.join("\n");
 }
 
 // Content-block detection helpers
@@ -954,13 +738,10 @@ serve(async (req) => {
         }
         if (parts.length > 0) unpolished += `\n\nBrand style: ${parts.join(", ")}`;
       }
-      const allNeg: string[] = [
-        ...(body.brandProfile?.doNotRules || []),
-        ...(body.negatives || []),
-      ];
-      if (allNeg.length > 0) {
-        const dedupedNeg = [...new Set(allNeg.map(n => n.toLowerCase()))];
-        unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
+      // Brand do-not rules as positive reframing
+      const doNotRules = body.brandProfile?.doNotRules || [];
+      if (doNotRules.length > 0) {
+        unpolished += `\n\nBrand constraints: ${doNotRules.join(", ")}`;
       }
       if (body.cameraStyle === "natural") {
         unpolished += `\n\nCAMERA RENDERING STYLE — NATURAL (iPhone): Shot on a latest-generation iPhone. Ultra-sharp details across the entire frame with deep depth of field (everything in focus, minimal bokeh). True-to-life, unedited color reproduction — no color grading, no warm/cool push. Natural ambient lighting only. The image should feel authentic and unprocessed.`;
@@ -988,16 +769,10 @@ serve(async (req) => {
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
 
     const forceProModel = !!(body as Record<string, unknown>).forceProModel;
-    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage, referenceAngleImage].filter(Boolean).length;
-    const hasModelImage = !!body.modelImage;
-    const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-    const aiModel = (forceProModel || isPerspective || hasModelImage || hasDualProductRef)
+    const hasModelImage = !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model');
+    const aiModel = (forceProModel || isPerspective || hasModelImage)
       ? "google/gemini-3-pro-image-preview"
-      : isQueueInternal
-        ? "google/gemini-3.1-flash-image-preview"
-        : (body.quality === "high" && refCount < 2)
-          ? "google/gemini-3-pro-image-preview"
-          : "google/gemini-3.1-flash-image-preview";
+      : "google/gemini-3.1-flash-image-preview";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,

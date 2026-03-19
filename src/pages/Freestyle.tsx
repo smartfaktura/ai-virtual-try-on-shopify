@@ -57,7 +57,7 @@ export default function Freestyle() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
-  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
+  // quality removed — always 'high'
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
@@ -68,9 +68,9 @@ export default function Freestyle() {
   const [shareImageIndex] = useState<number | null>(null);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
-  const [negatives, setNegatives] = useState<string[]>([]);
+  // negatives removed — positive framing only
   const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
-  const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
+  // negativesPopoverOpen removed
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
   const [failedEntries, setFailedEntries] = useState<FailedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
@@ -108,8 +108,6 @@ export default function Freestyle() {
     setSelectedScene(null);
     setSelectedProduct(null);
     setAspectRatio('1:1');
-    setQuality('standard');
-    setNegatives([]);
     setCameraStyle('pro');
     setFraming(null);
     setSelectedBrandProfile(null);
@@ -117,7 +115,7 @@ export default function Freestyle() {
     setEditIntent([]);
   }, []);
 
-  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null || imageRole !== 'edit' || editIntent.length > 0;
+  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null || imageRole !== 'edit' || editIntent.length > 0;
 
   const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
 
@@ -175,7 +173,7 @@ export default function Freestyle() {
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    if (q === 'high') setQuality('high');
+    // quality param ignored — always high
     if (sceneParam) {
       const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
       if (matchedScene) {
@@ -290,7 +288,7 @@ export default function Freestyle() {
 
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
-  const creditCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
+  const creditCost = 6;
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
@@ -481,11 +479,10 @@ export default function Freestyle() {
       sceneImage: sceneImageUrl,
       aspectRatio,
       imageCount: 1,
-      quality,
-      polishPrompt: true, // Always polish — toggle removed from UI
+      quality: 'high',
+      polishPrompt: true,
       modelContext,
       brandProfile: brandContext,
-      negatives: negatives.length > 0 ? negatives : undefined,
       cameraStyle,
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
@@ -501,10 +498,10 @@ export default function Freestyle() {
       jobType: 'freestyle',
       payload: queuePayload,
       imageCount: 1,
-      quality,
+      quality: 'high',
     }, {
       imageCount: 1,
-      quality,
+      quality: 'high',
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
@@ -516,7 +513,7 @@ export default function Freestyle() {
     } finally {
       setIsUploading(false);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, setBalanceFromServer, saveImages, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, enqueue, prompt, sourceImage, aspectRatio, setBalanceFromServer, saveImages, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -649,8 +646,6 @@ export default function Freestyle() {
     isLoadingProducts,
     aspectRatio,
     onAspectRatioChange: setAspectRatio,
-    quality,
-    onQualityChange: setQuality,
     selectedBrandProfile,
     onBrandProfileSelect: setSelectedBrandProfile,
     brandProfilePopoverOpen,
@@ -658,10 +653,6 @@ export default function Freestyle() {
     brandProfiles,
     isLoadingBrandProfiles,
     onFileDrop: handleFileDrop,
-    negatives,
-    onNegativesChange: setNegatives,
-    negativesPopoverOpen,
-    onNegativesPopoverChange: setNegativesPopoverOpen,
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
     framing,

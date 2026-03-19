@@ -40,18 +40,12 @@ interface FreestylePromptPanelProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
-  quality: 'standard' | 'high';
-  onQualityChange: (q: 'standard' | 'high') => void;
   selectedBrandProfile: BrandProfile | null;
   onBrandProfileSelect: (profile: BrandProfile | null) => void;
   brandProfilePopoverOpen: boolean;
   onBrandProfilePopoverChange: (open: boolean) => void;
   brandProfiles: BrandProfile[];
   isLoadingBrandProfiles: boolean;
-  negatives: string[];
-  onNegativesChange: (negatives: string[]) => void;
-  negativesPopoverOpen: boolean;
-  onNegativesPopoverChange: (open: boolean) => void;
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
   framing: FramingOption | null;
@@ -86,10 +80,8 @@ export function FreestylePromptPanel({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  quality, onQualityChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
-  negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
@@ -300,12 +292,9 @@ export function FreestylePromptPanel({
               selectedScene={selectedScene} onSceneSelect={onSceneSelect}
               scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
               aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-              quality={quality} onQualityChange={onQualityChange}
               selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
               brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
               brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
-              negatives={negatives} onNegativesChange={onNegativesChange}
-              negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
               cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
@@ -372,10 +361,10 @@ export function FreestylePromptPanel({
                         {showInsufficientCredits
                           ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
                           : selectedModel && selectedScene
-                            ? `${creditCost} credits: Model + Scene (15/image)`
+                            ? `${creditCost} credits: Model + Scene`
                             : selectedModel
-                              ? `${creditCost} credits: Model reference (12/image)`
-                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'}`}
+                              ? `${creditCost} credits: Model reference`
+                              : `${creditCost} credits per image`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
