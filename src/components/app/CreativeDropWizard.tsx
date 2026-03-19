@@ -124,6 +124,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+
+  const markDirty = useCallback(() => { if (!isDirty) setIsDirty(true); }, [isDirty]);
 
   // Step 1: Details
   const [name, setName] = useState(initialData?.name || '');
