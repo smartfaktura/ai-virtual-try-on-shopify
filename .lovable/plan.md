@@ -1,23 +1,40 @@
 
 
-# Widen Freestyle Prompt Panel + Fix Chip Layout
+# Remove Auto-Preselected Aspect Ratio + Add Validation
 
 ## Problem
-The prompt bar is constrained to `max-w-3xl` (768px) on desktop, leaving empty space on the right. With 9 chips across two rows, they look cramped and oddly spaced within this narrow container.
+Perspectives page auto-selects "1:1" on load (`new Set(['1:1'])`). User wants no preselection and proper error handling when none are selected.
 
-## Changes
+## Changes — `src/pages/Perspectives.tsx`
 
-### 1. `src/pages/Freestyle.tsx` (line 810)
-Widen the prompt panel container from `lg:max-w-3xl` to `lg:max-w-4xl` (896px). This gives chips more breathing room and fills the available space better.
-
+### 1. Initialize with empty set (line 86)
 ```
-lg:max-w-3xl → lg:max-w-4xl
+new Set(['1:1']) → new Set()
 ```
 
-### 2. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — Desktop layout (lines 293-322)
-Change the second row of chips to spread evenly using `justify-between` or add slight spacing improvements so chips don't cluster on the left with empty space on the right. Increase gap from `gap-1.5` to `gap-2` for both rows to give chips more visual breathing room.
+### 2. Allow deselecting all ratios (lines 352-357)
+Remove the `next.size > 1` guard so users can deselect the last ratio:
+```typescript
+const toggleRatio = (ratio: string) => {
+  const next = new Set(selectedRatios);
+  if (next.has(ratio)) next.delete(ratio);
+  else next.add(ratio);
+  setSelectedRatios(next);
+};
+```
 
-### Summary
-- One class change in Freestyle.tsx: `max-w-3xl` → `max-w-4xl`
-- Gap increase in FreestyleSettingsChips desktop rows: `gap-1.5` → `gap-2`
+### 3. Add validation toast on generate (line 425-426)
+Before the existing `if (!canGenerate) return`, add specific error messages:
+```typescript
+if (selectedRatios.size === 0) {
+  toast.error('Please select at least one aspect ratio.');
+  return;
+}
+if (selectedVariations.size === 0) {
+  toast.error('Please select at least one perspective angle.');
+  return;
+}
+```
+
+`canGenerate` already checks `selectedRatios.size > 0`, so the button stays disabled — the toast is a safety net if somehow triggered.
 
