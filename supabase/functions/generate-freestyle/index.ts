@@ -642,6 +642,7 @@ function buildContentArray(
   productImage?: string,
   modelImage?: string,
   sceneImage?: string,
+  imageRole?: string,
 ): ContentItem[] {
   const content: ContentItem[] = [];
 
@@ -654,9 +655,13 @@ function buildContentArray(
     content.push({ type: "image_url", image_url: { url: productImage } });
   }
 
-  // Source/reference image (user-uploaded) — NEVER labeled as product
+  // Source/reference image (user-uploaded) — label based on imageRole
   if (sourceImage) {
-    content.push({ type: "text", text: "[REFERENCE IMAGE]" });
+    const label = imageRole === 'product' ? '[PRODUCT IMAGE]'
+      : imageRole === 'model' ? '[MODEL REFERENCE]'
+      : imageRole === 'scene' ? '[SCENE REFERENCE]'
+      : '[REFERENCE IMAGE]';
+    content.push({ type: "text", text: label });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
