@@ -69,6 +69,21 @@ interface FreestyleRequest {
   productDimensions?: string;
 }
 
+// ── Editing intent detection — skip heavy polish for simple edits ─────────
+const EDITING_KEYWORDS = [
+  'extract', 'remove', 'isolate', 'cut out', 'erase', 'clean up',
+  'change background', 'replace background', 'swap background',
+  'replace', 'recolor', 'crop', 'make transparent', 'delete text',
+  'remove text', 'fix', 'enhance', 'sharpen', 'upscale', 'brighten',
+  'darken', 'desaturate', 'blur background', 'add shadow', 'remove shadow',
+  'straighten', 'rotate', 'flip', 'mirror', 'resize',
+];
+
+function detectEditingIntent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return EDITING_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 // ── Selfie / UGC intent detection ─────────────────────────────────────────
 const SELFIE_KEYWORDS = [
   'selfie', 'self-portrait', 'self portrait', 'front-facing', 'front facing',
@@ -150,6 +165,23 @@ function polishUserPrompt(
   framing?: string,
   productDimensions?: string
 ): string {
+  // ── Editing intent bypass: simple single-image edits skip all heavy layers ──
+  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
+  const isEditingRequest = detectEditingIntent(rawPrompt);
+  if (isEditingRequest && refCount <= 1 && !context.hasModel && !context.hasScene) {
+    const editLayers: string[] = [
+      rawPrompt,
+      "High resolution, clean result, no AI artifacts, no collage layouts.",
+    ];
+    if (userNegatives && userNegatives.length > 0) {
+      editLayers.push(`Avoid: ${userNegatives.join(", ")}`);
+    }
+    if (brandProfile?.doNotRules?.length) {
+      editLayers.push(`Also avoid: ${brandProfile.doNotRules.join(", ")}`);
+    }
+    return editLayers.join("\n");
+  }
+
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
   const expert = isExpertPrompt(rawPrompt);
@@ -163,25 +195,29 @@ function polishUserPrompt(
       "REQUIREMENTS:",
     ];
 
+    let stepNum = 1;
+
     if (context.hasProduct) {
       const dimNote = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
-      parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
+      parts.push(`${stepNum}. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
+      stepNum++;
       if (context.hasSource) {
-        const refNum = [context.hasProduct, context.hasModel].filter(Boolean).length + 1;
-        parts.push(`${refNum}. REFERENCE: [REFERENCE IMAGE] is ONLY for setting/mood/style/scene inspiration. Do NOT reproduce or recreate the reference image itself. The final image MUST prominently feature the exact product from [PRODUCT IMAGE] as the hero subject. Place the product in a similar setting or style as [REFERENCE IMAGE], but the product from [PRODUCT IMAGE] must be clearly visible and dominant.`);
+        parts.push(`${stepNum}. REFERENCE: [REFERENCE IMAGE] is ONLY for setting/mood/style/scene inspiration. Do NOT reproduce or recreate the reference image itself. The final image MUST prominently feature the exact product from [PRODUCT IMAGE] as the hero subject. Place the product in a similar setting or style as [REFERENCE IMAGE], but the product from [PRODUCT IMAGE] must be clearly visible and dominant.`);
+        stepNum++;
       }
     } else if (context.hasSource) {
-      parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : ""}`);
+      parts.push(`${stepNum}. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : ""}`);
+      stepNum++;
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
-      const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct].filter(Boolean).length + 1;
       const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
       if (framing && noFaceFramings.includes(framing)) {
-        parts.push(`${num}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
+        parts.push(`${stepNum}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
       } else {
-        parts.push(`${num}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
+        parts.push(`${stepNum}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
       }
+      stepNum++;
     }
     // Gender enforcement for condensed path
     if (modelContext) {
@@ -193,8 +229,8 @@ function polishUserPrompt(
       }
     }
     if (context.hasScene) {
-      const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct, context.hasModel].filter(Boolean).length + 1;
-      parts.push(`${num}. SCENE: Use [SCENE IMAGE] for environment, lighting, and atmosphere ONLY. If the scene contains any products, bottles, accessories, or commercial items, IGNORE them completely — the ONLY product in the final image must be from [PRODUCT IMAGE].`);
+      parts.push(`${stepNum}. SCENE: Use [SCENE IMAGE] for environment, lighting, and atmosphere ONLY. If the scene contains any products, bottles, accessories, or commercial items, IGNORE them completely — the ONLY product in the final image must be from [PRODUCT IMAGE].`);
+      stepNum++;
     }
 
     parts.push("");
@@ -319,8 +355,8 @@ function polishUserPrompt(
         "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
       );
     }
-    // Product-only framing (no model involved)
-    if (!context.hasModel) {
+    // Product-only framing (no model involved) — suppressed when explicit framing is set
+    if (!context.hasModel && !framing) {
       layers.push(
         "FRAMING: Use a creative product photography angle — overhead, 45-degree, low-angle, or dramatic perspective. Professional composition with intentional negative space. Do NOT simply center the product straight-on like the reference."
       );
