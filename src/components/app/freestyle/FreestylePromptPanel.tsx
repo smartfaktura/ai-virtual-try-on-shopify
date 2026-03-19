@@ -244,13 +244,13 @@ export function FreestylePromptPanel({
             <textarea
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
-              placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create..."}
+              placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create… (Enter to generate)"}
               rows={isMobile ? 4 : 3}
               className="w-full bg-transparent border-none text-sm sm:text-base leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[100px] lg:min-h-[72px] pr-8"
               onKeyDown={e => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  onGenerate();
+                  if (canGenerate && !isLoading) onGenerate();
                 }
               }}
             />
