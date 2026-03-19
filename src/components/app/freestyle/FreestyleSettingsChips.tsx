@@ -334,31 +334,40 @@ export function FreestyleSettingsChips({
       <div className="flex items-center gap-1.5 flex-wrap">
         {/* Group 1: References — what goes INTO the image */}
         {uploadButton}
-        <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+        <div className={cn(
+          highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
+          disabledChips?.product && 'opacity-40 pointer-events-none'
+        )}>
           <ProductSelectorChip
             selectedProduct={selectedProduct}
-            open={productPopoverOpen}
-            onOpenChange={onProductPopoverChange}
+            open={disabledChips?.product ? false : productPopoverOpen}
+            onOpenChange={disabledChips?.product ? () => {} : onProductPopoverChange}
             onSelect={onProductSelect}
             products={products}
             isLoading={isLoadingProducts}
             modal={false}
           />
         </div>
-        <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+        <div className={cn(
+          highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
+          disabledChips?.model && 'opacity-40 pointer-events-none'
+        )}>
           <ModelSelectorChip
             selectedModel={selectedModel}
-            open={modelPopoverOpen}
-            onOpenChange={onModelPopoverChange}
+            open={disabledChips?.model ? false : modelPopoverOpen}
+            onOpenChange={disabledChips?.model ? () => {} : onModelPopoverChange}
             onSelect={onModelSelect}
             modal={false}
           />
         </div>
-        <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+        <div className={cn(
+          highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
+          disabledChips?.scene && 'opacity-40 pointer-events-none'
+        )}>
           <SceneSelectorChip
             selectedScene={selectedScene}
-            open={scenePopoverOpen}
-            onOpenChange={onScenePopoverChange}
+            open={disabledChips?.scene ? false : scenePopoverOpen}
+            onOpenChange={disabledChips?.scene ? () => {} : onScenePopoverChange}
             onSelect={onSceneSelect}
             modal={false}
           />
