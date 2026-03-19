@@ -1158,6 +1158,36 @@ serve(async (req) => {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
                 console.log(`Fallback model succeeded for image ${i + 1}`);
+
+                // Save to freestyle_generations so image appears in gallery
+                try {
+                  const supabaseFb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+                    auth: { persistSession: false },
+                  });
+                  const insertDataFb: Record<string, unknown> = {
+                    user_id: userId,
+                    image_url: publicUrl,
+                    prompt: body.prompt || '',
+                    user_prompt: body.userPrompt || null,
+                    aspect_ratio: body.aspectRatio || '1:1',
+                    quality: body.quality || 'standard',
+                    model_id: body.modelId || null,
+                    scene_id: body.sceneId || null,
+                    product_id: body.productId || null,
+                  };
+                  if (body.workflow_label) {
+                    insertDataFb.workflow_label = body.workflow_label;
+                  }
+                  const { error: insertErrFb } = await supabaseFb.from('freestyle_generations').insert(insertDataFb);
+                  if (insertErrFb) {
+                    console.error(`Failed to save freestyle_generations (fallback):`, insertErrFb.message);
+                  } else {
+                    console.log(`Saved freestyle_generations record for fallback image ${i + 1}`);
+                  }
+                } catch (dbErrFb) {
+                  console.error(`Failed to save freestyle_generations record (fallback):`, dbErrFb);
+                }
+
                 continue;
               }
             } catch (fallbackErr) {
