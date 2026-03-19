@@ -270,6 +270,7 @@ export function FreestyleSettingsChips({
             modal={isMobile}
           />
           {cameraStyleChip}
+          {qualityChip}
           <BrandProfileChip
             selectedProfile={selectedBrandProfile}
             open={brandProfilePopoverOpen}
