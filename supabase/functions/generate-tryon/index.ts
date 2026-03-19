@@ -303,7 +303,7 @@ async function generateImageWithModel(
             ],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            image_config: { aspect_ratio: aspectRatio, image_size: '2K' },
+            image_config: { aspect_ratio: aspectRatio, image_size: '2K', output_format: 'png' },
           }),
         }
       );
