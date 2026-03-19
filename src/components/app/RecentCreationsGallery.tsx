@@ -8,7 +8,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { toSignedUrl } from '@/lib/signedUrl';
+import { toSignedUrls } from '@/lib/signedUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
@@ -93,10 +93,9 @@ export function RecentCreationsGallery() {
               if (url) {
                 const isTryOn = url.includes('tryon-images');
                 const label = isTryOn ? 'Virtual Try-On' : (workflowName || 'Product Shot');
-                const signedUrl = await toSignedUrl(url);
                 items.push({
                   id: `${job.id}-${i}`,
-                  imageUrl: signedUrl,
+                  imageUrl: url,
                   label,
                   subtitle: productTitle || undefined,
                   date: new Date(job.created_at).toLocaleDateString(),
@@ -127,12 +126,11 @@ export function RecentCreationsGallery() {
 
       if (!freestyleResult.error) {
         for (const f of freestyleResult.data ?? []) {
-          const signedUrl = await toSignedUrl(f.image_url);
           const isUpscaled = f.quality?.startsWith('upscaled_');
           const resolution = f.quality?.includes('4k') ? '4K' : '2K';
           items.push({
             id: f.id,
-            imageUrl: signedUrl,
+            imageUrl: f.image_url,
             label: isUpscaled ? 'Enhanced' : 'Freestyle',
             subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
             date: new Date(f.created_at).toLocaleDateString(),
@@ -146,7 +144,16 @@ export function RecentCreationsGallery() {
       }
 
       items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
-      return items.slice(0, 10);
+      const top = items.slice(0, 10);
+
+      // Batch-sign all URLs in 1-2 calls instead of sequential
+      const rawUrls = top.map(i => i.imageUrl);
+      const signedUrls = await toSignedUrls(rawUrls);
+      for (let i = 0; i < top.length; i++) {
+        top[i].imageUrl = signedUrls[i];
+      }
+
+      return top;
     },
     enabled: !!user,
     refetchInterval: 15_000,
@@ -270,7 +277,7 @@ export function RecentCreationsGallery() {
               >
                 <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
                   <ShimmerImage
-                    src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
+                    src={getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })}
                     alt={item.label}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
