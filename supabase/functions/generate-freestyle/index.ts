@@ -401,35 +401,28 @@ function polishUserPrompt(
   // Scene / environment layer
   if (context.hasScene) {
     layers.push(
-      "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background architecture, foliage, surfaces, and atmosphere. Match the lighting direction, color temperature, and time of day. CRITICAL: If the scene image contains any products, bottles, accessories, or commercial items, IGNORE them completely — do NOT reproduce them. The ONLY product in the final image must be the one from [PRODUCT IMAGE]. Use the scene ONLY for its environment, setting, and mood. Do NOT substitute a different environment or background."
+      "ENVIRONMENT: Place the subject in the environment shown in [SCENE REFERENCE]. Match the location, architecture, surfaces, lighting direction, and atmosphere. If the scene contains any products or commercial items, ignore them — the only product must be from [PRODUCT REFERENCE]."
     );
   }
 
-  // Camera rendering style layer (injected before negatives)
+  // Camera rendering style layer
   if (cameraStyle === "natural") {
     layers.push(
-`CAMERA RENDERING STYLE — NATURAL (iPhone):
-Apply these rendering characteristics ONLY — do NOT change the subject, scene, environment, model, or composition in any way:
-- LENS: Slight wide-angle perspective typical of smartphone main camera (26mm equivalent). Deep depth of field — foreground AND background stay sharp and in focus. No artificial bokeh, no shallow depth of field, no blurred backgrounds unless the scene naturally has extreme distance.
-- COLOR SCIENCE: Apple iPhone-style computational photography color rendering. True-to-life, neutral color reproduction — no cinematic color grading, no orange-and-teal push, no lifted shadows, no crushed blacks. Colors should look exactly as the human eye would see them. Whites are pure neutral white, not warm-tinted.
-- LIGHTING: Use whatever lighting exists in the scene naturally. No added studio strobes, softboxes, or artificial rim lights. If indoors, the light comes from windows and room lights. If outdoors, from the sun and sky. Slight HDR-like dynamic range (shadows are not pitch black, highlights are not blown out) — similar to iPhone Smart HDR processing.
-- TEXTURE & DETAIL: Ultra-sharp across the entire frame. High pixel-level detail on skin, fabric, hair, and surfaces. No heavy skin smoothing or frequency separation retouching. Natural skin texture including pores and fine lines is visible. Detail level comparable to a 48MP smartphone sensor.
-- OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."
-${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing camera mode (NOT Portrait Mode). The background MUST remain sharp and detailed — absolutely no depth-of-field blur, no bokeh effect whatsoever. Everything from foreground to background is in focus.` : ''}`
+      `CAMERA STYLE: Shot on iPhone. Deep depth of field, everything sharp. True-to-life colors, no grading. Natural ambient light, no studio lighting. Ultra-sharp detail across the entire frame.${isSelfie ? ' Front camera standard mode — no Portrait Mode, no bokeh.' : ''}`
     );
   }
 
-  // Explicit framing override (injected after camera style, before negatives)
+  // Explicit framing override
   if (framing) {
     const framingPrompts: Record<string, string> = {
-      full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
-      upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
-      close_up: `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
-      hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
-      neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
-      lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
-      back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
-      side_profile: `FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+      full_body: `FRAMING: Full body shot, head to toe.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+      upper_body: `FRAMING: Upper body, waist up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+      close_up: `FRAMING: Close-up portrait from shoulders up.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+      hand_wrist: `FRAMING: Hand and wrist only. No face.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
+      neck_shoulders: `FRAMING: Collarbone area, jewelry display.${context.hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
+      lower_body: `FRAMING: Lower body, hips to feet.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+      back_view: `FRAMING: Back view, facing away.${context.hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
+      side_profile: `FRAMING: Side profile, ear and jawline.${context.hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
     };
     if (framingPrompts[framing]) {
       layers.push(framingPrompts[framing]);
