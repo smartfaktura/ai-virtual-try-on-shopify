@@ -133,25 +133,21 @@ function buildGenericDNA(): string {
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
+// LEGACY — kept as fallback for Phase 1
 function buildNegativePrompt(cameraStyle?: 'pro' | 'natural', hasPeople = true): string {
+  const anatomyRule = hasPeople
+    ? '- Correct anatomy: exactly 2 arms, 2 hands with 5 fingers each, natural joint articulation, no extra or missing limbs'
+    : '- No people, no human figures, no body parts';
   const blurRule = cameraStyle === 'natural'
-    ? 'No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background.'
-    : 'No blurry or out-of-focus areas unless intentionally bokeh';
-
-  const anatomyRules = hasPeople ? `
-- Exactly 2 arms, 2 hands (5 fingers each), 2 legs per person — no extra, missing, or merged limbs
-- Natural joint articulation only — no impossible bends, twisted spines, or backward limbs
-- No duplicated or phantom body parts` : `
-- No people, no human figures, no body parts`;
+    ? '- No bokeh, no shallow depth of field — everything sharp foreground to background'
+    : '- No blurry or out-of-focus areas unless intentionally bokeh';
 
   return `
-CRITICAL — DO NOT include any of the following:
-${anatomyRules}
-- ${blurRule}
-- No AI-looking skin smoothing or plastic textures
-- No collage layouts or split-screen compositions
-- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges
-- No black borders, black bars, letterboxing, pillarboxing, or padding around the image edges`;
+AVOID:
+${anatomyRule}
+${blurRule}
+- No AI skin smoothing or plastic textures
+- No collage layouts, split-screen, or black borders`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
