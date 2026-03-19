@@ -425,6 +425,7 @@ export default function CreativeDrops() {
               drop={{
                 ...selectedDrop,
                 images: (selectedDrop.images || []) as { url: string; workflow_name?: string; scene_name?: string; product_title?: string }[],
+                generation_job_ids: selectedDrop.generation_job_ids || [],
               }}
             />
           )}
