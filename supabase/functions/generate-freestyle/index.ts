@@ -1161,7 +1161,7 @@ serve(async (req) => {
               if (typeof fallbackResult === "string") {
                 const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
-                console.log(`Fallback model succeeded for image ${i + 1}`);
+            console.log(`[generate-freestyle] Fallback model succeeded for image ${i + 1}`);
 
                 // Save to freestyle_generations so image appears in gallery
                 try {
@@ -1184,12 +1184,22 @@ serve(async (req) => {
                   }
                   const { error: insertErrFb } = await supabaseFb.from('freestyle_generations').insert(insertDataFb);
                   if (insertErrFb) {
-                    console.error(`Failed to save freestyle_generations (fallback):`, insertErrFb.message);
+                    console.error(`[generate-freestyle] Failed to save freestyle_generations (fallback):`, insertErrFb.message);
                   } else {
-                    console.log(`Saved freestyle_generations record for fallback image ${i + 1}`);
+                    console.log(`[generate-freestyle] Saved freestyle_generations record for fallback image ${i + 1}`);
+                  }
+
+                  // Early finalize in queue mode after fallback success
+                  if (isQueueInternal && body.job_id && images.length > 0) {
+                    console.log(`[generate-freestyle] Early finalize (fallback): completing queue job ${body.job_id}`);
+                    await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                    return new Response(
+                      JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
+                      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                   }
                 } catch (dbErrFb) {
-                  console.error(`Failed to save freestyle_generations record (fallback):`, dbErrFb);
+                  console.error(`[generate-freestyle] Failed to save freestyle_generations record (fallback):`, dbErrFb);
                 }
 
                 continue;
