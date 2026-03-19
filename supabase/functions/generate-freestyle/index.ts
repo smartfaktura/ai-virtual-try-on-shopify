@@ -931,9 +931,9 @@ serve(async (req) => {
 
     const polishContext = {
       hasSource: !!body.sourceImage,
-      hasProduct: !!body.productImage,
-      hasModel: !!body.modelImage,
-      hasScene: !!body.sceneImage,
+      hasProduct: !!body.productImage || (!!body.sourceImage && body.imageRole === 'product'),
+      hasModel: !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model'),
+      hasScene: !!body.sceneImage || (!!body.sourceImage && body.imageRole === 'scene'),
     };
 
     let finalPrompt: string;
