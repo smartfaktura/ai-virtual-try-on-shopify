@@ -507,10 +507,10 @@ export default function Freestyle() {
       jobType: 'freestyle',
       payload: queuePayload,
       imageCount: 1,
-      quality: 'high',
+      quality,
     }, {
       imageCount: 1,
-      quality: 'high',
+      quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
