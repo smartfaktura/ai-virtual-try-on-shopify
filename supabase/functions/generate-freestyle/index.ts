@@ -351,45 +351,37 @@ function polishUserPrompt(
     }
   }
 
-  // Model / portrait layer — strong identity matching
+  // LEGACY — Model / portrait layer — identity matching
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
     const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
     if (framing && noFaceFramings.includes(framing)) {
       layers.push(
-        `MODEL IDENTITY: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing composition. If a product reference image also contains a person, IGNORE that person entirely.`
+        `MODEL IDENTITY: Match the skin tone, body type, and physical characteristics of the person in [MODEL REFERENCE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`
       );
     } else {
       layers.push(
-        `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo. If a product reference image also contains a person, IGNORE that person entirely. The generated person must match ONLY the [MODEL IMAGE] reference.`
+        `MODEL IDENTITY: The person must match the individual in [MODEL REFERENCE]${identityDetails} — same face, features, skin tone, hair, and body. This is a specific person, not a generic model. Ignore any person in the product image.`
       );
     }
     // Gender enforcement for layered path
     if (modelContext) {
       const lowerCtx = modelContext.toLowerCase();
       if (lowerCtx.startsWith('male')) {
-        layers.push(
-          "GENDER RULE: A male model has been selected. ALL people in this image MUST be male. Do NOT generate any female figures, women, or feminine-presenting people — even if the scene reference image contains women. Replace any implied female presence with male figures matching the selected model's characteristics."
-        );
+        layers.push("GENDER: All people must be male. Do not generate female figures.");
       } else if (lowerCtx.startsWith('female')) {
-        layers.push(
-          "GENDER RULE: A female model has been selected. ALL people in this image MUST be female. Do NOT generate any male figures, men, or masculine-presenting people — even if the scene reference image contains men. Replace any implied male presence with female figures matching the selected model's characteristics."
-        );
+        layers.push("GENDER: All people must be female. Do not generate male figures.");
       }
     }
     if (isSelfie) {
-      if (cameraStyle === 'natural') {
-        layers.push(
-          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections. Even, ambient lighting on the face — no dramatic light shaping, no artificial warmth or glow. True-to-life skin tones with zero color grading. As captured by a smartphone front camera in auto mode."
-        );
-      } else {
-        layers.push(
-          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
-        );
-      }
+      layers.push(
+        cameraStyle === 'natural'
+          ? "PORTRAIT QUALITY: Natural skin texture with realistic pores. Even ambient lighting, true-to-life skin tones, no color grading."
+          : "PORTRAIT QUALITY: Natural skin texture with realistic pores. Soft flattering natural light. Relaxed genuine expression."
+      );
     } else {
       layers.push(
-        "PORTRAIT QUALITY: Razor-sharp eye detail with individual eyelash rendering. Micro-contrast on skin texture — natural pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
+        "PORTRAIT QUALITY: Sharp eye detail, natural skin texture with visible pores. Realistic hair texture. Accurate body proportions, natural pose. No heavy retouching or plastic look."
       );
       // Framing for standard portrait/model shots (only if no explicit framing override and not expert prompt)
       if (!framing && !expert) {
