@@ -77,6 +77,8 @@ export default function Freestyle() {
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+  const [imageRole, setImageRole] = useState<ImageRole>('edit');
+  const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
