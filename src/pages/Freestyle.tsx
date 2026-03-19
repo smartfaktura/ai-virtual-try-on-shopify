@@ -404,7 +404,23 @@ export default function Freestyle() {
     if (!basePrompt) {
       const parts: string[] = [];
 
-      if (selectedProduct) {
+      // Edit mode: build prompt from edit intents
+      if (sourceImage && imageRole === 'edit') {
+        const effectiveIntents = editIntent.length > 0 ? editIntent : ['enhance'];
+        const intentPhrases: Record<string, string> = {
+          replace_product: 'Replace the product in this image with a new one',
+          change_background: 'Change the background/environment while keeping the subject',
+          change_model: 'Replace the person while preserving composition and product placement',
+          enhance: 'Improve image quality, lighting, and details without changing content',
+        };
+        parts.push(effectiveIntents.map(i => intentPhrases[i] || i).join('. '));
+      } else if (sourceImage && imageRole === 'product') {
+        parts.push("High-end product photography featuring the item shown in the uploaded image. Use a fresh angle, creative composition, and professional lighting");
+      } else if (sourceImage && imageRole === 'model') {
+        parts.push("Professional portrait photography using the person from the uploaded image as the model");
+      } else if (sourceImage && imageRole === 'scene') {
+        parts.push("Professional photography set in the environment shown in the uploaded image");
+      } else if (selectedProduct) {
         parts.push(`High-end product photography of "${selectedProduct.title}"`);
         if (selectedProduct.product_type) parts.push(`(${selectedProduct.product_type})`);
       } else if (sourceImage) {
@@ -414,8 +430,8 @@ export default function Freestyle() {
       if (selectedModel) {
         const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
           .filter(Boolean).join(', ');
-        if (selectedProduct) {
-          const interaction = getProductModelInteraction(selectedProduct.product_type);
+        if (selectedProduct || (sourceImage && imageRole === 'product')) {
+          const interaction = selectedProduct ? getProductModelInteraction(selectedProduct.product_type) : 'showcased/held by';
           parts.push(`${interaction} a ${modelDesc} model`);
         } else {
           parts.push(`Portrait of a ${modelDesc} model`);
