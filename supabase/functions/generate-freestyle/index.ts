@@ -276,24 +276,16 @@ function polishUserPrompt(
 
   if (isSelfie) {
     layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
-    if (cameraStyle === 'natural') {
-      layers.push(
-        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on iPhone front camera in standard photo mode (NOT Portrait Mode). No depth-of-field blur applied."
-      );
-    } else {
-      layers.push(
-        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
-      );
-    }
-    // Selfie composition + framing layer
-    const selfieDepthInstruction = cameraStyle === 'natural'
-      ? "Deep depth of field — background is sharp and in focus, NOT blurred. This is a standard front-camera selfie WITHOUT Portrait Mode enabled. No bokeh, no background blur, no shallow depth of field whatsoever."
-      : "Soft natural smartphone-style bokeh in background.";
     layers.push(
-      `SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera. The camera IS the phone — the viewer sees exactly what the iPhone front camera captures. The subject is looking DIRECTLY into the camera lens (direct eye contact with the viewer). Slight wide-angle distortion typical of a smartphone selfie lens. The subject's arm holding the phone may be partially visible at the bottom or side edge of the frame, but the phone itself is NEVER visible because it IS the camera. ABSOLUTELY NO phone, smartphone, or device should appear anywhere in the image. This is NOT a third-person photo of someone holding a phone — it is the phone's own POV. ${selfieDepthInstruction} Authentic, candid expression — relaxed and genuine. NEVER show both hands free — one hand is always occupied holding the phone (which is the camera).`
+      cameraStyle === 'natural'
+        ? "Shot on iPhone front camera. Sharp focus on face, natural ambient lighting, true-to-life colors. No Portrait Mode blur."
+        : "Shot on smartphone front camera. Sharp focus on face, natural ambient lighting, flattering soft light."
     );
     layers.push(
-      "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
+      `SELFIE COMPOSITION: Shot from the phone's front camera POV. Subject looking directly into the lens. Slight wide-angle distortion. One hand holding phone (phone itself never visible). ${cameraStyle === 'natural' ? 'Deep depth of field — background sharp, no bokeh.' : 'Soft natural bokeh in background.'} Authentic, candid expression.`
+    );
+    layers.push(
+      "SELFIE FRAMING: Full head and hair visible with natural headroom. Frame from mid-chest up. Face in upper-third of composition."
     );
   } else {
     if (expert) {
