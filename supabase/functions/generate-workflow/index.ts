@@ -766,6 +766,9 @@ serve(async (req) => {
   const isQueueInternal = req.headers.get("x-queue-internal") === "true"
     && authHeaderRaw === `Bearer ${serviceRoleKey}`;
 
+  const FUNCTION_START = Date.now();
+  const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+
   try {
     // SECURITY: Only allow internal queue calls — reject direct access
     if (!isQueueInternal) {
