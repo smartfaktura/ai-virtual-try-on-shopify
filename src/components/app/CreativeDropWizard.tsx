@@ -1163,6 +1163,82 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     ))}
                   </div>
                 )}
+
+                {/* ── UGC Mood Picker (Selfie / UGC workflows) ── */}
+                {(wf.name.toLowerCase().includes('selfie') || wf.name.toLowerCase().includes('ugc')) && (
+                  <div className="space-y-3">
+                    <p className="section-label">UGC Mood</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: 'excited', emoji: '🤩', label: 'Excited', desc: '"OMG I love this!" energy' },
+                        { id: 'chill', emoji: '😌', label: 'Chill', desc: 'Everyday casual vibe' },
+                        { id: 'confident', emoji: '😎', label: 'Confident', desc: '"I know what works" energy' },
+                        { id: 'surprised', emoji: '😲', label: 'Surprised', desc: '"Wait, this actually works?!"' },
+                        { id: 'focused', emoji: '🧐', label: 'Focused', desc: 'Tutorial / demo mode' },
+                      ].map(mood => {
+                        const isSelected = wfSettings['Mood'] === mood.id;
+                        return (
+                          <button
+                            key={mood.id}
+                            onClick={() => {
+                              setWorkflowCustomSettings(prev => ({
+                                ...prev,
+                                [wf.id]: { ...(prev[wf.id] || {}), Mood: mood.id },
+                              }));
+                            }}
+                            className={cn(
+                              'flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 text-left transition-all',
+                              isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                            )}
+                          >
+                            <span className="text-lg">{mood.emoji}</span>
+                            <div>
+                              <p className={cn('text-sm font-medium', isSelected && 'text-primary')}>{mood.label}</p>
+                              <p className="text-[10px] text-muted-foreground">{mood.desc}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Flat Lay Aesthetic Picker ── */}
+                {wf.name.toLowerCase().includes('flat lay') && (
+                  <div className="space-y-3">
+                    <p className="section-label">Aesthetic Style</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
+                        { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
+                        { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
+                        { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
+                        { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
+                        { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
+                      ].map(aesthetic => {
+                        const isSelected = wfSettings['Aesthetic'] === aesthetic.id;
+                        return (
+                          <button
+                            key={aesthetic.id}
+                            onClick={() => {
+                              setWorkflowCustomSettings(prev => ({
+                                ...prev,
+                                [wf.id]: { ...(prev[wf.id] || {}), Aesthetic: aesthetic.id },
+                              }));
+                            }}
+                            className={cn(
+                              'px-4 py-3 rounded-xl border-2 text-left transition-all',
+                              isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                            )}
+                          >
+                            <p className={cn('text-sm font-medium', isSelected && 'text-primary')}>{aesthetic.label}</p>
+                            <p className="text-[10px] text-muted-foreground">{aesthetic.hint}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}
