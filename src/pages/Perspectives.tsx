@@ -423,6 +423,14 @@ export default function Perspectives() {
   }, [sourceType, directUploadUrl, pasteTargetIndex, handleDirectFile]);
 
   const handleGenerate = async () => {
+    if (selectedRatios.size === 0) {
+      toast.error('Please select at least one aspect ratio.');
+      return;
+    }
+    if (selectedVariations.size === 0) {
+      toast.error('Please select at least one perspective angle.');
+      return;
+    }
     if (!canGenerate) return;
     if (totalCost > credits) {
       toast.error(`Not enough credits. Need ${totalCost}, have ${credits}.`);
