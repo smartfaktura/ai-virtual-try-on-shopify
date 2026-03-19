@@ -619,7 +619,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               <p className="text-sm font-semibold">Total: {creditCost} credits</p>
               <p className="text-xs text-muted-foreground">
                 {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
-                {' '}× {quality === 'high' ? 16 : 8} credits
+                {' '}× 6 credits
                 {selectedFlatLayProductIds.size > 1 && ` + ${(selectedFlatLayProductIds.size - 1) * 2 * selectedVariationIndices.size} extra (${selectedFlatLayProductIds.size} products)`}
               </p>
             </div>
@@ -773,7 +773,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                 {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                 {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                {' '}× {quality === 'high' ? 8 : 4} credits
+                {' '}× 6 credits
               </p>
             </div>
             {balance >= creditCost ? (
