@@ -48,6 +48,8 @@ interface FreestylePromptPanelProps {
   isLoadingBrandProfiles: boolean;
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
+  quality: 'standard' | 'high';
+  onQualityChange: (q: 'standard' | 'high') => void;
   framing: FramingOption | null;
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
@@ -83,6 +85,7 @@ export function FreestylePromptPanel({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   cameraStyle, onCameraStyleChange,
+  quality, onQualityChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
   creditBalance,
@@ -296,6 +299,7 @@ export function FreestylePromptPanel({
               brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
               brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
               cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
+              quality={quality} onQualityChange={onQualityChange}
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}

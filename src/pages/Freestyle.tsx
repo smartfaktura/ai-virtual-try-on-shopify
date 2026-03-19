@@ -57,7 +57,7 @@ export default function Freestyle() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
-  // quality removed — always 'high'
+  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
@@ -173,7 +173,11 @@ export default function Freestyle() {
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    // quality param ignored — always high
+    // quality param from URL
+    const qualityParam = searchParams.get('quality');
+    if (qualityParam === 'high' || qualityParam === 'standard') {
+      setQuality(qualityParam);
+    }
     if (sceneParam) {
       const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
       if (matchedScene) {
@@ -288,7 +292,7 @@ export default function Freestyle() {
 
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
-  const creditCost = 6;
+  const creditCost = (hasModel || hasScene || quality === 'high') ? 6 : 4;
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
@@ -484,7 +488,7 @@ export default function Freestyle() {
       sceneImage: sceneImageUrl,
       aspectRatio,
       imageCount: 1,
-      quality: 'high',
+      quality,
       polishPrompt: true,
       modelContext,
       brandProfile: brandContext,
@@ -503,10 +507,10 @@ export default function Freestyle() {
       jobType: 'freestyle',
       payload: queuePayload,
       imageCount: 1,
-      quality: 'high',
+      quality,
     }, {
       imageCount: 1,
-      quality: 'high',
+      quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
@@ -660,6 +664,8 @@ export default function Freestyle() {
     onFileDrop: handleFileDrop,
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
+    quality,
+    onQualityChange: setQuality,
     framing,
     onFramingChange: setFraming,
     framingPopoverOpen,

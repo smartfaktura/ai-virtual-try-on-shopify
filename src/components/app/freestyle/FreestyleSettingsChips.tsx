@@ -2,7 +2,7 @@ import React from 'react';
 import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Smartphone, Camera, Lock,
+  Smartphone, Camera, Lock, Zap, Diamond,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -65,6 +65,8 @@ interface FreestyleSettingsChipsProps {
   isLoadingBrandProfiles: boolean;
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
+  quality: 'standard' | 'high';
+  onQualityChange: (q: 'standard' | 'high') => void;
   framing: FramingOption | null;
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
@@ -84,6 +86,7 @@ export function FreestyleSettingsChips({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   cameraStyle, onCameraStyleChange,
+  quality, onQualityChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
   highlightedChip,
@@ -92,6 +95,7 @@ export function FreestyleSettingsChips({
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
+  const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
 
   // --- Shared chip renderers ---
 
@@ -155,6 +159,45 @@ export function FreestyleSettingsChips({
               <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
             </div>
             {cameraStyle === opt.value && <span className="text-primary mt-0.5">✓</span>}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+
+  const qualityChip = (
+    <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+          quality === 'high'
+            ? 'border-primary/30 bg-primary/10 text-primary'
+            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+        )}>
+          {quality === 'high' ? <Diamond className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+          {quality === 'high' ? 'Pro' : 'Standard'}
+          <ChevronDown className="w-3 h-3 opacity-40" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1.5" align="start">
+        {([
+          { value: 'standard' as const, icon: Zap, label: 'Standard', desc: '4 credits/image. Fast generation, great for drafts and iteration.' },
+          { value: 'high' as const, icon: Diamond, label: 'Pro', desc: '6 credits/image. Higher detail and polish for final assets.' },
+        ]).map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
+            className={cn(
+              'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+              quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+            )}
+          >
+            <opt.icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-[13px]">{opt.label}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
+            </div>
+            {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
           </button>
         ))}
       </PopoverContent>
@@ -227,6 +270,7 @@ export function FreestyleSettingsChips({
             modal={isMobile}
           />
           {cameraStyleChip}
+          {qualityChip}
           <BrandProfileChip
             selectedProfile={selectedBrandProfile}
             open={brandProfilePopoverOpen}
@@ -276,6 +320,7 @@ export function FreestyleSettingsChips({
         {/* Group 3: Output — technical settings */}
         {aspectRatioChip}
         {cameraStyleChip}
+        {qualityChip}
 
       </div>
     </TooltipProvider>
