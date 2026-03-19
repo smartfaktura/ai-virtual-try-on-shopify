@@ -1189,6 +1189,7 @@ serve(async (req) => {
                 body.productImage,
                 body.modelImage,
                 body.sceneImage,
+                body.imageRole,
               );
               if (isPerspective && referenceAngleImage) {
                 contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
