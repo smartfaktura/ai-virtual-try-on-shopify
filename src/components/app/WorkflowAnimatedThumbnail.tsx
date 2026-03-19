@@ -149,7 +149,11 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
 /* ── Carousel mode component ── */
 
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
-  const backgrounds = scene.backgrounds ?? [scene.background];
+  const rawBackgrounds = scene.backgrounds ?? [scene.background];
+  const backgrounds = useMemo(
+    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { width: 600, quality: 60 })),
+    [rawBackgrounds],
+  );
   const INTERVAL = 1000;
   const [current, setCurrent] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
