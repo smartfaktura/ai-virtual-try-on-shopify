@@ -1873,10 +1873,12 @@ export default function Generate() {
                   </Alert>
                 )}
 
-                <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
+                <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => { setScratchUpload(null); setSaveToLibrary(false); }}
                   onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
                   variant={isInteriorDesign ? 'room' : 'product'}
+                  saveToLibrary={saveToLibrary}
+                  onSaveToLibraryChange={isInteriorDesign ? undefined : setSaveToLibrary}
                 />
 
                 {/* Recent uploads as collapsible section below upload area */}
