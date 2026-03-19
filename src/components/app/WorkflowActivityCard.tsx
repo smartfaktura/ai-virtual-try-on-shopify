@@ -261,6 +261,9 @@ export function WorkflowActivityCard({
       {/* Failed groups */}
       {failedGroups.map((group) => {
         const team = pickTeamForGroup(group.key);
+        const refundedCredits = group.jobs
+          .filter(j => j.status === 'failed')
+          .reduce((sum, j) => sum + (j.credits_reserved ?? 0), 0);
         return (
           <Card key={group.key} className="border-destructive/20 bg-destructive/[0.04]">
             <CardContent className="py-3 px-4 sm:py-4 sm:px-5">
@@ -287,6 +290,11 @@ export function WorkflowActivityCard({
                         : '1 image failed'}
                       {group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 50)}` : ''}
                     </p>
+                    {refundedCredits > 0 && (
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        {refundedCredits} credit{refundedCredits !== 1 ? 's' : ''} refunded
+                      </p>
+                    )}
                   </div>
                 </div>
 
