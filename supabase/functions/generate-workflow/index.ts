@@ -766,6 +766,9 @@ serve(async (req) => {
   const isQueueInternal = req.headers.get("x-queue-internal") === "true"
     && authHeaderRaw === `Bearer ${serviceRoleKey}`;
 
+  const FUNCTION_START = Date.now();
+  const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+
   try {
     // SECURITY: Only allow internal queue calls — reject direct access
     if (!isQueueInternal) {
@@ -909,12 +912,21 @@ serve(async (req) => {
     }> = [];
     const errors: string[] = [];
 
-    for (let i = 0; i < variationsToGenerate.length; i++) {
+    let wallClockBreak = false;
+
+    for (let i = 0; i < variationsToGenerate.length && !wallClockBreak; i++) {
       const variation = variationsToGenerate[i];
       const aspectRatio = (body as Record<string, unknown>).aspectRatio as string || getAspectRatioForVariation(config, variation);
 
       for (let a = 0; a < angleInstructions.length; a++) {
         const angle = angleInstructions[a];
+
+        // Wall-clock guard: break early if we're running out of time
+        if (Date.now() - FUNCTION_START > MAX_WALL_CLOCK_MS) {
+          console.warn(`[generate-workflow] Wall-clock limit approaching (${Math.round((Date.now() - FUNCTION_START) / 1000)}s), breaking after ${images.length}/${totalToGenerate} images`);
+          wallClockBreak = true;
+          break;
+        }
 
         try {
           // Build variation with angle instruction appended
@@ -1023,7 +1035,13 @@ serve(async (req) => {
               try {
                 const progressSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
                 await progressSupabase.from("generation_queue").update({
-                  result: { generatedCount: images.length, requestedCount: totalToGenerate, currentLabel: imageLabel },
+                  result: {
+                    generatedCount: images.length,
+                    requestedCount: totalToGenerate,
+                    currentLabel: imageLabel,
+                    // Persist images so cleanup_stale_jobs can recover partial results
+                    images: images.map((img) => img.url),
+                  },
                   timeout_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
                 }).eq("id", body.job_id);
               } catch (progressErr) {
