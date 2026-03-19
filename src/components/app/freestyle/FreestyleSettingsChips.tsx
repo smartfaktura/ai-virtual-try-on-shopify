@@ -2,7 +2,7 @@ import React from 'react';
 import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Smartphone, Camera, Lock, Zap, Diamond,
+  Smartphone, Camera, Lock, Gauge, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -174,15 +174,15 @@ export function FreestyleSettingsChips({
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          {quality === 'high' ? <Diamond className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+          {quality === 'high' ? <Sparkles className="w-3.5 h-3.5" /> : <Gauge className="w-3.5 h-3.5" />}
           {quality === 'high' ? 'Pro' : 'Standard'}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-1.5" align="start">
         {([
-          { value: 'standard' as const, icon: Zap, label: 'Standard', desc: '4 credits/image. Fast generation, great for drafts and iteration.' },
-          { value: 'high' as const, icon: Diamond, label: 'Pro', desc: '6 credits/image. Higher detail and polish for final assets.' },
+          { value: 'standard' as const, icon: Gauge, label: 'Standard', desc: '4 credits/image. Fast generation, great for drafts and iteration.' },
+          { value: 'high' as const, icon: Sparkles, label: 'Pro', desc: '6 credits/image. Higher detail and polish for final assets.' },
         ]).map(opt => (
           <button
             key={opt.value}
