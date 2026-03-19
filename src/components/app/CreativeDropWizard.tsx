@@ -268,7 +268,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const wf = selectedWorkflowsList[s - 3];
       return wf ? wf.name : 'Configure';
     }
-    if (s === scheduleStepIndex) return 'Schedule';
+    if (s === scheduleStepIndex) return 'Delivery';
     if (s === reviewStepIndex) return 'Review';
     return '';
   };
@@ -475,14 +475,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           toast.error('Failed to trigger generation');
         }
       } else {
-        toast.success(editingScheduleId ? 'Schedule updated!' : 'Schedule created successfully!');
+        toast.success(editingScheduleId ? 'Drop updated!' : 'Drop saved — it will run on the scheduled date');
       }
       onClose();
     },
     onError: (error: Error) => toast.error(
       editingScheduleId
-        ? `Failed to update schedule: ${error.message}`
-        : `Failed to create schedule: ${error.message}`
+        ? `Failed to update drop: ${error.message}`
+        : `Failed to create drop: ${error.message}`
     ),
   });
 
@@ -500,7 +500,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       <div className="pb-5">
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="text-xl font-semibold tracking-tight">
-            {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
+            {editingScheduleId ? 'Edit Drop' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
           </h2>
           <span className="text-xs text-muted-foreground font-mono">
             {step + 1}/{totalSteps}
@@ -531,7 +531,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {step === 0 && (
             <div className="space-y-8 animate-fade-in">
               <div className="space-y-2">
-                <p className="section-label">Schedule Name</p>
+                <p className="section-label">Drop Name</p>
                 <Input
                   placeholder="e.g. Summer 2026 Collection"
                   value={name}
@@ -1281,7 +1281,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   >
                     <Clock className={cn('w-5 h-5', deliveryMode === 'scheduled' ? 'text-primary' : 'text-muted-foreground')} />
                     <span className="text-sm font-semibold">Schedule</span>
-                    <span className="text-xs text-muted-foreground">Pick a date & recur</span>
+                    <span className="text-xs text-muted-foreground">Schedule for later</span>
+                    <span className="text-[10px] text-muted-foreground/70 mt-0.5">Ideal when waiting for credit renewal</span>
                   </button>
                 </div>
               </div>
