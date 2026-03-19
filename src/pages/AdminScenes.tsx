@@ -240,7 +240,7 @@ export default function AdminScenes() {
             <div className="border border-border rounded-lg divide-y divide-border bg-card">
               {poses.map((pose, idx) => (
                 <div key={pose.poseId} className="flex items-center gap-3 px-3 py-2">
-                  <div className="w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
                     <img
                       src={pose.previewUrl}
                       alt={pose.name}
