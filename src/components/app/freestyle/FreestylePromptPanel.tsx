@@ -192,10 +192,10 @@ export function FreestylePromptPanel({
   return (
     <div
       className={cn(
-        'relative bg-background backdrop-blur-xl transition-colors duration-200',
+        'relative bg-background transition-none lg:transition-colors lg:duration-200',
         isMobile
           ? 'rounded-t-3xl border-0 shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]'
-          : 'rounded-2xl border shadow-lg',
+          : 'rounded-2xl border shadow-lg backdrop-blur-xl',
         isDragOver
           ? 'border-primary border-2 ring-2 ring-primary/20'
           : !isMobile && 'border-border/60'
