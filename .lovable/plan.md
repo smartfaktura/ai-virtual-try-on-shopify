@@ -1,43 +1,29 @@
 
 
-# Fix Slow Loading in Recent Creations Gallery
+# Make Freestyle Prompt Bar Narrower + Add Support Icon Spacing
 
 ## Problem
-The `RecentCreationsGallery` component calls `toSignedUrl()` **sequentially inside loops** (lines 96 and 130). Each call is an individual network request to create a signed URL. With 5 jobs × multiple result images + 5 freestyle images, this creates a waterfall of 10-20+ sequential API calls before any image can render.
+The prompt panel currently uses `lg:max-w-4xl` (896px) which makes it stretch too wide on desktop/tablet. It also sits at the very bottom with no right-side margin awareness, causing it to overlap the customer support chat icon.
 
-Additionally, no `width` parameter is passed to `getOptimizedUrl` — only `quality: 60` — so the browser still downloads near-full-size images for 180px-wide thumbnails.
+## Changes
 
-## Root Cause
+### 1. `src/pages/Freestyle.tsx` — Reduce max-width and add bottom-right spacing
+
+**Line 810** — Change `lg:max-w-4xl` to `lg:max-w-2xl` (672px) to make the bar noticeably narrower.
+
+**Line 809** — Add right padding (`lg:pr-20`) to ensure the bar doesn't overlap the support icon (typically positioned ~60px from the right edge). Also add `lg:pb-5` for vertical breathing room above the support icon.
+
+**Before:**
 ```
-// Current: sequential await inside for-loop
-for (const job of jobs) {
-  for (const r of results) {
-    const signedUrl = await toSignedUrl(url);  // ← blocks next iteration
-  }
-}
+<div className="lg:px-4 lg:sm:px-8 lg:pb-3 lg:sm:pb-5 lg:pt-2 lg:pointer-events-none">
+  <div className="lg:max-w-4xl lg:mx-auto lg:pointer-events-auto relative z-20">
 ```
 
-The batch helper `toSignedUrls()` already exists and groups URLs by bucket into a single API call per bucket, but it's not being used here.
-
-## Changes — `src/components/app/RecentCreationsGallery.tsx`
-
-### 1. Collect all URLs first, then batch-sign
-Restructure `queryFn` to:
-1. Build the items array with raw URLs (no signing)
-2. Collect all URLs into a flat array
-3. Call `toSignedUrls(allUrls)` once at the end
-4. Map signed URLs back onto items
-
-This replaces 10-20 sequential network calls with 1-2 batch calls (one per private bucket).
-
-### 2. Add `width: 400` to `getOptimizedUrl`
-On line 273, add a width parameter for the thumbnail render:
+**After:**
 ```
-getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })
+<div className="lg:px-4 lg:sm:px-8 lg:pb-5 lg:sm:pb-6 lg:pt-2 lg:pointer-events-none lg:pr-20">
+  <div className="lg:max-w-2xl lg:mx-auto lg:pointer-events-auto relative z-20">
 ```
-Cards are 180px CSS but ~360px on retina — 400px is sufficient.
 
-## Expected Impact
-- **Network calls**: ~15 sequential → 1-2 batch (major latency reduction)
-- **Image payload**: ~60-80% smaller per thumbnail with width constraint
+This reduces the bar width by ~25% and adds explicit clearance for the support icon on the bottom-right.
 
