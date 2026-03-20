@@ -354,8 +354,8 @@ export function DropCard(props: Props) {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               {new Date(drop.run_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              {drop.total_images > 0 && ` · ${drop.total_images} image${drop.total_images !== 1 ? 's' : ''}`}
-              {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
+              {drop.status !== 'generating' && drop.total_images > 0 && ` · ${drop.total_images} image${drop.total_images !== 1 ? 's' : ''}`}
+              {drop.status !== 'generating' && drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
             </p>
             {drop.status === 'generating' && (() => {
               const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
