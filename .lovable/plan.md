@@ -1,22 +1,27 @@
 
 
-# Fix Remaining Audit Issues (3 items)
+# Fix Contact Form Email Notification
 
-## 1. Add 5 missing feature pages to sitemap
-**File:** `public/sitemap.xml`
-Add URLs for: `/features/ai-models-backgrounds`, `/features/shopify-image-generator`, `/features/upscale`, `/features/perspectives`, `/features/real-estate-staging`
+## Problem
+The contact form **does work** — submissions are saved to the database (confirmed 4 rows including 2 from today). The issue is that **no email notification is sent** because the `notify_contact_submission` database function exists but is **not attached as a trigger** to the `contact_submissions` table.
 
-## 2. Fix robots.txt mobile upload path
-**File:** `public/robots.txt`
-Change `Disallow: /mobile-upload` → `Disallow: /upload/` (in all 3 user-agent blocks)
+## Fix
 
-## 3. Fix hardcoded credits in Onboarding Resend sync
-**File:** `src/pages/Onboarding.tsx` line 117
-Change `credits_balance: 20` → `credits_balance: 60`
+### 1. Create a database trigger
+Attach the existing `notify_contact_submission()` function to the `contact_submissions` table so it fires on every new insert:
 
-## 4. Fix resendTimer initial value
-**File:** `src/pages/Auth.tsx` line 38
-Change `useState(60)` → `useState(30)`
+```sql
+CREATE TRIGGER on_contact_submission
+  AFTER INSERT ON public.contact_submissions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.notify_contact_submission();
+```
 
-4 small edits across 4 files.
+This will call the `send-email` edge function with type `contact_form` to `hello@vovv.ai` whenever a new contact form is submitted.
+
+### 2. Add a visible success toast
+The form already shows a success toast — no UI changes needed.
+
+## Summary
+Single migration to create the missing trigger. One SQL statement, no code changes.
 
