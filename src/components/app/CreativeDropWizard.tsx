@@ -334,6 +334,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     const preset = SEASONAL_PRESETS.find(p => p.id === presetId);
     if (preset && preset.instructions) {
       setThemeNotes(preset.instructions);
+      // Smart auto-naming: fill name if empty
+      if (!name.trim()) {
+        const monthName = new Date().toLocaleString('default', { month: 'long' });
+        setName(`${preset.label} Drop — ${monthName} ${new Date().getFullYear()}`);
+      }
     }
   };
 
