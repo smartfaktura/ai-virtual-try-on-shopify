@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 const LOGO_DARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
   <text x="0" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="4" fill="#1a2332">VOVV</text>
-  <text x="195" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="2" fill="#6b7d93">.AI</text>
+  <text x="195" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="2" fill="#1a2332">.AI</text>
 </svg>`;
 
 const LOGO_WHITE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
