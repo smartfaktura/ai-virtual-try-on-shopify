@@ -419,30 +419,79 @@ export default function Workflows() {
           </div>
           <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
 
-          <div className="section-divider">
+          <div className="section-divider flex items-center gap-3">
             <span className="section-label">Create a New Set</span>
+            <div className="flex-1" />
+            <ToggleGroup type="single" value={effectiveLayout} onValueChange={handleLayoutChange} className="gap-0.5">
+              <ToggleGroupItem value="rows" aria-label="Row layout" className="h-7 w-7 p-0">
+                <LayoutList className="w-3.5 h-3.5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-7 w-7 p-0">
+                <Grid2X2 className="w-3.5 h-3.5" />
+              </ToggleGroupItem>
+              {!isMobile && (
+                <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-7 w-7 p-0">
+                  <Grid3X3 className="w-3.5 h-3.5" />
+                </ToggleGroupItem>
+              )}
+            </ToggleGroup>
           </div>
+        </div>
+      )}
+
+      {/* ── Layout switcher (when no activity section shown) ── */}
+      {!hasActivity && (
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex-1" />
+          <ToggleGroup type="single" value={effectiveLayout} onValueChange={handleLayoutChange} className="gap-0.5">
+            <ToggleGroupItem value="rows" aria-label="Row layout" className="h-7 w-7 p-0">
+              <LayoutList className="w-3.5 h-3.5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-7 w-7 p-0">
+              <Grid2X2 className="w-3.5 h-3.5" />
+            </ToggleGroupItem>
+            {!isMobile && (
+              <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-7 w-7 p-0">
+                <Grid3X3 className="w-3.5 h-3.5" />
+              </ToggleGroupItem>
+            )}
+          </ToggleGroup>
         </div>
       )}
 
       {/* ── Workflow catalog ── */}
       {isLoading ? (
-        <div className="space-y-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-lg border overflow-hidden">
-              <div className="flex flex-col lg:flex-row">
-                <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
-                <div className="flex-1 p-6 lg:p-10 space-y-4">
-                  <Skeleton className="h-7 w-48" />
-                  <Skeleton className="h-4 w-full max-w-md" />
-                  <Skeleton className="h-4 w-full max-w-sm" />
-                  <Skeleton className="h-11 w-36 rounded-full" />
+        effectiveLayout === 'rows' ? (
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg border overflow-hidden">
+                <div className="flex flex-col lg:flex-row">
+                  <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
+                  <div className="flex-1 p-6 lg:p-10 space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <Skeleton className="h-4 w-full max-w-md" />
+                    <Skeleton className="h-4 w-full max-w-sm" />
+                    <Skeleton className="h-11 w-36 rounded-full" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
+            ))}
+          </div>
+        ) : (
+          <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="rounded-lg border overflow-hidden">
+                <Skeleton className="w-full aspect-square" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-8 w-full rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : effectiveLayout === 'rows' ? (
         <div className="space-y-6">
           {workflows.map((workflow, index) => (
             <WorkflowCard
@@ -454,6 +503,17 @@ export default function Workflows() {
             />
           ))}
           <FeedbackBanner />
+        </div>
+      ) : (
+        <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+          {workflows.map((workflow) => (
+            <WorkflowCardCompact
+              key={workflow.id}
+              id={`workflow-${workflow.id}`}
+              workflow={workflow}
+              onSelect={() => handleCreateVisualSet(workflow)}
+            />
+          ))}
         </div>
       )}
     </PageHeader>
