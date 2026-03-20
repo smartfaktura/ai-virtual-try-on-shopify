@@ -1313,8 +1313,12 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    if (modelsToGenerate.length === 1 && posesToGenerate.length === 1) {
-      // Single model + single scene — use existing enqueue hook for real-time tracking
+    const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+    const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+    const needsMultiJobs = modelsToGenerate.length > 1 || posesToGenerate.length > 1 || ratiosToGen.length > 1 || framingsToGen.length > 1;
+
+    if (!needsMultiJobs) {
+      // Single model + single scene + single ratio + single framing
       const model = modelsToGenerate[0];
       const pose = posesToGenerate[0];
       const base64ProductImage = await convertImageToBase64(sourceImageUrl);
@@ -1326,8 +1330,8 @@ export default function Generate() {
           product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
           model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
-          aspectRatio, imageCount: parseInt(imageCount),
-          framing: framing || undefined,
+          aspectRatio: ratiosToGen[0], imageCount: parseInt(imageCount),
+          framing: framingsToGen[0] || undefined,
           workflow_id: activeWorkflow?.id || null,
           workflow_name: activeWorkflow?.name || null,
           workflow_slug: activeWorkflow?.slug || null,
@@ -1356,7 +1360,7 @@ export default function Generate() {
         setCurrentStep('settings');
       }
     } else {
-      // Multi-model and/or multi-scene — use direct fetch for each combination
+      // Multi-model/scene/ratio/framing — use direct fetch for each combination
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
@@ -1367,15 +1371,19 @@ export default function Generate() {
 
       for (const model of modelsToGenerate) {
         for (const pose of posesToGenerate) {
-          const result = await enqueueTryOnForProduct(product as Product, token, pose, model);
-          if (result) {
-            jobMap.set(`${model.modelId}_${pose.poseId}`, result.jobId);
-            lastBalance = result.newBalance;
-            injectActiveJob(queryClient, {
-              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-              workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
-              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-            });
+          for (const ratioVal of ratiosToGen) {
+            for (const framingVal of framingsToGen) {
+              const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal);
+              if (result) {
+                jobMap.set(`${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                lastBalance = result.newBalance;
+                injectActiveJob(queryClient, {
+                  jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+                  workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+                  job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                });
+              }
+            }
           }
         }
       }
@@ -1387,7 +1395,7 @@ export default function Generate() {
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''} (${modelsToGenerate.length} model${modelsToGenerate.length > 1 ? 's' : ''} × ${posesToGenerate.length} scene${posesToGenerate.length > 1 ? 's' : ''})`);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
