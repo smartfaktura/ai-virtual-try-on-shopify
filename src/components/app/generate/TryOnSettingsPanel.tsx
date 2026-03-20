@@ -160,6 +160,8 @@ export default function TryOnSettingsPanel({
               parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
               if (modelCount > 1) parts.push(`${modelCount} models`);
               if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
+              if (ratioCount > 1) parts.push(`${ratioCount} sizes`);
+              if (frmCount > 1) parts.push(`${frmCount} framings`);
               if (isMultiProductMode) parts.push(`${multiProductCount} products`);
               parts.push(`6 credits each`);
               return parts.join(' × ');
