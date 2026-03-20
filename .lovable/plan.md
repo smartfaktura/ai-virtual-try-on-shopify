@@ -1,24 +1,45 @@
 
 
-# Fix "Images Generated" Slow Loading on Dashboard
+# Button Audit Results
 
-## Problem
-The "Images Generated" metric fetches ALL completed `generation_jobs` rows (140+) to sum `requested_count` client-side. This makes two sequential DB calls every time the dashboard loads, with no caching beyond the global 2-minute staleTime. The skeleton shows every visit.
+After systematically examining the entire app codebase — all pages, modals, navigation, landing sections, and interactive components — here are my findings:
 
-## Solution
+## Properly Intentional "Coming Soon" / Disabled Buttons (NOT bugs)
 
-### 1. Add aggressive caching + placeholderData
-**File:** `src/pages/Dashboard.tsx` (lines 193-219)
+These are deliberately disabled or show a "coming soon" toast. They're working as designed:
 
-Add `staleTime: 5 * 60 * 1000` (5 minutes) and `placeholderData: keepPreviousData` to the query. This means:
-- First load still fetches, but subsequent navigations show the cached number instantly (no skeleton)
-- Background refetch happens silently
+1. **Video nav item** in sidebar (`AppShell.tsx`) — shows "Coming soon!" toast for non-admin users
+2. **Generate Video button** in `LibraryDetailModal.tsx` — `disabled` with "Coming Soon" label
+3. **Generate Video button** in `WorkflowPreviewModal.tsx` — `disabled` with "Soon" label
+4. **Video page** (`VideoGenerate.tsx`) — shows "Coming Soon" badge for non-admins
+5. **Download Brand Kit** button on Press page — shows toast "Brand kit download coming soon"
 
-### 2. Run both sub-queries in parallel (already done) but reduce payload
-The `generation_jobs` query already selects only `requested_count`, which is fine. No change needed there.
+## Actual Issues Found
 
-### 3. Same caching treatment for other metric queries
-Apply `staleTime: 5 * 60 * 1000` to the product count, schedule count, and freestyle count queries too, so all 4 metric cards load instantly on return visits.
+### 1. `JobDetailModal.tsx` — noop download handler
+**Line 163:** `onDownload={() => {}}` — the lightbox download button does nothing when opened from the job detail modal. The download callback is an empty function.
 
-This is the lightest fix -- no migration needed, no RPC. The metric will show cached data immediately and refresh in the background.
+### 2. `JobDetailModal.tsx` — lightbox never opens
+The modal has `lightboxOpen` state and `lightboxIndex` state, but **nothing ever calls `setLightboxOpen(true)`**. The lightbox is wired up but unreachable — users can't open images full-screen from the job detail view.
+
+### 3. No other broken buttons found
+All other buttons across the app (landing CTAs, navigation, pricing, settings, feedback, contact forms, onboarding, product upload, freestyle, workflows, creative drops, discover, etc.) have proper `onClick` handlers that either navigate, call APIs, or trigger modals correctly.
+
+---
+
+## Recommended Fixes
+
+### Fix 1: Wire up lightbox opening in `JobDetailModal.tsx`
+Add an `onDoubleClick` or secondary action (e.g., expand icon) on result images to open the lightbox at that index.
+
+### Fix 2: Implement proper download in `JobDetailModal.tsx`
+Replace `onDownload={() => {}}` with an actual download function (fetch blob → create anchor → trigger download), matching the pattern used in `LibraryDetailModal` and `Freestyle`.
+
+### Fix 3: (Optional) Press page — "Download Brand Kit"
+Either create an actual brand kit ZIP for download, or change the button to link to a contact/email flow instead of just showing a toast.
+
+---
+
+## Summary
+The app is in good shape — only **2 real broken interactions** were found, both in `JobDetailModal.tsx` (dead lightbox + noop download). Everything else is either working correctly or intentionally disabled with appropriate user feedback.
 
