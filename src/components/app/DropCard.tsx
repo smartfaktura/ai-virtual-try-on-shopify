@@ -195,9 +195,11 @@ export function DropCard(props: Props) {
                     <DropdownMenuItem onClick={() => onDuplicate?.(schedule)}>
                       <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => runNowMutation.mutate(schedule)}>
-                      <RocketIcon className="w-3.5 h-3.5 mr-2" /> Run Now
-                    </DropdownMenuItem>
+                    {!isCompleted && (
+                      <DropdownMenuItem onClick={() => runNowMutation.mutate(schedule)}>
+                        <RocketIcon className="w-3.5 h-3.5 mr-2" /> Run Now
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
