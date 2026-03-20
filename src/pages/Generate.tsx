@@ -3957,7 +3957,7 @@ export default function Generate() {
 
       {/* Modals */}
       <TryOnConfirmModal open={tryOnConfirmModalOpen} onClose={() => setTryOnConfirmModalOpen(false)} onConfirm={handleTryOnConfirmGenerate}
-        product={selectedProduct} model={selectedModel} pose={selectedPose}
+        product={selectedProduct} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose}
         imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isEnqueuing} onBuyCredits={openBuyModal}
         sourceImageUrl={selectedProduct && selectedSourceImages.size > 0 ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url : undefined} />
       <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}
