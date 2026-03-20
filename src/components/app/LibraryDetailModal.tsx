@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getExtensionFromContentType } from '@/lib/dropDownload';
+import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';

@@ -100,11 +100,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
   const handleDownloadCurrent = useCallback(async () => {
     const url = signedUrls[selectedIndex];
     if (!url) return;
-    try {
-      await downloadSingleImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
-    } catch {
-      toast.error('Download failed');
-    }
+    await saveOrShareImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
   }, [signedUrls, selectedIndex, title]);
 
   const handleDownloadAll = useCallback(async () => {
