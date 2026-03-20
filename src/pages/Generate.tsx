@@ -3867,7 +3867,7 @@ export default function Generate() {
             )}
 
             {/* Batch progress - enhanced (hidden in multi-product mode) */}
-            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && (() => {
+            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && !hasMultipleJobs && (() => {
               const isVariationWorkflow = hasWorkflowConfig && variationStrategy?.variations?.length;
               const sortedIndices = Array.from(selectedVariationIndices).sort((a, b) => a - b);
               const variationLabel = isInteriorDesign ? 'style' : isVariationWorkflow ? 'variation' : 'image';
