@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FramingMultiSelector } from '@/components/app/FramingSelector';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -207,6 +208,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [isRandomScenesFlag, setIsRandomScenesFlag] = useState(false);
   const [customImageCountStr, setCustomImageCountStr] = useState('');
   const [campaignMode, setCampaignMode] = useState<'curated' | 'mix'>('curated');
+  const [selectedFramings, setSelectedFramings] = useState<Set<string>>(new Set(['auto']));
 
   // Freestyle
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
@@ -294,12 +296,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     const genConfig = selectedWorkflow.generation_config as any;
     const variations = genConfig?.variation_strategy?.variations || [];
     const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
-    const sceneCount = Math.max(sceneSelections.size, variations.length > 0 ? 1 : 1);
     const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
     const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
     const formatCount = Math.max(formats.length, 1);
-    return effectiveScenes * modelCount * formatCount;
-  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length]);
+    const framingCount = selectedFramings.has('auto') ? 1 : Math.max(selectedFramings.size, 1);
+    return effectiveScenes * modelCount * formatCount * framingCount;
+  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length, selectedFramings]);
 
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
@@ -345,6 +347,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setIsRandomModelsFlag(false);
     setIsRandomScenesFlag(false);
     setCustomImageCountStr('');
+    setSelectedFramings(new Set(['auto']));
     markDirty();
   };
 
@@ -461,6 +464,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           random_models: isRandomModelsFlag,
           random_scenes: isRandomScenesFlag,
           image_count: computedImageCount,
+          selected_framings: Array.from(selectedFramings),
         },
       };
 
@@ -1012,116 +1016,83 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         )}
                       </div>
                     )}
-                    {/* Images count */}
-                    <div className="space-y-3">
-                      <p className="section-label">Images per Product</p>
-                      {isMixMode ? (
-                        <>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {IMAGE_PRESETS.map(n => (
-                              <Button
-                                key={n}
-                                variant={imageCount === n && !customImageCountStr ? 'default' : 'outline'}
-                                onClick={() => {
-                                  setImageCount(n);
-                                  setCustomImageCountStr('');
-                                  markDirty();
-                                }}
-                                className="h-11 rounded-xl"
-                              >
-                                {n}
-                              </Button>
-                            ))}
-                          </div>
-                          <Input
-                            type="number"
-                            placeholder="Custom amount"
-                            value={customImageCountStr}
-                            onChange={e => {
-                              setCustomImageCountStr(e.target.value);
-                              const val = parseInt(e.target.value);
-                              if (val > 0) {
-                                setImageCount(val);
-                                markDirty();
-                              }
-                            }}
-                            className="h-11 rounded-xl"
+                    {/* ── Models — shown first (pick who wears it) ── */}
+                    {needsModels && !isMixMode && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="section-label">Models</p>
+                          <Badge variant="secondary" className="text-[10px] rounded-full">
+                            {isRandomModelsFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${modelSelections.length} selected`}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+                          <Switch
+                            checked={isRandomModelsFlag}
+                            onCheckedChange={setIsRandomModelsFlag}
                           />
-                        </>
-                      ) : (
-                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted/50 border border-border">
-                          <Calculator className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <p className="text-sm text-muted-foreground">
-                            {(() => {
-                              const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
-                              const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
-                              const formatCount = Math.max(formats.length, 1);
-                              const parts: string[] = [];
-                              if (effectiveScenes > 1 || variations.length > 0) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
-                              if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
-                              if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
-                              const formula = parts.length > 0 ? parts.join(' × ') + ' = ' : '';
-                              return <>{formula}<span className="font-semibold text-foreground">{computedImageCount} image{computedImageCount !== 1 ? 's' : ''}</span> per product</>;
-                            })()}
-                          </p>
+                          <div>
+                            <p className="text-sm font-medium flex items-center gap-1.5">
+                              <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
+                            </p>
+                            <p className="text-xs text-muted-foreground">Each image will feature a different model, selected randomly</p>
+                          </div>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Formats */}
-                    <div className="space-y-3">
-                      <p className="section-label">Aspect Ratios</p>
-                      {lockAspectRatio ? (
-                        <Badge variant="outline" className="text-xs rounded-full">1:1 (fixed)</Badge>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {ASPECT_RATIOS.map(ar => {
-                            const isFormatSelected = formats.includes(ar.id);
-                            return (
-                              <button
-                                key={ar.id}
-                                onClick={() => {
-                                  if (isFormatSelected) {
-                                    if (formats.length <= 1) return;
-                                    setFormats(formats.filter(f => f !== ar.id));
-                                  } else {
-                                    setFormats([...formats, ar.id]);
-                                  }
-                                }}
-                                className={cn(
-                                  'flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all',
-                                  isFormatSelected
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
-                                )}
-                              >
-                                <div
-                                  className={cn('rounded-[3px] border-2', isFormatSelected ? 'border-primary' : 'border-muted-foreground/40')}
-                                  style={{ width: `${Math.round(ar.w / Math.max(ar.w, ar.h) * 16)}px`, height: `${Math.round(ar.h / Math.max(ar.w, ar.h) * 16)}px` }}
-                                />
-                                {ar.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {formats.length > 1 && (
-                        <p className="text-xs text-muted-foreground">Each additional format multiplies the credit cost.</p>
-                      )}
-                    </div>
-
-                    {/* Flat Lay info */}
-                    {wf.name.toLowerCase().includes('flat lay') && (
-                      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-muted/40 border border-border/50">
-                        <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>Flat lay works best with <strong>small / medium products</strong> — accessories, cosmetics, packaged food, stationery.</p>
-                          <p>Oversized items (furniture, appliances) may not render naturally in a top-down arrangement.</p>
-                        </div>
+                        {!isRandomModelsFlag && (
+                          <>
+                            {modelSelections.length > 0 && (
+                              <div className="flex justify-end">
+                                <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setModelSelections([])}>
+                                  Clear
+                                </button>
+                              </div>
+                            )}
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                              {allModels.map(m => {
+                                const isModelSelected = modelSelections.includes(m.id);
+                                return (
+                                  <button
+                                    key={m.id}
+                                    onClick={() => {
+                                      setModelSelections(prev =>
+                                        isModelSelected ? prev.filter(id => id !== m.id) : [...prev, m.id]
+                                      );
+                                    }}
+                                    className={cn(
+                                      'relative rounded-xl overflow-hidden border-2 transition-all',
+                                      isModelSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                                    )}
+                                  >
+                                    <div className="aspect-[3/4] w-full bg-muted overflow-hidden">
+                                      <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="3/4" />
+                                    </div>
+                                    {isModelSelected && (
+                                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                        <Check className="w-3 h-3 text-primary-foreground" />
+                                      </div>
+                                    )}
+                                    <div className="px-1.5 py-1.5">
+                                      <p className={cn(
+                                        'text-[11px] truncate text-center font-medium',
+                                        isModelSelected ? 'text-primary' : 'text-foreground'
+                                      )}>{m.name}</p>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {modelSelections.length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''} selected — each model generates with every selected scene
+                              </p>
+                            )}
+                          </>
+                        )}
                       </div>
                     )}
 
-                    {/* Scenes — hidden in Mix mode */}
+                    {/* ── Scenes ── */}
                     {variations.length > 0 && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -1194,7 +1165,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* Pose / Scene Library — hidden in Mix mode */}
+                    {/* ── Pose / Scene Library ── */}
                     {showPosePicker && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -1244,76 +1215,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* Models — hidden in Mix mode */}
-                    {needsModels && !isMixMode && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="section-label">Models</p>
-                          <Badge variant="secondary" className="text-[10px] rounded-full">
-                            {isRandomModelsFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${modelSelections.length} selected`}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
-                          <Switch
-                            checked={isRandomModelsFlag}
-                            onCheckedChange={setIsRandomModelsFlag}
-                          />
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-1.5">
-                              <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
-                            </p>
-                            <p className="text-xs text-muted-foreground">Each image will feature a different model, selected randomly from all available</p>
-                          </div>
-                        </div>
-
-                        {!isRandomModelsFlag && (
-                          <>
-                            {modelSelections.length > 0 && (
-                              <div className="flex justify-end">
-                                <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setModelSelections([])}>
-                                  Clear
-                                </button>
-                              </div>
-                            )}
-                            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-                              {allModels.map(m => {
-                                const isModelSelected = modelSelections.includes(m.id);
-                                return (
-                                  <button
-                                    key={m.id}
-                                    onClick={() => {
-                                      setModelSelections(prev =>
-                                        isModelSelected ? prev.filter(id => id !== m.id) : [...prev, m.id]
-                                      );
-                                    }}
-                                    className="flex flex-col items-center gap-1.5"
-                                  >
-                                    <div className={cn(
-                                      'w-12 h-12 rounded-full overflow-hidden border-2 transition-all',
-                                      isModelSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
-                                    )}>
-                                      <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                    </div>
-                                    <p className={cn(
-                                      'text-[10px] truncate w-full text-center',
-                                      isModelSelected ? 'text-primary font-semibold' : 'text-muted-foreground'
-                                    )}>{m.name}</p>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            {modelSelections.length > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                {modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''} selected — each model generates with every selected scene
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Custom Settings */}
+                    {/* ── Custom Settings ── */}
                     {wfCustomSettings.length > 0 && (
                       <div className="space-y-4">
                         <p className="section-label">Settings</p>
@@ -1343,7 +1245,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* UGC Mood */}
+                    {/* ── UGC Mood ── */}
                     {(wf.name.toLowerCase().includes('selfie') || wf.name.toLowerCase().includes('ugc')) && (
                       <div className="space-y-3">
                         <p className="section-label">UGC Mood</p>
@@ -1377,39 +1279,135 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* Flat Lay Aesthetic */}
+                    {/* ── Flat Lay Aesthetic ── */}
                     {wf.name.toLowerCase().includes('flat lay') && (
-                      <div className="space-y-3">
-                        <p className="section-label">Aesthetic Style</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {[
-                            { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
-                            { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
-                            { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
-                            { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
-                            { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
-                            { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
-                          ].map(aesthetic => {
-                            const isSelected = customSettings['Aesthetic'] === aesthetic.id;
+                      <>
+                        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-muted/40 border border-border/50">
+                          <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Flat lay works best with <strong>small / medium products</strong> — accessories, cosmetics, packaged food, stationery.</p>
+                            <p>Oversized items (furniture, appliances) may not render naturally in a top-down arrangement.</p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <p className="section-label">Aesthetic Style</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {[
+                              { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
+                              { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
+                              { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
+                              { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
+                              { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
+                              { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
+                            ].map(aesthetic => {
+                              const isSelected = customSettings['Aesthetic'] === aesthetic.id;
+                              return (
+                                <button
+                                  key={aesthetic.id}
+                                  onClick={() => setCustomSettings(prev => ({ ...prev, Aesthetic: aesthetic.id }))}
+                                  className={cn(
+                                    'px-4 py-3 rounded-xl border-2 text-left transition-all',
+                                    isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                                  )}
+                                >
+                                  <p className={cn('text-sm font-medium', isSelected && 'text-primary')}>{aesthetic.label}</p>
+                                  <p className="text-[10px] text-muted-foreground">{aesthetic.hint}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* ── Aspect Ratios ── */}
+                    <div className="space-y-3">
+                      <p className="section-label">Aspect Ratios</p>
+                      {lockAspectRatio ? (
+                        <Badge variant="outline" className="text-xs rounded-full">1:1 (fixed)</Badge>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {ASPECT_RATIOS.map(ar => {
+                            const isFormatSelected = formats.includes(ar.id);
                             return (
                               <button
-                                key={aesthetic.id}
-                                onClick={() => setCustomSettings(prev => ({ ...prev, Aesthetic: aesthetic.id }))}
+                                key={ar.id}
+                                onClick={() => {
+                                  if (isFormatSelected) {
+                                    if (formats.length <= 1) return;
+                                    setFormats(formats.filter(f => f !== ar.id));
+                                  } else {
+                                    setFormats([...formats, ar.id]);
+                                  }
+                                }}
                                 className={cn(
-                                  'px-4 py-3 rounded-xl border-2 text-left transition-all',
-                                  isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                                  'flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all',
+                                  isFormatSelected
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
                                 )}
                               >
-                                <p className={cn('text-sm font-medium', isSelected && 'text-primary')}>{aesthetic.label}</p>
-                                <p className="text-[10px] text-muted-foreground">{aesthetic.hint}</p>
+                                <div
+                                  className={cn('rounded-[3px] border-2', isFormatSelected ? 'border-primary' : 'border-muted-foreground/40')}
+                                  style={{ width: `${Math.round(ar.w / Math.max(ar.w, ar.h) * 16)}px`, height: `${Math.round(ar.h / Math.max(ar.w, ar.h) * 16)}px` }}
+                                />
+                                {ar.label}
                               </button>
                             );
                           })}
                         </div>
+                      )}
+                      {formats.length > 1 && (
+                        <p className="text-xs text-muted-foreground">Each additional format multiplies the credit cost.</p>
+                      )}
+                    </div>
+
+                    {/* ── Framing (multi-select) — only for workflows with models ── */}
+                    {needsModels && !isMixMode && (
+                      <FramingMultiSelector
+                        selectedFramings={selectedFramings}
+                        onSelectedFramingsChange={setSelectedFramings}
+                      />
+                    )}
+
+                    {/* ── Images per Product (Mix mode only) ── */}
+                    {isMixMode && (
+                      <div className="space-y-3">
+                        <p className="section-label">Images per Product</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {IMAGE_PRESETS.map(n => (
+                            <Button
+                              key={n}
+                              variant={imageCount === n && !customImageCountStr ? 'default' : 'outline'}
+                              onClick={() => {
+                                setImageCount(n);
+                                setCustomImageCountStr('');
+                                markDirty();
+                              }}
+                              className="h-11 rounded-xl"
+                            >
+                              {n}
+                            </Button>
+                          ))}
+                        </div>
+                        <Input
+                          type="number"
+                          placeholder="Custom amount"
+                          value={customImageCountStr}
+                          onChange={e => {
+                            setCustomImageCountStr(e.target.value);
+                            const val = parseInt(e.target.value);
+                            if (val > 0) {
+                              setImageCount(val);
+                              markDirty();
+                            }
+                          }}
+                          className="h-11 rounded-xl"
+                        />
                       </div>
                     )}
 
-                    {/* Freestyle prompts */}
+                    {/* ── Freestyle prompts ── */}
                     <Collapsible open={includeFreestyle} onOpenChange={setIncludeFreestyle}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1453,20 +1451,38 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </CollapsibleContent>
                     </Collapsible>
 
-                    {/* Credit Summary */}
+                    {/* ── Credit Summary (Curated: matrix breakdown, Mix: simple) ── */}
                     {(() => {
                       const productCount = selectedProductIds.size;
                       const totalImages = productCount * computedImageCount;
                       const totalCredits = totalImages * 6;
+                      const framingCount = selectedFramings.has('auto') ? 1 : selectedFramings.size;
                       return (
                         <Card className="p-4 bg-muted/30 border-dashed space-y-2">
                           <div className="flex items-center gap-2">
                             <Wallet className="w-4 h-4 text-muted-foreground" />
                             <p className="text-sm font-semibold">Credit Estimate</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {productCount} product{productCount !== 1 ? 's' : ''} × {computedImageCount} image{computedImageCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{totalImages} images</span>
-                          </p>
+                          {!isMixMode ? (
+                            <p className="text-xs text-muted-foreground">
+                              {(() => {
+                                const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+                                const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
+                                const formatCount = Math.max(formats.length, 1);
+                                const parts: string[] = [];
+                                if (effectiveScenes > 1 || variations.length > 0) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                                if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
+                                if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
+                                if (framingCount > 1) parts.push(`${framingCount} framing${framingCount !== 1 ? 's' : ''}`);
+                                const formula = parts.length > 0 ? parts.join(' × ') + ' = ' : '';
+                                return <>{formula}<span className="font-semibold text-foreground">{computedImageCount} image{computedImageCount !== 1 ? 's' : ''}</span> per product</>;
+                              })()}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              {productCount} product{productCount !== 1 ? 's' : ''} × {computedImageCount} image{computedImageCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{totalImages} images</span>
+                            </p>
+                          )}
                           <p className="text-xs text-muted-foreground">
                             {totalImages} × 6 credits = <span className="font-semibold text-foreground">{totalCredits} credits</span>
                           </p>
