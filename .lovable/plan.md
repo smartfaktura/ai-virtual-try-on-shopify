@@ -1,57 +1,33 @@
 
 
-# Fix: Creative Drops Step 2 — Reorder Sections, Add Framing, Enlarge Models
+# Fix: Workflow Data Missing in Creative Drops Wizard (Query Key Collision)
 
-## Problems
-1. **Wrong order**: Currently shows Workflow → Campaign Mode → Images → Aspect Ratios → Scenes → Models. Should be: Workflow → Campaign Mode → Models → Scenes → Aspect Ratios → Framing → Summary.
-2. **No framing selector**: Workflows page has multi-framing support but Creative Drops lacks it entirely.
-3. **Model circles too small**: `w-12 h-12` (48px) circles are hard to see and select — should be larger cards like scenes.
-4. **"Images per Product" in Curated mode** is auto-calculated but shown before scenes/models — confusing since it depends on selections below it.
+## Problem
+When selecting a workflow like Virtual Try-On Set, the config panel shows only Aspect Ratios — no Campaign Mode, Models, or Scenes. The entire inline configuration is invisible.
 
-## Changes
+## Root Cause
+**React Query cache collision.** Three different queries all use the same `queryKey: ['workflows']`:
 
-### File: `src/components/app/CreativeDropWizard.tsx`
+1. `CreativeDrops.tsx` (line 121): `select('id, name')` — runs when the page loads
+2. `CreativeDropWizard.tsx` (line 256): `select('*')` — runs when wizard opens
+3. `Workflows.tsx` (line 53): `select('*')` — runs on the Workflows page
 
-**A. Reorder Step 2 sections** (lines 940-1476)
+Since `CreativeDrops.tsx` runs first (it's the parent page), React Query caches the result with **only `id` and `name`**. When the wizard opens and requests `queryKey: ['workflows']`, it gets the cached minimal result. All fields like `uses_tryon`, `generation_config`, `recommended_ratios` are `undefined` — so every conditional section (Campaign Mode, Models, Scenes, Poses) evaluates to `false` and doesn't render.
 
-New order within the config panel:
-1. Campaign Mode (Curated / Mix) — stays at top
-2. **Models** (moved up — pick who wears it first)
-3. **Scenes** (moved after models)
-4. Pose / Scene Library
-5. Custom Settings (UGC Mood, Flat Lay Aesthetic)
-6. **Aspect Ratios** (moved down)
-7. **Framing** (new — multi-select, same as Workflows page)
-8. Freestyle Prompts
-9. **Credit Summary** (moved to bottom, now includes framing in the matrix)
+## Fix
 
-**B. Add Framing multi-selector** (new section)
-
-Add state: `selectedFramings: Set<string>` (default: `new Set(['auto'])`)
-
-Import and render `FramingMultiSelector` from `@/components/app/FramingSelector`. Only show for workflows that use models (`needsModels`). Hidden in Mix mode (framing = auto).
-
-**C. Update `computedImageCount`** to include framing count:
+### File 1: `src/components/app/CreativeDropWizard.tsx` (line 256)
+Change the queryKey to something unique:
 ```
-framingCount = selectedFramings.has('auto') ? 1 : selectedFramings.size
-total = scenes × models × formats × framingCount
+queryKey: ['workflows-full']
 ```
+This ensures the wizard always fetches the complete workflow data with `select('*')`.
 
-**D. Enlarge model cards** (line 1279-1304)
-
-Change model grid from tiny circles to proper cards matching scene card style:
-- Grid: `grid-cols-3 sm:grid-cols-4 md:grid-cols-5` (same as scenes)
-- Each card: square image with rounded corners, name below, selection border — same pattern as scene cards
-- Replace `w-12 h-12 rounded-full` with `aspect-square w-full rounded-xl`
-
-**E. Update Credit Summary** to show framing in the formula breakdown.
-
-**F. Include `selectedFramings` in save logic** — store in `sceneConfig` alongside other settings.
+### File 2: `src/pages/CreativeDrops.tsx` (line 121)
+Keep as-is — it only needs `id, name` for the drop list display.
 
 ## Summary
-- 1 file changed
-- Sections reordered: Models → Scenes → Ratios → Framing → Summary
-- Framing multi-selector added (reusing existing component)
-- Model cards enlarged from 48px circles to full scene-card-style grid
-- Credit formula updated to include framing multiplier
+- 1 line changed in 1 file
+- Fixes the cache collision that caused all workflow configuration UI (models, scenes, campaign mode, poses) to be invisible
+- No other changes needed — the rendering logic is already correct, it just wasn't receiving the data
 
