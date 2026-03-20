@@ -3684,7 +3684,7 @@ export default function Generate() {
                 generatingProgress={generatingProgress}
                 activeJob={activeJob}
                 onCancel={cancelQueue}
-                totalExpectedImages={productQueue.length * tryOnSceneCount}
+                totalExpectedImages={productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount}
               />
             )}
 
