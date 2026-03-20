@@ -253,7 +253,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   });
 
   const { data: rawWorkflows = [], isLoading: workflowsLoading } = useQuery({
-    queryKey: ['workflows'],
+    queryKey: ['workflows-full'],
     queryFn: async () => {
       const { data, error } = await supabase.from('workflows').select('*').order('sort_order');
       if (error) throw error;
