@@ -65,6 +65,7 @@ export function GlobalGenerationBar() {
           job_type: row.job_type,
           quality: (payload?.quality as string) ?? null,
           resolution: (payload?.resolution as string) ?? null,
+          creative_drop_id: (payload?.creative_drop_id as string) ?? null,
         };
       });
 
@@ -110,6 +111,7 @@ export function GlobalGenerationBar() {
             job_type: original?.job_type ?? null,
             quality: original?.quality ?? null,
             resolution: original?.resolution ?? null,
+            isCreativeDrop: original?.isCreativeDrop ?? false,
             totalImageCount: original?.totalImageCount ?? 0,
             generatedImageCount: original?.generatedImageCount ?? 0,
           };
@@ -192,6 +194,7 @@ export function GlobalGenerationBar() {
                         <p className="text-xs font-medium truncate">
                           {isUpscale
                             ? `${luna?.name ?? 'Luna'} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : group.isCreativeDrop ? 'Creative Drop'
                             : group.job_type === 'freestyle' ? 'Freestyle'
                             : (group.workflow_name ?? 'Generation')}
                           {group.product_name ? ` — ${group.product_name}` : ''}
@@ -260,10 +263,11 @@ export function GlobalGenerationBar() {
               {visibleActive.length > 0 && (
               <div className="border-t border-border/40 px-3 py-2 flex justify-end">
                 {(() => {
+                   const hasCreativeDrop = visibleActive.some((g) => g.isCreativeDrop);
                    const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
                    const hasFreestyle = visibleActive.some((g) => g.job_type === 'freestyle');
-                   const targetPath = hasUpscale ? '/app/library' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
-                   const targetLabel = hasUpscale ? 'View in Library' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
+                   const targetPath = hasCreativeDrop ? '/app/creative-drops' : hasUpscale ? '/app/library' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
+                   const targetLabel = hasCreativeDrop ? 'View in Creative Drops' : hasUpscale ? 'View in Library' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
                    return (
                      <Button
                        size="sm"

@@ -96,6 +96,7 @@ export interface CreativeDropWizardInitialData {
 
 interface CreativeDropWizardProps {
   onClose: () => void;
+  onLaunched?: () => void;
   initialData?: CreativeDropWizardInitialData;
   editingScheduleId?: string;
 }
@@ -126,7 +127,7 @@ interface UserProduct {
 const STEP_LABELS = ['Details', 'Products', 'Workflow', 'Launch'];
 const TOTAL_STEPS = 4;
 
-export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: CreativeDropWizardProps) {
+export function CreativeDropWizard({ onClose, onLaunched, initialData, editingScheduleId }: CreativeDropWizardProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -553,7 +554,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
 
       if (isNow && !editingScheduleId) {
-        toast.success('Drop created — generating now!');
         try {
           const res = await supabase.functions.invoke('trigger-creative-drop', {
             body: { schedule_id: scheduleId },
@@ -563,6 +563,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             console.error('Trigger error:', errorMsg);
             toast.error(`Generation failed: ${errorMsg}`);
           }
+          onLaunched?.();
         } catch (e) {
           console.error('Trigger error:', e);
           toast.error('Failed to trigger generation');

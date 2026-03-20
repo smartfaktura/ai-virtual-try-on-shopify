@@ -19,6 +19,8 @@ export interface ActiveJob {
   imageCount?: number;
   /** From result.generatedCount — images generated so far */
   generatedCount?: number;
+  /** Present when job originates from a creative drop */
+  creative_drop_id?: string | null;
 }
 
 export interface BatchGroup {
@@ -43,6 +45,8 @@ export interface BatchGroup {
   quality: string | null;
   /** Upscale resolution ('2k' or '4k') when job_type is 'upscale' */
   resolution: string | null;
+  /** True when any job in the group is from a creative drop */
+  isCreativeDrop: boolean;
   /** Total images expected across all jobs in group (image-level, not job-level) */
   totalImageCount: number;
   /** Images generated so far across all jobs in group */
@@ -104,6 +108,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       resolution: anchor.resolution ?? null,
       totalImageCount,
       generatedImageCount,
+      isCreativeDrop: batch.some((j) => !!j.creative_drop_id),
     });
   }
 
@@ -158,6 +163,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       resolution: anchor.resolution ?? null,
       totalImageCount,
       generatedImageCount,
+      isCreativeDrop: batch.some((j) => !!j.creative_drop_id),
     });
   }
 
