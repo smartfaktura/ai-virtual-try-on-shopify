@@ -1700,7 +1700,9 @@ export default function Generate() {
   };
 
   const angleMultiplier = productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2;
-  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
+  const aspectRatioCount = Math.max(1, selectedAspectRatios.size);
+  const framingCount = selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size);
+  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount : parseInt(imageCount);
   const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
@@ -1709,7 +1711,7 @@ export default function Generate() {
   const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
   const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 15 : 10) : 0;
   const workflowCostPerImage = 6;
-  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
+  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
