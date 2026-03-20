@@ -937,8 +937,12 @@ export default function Generate() {
         ]);
 
         const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
+        const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+        const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
 
         for (const varIdx of variationIndices) {
+         for (const ratioVal of ratiosToGen) {
+          for (const framingVal of framingsToGen) {
           const payload: Record<string, unknown> = {
             workflow_id: activeWorkflow!.id,
             workflow_name: activeWorkflow!.name,
