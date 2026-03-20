@@ -1129,7 +1129,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                         )}
                                       >
                                         <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
-                                          <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                                          <ShimmerImage src={getOptimizedUrl(pose.optimizedImageUrl || pose.previewUrl, { quality: 60 })} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
                                         </div>
                                         {isPoseSelected && (
                                           <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
