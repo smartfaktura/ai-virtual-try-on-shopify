@@ -1,0 +1,12 @@
+{
+  "name": "VOVV AI",
+  "short_name": "VOVV",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "192x192", "type": "image/png" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f7",
+  "theme_color": "#2d3a4e"
+}
