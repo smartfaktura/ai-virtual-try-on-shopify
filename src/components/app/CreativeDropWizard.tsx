@@ -39,6 +39,9 @@ import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditC
 import type { Workflow } from '@/types/workflow';
 import { useNavigate } from 'react-router-dom';
 import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
 const opt = (url: string) => getOptimizedUrl(url, { width: 120, quality: 60 });
 
