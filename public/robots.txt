@@ -4,7 +4,7 @@ Disallow: /app/
 Disallow: /auth
 Disallow: /onboarding
 Disallow: /reset-password
-Disallow: /mobile-upload
+Disallow: /upload/
 
 User-agent: Bingbot
 Allow: /
