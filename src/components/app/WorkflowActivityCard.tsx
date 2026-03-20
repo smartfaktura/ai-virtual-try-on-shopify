@@ -290,11 +290,11 @@ export function WorkflowActivityCard({
                         : '1 image failed'}
                       {group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 50)}` : ''}
                     </p>
-                    {refundedCredits > 0 && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        {refundedCredits} credit{refundedCredits !== 1 ? 's' : ''} refunded
-                      </p>
-                    )}
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {refundedCredits > 0
+                        ? `${refundedCredits} credit${refundedCredits !== 1 ? 's' : ''} refunded automatically`
+                        : 'Credits refunded automatically'}
+                    </p>
                   </div>
                 </div>
 
