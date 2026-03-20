@@ -542,7 +542,15 @@ serve(async (req) => {
       );
     }
 
-    const body: TryOnRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
+    const body: TryOnRequest & {
+      user_id?: string;
+      job_id?: string;
+      credits_reserved?: number;
+      creative_drop_id?: string;
+      theme?: string;
+      theme_notes?: string;
+      brand_profile?: Record<string, unknown>;
+    } = await req.json();
 
     const userId = body.user_id;
 
@@ -560,7 +568,14 @@ serve(async (req) => {
       );
     }
 
-    const prompt = buildPrompt(body);
+    // Only inject theme/brand context for creative drop jobs
+    const dropContext: DropContext | undefined = body.creative_drop_id ? {
+      theme: body.theme,
+      themeNotes: body.theme_notes,
+      brandProfile: body.brand_profile,
+    } : undefined;
+
+    const prompt = buildPrompt(body, dropContext);
     console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
 
     const imageCount = Math.min(body.imageCount || 4, 8);
