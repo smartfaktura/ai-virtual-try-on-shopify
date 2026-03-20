@@ -1495,7 +1495,7 @@ export const pricingPlans: PricingPlan[] = [
     credits: 4500,
     features: [
       'All workflows incl. Virtual Try-On',
-      'Batch generation (3 scenes)',
+      'Workflows bulk generations',
       'Freestyle generation',
       'All Models & Scenes',
       'Upscale to 2K & 4K',
