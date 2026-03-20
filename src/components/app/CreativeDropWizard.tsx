@@ -107,9 +107,7 @@ const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', w: 16, h: 9 },
 ];
 
-const fashionPoses = mockTryOnPoses.filter(p =>
-  ['studio', 'lifestyle', 'editorial', 'streetwear'].includes(p.category)
-);
+// Full scene list is built inside the component using hooks
 
 const mockModelItems = mockModels.map(m => ({
   id: m.modelId,
