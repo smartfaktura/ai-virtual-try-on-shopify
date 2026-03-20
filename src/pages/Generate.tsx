@@ -3889,9 +3889,11 @@ export default function Generate() {
                 activeJob={activeJob}
                 onCancel={cancelQueue}
                 totalExpectedImages={
-                  (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie)
-                    ? workflowImageCount * multiProductCount
-                    : productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
+                  activeWorkflow?.uses_tryon
+                    ? multiProductCount * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
+                    : (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie)
+                      ? workflowImageCount * multiProductCount
+                      : productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
                 }
                 totalJobs={multiProductJobIds.size}
                 workflowName={activeWorkflow?.name}

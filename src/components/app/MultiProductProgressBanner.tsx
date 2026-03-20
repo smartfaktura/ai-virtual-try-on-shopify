@@ -90,12 +90,12 @@ export function MultiProductProgressBanner({
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
           {completedCount > 0
-            ? `${completedCount} of ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} done`
+            ? `${completedCount} of ${totalImages} image${totalImages !== 1 ? 's' : ''} done`
             : workflowName
-              ? `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${workflowName}...`
+              ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${workflowName}...`
               : totalProducts > 1
-                ? `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} products`
-                : `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''}...`}
+                ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} products`
+                : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''}...`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
