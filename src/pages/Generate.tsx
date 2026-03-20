@@ -361,7 +361,10 @@ export default function Generate() {
   const isMultiProductMode = productQueue.length > 1;
   // Upfront multi-product: map of productId → jobId for all enqueued products
   const [multiProductJobIds, setMultiProductJobIds] = useState<Map<string, string>>(new Map());
+  // Per-job metadata for reliable grouping (avoids brittle key parsing)
+  const [jobMetadata, setJobMetadata] = useState<Map<string, { productName: string; ratio: string; framing: string | null }>>(new Map());
   const multiProductPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isFinalizingResults, setIsFinalizingResults] = useState(false);
 
   
   const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
@@ -1204,7 +1207,7 @@ export default function Generate() {
     const effectiveFraming = framingOverride !== undefined ? framingOverride : (selectedFramings.has('auto') ? null : (selectedFramings.size > 0 ? Array.from(selectedFramings)[0] as FramingOption : framing));
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const maxRetries = 4;
+    const maxRetries = 6;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
@@ -1243,8 +1246,10 @@ export default function Generate() {
           || errMsg.toLowerCase().includes('concurrent');
 
         if (isRateLimit && attempt < maxRetries - 1) {
-          console.warn(`[enqueue] Rate limited for "${product.title}", retry ${attempt + 1}/${maxRetries - 1}`);
-          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          const retryAfter = err.retry_after_seconds ? Number(err.retry_after_seconds) : Math.pow(2, attempt + 1);
+          const jitter = Math.random() * 1000;
+          console.warn(`[enqueue] Rate limited for "${product.title}", retry ${attempt + 1}/${maxRetries - 1} in ${retryAfter}s`);
+          await new Promise(r => setTimeout(r, retryAfter * 1000 + jitter));
           continue;
         }
 
@@ -1296,6 +1301,7 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const jobMap = new Map<string, string>();
+      const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
       let enqueueCount = 0;
       for (const product of productQueue) {
@@ -1309,7 +1315,9 @@ export default function Generate() {
                 }
                 const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
                 if (result) {
-                  jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                  const compositeKey = `${product.id}::${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
+                  jobMap.set(compositeKey, result.jobId);
+                  metaMap.set(compositeKey, { productName: product.title, ratio: ratioVal, framing: framingVal });
                   lastBalance = result.newBalance;
                   injectActiveJob(queryClient, {
                     jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
@@ -1340,8 +1348,9 @@ export default function Generate() {
         return;
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} product${jobMap.size > 1 ? 's' : ''} for generation`);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''} for ${productQueue.length} product${productQueue.length > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       return;
     }
@@ -1416,8 +1425,10 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const jobMap = new Map<string, string>();
+      const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
       const product = selectedProduct || { id: 'scratch', title: productData.title, description: productData.description, productType: productData.productType, vendor: '', tags: [], images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active' as const, createdAt: '', updatedAt: '' };
+      const productName = selectedProduct?.title || productData?.title || '';
 
       for (const model of modelsToGenerate) {
         for (const pose of posesToGenerate) {
@@ -1425,11 +1436,13 @@ export default function Generate() {
             for (const framingVal of framingsToGen) {
               const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal);
               if (result) {
-                jobMap.set(`${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                const compositeKey = `${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
+                jobMap.set(compositeKey, result.jobId);
+                metaMap.set(compositeKey, { productName, ratio: ratioVal, framing: framingVal });
                 lastBalance = result.newBalance;
                 injectActiveJob(queryClient, {
                   jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-                  workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+                  workflow_slug: activeWorkflow?.slug, product_name: productName,
                   job_type: 'tryon', quality, imageCount: parseInt(imageCount),
                 });
               }
@@ -1444,6 +1457,7 @@ export default function Generate() {
         return;
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
       toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
@@ -1579,29 +1593,23 @@ export default function Generate() {
           multiProductPollingRef.current = null;
         }
 
-        // Aggregate results — parse composite keys to build labels for grouping
+        // Aggregate results using stored metadata for reliable grouping
         const allImages: string[] = [];
         const allLabels: string[] = [];
         for (const [key] of multiProductJobIds) {
           const r = completedResults.get(key);
           if (r) {
-            // Keys are formatted as: productId_modelId_poseId_ratio_framing
-            // or for single-product: modelId_poseId_ratio_framing
-            const keyParts = key.split('_');
-            const framingVal = keyParts[keyParts.length - 1];
-            const ratioVal = keyParts[keyParts.length - 2];
-            const productId = keyParts.length >= 5 ? keyParts[0] : null;
-            const product = productId ? productQueue.find(p => p.id === productId) : null;
-            const prefix = product ? product.title : '';
+            const meta = jobMetadata.get(key);
+            const prefix = meta?.productName || '';
 
-            // Use edge function labels if provided, otherwise build from key parts
+            // Use edge function labels if provided, otherwise build from metadata
             const labels = r.labels.length > 0
               ? r.labels
               : r.images.map(() => {
-                  const meta: string[] = [];
-                  if (ratioVal && ratioVal !== 'null') meta.push(ratioVal);
-                  if (framingVal && framingVal !== 'null' && framingVal !== 'auto') meta.push(framingVal.replace(/_/g, ' '));
-                  return meta.join(' · ') || 'Generated';
+                  const parts: string[] = [];
+                  if (meta?.ratio && meta.ratio !== 'null') parts.push(meta.ratio);
+                  if (meta?.framing && meta.framing !== 'null' && meta.framing !== 'auto') parts.push(String(meta.framing).replace(/_/g, ' '));
+                  return parts.join(' · ') || 'Generated';
                 });
 
             allImages.push(...r.images);
@@ -1610,23 +1618,28 @@ export default function Generate() {
         }
 
         if (allImages.length > 0) {
+          // Finalizing handoff: brief pause before showing results
+          setIsFinalizingResults(true);
+          setGeneratingProgress(100);
+          await new Promise(r => setTimeout(r, 1500));
           setGeneratedImages(allImages);
           setWorkflowVariationLabels(allLabels);
-          setGeneratingProgress(100);
+          setIsFinalizingResults(false);
           setCurrentStep('results');
           if (failedCount > 0) {
             toast.warning(`Completed with ${failedCount} failure${failedCount > 1 ? 's' : ''}. ${allImages.length} images generated.`);
           } else {
-            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
+            toast.success(`Generated ${allImages.length} images!`);
           }
         } else {
-          toast.error('All products failed. Credits refunded.');
+          toast.error('All generations failed. Credits refunded.');
           setCurrentStep('settings');
         }
         refreshBalance();
         queryClient.invalidateQueries({ queryKey: ['library'] });
         queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
         setMultiProductJobIds(new Map());
+        setJobMetadata(new Map());
       }
     };
 
@@ -3793,8 +3806,20 @@ export default function Generate() {
               </p>
             </div>
 
+            {/* Finalizing handoff overlay */}
+            {isFinalizingResults && (
+              <div className="w-full max-w-md text-center space-y-3">
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="font-medium">Finalizing results…</span>
+                </div>
+                <Progress value={100} className="h-2" />
+                <p className="text-xs text-muted-foreground">Preparing your images for review</p>
+              </div>
+            )}
+
             {/* Multi-product progress banner */}
-            {isMultiProductMode && (
+            {isMultiProductMode && !isFinalizingResults && (
               <MultiProductProgressBanner
                 productQueue={productQueue}
                 multiProductResults={multiProductResults}
@@ -3803,6 +3828,7 @@ export default function Generate() {
                 activeJob={activeJob}
                 onCancel={cancelQueue}
                 totalExpectedImages={productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount}
+                totalJobs={multiProductJobIds.size}
               />
             )}
 
