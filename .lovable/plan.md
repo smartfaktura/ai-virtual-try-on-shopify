@@ -1,42 +1,49 @@
 
 
-# Fix: Creative Drops Scenes & Random Toggles
+# Fix: Scene Loading Speed, Inner Scroll, and Workflow-Filtered Scenes
 
 ## Problems
-
-1. **"Scenes" section shows workflow variations** (Front View, 3/4 Turn, Back View, Movement Shot) — these are framing/angle labels from `generation_config.variation_strategy.variations`, NOT actual scenes. They're redundant with the Framing selector and confusing for users. Some appear duplicated.
-
-2. **"Random / Diverse" toggles exist inside Curated mode** — contradicts the purpose of Curated (manual selection). These toggles should be removed entirely: Curated = manual, Mix = random. That's already handled by the Campaign Mode selector.
-
-3. **Scene Library only shows 4 categories** — `fashionPoses` filters to `['studio', 'lifestyle', 'editorial', 'streetwear']`, missing product categories like `clean-studio`, `surface`, `flat-lay`, `product-editorial`. Should use the full scene list like the main Generate page does.
+1. **Slow scene images**: `ShimmerImage` renders raw `pose.previewUrl` (full-res Supabase Storage URLs) without using `getOptimizedUrl()` — every scene image loads at full size
+2. **Inner scroller**: `max-h-[400px] overflow-y-auto` creates a nested scroll container inside the wizard
+3. **Wrong scenes shown**: All scene categories appear for every workflow. Virtual Try-On should only show on-model scenes (Studio, Lifestyle, Editorial, Streetwear). Product Set should only show product scenes (Product Studio, Surface, Flat Lay, Product Editorial, Kitchen, Living Space, Bathroom, Botanical, Outdoor)
 
 ## Changes
 
 ### File: `src/components/app/CreativeDropWizard.tsx`
 
-**A. Remove the "Scenes" (variations) section entirely** (lines 1096-1167)
-The workflow variations (Front View, 3/4 Turn, etc.) are angle instructions, not scenes. They're already handled by the Framing selector. Remove this entire block including the `sceneSelections` toggle for variations.
+**A. Optimize scene images** (line 1120)
+Wrap `pose.previewUrl` with `getOptimizedUrl()`:
+```tsx
+<ShimmerImage
+  src={getOptimizedUrl(pose.previewUrl, { quality: 60 })}
+  ...
+/>
+```
+Also optimize the `pose.optimizedImageUrl` fallback if available. This matches how `SceneSelectorChip` already does it on the Generate page.
 
-**B. Remove "Random / Diverse" toggles from both Models and Scenes sections** (lines 1030-1041 for models, lines 1106-1117 for scenes)
-In Curated mode, the user manually picks — no random toggle needed. The Campaign Mode selector already handles the curated vs mix distinction.
+**B. Remove inner scroller** (line 1094)
+Change `<div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">` to just `<div className="space-y-4">`. The wizard itself already scrolls — no need for a nested scrollable container.
 
-**C. Replace `fashionPoses` with full scene list** (line 107-109 and line 1181)
-Instead of filtering to only 4 categories, use the same approach as `Generate.tsx`:
-- Import `useCustomScenes`, `useHiddenScenes`, `useSceneSortOrder` (already imported)
-- Use `filterVisible(mockTryOnPoses) + customPoses` to get all scenes including custom uploaded ones
-- Group by category with category labels, matching the Generate page's scene picker UI
+**C. Filter scenes by workflow type** (lines 276-284)
+Add filtering logic based on `selectedWorkflow`:
 
-**D. Make Scene Library the primary scene selection** (lines 1169-1217)
-Rename "Scene Library" to just "Scenes". Show it whenever `showPosePicker` or `needsModels` is true (not just when `show_pose_picker` is set). This becomes the only scene selection mechanism.
+- Define two category sets:
+  - `ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear']`
+  - `PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor']`
 
-**E. Update `computedImageCount`** to use `poseSelections.length` instead of `sceneSelections.size` since we're removing the variations-based scene selection.
+- When building `allScenePoses`, filter by workflow type:
+  - If `selectedWorkflow?.uses_tryon` → only show `ON_MODEL_CATEGORIES`
+  - If workflow is product-based (not `uses_tryon` and not model-based) → only show `PRODUCT_CATEGORIES`
+  - Fallback: show all
 
-**F. Remove `sceneSelections` state** — no longer needed since we removed the variations grid. Scene selection is now purely through `poseSelections` (the Scene Library poses).
+- Update the `useMemo` dependencies to include `selectedWorkflow` so it recalculates when the workflow changes
+
+**D. Clear pose selections when workflow changes** (existing `useEffect` for workflow change)
+When `selectedWorkflowId` changes, also reset `poseSelections` to `[]` since the available scenes change per workflow.
 
 ## Summary
-- 1 file changed
-- Remove confusing workflow-variation "Scenes" grid
-- Remove Random/Diverse toggles from Curated mode
-- Show full scene library (all categories + custom scenes) as the primary scene picker
-- Credit calculation uses pose selections instead of variation selections
+- 1 file, ~15 lines changed
+- Scene images load 5-10x faster via quality-compressed thumbnails
+- No nested scroll — scenes flow naturally in the wizard scroll
+- Scenes are contextually filtered: on-model scenes for try-on, product scenes for product workflows
 
