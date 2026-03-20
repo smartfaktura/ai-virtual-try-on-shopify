@@ -57,11 +57,12 @@ export interface WorkflowScene {
 interface Props {
   scene: WorkflowScene;
   isActive?: boolean;
+  compact?: boolean;
 }
 
 /* ── Floating element renderer ── */
 
-const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement }) {
+const FloatingEl = memo(function FloatingEl({ element, compact }: { element: SceneElement; compact?: boolean }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
@@ -73,6 +74,7 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
     ...element.position,
     opacity: 0,
     animation: `${animName} 0.55s cubic-bezier(.22,1,.36,1) ${element.enterDelay}s forwards`,
+    ...(compact ? { transform: 'scale(0.72)', transformOrigin: 'top left' } : {}),
   };
 
   // Optimize element images — model circles use quality-only to preserve face crop
@@ -608,7 +610,7 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
 
 /* ── Main component ── */
 
-export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
+export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const isUpscale = scene.mode === 'upscale';
   const isStaging = scene.mode === 'staging';
@@ -689,7 +691,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
             }}
           >
             {scene.elements.map((el, i) => (
-              <FloatingEl key={i} element={el} />
+              <FloatingEl key={i} element={el} compact={compact} />
             ))}
           </div>
 
@@ -712,15 +714,15 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
 
           {/* "Generated" badge */}
           <div
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+            className={`absolute ${compact ? 'bottom-3' : 'bottom-4'} left-1/2 -translate-x-1/2 z-20`}
             style={{
               opacity: 0,
               animation: `wf-badge-pop 0.45s cubic-bezier(.34,1.56,.64,1) ${badgeAt}s forwards`,
             }}
           >
-            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full wf-card-shadow">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
+            <div className={`flex items-center gap-2 bg-white ${compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2'} rounded-full wf-card-shadow`}>
+              <Sparkles className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-primary`} />
+              <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-bold text-primary tracking-wide`}>Generated</span>
             </div>
           </div>
         </div>
