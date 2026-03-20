@@ -1579,17 +1579,33 @@ export default function Generate() {
           multiProductPollingRef.current = null;
         }
 
-        // Aggregate results — iterate multiProductJobIds keys (not productQueue)
-        // to handle scratch uploads and key mismatches
+        // Aggregate results — parse composite keys to build labels for grouping
         const allImages: string[] = [];
         const allLabels: string[] = [];
         for (const [key] of multiProductJobIds) {
           const r = completedResults.get(key);
           if (r) {
-            const product = productQueue.find(p => p.id === key);
+            // Keys are formatted as: productId_modelId_poseId_ratio_framing
+            // or for single-product: modelId_poseId_ratio_framing
+            const keyParts = key.split('_');
+            const framingVal = keyParts[keyParts.length - 1];
+            const ratioVal = keyParts[keyParts.length - 2];
+            const productId = keyParts.length >= 5 ? keyParts[0] : null;
+            const product = productId ? productQueue.find(p => p.id === productId) : null;
             const prefix = product ? product.title : '';
+
+            // Use edge function labels if provided, otherwise build from key parts
+            const labels = r.labels.length > 0
+              ? r.labels
+              : r.images.map(() => {
+                  const meta: string[] = [];
+                  if (ratioVal && ratioVal !== 'null') meta.push(ratioVal);
+                  if (framingVal && framingVal !== 'null' && framingVal !== 'auto') meta.push(framingVal.replace(/_/g, ' '));
+                  return meta.join(' · ') || 'Generated';
+                });
+
             allImages.push(...r.images);
-            allLabels.push(...r.labels.map(l => prefix ? `${prefix} — ${l}` : l));
+            allLabels.push(...labels.map(l => prefix ? `${prefix} — ${l}` : l));
           }
         }
 
