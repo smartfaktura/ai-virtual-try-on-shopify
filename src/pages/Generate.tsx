@@ -732,12 +732,23 @@ export default function Generate() {
         next.delete(pose.poseId);
         nextMap.delete(pose.poseId);
       } else {
-        if (next.size >= maxScenes) {
-          toast.info(`You can select up to ${maxScenes} scene${maxScenes > 1 ? 's' : ''}${isFreeUser ? '. Upgrade for more.' : '.'}`);
+        if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
+          toast.info(`Free plan allows 1 scene per generation. Upgrade for more.`);
           return prev;
         }
         next.add(pose.poseId);
         nextMap.set(pose.poseId, pose);
+
+        // Credit warning for paid users
+        if (!isFreeUser) {
+          const newSceneCount = next.size;
+          const imgCount = parseInt(imageCount);
+          const prodCount = isMultiProductMode ? productQueue.length : 1;
+          const projectedCost = newSceneCount * imgCount * 6 * prodCount;
+          if (projectedCost > balance) {
+            toast.warning(`${newSceneCount} scenes will cost ${projectedCost} credits — you have ${balance}. Top up before generating.`, { duration: 4000 });
+          }
+        }
       }
       setSelectedPoseMap(nextMap);
       // Keep selectedPose in sync for backward compat
