@@ -127,7 +127,7 @@ interface UserProduct {
 const STEP_LABELS = ['Details', 'Products', 'Workflow', 'Launch'];
 const TOTAL_STEPS = 4;
 
-export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: CreativeDropWizardProps) {
+export function CreativeDropWizard({ onClose, onLaunched, initialData, editingScheduleId }: CreativeDropWizardProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
