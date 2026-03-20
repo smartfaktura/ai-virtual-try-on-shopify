@@ -1,22 +1,28 @@
 
 
-# Improve ZIP Image Naming and Folder Name
+# Fix Random/Duplicate Error Toasts on Generate Page
 
-## Current behavior
-- ZIP file named: `{productName}.zip`
-- Images named: `image_1.jpg`, `image_2.jpg`, etc. (generic, no product context)
+## Problem
+When a generation job fails (e.g., timeout), the user sees **two** error toasts:
+1. From `useGenerationQueue` hook fallback (line 130): "Generation timed out. Your credits have been refunded."
+2. From `Generate.tsx` activeJob effect (line 1489): raw `error_message` like "Timed out after 5 minutes"
 
-## New behavior
-- **ZIP file name**: `2026-03-20-Virtual Try On Set (VOVV.AI).zip` — format: `{YYYY-MM-DD}-{workflowName} (VOVV.AI).zip`
-- **Image file names**: `ProductName_1.jpg`, `ProductName_2.jpg` — using product name from `jobMetadata` or `workflowVariationLabels` to prefix each image with its product name
+This happens because `Generate.tsx` calls `useGenerationQueue` **without** providing `onGenerationFailed`, so the hook fires its own fallback toasts. Then the activeJob status watcher fires a second toast with the raw DB error.
 
 ## Changes — `src/pages/Generate.tsx`
 
-### 1. Update `handleDownloadZip` (lines ~1707-1719)
-- Build ZIP folder name as `YYYY-MM-DD-WorkflowName (VOVV.AI)` using current date + `activeWorkflow?.name`
-- For each image, derive product name from `workflowVariationLabels[index]` (which contains `ProductName — ratio · framing`) by extracting the part before ` — `, or fall back to the selected product title
-- Name each file as `{productName}_{sequenceNumber}{ext}` (per-product counter so numbering restarts per product)
+### 1. Pass `onGenerationFailed` callback to suppress hook fallback toasts
+Add an `onGenerationFailed` callback to the `useGenerationQueue` call (line 170). This callback will handle the error gracefully (set step back to settings, refresh balance) and the hook will skip its own fallback toasts.
 
-### Files
+### 2. Remove the duplicate toast in activeJob watcher
+Remove the `toast.error(activeJob.error_message || ...)` at line 1489. The `onGenerationFailed` callback now handles it with a user-friendly message instead of the raw backend string.
+
+### 3. Show friendly error messages
+In the new `onGenerationFailed` callback, show clean messages:
+- Timeout: "Generation timed out. Your credits have been refunded."
+- Rate limit: "Too many generations at once. Please wait and try again."
+- Generic: "Generation failed. Your credits have been refunded — try again."
+
+## Files
 - `src/pages/Generate.tsx` only
 
