@@ -1,28 +1,39 @@
 
+Fix plan (focused on “images generated but only 1 shown”):
 
-# Fix Random/Duplicate Error Toasts on Generate Page
+1) Confirmed from backend data
+- Last “Selfie / UGC Set” run created 8 completed workflow jobs (each with 1 image in result), so generation is successful.
+- This is a frontend aggregation/display issue.
 
-## Problem
-When a generation job fails (e.g., timeout), the user sees **two** error toasts:
-1. From `useGenerationQueue` hook fallback (line 130): "Generation timed out. Your credits have been refunded."
-2. From `Generate.tsx` activeJob effect (line 1489): raw `error_message` like "Timed out after 5 minutes"
+2) Root causes in `src/pages/Generate.tsx`
+- Multi-job polling request is malformed at line ~1556: uses `\&select` instead of `&select`.
+- Terminal detection is unsafe: `allTerminal` is based only on returned rows, so if API returns a partial subset, UI can finalize early with only 1 image.
+- Single-job watcher can still overwrite aggregated results after multi-job flow (stale `activeJob` path).
 
-This happens because `Generate.tsx` calls `useGenerationQueue` **without** providing `onGenerationFailed`, so the hook fires its own fallback toasts. Then the activeJob status watcher fires a second toast with the raw DB error.
+3) Implementation changes (same file only)
+- Fix polling URL:
+  - Change `...)\&select=...` → `...)&select=...`.
+- Harden multi-job completion logic:
+  - Build a `rowByJobId` map from response.
+  - For every expected job ID, derive status with fallback (`queued` if missing).
+  - Compute:
+    - `completedCount`, `failedCount` from expected jobs only,
+    - `allTerminal` only when **every expected job** is terminal.
+  - Aggregate images strictly by expected job order/keys so all generated images are included.
+- Prevent stale overwrite from single-job effect:
+  - Add guard in activeJob watcher to skip when we are already in results/finalizing or when multi-job context exists.
+  - Include `currentStep` (and finalizing flag) in dependencies.
+  - Optionally call `resetQueue()` before clearing `multiProductJobIds` in multi-job finalize block.
 
-## Changes — `src/pages/Generate.tsx`
+4) Expected result after fix
+- Selfie / UGC runs that produce 8 jobs will consistently show all 8 images in Generated Images grid.
+- No regression for true single-job workflows.
+- Progress banner and result count align with backend completion.
 
-### 1. Pass `onGenerationFailed` callback to suppress hook fallback toasts
-Add an `onGenerationFailed` callback to the `useGenerationQueue` call (line 170). This callback will handle the error gracefully (set step back to settings, refresh balance) and the hook will skip its own fallback toasts.
-
-### 2. Remove the duplicate toast in activeJob watcher
-Remove the `toast.error(activeJob.error_message || ...)` at line 1489. The `onGenerationFailed` callback now handles it with a user-friendly message instead of the raw backend string.
-
-### 3. Show friendly error messages
-In the new `onGenerationFailed` callback, show clean messages:
-- Timeout: "Generation timed out. Your credits have been refunded."
-- Rate limit: "Too many generations at once. Please wait and try again."
-- Generic: "Generation failed. Your credits have been refunded — try again."
-
-## Files
-- `src/pages/Generate.tsx` only
-
+5) Verification checklist
+- Re-run Selfie / UGC Set with 8 outputs (same settings as failed case).
+- Confirm:
+  - progress reaches 8/8,
+  - results grid shows 8 images,
+  - no late switch back to 1 image,
+  - Download All ZIP contains all displayed images.
