@@ -555,10 +555,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     <div className="space-y-0 touch-auto">
       {/* ── Progress Header ── */}
       <div className="pb-5">
-        <div className="flex items-center justify-between mb-1.5">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {editingScheduleId ? 'Edit Drop' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
-          </h2>
+        <div className="flex items-center justify-end mb-1.5">
           <span className="text-xs text-muted-foreground font-mono sm:hidden">
             {step + 1}/{totalSteps}
           </span>
