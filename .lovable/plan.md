@@ -1,35 +1,33 @@
 
 
-# Revamp Press Page
+# Improve About Page
 
-## Remove
-- **Company at a Glance** section with fake stats (founded 2024, 25+ team, 2M+ images, etc.)
-- **Recent Coverage** section with fabricated TechCrunch/Retail Dive/The Verge mentions
-- **mediaMentions** and **brandFacts** data arrays
+## Changes
 
-## Keep & Improve
-- **Hero** — rewrite copy: "Press & Media Resources" focus, premium tone
-- **Brand Assets** — expand into a proper section with individual downloadable items (logo dark, logo white, brand colors, product screenshots) as visually distinct cards instead of a single "coming soon" button. Each card shows a preview and downloads a real asset from storage
-- **Brand Guidelines** — keep Logo Usage and Brand Voice cards, polish copy
-- **Press Inquiries** — expand into a more prominent, premium CTA section with hello@vovv.ai
+### 1. Copy the founder image into the project
+Copy the uploaded image to `src/assets/founder-tomas.jpg` for use in the component.
 
-## Add
-- **What is VOVV.AI** — a short 2-3 sentence section explaining the product truthfully: "AI-powered visual studio for e-commerce brands. Upload a product photo, generate studio-quality images across workflows — from virtual try-on to product listings — in seconds."
-- **Brand Colors** visual strip — show the actual primary color (dark navy `hsl(217 33% 17%)`) and accent (`hsl(210 17% 70%)`) as swatches inside the brand assets area
+### 2. Remove fake stats section
+The current stats (2M+ images, 5,000+ brands, etc.) are not real. Remove the entire stats section.
 
-## Brand Asset Downloads
-Generate real downloadable assets by creating SVG logos programmatically in the component:
-- **Logo Dark** (dark text on transparent) — rendered as inline SVG, downloaded via blob
-- **Logo White** (white text on transparent) — same approach
-- **Brand Colors** — download a small JSON/text file with hex values
+### 3. Refine hero and mission copy
+- Keep the hero message but tighten it — more professional, less startup-cliché
+- Refine mission/vision copy to sound grounded and credible
 
-Each asset card will have a preview thumbnail and a download button that triggers a client-side blob download (no storage upload needed).
+### 4. Keep the AI Team section and Values
+These are good and truthful — the AI team members are the product's virtual team. Keep as-is.
 
-## Visual Polish
-- Use subtle gradient backgrounds on hero section
-- Larger spacing, refined typography
-- Premium card styling with hover effects
+### 5. Add a "Founder" section at the bottom
+After the AI team section, add a minimal, elegant founder block:
+- Optimized photo of Tomas Simkus (rounded, professional)
+- Name: Tomas Simkus
+- Title: Founder
+- LinkedIn link (icon button) pointing to `https://www.linkedin.com/in/tomassimkusprofile/`
+- No bio text beyond what's truthful — just the name, title, and LinkedIn
 
-## File
-`src/pages/Press.tsx` — full rewrite of the component. No other files affected.
+### File: `src/pages/About.tsx`
+- Remove `stats` array and the stats `<section>`
+- Import the founder image from `@/assets/founder-tomas.jpg`
+- Add founder section after the team grid
+- Add LinkedIn icon from lucide-react (`Linkedin`)
 
