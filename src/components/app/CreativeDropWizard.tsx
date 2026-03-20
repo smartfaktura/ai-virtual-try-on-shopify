@@ -483,7 +483,22 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
 
       const resolvedModels = modelSelections.map(mId => {
         const m = allModels.find(am => am.id === mId);
-        return m ? { id: m.id, name: m.name, image_url: m.image_url } : null;
+        if (!m) return null;
+        // Try to find demographics from mockModels
+        const mockModel = mockModels.find(mm => mm.modelId === mId);
+        return {
+          id: m.id, name: m.name, image_url: m.image_url,
+          gender: mockModel?.gender || (m as any).gender || 'female',
+          ethnicity: mockModel?.ethnicity || (m as any).ethnicity || '',
+          bodyType: mockModel?.bodyType || (m as any).body_type || 'slim',
+          ageRange: mockModel?.ageRange || (m as any).age_range || '25-34',
+        };
+      }).filter(Boolean);
+
+      // Resolve full pose objects for try-on workflows
+      const resolvedPoses = poseSelections.map(pid => {
+        const p = allScenePoses.find(sp => sp.poseId === pid);
+        return p ? { poseId: p.poseId, name: p.name, description: p.description || p.promptHint || '', category: p.category, imageUrl: p.previewUrl } : null;
       }).filter(Boolean);
 
       const mappedSettings: Record<string, string> = {};
@@ -499,6 +514,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
           selected_scenes: isRandomScenesFlag ? ['__random__'] : selectedLabels,
           selected_variation_indices: isRandomScenesFlag ? [] : selectedVarIndicesArr,
           pose_ids: poseSelections,
+          poses: resolvedPoses,
           model_ids: isRandomModelsFlag ? ['__random__'] : modelSelections,
           models: isRandomModelsFlag ? [{ id: '__random__', name: 'Random / Diverse' }] : resolvedModels,
           custom_settings: customSettings,

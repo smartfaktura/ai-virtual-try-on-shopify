@@ -183,8 +183,8 @@ serve(async (req) => {
       const wfSceneConfig = sceneConfig[wfId] || {};
       const models = (wfSceneConfig.models || []) as Record<string, unknown>[];
       const hasModel = (wf.uses_tryon as boolean) || models.length > 0;
-      const hasCustomScene = false; // Future: detect custom scenes
       const costPerImage = hasModel ? 6 : 4;
+      const isTryOn = wf.uses_tryon as boolean;
 
       const variationIndices = (wfSceneConfig.selected_variation_indices || []) as number[];
       const aspectRatio = (wfSceneConfig.aspect_ratio || "1:1") as string;
@@ -199,6 +199,9 @@ serve(async (req) => {
       const effectiveProductIds = (wfProductIdOverrides && wfProductIdOverrides.length > 0)
         ? wfProductIdOverrides.filter(pid => productIds.includes(pid))
         : productIds;
+
+      // Resolve poses for try-on workflows
+      const poses = (wfSceneConfig.poses || []) as Record<string, unknown>[];
 
       // When image_count is pre-computed by the wizard (includes model multiplier),
       // send one job per product with all models embedded — don't loop per-model.
@@ -222,6 +225,62 @@ serve(async (req) => {
           imageUrl: productData.image_url,
         };
 
+        // For try-on workflows, iterate per model × per pose
+        if (isTryOn) {
+          const tryOnModels = allModels.length > 0 ? allModels : [null];
+          const tryOnPoses = poses.length > 0 ? poses : [{
+            name: "Studio Full Body",
+            description: "Full body studio shot, clean background",
+            category: "studio",
+          }];
+
+          for (const modelObj of tryOnModels) {
+            for (const poseObj of tryOnPoses) {
+              const creditCost = 1 * costPerImage; // 1 image per model×pose combo
+
+              const payload: Record<string, unknown> = {
+                workflow_id: wfId,
+                product_id: productId,
+                product: productObject,
+                imageCount: 1,
+                quality: "standard",
+                aspectRatio,
+                brand_profile: brandProfile,
+                theme: schedule.theme || undefined,
+                theme_notes: schedule.theme_notes || undefined,
+                creative_drop_id: "__placeholder__", // filled after drop record is created
+                pose: {
+                  name: poseObj.name,
+                  description: poseObj.description || "",
+                  category: poseObj.category || "studio",
+                  imageUrl: poseObj.imageUrl || undefined,
+                },
+                ...mappedSettings,
+              };
+
+              if (modelObj) {
+                payload.model = {
+                  name: modelObj.name,
+                  gender: modelObj.gender || "female",
+                  ethnicity: modelObj.ethnicity || "",
+                  bodyType: modelObj.bodyType || modelObj.body_type || "slim",
+                  ageRange: modelObj.ageRange || modelObj.age_range || "25-34",
+                  imageUrl: modelObj.image_url || modelObj.imageUrl,
+                };
+              }
+
+              jobPayloads.push({
+                jobType: "tryon",
+                payload,
+                creditCost,
+              });
+              totalCreditCost += creditCost;
+            }
+          }
+          continue; // skip non-tryon loop below
+        }
+
+        // Non-try-on workflows
         for (const model of modelList) {
           const creditCost = actualImageCount * costPerImage;
 
@@ -243,12 +302,10 @@ serve(async (req) => {
           };
 
           if (wizardPreComputed && allModels.length > 0) {
-            // Embed all models for the generation function to iterate
             payload.models = allModels.map((m: Record<string, unknown>) => ({
               name: m.name,
               imageUrl: m.image_url,
             }));
-            // Also set first model for backwards compat
             payload.model = {
               name: (allModels[0] as Record<string, unknown>).name,
               imageUrl: (allModels[0] as Record<string, unknown>).image_url,
@@ -261,7 +318,7 @@ serve(async (req) => {
           }
 
           jobPayloads.push({
-            jobType: (wf.uses_tryon as boolean) ? "tryon" : "workflow",
+            jobType: "workflow",
             payload,
             creditCost,
           });
