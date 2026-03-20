@@ -28,7 +28,7 @@ type UserProduct = Tables<'user_products'>;
 
 const MAX_IMAGES_PER_JOB = 4;
 const FREE_SCENE_LIMIT = 1;
-const PAID_SCENE_LIMIT = 3;
+const PAID_SCENE_LIMIT = 99;
 const FLAT_LAY_SURFACE_LIMIT = 6;
 
 const FLAT_LAY_AESTHETICS = [
@@ -276,7 +276,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             variant="ghost"
             size="sm"
             onClick={() => {
-              const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT;
+              const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : (variationStrategy?.variations.length || 0);
               const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : paidLimit;
               const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
               if (selectedVariationIndices.size > 0) {
@@ -286,7 +286,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               }
             }}
           >
-            {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : `Select ${isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT}`}
+            {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
           </Button>
           )}
         </div>
@@ -363,9 +363,8 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                           toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
                           return prev;
                         }
-                        const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT;
-                        if (!isFreeUser && next.size >= paidLimit) {
-                          toast.error(`Maximum ${paidLimit} ${isFlatLay ? 'surfaces' : 'scenes'} per generation.`);
+                        if (!isFreeUser && isFlatLay && next.size >= FLAT_LAY_SURFACE_LIMIT) {
+                          toast.error(`Maximum ${FLAT_LAY_SURFACE_LIMIT} surfaces per generation.`);
                           return prev;
                         }
                         next.add(i);

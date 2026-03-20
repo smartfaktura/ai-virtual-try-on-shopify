@@ -8,7 +8,6 @@ interface PoseCategorySectionProps {
   selectedPoseIds?: Set<string>;
   onSelectPose: (pose: TryOnPose) => void;
   selectedGender?: ModelGender;
-  maxSelectable?: number;
 }
 
 const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
@@ -27,7 +26,7 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   outdoor: { title: 'Outdoor', recommendation: 'Best for lifestyle & seasonal campaigns' },
 };
 
-export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender, maxSelectable }: PoseCategorySectionProps) {
+export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender }: PoseCategorySectionProps) {
   const info = categoryInfo[category];
   if (poses.length === 0) return null;
 
@@ -56,7 +55,7 @@ export function PoseCategorySection({ category, poses, selectedPoseId, selectedP
             onSelect={() => onSelectPose(pose)}
             selectedGender={selectedGender}
             selectionIndex={getSelectionIndex(pose.poseId)}
-            maxSelectable={maxSelectable}
+            
           />
         ))}
       </div>

@@ -47,7 +47,7 @@ import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 const MAX_IMAGES_PER_JOB = 4;
 const FREE_SCENE_LIMIT = 1;
-const PAID_SCENE_LIMIT = 3;
+const PAID_SCENE_LIMIT = 99;
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -732,12 +732,23 @@ export default function Generate() {
         next.delete(pose.poseId);
         nextMap.delete(pose.poseId);
       } else {
-        if (next.size >= maxScenes) {
-          toast.info(`You can select up to ${maxScenes} scene${maxScenes > 1 ? 's' : ''}${isFreeUser ? '. Upgrade for more.' : '.'}`);
+        if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
+          toast.info(`Free plan allows 1 scene per generation. Upgrade for more.`);
           return prev;
         }
         next.add(pose.poseId);
         nextMap.set(pose.poseId, pose);
+
+        // Credit warning for paid users
+        if (!isFreeUser) {
+          const newSceneCount = next.size;
+          const imgCount = parseInt(imageCount);
+          const prodCount = isMultiProductMode ? productQueue.length : 1;
+          const projectedCost = newSceneCount * imgCount * 6 * prodCount;
+          if (projectedCost > balance) {
+            toast.warning(`${newSceneCount} scenes will cost ${projectedCost} credits — you have ${balance}. Top up before generating.`, { duration: 4000 });
+          }
+        }
       }
       setSelectedPoseMap(nextMap);
       // Keep selectedPose in sync for backward compat
@@ -3141,16 +3152,16 @@ export default function Generate() {
                     <p className="text-sm text-muted-foreground">
                       {isFreeUser
                         ? 'Free plan: 1 scene per generation'
-                        : `Choose up to ${PAID_SCENE_LIMIT} scenes for your shoot`}
+                        : 'Select scenes for your shoot'}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {selectedPoses.size} / {isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT}
+                    {selectedPoses.size} selected{!isFreeUser && selectedPoses.size > 0 ? ` · ${selectedPoses.size * parseInt(imageCount) * 6 * (isMultiProductMode ? productQueue.length : 1)} credits` : ''}
                   </Badge>
                 </div>
               </div>
               {Object.entries(posesByCategory).map(([category, poses]) => (
-                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} maxSelectable={isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} />
+                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} />
               ))}
               <MissingRequestBanner
                 category="scene"
