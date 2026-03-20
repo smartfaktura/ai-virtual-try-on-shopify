@@ -1,22 +1,58 @@
 
-Goal: make workflow thumbnails in `/app/creative-drops` show the real image (not zoomed/cropped), while avoiding the ugly grey blocks.
 
-1) Fix thumbnail rendering in workflow list  
-- File: `src/components/app/CreativeDropWizard.tsx` (workflow card block around lines ~948–950)  
-- Change thumbnail image from `object-cover object-top` to `object-contain` so the full image is always visible.  
-- Keep square thumbnail size for compact layout, but remove the heavy grey fill (`bg-muted`) that makes letterboxing look broken.
+# Fix: Workflow Thumbnails & Scene Count Badges
 
-2) Improve thumbnail container styling (no “grey crop” look)  
-- Replace current container background with a cleaner neutral/transparent style (e.g. `bg-transparent` + subtle border).  
-- Add small inner padding so contained images don’t touch edges and remain readable.
+## Problem 1: Thumbnails look bad
+The `w-14 h-14` square with `object-contain` and `p-1` makes vertical workflow preview images appear as tiny slivers. The container is too small and `object-contain` doesn't work for portrait-oriented images in a square box.
 
-3) Prevent layout mismatch while loading  
-- Update loading skeleton thumbnail size to match the final thumbnail dimensions so UI doesn’t “jump” after load.
+**Fix**: Use a taller rectangular container (`w-16 h-20`, roughly 4:5) with `object-cover` and NO padding. This gives enough room for portrait images to display naturally without extreme cropping. The key difference from previous attempts: the container matches the natural portrait orientation of the source images, so `object-cover` only trims minimally.
 
-4) Keep text readability fix aligned  
-- In the same workflow card, switch description from `truncate` to `line-clamp-2` so users can still understand workflow context after thumbnail changes.
+## Problem 2: Scene counts are wrong
+The badge shows `variations.length` from `generation_config.variation_strategy.variations`. But:
+- **Virtual Try-On** has only 4 variations but dozens of actual scenes available (filtered `mockTryOnPoses`)
+- **Product Listing** similarly has many more actual scenes than variations
+- The count should reflect the real number of selectable scenes for each workflow
 
-5) Verification checklist after implementation  
-- In Step 2 (“Choose a Workflow”), confirm each workflow thumbnail shows full composition (no zoom-in crop).  
-- Confirm no grey letterbox blocks dominate thumbnails.  
-- Confirm card rows remain aligned and descriptions wrap cleanly to 2 lines.
+**Fix**: Calculate the correct scene count per workflow:
+- For `uses_tryon` workflows → count of `ON_MODEL_CATEGORIES` filtered scenes from `mockTryOnPoses`
+- For product workflows (no models) → count of `PRODUCT_CATEGORIES` filtered scenes
+- For workflows that use variations as scenes (Flat Lay, Mirror Selfie, Selfie/UGC, Perspectives) → keep `variations.length`
+
+Since `allScenePoses` depends on the *selected* workflow, we need to compute per-workflow scene counts inline.
+
+## Changes
+
+### File: `src/components/app/CreativeDropWizard.tsx`
+
+**A. Fix thumbnail container** (lines 948-950)
+```tsx
+// Before
+<div className="w-14 h-14 rounded-xl border border-border/50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+  <ShimmerImage src={...} className="max-w-full max-h-full object-contain" aspectRatio="1/1" />
+</div>
+
+// After
+<div className="w-16 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
+  <ShimmerImage src={...} className="w-full h-full object-cover object-top" aspectRatio="4/5" />
+</div>
+```
+No padding, no border, just a clean 4:5 rectangle with `object-cover object-top`. The 4:5 ratio closely matches the source images' portrait orientation, so minimal cropping occurs.
+
+**B. Fix scene count badge** (lines 954-957)
+Compute correct scene count per workflow card:
+```tsx
+const wfUsesVariationsOnly = !wf.uses_tryon && variations.length > 0;
+const wfSceneCount = wfUsesVariationsOnly
+  ? variations.length
+  : (() => {
+      const cats = wf.uses_tryon ? ON_MODEL_CATEGORIES : PRODUCT_CATEGORIES;
+      return filterVisible(mockTryOnPoses).filter(p => cats.includes(p.category)).length + customScenePoses.filter(p => cats.includes(p.category)).length;
+    })();
+```
+Then display `{wfSceneCount} scenes` instead of `{variations.length} scenes`. Only show the badge when count > 0.
+
+## Summary
+- 1 file, ~10 lines changed
+- Thumbnails use 4:5 portrait containers with `object-cover object-top` — no grey, no tiny slivers
+- Scene counts accurately reflect available scenes per workflow type
+
