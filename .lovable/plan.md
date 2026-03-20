@@ -1,53 +1,33 @@
 
-Do I know what the issue is? Yes.
 
-### What is actually broken
-1. **Only ~28/32 jobs are being enqueued**: your backend `enqueue_generation` SQL has a **burst limit of 25/min (Pro)**, so large batches get rate-limited.
-2. **Wrong progress text** (“27 of 2 products”): progress is counting completed **jobs**, but label says **products**.
-3. **Only 1 image shown in results**: after multi-job aggregation finishes, a single `activeJob` completion effect can overwrite `generatedImages` with one job’s result.
-4. **Grouping metadata is fragile**: parsing composite keys with `_` breaks for values like `close_up` (and IDs containing `_`), so grouping labels become unreliable.
-5. **No finalizing handoff UX** between “done” and results.
+# Fix Progress Banner Text, Results UI, and Toast Noise
 
-### Implementation plan
-1. **Fix enqueue rate-limit behavior (backend)**
-   - Update `enqueue_generation` SQL (new migration):
-     - Raise Pro burst threshold (so 32-image batches are supported).
-     - Return `retry_after_seconds` when burst-limited.
-   - Update `supabase/functions/enqueue-generation/index.ts`:
-     - Treat “Too many requests” as **429** (not 402 credit-like error).
+## Issues from Screenshots
+1. Banner says "Generating 0 jobs for 2 products" / "2 of 32 jobs done" — should say **images**, not jobs
+2. Toast "Queued 32 generations for 2 products" is unnecessary noise — remove it
+3. Est. time 6-11 min is too high — reduce per-image estimate from 15s to ~8s for 3-7 min range
+4. Results page shows a huge "VARIATIONS" section with 32 badges — remove it entirely
+5. Images are too large in results grid — use smaller thumbnails (5-6 columns)
+6. Images are separated into groups by label — show all in one flat grid instead
 
-2. **Make client enqueue fully resilient**
-   - In `src/pages/Generate.tsx` retry logic:
-     - Use `retry_after_seconds` + jitter for silent retries.
-     - Keep retrying until queued (or safe overall timeout), so batch doesn’t stop at 20-something.
-     - Never show “not enough credits” for rate-limit responses.
+## Changes
 
-3. **Replace brittle composite-key parsing**
-   - In `Generate.tsx`, store per-job metadata by `jobId` (`productId`, `productName`, `ratio`, `framing`, etc.).
-   - Build result labels and groups from metadata, not `split('_')`.
+### 1. MultiProductProgressBanner.tsx — Fix text + time estimate
+- Replace "jobs" with "images" everywhere: "2 of 32 images done", "Generating 32 images for 2 products"
+- Change `estimatePerImage` from 15 to 8 seconds (gives ~3-7 min for 32 images)
 
-4. **Fix result overwrite + progress correctness**
-   - In `Generate.tsx`:
-     - Prevent single-job watcher from running during/after multi-product completion handoff.
-     - Clear/reset queue watcher state before applying aggregated multi-job results.
-   - In `MultiProductProgressBanner.tsx`:
-     - Show both **jobs progress** and **products progress** correctly (no more “27 of 2 products”).
+### 2. Generate.tsx — Remove toast noise
+- Remove the 4 `toast.success("Queued ...")` calls (lines ~1016, ~1180, ~1353, ~1462)
 
-5. **Add completion handoff state**
-   - Add a short “Finalizing results, redirecting…” stage (1–2s) before showing results.
-   - Keep UI stable and avoid abrupt state jumps.
+### 3. Generate.tsx — Remove VARIATIONS section in results
+- Remove the "Variation labels" block (lines ~3996-4006) that renders all those badges
 
-6. **Scale behavior for many users**
-   - Queue architecture is correct (`SKIP LOCKED` claim pattern).
-   - Add a small dispatch cap in `process-queue` per run to avoid worker stampedes under multi-user bursts while keeping throughput stable.
+### 4. Generate.tsx — Flat grid with smaller thumbnails, no grouping
+- Remove the grouped rendering path (lines ~4042-4077) that splits images by label
+- Always use flat grid with more columns: `grid-cols-3 md:grid-cols-5 lg:grid-cols-6`
+- This makes thumbnails smaller — user clicks to enlarge via lightbox
 
-### Files to update
-- `src/pages/Generate.tsx`
+### Files to edit
 - `src/components/app/MultiProductProgressBanner.tsx`
-- `supabase/functions/enqueue-generation/index.ts`
-- `supabase/functions/process-queue/index.ts`
-- `supabase/migrations/<new_migration>.sql`
+- `src/pages/Generate.tsx`
 
-### Technical details
-- Verified from backend data: the affected run enqueued **28 try-on jobs** for the workflow, not 32.
-- Root cause chain: burst-limit throttling + UI state race (multi-job aggregation vs single activeJob effect) + key parsing fragility.
