@@ -1,43 +1,68 @@
 
 
-# Improve: Creative Drops Wizard — Details Step UX Overhaul
+# Rework: Creative Drops Wizard — Single Workflow Per Drop (Frontend Only)
 
 ## What Changes
 
-### File: `src/components/app/CreativeDropWizard.tsx` (Step 0 section, lines 618-686)
+The wizard currently allows multi-workflow selection, creating dynamic config steps per workflow. This is confusing and error-prone. We simplify to **1 workflow per drop** and merge selection + configuration into a single step.
 
-**1. Step Headline + Subtitle**
-Add a clear heading at the top of the Details step:
-- Title: "Name Your Drop" with a Sparkles icon
-- Subtitle: "Set up the basics — you'll pick products and workflows next."
+### Current Flow (6+ dynamic steps)
+```text
+Details → Products → Select Multiple Workflows → Config WF1 → Config WF2 → ... → Delivery → Review
+```
 
-**2. Visual Header**
-The Sparkles icon (already imported) placed next to the title in a subtle primary-tinted circle.
+### New Flow (4 fixed steps)
+```text
+Details → Products → Workflow (select + configure) → Launch (delivery + review merged)
+```
 
-**3. Rotating Placeholders**
-Replace static "Spring Campaign" placeholder with a cycling set of examples: "Summer Vibes 2026", "Black Friday Launch", "New Arrivals — March", "Holiday Collection". Uses a `useMemo` with a random pick on mount.
+## File: `src/components/app/CreativeDropWizard.tsx` (single file, ~1982 lines)
 
-**4. Theme Preview Chip**
-When a seasonal preset is selected, show a small colored preview chip below the theme buttons with the preset's icon + a short mood phrase (e.g., "Fresh pastels, blooming flowers").
+### A. Simplify State (lines 161-214)
+- `selectedWorkflowIds: Set<string>` → `selectedWorkflowId: string | null`
+- Remove all per-workflow `Record<string, ...>` maps (`workflowSceneSelections`, `workflowModelSelections`, `workflowPoseSelections`, `workflowCustomSettings`, `imagesPerWorkflow`, `workflowProductIds`, `workflowFormats`, `randomModels`, `randomScenes`, `customImageCounts`)
+- Replace with flat state: `sceneSelections: Set<string>`, `modelSelections: string[]`, `poseSelections: string[]`, `customSettings: Record<string, string>`, `imageCount: number`, `formats: string[]`, `isRandomModels: boolean`, `isRandomScenes: boolean`
 
-**5. Smart Auto-naming**
-When a seasonal preset is picked and the name field is still empty, auto-fill the name with e.g., "Summer Drop — March 2026".
+### B. Fix Step Calculation (lines 301-310)
+- Remove dynamic `configStepCount`. Fixed 4 steps: `totalSteps = 4`
+- Step 0: Details, Step 1: Products, Step 2: Workflow, Step 3: Launch
+- Remove `isConfigStep`, `configWorkflowIndex`, `configWorkflow` — replaced by checking `step === 2`
+- Stepper labels: `['Details', 'Products', 'Workflow', 'Launch']`
 
-**6. Brand Profile Preview Card**
-When a brand profile is selected, show a compact inline card below the select with the brand name and a subtle badge. If the profile has colors or a description, show a preview snippet.
+### C. Step 2: Merge Select + Configure (lines 914-1587)
+- **Top section**: Workflow card grid (single-select — clicking one deselects previous). Same cards as current step 2 but with radio-style selection instead of checkbox
+- **Below (when workflow selected)**: Show the full config panel inline — scenes, models, poses, formats, image count, custom settings. This is the exact same UI as current config steps (lines 1032-1587) but without the per-workflow `wf.id` key lookups — just uses flat state directly
+- Remove the separate config step rendering entirely
 
-**7. Progress Hint / Next Step Nudge**
-Add a small muted line at the bottom: "Next: Select products →" to orient the user.
+### D. Step 3: Merge Delivery + Review (lines 1589-1924)
+- Combine the Schedule/Delivery section and the Review section into one scrollable step called "Launch"
+- Show delivery options at top, then review summary below, then the submit button
 
-**8. Drop Goal Selector (chips)**
-Add optional goal chips above the theme section: "Product Launch", "Social Content", "Seasonal Campaign", "Brand Awareness". Stored in state but purely cosmetic/organizational for now — no backend impact.
+### E. Update Validation (lines 358-406)
+- Step 2: `selectedWorkflowId !== null` + scene/model requirements (same logic as current `isConfigStep` validation but on flat state)
+- Step 3: delivery validation (same as current `scheduleStepIndex`)
 
-**9. Collapsible Brand Profile**
-Wrap the Brand Profile section in a Collapsible with a subtle "Brand profile (optional)" trigger, defaulting to collapsed. Opens if a brand is already selected.
+### F. Update Save Logic (lines 426-562)
+- Build `sceneConfig` with single workflow entry: `{ [selectedWorkflowId]: { ... } }`
+- `workflow_ids` becomes `[selectedWorkflowId]`
+- All config reads from flat state instead of `Record<string, ...>[wf.id]`
 
-**10. Character Counter on Drop Name**
-Show a `{name.length}/60` counter below the input, with the counter turning amber at 50+ and red at 60.
+### G. Update Credit Calculation (lines 328-343)
+- Single `WorkflowCostConfig` instead of mapping over `selectedWorkflowsList`
 
-## Files
-- `src/components/app/CreativeDropWizard.tsx` — all changes in the step 0 render block and minor state additions
+### H. Update `CreativeDropWizardInitialData` interface (lines 70-90)
+- `selectedWorkflowIds: string[]` → keep as array for DB compat but only use `[0]`
+- Remove per-workflow map types, add flat equivalents
+
+## What's NOT Changing
+- Database schema — `workflow_ids` stays as array, `scene_config` stays as JSON
+- Backend edge functions — no changes
+- Step 0 (Details) — keep as-is with all the recent UX improvements
+- Step 1 (Products) — keep as-is
+- The Freestyle prompts section moves into the Workflow step as a collapsible
+
+## Estimated Impact
+- ~400 lines removed (multi-workflow maps, dynamic step indexing, per-workflow config loops)
+- ~100 lines simplified (flat state instead of keyed lookups)
+- Net reduction of ~300 lines
 
