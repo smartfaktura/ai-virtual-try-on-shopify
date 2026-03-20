@@ -108,6 +108,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       resolution: anchor.resolution ?? null,
       totalImageCount,
       generatedImageCount,
+      isCreativeDrop: batch.some((j) => !!j.creative_drop_id),
     });
   }
 
