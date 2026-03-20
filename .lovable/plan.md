@@ -1,33 +1,77 @@
 
 
-# Fix Creative Drops: Remove Toast, Label Generation Bar, Add Schedule Feedback
+# Creative Drop Try-On Generation: Silent Failure
 
-## Issues
+## Root Cause
 
-1. **Unnecessary toast**: "Drop created — generating now!" toast in `CreativeDropWizard.tsx` (line 556) is redundant — the GlobalGenerationBar already shows processing status.
+The creative drop job has been stuck in `processing` for 5+ minutes because `generate-tryon` receives the payload but it's **missing required fields**, causing a 400 response that nobody reads (fire-and-forget dispatch). No logs appear because the function returns before reaching any `console.log` statement.
 
-2. **GlobalGenerationBar shows generic "Generation"**: Creative drop jobs have `creative_drop_id` in their payload but the bar just shows the workflow name (e.g., "Generation"). It should say "Creative Drop" or the drop/schedule name to distinguish from regular generations.
+**Two missing data structures in `trigger-creative-drop`:**
 
-3. **Schedule card has no feedback after "Generate Now"**: After the wizard triggers a drop, the Schedules tab shows the same static card. No indicator that generation is in progress. The user should see a "Generating…" state on the schedule card, or be auto-switched to the Drops tab.
+### 1. Missing `pose` object (CRITICAL — causes instant 400)
+`generate-tryon` checks `if (!body.product || !body.model || !body.pose)` at line 565 and returns 400. The creative drop payload has no `pose` field at all. The wizard saves `pose_ids` (e.g., `["custom-1200035f-..."]`) in `scene_config`, but `trigger-creative-drop` never resolves these IDs into pose objects.
 
-## Changes
+### 2. Incomplete `model` object (causes bad prompts)
+`generate-tryon` expects `model: { name, gender, ethnicity, bodyType, ageRange, imageUrl }`. The creative drop only sends `{ name, imageUrl }` — missing 4 fields. The wizard saves models as `{ id, name, image_url }` without demographic data.
 
-### File 1: `src/components/app/CreativeDropWizard.tsx`
-- **Line 556**: Remove `toast.success('Drop created — generating now!')` — the GlobalGenerationBar and the Drops tab provide feedback already.
+## Fix
 
-### File 2: `src/components/app/GlobalGenerationBar.tsx`
-- **Lines 192-196**: Check if `payload.creative_drop_id` exists on the job. If so, label the group as `"Creative Drop"` instead of the workflow name. Update the `ActiveJob` type and `groupJobsIntoBatches` input to pass through `creative_drop_id`.
-- Also update the "View in Workflows" button to say "View in Creative Drops" and navigate to `/app/creative-drops` when the job is a creative drop job.
+### File 1: `supabase/functions/trigger-creative-drop/index.ts`
 
-### File 3: `src/pages/CreativeDrops.tsx`
-- After wizard `onSuccess` with `isNow`, auto-switch to the **Drops** tab (`setActiveTab('drops')`) so the user immediately sees the generating drop card with progress bar.
+**A. Resolve pose data for try-on workflows (~25 lines)**
 
-### File 4: `src/lib/batchGrouping.ts`
-- Add `creative_drop_id` field to `ActiveJob` interface so the GlobalGenerationBar can detect creative drop jobs.
+After reading `sceneConfig`, for try-on workflows:
+1. Read `pose_ids` from `wfSceneConfig`
+2. For IDs starting with `custom-`, query `custom_scenes` table (strip prefix)
+3. For standard IDs (e.g., `pose_001`), use a hardcoded lookup of the mock poses (same data as `mockTryOnPoses` — name, description, category)
+4. Build a `pose` object: `{ name, description, category, imageUrl? }` for each pose
+5. If multiple poses, loop per-pose (each generates separately). If none, use a default studio pose.
+
+**B. Resolve full model demographics (~15 lines)**
+
+For try-on workflows, enrich the `model` object with `gender`, `ethnicity`, `bodyType`, `ageRange`:
+1. For standard model IDs (e.g., `model_035`), use a hardcoded lookup matching `mockModels` data
+2. For custom models (from DB), query `custom_models` table for metadata — or fall back to reasonable defaults (`gender: 'female'`, `bodyType: 'slim'`, etc.)
+
+**C. Restructure job loop for try-on (~10 lines)**
+
+Currently iterates `products × models`. For try-on, must iterate `products × models × poses`, creating one job per combination. Each job gets a fully resolved `pose` and `model` object.
+
+### File 2: `supabase/functions/trigger-creative-drop/index.ts` (add logging)
+
+Add a `console.warn` when a try-on job is built without pose data as a safety net.
+
+### File 3: `src/components/app/CreativeDropWizard.tsx`
+
+Save full model demographics alongside the basic model data in `scene_config.models`:
+```ts
+return m ? { 
+  id: m.id, name: m.name, image_url: m.image_url,
+  gender: mockModel?.gender, ethnicity: mockModel?.ethnicity,
+  bodyType: mockModel?.bodyType, ageRange: mockModel?.ageRange
+} : null;
+```
+
+Save full pose objects alongside `pose_ids` in `scene_config.poses`:
+```ts
+poses: poseSelections.map(pid => {
+  const p = allScenePoses.find(sp => sp.poseId === pid);
+  return p ? { poseId: p.poseId, name: p.name, description: p.description, category: p.category, imageUrl: p.previewUrl } : null;
+}).filter(Boolean),
+```
+
+This way `trigger-creative-drop` has all the data it needs without hardcoding mock data on the backend.
+
+## Also Fix: Stuck Job Cleanup
+
+The current stuck job (`0a644a6f`) should be cleaned up by `cleanup_stale_jobs` (runs at the start of every `process-queue` call, cleans jobs processing > 5 min). But we should also add a `console.log` before the 400 return in `generate-tryon` so future issues are visible in logs.
+
+### File 4: `supabase/functions/generate-tryon/index.ts`
+Add `console.error("[generate-tryon] Missing required fields", { hasProduct: !!body.product, hasModel: !!body.model, hasPose: !!body.pose })` before the 400 return on line 565.
 
 ## Summary
-- 4 files, ~15 lines changed
-- Removes redundant toast
-- Labels creative drop jobs distinctly in the global bar
-- Auto-switches to Drops tab after launching so user sees progress immediately
+- **Root cause**: `trigger-creative-drop` doesn't build `pose` objects for try-on jobs — `generate-tryon` immediately rejects with 400 (silently)
+- **Fix approach**: Store full pose & model data from the wizard, forward it in `trigger-creative-drop`
+- 3 files changed, ~60 lines added
+- Fixes both the missing pose (crash) and missing model demographics (bad prompts)
 
