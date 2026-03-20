@@ -85,7 +85,9 @@ export function MultiProductProgressBanner({
         <span className="font-medium">
           {completedCount > 0
             ? `${completedCount} of ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} done`
-            : `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} product${totalProducts !== 1 ? 's' : ''}`}
+            : totalProducts > 1
+              ? `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} products`
+              : `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''}...`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
@@ -137,13 +139,13 @@ export function MultiProductProgressBanner({
         </div>
       )}
 
-      {/* Active job indicator with team avatar — suppress "completed" while batch is still running */}
-      {activeJob && !(activeJob.status === 'completed' && completedCount < totalJobCount) && (
+      {/* Active job indicator — only show QueuePositionIndicator when entire batch is complete */}
+      {activeJob && completedCount >= totalJobCount && (
         <QueuePositionIndicator job={activeJob} onCancel={onCancel} />
       )}
 
-      {/* Rotating team message (fallback when no activeJob) */}
-      {!activeJob && (
+      {/* Rotating team message — show during active generation */}
+      {completedCount < totalJobCount && (
         <div className="flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
           <Avatar className="w-6 h-6 border border-border">
             <AvatarImage src={currentMember.avatar} alt={currentMember.name} />

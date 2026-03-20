@@ -13,6 +13,7 @@ import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 const teamAvatar = (file: string) => getLandingAssetUrl(`team/${file}`);
 const avatarSophia = teamAvatar('avatar-sophia.jpg');
@@ -4089,7 +4090,7 @@ export default function Generate() {
               <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                    <img src={url} alt={`Generated ${index + 1}`} className="w-full object-cover aspect-auto bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
+                    <ShimmerImage src={url} alt={`Generated ${index + 1}`} className="w-full object-cover aspect-auto rounded" wrapperClassName="bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
                       <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size"><Maximize2 className="w-3.5 h-3.5" /></button>
                       <button onClick={e => { e.stopPropagation(); handleDownloadImage(index); }} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Download"><Download className="w-3.5 h-3.5" /></button>
