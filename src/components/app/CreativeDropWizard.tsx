@@ -1015,36 +1015,57 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     {/* Images count */}
                     <div className="space-y-3">
                       <p className="section-label">Images per Product</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {IMAGE_PRESETS.map(n => (
-                          <Button
-                            key={n}
-                            variant={imageCount === n && !customImageCountStr ? 'default' : 'outline'}
-                            onClick={() => {
-                              setImageCount(n);
-                              setCustomImageCountStr('');
-                              markDirty();
+                      {isMixMode ? (
+                        <>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {IMAGE_PRESETS.map(n => (
+                              <Button
+                                key={n}
+                                variant={imageCount === n && !customImageCountStr ? 'default' : 'outline'}
+                                onClick={() => {
+                                  setImageCount(n);
+                                  setCustomImageCountStr('');
+                                  markDirty();
+                                }}
+                                className="h-11 rounded-xl"
+                              >
+                                {n}
+                              </Button>
+                            ))}
+                          </div>
+                          <Input
+                            type="number"
+                            placeholder="Custom amount"
+                            value={customImageCountStr}
+                            onChange={e => {
+                              setCustomImageCountStr(e.target.value);
+                              const val = parseInt(e.target.value);
+                              if (val > 0) {
+                                setImageCount(val);
+                                markDirty();
+                              }
                             }}
                             className="h-11 rounded-xl"
-                          >
-                            {n}
-                          </Button>
-                        ))}
-                      </div>
-                      <Input
-                        type="number"
-                        placeholder="Custom amount"
-                        value={customImageCountStr}
-                        onChange={e => {
-                          setCustomImageCountStr(e.target.value);
-                          const val = parseInt(e.target.value);
-                          if (val > 0) {
-                            setImageCount(val);
-                            markDirty();
-                          }
-                        }}
-                        className="h-11 rounded-xl"
-                      />
+                          />
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted/50 border border-border">
+                          <Calculator className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <p className="text-sm text-muted-foreground">
+                            {(() => {
+                              const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+                              const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
+                              const formatCount = Math.max(formats.length, 1);
+                              const parts: string[] = [];
+                              if (effectiveScenes > 1 || variations.length > 0) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                              if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
+                              if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
+                              const formula = parts.length > 0 ? parts.join(' × ') + ' = ' : '';
+                              return <>{formula}<span className="font-semibold text-foreground">{computedImageCount} image{computedImageCount !== 1 ? 's' : ''}</span> per product</>;
+                            })()}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Formats */}
