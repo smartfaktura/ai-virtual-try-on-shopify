@@ -1,77 +1,48 @@
 
 
-# Creative Drop Try-On Generation: Silent Failure
+# Fix: Post-Launch UX — Show Generating Drop Immediately
 
-## Root Cause
+## Problem
 
-The creative drop job has been stuck in `processing` for 5+ minutes because `generate-tryon` receives the payload but it's **missing required fields**, causing a 400 response that nobody reads (fire-and-forget dispatch). No logs appear because the function returns before reaching any `console.log` statement.
-
-**Two missing data structures in `trigger-creative-drop`:**
-
-### 1. Missing `pose` object (CRITICAL — causes instant 400)
-`generate-tryon` checks `if (!body.product || !body.model || !body.pose)` at line 565 and returns 400. The creative drop payload has no `pose` field at all. The wizard saves `pose_ids` (e.g., `["custom-1200035f-..."]`) in `scene_config`, but `trigger-creative-drop` never resolves these IDs into pose objects.
-
-### 2. Incomplete `model` object (causes bad prompts)
-`generate-tryon` expects `model: { name, gender, ethnicity, bodyType, ageRange, imageUrl }`. The creative drop only sends `{ name, imageUrl }` — missing 4 fields. The wizard saves models as `{ id, name, image_url }` without demographic data.
+After clicking "Generate Now":
+1. Wizard closes instantly via `onClose()`
+2. Tab switches to "Drops" via `onLaunched()`
+3. But the drops query hasn't refetched yet — the new "generating" drop doesn't exist in the cache
+4. User sees "No drops yet" empty state or stale data — no indication anything is happening
+5. The only feedback is the small GlobalGenerationBar pill in the bottom-right corner
 
 ## Fix
 
-### File 1: `supabase/functions/trigger-creative-drop/index.ts`
+### File 1: `src/components/app/CreativeDropWizard.tsx` (~lines 568-590)
 
-**A. Resolve pose data for try-on workflows (~25 lines)**
+**Don't close the wizard immediately after triggering.** Instead:
+1. After successful `trigger-creative-drop` invoke, wait for the drops query to refetch before closing
+2. Add a brief "Launching your drop..." loading state with a spinner before closing
+3. Use `await queryClient.invalidateQueries({ queryKey: ['creative-drops'] })` (awaited!) so the drop appears in the list before closing
 
-After reading `sceneConfig`, for try-on workflows:
-1. Read `pose_ids` from `wfSceneConfig`
-2. For IDs starting with `custom-`, query `custom_scenes` table (strip prefix)
-3. For standard IDs (e.g., `pose_001`), use a hardcoded lookup of the mock poses (same data as `mockTryOnPoses` — name, description, category)
-4. Build a `pose` object: `{ name, description, category, imageUrl? }` for each pose
-5. If multiple poses, loop per-pose (each generates separately). If none, use a default studio pose.
-
-**B. Resolve full model demographics (~15 lines)**
-
-For try-on workflows, enrich the `model` object with `gender`, `ethnicity`, `bodyType`, `ageRange`:
-1. For standard model IDs (e.g., `model_035`), use a hardcoded lookup matching `mockModels` data
-2. For custom models (from DB), query `custom_models` table for metadata — or fall back to reasonable defaults (`gender: 'female'`, `bodyType: 'slim'`, etc.)
-
-**C. Restructure job loop for try-on (~10 lines)**
-
-Currently iterates `products × models`. For try-on, must iterate `products × models × poses`, creating one job per combination. Each job gets a fully resolved `pose` and `model` object.
-
-### File 2: `supabase/functions/trigger-creative-drop/index.ts` (add logging)
-
-Add a `console.warn` when a try-on job is built without pose data as a safety net.
-
-### File 3: `src/components/app/CreativeDropWizard.tsx`
-
-Save full model demographics alongside the basic model data in `scene_config.models`:
-```ts
-return m ? { 
-  id: m.id, name: m.name, image_url: m.image_url,
-  gender: mockModel?.gender, ethnicity: mockModel?.ethnicity,
-  bodyType: mockModel?.bodyType, ageRange: mockModel?.ageRange
-} : null;
+Change the `onSuccess` flow:
+```
+onLaunched?.();                    // switch tab to "drops" 
+await queryClient.invalidateQueries({ queryKey: ['creative-drops'] });  // wait for fresh data
+await queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
+onClose();                         // NOW close wizard
 ```
 
-Save full pose objects alongside `pose_ids` in `scene_config.poses`:
-```ts
-poses: poseSelections.map(pid => {
-  const p = allScenePoses.find(sp => sp.poseId === pid);
-  return p ? { poseId: p.poseId, name: p.name, description: p.description, category: p.category, imageUrl: p.previewUrl } : null;
-}).filter(Boolean),
-```
+Also add `setIsLaunching(true)` state before the trigger call and show a fullscreen "Launching..." overlay on the wizard so the user knows something is happening.
 
-This way `trigger-creative-drop` has all the data it needs without hardcoding mock data on the backend.
+### File 2: `src/pages/CreativeDrops.tsx` (~line 246)
 
-## Also Fix: Stuck Job Cleanup
+**Call `onLaunched` BEFORE `onClose`** — currently `onLaunched` sets the tab, but `onClose` resets wizard state. The order in the wizard already handles this correctly (line 582 calls `onLaunched`, line 590 calls `onClose`). No change needed here.
 
-The current stuck job (`0a644a6f`) should be cleaned up by `cleanup_stale_jobs` (runs at the start of every `process-queue` call, cleans jobs processing > 5 min). But we should also add a `console.log` before the 400 return in `generate-tryon` so future issues are visible in logs.
+### File 3: `src/components/app/DropCard.tsx` (~line 301)
 
-### File 4: `supabase/functions/generate-tryon/index.ts`
-Add `console.error("[generate-tryon] Missing required fields", { hasProduct: !!body.product, hasModel: !!body.model, hasPose: !!body.pose })` before the 400 return on line 565.
+**Make generating drop cards more prominent:**
+- Add a subtle pulsing border animation for `generating` status cards
+- Make the card clickable even during generating (currently only `ready` cards are clickable)
 
 ## Summary
-- **Root cause**: `trigger-creative-drop` doesn't build `pose` objects for try-on jobs — `generate-tryon` immediately rejects with 400 (silently)
-- **Fix approach**: Store full pose & model data from the wizard, forward it in `trigger-creative-drop`
-- 3 files changed, ~60 lines added
-- Fixes both the missing pose (crash) and missing model demographics (bad prompts)
+- 2 files changed, ~15 lines
+- Key fix: await query invalidation before closing wizard so the generating drop card is visible
+- Add "Launching..." state to the wizard button so user sees immediate feedback
+- Add visual emphasis to generating drop cards
 
