@@ -399,6 +399,10 @@ export default function CreativeDrops() {
             </TabsContent>
           </Tabs>
 
+          <div className="mt-6">
+            <FeedbackBanner />
+          </div>
+
           {selectedDrop && (
             <DropDetailModal
               open={!!selectedDrop}
