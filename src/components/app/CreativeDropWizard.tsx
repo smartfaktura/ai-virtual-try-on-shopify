@@ -1913,7 +1913,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           ) : (
             <Button
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || (deliveryMode === 'now' && profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance)}
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               {saveMutation.isPending

@@ -200,8 +200,12 @@ serve(async (req) => {
         ? wfProductIdOverrides.filter(pid => productIds.includes(pid))
         : productIds;
 
-      // For model-based workflows, generate per-model; otherwise just once per product
-      const modelList = models.length > 0 ? models : [null];
+      // When image_count is pre-computed by the wizard (includes model multiplier),
+      // send one job per product with all models embedded — don't loop per-model.
+      // Only loop per-model when image_count is NOT pre-computed.
+      const wizardPreComputed = perWfImageCount != null;
+      const modelList = (!wizardPreComputed && models.length > 0) ? models : [null];
+      const allModels = models.length > 0 ? models : [];
 
       for (const productId of effectiveProductIds) {
         const productData = productMap.get(productId);
@@ -238,7 +242,18 @@ serve(async (req) => {
             ...mappedSettings,
           };
 
-          if (model) {
+          if (wizardPreComputed && allModels.length > 0) {
+            // Embed all models for the generation function to iterate
+            payload.models = allModels.map((m: Record<string, unknown>) => ({
+              name: m.name,
+              imageUrl: m.image_url,
+            }));
+            // Also set first model for backwards compat
+            payload.model = {
+              name: (allModels[0] as Record<string, unknown>).name,
+              imageUrl: (allModels[0] as Record<string, unknown>).image_url,
+            };
+          } else if (model) {
             payload.model = {
               name: (model as Record<string, unknown>).name,
               imageUrl: (model as Record<string, unknown>).image_url,
