@@ -61,10 +61,10 @@ export function MultiProductProgressBanner({
   const totalProducts = productQueue.length;
   const completedCount = multiProductResults.size;
   const totalImages = totalExpectedImages || totalProducts;
-  const estimatePerImage = 90; // seconds per image for try-on / pro model
+  const estimatePerImage = 15; // seconds per image (realistic for standard quality)
   const totalEstimate = totalImages * estimatePerImage;
   const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
-  const estHighMin = Math.ceil((totalEstimate * 1.3) / 60);
+  const estHighMin = Math.max(estLowMin, Math.ceil((totalEstimate * 1.3) / 60));
 
   const ratio = elapsed / totalEstimate;
   const overtimeMsg = ratio >= 2
@@ -80,7 +80,9 @@ export function MultiProductProgressBanner({
       {/* Header with counts and elapsed */}
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
-          {completedCount} of {totalProducts} products{totalExpectedImages ? ` · ${totalImages} images` : ''}
+          {completedCount > 0
+            ? `${completedCount} of ${totalProducts} product${totalProducts !== 1 ? 's' : ''} done`
+            : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} product${totalProducts !== 1 ? 's' : ''}`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
