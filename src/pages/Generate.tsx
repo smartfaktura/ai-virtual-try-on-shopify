@@ -3806,8 +3806,20 @@ export default function Generate() {
               </p>
             </div>
 
+            {/* Finalizing handoff overlay */}
+            {isFinalizingResults && (
+              <div className="w-full max-w-md text-center space-y-3">
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="font-medium">Finalizing results…</span>
+                </div>
+                <Progress value={100} className="h-2" />
+                <p className="text-xs text-muted-foreground">Preparing your images for review</p>
+              </div>
+            )}
+
             {/* Multi-product progress banner */}
-            {isMultiProductMode && (
+            {isMultiProductMode && !isFinalizingResults && (
               <MultiProductProgressBanner
                 productQueue={productQueue}
                 multiProductResults={multiProductResults}
@@ -3816,6 +3828,7 @@ export default function Generate() {
                 activeJob={activeJob}
                 onCancel={cancelQueue}
                 totalExpectedImages={productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount}
+                totalJobs={multiProductJobIds.size}
               />
             )}
 

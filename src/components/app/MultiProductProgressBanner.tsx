@@ -20,6 +20,7 @@ interface MultiProductProgressBannerProps {
   activeJob?: QueueJob | null;
   onCancel?: () => void;
   totalExpectedImages?: number;
+  totalJobs?: number;
 }
 
 function formatElapsed(seconds: number): string {
