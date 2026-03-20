@@ -99,7 +99,7 @@ export default function Press() {
             <Card className="group bg-card border-border hover:border-primary/30 transition-all hover:shadow-lg">
               <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
                 <div className="w-full h-24 rounded-lg bg-muted/50 flex items-center justify-center p-4">
-                  <span className="text-2xl font-extrabold tracking-widest text-foreground">VOVV<span className="text-muted-foreground">.AI</span></span>
+                  <span className="text-2xl font-extrabold tracking-widest text-foreground">VOVV.AI</span>
                 </div>
                 <div>
                   <p className="font-semibold text-foreground text-sm">Logo — Dark</p>
