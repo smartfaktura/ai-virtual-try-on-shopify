@@ -202,7 +202,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const v = initialData.workflowFormats[initWfId];
       return Array.isArray(v) ? v : [v];
     }
-    return ['1:1'];
+    return [];
   });
   const [isRandomModelsFlag, setIsRandomModelsFlag] = useState(false);
   const [isRandomScenesFlag, setIsRandomScenesFlag] = useState(false);
@@ -389,6 +389,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         if ((selectedWorkflow.uses_tryon || uiConfig?.show_model_picker) && !isRandomModelsFlag && modelSelections.length === 0) {
           return 'Select at least one model or enable Random';
         }
+        if (formats.length === 0) return 'Select at least one aspect ratio';
         if (imageCount <= 0) return 'Set the number of images';
       }
     }
