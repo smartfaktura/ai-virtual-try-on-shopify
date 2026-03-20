@@ -3579,11 +3579,13 @@ export default function Generate() {
           />
         )}
 
-        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPoses.size > 0 && (
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModels.size > 0 && selectedPoses.size > 0 && (
           <TryOnSettingsPanel
             selectedProduct={selectedProduct}
             scratchUpload={scratchUpload}
-            selectedModel={selectedModel}
+            selectedModel={selectedModel!}
+            selectedModels={selectedModels}
+            selectedModelMap={selectedModelMap}
             selectedPose={selectedPose}
             selectedPoses={selectedPoses}
             selectedPoseMap={selectedPoseMap}
