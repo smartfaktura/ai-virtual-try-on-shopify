@@ -292,6 +292,15 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     [workflows, selectedWorkflowId]
   );
 
+  // Workflow type detection
+  const isFlatLay = selectedWorkflow?.name?.toLowerCase().includes('flat lay') ?? false;
+  const isMirrorSelfie = selectedWorkflow?.name === 'Mirror Selfie Set';
+  const isSelfieUgc = !isMirrorSelfie && (selectedWorkflow?.name?.toLowerCase().includes('selfie') || selectedWorkflow?.name?.toLowerCase().includes('ugc')) || false;
+  const isPerspectives = selectedWorkflow?.name?.toLowerCase().includes('perspectives') ?? false;
+  const isProductListing = selectedWorkflow?.name?.toLowerCase().includes('product listing') ?? false;
+  const hasVariations = !!((selectedWorkflow?.generation_config as any)?.variation_strategy?.variations?.length);
+  const useVariationsAsScenes = hasVariations && !selectedWorkflow?.uses_tryon;
+
   const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
   const PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor'];
 
