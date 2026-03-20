@@ -55,7 +55,7 @@ export function PoseCategorySection({ category, poses, selectedPoseId, selectedP
             onSelect={() => onSelectPose(pose)}
             selectedGender={selectedGender}
             selectionIndex={getSelectionIndex(pose.poseId)}
-            maxSelectable={maxSelectable}
+            
           />
         ))}
       </div>
