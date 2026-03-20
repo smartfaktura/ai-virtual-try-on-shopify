@@ -37,7 +37,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each generation costs credits based on the mode: Workflows and Freestyle cost 6 credits per image. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
+        a: 'Each generation costs credits based on the mode: Workflows cost 6 credits per image. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
       },
       {
         q: 'What happens if I run out of credits?',
