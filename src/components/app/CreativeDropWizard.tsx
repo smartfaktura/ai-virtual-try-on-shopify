@@ -39,6 +39,9 @@ import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditC
 import type { Workflow } from '@/types/workflow';
 import { useNavigate } from 'react-router-dom';
 import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
 const opt = (url: string) => getOptimizedUrl(url, { width: 120, quality: 60 });
 
@@ -104,9 +107,7 @@ const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', w: 16, h: 9 },
 ];
 
-const fashionPoses = mockTryOnPoses.filter(p =>
-  ['studio', 'lifestyle', 'editorial', 'streetwear'].includes(p.category)
-);
+// Full scene list is built inside the component using hooks
 
 const mockModelItems = mockModels.map(m => ({
   id: m.modelId,
@@ -167,12 +168,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(initWfId);
 
   // Flat config state (for the single selected workflow)
-  const [sceneSelections, setSceneSelections] = useState<Set<string>>(() => {
-    if (initWfId && initialData?.workflowSceneSelections?.[initWfId]) {
-      return new Set(initialData.workflowSceneSelections[initWfId]);
-    }
-    return new Set();
-  });
+  // sceneSelections removed — scene selection is now purely through poseSelections (Scene Library)
   const [modelSelections, setModelSelections] = useState<string[]>(() => {
     if (initWfId && initialData?.workflowModelSelections?.[initWfId]) {
       return initialData.workflowModelSelections[initWfId];
@@ -272,6 +268,21 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
   });
 
+  // Full scene list (all categories + custom scenes)
+  const { asPoses: customScenePoses } = useCustomScenes();
+  const { filterVisible } = useHiddenScenes();
+  const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
+
+  const allScenePoses = useMemo(() => {
+    const raw = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customScenePoses]);
+    return sortScenes(raw);
+  }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides]);
+
+  const sceneCategories = useMemo(() => {
+    const order = deriveCategoryOrder(allScenePoses);
+    return order.length > 0 ? order : Object.keys(poseCategoryLabels);
+  }, [allScenePoses, deriveCategoryOrder]);
+
   const allModels = [
     ...mockModelItems,
     ...(customModels || []).map((m: any) => ({
@@ -294,14 +305,13 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     if (campaignMode === 'mix') return imageCount;
     if (!selectedWorkflow) return imageCount;
     const genConfig = selectedWorkflow.generation_config as any;
-    const variations = genConfig?.variation_strategy?.variations || [];
     const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
-    const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+    const effectiveScenes = Math.max(poseSelections.length, 1);
     const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
     const formatCount = Math.max(formats.length, 1);
     const framingCount = selectedFramings.has('auto') ? 1 : Math.max(selectedFramings.size, 1);
     return effectiveScenes * modelCount * formatCount * framingCount;
-  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length, selectedFramings]);
+  }, [campaignMode, imageCount, selectedWorkflow, poseSelections.length, modelSelections.length, formats.length, selectedFramings]);
 
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
@@ -338,7 +348,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }
     setSelectedWorkflowId(wfId);
     // Reset config for new workflow
-    setSceneSelections(new Set());
+    // sceneSelections removed
     setModelSelections([]);
     setPoseSelections([]);
     setCustomSettings({});
@@ -359,14 +369,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       if (!selectedWorkflowId || !selectedWorkflow) return false;
       const genConfig = selectedWorkflow.generation_config as any;
       const uiConfig = genConfig?.ui_config;
-      const variations = genConfig?.variation_strategy?.variations || [];
-      if (variations.length > 0) {
-        if (!isRandomScenesFlag && sceneSelections.size === 0) return false;
-      }
-      if (selectedWorkflow.uses_tryon || uiConfig?.show_model_picker) {
-        if (!isRandomModelsFlag && modelSelections.length === 0) return false;
-      }
-      if (imageCount <= 0) return false;
+      const needsModels = selectedWorkflow.uses_tryon || uiConfig?.show_model_picker;
+      if (campaignMode === 'curated' && needsModels && modelSelections.length === 0) return false;
+      if (formats.length === 0) return false;
       return true;
     }
     if (step === 3) return deliveryMode === 'now' || !!startDate;
@@ -382,15 +387,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       if (selectedWorkflow) {
         const genConfig = selectedWorkflow.generation_config as any;
         const uiConfig = genConfig?.ui_config;
-        const variations = genConfig?.variation_strategy?.variations || [];
-        if (variations.length > 0 && !isRandomScenesFlag && sceneSelections.size === 0) {
-          return 'Select at least one scene or enable Random';
-        }
-        if ((selectedWorkflow.uses_tryon || uiConfig?.show_model_picker) && !isRandomModelsFlag && modelSelections.length === 0) {
-          return 'Select at least one model or enable Random';
+        const needsModels = selectedWorkflow.uses_tryon || uiConfig?.show_model_picker;
+        if (campaignMode === 'curated' && needsModels && modelSelections.length === 0) {
+          return 'Select at least one model';
         }
         if (formats.length === 0) return 'Select at least one aspect ratio';
-        if (imageCount <= 0) return 'Set the number of images';
       }
     }
     if (step === 3 && deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
@@ -435,10 +436,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const genConfig = selectedWorkflow?.generation_config as any;
       const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
 
-      const selectedLabels = Array.from(sceneSelections);
-      const selectedVariationIndices = selectedLabels
-        .map(label => variations.findIndex(v => v.label === label))
-        .filter(i => i >= 0);
+      const selectedLabels: string[] = [];
+      const selectedVariationIndices: number[] = [];
 
       const resolvedModels = modelSelections.map(mId => {
         const m = allModels.find(am => am.id === mId);
@@ -1027,20 +1026,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           </Badge>
                         </div>
 
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
-                          <Switch
-                            checked={isRandomModelsFlag}
-                            onCheckedChange={setIsRandomModelsFlag}
-                          />
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-1.5">
-                              <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
-                            </p>
-                            <p className="text-xs text-muted-foreground">Each image will feature a different model, selected randomly</p>
-                          </div>
-                        </div>
 
-                        {!isRandomModelsFlag && (
+                        {(
                           <>
                             {modelSelections.length > 0 && (
                               <div className="flex justify-end">
@@ -1093,126 +1080,66 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* ── Scenes ── */}
-                    {variations.length > 0 && !isMixMode && (
+                    {/* ── Scenes (full library, grouped by category) ── */}
+                    {(needsModels || showPosePicker) && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Scenes</p>
-                          <Badge variant="secondary" className="text-[10px] rounded-full">
-                            {isRandomScenesFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${sceneSelections.size}/${variations.length} selected`}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
-                          <Switch
-                            checked={isRandomScenesFlag}
-                            onCheckedChange={setIsRandomScenesFlag}
-                          />
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-1.5">
-                              <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
-                            </p>
-                            <p className="text-xs text-muted-foreground">Each image will feature a different scene, selected randomly</p>
-                          </div>
-                        </div>
-
-                        {!isRandomScenesFlag && (
-                          <>
-                            {sceneSelections.size > 0 && (
-                              <div className="flex items-center justify-between">
-                                <button className="text-xs text-primary hover:underline font-medium" onClick={() => setSceneSelections(new Set(variations.map((v: any) => v.label)))}>Select All</button>
-                                <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSceneSelections(new Set())}>Clear</button>
-                              </div>
-                            )}
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                              {variations.map((v: any, idx: number) => {
-                                const isSceneSelected = sceneSelections.has(v.label);
-                                return (
-                                  <button
-                                    key={v.label}
-                                    onClick={() => {
-                                      const next = new Set(sceneSelections);
-                                      isSceneSelected ? next.delete(v.label) : next.add(v.label);
-                                      setSceneSelections(next);
-                                    }}
-                                    className={cn(
-                                      'relative rounded-xl overflow-hidden border-2 transition-all',
-                                      isSceneSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
-                                    )}
-                                  >
-                                    <div className="aspect-square w-full bg-muted overflow-hidden">
-                                      {v.preview_url ? (
-                                        <ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/5">
-                                          <span className="text-[10px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                    {isSceneSelected && (
-                                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                                        <Check className="w-3 h-3 text-primary-foreground" />
-                                      </div>
-                                    )}
-                                    <div className="px-1.5 py-1.5">
-                                      <p className="text-[11px] text-foreground truncate text-center font-medium">{v.label}</p>
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── Pose / Scene Library ── */}
-                    {showPosePicker && !isMixMode && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="section-label">Scene Library</p>
                           {poseSelections.length > 0 && (
                             <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setPoseSelections([])}>
-                              Clear
+                              Clear ({poseSelections.length})
                             </button>
                           )}
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                          {fashionPoses.map(pose => {
-                            const isPoseSelected = poseSelections.includes(pose.poseId);
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                          {sceneCategories.map(cat => {
+                            const catPoses = allScenePoses.filter(p => p.category === cat);
+                            if (catPoses.length === 0) return null;
                             return (
-                              <button
-                                key={pose.poseId}
-                                onClick={() => {
-                                  setPoseSelections(prev =>
-                                    isPoseSelected ? prev.filter(id => id !== pose.poseId) : [...prev, pose.poseId]
-                                  );
-                                }}
-                                className={cn(
-                                  'relative rounded-xl overflow-hidden border-2 transition-all',
-                                  isPoseSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
-                                )}
-                              >
-                                <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
-                                  <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                              <div key={cat}>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
+                                  {poseCategoryLabels[cat as keyof typeof poseCategoryLabels] || cat}
+                                </p>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                  {catPoses.map(pose => {
+                                    const isPoseSelected = poseSelections.includes(pose.poseId);
+                                    return (
+                                      <button
+                                        key={pose.poseId}
+                                        onClick={() => {
+                                          setPoseSelections(prev =>
+                                            isPoseSelected ? prev.filter(id => id !== pose.poseId) : [...prev, pose.poseId]
+                                          );
+                                        }}
+                                        className={cn(
+                                          'relative rounded-xl overflow-hidden border-2 transition-all',
+                                          isPoseSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                                        )}
+                                      >
+                                        <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
+                                          <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                                        </div>
+                                        {isPoseSelected && (
+                                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                            <Check className="w-3 h-3 text-primary-foreground" />
+                                          </div>
+                                        )}
+                                        <div className="px-1.5 py-1.5">
+                                          <p className="text-[11px] text-foreground truncate text-center font-medium">{pose.name}</p>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
                                 </div>
-                                {isPoseSelected && (
-                                  <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                                    <Check className="w-3 h-3 text-primary-foreground" />
-                                  </div>
-                                )}
-                                <div className="absolute top-1.5 left-1.5">
-                                  <Badge className="text-[8px] px-1 py-0 bg-foreground/70 text-background border-0 backdrop-blur-sm">
-                                    {poseCategoryLabels[pose.category] || pose.category}
-                                  </Badge>
-                                </div>
-                                <div className="px-1.5 py-1.5">
-                                  <p className="text-[11px] text-foreground truncate text-center font-medium">{pose.name}</p>
-                                </div>
-                              </button>
+                              </div>
                             );
                           })}
                         </div>
+                        {poseSelections.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {poseSelections.length} scene{poseSelections.length !== 1 ? 's' : ''} selected — each scene generates with every selected model
+                          </p>
+                        )}
                       </div>
                     )}
 
@@ -1467,11 +1394,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           {!isMixMode ? (
                             <p className="text-xs text-muted-foreground">
                               {(() => {
-                                const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+                                const effectiveScenes = Math.max(poseSelections.length, 1);
                                 const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
                                 const formatCount = Math.max(formats.length, 1);
                                 const parts: string[] = [];
-                                if (effectiveScenes > 1 || variations.length > 0) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                                if (effectiveScenes > 1) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
                                 if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
                                 if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
                                 if (framingCount > 1) parts.push(`${framingCount} framing${framingCount !== 1 ? 's' : ''}`);
@@ -1696,11 +1623,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
               {/* Workflow summary */}
               {selectedWorkflow && (() => {
                 const wf = selectedWorkflow;
-                const variations = (wf.generation_config as any)?.variation_strategy?.variations || [];
                 const needsModels = wf.uses_tryon || (wf.generation_config as any)?.ui_config?.show_model_picker;
-                const showPosePicker = (wf.generation_config as any)?.ui_config?.show_pose_picker;
                 const settingEntries = Object.entries(customSettings);
-                const selectedSceneNames = isRandomScenesFlag ? [] : Array.from(sceneSelections);
 
                 return (
                   <div className="p-3 rounded-xl bg-card border space-y-2">
@@ -1715,35 +1639,22 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     </div>
                     <div className="flex flex-wrap gap-1.5 pl-6">
                       <Badge variant="secondary" className="text-[10px] rounded-full">
-                        {imageCount} img × {selectedProductIds.size} prod
+                        {computedImageCount} img × {selectedProductIds.size} prod
                       </Badge>
-                      {variations.length > 0 && !wf.uses_tryon && (
+                      {poseSelections.length > 0 && (
                         <Badge variant="secondary" className="text-[10px] rounded-full">
-                          {isRandomScenesFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random scenes</> : <>{sceneSelections.size}/{variations.length} scenes</>}
+                          {campaignMode === 'mix' ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Auto scenes</> : <>{poseSelections.length} scene{poseSelections.length !== 1 ? 's' : ''}</>}
                         </Badge>
-                      )}
-                      {showPosePicker && (
-                        <Badge variant="secondary" className="text-[10px] rounded-full">{poseSelections.length} pose{poseSelections.length !== 1 ? 's' : ''}</Badge>
                       )}
                       {needsModels && (
                         <Badge variant="secondary" className="text-[10px] rounded-full">
-                          {isRandomModelsFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random models</> : <>{modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''}</>}
+                          {campaignMode === 'mix' ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Auto models</> : <>{modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''}</>}
                         </Badge>
                       )}
                       {settingEntries.map(([k, v]) => (
-                        <Badge key={k} variant="outline" className="text-[10px] rounded-full">{k}: {v}</Badge>
+                        <Badge key={k} variant="outline" className="text-[10px] rounded-full">{k}: {String(v)}</Badge>
                       ))}
                     </div>
-                    {selectedSceneNames.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pl-6">
-                        {selectedSceneNames.slice(0, 8).map(name => (
-                          <span key={name} className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">{name}</span>
-                        ))}
-                        {selectedSceneNames.length > 8 && (
-                          <span className="text-[10px] text-muted-foreground">+{selectedSceneNames.length - 8} more</span>
-                        )}
-                      </div>
-                    )}
                     {needsModels && !isRandomModelsFlag && modelSelections.length > 0 && (
                       <div className="flex gap-1 pl-6 flex-wrap">
                         {modelSelections.slice(0, 6).map(mId => {
