@@ -3172,11 +3172,13 @@ export default function Generate() {
                   <span className="text-xs text-muted-foreground text-center flex-1">Select a model to continue</span>
                 )}
                 {isMirrorSelfie ? (
-                  <Button disabled={!selectedModel} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
+                  <Button disabled={selectedModels.size === 0} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
                 ) : isSelfieUgc || (uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon) ? (
-                  <Button disabled={!selectedModel} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
+                  <Button disabled={selectedModels.size === 0} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
                 ) : (
-                  <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
+                  <Button disabled={selectedModels.size === 0} onClick={() => setCurrentStep('pose')}>
+                    Continue to Scene {selectedModels.size > 1 && `(${selectedModels.size} models)`}
+                  </Button>
                 )}
               </div>
             </div>
