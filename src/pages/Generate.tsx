@@ -987,7 +987,7 @@ export default function Generate() {
 
           if (response.ok) {
             const result = await response.json();
-            jobMap.set(`${product.id}_${varIdx}`, result.jobId);
+            jobMap.set(`${product.id}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
@@ -998,8 +998,10 @@ export default function Generate() {
             const err = await response.json().catch(() => ({}));
             toast.error(err.error || `Failed to queue "${product.title}"`);
           }
-        }
-      }
+          } // end framingVal loop
+         } // end ratioVal loop
+        } // end varIdx loop
+      } // end product loop
 
       if (jobMap.size === 0) {
         toast.error('Could not queue any products');
