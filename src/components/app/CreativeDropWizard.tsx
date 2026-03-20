@@ -205,7 +205,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [customImageCountStr, setCustomImageCountStr] = useState('');
   const [campaignMode, setCampaignMode] = useState<'curated' | 'mix'>('curated');
   const [selectedFramings, setSelectedFramings] = useState<Set<string>>(new Set(['auto']));
-
+  const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
+  const [flatLayPropStyle, setFlatLayPropStyle] = useState<'clean' | 'decorated'>('clean');
+  const [stylingNotes, setStylingNotes] = useState('');
+  const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
+  const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
   // Freestyle
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
   const [freestylePrompts, setFreestylePrompts] = useState<string[]>(
