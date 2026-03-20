@@ -1,37 +1,53 @@
 
-Goal: Fix `/app/workflows` mobile 2-column grid so animated overlays fit cleanly inside thumbnails (mobile only), without changing desktop row/3-col behavior.
 
-1) Identify and isolate the mobile 2-col variant
-- File: `src/pages/Workflows.tsx`
-- Pass an explicit prop to compact cards only when `isMobile && effectiveLayout === '2col'` (e.g. `mobileGridCompact`).
-- Keep existing behavior for desktop/tablet layouts.
+# Fix Favicon Google Indexing
 
-2) Give mobile grid cards more vertical room
-- File: `src/components/app/WorkflowCardCompact.tsx`
-- Make thumbnail ratio taller only for mobile compact mode (e.g. `aspect-[2/3]` on mobile, keep current ratio on larger screens).
-- Keep this scoped to the 2-col mobile view so row/desktop cards are unchanged.
+## Problem
+Google isn't picking up the favicon. Common causes:
+1. **No `sizes` attribute** on the icon links — Google needs explicit size hints
+2. **No `apple-touch-icon`** — Google's crawler often prefers this for search result favicons
+3. **No web manifest** — Google checks `manifest.json` for icons
+4. **Two competing declarations** (PNG + ICO) without size differentiation
 
-3) Replace blur-prone global scaling with true compact sizes
-- File: `src/components/app/WorkflowAnimatedThumbnail.tsx`
-- Remove the current “scale whole element” approach for compact mode.
-- Add compact size tokens per element type (product/scene chips, model circle, action button, badges, label font sizes/padding) so overlays are genuinely smaller and sharper.
-- This avoids oversized overlays and improves readability on small screens.
+## Changes
 
-4) Apply compact sizing consistently across animation modes
-- File: `src/components/app/WorkflowAnimatedThumbnail.tsx`
-- Ensure compact sizing is used in recipe and carousel overlays (and compact badge sizing where relevant in upscale/staging) so every workflow type fits in mobile 2-col cards.
+### 1. Fix `index.html` icon declarations
+- Add `sizes="32x32"` to the PNG favicon link
+- Add `sizes="48x48"` to a second PNG entry (Google prefers 48×48 multiples)
+- Add an `apple-touch-icon` link (Google frequently uses this as the favicon source in search results)
+- Add a `<link rel="manifest">` pointing to a web manifest
 
-5) Keep loading/spacing aligned with new mobile card proportions
-- File: `src/pages/Workflows.tsx`
-- Update compact-grid skeleton thumbnail ratio to match the new mobile thumbnail ratio.
-- Slightly optimize mobile grid gap if needed (mobile-only) to maximize usable card width.
+### 2. Create `public/site.webmanifest`
+A minimal web manifest with icon entries at 192×192 and 512×512 sizes. Google explicitly recommends this for favicon indexing. Since we only have the current favicon files, we'll reference `favicon.png` and note that ideally a 192px version should be provided.
 
-Acceptance checks
-- On mobile in 2-col grid, animated chips/circles/badges stay fully inside card bounds and no longer dominate or clip.
-- Text remains readable and crisp.
-- Desktop row and desktop 2/3-col layouts remain visually unchanged.
+### 3. Minimal manifest content
+```json
+{
+  "name": "VOVV AI",
+  "short_name": "VOVV",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "192x192", "type": "image/png" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f7",
+  "theme_color": "#2d3a4e"
+}
+```
 
-Files to update
-- `src/pages/Workflows.tsx`
-- `src/components/app/WorkflowCardCompact.tsx`
-- `src/components/app/WorkflowAnimatedThumbnail.tsx`
+### Updated `index.html` head (icon section)
+```html
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+```
+
+### Files
+- `index.html` — update icon link tags (4 lines)
+- `public/site.webmanifest` — new file
+
+### Note
+For best results, you should also provide a 192×192 PNG version of your logo (e.g. `favicon-192.png`). Google strongly prefers icons that are multiples of 48px. If you upload one, I'll wire it in.
+
