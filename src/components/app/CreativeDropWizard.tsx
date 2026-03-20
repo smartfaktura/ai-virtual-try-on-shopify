@@ -946,7 +946,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         )}
                       >
                         <div className="w-20 h-24 rounded-xl bg-muted overflow-hidden flex-shrink-0">
-                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="w-full h-full object-cover" aspectRatio="5/6" />
+                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="w-full h-full object-contain" aspectRatio="5/6" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{wf.name}</p>
