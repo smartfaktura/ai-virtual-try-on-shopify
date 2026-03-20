@@ -1484,6 +1484,8 @@ export default function Generate() {
     if (!activeJob) return;
     // Multi-product uses its own polling, skip here
     if (multiProductJobIds.size > 0) return;
+    // Don't let stale activeJob overwrite results already on screen
+    if (currentStep === 'results') return;
     if (activeJob.status === 'completed' && activeJob.result) {
       const result = activeJob.result as { images?: string[]; variations?: Array<{ label: string }> };
       if (result.images && result.images.length > 0) {
@@ -1499,7 +1501,7 @@ export default function Generate() {
       }
     }
     // Failed status is now handled by onGenerationFailed callback in useGenerationQueue
-  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size]);
+  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size, currentStep]);
 
   // Watch batch completion (single-product only)
   useEffect(() => {
@@ -1553,30 +1555,35 @@ export default function Generate() {
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${jobIds.join(',')})\&select=id,status,result,error_message,completed_at`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${jobIds.join(',')})&select=id,status,result,error_message,completed_at`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) return;
       const rows = await res.json() as Array<{ id: string; status: string; result: { images?: string[]; variations?: Array<{ label: string }> } | null; error_message: string | null; completed_at: string | null }>;
 
-      // Build a map of job results
+      // Build a map from job ID → row for reliable lookup
+      const rowMap = new Map<string, (typeof rows)[number]>();
+      for (const row of rows) rowMap.set(row.id, row);
+
+      // Check ALL expected jobs (not just returned rows) for terminal status
       const completedResults = new Map<string, { images: string[]; labels: string[] }>();
       let allTerminal = true;
       let completedCount = 0;
       let failedCount = 0;
 
-      for (const row of rows) {
+      for (const [prodId, jobId] of multiProductJobIds.entries()) {
+        const row = rowMap.get(jobId);
+        if (!row) {
+          // Job not returned by API yet — not terminal
+          allTerminal = false;
+          continue;
+        }
         if (row.status === 'completed' && row.result?.images) {
           completedCount++;
-          // Find the product for this job
-          for (const [prodId, jobId] of multiProductJobIds.entries()) {
-            if (jobId === row.id) {
-              completedResults.set(prodId, {
-                images: row.result.images,
-                labels: row.result.variations?.map(v => v.label) || [],
-              });
-            }
-          }
+          completedResults.set(prodId, {
+            images: row.result.images,
+            labels: row.result.variations?.map(v => v.label) || [],
+          });
         } else if (row.status === 'failed' || row.status === 'cancelled') {
           failedCount++;
         } else {
@@ -1643,6 +1650,7 @@ export default function Generate() {
         refreshBalance();
         queryClient.invalidateQueries({ queryKey: ['library'] });
         queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+        resetQueue();
         setMultiProductJobIds(new Map());
         setJobMetadata(new Map());
       }
