@@ -63,7 +63,7 @@ export default function CreativeDrops() {
   const [wizardInitialData, setWizardInitialData] = useState<CreativeDropWizardInitialData | undefined>(undefined);
   const [editingScheduleId, setEditingScheduleId] = useState<string | undefined>(undefined);
   const [selectedDrop, setSelectedDrop] = useState<CreativeDrop | null>(null);
-  const [activeTab, setActiveTab] = useState('schedules');
+  const [activeTab, setActiveTab] = useState('drops');
   const [dropStatusFilter, setDropStatusFilter] = useState<string>('all');
   const [dropSortAsc, setDropSortAsc] = useState(false);
 
