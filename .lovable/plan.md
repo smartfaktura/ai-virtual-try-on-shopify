@@ -1,32 +1,38 @@
 
 
-# Layout Switcher for Workflow Catalog
+# Update Help Center FAQ Content
 
 ## What Changes
 
-### 1. Create a compact `WorkflowCardCompact` component
-A new card variant for 2-col and 3-col grid layouts. Shows the animated thumbnail (square aspect ratio), workflow name, badge, a short description (2-line clamp), and a "Create Set" button. No feature bullet list — keeps it compact.
+Update the `faqCategories` array in `src/pages/HelpCenter.tsx` to accurately reflect the app's actual features, workflows, and terminology. The landing FAQ already has accurate content — the Help Center should be consistent and more detailed.
 
-**File:** `src/components/app/WorkflowCardCompact.tsx`
+### Key content fixes:
 
-### 2. Add layout switcher to Workflows page
-- Store layout preference in `localStorage` (`workflow-layout`) with default `"rows"` (current full-width layout)
-- Three toggle buttons with icons: Rows (list icon), 2-Col (grid-2 icon), 3-Col (grid-3 icon)
-- On mobile/tablet (< 1024px): only show Rows and 2-Col options; force 2-col max
-- Render logic:
-  - `"rows"` → current `WorkflowCard` in `space-y-6` (unchanged)
-  - `"2col"` → `grid grid-cols-1 sm:grid-cols-2 gap-4` using `WorkflowCardCompact`
-  - `"3col"` → `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4` using `WorkflowCardCompact`
+**Getting Started**
+- Update workflow list to name all actual workflows: Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, and Picture Perspectives
+- Add a question about Freestyle mode (missing entirely)
+- Mention 2K resolution / PNG output standard
 
-**File:** `src/pages/Workflows.tsx` — add state, switcher UI, conditional rendering
+**Credits & Billing**
+- Fix credit costs: Freestyle = 4 credits (6 with model/scene), Workflows = 6 credits, Video = 30 credits
+- Remove "roll over for one billing cycle" — landing FAQ says they don't roll over
+- Add mention of free 20 credits for new accounts
+- Add mention that top-up credits never expire
 
-### 3. Layout switcher UI
-Place a small toggle group (using existing `ToggleGroup` from shadcn) right-aligned next to the "Create a New Set" section label. Uses `LayoutList`, `Grid2X2`, `Grid3X3` icons from lucide-react.
+**Workflows & Generation**
+- Fix Workflows description — replace generic "Lifestyle, Studio, Social Media" with actual workflow names
+- Add Picture Perspectives workflow explanation (generates front/back/side/close-up angle sets, 6 credits per angle)
+- Add question about Upscale feature
+- Update Creative Drops to mention "monthly or biweekly" schedule, Growth plans requirement
+- Add batch generation details
 
-## Technical Details
+**Image Quality**
+- Mention 2K resolution and PNG output as defaults
+- Update upscale info — it's a real feature in the app, not just "from the Library"
 
-- `WorkflowCardCompact`: vertical card with square thumbnail on top, content below. Reuses `WorkflowAnimatedThumbnail` and the same `onSelect` handler.
-- Layout preference persisted in `localStorage` so it sticks across sessions.
-- The `reversed` prop is only used in row layout; grid layouts don't alternate.
-- Skeleton loaders adapt to selected layout.
+**Account & Data**
+- Keep mostly as-is, content is accurate
+
+### File
+`src/pages/HelpCenter.tsx` — replace the `faqCategories` array (lines 9–111) with updated content. No structural/UI changes.
 
