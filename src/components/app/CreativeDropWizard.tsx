@@ -472,8 +472,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const genConfig = selectedWorkflow?.generation_config as any;
       const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
 
-      const selectedLabels: string[] = [];
-      const selectedVariationIndices: number[] = [];
+      const genConfig = selectedWorkflow?.generation_config as any;
+      const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
+
+      // Build selected labels from variation indices
+      const selectedLabels: string[] = Array.from(selectedVariationIndices).map(i => variations[i]?.label).filter(Boolean);
+      const selectedVarIndicesArr: number[] = Array.from(selectedVariationIndices);
 
       const resolvedModels = modelSelections.map(mId => {
         const m = allModels.find(am => am.id === mId);
@@ -491,7 +495,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           aspect_ratios: formats,
           aspect_ratio: formats[0],
           selected_scenes: isRandomScenesFlag ? ['__random__'] : selectedLabels,
-          selected_variation_indices: isRandomScenesFlag ? [] : selectedVariationIndices,
+          selected_variation_indices: isRandomScenesFlag ? [] : selectedVarIndicesArr,
           pose_ids: poseSelections,
           model_ids: isRandomModelsFlag ? ['__random__'] : modelSelections,
           models: isRandomModelsFlag ? [{ id: '__random__', name: 'Random / Diverse' }] : resolvedModels,
@@ -501,6 +505,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           random_scenes: isRandomScenesFlag,
           image_count: computedImageCount,
           selected_framings: Array.from(selectedFramings),
+          flat_lay_prop_style: flatLayPropStyle,
+          selected_aesthetics: selectedAesthetics,
+          styling_notes: stylingNotes,
+          product_angle: productAngle,
         },
       };
 
