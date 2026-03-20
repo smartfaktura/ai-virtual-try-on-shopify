@@ -473,7 +473,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const saveVariations: { label: string }[] = saveGenConfig?.variation_strategy?.variations || [];
 
       // Build selected labels from variation indices
-      const selectedLabels: string[] = Array.from(selectedVariationIndices).map(i => variations[i]?.label).filter(Boolean);
+      const selectedLabels: string[] = Array.from(selectedVariationIndices).map(i => saveVariations[i]?.label).filter(Boolean);
       const selectedVarIndicesArr: number[] = Array.from(selectedVariationIndices);
 
       const resolvedModels = modelSelections.map(mId => {
