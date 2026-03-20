@@ -331,16 +331,22 @@ export default function PublicDiscover() {
 
   return (
     <PageLayout>
-      <SEOHead title="Discover AI Photography Presets & Scenes — VOVV AI" description="Browse curated AI fashion photography presets, scenes, and styles. Get inspired and use them in your next product shoot." canonical={`${SITE_URL}/discover`} />
+      <SEOHead title="Discover AI Photography Presets & Scenes — VOVV AI" description="All images on this page were generated with VOVV.AI. Explore AI fashion photography styles, scenes and prompts — start generating for free." canonical={`${SITE_URL}/discover`} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
         {/* Header */}
-        <div className="space-y-2 text-center">
+        <div className="space-y-3 text-center">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
             Discover
           </h1>
-          <p className="text-base text-muted-foreground max-w-md mx-auto">
-            Browse curated AI fashion photography — prompts, scenes and styles
+          <p className="text-base text-muted-foreground max-w-lg mx-auto">
+            All images on this page were generated with VOVV.AI — explore styles, scenes and prompts
           </p>
+          <a
+            href={user ? '/app/freestyle' : '/auth'}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            Start generating for free →
+          </a>
         </div>
 
         {/* Search */}
