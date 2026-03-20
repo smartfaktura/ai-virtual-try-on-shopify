@@ -469,11 +469,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         'Styling': 'styling_notes',
       };
 
-      const genConfig = selectedWorkflow?.generation_config as any;
-      const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
-
-      const genConfig = selectedWorkflow?.generation_config as any;
-      const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
+      const saveGenConfig = selectedWorkflow?.generation_config as any;
+      const saveVariations: { label: string }[] = saveGenConfig?.variation_strategy?.variations || [];
 
       // Build selected labels from variation indices
       const selectedLabels: string[] = Array.from(selectedVariationIndices).map(i => variations[i]?.label).filter(Boolean);
