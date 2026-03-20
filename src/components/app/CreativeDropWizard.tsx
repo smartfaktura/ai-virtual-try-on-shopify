@@ -476,7 +476,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         workflow_ids: [selectedWorkflowId],
         model_ids: isRandomModelsFlag ? ['__random__'] : modelSelections,
         brand_profile_id: brandProfileId || null,
-        images_per_drop: imageCount,
+        images_per_drop: computedImageCount,
         estimated_credits: costEstimate.totalCredits,
         active: true,
         start_date: effectiveStartDate.toISOString(),
