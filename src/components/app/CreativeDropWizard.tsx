@@ -137,6 +137,19 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [themeNotes, setThemeNotes] = useState(initialData?.themeNotes || '');
   const [brandProfileId, setBrandProfileId] = useState(initialData?.brandProfileId || '');
   const [seasonalPreset, setSeasonalPreset] = useState('none');
+  const [dropGoal, setDropGoal] = useState<string>('');
+
+  const DROP_GOALS = [
+    { id: 'product-launch', label: 'Product Launch', icon: RocketIcon },
+    { id: 'social-content', label: 'Social Content', icon: Users },
+    { id: 'seasonal-campaign', label: 'Seasonal Campaign', icon: Sun },
+    { id: 'brand-awareness', label: 'Brand Awareness', icon: Sparkles },
+  ];
+
+  const namePlaceholder = useMemo(() => {
+    const options = ['Summer Vibes 2026', 'Black Friday Launch', 'New Arrivals — March', 'Holiday Collection', 'Spring Refresh Campaign'];
+    return options[Math.floor(Math.random() * options.length)];
+  }, []);
 
   // Step 2: Products
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(
