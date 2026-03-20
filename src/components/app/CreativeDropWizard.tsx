@@ -514,6 +514,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
           selected_scenes: isRandomScenesFlag ? ['__random__'] : selectedLabels,
           selected_variation_indices: isRandomScenesFlag ? [] : selectedVarIndicesArr,
           pose_ids: poseSelections,
+          poses: resolvedPoses,
           model_ids: isRandomModelsFlag ? ['__random__'] : modelSelections,
           models: isRandomModelsFlag ? [{ id: '__random__', name: 'Random / Diverse' }] : resolvedModels,
           custom_settings: customSettings,

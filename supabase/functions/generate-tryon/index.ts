@@ -563,6 +563,12 @@ serve(async (req) => {
     }
 
     if (!body.product || !body.model || !body.pose) {
+      console.error("[generate-tryon] Missing required fields", {
+        hasProduct: !!body.product,
+        hasModel: !!body.model,
+        hasPose: !!body.pose,
+        creative_drop_id: body.creative_drop_id || null,
+      });
       return new Response(
         JSON.stringify({ error: "Missing required fields: product, model, or pose" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
