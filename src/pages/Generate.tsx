@@ -1348,8 +1348,9 @@ export default function Generate() {
         return;
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} product${jobMap.size > 1 ? 's' : ''} for generation`);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''} for ${productQueue.length} product${productQueue.length > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       return;
     }
