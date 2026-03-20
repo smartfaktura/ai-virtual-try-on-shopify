@@ -80,7 +80,9 @@ export function MultiProductProgressBanner({
       {/* Header with counts and elapsed */}
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
-          {completedCount} of {totalProducts} products{totalExpectedImages ? ` · ${totalImages} images` : ''}
+          {completedCount > 0
+            ? `${completedCount} of ${totalProducts} product${totalProducts !== 1 ? 's' : ''} done`
+            : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} product${totalProducts !== 1 ? 's' : ''}`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />

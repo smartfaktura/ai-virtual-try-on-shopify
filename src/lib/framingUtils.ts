@@ -100,7 +100,7 @@ export function buildFramingPrompt(framing: FramingOption, hasModel: boolean): s
     case 'upper_body':
       return `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${modelRef}`;
     case 'close_up':
-      return `FRAMING: Tight close-up portrait, face filling most of the frame. Professional beauty/headshot composition emphasizing facial area and any worn accessories.${modelRef}`;
+      return `FRAMING — CLOSE-UP / PRODUCT DETAIL: Lens 85mm at f/2.8, shallow depth-of-field with razor-sharp focus on the product zone. Tight crop from mid-chest upward — the product/garment must fill at least 60% of the visible frame area. Show fabric texture, stitching, material drape, and pattern detail at close range. Camera distance is much closer than a standard portrait — the viewer should feel they can reach out and touch the product. DO NOT produce a standard portrait/headshot — the crop must be noticeably tighter than 'upper body'. Background should be heavily blurred (bokeh) to isolate the product area.${modelRef}`;
     case 'hand_wrist':
       return `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${modelRef}`;
     case 'neck_shoulders':

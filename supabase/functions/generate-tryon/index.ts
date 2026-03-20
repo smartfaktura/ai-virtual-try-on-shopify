@@ -85,7 +85,7 @@ function buildFramingInstruction(framing: string | undefined): string {
   const instructions: Record<string, string> = {
     full_body: "5. FRAMING: Full body shot, head to toe. Show the complete outfit.\n\n",
     upper_body: "5. FRAMING: Upper body shot, waist up. Show face and upper body clearly.\n\n",
-    close_up: "5. FRAMING: Close-up from shoulders up. Tight beauty headshot emphasizing product detail.\n\n",
+    close_up: "5. FRAMING — CLOSE-UP / PRODUCT DETAIL:\n   - Lens: 85mm at f/2.8, shallow depth-of-field with razor-sharp focus on the product zone.\n   - Framing: Tight crop from mid-chest upward. The product/garment must fill at least 60% of the visible frame area.\n   - Show fabric texture, stitching, material drape, pattern detail at close range.\n   - Camera distance: Much closer than a standard portrait — the viewer should feel they can reach out and touch the product.\n   - DO NOT produce a standard portrait/headshot. The crop must be noticeably tighter than 'upper body'.\n   - Background should be heavily blurred (bokeh) to isolate the product area.\n\n",
     hand_wrist: "5. FRAMING: Show only the hand and wrist area. Product naturally worn on wrist/hand. Do NOT include the face. Focus on the hand, wrist, and forearm only.\n\n",
     neck_shoulders: "5. FRAMING: Close-up of the collarbone, neck, and upper chest area. Product visible on/near neck. Do NOT include the full face — show jawline at most.\n\n",
     lower_body: "5. FRAMING: Lower body from hips to feet. Focus on legs and footwear. The face is NOT visible in this shot.\n\n",
