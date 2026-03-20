@@ -55,7 +55,7 @@ export interface CreativeDrop {
   schedule_name?: string;
 }
 
-const DROP_STATUSES = ['all', 'scheduled', 'generating', 'ready', 'failed'] as const;
+
 
 export default function CreativeDrops() {
   const { user } = useAuth();
