@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { getExtensionFromContentType } from '@/lib/dropDownload';
+import { getExtensionFromContentType, downloadDropAsZip } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
@@ -1702,11 +1702,20 @@ export default function Generate() {
       toast.error('Download failed');
     }
   };
-  const handleDownloadAll = async () => {
-    for (let idx = 0; idx < generatedImages.length; idx++) {
-      await handleDownloadImage(idx);
-    }
-    
+  const [zipDownloading, setZipDownloading] = useState(false);
+  const [zipPct, setZipPct] = useState(0);
+  const handleDownloadZip = async (indices?: number[]) => {
+    const urls = indices ? indices.map(i => generatedImages[i]) : generatedImages;
+    if (urls.length === 0) return;
+    if (urls.length === 1) { await handleDownloadImage(indices?.[0] ?? 0); return; }
+    setZipDownloading(true);
+    setZipPct(0);
+    try {
+      const productName = selectedProduct?.title || scratchUpload?.productInfo.title || 'generation';
+      const images = urls.map((url, i) => ({ url, workflow_name: activeWorkflow?.name || productName, scene_name: `image_${(indices?.[i] ?? i) + 1}` }));
+      await downloadDropAsZip(images, productName, pct => setZipPct(pct));
+    } catch { toast.error('Download failed'); }
+    finally { setZipDownloading(false); }
   };
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
@@ -4007,8 +4016,8 @@ export default function Generate() {
                       setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
                     }
                   }}>{selectedForPublish.size === generatedImages.length ? 'Deselect All' : 'Select All'}</Button>
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={handleDownloadAll}>
-                    <Download className="w-3.5 h-3.5 mr-1.5" /> Download All
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => handleDownloadZip()} disabled={zipDownloading}>
+                    {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" /> Download All</>}
                   </Button>
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => setCurrentStep('settings')}>Adjust</Button>
                   {isInteriorDesign && (
@@ -4062,13 +4071,23 @@ export default function Generate() {
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
               <div className="flex flex-col sm:flex-row gap-2.5">
-                <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => {
-                  if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
-                  selectedForPublish.forEach(idx => handleDownloadImage(idx));
-                }}><Download className="w-4 h-4 mr-2" /> Download Selected ({selectedForPublish.size})</Button>
                 <Button className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
               </div>
             </div>
+
+            {/* Floating selection bar */}
+            {selectedForPublish.size > 0 && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-5 py-3">
+                <span className="text-sm font-medium whitespace-nowrap">{selectedForPublish.size} selected</span>
+                <Separator orientation="vertical" className="h-6" />
+                <Button size="sm" variant="outline" className="rounded-xl" onClick={() => handleDownloadZip(Array.from(selectedForPublish))} disabled={zipDownloading}>
+                  {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" />Download ZIP</>}
+                </Button>
+                <button onClick={() => setSelectedForPublish(new Set())} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
