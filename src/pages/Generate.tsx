@@ -938,7 +938,7 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const needsModel = uiConfig?.show_model_picker && selectedModel;
-      const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+      const modelsToGenerate = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
         ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
         : needsModel ? [selectedModel!] : [];
       const jobMap = new Map<string, string>();
