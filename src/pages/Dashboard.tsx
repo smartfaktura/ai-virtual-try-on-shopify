@@ -116,6 +116,8 @@ export default function Dashboard() {
       return count ?? 0;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev: number | undefined) => prev,
   });
 
   // Fetch brand profile count
@@ -197,7 +199,6 @@ export default function Dashboard() {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const iso = thirtyDaysAgo.toISOString();
 
-      // Sum requested_count from completed generation jobs
       const { data: jobs, error: e1 } = await supabase
         .from('generation_jobs')
         .select('requested_count')
@@ -206,7 +207,6 @@ export default function Dashboard() {
       if (e1) throw e1;
       const jobImages = (jobs || []).reduce((sum, j) => sum + (j.requested_count || 0), 0);
 
-      // Count freestyle generations (1 row = 1 image)
       const { count: freestyleCount, error: e2 } = await supabase
         .from('freestyle_generations')
         .select('*', { count: 'exact', head: true })
@@ -216,6 +216,8 @@ export default function Dashboard() {
       return jobImages + (freestyleCount ?? 0);
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev: number | undefined) => prev,
   });
 
   // Fetch active schedule count
@@ -230,6 +232,8 @@ export default function Dashboard() {
       return count ?? 0;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev: number | undefined) => prev,
   });
 
   // Fetch workflows (for first-run grid)
