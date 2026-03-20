@@ -945,9 +945,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
                         )}
                       >
-                        <div className="w-16 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
-                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="w-full h-full object-cover object-top" aspectRatio="4/5" />
-                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{wf.name}</p>
                           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{wf.description}</p>
