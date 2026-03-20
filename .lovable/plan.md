@@ -1,68 +1,66 @@
 
 
-# Rework: Creative Drops Wizard — Single Workflow Per Drop (Frontend Only)
+# Add "Campaign Mode" Selector to Creative Drops Workflow Step
 
-## What Changes
+## What the User Wants
+When selecting a workflow like Virtual Try-On or Mirror Selfie, the user wants a clear choice between:
+1. **Curated** — manually pick specific models, scenes, settings
+2. **Mix** — system auto-randomizes models and scenes for maximum diversity based on the selected products
 
-The wizard currently allows multi-workflow selection, creating dynamic config steps per workflow. This is confusing and error-prone. We simplify to **1 workflow per drop** and merge selection + configuration into a single step.
+Currently, the "Random / Diverse" toggles exist separately for scenes and models buried in the config panel. The user wants a top-level, prominent choice before diving into details.
 
-### Current Flow (6+ dynamic steps)
+## Changes
+
+### File: `src/components/app/CreativeDropWizard.tsx`
+
+**A. Add Campaign Mode selector (after workflow is selected, before config panel)**
+
+When a workflow is selected and it has scenes/models, show a two-card selector:
+
 ```text
-Details → Products → Select Multiple Workflows → Config WF1 → Config WF2 → ... → Delivery → Review
+┌─────────────────────┐  ┌─────────────────────┐
+│  🎨 Curated         │  │  🔀 Mix             │
+│  Pick models &      │  │  Auto-diverse mix   │
+│  scenes manually    │  │  of all models &    │
+│                     │  │  scenes             │
+└─────────────────────┘  └─────────────────────┘
 ```
 
-### New Flow (4 fixed steps)
-```text
-Details → Products → Workflow (select + configure) → Launch (delivery + review merged)
-```
+- **Curated**: Shows the full config panel (scenes grid, models grid) — current behavior
+- **Mix**: Auto-sets `isRandomModelsFlag = true` and `isRandomScenesFlag = true`, collapses the manual selection panels, shows a simple summary card: "System will automatically select diverse models and scenes for each image"
 
-## File: `src/components/app/CreativeDropWizard.tsx` (single file, ~1982 lines)
+**B. State: Add `campaignMode: 'curated' | 'mix'`** (default: `'curated'`)
 
-### A. Simplify State (lines 161-214)
-- `selectedWorkflowIds: Set<string>` → `selectedWorkflowId: string | null`
-- Remove all per-workflow `Record<string, ...>` maps (`workflowSceneSelections`, `workflowModelSelections`, `workflowPoseSelections`, `workflowCustomSettings`, `imagesPerWorkflow`, `workflowProductIds`, `workflowFormats`, `randomModels`, `randomScenes`, `customImageCounts`)
-- Replace with flat state: `sceneSelections: Set<string>`, `modelSelections: string[]`, `poseSelections: string[]`, `customSettings: Record<string, string>`, `imageCount: number`, `formats: string[]`, `isRandomModels: boolean`, `isRandomScenes: boolean`
+When user switches to "Mix":
+- Set `isRandomModelsFlag = true`, `isRandomScenesFlag = true`
+- Hide scene/model grids (they're irrelevant in mix mode)
+- Show a compact summary instead
 
-### B. Fix Step Calculation (lines 301-310)
-- Remove dynamic `configStepCount`. Fixed 4 steps: `totalSteps = 4`
-- Step 0: Details, Step 1: Products, Step 2: Workflow, Step 3: Launch
-- Remove `isConfigStep`, `configWorkflowIndex`, `configWorkflow` — replaced by checking `step === 2`
-- Stepper labels: `['Details', 'Products', 'Workflow', 'Launch']`
+When user switches to "Curated":
+- Set `isRandomModelsFlag = false`, `isRandomScenesFlag = false`
+- Show full scene/model grids as current
 
-### C. Step 2: Merge Select + Configure (lines 914-1587)
-- **Top section**: Workflow card grid (single-select — clicking one deselects previous). Same cards as current step 2 but with radio-style selection instead of checkbox
-- **Below (when workflow selected)**: Show the full config panel inline — scenes, models, poses, formats, image count, custom settings. This is the exact same UI as current config steps (lines 1032-1587) but without the per-workflow `wf.id` key lookups — just uses flat state directly
-- Remove the separate config step rendering entirely
+**C. Simplify the config panel in Mix mode**
+When `campaignMode === 'mix'`, only show:
+- Images per Product count
+- Aspect Ratios
+- Workflow-specific settings (UGC Mood, Flat Lay Aesthetic)
+- Credit Summary
+- A summary card: "Auto Mix: System picks diverse models & scenes for each product"
 
-### D. Step 3: Merge Delivery + Review (lines 1589-1924)
-- Combine the Schedule/Delivery section and the Review section into one scrollable step called "Launch"
-- Show delivery options at top, then review summary below, then the submit button
+Hide: Scene grid, Model grid, Pose picker (since they're all randomized)
 
-### E. Update Validation (lines 358-406)
-- Step 2: `selectedWorkflowId !== null` + scene/model requirements (same logic as current `isConfigStep` validation but on flat state)
-- Step 3: delivery validation (same as current `scheduleStepIndex`)
-
-### F. Update Save Logic (lines 426-562)
-- Build `sceneConfig` with single workflow entry: `{ [selectedWorkflowId]: { ... } }`
-- `workflow_ids` becomes `[selectedWorkflowId]`
-- All config reads from flat state instead of `Record<string, ...>[wf.id]`
-
-### G. Update Credit Calculation (lines 328-343)
-- Single `WorkflowCostConfig` instead of mapping over `selectedWorkflowsList`
-
-### H. Update `CreativeDropWizardInitialData` interface (lines 70-90)
-- `selectedWorkflowIds: string[]` → keep as array for DB compat but only use `[0]`
-- Remove per-workflow map types, add flat equivalents
+**D. For workflows without models (Product Listing Set)**
+Don't show the campaign mode selector — go straight to config since there's nothing to "mix".
 
 ## What's NOT Changing
-- Database schema — `workflow_ids` stays as array, `scene_config` stays as JSON
-- Backend edge functions — no changes
-- Step 0 (Details) — keep as-is with all the recent UX improvements
-- Step 1 (Products) — keep as-is
-- The Freestyle prompts section moves into the Workflow step as a collapsible
+- Backend/save logic — `isRandomModelsFlag` and `isRandomScenesFlag` already exist and are saved
+- Credit calculation — unchanged
+- Workflow selection cards — unchanged
+- Steps 0, 1, 3 — unchanged
 
-## Estimated Impact
-- ~400 lines removed (multi-workflow maps, dynamic step indexing, per-workflow config loops)
-- ~100 lines simplified (flat state instead of keyed lookups)
-- Net reduction of ~300 lines
+## Summary
+- 1 file modified, ~40 lines added
+- Prominent "Curated vs Mix" choice replaces buried Random toggles
+- Mix mode auto-enables all randomization and hides manual selection UI
 
