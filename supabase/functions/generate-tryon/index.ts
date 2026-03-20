@@ -120,7 +120,51 @@ function buildIdentityBlock(req: TryOnRequest): string {
    - This is ${req.model.name}, a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}`;
 }
 
-function buildPrompt(req: TryOnRequest): string {
+interface DropContext {
+  theme?: string;
+  themeNotes?: string;
+  brandProfile?: Record<string, unknown>;
+}
+
+function buildDropDirectionBlocks(ctx: DropContext): string {
+  const blocks: string[] = [];
+
+  if (ctx.theme && ctx.theme !== "custom") {
+    const themeDescriptions: Record<string, string> = {
+      spring: "fresh spring aesthetic — bright natural light, pastel tones, blooming florals, airy and light atmosphere",
+      summer: "vibrant summer aesthetic — warm bright sunlight, bold colors, outdoor energy, golden-hour warmth",
+      autumn: "warm autumn aesthetic — golden/amber tones, rich earthy colors, soft warm lighting, cozy layered atmosphere",
+      winter: "crisp winter aesthetic — cool blue-white tones, clean minimal backdrop, soft diffused light, elegant and refined mood",
+      holiday: "festive holiday aesthetic — warm inviting lighting, rich jewel tones, celebratory atmosphere, luxurious feel",
+      "back-to-school": "back-to-school aesthetic — casual confident energy, campus/urban backdrop feel, natural daylight",
+      "new-year": "new year aesthetic — fresh and aspirational mood, clean modern backdrop, bright optimistic lighting",
+      valentines: "Valentine's aesthetic — soft romantic tones, warm pinks and reds, intimate soft lighting",
+    };
+    const desc = themeDescriptions[ctx.theme] || `${ctx.theme} seasonal aesthetic`;
+    blocks.push(`SEASONAL DIRECTION: ${desc}. Let this mood influence lighting, color grading, and background atmosphere.`);
+  }
+
+  if (ctx.themeNotes) {
+    blocks.push(`CREATIVE DIRECTION: ${ctx.themeNotes}`);
+  }
+
+  if (ctx.brandProfile) {
+    const bp = ctx.brandProfile;
+    const parts: string[] = [];
+    if (bp.tone) parts.push(`Tone: ${bp.tone}`);
+    if (bp.lighting_style) parts.push(`Lighting: ${bp.lighting_style}`);
+    if (bp.color_temperature) parts.push(`Color temperature: ${bp.color_temperature}`);
+    if (bp.background_style) parts.push(`Background style: ${bp.background_style}`);
+    if (bp.composition_bias) parts.push(`Composition: ${bp.composition_bias}`);
+    if (parts.length > 0) {
+      blocks.push(`BRAND GUIDELINES:\n   ${parts.join("\n   ")}`);
+    }
+  }
+
+  return blocks.length > 0 ? "\n" + blocks.join("\n\n") + "\n" : "";
+}
+
+function buildPrompt(req: TryOnRequest, dropContext?: DropContext): string {
   const hasSceneImage = !!req.pose.imageUrl;
 
   const backgroundMap: Record<string, string> = {
@@ -134,6 +178,7 @@ function buildPrompt(req: TryOnRequest): string {
   const identityBlock = buildIdentityBlock(req);
   const jewelryGuard = buildJewelryGuard(req.product);
   const framingInstruction = buildFramingInstruction(req.framing);
+  const dropBlocks = dropContext ? buildDropDirectionBlocks(dropContext) : "";
 
   // Build environment/background section based on whether scene image is provided
   let environmentBlock: string;
@@ -173,9 +218,8 @@ ${environmentBlock}
    - Perfect anatomy with natural hands
    - No AI artifacts or distortions
    - Ultra high resolution
-
+${dropBlocks}
 ${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
-}
 
 const negativePrompt =
   "blurry, low quality, distorted, deformed hands, extra fingers, missing fingers, bad anatomy, unnatural pose, stiff pose, mannequin, cartoon, illustration, anime, 3d render, text, watermark, logo overlay, signature, flat lay, product only without model, floating clothes, wrinkled messy clothes, wrong colors, pattern distortion";
@@ -498,7 +542,15 @@ serve(async (req) => {
       );
     }
 
-    const body: TryOnRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
+    const body: TryOnRequest & {
+      user_id?: string;
+      job_id?: string;
+      credits_reserved?: number;
+      creative_drop_id?: string;
+      theme?: string;
+      theme_notes?: string;
+      brand_profile?: Record<string, unknown>;
+    } = await req.json();
 
     const userId = body.user_id;
 
@@ -516,7 +568,14 @@ serve(async (req) => {
       );
     }
 
-    const prompt = buildPrompt(body);
+    // Only inject theme/brand context for creative drop jobs
+    const dropContext: DropContext | undefined = body.creative_drop_id ? {
+      theme: body.theme,
+      themeNotes: body.theme_notes,
+      brandProfile: body.brand_profile,
+    } : undefined;
+
+    const prompt = buildPrompt(body, dropContext);
     console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
 
     const imageCount = Math.min(body.imageCount || 4, 8);
