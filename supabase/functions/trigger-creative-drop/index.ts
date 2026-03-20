@@ -63,29 +63,46 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Authenticate user with cryptographic JWT verification
     const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const isInternal = req.headers.get("x-queue-internal") === "true"
+      && authHeader === `Bearer ${serviceRoleKey}`;
+
+    let userId: string;
+    const body = await req.json();
+    const { schedule_id } = body;
+
+    if (isInternal) {
+      // Internal call from run-scheduled-drops — user_id passed in body
+      if (!body.user_id) {
+        return new Response(
+          JSON.stringify({ error: "Missing user_id for internal call" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userId = body.user_id;
+    } else {
+      // External call — authenticate via JWT
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Authentication required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const tokenStr = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(tokenStr);
+      if (userError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Authentication required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userId = user.id;
     }
 
-    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const tokenStr = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(tokenStr);
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    const userId = user.id;
-
-    const { schedule_id } = await req.json();
     if (!schedule_id) {
       return new Response(
         JSON.stringify({ error: "Missing schedule_id" }),
