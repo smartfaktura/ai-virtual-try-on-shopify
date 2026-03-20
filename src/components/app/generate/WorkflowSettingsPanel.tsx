@@ -124,6 +124,8 @@ interface WorkflowSettingsPanelProps {
   workflowImageCount: number;
   multiProductCount: number;
   angleMultiplier: number;
+  aspectRatioCount: number;
+  framingCount: number;
   interiorType: 'interior' | 'exterior';
 
   // Admin
