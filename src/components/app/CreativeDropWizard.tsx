@@ -1103,7 +1103,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </button>
                           )}
                         </div>
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="space-y-4">
                           {sceneCategories.map(cat => {
                             const catPoses = allScenePoses.filter(p => p.category === cat);
                             if (catPoses.length === 0) return null;
