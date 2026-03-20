@@ -49,6 +49,14 @@ export function LandingFooter() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your automated visual studio for e-commerce. Professional product visuals, delivered monthly.
             </p>
+            <div className="flex items-center gap-3 mt-4">
+              <a href="https://www.instagram.com/vovv.ai" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href="https://www.facebook.com/vovvaistudio/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Facebook">
+                <Facebook className="h-5 w-5" />
+              </a>
+            </div>
           </div>
 
           {/* Links */}
