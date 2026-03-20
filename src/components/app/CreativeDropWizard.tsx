@@ -1931,12 +1931,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           ) : (
             <Button
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || (deliveryMode === 'now' && profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance)}
+              disabled={saveMutation.isPending || (deliveryMode === 'now' && insufficientCredits)}
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               {saveMutation.isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
-                : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
+                : (deliveryMode === 'now' && insufficientCredits)
+                  ? <><Wallet className="w-4 h-4" /> Not Enough Credits</>
+                  : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
               }
             </Button>
           )}
