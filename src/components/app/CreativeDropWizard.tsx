@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useCredits } from '@/contexts/CreditContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FramingMultiSelector } from '@/components/app/FramingSelector';
 import { format } from 'date-fns';
