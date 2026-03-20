@@ -1106,51 +1106,70 @@ export default function Generate() {
       };
     }
 
-    // Decide: single job or batch — always batch when multiple images for parallel processing
-    if (workflowImageCount <= 1) {
-      // Single job — existing behavior
-      const enqueueResult = await enqueue({
-        jobType: 'workflow',
-        payload,
-        imageCount: workflowImageCount,
-        quality: 'high',
-        additionalProductCount: 0,
-      }, {
-        imageCount: workflowImageCount,
-        quality: 'high',
-        hasModel: !!needsModel,
-        hasScene: false,
-        hasProduct: true,
-      });
-      if (enqueueResult) {
-        setBalanceFromServer(enqueueResult.newBalance);
-        injectActiveJob(queryClient, {
-          jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
-          job_type: 'workflow', quality: 'high', imageCount: workflowImageCount,
-        });
+    // Build all ratio × framing combos
+    const ratiosToGenerate = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+    const framingsToGenerate: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+
+    // If only one combo, use the original logic; otherwise loop
+    if (ratiosToGenerate.length === 1 && framingsToGenerate.length === 1) {
+      payload.aspectRatio = ratiosToGenerate[0];
+      payload.framing = framingsToGenerate[0] || undefined;
+      const baseImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
+
+      if (baseImageCount <= 1) {
+        const enqueueResult = await enqueue({
+          jobType: 'workflow', payload, imageCount: baseImageCount, quality: 'high', additionalProductCount: 0,
+        }, { imageCount: baseImageCount, quality: 'high', hasModel: !!needsModel, hasScene: false, hasProduct: true });
+        if (enqueueResult) {
+          setBalanceFromServer(enqueueResult.newBalance);
+          injectActiveJob(queryClient, { jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: baseImageCount });
+        } else { setCurrentStep('settings'); }
       } else {
-        setCurrentStep('settings');
+        const success = await startBatch({
+          payload, selectedVariationIndices: Array.from(selectedVariationIndices), angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: !!needsModel, hasScene: false,
+          onJobEnqueued: (jobId) => injectActiveJob(queryClient, { jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 }),
+        });
+        if (!success) { setCurrentStep('settings'); }
       }
     } else {
-      // Batch mode — split into multiple jobs
-      const success = await startBatch({
-        payload,
-        selectedVariationIndices: Array.from(selectedVariationIndices),
-        angleMultiplier,
-        quality: 'high',
-        imageCount: workflowImageCount,
-        hasModel: !!needsModel,
-        hasScene: false,
-        onJobEnqueued: (jobId) => injectActiveJob(queryClient, {
-          jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
-          job_type: 'workflow', quality: 'high', imageCount: 1,
-        }),
-      });
-      if (!success) {
-        setCurrentStep('settings');
+      // Multiple combos — enqueue each as a separate batch
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+      const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
+
+      for (const ratio of ratiosToGenerate) {
+        for (const framingVal of framingsToGenerate) {
+          for (const varIdx of variationIndices) {
+            const comboPayload = { ...payload, aspectRatio: ratio, framing: framingVal || undefined, selected_variations: [varIdx] };
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!needsModel, hasScene: false }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              jobMap.set(`${varIdx}_${ratio}_${framingVal}`, result.jobId);
+              lastBalance = result.newBalance;
+              injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+            } else {
+              const err = await response.json().catch(() => ({}));
+              if (response.status === 402) { toast.error('Insufficient credits'); break; }
+              toast.error(err.error || 'Failed to queue generation');
+            }
+          }
+        }
       }
+
+      if (jobMap.size === 0) { toast.error('Could not queue any images'); setCurrentStep('settings'); return; }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
       console.error('Workflow generation failed:', err);
