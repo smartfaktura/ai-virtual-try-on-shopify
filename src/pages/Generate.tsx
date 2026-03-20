@@ -959,8 +959,8 @@ export default function Generate() {
             } : undefined,
             selected_variations: [varIdx],
             product_angles: productAngle !== 'front' ? productAngle : undefined,
-            quality, aspectRatio,
-            framing: framing || undefined,
+            quality, aspectRatio: ratioVal,
+            framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
           };
           if (needsModel && base64ModelImage) {
