@@ -1,36 +1,24 @@
 
 
-# Compact Mobile Prompt Bar
+# Fix "Images Generated" Slow Loading on Dashboard
 
-## Changes
+## Problem
+The "Images Generated" metric fetches ALL completed `generation_jobs` rows (140+) to sum `requested_count` client-side. This makes two sequential DB calls every time the dashboard loads, with no caching beyond the global 2-minute staleTime. The skeleton shows every visit.
 
-### 1. Shorter mobile placeholder (no "Enter to generate")
-**File:** `FreestylePromptPanel.tsx` line 247
+## Solution
 
-Change mobile placeholder from `"Describe what you want to create… (Enter to generate)"` to `"Describe what you want to create…"`. Keep desktop version as-is.
+### 1. Add aggressive caching + placeholderData
+**File:** `src/pages/Dashboard.tsx` (lines 193-219)
 
-### 2. Remove helper text before Generate on mobile
-**File:** `FreestylePromptPanel.tsx` lines 322-325
+Add `staleTime: 5 * 60 * 1000` (5 minutes) and `placeholderData: keepPreviousData` to the query. This means:
+- First load still fetches, but subsequent navigations show the cached number instantly (no skeleton)
+- Background refetch happens silently
 
-Hide the "Type a prompt or add a reference to start" text on mobile. Only show it on `sm:` and up. This removes the extra row that pushes the Generate button down.
+### 2. Run both sub-queries in parallel (already done) but reduce payload
+The `generation_jobs` query already selects only `requested_count`, which is fine. No change needed there.
 
-### 3. Reduce textarea height on mobile
-**File:** `FreestylePromptPanel.tsx` line 249
+### 3. Same caching treatment for other metric queries
+Apply `staleTime: 5 * 60 * 1000` to the product count, schedule count, and freestyle count queries too, so all 4 metric cards load instantly on return visits.
 
-Change mobile `min-h-[80px]` to `min-h-[56px]` and rows from 3 to 2 on mobile, keeping desktop at 3 rows / 72px.
-
-### 4. Tighter padding on mobile action bar
-**File:** `FreestylePromptPanel.tsx` line 315
-
-Reduce mobile padding from `py-3` to `py-2` on the action bar row, and `py-3` to `py-2` on the chips row (line 287).
-
-### 5. Fit all chips in fewer rows on mobile  
-**File:** `FreestyleSettingsChips.tsx` lines 258-290
-
-Reorganize mobile layout into a single wrapping container with `gap-1` instead of two separate groups with `space-y-1.5`. All 9 chips (Upload, Product, Model, Scene, Framing, Brand, Ratio, Camera, Quality) flow naturally in one `flex-wrap` container. With `gap-1` and smaller chips they'll fit in ~3 tight rows naturally.
-
-### 6. Remove bottom divider before action bar on mobile
-**File:** `FreestylePromptPanel.tsx` line 312
-
-Hide the divider between chips and the generate button on mobile to save vertical space.
+This is the lightest fix -- no migration needed, no RPC. The metric will show cached data immediately and refresh in the background.
 
