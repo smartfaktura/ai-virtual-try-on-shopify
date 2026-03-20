@@ -279,7 +279,7 @@ export default function CreativeDrops() {
                 ...(generatingCount > 0 ? [{ value: generatingCount, label: 'Generating Now', generating: true }] :
                   nextRun?.next_run_at ? [{ value: new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), label: 'Next Run' }] : []),
               ].map((stat: any) => (
-                <div key={stat.label} className="flex-1 min-w-[110px] px-5 py-4 text-center">
+                <div key={stat.label} className="flex-1 min-w-[80px] sm:min-w-[110px] px-3 sm:px-5 py-3 sm:py-4 text-center">
                   <div className="flex items-center justify-center gap-1.5">
                     <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
                     {stat.generating && (
