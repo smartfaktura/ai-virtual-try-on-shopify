@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Send, CheckCircle, AlertCircle, Mail } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
@@ -40,34 +39,18 @@ export function ContactFormDialog({ open, onOpenChange, onSuccess }: ContactForm
     setErrorMsg('');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Please sign in first');
-      }
+      const { data, error } = await supabase.functions.invoke('send-contact', {
+        body: { name: trimName, email: trimEmail, message: trimMessage },
+      });
 
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({ name: trimName, email: trimEmail, message: trimMessage }),
-        }
-      );
-
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({ error: 'Failed to send' }));
-        throw new Error(data.error || 'Failed to send');
+      if (error || data?.error) {
+        throw new Error(data?.error || 'Failed to send');
       }
 
       setState('sent');
       setTimeout(() => {
         onSuccess?.(trimEmail);
         onOpenChange(false);
-        // Reset for next open
         setTimeout(() => {
           setState('idle');
           setMessage('');
@@ -108,7 +91,6 @@ export function ContactFormDialog({ open, onOpenChange, onSuccess }: ContactForm
           </div>
         ) : (
           <>
-            {/* Header */}
             <div className="px-6 pt-6 pb-4 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
@@ -128,53 +110,24 @@ export function ContactFormDialog({ open, onOpenChange, onSuccess }: ContactForm
                 <div>
                   <DialogHeader className="space-y-0 text-left">
                     <DialogTitle className="text-base">Message Our Team</DialogTitle>
-                    <DialogDescription className="text-xs">
-                      We typically respond within 24 hours
-                    </DialogDescription>
+                    <DialogDescription className="text-xs">We typically respond within 24 hours</DialogDescription>
                   </DialogHeader>
                 </div>
               </div>
             </div>
 
-            {/* Form */}
             <div className="px-6 pb-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Name</label>
-                <input
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={100}
-                  disabled={state === 'sending'}
-                  className="w-full h-10 bg-muted/50 border border-border rounded-lg px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors disabled:opacity-50"
-                />
+                <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} disabled={state === 'sending'} className="w-full h-10 bg-muted/50 border border-border rounded-lg px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors disabled:opacity-50" />
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Email</label>
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  maxLength={255}
-                  disabled={state === 'sending'}
-                  className="w-full h-10 bg-muted/50 border border-border rounded-lg px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors disabled:opacity-50"
-                />
+                <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} disabled={state === 'sending'} className="w-full h-10 bg-muted/50 border border-border rounded-lg px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors disabled:opacity-50" />
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Message</label>
-                <textarea
-                  placeholder="How can we help?"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  maxLength={2000}
-                  rows={4}
-                  disabled={state === 'sending'}
-                  className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors resize-none disabled:opacity-50"
-                />
+                <textarea placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={4} disabled={state === 'sending'} className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors resize-none disabled:opacity-50" />
               </div>
 
               {state === 'error' && (
@@ -184,11 +137,7 @@ export function ContactFormDialog({ open, onOpenChange, onSuccess }: ContactForm
                 </div>
               )}
 
-              <button
-                onClick={handleSubmit}
-                disabled={state === 'sending' || !name.trim() || !email.trim() || !message.trim()}
-                className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors"
-              >
+              <button onClick={handleSubmit} disabled={state === 'sending' || !name.trim() || !email.trim() || !message.trim()} className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors">
                 {state === 'sending' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />

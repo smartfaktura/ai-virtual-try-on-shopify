@@ -31,31 +31,15 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
     setErrorMsg('');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Please sign in first');
-      }
+      const { data, error } = await supabase.functions.invoke('send-contact', {
+        body: { name: trimName, email: trimEmail, message: trimMessage },
+      });
 
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({ name: trimName, email: trimEmail, message: trimMessage }),
-        }
-      );
-
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({ error: 'Failed to send' }));
-        throw new Error(data.error || 'Failed to send');
+      if (error || data?.error) {
+        throw new Error(data?.error || 'Failed to send');
       }
 
       setState('sent');
-      // Delay the onSent callback so the user sees the success banner
       setTimeout(() => {
         onSent?.(trimEmail);
       }, 10000);
@@ -82,33 +66,9 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
     <div className="space-y-2.5 p-3 rounded-xl bg-muted/50 border border-border">
       <p className="text-xs font-medium text-foreground">Send a message to our team</p>
 
-      <input
-        type="text"
-        placeholder="Your name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        maxLength={100}
-        className={inputClass}
-        disabled={state === 'sending'}
-      />
-      <input
-        type="email"
-        placeholder="Your email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        maxLength={255}
-        className={inputClass}
-        disabled={state === 'sending'}
-      />
-      <textarea
-        placeholder="How can we help?"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        maxLength={2000}
-        rows={3}
-        className={cn(inputClass, "resize-none")}
-        disabled={state === 'sending'}
-      />
+      <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} className={inputClass} disabled={state === 'sending'} />
+      <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} className={inputClass} disabled={state === 'sending'} />
+      <textarea placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={3} className={cn(inputClass, "resize-none")} disabled={state === 'sending'} />
 
       {state === 'error' && (
         <div className="flex items-center gap-1.5 text-destructive">

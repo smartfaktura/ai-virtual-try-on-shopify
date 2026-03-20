@@ -25,17 +25,23 @@ export default function Contact() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from('contact_submissions').insert({
-      name: name.trim().slice(0, 100),
-      email: email.trim().slice(0, 255),
-      inquiry_type: subject,
-      message: message.trim().slice(0, 5000),
+
+    const { data, error } = await supabase.functions.invoke('send-contact', {
+      body: {
+        name: name.trim().slice(0, 100),
+        email: email.trim().slice(0, 255),
+        inquiryType: subject,
+        message: message.trim().slice(0, 5000),
+      },
     });
+
     setSubmitting(false);
-    if (error) {
-      toast.error('Failed to send message. Please try again.');
+
+    if (error || data?.error) {
+      toast.error(data?.error || 'Failed to send message. Please try again.');
       return;
     }
+
     toast.success('Message sent!', {
       description: 'We\'ll get back to you within 24 hours.',
     });
@@ -64,7 +70,6 @@ export default function Contact() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Form */}
             <div className="md:col-span-2">
               <Card className="bg-card border-border">
                 <CardContent className="pt-6">
@@ -72,30 +77,17 @@ export default function Contact() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Name</label>
-                        <Input
-                          placeholder="Your name"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          required
-                        />
+                        <Input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
                       </div>
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
-                        <Input
-                          type="email"
-                          placeholder="you@company.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                        />
+                        <Input type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
                       </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">Subject</label>
                       <Select value={subject} onValueChange={setSubject}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a topic" />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Choose a topic" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="general">General Question</SelectItem>
                           <SelectItem value="billing">Billing & Plans</SelectItem>
@@ -108,13 +100,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">Message</label>
-                      <Textarea
-                        placeholder="How can we help?"
-                        rows={5}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        required
-                      />
+                      <Textarea placeholder="How can we help?" rows={5} value={message} onChange={(e) => setMessage(e.target.value)} required />
                     </div>
                     <Button type="submit" className="rounded-full px-8 gap-2" disabled={submitting}>
                       <Send className="w-4 h-4" />
@@ -125,24 +111,19 @@ export default function Contact() {
               </Card>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
               <Card className="bg-card border-border">
                 <CardContent className="pt-6">
                   <Mail className="w-8 h-8 text-primary mb-3" />
                   <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
-                  <a href="mailto:hello@vovv.ai" className="text-sm text-primary hover:underline">
-                    hello@vovv.ai
-                  </a>
+                  <a href="mailto:hello@vovv.ai" className="text-sm text-primary hover:underline">hello@vovv.ai</a>
                 </CardContent>
               </Card>
               <Card className="bg-card border-border">
                 <CardContent className="pt-6">
                   <Clock className="w-8 h-8 text-primary mb-3" />
                   <h3 className="font-semibold text-foreground mb-1">Response Time</h3>
-                  <p className="text-sm text-muted-foreground">
-                    We typically respond within 2 hours during business hours (Mon–Fri, 9am–6pm EST).
-                  </p>
+                  <p className="text-sm text-muted-foreground">We typically respond within 2 hours during business hours (Mon–Fri, 9am–6pm EST).</p>
                 </CardContent>
               </Card>
             </div>
