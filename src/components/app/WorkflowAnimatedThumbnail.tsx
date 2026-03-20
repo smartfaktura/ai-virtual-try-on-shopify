@@ -62,7 +62,7 @@ interface Props {
 
 /* ── Floating element renderer ── */
 
-const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement }) {
+const FloatingEl = memo(function FloatingEl({ element, compact }: { element: SceneElement; compact?: boolean }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
@@ -74,6 +74,7 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
     ...element.position,
     opacity: 0,
     animation: `${animName} 0.55s cubic-bezier(.22,1,.36,1) ${element.enterDelay}s forwards`,
+    ...(compact ? { transform: 'scale(0.72)', transformOrigin: 'top left' } : {}),
   };
 
   // Optimize element images — model circles use quality-only to preserve face crop
