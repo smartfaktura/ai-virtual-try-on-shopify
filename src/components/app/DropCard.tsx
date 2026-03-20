@@ -168,18 +168,20 @@ export function DropCard(props: Props) {
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 rounded-lg text-xs gap-1.5"
-                  onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
-                >
-                  {schedule.active ? (
-                    <><Pause className="w-3 h-3" /> <span className="hidden sm:inline">Pause</span></>
-                  ) : (
-                    <><Play className="w-3 h-3" /> <span className="hidden sm:inline">Resume</span></>
-                  )}
-                </Button>
+                {!isCompleted && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 rounded-lg text-xs gap-1.5"
+                    onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
+                  >
+                    {schedule.active ? (
+                      <><Pause className="w-3 h-3" /> <span className="hidden sm:inline">Pause</span></>
+                    ) : (
+                      <><Play className="w-3 h-3" /> <span className="hidden sm:inline">Resume</span></>
+                    )}
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
