@@ -1301,6 +1301,7 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const jobMap = new Map<string, string>();
+      const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
       let enqueueCount = 0;
       for (const product of productQueue) {
@@ -1314,7 +1315,9 @@ export default function Generate() {
                 }
                 const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
                 if (result) {
-                  jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                  const compositeKey = `${product.id}::${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
+                  jobMap.set(compositeKey, result.jobId);
+                  metaMap.set(compositeKey, { productName: product.title, ratio: ratioVal, framing: framingVal });
                   lastBalance = result.newBalance;
                   injectActiveJob(queryClient, {
                     jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
