@@ -1702,11 +1702,20 @@ export default function Generate() {
       toast.error('Download failed');
     }
   };
-  const handleDownloadAll = async () => {
-    for (let idx = 0; idx < generatedImages.length; idx++) {
-      await handleDownloadImage(idx);
-    }
-    
+  const [zipDownloading, setZipDownloading] = useState(false);
+  const [zipPct, setZipPct] = useState(0);
+  const handleDownloadZip = async (indices?: number[]) => {
+    const urls = indices ? indices.map(i => generatedImages[i]) : generatedImages;
+    if (urls.length === 0) return;
+    if (urls.length === 1) { await handleDownloadImage(indices?.[0] ?? 0); return; }
+    setZipDownloading(true);
+    setZipPct(0);
+    try {
+      const productName = selectedProduct?.title || scratchUpload?.productInfo.title || 'generation';
+      const images = urls.map((url, i) => ({ url, workflow_name: activeWorkflow?.name || productName, scene_name: `image_${(indices?.[i] ?? i) + 1}` }));
+      await downloadDropAsZip(images, productName, pct => setZipPct(pct));
+    } catch { toast.error('Download failed'); }
+    finally { setZipDownloading(false); }
   };
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
