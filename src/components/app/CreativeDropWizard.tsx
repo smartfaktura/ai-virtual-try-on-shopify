@@ -206,6 +206,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [isRandomModelsFlag, setIsRandomModelsFlag] = useState(false);
   const [isRandomScenesFlag, setIsRandomScenesFlag] = useState(false);
   const [customImageCountStr, setCustomImageCountStr] = useState('');
+  const [campaignMode, setCampaignMode] = useState<'curated' | 'mix'>('curated');
 
   // Freestyle
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
