@@ -122,6 +122,7 @@ interface WorkflowSettingsPanelProps {
 
   // Derived
   workflowImageCount: number;
+  workflowModelCount: number;
   multiProductCount: number;
   angleMultiplier: number;
   aspectRatioCount: number;
@@ -777,6 +778,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {isMultiProductMode ? `${productQueue.length} products × ` : ''}
+                  {props.workflowModelCount > 1 ? `${props.workflowModelCount} models × ` : ''}
                   {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                   {angleMultiplier > 1 ? ` × ${angleMultiplier} angles` : ''}
                   {aspectRatioCount > 1 ? ` × ${aspectRatioCount} sizes` : ''}

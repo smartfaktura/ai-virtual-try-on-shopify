@@ -1882,7 +1882,8 @@ export default function Generate() {
   const angleMultiplier = productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2;
   const aspectRatioCount = Math.max(1, selectedAspectRatios.size);
   const framingCount = selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size);
-  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount : parseInt(imageCount);
+  const workflowModelCount = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 1 ? selectedModels.size : 1;
+  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount * workflowModelCount : parseInt(imageCount);
   const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
@@ -3755,6 +3756,7 @@ export default function Generate() {
             creditCost={creditCost}
             isFreeUser={isFreeUser}
             workflowImageCount={workflowImageCount}
+            workflowModelCount={workflowModelCount}
             multiProductCount={multiProductCount}
             angleMultiplier={angleMultiplier}
             aspectRatioCount={aspectRatioCount}
