@@ -66,12 +66,16 @@ export function MultiProductProgressBanner({
   const completedCount = multiProductResults.size;
   const totalJobCount = totalJobs || multiProductJobIds.size;
   const totalImages = totalExpectedImages || totalJobCount;
-  const estimatePerImage = 8; // seconds per image (realistic for standard quality)
-  const totalEstimate = totalImages * estimatePerImage;
-  const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
-  const estHighMin = Math.max(estLowMin, Math.ceil((totalEstimate * 1.3) / 60));
+  const estimatePerImage = 8;
+  const totalEstSeconds = totalImages * estimatePerImage;
+  const estLowSec = Math.round(totalEstSeconds * 0.7);
+  const estHighSec = Math.round(totalEstSeconds * 1.3);
+  const useSeconds = estHighSec < 60;
+  const estLow = useSeconds ? estLowSec : Math.max(1, Math.ceil(estLowSec / 60));
+  const estHigh = useSeconds ? estHighSec : Math.max(estLow, Math.ceil(estHighSec / 60));
+  const estUnit = useSeconds ? 'sec' : 'min';
 
-  const ratio = elapsed / totalEstimate;
+  const ratio = elapsed / totalEstSeconds;
   const overtimeMsg = ratio >= 2
     ? 'Almost there — high-quality results take a little extra time…'
     : ratio >= 1.3
@@ -104,7 +108,7 @@ export function MultiProductProgressBanner({
 
       {/* Time estimate */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Est. ~{estLowMin}-{estHighMin} min for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
+        <span>Est. ~{estLow === estHigh ? estLow : `${estLow}-${estHigh}`} {estUnit} for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
         <span>{generatingProgress}%</span>
       </div>
 
