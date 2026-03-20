@@ -6,6 +6,7 @@ interface TryOnPreviewProps {
   product?: Product | null;
   scratchUpload?: ScratchUpload | null;
   model: ModelProfile | null;
+  models?: ModelProfile[];
   pose: TryOnPose | null;
   poses?: TryOnPose[];
   creditCost?: number;
@@ -13,23 +14,28 @@ interface TryOnPreviewProps {
   products?: Product[];
 }
 
-export function TryOnPreview({ product, scratchUpload, model, pose, poses, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
+export function TryOnPreview({ product, scratchUpload, model, models, pose, poses, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
   const allPoses = poses && poses.length > 0 ? poses : pose ? [pose] : [];
+  const allModels = models && models.length > 0 ? models : model ? [model] : [];
   const firstPose = allPoses[0] || null;
+  const firstModel = allModels[0] || null;
   const poseImage = firstPose?.previewUrl;
   const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
   const productTitle = product?.title || scratchUpload?.productInfo.title || '';
   const hasProduct = !!(product || scratchUpload);
   const isMultiProduct = products && products.length > 1;
   const isMultiScene = allPoses.length > 1;
-  const hasAllSelections = hasProduct && model && allPoses.length > 0;
+  const isMultiModel = allModels.length > 1;
+  const hasAllSelections = hasProduct && allModels.length > 0 && allPoses.length > 0;
 
   const description = hasAllSelections
     ? isMultiProduct
-      ? `${model.name} wearing ${products.length} products in ${allPoses.length} scene${allPoses.length > 1 ? 's' : ''}`
-      : isMultiScene
-        ? `${model.name} wearing ${productTitle} in ${allPoses.length} scenes`
-        : `${model.name} in ${firstPose!.name} wearing ${productTitle}`
+      ? `${allModels.map(m => m.name).slice(0, 2).join(', ')}${allModels.length > 2 ? ` +${allModels.length - 2}` : ''} wearing ${products.length} products in ${allPoses.length} scene${allPoses.length > 1 ? 's' : ''}`
+      : isMultiModel
+        ? `${allModels.map(m => m.name).slice(0, 3).join(', ')}${allModels.length > 3 ? ` +${allModels.length - 3}` : ''} wearing ${productTitle} in ${allPoses.length} scene${allPoses.length > 1 ? 's' : ''}`
+        : isMultiScene
+          ? `${firstModel!.name} wearing ${productTitle} in ${allPoses.length} scenes`
+          : `${firstModel!.name} in ${firstPose!.name} wearing ${productTitle}`
     : 'Complete your selections to see preview';
 
   return (
@@ -46,20 +52,14 @@ export function TryOnPreview({ product, scratchUpload, model, pose, poses, credi
             <Thumb image={productImageUrl} label="Product" active={hasProduct} />
           )}
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
-          <Thumb image={model?.previewUrl} label="Model" active={!!model} round />
+          {isMultiModel ? (
+            <MultiThumbs items={allModels.map(m => ({ id: m.modelId, image: m.previewUrl, name: m.name }))} label="models" round />
+          ) : (
+            <Thumb image={firstModel?.previewUrl} label="Model" active={allModels.length > 0} round />
+          )}
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
           {isMultiScene ? (
-            <div className="flex items-center gap-1.5">
-              {allPoses.slice(0, 3).map((p, i) => {
-                const img = p.previewUrl;
-                return (
-                  <div key={p.poseId} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0">
-                    <img src={img} alt={p.name} className="w-full h-full object-cover" />
-                  </div>
-                );
-              })}
-              <span className="ml-1 text-[10px] sm:text-xs font-medium text-primary">{allPoses.length} scenes</span>
-            </div>
+            <MultiThumbs items={allPoses.map(p => ({ id: p.poseId, image: p.previewUrl, name: p.name }))} label="scenes" />
           ) : (
             <Thumb image={poseImage} label="Scene" active={!!firstPose} />
           )}
@@ -75,11 +75,28 @@ export function TryOnPreview({ product, scratchUpload, model, pose, poses, credi
         </div>
         <div className="flex justify-center gap-3 sm:gap-4 pt-2 border-t border-border">
           <StatusPill label="Product" completed={hasProduct} count={isMultiProduct ? products.length : undefined} />
-          <StatusPill label="Model" completed={!!model} />
+          <StatusPill label="Model" completed={allModels.length > 0} count={isMultiModel ? allModels.length : undefined} />
           <StatusPill label="Scene" completed={allPoses.length > 0} count={isMultiScene ? allPoses.length : undefined} />
         </div>
       </div>
     </Card>
+  );
+}
+
+function MultiThumbs({ items, label, round }: { items: Array<{ id: string; image: string; name: string }>; label: string; round?: boolean }) {
+  const visibleCount = Math.min(items.length, 3);
+  return (
+    <div className="flex items-center gap-1.5">
+      {items.slice(0, visibleCount).map((item) => (
+        <div key={item.id} className={`w-12 h-12 sm:w-16 sm:h-16 ${round ? 'rounded-full' : 'rounded-lg'} overflow-hidden border-2 border-primary bg-card flex-shrink-0`}>
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+        </div>
+      ))}
+      {items.length > visibleCount && (
+        <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary text-primary-foreground">+{items.length - visibleCount}</span>
+      )}
+      <span className="ml-1 text-[10px] sm:text-xs font-medium text-primary">{items.length} {label}</span>
+    </div>
   );
 }
 

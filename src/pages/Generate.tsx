@@ -3138,12 +3138,21 @@ export default function Generate() {
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
-                <h2 className="text-base font-semibold">Select a Model</h2>
-                <p className="text-sm text-muted-foreground">
-                  {activeWorkflow?.name === 'Mirror Selfie Set'
-                    ? 'This model will appear taking a mirror selfie wearing your product'
-                    : 'Choose the model who will wear your clothing'}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold">Select Model{!isFreeUser ? 's' : ''}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {activeWorkflow?.name === 'Mirror Selfie Set'
+                        ? 'This model will appear taking a mirror selfie wearing your product'
+                        : isFreeUser ? 'Choose the model who will wear your clothing' : 'Select one or more models for your shoot'}
+                    </p>
+                  </div>
+                  {selectedModels.size > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedModels.size} selected{!isFreeUser && selectedModels.size > 0 ? ` · ${selectedModels.size * Math.max(1, selectedPoses.size) * parseInt(imageCount) * 6 * (isMultiProductMode ? productQueue.length : 1)} credits` : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
