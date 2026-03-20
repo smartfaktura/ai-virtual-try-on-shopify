@@ -33,8 +33,12 @@ interface TryOnSettingsPanelProps {
   setQuality: (v: ImageQuality) => void;
   framing: FramingOption | null;
   setFraming: (f: FramingOption | null) => void;
+  selectedFramings: Set<string>;
+  setSelectedFramings: (s: Set<string>) => void;
   aspectRatio: AspectRatio;
   setAspectRatio: (ar: AspectRatio) => void;
+  selectedAspectRatios: Set<AspectRatio>;
+  setSelectedAspectRatios: (s: Set<AspectRatio>) => void;
   balance: number;
   isFreeUser: boolean;
   isMultiProductMode: boolean;
