@@ -1209,8 +1209,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* Models */}
-                    {needsModels && (
+                    {/* Models — hidden in Mix mode */}
+                    {needsModels && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Models</p>
