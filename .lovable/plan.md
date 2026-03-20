@@ -1,53 +1,37 @@
 
 
-# Fix: Mirror Selfie Image Count Doesn't Include Model Count
+# Fix: Wrong Image Count in Progress Banner Estimate
 
 ## Problem
-With 2 scenes × 2 models × 1 product selected, the settings panel shows "2 images · 12 credits" instead of "4 images · 24 credits". The model count is completely missing from the credit/image calculation for workflows.
+The estimate line shows "Est. ~1-1 min for 2 images" when generating 8 images. Two issues:
 
-## Root Cause
-
-**`src/pages/Generate.tsx` line 1885:**
-```
-workflowImageCount = hasWorkflowConfig
-  ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount
-  : parseInt(imageCount);
-```
-This formula doesn't multiply by model count. For Mirror Selfie/Selfie UGC with 2 models selected, it should be × 2.
-
-**Line 1894 (credit cost):** Uses `workflowImageCount * workflowCostPerImage` — also missing model multiplier.
-
-**`WorkflowSettingsPanel.tsx` line 776:** Displays `workflowImageCount * multiProductCount` — no model count shown.
+1. **Wrong total**: `totalExpectedImages` is calculated as `productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount` — but for workflows, `tryOnSceneCount` and `tryOnModelCount` are both 1 (they only count for `virtual-try-on` mode), so the total is wrong.
+2. **Bad format**: When `estLowMin === estHighMin`, it shows "~1-1 min" which looks broken.
 
 ## Changes
 
-### File 1: `src/pages/Generate.tsx` (line 1885)
-
-Add a `workflowModelCount` for workflows that use multi-model (Mirror Selfie, Selfie/UGC):
-
-```typescript
-const workflowModelCount = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 1
-  ? selectedModels.size : 1;
-const workflowImageCount = hasWorkflowConfig
-  ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount * workflowModelCount
-  : parseInt(imageCount);
-```
-
-This fixes both the image count display and the credit cost calculation (since `creditCost` derives from `workflowImageCount`).
-
-### File 2: `src/components/app/generate/WorkflowSettingsPanel.tsx` (lines 778-784)
-
-Pass `workflowModelCount` as a new prop and include it in the breakdown text:
+### File 1: `src/pages/Generate.tsx` (line 3891)
+Use `workflowImageCount * multiProductCount` for workflows instead of the try-on formula:
 
 ```
-{workflowModelCount > 1 ? `${workflowModelCount} models × ` : ''}
-{selectedVariationIndices.size} scenes ...
+totalExpectedImages={
+  hasWorkflowConfig || isSelfieUgc || isMirrorSelfie
+    ? workflowImageCount * multiProductCount
+    : productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
+}
 ```
 
-Add `workflowModelCount: number` to the props interface and pass it from Generate.tsx.
+### File 2: `src/components/app/MultiProductProgressBanner.tsx` (line 107)
+Fix the "~1-1 min" display — when low equals high, show just one value:
 
-## Summary
-- 2 files, ~8 lines changed
-- Multiplies model count into `workflowImageCount` for Mirror Selfie and Selfie/UGC workflows
-- Updates cost summary breakdown to show model count
+```
+Est. ~{estLowMin === estHighMin ? `${estLowMin}` : `${estLowMin}-${estHighMin}`} min for {totalImages} images
+```
+
+Also, for short estimates under 1 minute, show seconds instead of "~1 min":
+```
+const totalEstSeconds = totalImages * estimatePerImage;
+if (totalEstSeconds < 60) → show "Est. ~X-Y seconds"
+else → show "Est. ~X-Y min"
+```
 
