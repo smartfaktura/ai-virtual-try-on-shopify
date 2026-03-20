@@ -3924,7 +3924,7 @@ export default function Generate() {
             })()}
 
             {/* Single job progress (hidden in multi-product mode) */}
-            {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && (
+            {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && !hasMultipleJobs && (
               <div className="w-full max-w-md">
                 {activeJob ? (
                   <QueuePositionIndicator job={activeJob} onCancel={cancelQueue} />
