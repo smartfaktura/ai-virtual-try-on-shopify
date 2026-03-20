@@ -1961,7 +1961,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               {saveMutation.isPending
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {deliveryMode === 'now' && !editingScheduleId ? 'Launching Drop...' : editingScheduleId ? 'Saving...' : 'Creating...'}</>
                 : (deliveryMode === 'now' && insufficientCredits)
                   ? <><Wallet className="w-4 h-4" /> Not Enough Credits</>
                   : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
