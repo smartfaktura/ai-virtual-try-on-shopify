@@ -3990,17 +3990,6 @@ export default function Generate() {
                   )}
                 </div>
 
-                {/* Variation labels */}
-                {workflowVariationLabels.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Variations</p>
-                    <div className="flex flex-wrap gap-1">
-                      {workflowVariationLabels.map((label, i) => (
-                        <Badge key={i} variant="secondary" className="text-[10px] font-normal">{label}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
