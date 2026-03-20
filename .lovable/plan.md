@@ -1,63 +1,48 @@
 
 
-# Creative Drops: Bug Audit Results
+# Creative Drops: Final Debug Audit
 
 ## Bugs Found
 
-### Bug 1 (Medium): `run-scheduled-drops` Has No Authentication
-The function has **zero authentication**. Anyone can call it and trigger all due schedules for all users. It should verify the request comes from the cron job (service role key) or reject it.
+### Bug 1 (CRITICAL — Runtime Crash): `run-scheduled-drops` double variable declaration
 
-**File**: `supabase/functions/run-scheduled-drops/index.ts` (lines 10-21)
-**Fix**: Add service-role auth check before processing, same pattern as `complete-creative-drop`.
+`supabase/functions/run-scheduled-drops/index.ts` declares `const serviceRoleKey` twice: line 16 and line 30. This causes a Deno runtime error — the scheduled cron job will always fail silently.
 
-### Bug 2 (Medium): Progress Bar Always Shows 0% During Generation
-`DropCard.tsx` line 291-293: `completedImages = dropImages.length`. But `drop.images` is only populated when `complete-creative-drop` runs (after ALL jobs finish). During generation, `drop.images` is always `[]`, so `completedImages = 0` and `progressPct = 0%`.
+**Fix**: Remove the duplicate declaration on line 30. `serviceRoleKey` from line 16 is already in scope.
 
-The time-based estimate text (lines 316-328) works fine, but the actual `<Progress>` bar is stuck at 0%.
+### Bug 2 (Major — Broken UI): Image metadata stores IDs instead of names
 
-**Fix**: Use time-based progress for the bar too: `Math.min(95, Math.round((elapsedMs / estimatedTotalMs) * 100))`.
+`complete-creative-drop` stores images as `{ url, workflow_id, product_id }` (UUIDs). But the frontend `DropImage` type expects `{ url, workflow_name, product_title }` (human-readable strings). Result: when a "ready" drop has images populated, the detail modal can't group by workflow or show product titles — all metadata appears blank.
 
-### Bug 3 (Low): `complete-creative-drop` Queries Wrong Table for Pending Jobs
-Line 54-58 queries `generation_queue` with `payload->>creative_drop_id`, but the PostgREST JSON arrow filter syntax may not work reliably with `payload->>` on `generation_queue`. The `generation_queue.payload` column stores `creative_drop_id` inside JSONB, and the filter `payload->>creative_drop_id` requires exact key match.
+The fallback query in `DropDetailModal` (which resolves names from `generation_jobs`) only runs when `drop.images` is empty. Once `complete-creative-drop` populates `drop.images`, the fallback is skipped and no names are available.
 
-This is actually fine syntactically in PostgREST, but there's a subtle issue: the `not("status", "in", '("completed","failed","cancelled")')` filter uses parentheses syntax which may fail. The correct PostgREST syntax for `NOT IN` is `not.in.(completed,failed,cancelled)` — the current string `'("completed","failed","cancelled")'` might not parse correctly.
+**Fix**: Update `complete-creative-drop` to resolve workflow names and product titles before storing:
+1. Collect unique `workflow_id`s and `product_id`s from completed jobs
+2. Batch-query `workflows` and `user_products` tables for names
+3. Store images as `{ url, workflow_name, product_title }` matching the frontend type
 
-**Fix**: Change to `.in("status", ["queued", "processing"])` (positive match instead of negative).
+### Bug 3 (Low — Cosmetic): Drop card "generating" status shows `0 of 0 images`
 
-### Bug 4 (Low): Double Credit Deduction
-`trigger-creative-drop` checks credits balance at line 257, then enqueues via `enqueue_generation` RPC which ALSO deducts credits (line in the RPC function). So credits are deducted per-job by the RPC, but the balance check at line 257 only checks the raw balance vs total cost — it doesn't account for sequential deductions within the same batch. If user has exactly enough credits for 5 jobs, by job 3 the RPC might report "Insufficient credits" because jobs 1-2 already deducted.
+When `total_images` is 0 (set at creation before jobs complete), the generating text shows "0 of 0 images". The `total_images` in the `creative_drops` insert is calculated from `jobPayloads.reduce(...)` which uses `payload.imageCount`. This should be correct. However, if `getVariationCount` returns 0 for some workflows, `total_images` could be 0.
 
-This is actually handled correctly because `enqueue_generation` uses `FOR UPDATE` and deducts atomically. The pre-check at line 257 is just an early-exit optimization. However, if it passes the pre-check but a concurrent request drains credits between check and enqueue, some jobs will fail with "Insufficient credits" — which is handled gracefully (pushed to `errors` array). Not a real bug, just a race condition that's already handled.
+**Fix**: In `DropCard.tsx`, when `total_images === 0` during generating, show job count instead: `"Processing ${drop.generation_job_ids.length} jobs"`.
 
-### Bug 5 (Low): `creative_drops` Insert Uses User RLS But Service Role Client
-Line 275-291 in `trigger-creative-drop` inserts into `creative_drops` using the service role client, which bypasses RLS. This is correct behavior. No bug here.
+## Changes
 
-## What's Working Correctly
-- Wizard saves schedules with proper `user_id` scoping
-- "Run Now" triggers `trigger-creative-drop` which enqueues jobs correctly
-- `complete-creative-drop` fires after each job and collects images as objects with metadata
-- Daily cron at 7 AM UTC runs `run-scheduled-drops`
-- Drop detail modal falls back to querying `generation_jobs` when `drop.images` is empty
-- Toast notifications on drop completion (generating → ready/failed)
-- 10-second polling while drops are generating
-- One-time schedules get deactivated after execution
-- Recurring schedules get `next_run_at` updated properly
+### File 1: `supabase/functions/run-scheduled-drops/index.ts`
+- Remove line 30 (`const serviceRoleKey = ...`) — it's a duplicate of line 16
 
-## Recommended Fixes (Priority Order)
+### File 2: `supabase/functions/complete-creative-drop/index.ts`
+- After collecting completed jobs, batch-query `workflows` table for names and `user_products` table for titles
+- Store images as `{ url, workflow_name, product_title }` instead of `{ url, workflow_id, product_id }`
+- ~15 lines added
 
-### Fix 1: Add Auth to `run-scheduled-drops`
-Add service-role key check (5 lines).
-
-### Fix 2: Time-Based Progress Bar
-Replace count-based progress with time-based estimate in `DropCard.tsx` (3 lines).
-
-### Fix 3: Fix Pending Jobs Query
-Change the `NOT IN` filter to a positive `IN` filter for reliability (1 line).
+### File 3: `src/components/app/DropCard.tsx`
+- Line 313: When `generating` and `targetImages === 0`, show job count fallback text
 
 ## Summary
-- 1 security issue (unauthenticated cron endpoint)
-- 1 UX issue (progress bar stuck at 0%)
-- 1 potential query issue (PostgREST filter syntax)
-- No data loss or corruption risks
-- 3 files, ~15 lines total to fix
+- 1 runtime crash fix (cron will actually work now)
+- 1 metadata resolution fix (drop detail modal shows names correctly)
+- 1 cosmetic fix
+- 3 files, ~20 lines changed
 
