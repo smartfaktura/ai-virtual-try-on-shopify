@@ -563,6 +563,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
             console.error('Trigger error:', errorMsg);
             toast.error(`Generation failed: ${errorMsg}`);
           }
+          onLaunched?.();
         } catch (e) {
           console.error('Trigger error:', e);
           toast.error('Failed to trigger generation');
