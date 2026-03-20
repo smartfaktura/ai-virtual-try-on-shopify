@@ -1,53 +1,43 @@
 
 
-# Fix: Inconsistent Image Counts in Progress Banner
+# Improve: Creative Drops Wizard — Details Step UX Overhaul
 
-## Problem
-The banner shows conflicting numbers: "Generating 2 images for Virtual Try-On Set..." but "Est. ~22-42 sec for 4 images". Two different sources of truth are used — `multiProductJobIds.size` (actual jobs = 2) vs `totalExpectedImages` (calculated formula = 4). The formula over-counts because it multiplies by aspect ratios/framings that may not actually create separate jobs.
+## What Changes
 
-## Root Cause
-`MultiProductProgressBanner` uses:
-- **Header**: `totalJobCount` = `totalJobs` prop (from `multiProductJobIds.size`) — actual enqueued jobs
-- **Estimate line**: `totalImages` = `totalExpectedImages` prop — calculated formula that can differ
+### File: `src/components/app/CreativeDropWizard.tsx` (Step 0 section, lines 618-686)
 
-These two numbers must always match. The actual job count (`multiProductJobIds.size`) is the ground truth since it reflects what was actually enqueued.
+**1. Step Headline + Subtitle**
+Add a clear heading at the top of the Details step:
+- Title: "Name Your Drop" with a Sparkles icon
+- Subtitle: "Set up the basics — you'll pick products and workflows next."
 
-## Fix
+**2. Visual Header**
+The Sparkles icon (already imported) placed next to the title in a subtle primary-tinted circle.
 
-### File: `src/components/app/MultiProductProgressBanner.tsx`
-Unify the image count. Use `totalExpectedImages` as the single source of truth for everything — header, estimate, and completion text. But also ensure the estimate falls back to `totalJobCount` if `totalExpectedImages` isn't provided.
+**3. Rotating Placeholders**
+Replace static "Spring Campaign" placeholder with a cycling set of examples: "Summer Vibes 2026", "Black Friday Launch", "New Arrivals — March", "Holiday Collection". Uses a `useMemo` with a random pick on mount.
 
-Change line 68:
-```
-const totalImages = totalExpectedImages || totalJobCount;
-```
-And change line 93 to also use `totalImages` instead of `totalJobCount`:
-```
-{completedCount > 0
-  ? `${completedCount} of ${totalImages} image${totalImages !== 1 ? 's' : ''} done`
-  : workflowName
-    ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${workflowName}...`
-    : ...}
-```
+**4. Theme Preview Chip**
+When a seasonal preset is selected, show a small colored preview chip below the theme buttons with the preset's icon + a short mood phrase (e.g., "Fresh pastels, blooming flowers").
 
-### File: `src/pages/Generate.tsx` (line 3891-3895)
-Fix the `totalExpectedImages` calculation. For Virtual Try-On Set (which is a try-on workflow WITH `generation_config`), the current formula `workflowImageCount * multiProductCount` over-counts. The issue is `workflowImageCount` includes `aspectRatioCount * framingCount` but these don't create separate jobs for try-on workflows — they're embedded in each job.
+**5. Smart Auto-naming**
+When a seasonal preset is picked and the name field is still empty, auto-fill the name with e.g., "Summer Drop — March 2026".
 
-For workflows that use try-on (`activeWorkflow?.uses_tryon`), use the actual try-on job formula instead:
-```
-totalExpectedImages={
-  activeWorkflow?.uses_tryon
-    ? multiProductCount * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
-    : (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie)
-      ? workflowImageCount * multiProductCount
-      : productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
-}
-```
+**6. Brand Profile Preview Card**
+When a brand profile is selected, show a compact inline card below the select with the brand name and a subtle badge. If the profile has colors or a description, show a preview snippet.
 
-This ensures the expected count matches actual enqueued jobs for all workflow types.
+**7. Progress Hint / Next Step Nudge**
+Add a small muted line at the bottom: "Next: Select products →" to orient the user.
 
-## Summary
-- 2 files, ~6 lines changed
-- Unifies image count display across header and estimate line
-- Fixes over-counting for try-on workflows
+**8. Drop Goal Selector (chips)**
+Add optional goal chips above the theme section: "Product Launch", "Social Content", "Seasonal Campaign", "Brand Awareness". Stored in state but purely cosmetic/organizational for now — no backend impact.
+
+**9. Collapsible Brand Profile**
+Wrap the Brand Profile section in a Collapsible with a subtle "Brand profile (optional)" trigger, defaulting to collapsed. Opens if a brand is already selected.
+
+**10. Character Counter on Drop Name**
+Show a `{name.length}/60` counter below the input, with the counter turning amber at 50+ and red at 60.
+
+## Files
+- `src/components/app/CreativeDropWizard.tsx` — all changes in the step 0 render block and minor state additions
 
