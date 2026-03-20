@@ -61,10 +61,10 @@ export function MultiProductProgressBanner({
   const totalProducts = productQueue.length;
   const completedCount = multiProductResults.size;
   const totalImages = totalExpectedImages || totalProducts;
-  const estimatePerImage = 90; // seconds per image for try-on / pro model
+  const estimatePerImage = 15; // seconds per image (realistic for standard quality)
   const totalEstimate = totalImages * estimatePerImage;
   const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
-  const estHighMin = Math.ceil((totalEstimate * 1.3) / 60);
+  const estHighMin = Math.max(estLowMin, Math.ceil((totalEstimate * 1.3) / 60));
 
   const ratio = elapsed / totalEstimate;
   const overtimeMsg = ratio >= 2
