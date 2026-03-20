@@ -3135,7 +3135,7 @@ export default function Generate() {
         {/* Model Selection */}
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4 pb-20">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <div className="flex items-center justify-between">
