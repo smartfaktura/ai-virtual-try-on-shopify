@@ -8,7 +8,6 @@ interface PoseCategorySectionProps {
   selectedPoseIds?: Set<string>;
   onSelectPose: (pose: TryOnPose) => void;
   selectedGender?: ModelGender;
-  maxSelectable?: number;
 }
 
 const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
