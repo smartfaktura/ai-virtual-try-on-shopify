@@ -485,7 +485,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
         const m = allModels.find(am => am.id === mId);
         if (!m) return null;
         // Try to find demographics from mockModels
-        const mockModel = mockModels.find(mm => mm.id === mId);
+        const mockModel = mockModels.find(mm => mm.modelId === mId);
         return {
           id: m.id, name: m.name, image_url: m.image_url,
           gender: mockModel?.gender || (m as any).gender || 'female',
