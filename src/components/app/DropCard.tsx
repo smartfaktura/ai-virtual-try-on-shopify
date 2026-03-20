@@ -319,7 +319,7 @@ export function DropCard(props: Props) {
         <div className="flex gap-3">
           {/* Left: Thumbnails or status icon */}
           {drop.status === 'ready' && dropImages.length > 0 ? (
-            <div className="flex-shrink-0 grid grid-cols-2 gap-0.5 w-[68px] h-[68px] rounded-xl overflow-hidden">
+            <div className="flex-shrink-0 grid grid-cols-2 gap-0.5 w-[56px] h-[56px] sm:w-[68px] sm:h-[68px] rounded-xl overflow-hidden">
               {dropImages.slice(0, 4).map((img, i) => (
                 <div key={i} className="bg-muted overflow-hidden">
                   <img src={img.url} alt="" className="w-full h-full object-cover" />
