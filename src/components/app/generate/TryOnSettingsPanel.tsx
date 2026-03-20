@@ -64,7 +64,9 @@ export default function TryOnSettingsPanel({
   const posesArray = Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean);
   const modelsArray = selectedModelMap ? Array.from(selectedModelMap.values()) : selectedModel ? [selectedModel] : [];
   const modelCount = Math.max(1, modelsArray.length);
-  const totalImages = parseInt(imageCount) * tryOnSceneCount * modelCount * multiProductCount;
+  const ratioCount = Math.max(1, selectedAspectRatios.size);
+  const frmCount = selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size);
+  const totalImages = parseInt(imageCount) * tryOnSceneCount * modelCount * multiProductCount * ratioCount * frmCount;
 
   return (
     <div className="space-y-4">
