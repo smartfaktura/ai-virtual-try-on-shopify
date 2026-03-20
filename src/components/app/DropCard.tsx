@@ -283,7 +283,10 @@ export function DropCard(props: Props) {
   const { drop, onViewDrop, scheduleName } = props;
   const config = statusConfig[drop.status] || statusConfig.scheduled;
   const StatusIcon = config.icon;
-  const dropImages = (drop.images || []) as { url: string }[];
+  const rawImages = (drop.images || []) as (string | { url: string })[];
+  const dropImages = rawImages.map(img =>
+    typeof img === 'string' ? { url: img } : img
+  ).filter(img => img.url);
 
   const completedImages = dropImages.length;
   const targetImages = drop.total_images || 0;
