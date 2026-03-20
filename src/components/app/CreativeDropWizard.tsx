@@ -347,6 +347,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setIsRandomModelsFlag(false);
     setIsRandomScenesFlag(false);
     setCustomImageCountStr('');
+    setSelectedFramings(new Set(['auto']));
     markDirty();
   };
 
