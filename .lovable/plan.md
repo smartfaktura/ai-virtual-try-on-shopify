@@ -1,27 +1,21 @@
 
 
-# Fix Results Page: Download, Selection Bar, and Cleanup
+# Improve ZIP Image Naming and Folder Name
 
-## Issues
-1. **Download All broken** — downloads images one-by-one (triggers popup blockers, slow). Should ZIP like Library.
-2. **Select All has no floating action bar** — should show a compact floating bar like Library page with "X selected" + "Download ZIP" (no Enhance 2K/4K for workflow).
-3. **Label text still visible** — "Product — 9:16 · full body" text still renders above grid from `workflowVariationLabels`. Remove it entirely.
+## Current behavior
+- ZIP file named: `{productName}.zip`
+- Images named: `image_1.jpg`, `image_2.jpg`, etc. (generic, no product context)
 
-## Changes
+## New behavior
+- **ZIP file name**: `2026-03-20-Virtual Try On Set (VOVV.AI).zip` — format: `{YYYY-MM-DD}-{workflowName} (VOVV.AI).zip`
+- **Image file names**: `ProductName_1.jpg`, `ProductName_2.jpg` — using product name from `jobMetadata` or `workflowVariationLabels` to prefix each image with its product name
 
-### File: `src/pages/Generate.tsx`
+## Changes — `src/pages/Generate.tsx`
 
-1. **Fix `handleDownloadAll`** — replace sequential download with JSZip bulk download (same pattern as Library page). Already imports JSZip.
-
-2. **Remove label rendering** — ensure no `workflowVariationLabels` text is rendered in the results section. The label "Žiedas su deimantais — 9:16 · full body" visible in screenshot needs to be removed if still present.
-
-3. **Add floating selection bar** — when `selectedForPublish.size > 0`, show a fixed bottom bar:
-   - "X selected" count
-   - "Download ZIP" button (uses JSZip)
-   - Close button to deselect all
-   - No "Enhance 2K/4K" button (workflow context)
-
-4. **Simplify top action buttons** — keep Select All / Deselect All, Adjust, Start Over. Replace "Download All" with ZIP-based download. Remove "Download Selected" from bottom section since the floating bar handles it.
+### 1. Update `handleDownloadZip` (lines ~1707-1719)
+- Build ZIP folder name as `YYYY-MM-DD-WorkflowName (VOVV.AI)` using current date + `activeWorkflow?.name`
+- For each image, derive product name from `workflowVariationLabels[index]` (which contains `ProductName — ratio · framing`) by extracting the part before ` — `, or fall back to the selected product title
+- Name each file as `{productName}_{sequenceNumber}{ext}` (per-product counter so numbering restarts per product)
 
 ### Files
 - `src/pages/Generate.tsx` only
