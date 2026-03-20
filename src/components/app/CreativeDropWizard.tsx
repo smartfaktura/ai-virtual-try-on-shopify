@@ -332,12 +332,17 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     if (!selectedWorkflow) return imageCount;
     const genConfig = selectedWorkflow.generation_config as any;
     const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
-    const effectiveScenes = Math.max(poseSelections.length, 1);
+    // For workflows with variations (non-try-on), use variation indices as scene count
+    const effectiveScenes = useVariationsAsScenes
+      ? Math.max(selectedVariationIndices.size, 1)
+      : Math.max(poseSelections.length, 1);
     const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
     const formatCount = Math.max(formats.length, 1);
     const framingCount = selectedFramings.has('auto') ? 1 : Math.max(selectedFramings.size, 1);
-    return effectiveScenes * modelCount * formatCount * framingCount;
-  }, [campaignMode, imageCount, selectedWorkflow, poseSelections.length, modelSelections.length, formats.length, selectedFramings]);
+    // Product listing angle multiplier
+    const angleMultiplier = isProductListing ? (productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2) : 1;
+    return effectiveScenes * modelCount * formatCount * framingCount * angleMultiplier;
+  }, [campaignMode, imageCount, selectedWorkflow, poseSelections.length, modelSelections.length, formats.length, selectedFramings, selectedVariationIndices.size, useVariationsAsScenes, isProductListing, productAngle]);
 
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
