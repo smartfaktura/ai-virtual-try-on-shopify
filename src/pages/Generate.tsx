@@ -1425,8 +1425,10 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const jobMap = new Map<string, string>();
+      const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
       const product = selectedProduct || { id: 'scratch', title: productData.title, description: productData.description, productType: productData.productType, vendor: '', tags: [], images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active' as const, createdAt: '', updatedAt: '' };
+      const productName = selectedProduct?.title || productData?.title || '';
 
       for (const model of modelsToGenerate) {
         for (const pose of posesToGenerate) {
@@ -1434,11 +1436,13 @@ export default function Generate() {
             for (const framingVal of framingsToGen) {
               const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal);
               if (result) {
-                jobMap.set(`${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                const compositeKey = `${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
+                jobMap.set(compositeKey, result.jobId);
+                metaMap.set(compositeKey, { productName, ratio: ratioVal, framing: framingVal });
                 lastBalance = result.newBalance;
                 injectActiveJob(queryClient, {
                   jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-                  workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+                  workflow_slug: activeWorkflow?.slug, product_name: productName,
                   job_type: 'tryon', quality, imageCount: parseInt(imageCount),
                 });
               }
@@ -1453,6 +1457,7 @@ export default function Generate() {
         return;
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
       toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
