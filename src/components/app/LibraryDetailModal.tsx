@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getExtensionFromContentType } from '@/lib/dropDownload';
+import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { useNavigate } from 'react-router-dom';
 import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -65,22 +65,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   if (!open || !item) return null;
 
   const handleDownload = async () => {
-    try {
-      const response = await fetch(item.imageUrl);
-      const contentType = response.headers.get('content-type');
-      const ext = getExtensionFromContentType(contentType);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Download failed');
-    }
+    await saveOrShareImage(item.imageUrl, `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}`);
   };
 
   const handleDelete = async () => {
@@ -213,7 +198,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                   onClick={handleDownload}
                   className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
-                  <Download className="w-4 h-4 mr-2" /> Download Image
+                  <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
                 </Button>
 
                 {isUpscaling ? (

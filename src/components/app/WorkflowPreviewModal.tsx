@@ -5,7 +5,8 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
-import { downloadDropAsZip, downloadSingleImage } from '@/lib/dropDownload';
+import { downloadDropAsZip } from '@/lib/dropDownload';
+import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -100,11 +101,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
   const handleDownloadCurrent = useCallback(async () => {
     const url = signedUrls[selectedIndex];
     if (!url) return;
-    try {
-      await downloadSingleImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
-    } catch {
-      toast.error('Download failed');
-    }
+    await saveOrShareImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
   }, [signedUrls, selectedIndex, title]);
 
   const handleDownloadAll = useCallback(async () => {
@@ -113,7 +110,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
     setDownloadPct(0);
     try {
       if (signedUrls.length === 1) {
-        await downloadSingleImage(signedUrls[0], `${title.replace(/\s+/g, '_')}.png`);
+        await saveOrShareImage(signedUrls[0], `${title.replace(/\s+/g, '_')}.png`);
         
       } else {
         const images = signedUrls.map((url, i) => ({
@@ -253,7 +250,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
               disabled={isLoading}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              <Download className="w-4 h-4 mr-2" /> Download Image
+              <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
             </Button>
 
             {/* Download all */}
