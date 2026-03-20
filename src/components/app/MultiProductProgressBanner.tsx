@@ -21,6 +21,7 @@ interface MultiProductProgressBannerProps {
   onCancel?: () => void;
   totalExpectedImages?: number;
   totalJobs?: number;
+  workflowName?: string;
 }
 
 function formatElapsed(seconds: number): string {
