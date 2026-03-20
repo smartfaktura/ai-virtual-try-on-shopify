@@ -189,7 +189,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       <img
         src={backgrounds[current]}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-top"
+        className="absolute inset-0 w-full h-full object-cover object-center"
         onLoad={() => {
           if (!initialLoaded) setInitialLoaded(true);
         }}
@@ -282,7 +282,7 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
       <img
         src={bgSrc}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{ filter: 'blur(1.5px) saturate(0.97)', transform: 'scale(1.015)' }}
         onLoad={() => setBgLoaded(true)}
       />
@@ -293,7 +293,7 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
           <img
             src={bgSrc}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-top"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             style={{
               clipPath: showSharpLayer
                 ? (phase === 'wiping' ? undefined : 'inset(0 0% 0 0)')
@@ -660,7 +660,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
         alt=""
         loading="eager"
         decoding="async"
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           transform: 'translateZ(0)',
         }}
