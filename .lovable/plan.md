@@ -1,45 +1,37 @@
 
 
-# Fix Help Center FAQ — Remove False Information
+# Elevate the About Page — Premium, Founder-Centric Redesign
 
-## Audit Results
+## What's Wrong Now
+- The page feels flat and generic — plain white sections, no visual richness
+- The founder section is an afterthought — tiny circle photo, just "Founder" and a LinkedIn link
+- No narrative arc connecting the founder's vision to the product
+- The hero is functional but lacks personality and premium feel
 
-Going through each FAQ answer, here are the issues found and fixes needed:
+## Changes
 
-### Issues to Fix
+### 1. Elevated Hero with subtle gradient backdrop
+Replace the plain hero with a refined section using a subtle gradient background (`bg-gradient-to-b from-primary/5 via-background to-background`). Add a thin decorative line or accent element above the heading for visual distinction.
 
-**1. "Can I invite team members?"** — FALSE  
-Says: "Team collaboration features are available on Growth and Pro plans. You can manage team access and permissions from Settings > Team & Permissions."  
-Reality: There is no "Team & Permissions" section in Settings. No team invite feature exists in the app.  
-**Fix**: Remove this question entirely.
+### 2. Redesign the Founder section as the emotional anchor
+Move the founder section between Mission and Values (or after Values, before AI Team) so it flows narratively: Problem → Approach → Founder's Vision → Values → Team.
 
-**2. Freestyle credit cost** — INCONSISTENT  
-Help Center says: "Freestyle costs 6 credits per image" (in two places).  
-Reality per code (`FreestyleSettingsChips.tsx`): Standard quality = 4 credits, Pro quality = 6 credits. Landing FAQ also says "4 credits per image, or 6 credits when you add a model or scene."  
-**Fix**: Update both mentions to: "Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene."
+Redesign to a horizontal card layout:
+- Left: larger photo (w-32 h-32 or bigger), rounded-2xl with a subtle shadow and ring
+- Right: Name, title, a short 1-2 sentence founder quote/vision statement (italic, styled as a quote with a left border accent), LinkedIn icon button
+- Wrap in a card with subtle border and premium feel
 
-**3. "You can delete your data at any time from Settings"** — FALSE  
-There is no delete account/data feature in Settings.  
-**Fix**: Change to: "Your images are private and never used to train our AI models. Contact hello@vovv.ai to request data deletion."
+### 3. Add a founder quote
+Add a compelling, short quote: *"Every brand deserves visuals that look like they came from a professional studio — without the cost, the wait, or the complexity."* This anchors the page emotionally.
 
-**4. "Upload up to 5 images per product"** — UNVERIFIED  
-No `maxFiles` or upload limit of 5 found in the upload components. The number 5 appears only in blog posts as a recommendation, not a hard limit.  
-**Fix**: Remove the specific "up to 5" claim. Say: "For best results, use images with clean backgrounds and at least 1024×1024 resolution."
+### 4. Polish section spacing and typography
+- Increase section padding consistency
+- Add subtle section dividers or gradient transitions between sections
+- Use `tracking-tight` on all headings for premium feel
 
-### Answers Verified as Correct
-- Getting Started Q1 (first product image) ✓
-- Background removal ✓  
-- Brand Profile ✓
-- Credits & Billing (run out, free trial, change plan, refunds) ✓
-- All Workflows & Generation answers ✓
-- Image Quality answers ✓
-- Export images (ZIP download exists in Jobs.tsx) ✓
-- Commercial use ✓
-
-## File
-**`src/pages/HelpCenter.tsx`** — 4 edits:
-1. Remove "Can I invite team members?" Q&A entirely (lines 113-116)
-2. Fix Freestyle credit mentions in two places (lines 27, 40)
-3. Fix data storage answer — remove "delete from Settings" claim (line 111)
-4. Fix upload formats answer — remove "up to 5 images" claim (line 19)
+### File: `src/pages/About.tsx`
+- Restructure section order: Hero → Mission → Founder (redesigned) → Values → AI Team
+- Founder section: horizontal layout with quote, larger photo, subtle card treatment
+- Hero: add gradient background
+- Minor spacing/typography polish throughout
 
