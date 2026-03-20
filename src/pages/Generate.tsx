@@ -1498,12 +1498,7 @@ export default function Generate() {
         resetQueue();
       }
     }
-    if (activeJob.status === 'failed') {
-      toast.error(activeJob.error_message || 'Generation failed. Credits refunded.');
-      setCurrentStep('settings');
-      refreshBalance();
-      resetQueue();
-    }
+    // Failed status is now handled by onGenerationFailed callback in useGenerationQueue
   }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size]);
 
   // Watch batch completion (single-product only)
