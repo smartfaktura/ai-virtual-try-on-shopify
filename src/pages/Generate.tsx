@@ -374,6 +374,7 @@ export default function Generate() {
   const isMultiProductMode = productQueue.length > 1;
   // Upfront multi-product: map of productId → jobId for all enqueued products
   const [multiProductJobIds, setMultiProductJobIds] = useState<Map<string, string>>(new Map());
+  const hasMultipleJobs = multiProductJobIds.size > 1;
   // Per-job metadata for reliable grouping (avoids brittle key parsing)
   const [jobMetadata, setJobMetadata] = useState<Map<string, { productName: string; ratio: string; framing: string | null }>>(new Map());
   const multiProductPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -3831,7 +3832,7 @@ export default function Generate() {
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
-                 generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
+                 generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
                  isInteriorDesign ? (() => { const styles = Array.from(selectedVariationIndices).map(i => variationStrategy?.variations[i]?.label).filter(Boolean); return styles.length > 1 ? `Staging your ${interiorRoomType || 'room'} in ${styles.length} styles: ${styles.join(', ')}` : `Staging your ${interiorRoomType || 'room'} in ${styles[0] || 'selected'} style`; })() :
                  hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
@@ -3852,7 +3853,7 @@ export default function Generate() {
             )}
 
             {/* Multi-product progress banner */}
-            {isMultiProductMode && !isFinalizingResults && (
+            {(isMultiProductMode || hasMultipleJobs) && !isFinalizingResults && (
               <MultiProductProgressBanner
                 productQueue={productQueue}
                 multiProductResults={multiProductResults}
@@ -3866,7 +3867,7 @@ export default function Generate() {
             )}
 
             {/* Batch progress - enhanced (hidden in multi-product mode) */}
-            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && (() => {
+            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && !hasMultipleJobs && (() => {
               const isVariationWorkflow = hasWorkflowConfig && variationStrategy?.variations?.length;
               const sortedIndices = Array.from(selectedVariationIndices).sort((a, b) => a - b);
               const variationLabel = isInteriorDesign ? 'style' : isVariationWorkflow ? 'variation' : 'image';
@@ -3923,7 +3924,7 @@ export default function Generate() {
             })()}
 
             {/* Single job progress (hidden in multi-product mode) */}
-            {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && (
+            {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && !hasMultipleJobs && (
               <div className="w-full max-w-md">
                 {activeJob ? (
                   <QueuePositionIndicator job={activeJob} onCancel={cancelQueue} />
