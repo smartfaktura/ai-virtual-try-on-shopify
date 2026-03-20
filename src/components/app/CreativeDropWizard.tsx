@@ -652,7 +652,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   <p className="section-label">Drop Name</p>
                   <span className={cn(
                     'text-[10px] tabular-nums',
-                    name.length >= 60 ? 'text-destructive' : name.length >= 50 ? 'text-amber-500' : 'text-muted-foreground/50'
+                    name.length >= 60 ? 'text-destructive' : name.length >= 50 ? 'text-destructive/60' : 'text-muted-foreground/50'
                   )}>{name.length}/60</span>
                 </div>
                 <Input
