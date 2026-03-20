@@ -3827,8 +3827,8 @@ export default function Generate() {
             <div className="text-center">
               <h2 className="text-lg font-semibold">
                 {isUpscale ? `Enhancing to ${upscaleResolution === '4k' ? '4K' : '2K'}...` :
-                 generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
-                 hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` : 'Creating Your Images...'}
+                 hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` :
+                 generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
