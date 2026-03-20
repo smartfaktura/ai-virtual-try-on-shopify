@@ -1,60 +1,53 @@
 
+Do I know what the issue is? Yes.
 
-# Fix Generated Results Not Grouping by Format
+### What is actually broken
+1. **Only ~28/32 jobs are being enqueued**: your backend `enqueue_generation` SQL has a **burst limit of 25/min (Pro)**, so large batches get rate-limited.
+2. **Wrong progress text** (“27 of 2 products”): progress is counting completed **jobs**, but label says **products**.
+3. **Only 1 image shown in results**: after multi-job aggregation finishes, a single `activeJob` completion effect can overwrite `generatedImages` with one job’s result.
+4. **Grouping metadata is fragile**: parsing composite keys with `_` breaks for values like `close_up` (and IDs containing `_`), so grouping labels become unreliable.
+5. **No finalizing handoff UX** between “done” and results.
 
-## Problem
-The results grid shows all images in a flat layout with ugly white space because:
-1. The try-on edge function doesn't return `variations` labels
-2. The aggregation code (line 1586-1594) tries to match job keys like `productId_modelId_poseId_ratio_framing` against `product.id` — never matches, so labels are always empty
-3. Empty labels → grouping code is skipped → flat grid with mixed aspect ratios
+### Implementation plan
+1. **Fix enqueue rate-limit behavior (backend)**
+   - Update `enqueue_generation` SQL (new migration):
+     - Raise Pro burst threshold (so 32-image batches are supported).
+     - Return `retry_after_seconds` when burst-limited.
+   - Update `supabase/functions/enqueue-generation/index.ts`:
+     - Treat “Too many requests” as **429** (not 402 credit-like error).
 
-## Solution
-Build labels client-side from the composite job keys during aggregation, grouping by aspect ratio and framing.
+2. **Make client enqueue fully resilient**
+   - In `src/pages/Generate.tsx` retry logic:
+     - Use `retry_after_seconds` + jitter for silent retries.
+     - Keep retrying until queued (or safe overall timeout), so batch doesn’t stop at 20-something.
+     - Never show “not enough credits” for rate-limit responses.
 
-### File: `src/pages/Generate.tsx` (~lines 1582-1594)
+3. **Replace brittle composite-key parsing**
+   - In `Generate.tsx`, store per-job metadata by `jobId` (`productId`, `productName`, `ratio`, `framing`, etc.).
+   - Build result labels and groups from metadata, not `split('_')`.
 
-**Change the aggregation loop** to:
-1. Parse the composite key (`productId_modelId_poseId_ratio_framing`) to extract ratio and framing
-2. Look up product name from `productQueue` using the product ID portion of the key
-3. Build a label like `"Product Name — 4:5 Portrait"` or `"Product Name — 1:1 Close-Up"` for each image
-4. When the edge function returns no `variations` labels, generate them from the key parts
+4. **Fix result overwrite + progress correctness**
+   - In `Generate.tsx`:
+     - Prevent single-job watcher from running during/after multi-product completion handoff.
+     - Clear/reset queue watcher state before applying aggregated multi-job results.
+   - In `MultiProductProgressBanner.tsx`:
+     - Show both **jobs progress** and **products progress** correctly (no more “27 of 2 products”).
 
-```typescript
-for (const [key] of multiProductJobIds) {
-  const r = completedResults.get(key);
-  if (r) {
-    // Parse key: productId_modelId_poseId_ratio_framing
-    const parts = key.split('_');
-    const productId = parts[0];
-    const ratioVal = parts[parts.length - 2]; // e.g. "4:5"
-    const framingVal = parts[parts.length - 1]; // e.g. "close_up" or "null"
-    const product = productQueue.find(p => p.id === productId);
-    const prefix = product?.title || '';
-    
-    // Build label from key if edge function didn't provide one
-    const labels = r.labels.length > 0
-      ? r.labels
-      : r.images.map(() => {
-          const parts = [ratioVal];
-          if (framingVal && framingVal !== 'null') parts.push(framingVal.replace(/_/g, ' '));
-          return parts.join(' · ');
-        });
-    
-    allImages.push(...r.images);
-    allLabels.push(...labels.map(l => prefix ? `${prefix} — ${l}` : l));
-  }
-}
-```
+5. **Add completion handoff state**
+   - Add a short “Finalizing results, redirecting…” stage (1–2s) before showing results.
+   - Keep UI stable and avoid abrupt state jumps.
 
-### Also fix: single-product multi-job path (~lines 1408-1440)
-The same issue exists for single product with multiple models/poses/ratios. Apply the same label-building from key parts.
+6. **Scale behavior for many users**
+   - Queue architecture is correct (`SKIP LOCKED` claim pattern).
+   - Add a small dispatch cap in `process-queue` per run to avoid worker stampedes under multi-user bursts while keeping throughput stable.
 
-### Result
-Images will be grouped by format sections like:
-- **Product A — 1:1**
-- **Product A — 4:5**
-- **Product B — 1:1**
-- **Product B — 4:5**
+### Files to update
+- `src/pages/Generate.tsx`
+- `src/components/app/MultiProductProgressBanner.tsx`
+- `supabase/functions/enqueue-generation/index.ts`
+- `supabase/functions/process-queue/index.ts`
+- `supabase/migrations/<new_migration>.sql`
 
-Each group renders in its own uniform grid — no mixed sizes, no white space.
-
+### Technical details
+- Verified from backend data: the affected run enqueued **28 try-on jobs** for the workflow, not 32.
+- Root cause chain: burst-limit throttling + UI state race (multi-job aggregation vs single activeJob effect) + key parsing fragility.
