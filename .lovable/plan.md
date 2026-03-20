@@ -1,29 +1,30 @@
 
 
-# Fix Generated Images Select All Toggle, Summary Scenes, Remove Badges
+# Fix Contact Form Reply-To Address
 
-## Problems
-1. **Select All button** cannot toggle to "Deselect All" — clicking it always selects, no way to unselect all
-2. **Summary only shows one model/scene** — uses `selectedModel` and `selectedPose` (singular) instead of iterating over `selectedModels`/`selectedPoses` maps
-3. **Unnecessary badges** — "Aspect: 4:5" and "Quality: Standard" badges are clutter in the results summary; quality is always high for workflows and aspect ratio is obvious from the images
+## Problem
+When a contact form email arrives at hello@vovv.ai, clicking "Reply" addresses the reply to `notifications@vovv.ai` (the sender) instead of the person who filled out the form.
 
-## Changes
+## Fix
+In `supabase/functions/send-email/index.ts`, add `reply_to` to the Resend API payload when the email type is `contact_form`. The submitter's email is already available in `data.email`.
 
-### File: `src/pages/Generate.tsx`
+### File: `supabase/functions/send-email/index.ts` (lines 346-358)
+- Extract `reply_to` from `data.email` when `type === 'contact_form'`
+- Add `reply_to` field to the Resend API request body
+- Only include it when it has a value (so other email types are unaffected)
 
-**1. Toggle Select All / Deselect All (line ~3927-3929)**
-- Check if all images are already selected (`selectedForPublish.size === generatedImages.length`)
-- If yes: clear the set (deselect all)
-- If no: select all
-- Change button label to reflect current state: "Deselect All" vs "Select All"
+```typescript
+// Before sending, determine reply_to for contact forms
+const replyTo = type === "contact_form" && data?.email ? data.email : undefined;
 
-**2. Show all selected models and scenes in summary (lines ~3860-3877)**
-- Replace the single `selectedModel` block with iteration over `selectedModelMap` values
-- Replace the single `selectedPose` block with iteration over `selectedPoseMap` values
-- Keep the existing variation-strategy scene display as-is (it already shows multiple)
+body: JSON.stringify({
+  from: "VOVV.AI <notifications@vovv.ai>",
+  to: [to],
+  reply_to: replyTo,  // ← new field
+  subject,
+  html,
+}),
+```
 
-**3. Remove Aspect and Quality badges (lines ~3897-3899)**
-- Remove the `Aspect: {aspectRatio}` badge
-- Remove the `Quality: {quality}` badge
-- Keep framing and brand profile badges if present
+After editing, redeploy the `send-email` edge function.
 
