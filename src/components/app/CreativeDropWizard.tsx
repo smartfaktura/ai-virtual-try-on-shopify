@@ -1587,14 +1587,18 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           {!isMixMode ? (
                             <p className="text-xs text-muted-foreground">
                               {(() => {
-                                const effectiveScenes = Math.max(poseSelections.length, 1);
+                                const effectiveScenes = useVariationsAsScenes
+                                  ? Math.max(selectedVariationIndices.size, 1)
+                                  : Math.max(poseSelections.length, 1);
                                 const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
                                 const formatCount = Math.max(formats.length, 1);
+                                const angleMultiplier = isProductListing ? (productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2) : 1;
                                 const parts: string[] = [];
-                                if (effectiveScenes > 1) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                                if (effectiveScenes > 1) parts.push(`${effectiveScenes} ${isFlatLay ? 'surface' : isPerspectives ? 'angle' : 'scene'}${effectiveScenes !== 1 ? 's' : ''}`);
                                 if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
                                 if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
                                 if (framingCount > 1) parts.push(`${framingCount} framing${framingCount !== 1 ? 's' : ''}`);
+                                if (angleMultiplier > 1) parts.push(`${angleMultiplier} angles`);
                                 const formula = parts.length > 0 ? parts.join(' × ') + ' = ' : '';
                                 return <>{formula}<span className="font-semibold text-foreground">{computedImageCount} image{computedImageCount !== 1 ? 's' : ''}</span> per product</>;
                               })()}
