@@ -1623,11 +1623,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
               {/* Workflow summary */}
               {selectedWorkflow && (() => {
                 const wf = selectedWorkflow;
-                const variations = (wf.generation_config as any)?.variation_strategy?.variations || [];
                 const needsModels = wf.uses_tryon || (wf.generation_config as any)?.ui_config?.show_model_picker;
-                const showPosePicker = (wf.generation_config as any)?.ui_config?.show_pose_picker;
                 const settingEntries = Object.entries(customSettings);
-                const selectedSceneNames = isRandomScenesFlag ? [] : Array.from(sceneSelections);
 
                 return (
                   <div className="p-3 rounded-xl bg-card border space-y-2">
@@ -1642,35 +1639,22 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     </div>
                     <div className="flex flex-wrap gap-1.5 pl-6">
                       <Badge variant="secondary" className="text-[10px] rounded-full">
-                        {imageCount} img × {selectedProductIds.size} prod
+                        {computedImageCount} img × {selectedProductIds.size} prod
                       </Badge>
-                      {variations.length > 0 && !wf.uses_tryon && (
+                      {poseSelections.length > 0 && (
                         <Badge variant="secondary" className="text-[10px] rounded-full">
-                          {isRandomScenesFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random scenes</> : <>{sceneSelections.size}/{variations.length} scenes</>}
+                          {campaignMode === 'mix' ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Auto scenes</> : <>{poseSelections.length} scene{poseSelections.length !== 1 ? 's' : ''}</>}
                         </Badge>
-                      )}
-                      {showPosePicker && (
-                        <Badge variant="secondary" className="text-[10px] rounded-full">{poseSelections.length} pose{poseSelections.length !== 1 ? 's' : ''}</Badge>
                       )}
                       {needsModels && (
                         <Badge variant="secondary" className="text-[10px] rounded-full">
-                          {isRandomModelsFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random models</> : <>{modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''}</>}
+                          {campaignMode === 'mix' ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Auto models</> : <>{modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''}</>}
                         </Badge>
                       )}
                       {settingEntries.map(([k, v]) => (
-                        <Badge key={k} variant="outline" className="text-[10px] rounded-full">{k}: {v}</Badge>
+                        <Badge key={k} variant="outline" className="text-[10px] rounded-full">{k}: {String(v)}</Badge>
                       ))}
                     </div>
-                    {selectedSceneNames.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pl-6">
-                        {selectedSceneNames.slice(0, 8).map(name => (
-                          <span key={name} className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">{name}</span>
-                        ))}
-                        {selectedSceneNames.length > 8 && (
-                          <span className="text-[10px] text-muted-foreground">+{selectedSceneNames.length - 8} more</span>
-                        )}
-                      </div>
-                    )}
                     {needsModels && !isRandomModelsFlag && modelSelections.length > 0 && (
                       <div className="flex gap-1 pl-6 flex-wrap">
                         {modelSelections.slice(0, 6).map(mId => {
