@@ -147,8 +147,8 @@ export default function TryOnSettingsPanel({
             </Select>
           </div>
         </div>
-        <FramingSelector framing={framing} onFramingChange={setFraming} />
-        <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+        <FramingMultiSelector selectedFramings={selectedFramings} onSelectedFramingsChange={setSelectedFramings} />
+        <AspectRatioMultiSelector value={selectedAspectRatios} onChange={setSelectedAspectRatios} />
       </CardContent></Card>
 
       <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
