@@ -298,7 +298,7 @@ export function DropCard(props: Props) {
 
   return (
     <>
-    <Card className={cn('rounded-2xl transition-colors', drop.status === 'ready' && 'cursor-pointer hover:border-primary/30', drop.status === 'generating' && 'border-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)] animate-pulse')} onClick={drop.status === 'ready' ? onViewDrop : undefined}>
+    <Card className={cn('rounded-2xl transition-colors', (drop.status === 'ready' || drop.status === 'generating') && 'cursor-pointer hover:border-primary/30', drop.status === 'generating' && 'border-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)] animate-pulse')} onClick={(drop.status === 'ready' || drop.status === 'generating') ? onViewDrop : undefined}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
