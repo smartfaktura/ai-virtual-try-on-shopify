@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight, Coins, Image } from 'lucide-react';
+import { Calendar, Clock, Pause, Play, CheckCircle, AlertCircle, Loader2, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -303,53 +303,86 @@ export function DropCard(props: Props) {
     ? Math.min(95, Math.round((Date.now() - new Date(drop.created_at).getTime()) / (targetImages * SECONDS_PER_IMAGE * 1000) * 100)) || 5
     : targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
 
+  const isClickable = drop.status === 'ready' || drop.status === 'generating';
+
   return (
     <>
-    <Card className={cn('rounded-2xl transition-colors', (drop.status === 'ready' || drop.status === 'generating') && 'cursor-pointer hover:border-primary/30', drop.status === 'generating' && 'border-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)] animate-pulse')} onClick={(drop.status === 'ready' || drop.status === 'generating') ? onViewDrop : undefined}>
+    <Card
+      className={cn(
+        'rounded-2xl transition-colors',
+        isClickable && 'cursor-pointer hover:border-primary/30',
+        drop.status === 'generating' && 'border-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
+      )}
+      onClick={isClickable ? onViewDrop : undefined}
+    >
       <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4 text-primary" />
+        <div className="flex gap-3">
+          {/* Left: Thumbnails or status icon */}
+          {drop.status === 'ready' && dropImages.length > 0 ? (
+            <div className="flex-shrink-0 grid grid-cols-2 gap-0.5 w-[68px] h-[68px] rounded-xl overflow-hidden">
+              {dropImages.slice(0, 4).map((img, i) => (
+                <div key={i} className="bg-muted overflow-hidden">
+                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+              {dropImages.length < 4 && Array.from({ length: 4 - Math.min(dropImages.length, 4) }).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-muted" />
+              ))}
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium">
-                Drop — {new Date(drop.run_date).toLocaleDateString()}
+          ) : (
+            <div className={cn(
+              'w-[68px] h-[68px] rounded-xl flex items-center justify-center flex-shrink-0',
+              drop.status === 'generating' ? 'bg-primary/5' : 'bg-accent'
+            )}>
+              <StatusIcon className={cn(
+                'w-6 h-6',
+                drop.status === 'generating' ? 'text-primary animate-spin' : 'text-muted-foreground',
+                drop.status === 'failed' && 'text-destructive'
+              )} />
+            </div>
+          )}
+
+          {/* Center: Metadata */}
+          <div className="flex-1 min-w-0 py-0.5">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium truncate">
+                {scheduleName || `Drop — ${new Date(drop.run_date).toLocaleDateString()}`}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {drop.status === 'generating'
-                  ? targetImages > 0 ? `${completedImages} of ${targetImages} images` : `Processing ${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`
-                  : drop.total_images > 0
-                    ? `${drop.total_images} images`
-                    : `${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`}
-                {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
-              </p>
-              {drop.status === 'generating' && (() => {
-                const SECONDS_PER_IMAGE = 8;
-                const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
-                const estimatedTotalMs = targetImages * SECONDS_PER_IMAGE * 1000;
-                const remainingMs = Math.max(0, estimatedTotalMs - elapsedMs);
-                const remainingMin = Math.ceil(remainingMs / 60000);
-                return (
-                  <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                    Started {formatDistanceToNow(new Date(drop.created_at), { addSuffix: true })}
-                    {remainingMin > 0 ? ` · ~${remainingMin} min remaining` : ' · Finishing up…'}
-                  </p>
-                );
-              })()}
-              {scheduleName && (
-                <p className="text-[11px] text-muted-foreground/70 mt-0.5">From: {scheduleName}</p>
+              {drop.status === 'failed' && (
+                <span className="text-[11px] text-destructive font-medium">Failed</span>
               )}
             </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {new Date(drop.run_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {drop.total_images > 0 && ` · ${drop.total_images} image${drop.total_images !== 1 ? 's' : ''}`}
+              {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
+            </p>
+            {drop.status === 'generating' && (() => {
+              const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
+              const estimatedTotalMs = targetImages * SECONDS_PER_IMAGE * 1000;
+              const remainingMs = Math.max(0, estimatedTotalMs - elapsedMs);
+              const remainingMin = Math.ceil(remainingMs / 60000);
+              return (
+                <div className="mt-1.5">
+                  <Progress value={progressPct} className="h-1" />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {progressPct}% · {remainingMin > 0 ? `~${remainingMin} min remaining` : 'Finishing up…'}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Badge className={config.color} variant="secondary">
-              <StatusIcon className={`w-3 h-3 mr-1 ${drop.status === 'generating' ? 'animate-spin' : ''}`} />
-              {drop.status}
-            </Badge>
-            {drop.status === 'ready' && dropImages.length > 0 && (
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={e => { e.stopPropagation(); onViewDrop?.(); }}>
-                <Download className="w-3.5 h-3.5" />
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {drop.status === 'ready' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-8 gap-1 text-muted-foreground hover:text-foreground"
+                onClick={e => { e.stopPropagation(); onViewDrop?.(); }}
+              >
+                View <ArrowRight className="w-3 h-3" />
               </Button>
             )}
             <DropdownMenu>
@@ -369,35 +402,6 @@ export function DropCard(props: Props) {
             </DropdownMenu>
           </div>
         </div>
-
-        {/* Generation progress bar */}
-        {drop.status === 'generating' && targetImages > 0 && (
-          <div className="mt-3">
-            <Progress value={progressPct} className="h-1.5" />
-            <p className="text-[11px] text-muted-foreground mt-1">{progressPct}% complete</p>
-          </div>
-        )}
-
-        {/* Thumbnail previews + View Drop CTA for ready drops */}
-        {drop.status === 'ready' && dropImages.length > 0 && (
-          <div className="mt-3">
-            <div className="flex items-center gap-1.5">
-              {dropImages.slice(0, 4).map((img, i) => (
-                 <div key={i} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/20">
-                   <img src={img.url} alt="" className="w-full h-full object-cover" />
-                 </div>
-               ))}
-               {dropImages.length > 4 && (
-                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium text-muted-foreground ring-1 ring-border/20">
-                  +{dropImages.length - 4}
-                </div>
-              )}
-              <Button variant="ghost" size="sm" className="ml-auto text-xs text-primary h-7 gap-1" onClick={e => { e.stopPropagation(); onViewDrop?.(); }}>
-                View Drop <ArrowRight className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
 

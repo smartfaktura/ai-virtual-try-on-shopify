@@ -55,7 +55,7 @@ export interface CreativeDrop {
   schedule_name?: string;
 }
 
-const DROP_STATUSES = ['all', 'scheduled', 'generating', 'ready', 'failed'] as const;
+
 
 export default function CreativeDrops() {
   const { user } = useAuth();
@@ -64,7 +64,7 @@ export default function CreativeDrops() {
   const [editingScheduleId, setEditingScheduleId] = useState<string | undefined>(undefined);
   const [selectedDrop, setSelectedDrop] = useState<CreativeDrop | null>(null);
   const [activeTab, setActiveTab] = useState('drops');
-  const [dropStatusFilter, setDropStatusFilter] = useState<string>('all');
+  
   const [dropSortAsc, setDropSortAsc] = useState(false);
 
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
@@ -151,7 +151,6 @@ export default function CreativeDrops() {
 
   const hasStats = schedules.length > 0 || drops.length > 0;
   const filteredDrops = drops
-    .filter(d => dropStatusFilter === 'all' || d.status === dropStatusFilter)
     .sort((a, b) => {
       const dateA = new Date(a.run_date).getTime();
       const dateB = new Date(b.run_date).getTime();
@@ -319,34 +318,14 @@ export default function CreativeDrops() {
             </div>
 
             <TabsContent value="drops" className="space-y-4">
-              {/* Filter & Sort bar */}
+              {/* Count + Sort row */}
               {drops.length > 0 && (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="relative flex-1 overflow-hidden">
-                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-4">
-                      {DROP_STATUSES.map(s => (
-                        <Button
-                          key={s}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            'text-xs capitalize rounded-full h-7 px-3',
-                            dropStatusFilter === s
-                              ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background'
-                              : 'text-muted-foreground hover:text-foreground'
-                          )}
-                          onClick={() => setDropStatusFilter(s)}
-                        >
-                          {s}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">{filteredDrops.length} drop{filteredDrops.length !== 1 ? 's' : ''}</p>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs h-7"
+                    className="text-xs h-7 text-muted-foreground"
                     onClick={() => setDropSortAsc(prev => !prev)}
                   >
                     {dropSortAsc ? 'Oldest first' : 'Newest first'}
@@ -360,7 +339,7 @@ export default function CreativeDrops() {
                     <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
                   ))}
                 </div>
-              ) : filteredDrops.length === 0 && drops.length === 0 ? (
+              ) : filteredDrops.length === 0 ? (
                 <EmptyStateCard
                   heading="No drops yet"
                   description="Create your first drop to start generating creative assets automatically."
@@ -372,10 +351,6 @@ export default function CreativeDrops() {
                   }}
                   icon={<Zap className="w-10 h-10 text-muted-foreground" />}
                 />
-              ) : filteredDrops.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  No drops matching "{dropStatusFilter}" status
-                </div>
               ) : (
                 <div className="space-y-3">
                   {filteredDrops.map(drop => (
