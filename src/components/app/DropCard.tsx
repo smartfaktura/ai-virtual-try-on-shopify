@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight, Coins, Image } from 'lucide-react';
+import { Calendar, Clock, Pause, Play, CheckCircle, AlertCircle, Loader2, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
