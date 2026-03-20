@@ -366,7 +366,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setPoseSelections([]);
     setCustomSettings({});
     setImageCount(25);
-    setFormats(['1:1']);
+    setFormats([]);
     setIsRandomModelsFlag(false);
     setIsRandomScenesFlag(false);
     setCustomImageCountStr('');
