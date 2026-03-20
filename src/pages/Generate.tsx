@@ -1215,8 +1215,9 @@ export default function Generate() {
 
   const handleTryOnConfirmGenerate = async () => {
     try {
-    if (!selectedModel || selectedPoses.size === 0) return;
+    if (selectedModels.size === 0 || selectedPoses.size === 0) return;
     const posesToGenerate = Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean);
+    const modelsToGenerate = Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean);
 
     // Multi-product upfront enqueue
     if (isMultiProductMode) {
