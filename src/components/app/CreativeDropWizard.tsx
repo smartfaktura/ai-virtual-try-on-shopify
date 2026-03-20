@@ -1676,6 +1676,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   <p className="section-label pt-2">Repeat Frequency</p>
                   <div className="flex flex-wrap gap-2">
                     {[
+                      { id: 'none', label: 'Do Not Repeat' },
                       { id: 'weekly', label: 'Weekly' },
                       { id: 'biweekly', label: 'Every 2 Weeks' },
                       { id: 'monthly', label: 'Monthly' },

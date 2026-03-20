@@ -249,7 +249,7 @@ export function DropCard(props: Props) {
               {/* Next run */}
               <span className="text-xs text-muted-foreground">
                 {isOneTime ? 'One-time' : schedule.next_run_at
-                  ? formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })
+                  ? `${format(new Date(schedule.next_run_at), 'MMM d')} (${formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })})`
                   : isPaused ? 'Paused' : 'Not scheduled'}
               </span>
             </div>
