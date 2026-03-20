@@ -937,6 +937,9 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const needsModel = uiConfig?.show_model_picker && selectedModel;
+      const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+        ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
+        : needsModel ? [selectedModel!] : [];
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
 
@@ -948,14 +951,17 @@ export default function Generate() {
         const originalUp = userProducts.find(up => up.id === product.id);
         const productData = { title: product.title, productType: product.productType, description: product.description, dimensions: originalUp?.dimensions || undefined };
 
-        const [base64Image, base64ModelImage] = await Promise.all([
-          convertImageToBase64(sourceImageUrl),
-          needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
-        ]);
+        const base64Image = await convertImageToBase64(sourceImageUrl);
 
         const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
         const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
         const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+
+        // Model loop — at least one iteration even without models
+        const modelIterator = modelsToGenerate.length > 0 ? modelsToGenerate : [null];
+
+        for (const modelProfile of modelIterator) {
+          const base64ModelImage = modelProfile ? await convertImageToBase64(modelProfile.previewUrl) : undefined;
 
         for (const varIdx of variationIndices) {
          for (const ratioVal of ratiosToGen) {
@@ -980,10 +986,10 @@ export default function Generate() {
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
           };
-          if (needsModel && base64ModelImage) {
+          if (modelProfile && base64ModelImage) {
             payload.model = {
-              name: selectedModel!.name, gender: selectedModel!.gender, ethnicity: selectedModel!.ethnicity,
-              bodyType: selectedModel!.bodyType, ageRange: selectedModel!.ageRange, imageUrl: base64ModelImage,
+              name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
+              bodyType: modelProfile.bodyType, ageRange: modelProfile.ageRange, imageUrl: base64ModelImage,
             };
           }
 
@@ -997,14 +1003,14 @@ export default function Generate() {
               imageCount: angleMultiplier,
               quality,
               additionalProductCount: 0,
-              hasModel: !!needsModel,
+              hasModel: !!modelProfile,
               hasScene: false,
             }),
           });
 
           if (response.ok) {
             const result = await response.json();
-            jobMap.set(`${product.id}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
+            jobMap.set(`${product.id}_${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
@@ -1018,6 +1024,7 @@ export default function Generate() {
           } // end framingVal loop
          } // end ratioVal loop
         } // end varIdx loop
+        } // end model loop
       } // end product loop
 
       if (jobMap.size === 0) {
@@ -1048,12 +1055,14 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    // Convert product image; also convert model image if workflow uses model picker
+    // Convert product image
     const needsModel = uiConfig?.show_model_picker && selectedModel;
-    const [base64Image, base64ModelImage] = await Promise.all([
-      convertImageToBase64(sourceImageUrl),
-      needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
-    ]);
+    const base64Image = await convertImageToBase64(sourceImageUrl);
+
+    // Determine models to iterate over
+    const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+      ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
+      : needsModel ? [selectedModel!] : [];
 
     // Build styling notes for flat lay
     const flatLayStylingNotes = isFlatLay ? [
@@ -1075,7 +1084,10 @@ export default function Generate() {
         )
       : undefined;
 
-    const payload: Record<string, unknown> = {
+    // If multiple models for selfie/UGC, use multi-combo path for all
+    const useMultiModelLoop = modelsToGenerate.length > 1;
+
+    const buildBasePayload = (): Record<string, unknown> => ({
       workflow_id: activeWorkflow!.id,
       workflow_name: activeWorkflow!.name,
       workflow_slug: activeWorkflow!.slug,
@@ -1115,47 +1127,47 @@ export default function Generate() {
       ceiling_height: isInteriorDesign && interiorCeilingHeight !== 'Standard' ? interiorCeilingHeight : undefined,
       room_dimensions: isInteriorDesign && interiorRoomDimensions ? interiorRoomDimensions : undefined,
       exact_ceiling_height: isInteriorDesign && interiorExactCeilingHeight ? interiorExactCeilingHeight : undefined,
-    };
-
-    // Attach model data for selfie/UGC workflows
-    if (needsModel && base64ModelImage) {
-      payload.model = {
-        name: selectedModel!.name,
-        gender: selectedModel!.gender,
-        ethnicity: selectedModel!.ethnicity,
-        bodyType: selectedModel!.bodyType,
-        ageRange: selectedModel!.ageRange,
-        imageUrl: base64ModelImage,
-      };
-    }
+    });
 
     // Build all ratio × framing combos
     const ratiosToGenerate = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
     const framingsToGenerate: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
 
-    // If only one combo, use the original logic; otherwise loop
-    if (ratiosToGenerate.length === 1 && framingsToGenerate.length === 1) {
+    // Single ratio/framing combo + single model — use original enqueue/batch logic
+    if (ratiosToGenerate.length === 1 && framingsToGenerate.length === 1 && !useMultiModelLoop) {
+      const payload = buildBasePayload();
       payload.aspectRatio = ratiosToGenerate[0];
       payload.framing = framingsToGenerate[0] || undefined;
+
+      // Attach single model
+      if (modelsToGenerate.length === 1) {
+        const m = modelsToGenerate[0];
+        const base64ModelImage = await convertImageToBase64(m.previewUrl);
+        payload.model = {
+          name: m.name, gender: m.gender, ethnicity: m.ethnicity,
+          bodyType: m.bodyType, ageRange: m.ageRange, imageUrl: base64ModelImage,
+        };
+      }
+
       const baseImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
 
       if (baseImageCount <= 1) {
         const enqueueResult = await enqueue({
           jobType: 'workflow', payload, imageCount: baseImageCount, quality: 'high', additionalProductCount: 0,
-        }, { imageCount: baseImageCount, quality: 'high', hasModel: !!needsModel, hasScene: false, hasProduct: true });
+        }, { imageCount: baseImageCount, quality: 'high', hasModel: modelsToGenerate.length > 0, hasScene: false, hasProduct: true });
         if (enqueueResult) {
           setBalanceFromServer(enqueueResult.newBalance);
           injectActiveJob(queryClient, { jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: baseImageCount });
         } else { setCurrentStep('settings'); }
       } else {
         const success = await startBatch({
-          payload, selectedVariationIndices: Array.from(selectedVariationIndices), angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: !!needsModel, hasScene: false,
+          payload, selectedVariationIndices: Array.from(selectedVariationIndices), angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: modelsToGenerate.length > 0, hasScene: false,
           onJobEnqueued: (jobId) => injectActiveJob(queryClient, { jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 }),
         });
         if (!success) { setCurrentStep('settings'); }
       }
     } else {
-      // Multiple combos — enqueue each as a separate batch
+      // Multiple combos or multiple models — enqueue each as a separate job
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
@@ -1165,24 +1177,36 @@ export default function Generate() {
       let lastBalance: number | null = null;
       const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
 
-      for (const ratio of ratiosToGenerate) {
-        for (const framingVal of framingsToGenerate) {
-          for (const varIdx of variationIndices) {
-            const comboPayload = { ...payload, aspectRatio: ratio, framing: framingVal || undefined, selected_variations: [varIdx] };
-            const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-              body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!needsModel, hasScene: false }),
-            });
-            if (response.ok) {
-              const result = await response.json();
-              jobMap.set(`${varIdx}_${ratio}_${framingVal}`, result.jobId);
-              lastBalance = result.newBalance;
-              injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
-            } else {
-              const err = await response.json().catch(() => ({}));
-              if (response.status === 402) { toast.error('Insufficient credits'); break; }
-              toast.error(err.error || 'Failed to queue generation');
+      const modelIterator = modelsToGenerate.length > 0 ? modelsToGenerate : [null as ModelProfile | null];
+
+      for (const modelProfile of modelIterator) {
+        const base64ModelImage = modelProfile ? await convertImageToBase64(modelProfile.previewUrl) : undefined;
+
+        for (const ratio of ratiosToGenerate) {
+          for (const framingVal of framingsToGenerate) {
+            for (const varIdx of variationIndices) {
+              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: [varIdx] };
+              if (modelProfile && base64ModelImage) {
+                comboPayload.model = {
+                  name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
+                  bodyType: modelProfile.bodyType, ageRange: modelProfile.ageRange, imageUrl: base64ModelImage,
+                };
+              }
+              const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!modelProfile, hasScene: false }),
+              });
+              if (response.ok) {
+                const result = await response.json();
+                jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
+                lastBalance = result.newBalance;
+                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+              } else {
+                const err = await response.json().catch(() => ({}));
+                if (response.status === 402) { toast.error('Insufficient credits'); break; }
+                toast.error(err.error || 'Failed to queue generation');
+              }
             }
           }
         }
@@ -3827,12 +3851,12 @@ export default function Generate() {
             <div className="text-center">
               <h2 className="text-lg font-semibold">
                 {isUpscale ? `Enhancing to ${upscaleResolution === '4k' ? '4K' : '2K'}...` :
-                 hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` :
+                 (hasWorkflowConfig || isSelfieUgc) ? `Creating ${activeWorkflow?.name}...` :
                  generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
-                 hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
+                 (hasWorkflowConfig || isSelfieUgc) ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
                  generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
                  isInteriorDesign ? (() => { const styles = Array.from(selectedVariationIndices).map(i => variationStrategy?.variations[i]?.label).filter(Boolean); return styles.length > 1 ? `Staging your ${interiorRoomType || 'room'} in ${styles.length} styles: ${styles.join(', ')}` : `Staging your ${interiorRoomType || 'room'} in ${styles[0] || 'selected'} style`; })() :
