@@ -220,6 +220,7 @@ ${environmentBlock}
    - Ultra high resolution
 ${dropBlocks}
 ${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
+}
 
 const negativePrompt =
   "blurry, low quality, distorted, deformed hands, extra fingers, missing fingers, bad anatomy, unnatural pose, stiff pose, mannequin, cartoon, illustration, anime, 3d render, text, watermark, logo overlay, signature, flat lay, product only without model, floating clothes, wrinkled messy clothes, wrong colors, pattern distortion";
