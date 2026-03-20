@@ -3857,24 +3857,24 @@ export default function Generate() {
                       <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
                     </div>
                   )}
-                  {selectedModel && (
-                    <div className="flex-shrink-0 text-center">
+                  {Array.from(selectedModelMap.values()).map(model => (
+                    <div key={model.modelId} className="flex-shrink-0 text-center">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-                        <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
+                        <img src={model.previewUrl} alt={model.name} className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Model</p>
-                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{selectedModel.name}</p>
+                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{model.name}</p>
                     </div>
-                  )}
-                  {selectedPose && (
-                    <div className="flex-shrink-0 text-center">
+                  ))}
+                  {Array.from(selectedPoseMap.values()).map(pose => (
+                    <div key={pose.poseId} className="flex-shrink-0 text-center">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-                        <img src={selectedPose.previewUrl} alt={selectedPose.name} className="w-full h-full object-cover" />
+                        <img src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Scene</p>
-                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{selectedPose.name}</p>
+                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{pose.name}</p>
                     </div>
-                  )}
+                  ))}
                   {variationStrategy?.type === 'scene' && selectedVariationIndices.size > 0 && variationStrategy.variations
                     .filter((_, i) => selectedVariationIndices.has(i))
                     .map((v, idx) => (
