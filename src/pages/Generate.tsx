@@ -3958,38 +3958,72 @@ export default function Generate() {
                 </div>
               </div>
 
-              <div className={`grid gap-4 ${
-                generatedImages.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
-                generatedImages.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
-                generatedImages.length <= 4 ? 'grid-cols-2 md:grid-cols-3' :
-                'grid-cols-2 md:grid-cols-4'
-              }`}>
-                {generatedImages.map((url, index) => (
-                  <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                    <img src={url} alt={`Generated ${index + 1}`} className="w-full object-contain bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
-                    {/* Variation label overlay */}
-                    {workflowVariationLabels[index] && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-6">
-                        <p className="text-white text-xs font-medium">{workflowVariationLabels[index]}</p>
+              {(() => {
+                // Group images by variation label for clean grid when mixed ratios
+                const hasLabels = workflowVariationLabels.some(l => !!l);
+                if (hasLabels) {
+                  const groups: { label: string; items: { url: string; index: number }[] }[] = [];
+                  generatedImages.forEach((url, index) => {
+                    const label = workflowVariationLabels[index] || 'Results';
+                    let group = groups.find(g => g.label === label);
+                    if (!group) { group = { label, items: [] }; groups.push(group); }
+                    group.items.push({ url, index });
+                  });
+                  return groups.map((group) => (
+                    <div key={group.label} className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">{group.label}</p>
+                      <div className={`grid gap-4 ${
+                        group.items.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                        group.items.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
+                        group.items.length <= 4 ? 'grid-cols-2 md:grid-cols-3' :
+                        'grid-cols-2 md:grid-cols-4'
+                      }`}>
+                        {group.items.map(({ url, index }) => (
+                          <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                            <img src={url} alt={`Generated ${index + 1}`} className="w-full object-cover aspect-auto bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
+                              <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size"><Maximize2 className="w-4 h-4" /></button>
+                              <button onClick={e => { e.stopPropagation(); handleDownloadImage(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Download"><Download className="w-4 h-4" /></button>
+                              <button onClick={e => { e.stopPropagation(); handleRegenerate(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Regenerate"><RefreshCw className="w-4 h-4" /></button>
+                            </div>
+                            <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${selectedForPublish.has(index) ? 'bg-primary border-primary scale-110' : 'border-white bg-black/50'}`} onClick={() => toggleImageSelection(index)}>
+                              {selectedForPublish.has(index) ? <CheckCircle className="w-4 h-4 text-primary-foreground" /> : <span className="text-white text-xs font-bold">{index + 1}</span>}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
-                      <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size">
-                        <Maximize2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={e => { e.stopPropagation(); handleDownloadImage(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Download">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button onClick={e => { e.stopPropagation(); handleRegenerate(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Regenerate">
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
                     </div>
-                    <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${selectedForPublish.has(index) ? 'bg-primary border-primary scale-110' : 'border-white bg-black/50'}`} onClick={() => toggleImageSelection(index)}>
-                      {selectedForPublish.has(index) ? <CheckCircle className="w-4 h-4 text-primary-foreground" /> : <span className="text-white text-xs font-bold">{index + 1}</span>}
-                    </div>
+                  ));
+                }
+                // Fallback: flat grid when no labels
+                return (
+                  <div className={`grid gap-4 ${
+                    generatedImages.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                    generatedImages.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
+                    generatedImages.length <= 4 ? 'grid-cols-2 md:grid-cols-3' :
+                    'grid-cols-2 md:grid-cols-4'
+                  }`}>
+                    {generatedImages.map((url, index) => (
+                      <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                        <img src={url} alt={`Generated ${index + 1}`} className="w-full object-cover aspect-auto bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
+                        {workflowVariationLabels[index] && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-6">
+                            <p className="text-white text-xs font-medium">{workflowVariationLabels[index]}</p>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
+                          <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size"><Maximize2 className="w-4 h-4" /></button>
+                          <button onClick={e => { e.stopPropagation(); handleDownloadImage(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Download"><Download className="w-4 h-4" /></button>
+                          <button onClick={e => { e.stopPropagation(); handleRegenerate(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Regenerate"><RefreshCw className="w-4 h-4" /></button>
+                        </div>
+                        <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${selectedForPublish.has(index) ? 'bg-primary border-primary scale-110' : 'border-white bg-black/50'}`} onClick={() => toggleImageSelection(index)}>
+                          {selectedForPublish.has(index) ? <CheckCircle className="w-4 h-4 text-primary-foreground" /> : <span className="text-white text-xs font-bold">{index + 1}</span>}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
 
             </CardContent></Card>
 
