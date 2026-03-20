@@ -43,7 +43,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
-const opt = (url: string) => getOptimizedUrl(url, { width: 120, quality: 60 });
+const opt = (url: string) => getOptimizedUrl(url, { width: 200, quality: 60 });
 
 const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
   'Virtual Try-On Set': opt(getLandingAssetUrl('workflows/workflow-tryon-result.png')),
@@ -917,8 +917,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
                         )}
                       >
-                        <div className="w-14 h-14 rounded-xl bg-muted overflow-hidden flex-shrink-0">
-                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="w-full h-full object-cover" aspectRatio="1/1" />
+                        <div className="w-20 h-24 rounded-xl bg-muted overflow-hidden flex-shrink-0">
+                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="w-full h-full object-cover" aspectRatio="5/6" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{wf.name}</p>
