@@ -71,7 +71,24 @@ serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false, resolution, skipWake = false } = body;
+    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false, resolution, skipWake = false, wakeOnly = false } = body;
+
+    // If wakeOnly, just trigger process-queue and return
+    if (wakeOnly) {
+      fetch(`${supabaseUrl}/functions/v1/process-queue`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+          "x-queue-internal": "true",
+        },
+        body: JSON.stringify({ trigger: "batch-wake" }),
+      }).catch((e) => console.warn(`[enqueue] batch wake failed:`, (e as Error).message));
+      return new Response(
+        JSON.stringify({ ok: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!jobType || !payload) {
       return new Response(
