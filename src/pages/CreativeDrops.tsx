@@ -318,30 +318,6 @@ export default function CreativeDrops() {
               </Button>
             </div>
 
-            <TabsContent value="schedules" className="space-y-4">
-
-              {schedulesLoading ? (
-                <div className="space-y-3">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
-                  ))}
-                </div>
-              ) : schedules.length === 0 ? (
-                <EmptyStateCard
-                  heading="No scheduled drops yet"
-                  description="Set up your first scheduled drop to automate visual generation for your products."
-                  action={{ content: 'Create Drop', onAction: openWizard }}
-                  icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {schedules.map(schedule => (
-                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} onEdit={handleEdit} workflowNames={schedule.workflow_ids.map(id => workflowNameMap.get(id)).filter(Boolean) as string[]} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
             <TabsContent value="drops" className="space-y-4">
               {/* Filter & Sort bar */}
               {drops.length > 0 && (
@@ -410,6 +386,29 @@ export default function CreativeDrops() {
                       onViewDrop={() => setSelectedDrop(drop)}
                       scheduleName={drop.schedule_name || (drop.schedule_id ? scheduleNameMap.get(drop.schedule_id) : undefined) || undefined}
                     />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="schedules" className="space-y-4">
+              {schedulesLoading ? (
+                <div className="space-y-3">
+                  {[1, 2].map(i => (
+                    <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : schedules.length === 0 ? (
+                <EmptyStateCard
+                  heading="No scheduled drops yet"
+                  description="Set up your first scheduled drop to automate visual generation for your products."
+                  action={{ content: 'Create Drop', onAction: openWizard }}
+                  icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {schedules.map(schedule => (
+                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} onEdit={handleEdit} workflowNames={schedule.workflow_ids.map(id => workflowNameMap.get(id)).filter(Boolean) as string[]} />
                   ))}
                 </div>
               )}
