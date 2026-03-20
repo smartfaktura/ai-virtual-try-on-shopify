@@ -64,7 +64,7 @@ export function MultiProductProgressBanner({
   const completedCount = multiProductResults.size;
   const totalJobCount = totalJobs || multiProductJobIds.size;
   const totalImages = totalExpectedImages || totalJobCount;
-  const estimatePerImage = 15; // seconds per image (realistic for standard quality)
+  const estimatePerImage = 8; // seconds per image (realistic for standard quality)
   const totalEstimate = totalImages * estimatePerImage;
   const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
   const estHighMin = Math.max(estLowMin, Math.ceil((totalEstimate * 1.3) / 60));
@@ -84,8 +84,8 @@ export function MultiProductProgressBanner({
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
           {completedCount > 0
-            ? `${completedCount} of ${totalJobCount} job${totalJobCount !== 1 ? 's' : ''} done (${totalProducts} product${totalProducts !== 1 ? 's' : ''})`
-            : `Generating ${totalJobCount} job${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} product${totalProducts !== 1 ? 's' : ''}`}
+            ? `${completedCount} of ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} done`
+            : `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} product${totalProducts !== 1 ? 's' : ''}`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
