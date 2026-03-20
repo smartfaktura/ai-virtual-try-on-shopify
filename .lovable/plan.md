@@ -1,30 +1,26 @@
 
 
-# Fix Contact Form Reply-To Address
+# Improve Cost Summary & Generate Button UX
 
-## Problem
-When a contact form email arrives at hello@vovv.ai, clicking "Reply" addresses the reply to `notifications@vovv.ai` (the sender) instead of the person who filled out the form.
+## Changes
 
-## Fix
-In `supabase/functions/send-email/index.ts`, add `reply_to` to the Resend API payload when the email type is `contact_form`. The submitter's email is already available in `data.email`.
+### 1. Cost summary bar — show total images + cleaner mobile layout
+**Files**: `TryOnSettingsPanel.tsx`, `WorkflowSettingsPanel.tsx`
 
-### File: `supabase/functions/send-email/index.ts` (lines 346-358)
-- Extract `reply_to` from `data.email` when `type === 'contact_form'`
-- Add `reply_to` field to the Resend API request body
-- Only include it when it has a value (so other email types are unaffected)
+- Add total image count next to credit cost: **"32 images · 192 credits"**
+- On mobile, stack the layout vertically (credits available below the cost line) instead of side-by-side to prevent text overlap
+- Use `flex-col sm:flex-row` pattern for the summary bar
 
-```typescript
-// Before sending, determine reply_to for contact forms
-const replyTo = type === "contact_form" && data?.email ? data.email : undefined;
+### 2. Simplify Generate button text
+- Change `Generate ${totalImages} Try-On Images` → `Generate`
+- Change `Generate ${count} ${workflow} Images` → `Generate`
+- The total image count is already shown in the summary bar above, so the button stays clean
 
-body: JSON.stringify({
-  from: "VOVV.AI <notifications@vovv.ai>",
-  to: [to],
-  reply_to: replyTo,  // ← new field
-  subject,
-  html,
-}),
-```
+### 3. Mobile credits available fix
+- Wrap credits-available text to its own line on small screens
+- Ensure the destructive "need X credits" button also wraps cleanly
 
-After editing, redeploy the `send-email` edge function.
+### Files to edit
+- `src/components/app/generate/TryOnSettingsPanel.tsx` — summary bar + button
+- `src/components/app/generate/WorkflowSettingsPanel.tsx` — summary bar + button
 
