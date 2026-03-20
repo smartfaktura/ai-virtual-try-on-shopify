@@ -116,6 +116,8 @@ export default function Dashboard() {
       return count ?? 0;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev: number | undefined) => prev,
   });
 
   // Fetch brand profile count
