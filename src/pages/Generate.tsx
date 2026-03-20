@@ -1277,18 +1277,18 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    const base64ProductImage = await convertImageToBase64(sourceImageUrl);
-    const base64ModelImage = await convertImageToBase64(selectedModel.previewUrl);
-
-    if (posesToGenerate.length === 1) {
-      // Single scene — use existing enqueue hook for real-time tracking
+    if (modelsToGenerate.length === 1 && posesToGenerate.length === 1) {
+      // Single model + single scene — use existing enqueue hook for real-time tracking
+      const model = modelsToGenerate[0];
       const pose = posesToGenerate[0];
+      const base64ProductImage = await convertImageToBase64(sourceImageUrl);
+      const base64ModelImage = await convertImageToBase64(model.previewUrl);
       const base64SceneImage = pose.previewUrl ? await convertImageToBase64(pose.previewUrl) : undefined;
       const enqueueResult = await enqueue({
         jobType: 'tryon',
         payload: {
           product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
-          model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+          model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
           framing: framing || undefined,
@@ -1320,7 +1320,7 @@ export default function Generate() {
         setCurrentStep('settings');
       }
     } else {
-      // Multi-scene — use direct fetch for each pose (upfront batch enqueue)
+      // Multi-model and/or multi-scene — use direct fetch for each combination
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
@@ -1329,27 +1329,29 @@ export default function Generate() {
       let lastBalance: number | null = null;
       const product = selectedProduct || { id: 'scratch', title: productData.title, description: productData.description, productType: productData.productType, vendor: '', tags: [], images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active' as const, createdAt: '', updatedAt: '' };
 
-      for (const pose of posesToGenerate) {
-        const result = await enqueueTryOnForProduct(product as Product, token, pose);
-        if (result) {
-          jobMap.set(pose.poseId, result.jobId);
-          lastBalance = result.newBalance;
-          injectActiveJob(queryClient, {
-            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-            workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
-            job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-          });
+      for (const model of modelsToGenerate) {
+        for (const pose of posesToGenerate) {
+          const result = await enqueueTryOnForProduct(product as Product, token, pose, model);
+          if (result) {
+            jobMap.set(`${model.modelId}_${pose.poseId}`, result.jobId);
+            lastBalance = result.newBalance;
+            injectActiveJob(queryClient, {
+              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+              workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+            });
+          }
         }
       }
 
       if (jobMap.size === 0) {
-        toast.error('Could not queue any scenes');
+        toast.error('Could not queue any combinations');
         setCurrentStep('settings');
         return;
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} scene${jobMap.size > 1 ? 's' : ''} for generation`);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''} (${modelsToGenerate.length} model${modelsToGenerate.length > 1 ? 's' : ''} × ${posesToGenerate.length} scene${posesToGenerate.length > 1 ? 's' : ''})`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
