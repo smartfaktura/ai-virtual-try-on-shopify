@@ -1177,7 +1177,6 @@ export default function Generate() {
       if (jobMap.size === 0) { toast.error('Could not queue any images'); setCurrentStep('settings'); return; }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
