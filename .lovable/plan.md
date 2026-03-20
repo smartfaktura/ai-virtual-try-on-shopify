@@ -1,56 +1,33 @@
 
 
-# Fix: Three Issues in Selfie / UGC Set Workflow
+# Fix: Banner Disappearing + Add Image Loading Shimmer
 
-## Issues Found
+## Two Issues
 
-### 1. Title still shows "Creating Virtual Try-On..."
-The title fix from the previous change correctly reordered the conditions. However, the screenshot shows it still says "Creating Virtual Try-On..." — this suggests the `hasWorkflowConfig` variable is `false` for Selfie/UGC at this point.
+### 1. Banner disappears / shows "Generation complete!" mid-batch
+The `MultiProductProgressBanner` receives `activeJob` from the `useGenerationQueue` hook, which only tracks the **last enqueued job**. When that single job completes, `activeJob.status` becomes `'completed'`. The current suppression on line 141 checks `completedCount < totalJobCount`, but the `activeJob` completed state still leaks through when there's a timing gap between completion and the next poll cycle. Additionally, when `activeJob` becomes `null` after reset, the banner falls to the rotating team member fallback — which looks like the banner "disappeared."
 
-Looking at the code: `hasWorkflowConfig = !!workflowConfig` where `workflowConfig = activeWorkflow?.generation_config`. If the Selfie/UGC Set workflow doesn't have a `generation_config` property, `hasWorkflowConfig` would be false, falling through to the try-on check. Need to also check `isSelfieUgc` in the title/subtitle conditions.
+**Fix in `MultiProductProgressBanner.tsx`:**
+- Completely hide the `QueuePositionIndicator` when `completedCount < totalJobCount` (the batch is still running). The banner itself already shows progress ("13 of 16 images done") — the `QueuePositionIndicator` is redundant and causes confusion.
+- Only show `QueuePositionIndicator` when `completedCount >= totalJobCount` (all done) for the final "complete" state.
+- Always show the rotating team member during active generation instead of only when `!activeJob`.
 
-### 2. "Generation complete!" shows while still generating (5 of 6)
-The `MultiProductProgressBanner` renders a `QueuePositionIndicator` at line 141-143 when `activeJob` exists. When one job completes, `activeJob.status` becomes `'completed'`, and the QueuePositionIndicator shows "Generation complete!" even though 5 of 6 jobs are done and 1 is still in progress. The banner should suppress the QueuePositionIndicator's completed state when not all jobs are done.
+### 2. Generated images appear in parts (laggy/piecemeal)
+The results grid (line 4089) uses raw `<img>` tags. When 16 images load from CDN, they pop in at different times creating a jarring experience.
 
-### 3. Male models not generating — only female results
-The Selfie/UGC workflow routes through `handleWorkflowGenerate` (line 918), which only uses `selectedModel` (singular) — it never iterates over `selectedModels`. When 3 models are picked (Olivia, Marcus, Jin), only Olivia's data is sent to all jobs. The multi-model loop exists in `handleTryOnConfirmGenerate` but that path is skipped for `isSelfieUgc`.
+**Fix in `Generate.tsx` results grid:**
+- Replace raw `<img>` with the existing `ShimmerImage` component (already in the project at `src/components/ui/shimmer-image.tsx`)
+- Each image slot shows an animated shimmer gradient until the image loads, then crossfades in
 
----
+## Technical Details
 
-## Plan
+### File 1: `src/components/app/MultiProductProgressBanner.tsx`
+- Lines 140-156: Replace the `activeJob` logic. During active generation (`completedCount < totalJobCount`), always show the rotating team member and never show `QueuePositionIndicator`. Only show `QueuePositionIndicator` when batch is fully complete.
 
-### File 1: `src/pages/Generate.tsx`
+### File 2: `src/pages/Generate.tsx`
+- Line 4092: Replace `<img src={url} ...>` with `<ShimmerImage src={url} aspectRatio="3/4" ...>` and add the import
+- The `ShimmerImage` component handles cache detection, shimmer animation, and crossfade automatically
 
-**A. Fix title/subtitle for Selfie/UGC (lines ~3829-3839)**
-Add `isSelfieUgc` as an additional check alongside `hasWorkflowConfig`:
-```
-{isUpscale ? ... :
- (hasWorkflowConfig || isSelfieUgc) ? `Creating ${activeWorkflow?.name}...` :
- generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : ...}
-```
-Same for subtitle — add `isSelfieUgc` to the workflow subtitle branch.
-
-**B. Fix multi-model generation in `handleWorkflowGenerate` (lines ~1034-1195)**
-When `isSelfieUgc` and multiple models are selected, the single-product path must iterate over each model in `selectedModels`, not just use `selectedModel`. For each model, convert its image to base64 and include its data in the payload. This means the existing ratio × framing × variation loop also needs a model loop wrapping it, creating a separate job per model × variation × ratio × framing combo.
-
-The multi-product path (lines 943-1021) has the same issue — it only uses `selectedModel` and needs the same multi-model loop.
-
-### File 2: `src/components/app/MultiProductProgressBanner.tsx`
-
-**C. Suppress "Generation complete!" when jobs are still in progress (line ~141-143)**
-Don't pass `activeJob` to `QueuePositionIndicator` when `activeJob.status === 'completed'` but `completedCount < totalJobCount`. Replace the condition:
-```tsx
-{activeJob && activeJob.status !== 'completed' && (
-  <QueuePositionIndicator job={activeJob} onCancel={onCancel} />
-)}
-```
-This prevents showing the green "Generation complete!" banner prematurely while other jobs are still running.
-
----
-
-## Summary of Changes
-- 2 files modified
-- Title/subtitle: add `isSelfieUgc` fallback so Selfie/UGC Set shows its workflow name
-- Multi-model: wrap the workflow generation loop with a model iterator so all selected models get their own jobs
-- Progress banner: hide "Generation complete!" indicator until all jobs are actually done
+### Also fix line 88 text
+- Change `Generating X images for 0 products` to omit product count when `totalProducts <= 1` (from approved but unimplemented previous plan)
 
