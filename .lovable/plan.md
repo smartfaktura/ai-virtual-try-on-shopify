@@ -1,71 +1,63 @@
 
 
-# Creative Drops: Current State & Remaining Issues
+# Creative Drops: Bug Audit Results
 
-## What's Working
-- Wizard creates schedules and saves to `creative_schedules` ✓
-- "Run Now" triggers `trigger-creative-drop` which enqueues jobs ✓
-- `complete-creative-drop` fires after each job and transitions drop to `ready`/`failed` ✓
-- Daily cron at 7 AM UTC triggers scheduled drops ✓
-- `run-scheduled-drops` handles internal auth bypass ✓
-- Drop detail modal fetches images from `generation_jobs` as fallback ✓
+## Bugs Found
 
-## Critical Bug: Image Format Mismatch
+### Bug 1 (Medium): `run-scheduled-drops` Has No Authentication
+The function has **zero authentication**. Anyone can call it and trigger all due schedules for all users. It should verify the request comes from the cron job (service role key) or reject it.
 
-**`complete-creative-drop`** stores images as plain string URLs:
-```ts
-allImages.push(img);  // string: "https://..."
-// Saved as: images = ["https://...", "https://..."]
-```
+**File**: `supabase/functions/run-scheduled-drops/index.ts` (lines 10-21)
+**Fix**: Add service-role auth check before processing, same pattern as `complete-creative-drop`.
 
-**`DropCard.tsx`** (line 286) expects objects with `.url`:
-```ts
-const dropImages = (drop.images || []) as { url: string }[];
-// Line 373: img.url → undefined on a plain string
-```
+### Bug 2 (Medium): Progress Bar Always Shows 0% During Generation
+`DropCard.tsx` line 291-293: `completedImages = dropImages.length`. But `drop.images` is only populated when `complete-creative-drop` runs (after ALL jobs finish). During generation, `drop.images` is always `[]`, so `completedImages = 0` and `progressPct = 0%`.
 
-**Result**: When a drop completes and transitions to `ready`, the thumbnail previews show broken images (undefined URLs) and the "+N" count may be wrong.
+The time-based estimate text (lines 316-328) works fine, but the actual `<Progress>` bar is stuck at 0%.
 
-**Fix**: Update `complete-creative-drop` to store images as `[{ url: "https://..." }]` objects instead of plain strings, matching what the UI expects. Also store `workflow_name` and `product_title` metadata per image for the group-by-workflow feature.
+**Fix**: Use time-based progress for the bar too: `Math.min(95, Math.round((elapsedMs / estimatedTotalMs) * 100))`.
 
-## Bug 2: Missing `product_id` in Job Payloads
+### Bug 3 (Low): `complete-creative-drop` Queries Wrong Table for Pending Jobs
+Line 54-58 queries `generation_queue` with `payload->>creative_drop_id`, but the PostgREST JSON arrow filter syntax may not work reliably with `payload->>` on `generation_queue`. The `generation_queue.payload` column stores `creative_drop_id` inside JSONB, and the filter `payload->>creative_drop_id` requires exact key match.
 
-`trigger-creative-drop` sends `product: { title, imageUrl, ... }` but NOT `product_id` as a UUID field. In `generate-workflow` line 731: `product_id: payload.product_id || null` — this is always `null` for creative drop jobs.
+This is actually fine syntactically in PostgREST, but there's a subtle issue: the `not("status", "in", '("completed","failed","cancelled")')` filter uses parentheses syntax which may fail. The correct PostgREST syntax for `NOT IN` is `not.in.(completed,failed,cancelled)` — the current string `'("completed","failed","cancelled")'` might not parse correctly.
 
-**Impact**: `DropDetailModal` can't look up product titles for drop images via `product_id`.
+**Fix**: Change to `.in("status", ["queued", "processing"])` (positive match instead of negative).
 
-**Fix**: Add `product_id` to the payload in `trigger-creative-drop` alongside the `product` object.
+### Bug 4 (Low): Double Credit Deduction
+`trigger-creative-drop` checks credits balance at line 257, then enqueues via `enqueue_generation` RPC which ALSO deducts credits (line in the RPC function). So credits are deducted per-job by the RPC, but the balance check at line 257 only checks the raw balance vs total cost — it doesn't account for sequential deductions within the same batch. If user has exactly enough credits for 5 jobs, by job 3 the RPC might report "Insufficient credits" because jobs 1-2 already deducted.
 
-## Bug 3: Progress Bar Never Updates During Generation
+This is actually handled correctly because `enqueue_generation` uses `FOR UPDATE` and deducts atomically. The pre-check at line 257 is just an early-exit optimization. However, if it passes the pre-check but a concurrent request drains credits between check and enqueue, some jobs will fail with "Insufficient credits" — which is handled gracefully (pushed to `errors` array). Not a real bug, just a race condition that's already handled.
 
-The drop card shows a progress bar during `generating` status, but `completedImages` is calculated from `dropImages.length` (the `images` array on the drop). This array is only populated AFTER completion — it stays empty during generation. So the progress bar always shows 0%.
+### Bug 5 (Low): `creative_drops` Insert Uses User RLS But Service Role Client
+Line 275-291 in `trigger-creative-drop` inserts into `creative_drops` using the service role client, which bypasses RLS. This is correct behavior. No bug here.
 
-**Fix**: During `generating` status, query `generation_jobs` where `creative_drop_id = drop.id AND status = 'completed'` to get real-time completed image count. Or update `creative_drops.images` incrementally as each job completes.
+## What's Working Correctly
+- Wizard saves schedules with proper `user_id` scoping
+- "Run Now" triggers `trigger-creative-drop` which enqueues jobs correctly
+- `complete-creative-drop` fires after each job and collects images as objects with metadata
+- Daily cron at 7 AM UTC runs `run-scheduled-drops`
+- Drop detail modal falls back to querying `generation_jobs` when `drop.images` is empty
+- Toast notifications on drop completion (generating → ready/failed)
+- 10-second polling while drops are generating
+- One-time schedules get deactivated after execution
+- Recurring schedules get `next_run_at` updated properly
 
-## Bug 4: Drop Card Thumbnail Previews for "Ready" Drops
+## Recommended Fixes (Priority Order)
 
-Even after fixing the format, the `DropCard` only shows thumbnails when `dropImages.length > 0`. But since the `creative_drops` query in `CreativeDrops.tsx` returns `images` as a JSON column, the format must match consistently.
+### Fix 1: Add Auth to `run-scheduled-drops`
+Add service-role key check (5 lines).
 
-## Changes Needed
+### Fix 2: Time-Based Progress Bar
+Replace count-based progress with time-based estimate in `DropCard.tsx` (3 lines).
 
-### File 1: `supabase/functions/complete-creative-drop/index.ts`
-- Store images as `[{ url: "..." }]` objects instead of plain strings
-- Include `workflow_id` metadata from `generation_jobs` for each image
-
-### File 2: `supabase/functions/trigger-creative-drop/index.ts`
-- Add `product_id: productId` (the UUID) to each job payload alongside the `product` object
-
-### File 3: `src/components/app/DropCard.tsx`
-- Handle both string and object formats in `dropImages` parsing (defensive)
-- For `generating` status, show time-based estimate instead of image-count progress (since real-time count isn't available without an extra query)
+### Fix 3: Fix Pending Jobs Query
+Change the `NOT IN` filter to a positive `IN` filter for reliability (1 line).
 
 ## Summary
-
-| Issue | Severity | Fix |
-|-------|----------|-----|
-| Image format mismatch (strings vs objects) | **Critical** — ready drops show no thumbnails | `complete-creative-drop` |
-| Missing `product_id` in payloads | Medium — no product names in detail modal | `trigger-creative-drop` |
-| Progress bar always 0% | Low — cosmetic | `DropCard.tsx` |
-
-3 files changed, ~30 lines total.
+- 1 security issue (unauthenticated cron endpoint)
+- 1 UX issue (progress bar stuck at 0%)
+- 1 potential query issue (PostgREST filter syntax)
+- No data loss or corruption risks
+- 3 files, ~15 lines total to fix
 
