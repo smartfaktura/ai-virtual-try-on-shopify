@@ -152,12 +152,14 @@ export function DropCard(props: Props) {
                     variant="secondary"
                     className={cn(
                       'text-[10px] rounded-full px-2 py-0.5 flex-shrink-0',
-                      schedule.active
+                      isCompleted
                         ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                        : 'bg-muted text-muted-foreground'
+                        : schedule.active
+                          ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                          : 'bg-muted text-muted-foreground'
                     )}
                   >
-                    {schedule.active ? 'Active' : 'Paused'}
+                    {isCompleted ? <><CheckCircle className="w-3 h-3 mr-1 inline" />Completed</> : schedule.active ? 'Active' : 'Paused'}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
