@@ -621,7 +621,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
               <div className="space-y-2">
                 <p className="section-label">Drop Name</p>
                 <Input
-                  placeholder="e.g. Summer 2026 Collection"
+                  placeholder="Spring Campaign"
                   value={name}
                   onChange={e => { setName(e.target.value); markDirty(); }}
                   className={cn('h-12 rounded-xl text-sm', attempted && !name.trim() && 'border-destructive')}
