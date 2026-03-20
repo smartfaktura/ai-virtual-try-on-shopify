@@ -296,25 +296,21 @@ export default function CreativeDrops() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <div className="flex items-center justify-between gap-3">
-              <TabsList className="bg-muted/50 rounded-xl p-1 h-auto">
-                <TabsTrigger value="drops" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <TabsList className="bg-muted/50 rounded-xl p-1 h-auto w-full sm:w-auto">
+                <TabsTrigger value="drops" className="rounded-lg flex-1 sm:flex-none px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Drops
                 </TabsTrigger>
-                <TabsTrigger value="schedules" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
+                <TabsTrigger value="schedules" className="rounded-lg flex-1 sm:flex-none px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Scheduled
                 </TabsTrigger>
-                <TabsTrigger value="calendar" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
+                <TabsTrigger value="calendar" className="rounded-lg flex-1 sm:flex-none px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Calendar
                 </TabsTrigger>
               </TabsList>
-              <Button onClick={openWizard} className="rounded-xl gap-2 hidden sm:inline-flex">
+              <Button onClick={openWizard} className="rounded-xl gap-2 w-full sm:w-auto">
                 <Calendar className="w-4 h-4" />
                 Create Drop
-              </Button>
-              <Button onClick={openWizard} className="rounded-xl gap-2 sm:hidden text-sm px-3">
-                <Calendar className="w-4 h-4" />
-                Create
               </Button>
             </div>
 
