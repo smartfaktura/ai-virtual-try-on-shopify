@@ -1593,29 +1593,23 @@ export default function Generate() {
           multiProductPollingRef.current = null;
         }
 
-        // Aggregate results — parse composite keys to build labels for grouping
+        // Aggregate results using stored metadata for reliable grouping
         const allImages: string[] = [];
         const allLabels: string[] = [];
         for (const [key] of multiProductJobIds) {
           const r = completedResults.get(key);
           if (r) {
-            // Keys are formatted as: productId_modelId_poseId_ratio_framing
-            // or for single-product: modelId_poseId_ratio_framing
-            const keyParts = key.split('_');
-            const framingVal = keyParts[keyParts.length - 1];
-            const ratioVal = keyParts[keyParts.length - 2];
-            const productId = keyParts.length >= 5 ? keyParts[0] : null;
-            const product = productId ? productQueue.find(p => p.id === productId) : null;
-            const prefix = product ? product.title : '';
+            const meta = jobMetadata.get(key);
+            const prefix = meta?.productName || '';
 
-            // Use edge function labels if provided, otherwise build from key parts
+            // Use edge function labels if provided, otherwise build from metadata
             const labels = r.labels.length > 0
               ? r.labels
               : r.images.map(() => {
-                  const meta: string[] = [];
-                  if (ratioVal && ratioVal !== 'null') meta.push(ratioVal);
-                  if (framingVal && framingVal !== 'null' && framingVal !== 'auto') meta.push(framingVal.replace(/_/g, ' '));
-                  return meta.join(' · ') || 'Generated';
+                  const parts: string[] = [];
+                  if (meta?.ratio && meta.ratio !== 'null') parts.push(meta.ratio);
+                  if (meta?.framing && meta.framing !== 'null' && meta.framing !== 'auto') parts.push(String(meta.framing).replace(/_/g, ' '));
+                  return parts.join(' · ') || 'Generated';
                 });
 
             allImages.push(...r.images);
@@ -1624,23 +1618,28 @@ export default function Generate() {
         }
 
         if (allImages.length > 0) {
+          // Finalizing handoff: brief pause before showing results
+          setIsFinalizingResults(true);
+          setGeneratingProgress(100);
+          await new Promise(r => setTimeout(r, 1500));
           setGeneratedImages(allImages);
           setWorkflowVariationLabels(allLabels);
-          setGeneratingProgress(100);
+          setIsFinalizingResults(false);
           setCurrentStep('results');
           if (failedCount > 0) {
             toast.warning(`Completed with ${failedCount} failure${failedCount > 1 ? 's' : ''}. ${allImages.length} images generated.`);
           } else {
-            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
+            toast.success(`Generated ${allImages.length} images!`);
           }
         } else {
-          toast.error('All products failed. Credits refunded.');
+          toast.error('All generations failed. Credits refunded.');
           setCurrentStep('settings');
         }
         refreshBalance();
         queryClient.invalidateQueries({ queryKey: ['library'] });
         queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
         setMultiProductJobIds(new Map());
+        setJobMetadata(new Map());
       }
     };
 
