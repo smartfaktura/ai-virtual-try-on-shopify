@@ -290,7 +290,10 @@ export function DropCard(props: Props) {
 
   const completedImages = dropImages.length;
   const targetImages = drop.total_images || 0;
-  const progressPct = targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
+  const SECONDS_PER_IMAGE = 8;
+  const progressPct = drop.status === 'generating'
+    ? Math.min(95, Math.round((Date.now() - new Date(drop.created_at).getTime()) / (targetImages * SECONDS_PER_IMAGE * 1000) * 100)) || 5
+    : targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
 
   return (
     <>
