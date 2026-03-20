@@ -51,6 +51,7 @@ export interface WorkflowScene {
   elements: SceneElement[];
   mode?: 'recipe' | 'carousel' | 'upscale' | 'staging';
   slideLabels?: string[];
+  objectPosition?: string;
 }
 
 interface Props {
@@ -660,8 +661,9 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
         alt=""
         loading="eager"
         decoding="async"
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
+          objectPosition: scene.objectPosition ?? 'center',
           transform: 'translateZ(0)',
         }}
         onLoad={() => setBgLoaded(true)}
