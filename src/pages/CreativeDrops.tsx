@@ -151,7 +151,6 @@ export default function CreativeDrops() {
 
   const hasStats = schedules.length > 0 || drops.length > 0;
   const filteredDrops = drops
-    .filter(d => dropStatusFilter === 'all' || d.status === dropStatusFilter)
     .sort((a, b) => {
       const dateA = new Date(a.run_date).getTime();
       const dateB = new Date(b.run_date).getTime();
