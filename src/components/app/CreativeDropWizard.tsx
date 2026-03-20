@@ -296,12 +296,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     const genConfig = selectedWorkflow.generation_config as any;
     const variations = genConfig?.variation_strategy?.variations || [];
     const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
-    const sceneCount = Math.max(sceneSelections.size, variations.length > 0 ? 1 : 1);
     const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
     const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
     const formatCount = Math.max(formats.length, 1);
-    return effectiveScenes * modelCount * formatCount;
-  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length]);
+    const framingCount = selectedFramings.has('auto') ? 1 : Math.max(selectedFramings.size, 1);
+    return effectiveScenes * modelCount * formatCount * framingCount;
+  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length, selectedFramings]);
 
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
