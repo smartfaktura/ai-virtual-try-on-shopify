@@ -202,7 +202,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const v = initialData.workflowFormats[initWfId];
       return Array.isArray(v) ? v : [v];
     }
-    return ['1:1'];
+    return [];
   });
   const [isRandomModelsFlag, setIsRandomModelsFlag] = useState(false);
   const [isRandomScenesFlag, setIsRandomScenesFlag] = useState(false);
