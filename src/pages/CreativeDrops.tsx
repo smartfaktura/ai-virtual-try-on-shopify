@@ -273,7 +273,7 @@ export default function CreativeDrops() {
           <div className="rounded-2xl bg-card shadow-sm overflow-hidden mb-8">
             <div className="flex overflow-x-auto scrollbar-hide divide-x divide-border">
               {[
-                { value: activeCount, label: 'Active Schedules' },
+                { value: activeCount, label: 'Scheduled' },
                 { value: totalDrops, label: 'Total Drops' },
                 { value: totalImages, label: 'Images Generated' },
                 { value: totalCredits, label: 'Credits Used' },
