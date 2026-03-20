@@ -703,7 +703,6 @@ function CalendarView({
           Scheduled
         </div>
       </div>
-      <FeedbackBanner />
     </div>
   );
 }

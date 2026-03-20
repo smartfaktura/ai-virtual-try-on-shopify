@@ -145,7 +145,7 @@ function buildDropDirectionBlocks(ctx: DropContext): string {
   }
 
   if (ctx.themeNotes) {
-    blocks.push(`CREATIVE DIRECTION: ${ctx.themeNotes}`);
+    blocks.push(`SEASONAL DIRECTION: ${ctx.themeNotes}. You MUST incorporate this seasonal mood, color palette, and atmosphere into the scene, lighting, and overall feel.`);
   }
 
   if (ctx.brandProfile) {

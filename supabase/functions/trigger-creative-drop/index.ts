@@ -303,7 +303,7 @@ serve(async (req) => {
             aspectRatio,
             selected_variations: variationIndices.length > 0 ? variationIndices : undefined,
             brand_profile: brandProfile,
-            theme: schedule.theme || undefined,
+            theme: resolvedTheme || undefined,
             theme_notes: schedule.theme_notes || undefined,
             prop_style: (wfSceneConfig.flat_lay_prop_style as string) || undefined,
             styling_notes: (wfSceneConfig.styling_notes as string) || undefined,
