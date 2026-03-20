@@ -45,6 +45,8 @@ export interface BatchGroup {
   quality: string | null;
   /** Upscale resolution ('2k' or '4k') when job_type is 'upscale' */
   resolution: string | null;
+  /** True when any job in the group is from a creative drop */
+  isCreativeDrop: boolean;
   /** Total images expected across all jobs in group (image-level, not job-level) */
   totalImageCount: number;
   /** Images generated so far across all jobs in group */

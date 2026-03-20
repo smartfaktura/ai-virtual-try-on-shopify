@@ -553,7 +553,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
 
       if (isNow && !editingScheduleId) {
-        toast.success('Drop created — generating now!');
         try {
           const res = await supabase.functions.invoke('trigger-creative-drop', {
             body: { schedule_id: scheduleId },
