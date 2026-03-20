@@ -1246,8 +1246,10 @@ export default function Generate() {
           || errMsg.toLowerCase().includes('concurrent');
 
         if (isRateLimit && attempt < maxRetries - 1) {
-          console.warn(`[enqueue] Rate limited for "${product.title}", retry ${attempt + 1}/${maxRetries - 1}`);
-          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          const retryAfter = err.retry_after_seconds ? Number(err.retry_after_seconds) : Math.pow(2, attempt + 1);
+          const jitter = Math.random() * 1000;
+          console.warn(`[enqueue] Rate limited for "${product.title}", retry ${attempt + 1}/${maxRetries - 1} in ${retryAfter}s`);
+          await new Promise(r => setTimeout(r, retryAfter * 1000 + jitter));
           continue;
         }
 
