@@ -1159,8 +1159,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* Pose / Scene Library */}
-                    {showPosePicker && (
+                    {/* Pose / Scene Library — hidden in Mix mode */}
+                    {showPosePicker && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Scene Library</p>
