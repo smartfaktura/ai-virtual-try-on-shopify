@@ -287,14 +287,28 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
   const progressPercent = TOTAL_STEPS > 1 ? Math.round((step / (TOTAL_STEPS - 1)) * 100) : 0;
 
+  // Image count: matrix-based for Curated, user-chosen for Mix
+  const computedImageCount = useMemo(() => {
+    if (campaignMode === 'mix') return imageCount;
+    if (!selectedWorkflow) return imageCount;
+    const genConfig = selectedWorkflow.generation_config as any;
+    const variations = genConfig?.variation_strategy?.variations || [];
+    const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
+    const sceneCount = Math.max(sceneSelections.size, variations.length > 0 ? 1 : 1);
+    const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+    const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
+    const formatCount = Math.max(formats.length, 1);
+    return effectiveScenes * modelCount * formatCount;
+  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length]);
+
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
     workflowId: selectedWorkflow.id,
     workflowName: selectedWorkflow.name,
     hasModel: selectedWorkflow.uses_tryon || modelSelections.length > 0,
     hasCustomScene: false,
-    formatCount: Math.max(formats.length, 1),
-    imageCountOverride: imageCount,
+    formatCount: 1, // already included in computedImageCount
+    imageCountOverride: computedImageCount,
     productCount: selectedProductIds.size,
   }] : [];
 
