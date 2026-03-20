@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Info } from 'lucide-react';
+import { CheckCircle, Info, Expand } from 'lucide-react';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import type { GenerationJob } from '@/types';
@@ -27,6 +27,32 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
       setSelectedForPublish(new Set());
     }
   }, [open, job?.jobId]);
+
+  const handleDownload = useCallback(async (index: number) => {
+    if (!job) return;
+    const imageUrl = job.results[index]?.imageUrl;
+    if (!imageUrl) return;
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const ext = blob.type.includes('png') ? 'png' : 'jpg';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.productSnapshot.title.replace(/\s+/g, '-')}-${index + 1}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  }, [job]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   if (!job) return null;
 
@@ -134,6 +160,13 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
                           )}
                         </div>
                       )}
+                      {/* Expand button to open lightbox */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openLightbox(index); }}
+                        className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Expand className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -160,7 +193,7 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
         onClose={() => setLightboxOpen(false)}
         onNavigate={setLightboxIndex}
         onSelect={toggleSelection}
-        onDownload={() => {}}
+        onDownload={handleDownload}
         selectedIndices={selectedForPublish}
         productName={job.productSnapshot.title}
       />
