@@ -273,10 +273,22 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
 
+  const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
+  const PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor'];
+
   const allScenePoses = useMemo(() => {
     const raw = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customScenePoses]);
-    return sortScenes(raw);
-  }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides]);
+    const sorted = sortScenes(raw);
+    if (!selectedWorkflow) return sorted;
+    if (selectedWorkflow.uses_tryon) {
+      return sorted.filter(p => ON_MODEL_CATEGORIES.includes(p.category));
+    }
+    const needsModelsForWf = selectedWorkflow.generation_config?.ui_config?.show_model_picker;
+    if (!needsModelsForWf) {
+      return sorted.filter(p => PRODUCT_CATEGORIES.includes(p.category));
+    }
+    return sorted;
+  }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides, selectedWorkflow]);
 
   const sceneCategories = useMemo(() => {
     const order = deriveCategoryOrder(allScenePoses);
