@@ -1,32 +1,18 @@
 
 
-# Revamp Changelog Page
+# Fix Workflow Card Thumbnail Focus
 
-## What Changes
+## Problem
+The `WorkflowAnimatedThumbnail` component uses `object-top` on all background images, which works for the wider row layout but crops out the important center content (e.g., the model) when displayed in the square compact card.
 
-### 1. Rewrite release data with real timeline
-Replace the current `releases` array with an accurate, engaging changelog:
+## Solution
+Change `object-top` to `object-center` on the background `<img>` elements inside `WorkflowAnimatedThumbnail.tsx`. This affects approximately 5 occurrences across different render modes (carousel, upscale, staging, default).
 
-**Recent (shown by default):**
-- **March 20, 2026** — Layout switcher for Workflows (rows/2-col/3-col), Help Center FAQ rewrite, Team page mobile fix, favicon audit
-- **March 10, 2026** — Freestyle Studio enhancements (Brand Profile chips, style presets, negative prompts chip), Workflow animated thumbnails, compact workflow cards
-- **February 2026** — AI video generation (5s/10s clips), Mobile upload via QR code, 40+ model library with filtering
-- **January 2026** — Creative Drops with scheduling, Bulk generation, Credit pack purchasing, Dashboard redesign
+### File: `src/components/app/WorkflowAnimatedThumbnail.tsx`
+- Line 192: `object-cover object-top` → `object-cover object-center`
+- Line 285: `object-cover object-top` → `object-cover object-center`
+- Line 296: `object-cover object-top` → `object-cover object-center`
+- Line 663: `object-cover object-top` → `object-cover object-center`
 
-**Older (collapsed by default):**
-- **December 2025** — Brand Profiles, Virtual Try-On, Pose library (20+ poses)
-- **October 2025** — Launch: product upload, 4 workflows, template library, jobs library, auth
-- **Summer 2025** — Early development: core architecture, AI pipeline prototyping, initial design system
-
-### 2. Add "Show full history" toggle
-- Use React `useState` to track `showAll` (default `false`)
-- Show only the first 4 releases by default (2026 entries)
-- A "View full history" button at the bottom expands to show all entries
-- When expanded, show "Show less" to collapse back
-
-### 3. Keep the existing timeline UI structure
-No layout/design changes — same hero, same timeline dots, same badge system. Just better data and the collapsible cutoff.
-
-### File
-`src/pages/Changelog.tsx` — rewrite `releases` array, add `useState` for show/hide, slice releases conditionally, add toggle button.
+This centers the focal point of every workflow thumbnail, ensuring models and key content are visible in both row and grid layouts.
 
