@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Package, Clock, Palette, Loader2 } from 'lucide-react';
-import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
-import { FramingSelector } from '@/components/app/FramingSelector';
+import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
+import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toast } from 'sonner';
 import type { Product, ScratchUpload, GenerationSourceType, AspectRatio, ImageQuality, FramingOption, ModelProfile } from '@/types';
