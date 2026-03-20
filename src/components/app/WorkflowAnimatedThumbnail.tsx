@@ -790,15 +790,15 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
 
           {/* "Generated" badge */}
           <div
-            className={`absolute ${compact ? 'bottom-3' : 'bottom-4'} left-1/2 -translate-x-1/2 z-20`}
+            className={`absolute ${mobileCompact ? 'bottom-2' : compact ? 'bottom-3' : 'bottom-4'} left-1/2 -translate-x-1/2 z-20`}
             style={{
               opacity: 0,
               animation: `wf-badge-pop 0.45s cubic-bezier(.34,1.56,.64,1) ${badgeAt}s forwards`,
             }}
           >
-            <div className={`flex items-center gap-2 bg-white ${compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2'} rounded-full wf-card-shadow`}>
-              <Sparkles className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-primary`} />
-              <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-bold text-primary tracking-wide`}>Generated</span>
+            <div className={`flex items-center gap-2 bg-white ${mobileCompact ? 'px-2 py-1' : compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2'} rounded-full wf-card-shadow`}>
+              <Sparkles className={`${mobileCompact || compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-primary`} />
+              <span className={`${mobileCompact ? 'text-[9px]' : compact ? 'text-[10px]' : 'text-[11px]'} font-bold text-primary tracking-wide`}>Generated</span>
             </div>
           </div>
         </div>
