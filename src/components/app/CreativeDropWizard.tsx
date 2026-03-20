@@ -1394,7 +1394,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           {!isMixMode ? (
                             <p className="text-xs text-muted-foreground">
                               {(() => {
-                                const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+                                const effectiveScenes = Math.max(poseSelections.length, 1);
                                 const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
                                 const formatCount = Math.max(formats.length, 1);
                                 const parts: string[] = [];
