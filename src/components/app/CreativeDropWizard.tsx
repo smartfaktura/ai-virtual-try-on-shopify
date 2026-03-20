@@ -1080,126 +1080,66 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* ── Scenes ── */}
-                    {variations.length > 0 && !isMixMode && (
+                    {/* ── Scenes (full library, grouped by category) ── */}
+                    {(needsModels || showPosePicker) && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Scenes</p>
-                          <Badge variant="secondary" className="text-[10px] rounded-full">
-                            {isRandomScenesFlag ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${sceneSelections.size}/${variations.length} selected`}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
-                          <Switch
-                            checked={isRandomScenesFlag}
-                            onCheckedChange={setIsRandomScenesFlag}
-                          />
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-1.5">
-                              <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
-                            </p>
-                            <p className="text-xs text-muted-foreground">Each image will feature a different scene, selected randomly</p>
-                          </div>
-                        </div>
-
-                        {!isRandomScenesFlag && (
-                          <>
-                            {sceneSelections.size > 0 && (
-                              <div className="flex items-center justify-between">
-                                <button className="text-xs text-primary hover:underline font-medium" onClick={() => setSceneSelections(new Set(variations.map((v: any) => v.label)))}>Select All</button>
-                                <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSceneSelections(new Set())}>Clear</button>
-                              </div>
-                            )}
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                              {variations.map((v: any, idx: number) => {
-                                const isSceneSelected = sceneSelections.has(v.label);
-                                return (
-                                  <button
-                                    key={v.label}
-                                    onClick={() => {
-                                      const next = new Set(sceneSelections);
-                                      isSceneSelected ? next.delete(v.label) : next.add(v.label);
-                                      setSceneSelections(next);
-                                    }}
-                                    className={cn(
-                                      'relative rounded-xl overflow-hidden border-2 transition-all',
-                                      isSceneSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
-                                    )}
-                                  >
-                                    <div className="aspect-square w-full bg-muted overflow-hidden">
-                                      {v.preview_url ? (
-                                        <ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/5">
-                                          <span className="text-[10px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                    {isSceneSelected && (
-                                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                                        <Check className="w-3 h-3 text-primary-foreground" />
-                                      </div>
-                                    )}
-                                    <div className="px-1.5 py-1.5">
-                                      <p className="text-[11px] text-foreground truncate text-center font-medium">{v.label}</p>
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── Pose / Scene Library ── */}
-                    {showPosePicker && !isMixMode && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="section-label">Scene Library</p>
                           {poseSelections.length > 0 && (
                             <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setPoseSelections([])}>
-                              Clear
+                              Clear ({poseSelections.length})
                             </button>
                           )}
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                          {fashionPoses.map(pose => {
-                            const isPoseSelected = poseSelections.includes(pose.poseId);
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                          {sceneCategories.map(cat => {
+                            const catPoses = allScenePoses.filter(p => p.category === cat);
+                            if (catPoses.length === 0) return null;
                             return (
-                              <button
-                                key={pose.poseId}
-                                onClick={() => {
-                                  setPoseSelections(prev =>
-                                    isPoseSelected ? prev.filter(id => id !== pose.poseId) : [...prev, pose.poseId]
-                                  );
-                                }}
-                                className={cn(
-                                  'relative rounded-xl overflow-hidden border-2 transition-all',
-                                  isPoseSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
-                                )}
-                              >
-                                <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
-                                  <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                              <div key={cat}>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
+                                  {poseCategoryLabels[cat as keyof typeof poseCategoryLabels] || cat}
+                                </p>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                  {catPoses.map(pose => {
+                                    const isPoseSelected = poseSelections.includes(pose.poseId);
+                                    return (
+                                      <button
+                                        key={pose.poseId}
+                                        onClick={() => {
+                                          setPoseSelections(prev =>
+                                            isPoseSelected ? prev.filter(id => id !== pose.poseId) : [...prev, pose.poseId]
+                                          );
+                                        }}
+                                        className={cn(
+                                          'relative rounded-xl overflow-hidden border-2 transition-all',
+                                          isPoseSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                                        )}
+                                      >
+                                        <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
+                                          <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                                        </div>
+                                        {isPoseSelected && (
+                                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                            <Check className="w-3 h-3 text-primary-foreground" />
+                                          </div>
+                                        )}
+                                        <div className="px-1.5 py-1.5">
+                                          <p className="text-[11px] text-foreground truncate text-center font-medium">{pose.name}</p>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
                                 </div>
-                                {isPoseSelected && (
-                                  <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                                    <Check className="w-3 h-3 text-primary-foreground" />
-                                  </div>
-                                )}
-                                <div className="absolute top-1.5 left-1.5">
-                                  <Badge className="text-[8px] px-1 py-0 bg-foreground/70 text-background border-0 backdrop-blur-sm">
-                                    {poseCategoryLabels[pose.category] || pose.category}
-                                  </Badge>
-                                </div>
-                                <div className="px-1.5 py-1.5">
-                                  <p className="text-[11px] text-foreground truncate text-center font-medium">{pose.name}</p>
-                                </div>
-                              </button>
+                              </div>
                             );
                           })}
                         </div>
+                        {poseSelections.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {poseSelections.length} scene{poseSelections.length !== 1 ? 's' : ''} selected — each scene generates with every selected model
+                          </p>
+                        )}
                       </div>
                     )}
 
