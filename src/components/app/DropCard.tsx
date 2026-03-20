@@ -366,7 +366,7 @@ export function DropCard(props: Props) {
                 <div className="mt-1.5">
                   <Progress value={progressPct} className="h-1" />
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    {progressPct}% · {remainingMin > 0 ? `~${remainingMin} min remaining` : 'Finishing up…'}
+                    Generating… {remainingMin > 0 ? `~${remainingMin} min remaining` : 'Finishing up…'}
                   </p>
                 </div>
               );

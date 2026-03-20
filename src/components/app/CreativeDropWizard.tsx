@@ -583,6 +583,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
           onLaunched?.();
           await queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
           await queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
+          refreshBalance();
           onClose();
         } catch (e) {
           console.error('Trigger error:', e);

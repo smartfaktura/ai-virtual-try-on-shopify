@@ -312,8 +312,9 @@ export default function CreativeDrops() {
                 <Calendar className="w-4 h-4" />
                 Create Drop
               </Button>
-              <Button onClick={openWizard} size="icon" className="rounded-xl sm:hidden">
+              <Button onClick={openWizard} className="rounded-xl gap-2 sm:hidden text-sm px-3">
                 <Calendar className="w-4 h-4" />
+                Create
               </Button>
             </div>
 
