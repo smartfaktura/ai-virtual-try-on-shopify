@@ -360,6 +360,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
   const effectiveFrequency = deliveryMode === 'now' ? 'one-time' : frequency;
   const costEstimate = calculateDropCredits(workflowConfigs, 25, effectiveFrequency, selectedProductIds.size);
+  const insufficientCredits = profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance;
 
   const handleSeasonalPreset = (presetId: string) => {
     setSeasonalPreset(presetId);
