@@ -4016,8 +4016,8 @@ export default function Generate() {
                       setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
                     }
                   }}>{selectedForPublish.size === generatedImages.length ? 'Deselect All' : 'Select All'}</Button>
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={handleDownloadAll}>
-                    <Download className="w-3.5 h-3.5 mr-1.5" /> Download All
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => handleDownloadZip()} disabled={zipDownloading}>
+                    {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" /> Download All</>}
                   </Button>
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => setCurrentStep('settings')}>Adjust</Button>
                   {isInteriorDesign && (
