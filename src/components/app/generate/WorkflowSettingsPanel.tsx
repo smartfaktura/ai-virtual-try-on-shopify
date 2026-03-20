@@ -766,7 +766,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                     <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
                   </div>
                 ) : (
-                  <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                  <AspectRatioMultiSelector value={selectedAspectRatios} onChange={setSelectedAspectRatios} />
                 )}
               </div>
             </div>
