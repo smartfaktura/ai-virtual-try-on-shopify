@@ -351,10 +351,6 @@ export default function CreativeDrops() {
                   }}
                   icon={<Zap className="w-10 h-10 text-muted-foreground" />}
                 />
-              ) : filteredDrops.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  No drops matching "{dropStatusFilter}" status
-                </div>
               ) : (
                 <div className="space-y-3">
                   {filteredDrops.map(drop => (
