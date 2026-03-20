@@ -419,13 +419,13 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setAttempted(false);
     markDirty();
     setStep(s => s + 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('app-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     setAttempted(false);
     setStep(s => s - 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('app-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Save
