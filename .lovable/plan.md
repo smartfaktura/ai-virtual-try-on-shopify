@@ -1,49 +1,51 @@
 
 
-# Fix: Theme Not Applied, Credit Balance Not Refreshing, Progress Not Updating + Mobile Improvements
+# Improve Calendar View & Mobile Layout
 
-## Issues Found
+## Current Issues
 
-### Bug 1: Theme always saves as "custom" (ROOT CAUSE of no seasonal direction)
-`handleSeasonalPreset` updates `seasonalPreset` and `themeNotes` but **never calls `setTheme(presetId)`**. The `theme` state stays `'custom'`, which is saved to the schedule and passed to `trigger-creative-drop`. The generation prompt then skips the `SEASONAL DIRECTION` block because `theme === 'custom'`.
-
-DB confirms: all 8 jobs for the Spring Drop have `theme: "custom"`.
-
-### Bug 2: Credit balance doesn't refresh after drop
-Credits ARE deducted on the backend (56 → 8 = 48 deducted). But the sidebar credit indicator uses `CreditContext` which only refreshes via `check-subscription` every 60s. After launching a drop, `refreshBalance` is never called, so the UI shows stale balance.
-
-### Bug 3: Progress jumps from 0% to "ready" instantly
-The drop completed in ~85 seconds (8 try-on jobs). The progress bar uses a time-based estimate (`Date.now() - created_at`) with 8s/image, estimating ~64s total. Since polling is every 5s, the drop can complete between two polls. The `complete-creative-drop` function updates the status to `ready`, so the next poll sees it as ready — the "0 of 8 images" text is wrong because it's checking `dropImages.length` (images in the drop record) vs `total_images`, but during generating the images array is empty (images are only written by `complete-creative-drop` when ALL jobs finish).
-
-### Bug 4: Mobile layout needs improvement
-On 390px viewport: stats ribbon text is cramped, Create Drop button is just an icon with no label, drop cards need tighter spacing.
+From the screenshot at 390px mobile viewport:
+- Calendar cells are cramped with single-letter day headers
+- Day cells are small and hard to tap on mobile
+- The drop/scheduled indicators (tiny 4px bars) are barely visible
+- Popover for scheduled days may not work well on mobile (gets clipped)
+- The tabs + "Create" button row is tight on mobile
+- No visual distinction between months with activity vs empty months
+- Calendar doesn't show drop details inline — just dots
 
 ## Changes
 
-### File 1: `src/components/app/CreativeDropWizard.tsx`
-**Fix theme saving** — In `handleSeasonalPreset`, add `setTheme(presetId === 'none' ? 'custom' : presetId)`. This ensures the seasonal preset ID (e.g., `spring`, `winter`) is saved to the schedule and forwarded to the generation engine.
+### File 1: `src/pages/CreativeDrops.tsx` — CalendarView improvements
 
-### File 2: `src/components/app/CreativeDropWizard.tsx`  
-**Refresh credits after launch** — After successful `trigger-creative-drop` invoke (~line 560), call `refreshBalance()` from `useCredits()` so the sidebar balance updates immediately.
+**Calendar grid enhancements:**
+1. Use full 3-letter day headers on desktop, keep single-letter on mobile (`Su Mo Tu` vs `S M T`)
+2. Increase cell min-height on mobile from `min-h-[44px]` to `min-h-[48px]` for better tap targets
+3. Replace tiny bar indicators with small colored dots (easier to see at any size)
+4. For days with drops: show a small count badge (e.g., "2") if multiple drops exist
+5. Add status-aware dot colors: primary for completed, amber for generating, muted for scheduled
 
-### File 3: `src/components/app/DropCard.tsx`
-**Fix progress display during generating** — Instead of showing "0 of 8 images" (which checks `dropImages.length` — always 0 during generation since images are only written on completion), show time-based progress only: `"Generating… ~X min remaining"`. Remove the misleading image count from generating state.
+**Mobile popover fix:**
+- On mobile, use a bottom sheet style (or `side="bottom"`) for the popover content instead of `side="top"` which clips on small screens
+- Show drop details in the popover too (not just schedules) — clicking a day with completed drops should show drop names and "View Drop" links
 
-### File 4: `src/pages/CreativeDrops.tsx`
-**Mobile improvements:**
-- Stats ribbon: reduce min-width and font sizes for mobile (`min-w-[80px]` instead of `110px`, smaller text)
-- Show "Create Drop" text on mobile button instead of icon-only
-- Reduce padding in drop cards on mobile
+**Today indicator:**
+- Add a subtle ring/border around today's date instead of just background color, making it more visible
 
-### File 5: `src/components/app/DropCard.tsx`
-**Mobile card improvements:**
-- Reduce thumbnail grid size on mobile (from 68px to 56px)
-- Tighter padding on mobile (`p-3 sm:p-4`)
+**Month navigation:**
+- Add "Today" button between arrows to quickly return to current month
+- Show dot summary below month name: "2 drops · 1 scheduled this month"
+
+### File 2: `src/pages/CreativeDrops.tsx` — Mobile tab bar improvements
+
+**Tab row layout on mobile:**
+- Make tabs full-width on mobile with equal sizing (`flex-1` on each trigger)
+- Move "Create" button below the tabs on mobile as a full-width secondary action, or keep it compact but ensure it doesn't overflow
+- Reduce tab text to shorter labels on mobile if needed
 
 ## Summary
-- 3 files, ~20 lines changed
-- Critical fix: theme now correctly saved as `spring`/`winter`/etc. instead of always `custom`
-- Credit balance refreshes immediately after drop launch
-- Progress bar no longer shows misleading "0 of 8 images"
-- Mobile layout improvements for `/app/creative-drops`
+- 1 file, ~40 lines changed
+- Better tap targets and dot indicators for mobile calendar
+- Popovers show both drops and schedules with actions
+- "Today" quick-return button
+- Mobile-friendly tab layout
 
