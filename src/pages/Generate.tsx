@@ -53,7 +53,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuth } from '@/contexts/AuthContext';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { MultiProductProgressBanner } from '@/components/app/MultiProductProgressBanner';
-import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
+import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
