@@ -724,7 +724,41 @@ export default function Generate() {
     toast.success(`"${template.name}" selected! Click Continue when ready.`);
   };
 
-  const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); };
+  const handleSelectModel = (model: ModelProfile) => {
+    setSelectedModels(prev => {
+      const next = new Set(prev);
+      const nextMap = new Map(selectedModelMap);
+      if (next.has(model.modelId)) {
+        next.delete(model.modelId);
+        nextMap.delete(model.modelId);
+      } else {
+        if (isFreeUser && next.size >= 1) {
+          // Free users: replace single selection
+          next.clear();
+          nextMap.clear();
+        }
+        next.add(model.modelId);
+        nextMap.set(model.modelId, model);
+
+        // Credit warning for paid users
+        if (!isFreeUser && next.size > 1) {
+          const newModelCount = next.size;
+          const sceneCount = Math.max(1, selectedPoses.size);
+          const imgCount = parseInt(imageCount);
+          const prodCount = isMultiProductMode ? productQueue.length : 1;
+          const projectedCost = newModelCount * sceneCount * imgCount * 6 * prodCount;
+          if (projectedCost > balance) {
+            toast.warning(`${newModelCount} models × ${sceneCount} scenes will cost ${projectedCost} credits — you have ${balance}. Top up before generating.`, { duration: 4000 });
+          }
+        }
+      }
+      setSelectedModelMap(nextMap);
+      // Keep selectedModel in sync (first selected) for backward compat
+      const firstId = Array.from(next)[0];
+      setSelectedModel(firstId ? nextMap.get(firstId) || null : null);
+      return next;
+    });
+  };
   const handleSelectPose = (pose: TryOnPose) => {
     const maxScenes = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
     setSelectedPoses(prev => {
