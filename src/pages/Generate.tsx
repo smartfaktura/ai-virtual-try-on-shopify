@@ -1484,6 +1484,8 @@ export default function Generate() {
     if (!activeJob) return;
     // Multi-product uses its own polling, skip here
     if (multiProductJobIds.size > 0) return;
+    // Don't let stale activeJob overwrite results already on screen
+    if (currentStep === 'results') return;
     if (activeJob.status === 'completed' && activeJob.result) {
       const result = activeJob.result as { images?: string[]; variations?: Array<{ label: string }> };
       if (result.images && result.images.length > 0) {
@@ -1499,7 +1501,7 @@ export default function Generate() {
       }
     }
     // Failed status is now handled by onGenerationFailed callback in useGenerationQueue
-  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size]);
+  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size, currentStep]);
 
   // Watch batch completion (single-product only)
   useEffect(() => {
