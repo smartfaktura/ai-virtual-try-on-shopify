@@ -13,6 +13,7 @@ import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 const teamAvatar = (file: string) => getLandingAssetUrl(`team/${file}`);
 const avatarSophia = teamAvatar('avatar-sophia.jpg');
