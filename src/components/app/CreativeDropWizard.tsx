@@ -1398,7 +1398,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                 const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
                                 const formatCount = Math.max(formats.length, 1);
                                 const parts: string[] = [];
-                                if (effectiveScenes > 1 || variations.length > 0) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                                if (effectiveScenes > 1) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
                                 if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
                                 if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
                                 if (framingCount > 1) parts.push(`${framingCount} framing${framingCount !== 1 ? 's' : ''}`);
