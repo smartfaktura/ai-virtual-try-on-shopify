@@ -1,48 +1,69 @@
 
 
-# Creative Drops: Final Debug Audit
+# Deep Audit: Creative Drops Settings Pipeline
 
-## Bugs Found
+## What Works Correctly
+- **Theme & theme_notes** → passed from schedule → `trigger-creative-drop` → `generate-workflow` → injected into prompt as `SEASONAL DIRECTION` or `CREATIVE DIRECTION` block ✓
+- **Brand profile** → fully resolved from DB with all fields (tone, lighting, colors, etc.) → passed to `generate-workflow` → injected as `BRAND GUIDELINES` block in prompt ✓
+- **Aspect ratio** → passed from `scene_config.aspect_ratio` ✓
+- **Selected variations** → variation indices forwarded, `generate-workflow` picks correct scenes ✓
+- **Custom settings / mapped_settings** → spread into payload, covers interior design fields (room_type, wall_color, flooring, etc.) ✓
+- **Model** → name + imageUrl forwarded for try-on workflows ✓
 
-### Bug 1 (CRITICAL — Runtime Crash): `run-scheduled-drops` double variable declaration
+## Bug: 4 Wizard Settings Are Silently Dropped
 
-`supabase/functions/run-scheduled-drops/index.ts` declares `const serviceRoleKey` twice: line 16 and line 30. This causes a Deno runtime error — the scheduled cron job will always fail silently.
+The wizard saves these to `scene_config[workflowId]`, but `trigger-creative-drop` never reads or forwards them to the job payload:
 
-**Fix**: Remove the duplicate declaration on line 30. `serviceRoleKey` from line 16 is already in scope.
+| Wizard Field | Expected Payload Key | Effect if Missing |
+|---|---|---|
+| `flat_lay_prop_style` | `prop_style` | Flat Lay workflow ignores user's "clean" vs "decorated" choice — defaults to `clean` always |
+| `styling_notes` | `styling_notes` | User's custom styling notes for flat lay are lost |
+| `product_angle` | `product_angles` | Multi-angle generation (front-side, front-back, all) ignored — always generates front-only |
+| `selected_framings` | Not consumed by `generate-workflow` directly | Framings (close-up, wide, etc.) have no effect on creative drops |
 
-### Bug 2 (Major — Broken UI): Image metadata stores IDs instead of names
+### Impact
+- **Flat Lay** drops will always be "clean" style with no props, regardless of user selection
+- **Product angle** drops will always be front-only, even if user selected "all angles"
+- **Styling notes** are completely lost
+- **Framings** — this is actually not supported by `generate-workflow` at all (it's a freestyle-only concept), so this is a UI/expectation mismatch rather than a code bug
 
-`complete-creative-drop` stores images as `{ url, workflow_id, product_id }` (UUIDs). But the frontend `DropImage` type expects `{ url, workflow_name, product_title }` (human-readable strings). Result: when a "ready" drop has images populated, the detail modal can't group by workflow or show product titles — all metadata appears blank.
+## Fix
 
-The fallback query in `DropDetailModal` (which resolves names from `generation_jobs`) only runs when `drop.images` is empty. Once `complete-creative-drop` populates `drop.images`, the fallback is skipped and no names are available.
+### File: `supabase/functions/trigger-creative-drop/index.ts` (~lines 224-236)
 
-**Fix**: Update `complete-creative-drop` to resolve workflow names and product titles before storing:
-1. Collect unique `workflow_id`s and `product_id`s from completed jobs
-2. Batch-query `workflows` and `user_products` tables for names
-3. Store images as `{ url, workflow_name, product_title }` matching the frontend type
+Add the missing fields from `wfSceneConfig` to the job payload:
 
-### Bug 3 (Low — Cosmetic): Drop card "generating" status shows `0 of 0 images`
+```ts
+const payload = {
+  workflow_id: wfId,
+  product_id: productId,
+  product: productObject,
+  imageCount: actualImageCount,
+  quality: "standard",
+  aspectRatio,
+  selected_variations: variationIndices.length > 0 ? variationIndices : undefined,
+  brand_profile: brandProfile,
+  theme: schedule.theme || undefined,
+  theme_notes: schedule.theme_notes || undefined,
+  // --- ADD THESE 3 LINES ---
+  prop_style: wfSceneConfig.flat_lay_prop_style || undefined,
+  styling_notes: wfSceneConfig.styling_notes || undefined,
+  product_angles: wfSceneConfig.product_angle || undefined,
+  // --- END ---
+  ...mappedSettings,
+};
+```
 
-When `total_images` is 0 (set at creation before jobs complete), the generating text shows "0 of 0 images". The `total_images` in the `creative_drops` insert is calculated from `jobPayloads.reduce(...)` which uses `payload.imageCount`. This should be correct. However, if `getVariationCount` returns 0 for some workflows, `total_images` could be 0.
+That's it — 3 lines added. `generate-workflow` already reads `body.prop_style`, `body.styling_notes`, and `body.product_angles` correctly. The data just wasn't being forwarded from the schedule.
 
-**Fix**: In `DropCard.tsx`, when `total_images === 0` during generating, show job count instead: `"Processing ${drop.generation_job_ids.length} jobs"`.
-
-## Changes
-
-### File 1: `supabase/functions/run-scheduled-drops/index.ts`
-- Remove line 30 (`const serviceRoleKey = ...`) — it's a duplicate of line 16
-
-### File 2: `supabase/functions/complete-creative-drop/index.ts`
-- After collecting completed jobs, batch-query `workflows` table for names and `user_products` table for titles
-- Store images as `{ url, workflow_name, product_title }` instead of `{ url, workflow_id, product_id }`
-- ~15 lines added
-
-### File 3: `src/components/app/DropCard.tsx`
-- Line 313: When `generating` and `targetImages === 0`, show job count fallback text
+## No Other Issues Found
+- `generate-workflow` correctly consumes all payload fields including theme, brand_profile, variations, model, mapped_settings
+- `generate-tryon` correctly forwards `creative_drop_id` for completion tracking
+- The prompt template system correctly injects seasonal themes, brand guidelines, and variation instructions
+- Custom themes with `theme_notes` produce a `CREATIVE DIRECTION` block in the prompt
 
 ## Summary
-- 1 runtime crash fix (cron will actually work now)
-- 1 metadata resolution fix (drop detail modal shows names correctly)
-- 1 cosmetic fix
-- 3 files, ~20 lines changed
+- 1 file, 3 lines added
+- Fixes 3 silently-dropped settings (prop style, styling notes, product angles)
+- All other settings (theme, brand, variations, models, aspect ratio, interior design fields) flow correctly end-to-end
 
