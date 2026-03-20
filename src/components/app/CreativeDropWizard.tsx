@@ -26,7 +26,7 @@ import {
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
-  Settings2, Wallet, Users,
+  Settings2, Wallet, Users, Calculator,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -287,14 +287,28 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
   const progressPercent = TOTAL_STEPS > 1 ? Math.round((step / (TOTAL_STEPS - 1)) * 100) : 0;
 
+  // Image count: matrix-based for Curated, user-chosen for Mix
+  const computedImageCount = useMemo(() => {
+    if (campaignMode === 'mix') return imageCount;
+    if (!selectedWorkflow) return imageCount;
+    const genConfig = selectedWorkflow.generation_config as any;
+    const variations = genConfig?.variation_strategy?.variations || [];
+    const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
+    const sceneCount = Math.max(sceneSelections.size, variations.length > 0 ? 1 : 1);
+    const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+    const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
+    const formatCount = Math.max(formats.length, 1);
+    return effectiveScenes * modelCount * formatCount;
+  }, [campaignMode, imageCount, selectedWorkflow, sceneSelections.size, modelSelections.length, formats.length]);
+
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
     workflowId: selectedWorkflow.id,
     workflowName: selectedWorkflow.name,
     hasModel: selectedWorkflow.uses_tryon || modelSelections.length > 0,
     hasCustomScene: false,
-    formatCount: Math.max(formats.length, 1),
-    imageCountOverride: imageCount,
+    formatCount: 1, // already included in computedImageCount
+    imageCountOverride: computedImageCount,
     productCount: selectedProductIds.size,
   }] : [];
 
@@ -446,7 +460,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           mapped_settings: mappedSettings,
           random_models: isRandomModelsFlag,
           random_scenes: isRandomScenesFlag,
-          image_count: imageCount,
+          image_count: computedImageCount,
         },
       };
 
@@ -462,7 +476,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         workflow_ids: [selectedWorkflowId],
         model_ids: isRandomModelsFlag ? ['__random__'] : modelSelections,
         brand_profile_id: brandProfileId || null,
-        images_per_drop: imageCount,
+        images_per_drop: computedImageCount,
         estimated_credits: costEstimate.totalCredits,
         active: true,
         start_date: effectiveStartDate.toISOString(),
@@ -1001,36 +1015,57 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     {/* Images count */}
                     <div className="space-y-3">
                       <p className="section-label">Images per Product</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {IMAGE_PRESETS.map(n => (
-                          <Button
-                            key={n}
-                            variant={imageCount === n && !customImageCountStr ? 'default' : 'outline'}
-                            onClick={() => {
-                              setImageCount(n);
-                              setCustomImageCountStr('');
-                              markDirty();
+                      {isMixMode ? (
+                        <>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {IMAGE_PRESETS.map(n => (
+                              <Button
+                                key={n}
+                                variant={imageCount === n && !customImageCountStr ? 'default' : 'outline'}
+                                onClick={() => {
+                                  setImageCount(n);
+                                  setCustomImageCountStr('');
+                                  markDirty();
+                                }}
+                                className="h-11 rounded-xl"
+                              >
+                                {n}
+                              </Button>
+                            ))}
+                          </div>
+                          <Input
+                            type="number"
+                            placeholder="Custom amount"
+                            value={customImageCountStr}
+                            onChange={e => {
+                              setCustomImageCountStr(e.target.value);
+                              const val = parseInt(e.target.value);
+                              if (val > 0) {
+                                setImageCount(val);
+                                markDirty();
+                              }
                             }}
                             className="h-11 rounded-xl"
-                          >
-                            {n}
-                          </Button>
-                        ))}
-                      </div>
-                      <Input
-                        type="number"
-                        placeholder="Custom amount"
-                        value={customImageCountStr}
-                        onChange={e => {
-                          setCustomImageCountStr(e.target.value);
-                          const val = parseInt(e.target.value);
-                          if (val > 0) {
-                            setImageCount(val);
-                            markDirty();
-                          }
-                        }}
-                        className="h-11 rounded-xl"
-                      />
+                          />
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted/50 border border-border">
+                          <Calculator className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <p className="text-sm text-muted-foreground">
+                            {(() => {
+                              const effectiveScenes = sceneSelections.size > 0 ? sceneSelections.size : Math.max(variations.length, 1);
+                              const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
+                              const formatCount = Math.max(formats.length, 1);
+                              const parts: string[] = [];
+                              if (effectiveScenes > 1 || variations.length > 0) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                              if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
+                              if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
+                              const formula = parts.length > 0 ? parts.join(' × ') + ' = ' : '';
+                              return <>{formula}<span className="font-semibold text-foreground">{computedImageCount} image{computedImageCount !== 1 ? 's' : ''}</span> per product</>;
+                            })()}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Formats */}
@@ -1270,7 +1305,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </div>
                             {modelSelections.length > 0 && (
                               <p className="text-xs text-muted-foreground">
-                                {imageCount} images distributed across {modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''} (~{Math.round(imageCount / modelSelections.length)} each)
+                                {modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''} selected — each model generates with every selected scene
                               </p>
                             )}
                           </>
@@ -1420,9 +1455,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
                     {/* Credit Summary */}
                     {(() => {
-                      const formatCount = Math.max(formats.length, 1);
                       const productCount = selectedProductIds.size;
-                      const totalImages = productCount * imageCount * formatCount;
+                      const totalImages = productCount * computedImageCount;
                       const totalCredits = totalImages * 6;
                       return (
                         <Card className="p-4 bg-muted/30 border-dashed space-y-2">
@@ -1431,7 +1465,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             <p className="text-sm font-semibold">Credit Estimate</p>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {productCount} product{productCount !== 1 ? 's' : ''} × {imageCount} image{imageCount !== 1 ? 's' : ''} × {formatCount} format{formatCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{totalImages} images</span>
+                            {productCount} product{productCount !== 1 ? 's' : ''} × {computedImageCount} image{computedImageCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{totalImages} images</span>
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {totalImages} × 6 credits = <span className="font-semibold text-foreground">{totalCredits} credits</span>
