@@ -1650,6 +1650,7 @@ export default function Generate() {
         refreshBalance();
         queryClient.invalidateQueries({ queryKey: ['library'] });
         queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+        resetQueue();
         setMultiProductJobIds(new Map());
         setJobMetadata(new Map());
       }
