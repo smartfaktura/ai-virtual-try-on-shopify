@@ -1,23 +1,37 @@
 
+Goal: Fix `/app/workflows` mobile 2-column grid so animated overlays fit cleanly inside thumbnails (mobile only), without changing desktop row/3-col behavior.
 
-# Fix Press Page Logo SVGs — Uniform Colors
+1) Identify and isolate the mobile 2-col variant
+- File: `src/pages/Workflows.tsx`
+- Pass an explicit prop to compact cards only when `isMobile && effectiveLayout === '2col'` (e.g. `mobileGridCompact`).
+- Keep existing behavior for desktop/tablet layouts.
 
-## Problem
-The downloadable logo SVGs use a two-tone style where ".AI" is a different shade from "VOVV". The user wants:
-- **Dark logo**: entire "VOVV.AI" in the same dark color (`#1a2332`)
-- **White logo**: entire "VOVV.AI" in white (`#ffffff`)
+2) Give mobile grid cards more vertical room
+- File: `src/components/app/WorkflowCardCompact.tsx`
+- Make thumbnail ratio taller only for mobile compact mode (e.g. `aspect-[2/3]` on mobile, keep current ratio on larger screens).
+- Keep this scoped to the 2-col mobile view so row/desktop cards are unchanged.
 
-## Changes — `src/pages/Press.tsx`
+3) Replace blur-prone global scaling with true compact sizes
+- File: `src/components/app/WorkflowAnimatedThumbnail.tsx`
+- Remove the current “scale whole element” approach for compact mode.
+- Add compact size tokens per element type (product/scene chips, model circle, action button, badges, label font sizes/padding) so overlays are genuinely smaller and sharper.
+- This avoids oversized overlays and improves readability on small screens.
 
-### 1. Dark logo SVG (line 11)
-Change `.AI` fill from `#6b7d93` → `#1a2332` (same as "VOVV")
+4) Apply compact sizing consistently across animation modes
+- File: `src/components/app/WorkflowAnimatedThumbnail.tsx`
+- Ensure compact sizing is used in recipe and carousel overlays (and compact badge sizing where relevant in upscale/staging) so every workflow type fits in mobile 2-col cards.
 
-### 2. White logo SVG (line 16)
-Change `.AI` fill from `#a3b1c2` → `#ffffff` (same as "VOVV")
+5) Keep loading/spacing aligned with new mobile card proportions
+- File: `src/pages/Workflows.tsx`
+- Update compact-grid skeleton thumbnail ratio to match the new mobile thumbnail ratio.
+- Slightly optimize mobile grid gap if needed (mobile-only) to maximize usable card width.
 
-### 3. Update preview text in the cards
-- Dark preview: change `<span className="text-muted-foreground">.AI</span>` to inherit the same foreground color
-- White preview: change `<span className="text-white/60">.AI</span>` to `text-white`
+Acceptance checks
+- On mobile in 2-col grid, animated chips/circles/badges stay fully inside card bounds and no longer dominate or clip.
+- Text remains readable and crisp.
+- Desktop row and desktop 2/3-col layouts remain visually unchanged.
 
-Single file edit, 4 small line changes.
-
+Files to update
+- `src/pages/Workflows.tsx`
+- `src/components/app/WorkflowCardCompact.tsx`
+- `src/components/app/WorkflowAnimatedThumbnail.tsx`
