@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import type { CreativeSchedule, CreativeDrop } from '@/pages/CreativeDrops';
 
 interface ScheduleCardProps {
@@ -249,7 +249,7 @@ export function DropCard(props: Props) {
               {/* Next run */}
               <span className="text-xs text-muted-foreground">
                 {isOneTime ? 'One-time' : schedule.next_run_at
-                  ? formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })
+                  ? `${format(new Date(schedule.next_run_at), 'MMM d')} (${formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })})`
                   : isPaused ? 'Paused' : 'Not scheduled'}
               </span>
             </div>
