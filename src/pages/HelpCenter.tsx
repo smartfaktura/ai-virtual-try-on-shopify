@@ -16,7 +16,7 @@ const faqCategories = [
       },
       {
         q: 'What image formats are supported for uploads?',
-        a: 'We accept JPG, PNG, and WebP files. For best results, use images with clean backgrounds and at least 1024×1024 resolution. You can upload up to 5 images per product.',
+        a: 'We accept JPG, PNG, and WebP files. For best results, use images with clean backgrounds and at least 1024×1024 resolution.',
       },
       {
         q: 'Do I need to remove the background from my product photos?',
