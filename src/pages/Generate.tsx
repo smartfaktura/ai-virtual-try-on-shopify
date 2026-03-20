@@ -167,7 +167,20 @@ export default function Generate() {
   const workflowIdFromQuery = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
-  const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({ jobTypes: ['workflow', 'tryon'] });
+  const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
+    jobTypes: ['workflow', 'tryon'],
+    onGenerationFailed: (_jobId, _message, errorType) => {
+      const friendlyMessages: Record<string, string> = {
+        timeout: 'Generation timed out. Your credits have been refunded.',
+        rate_limit: 'Too many generations at once. Please wait and try again.',
+        generic: 'Generation failed. Your credits have been refunded — try again.',
+      };
+      toast.error(friendlyMessages[errorType] || friendlyMessages.generic);
+      setCurrentStep('settings');
+      refreshBalance();
+      resetQueue();
+    },
+  });
   const { startBatch, batchState, isBatching, resetBatch } = useGenerationBatch();
   const isFreeUser = plan === 'free';
   const { isAdmin } = useIsAdmin();
