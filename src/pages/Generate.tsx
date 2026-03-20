@@ -3168,7 +3168,7 @@ export default function Generate() {
                     setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product');
                   }
                 }}>Back</Button>
-                {!selectedModel && (
+                {selectedModels.size === 0 && (
                   <span className="text-xs text-muted-foreground text-center flex-1">Select a model to continue</span>
                 )}
                 {isMirrorSelfie ? (
