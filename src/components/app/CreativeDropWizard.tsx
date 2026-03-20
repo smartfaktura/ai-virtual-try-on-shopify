@@ -634,12 +634,31 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
           {/* ─── Step 0: Details ─── */}
           {step === 0 && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="space-y-2">
-                <p className="section-label">Drop Name</p>
+            <div className="space-y-6 animate-fade-in">
+              {/* Header */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold tracking-tight">Name Your Drop</h3>
+                  <p className="text-xs text-muted-foreground">Set up the basics — you'll pick products and workflows next.</p>
+                </div>
+              </div>
+
+              {/* Drop Name + Character Counter */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="section-label">Drop Name</p>
+                  <span className={cn(
+                    'text-[10px] tabular-nums',
+                    name.length >= 60 ? 'text-destructive' : name.length >= 50 ? 'text-amber-500' : 'text-muted-foreground/50'
+                  )}>{name.length}/60</span>
+                </div>
                 <Input
-                  placeholder="Spring Campaign"
+                  placeholder={namePlaceholder}
                   value={name}
+                  maxLength={60}
                   onChange={e => { setName(e.target.value); markDirty(); }}
                   className={cn('h-12 rounded-xl text-sm max-w-md', attempted && !name.trim() && 'border-destructive')}
                 />
@@ -648,6 +667,33 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 )}
               </div>
 
+              {/* Drop Goal Chips */}
+              <div className="space-y-2">
+                <p className="section-label">Drop Goal <span className="text-muted-foreground font-normal">(optional)</span></p>
+                <div className="flex flex-wrap gap-2">
+                  {DROP_GOALS.map(goal => {
+                    const Icon = goal.icon;
+                    const isActive = dropGoal === goal.id;
+                    return (
+                      <button
+                        key={goal.id}
+                        onClick={() => { setDropGoal(isActive ? '' : goal.id); markDirty(); }}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-medium transition-all',
+                          isActive
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
+                        )}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {goal.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Campaign Theme */}
               <div className="space-y-2">
                 <p className="section-label">Campaign Theme</p>
                 <p className="text-xs text-muted-foreground">Auto-fill style directions for a seasonal campaign</p>
@@ -672,31 +718,72 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     );
                   })}
                 </div>
+                {/* Theme Preview Chip */}
+                {seasonalPreset !== 'none' && (() => {
+                  const activePreset = SEASONAL_PRESETS.find(p => p.id === seasonalPreset);
+                  if (!activePreset || !activePreset.icon) return null;
+                  const PresetIcon = activePreset.icon;
+                  return (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 max-w-md">
+                      <PresetIcon className="w-4 h-4 text-primary shrink-0" />
+                      <p className="text-xs text-primary/80 line-clamp-1">{activePreset.instructions}</p>
+                    </div>
+                  );
+                })()}
               </div>
 
-              <div className="space-y-2">
-                <p className="section-label">Brand Profile</p>
-                {brandProfilesLoading ? (
-                  <div className="h-12 rounded-xl bg-muted animate-pulse" />
-                ) : (
-                  <Select value={brandProfileId} onValueChange={setBrandProfileId}>
-                    <SelectTrigger className="h-12 rounded-xl">
-                      <SelectValue placeholder="Select brand profile (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brandProfiles.length === 0 ? (
-                        <div className="px-3 py-4 text-center">
-                          <p className="text-xs text-muted-foreground mb-1">No profiles yet</p>
-                          <a href="/app/brand-profiles" className="text-xs text-primary hover:underline">Create one →</a>
+              {/* Brand Profile — Collapsible */}
+              <Collapsible defaultOpen={!!brandProfileId}>
+                <CollapsibleTrigger className="flex items-center gap-2 group cursor-pointer">
+                  <p className="section-label">Brand Profile</p>
+                  <span className="text-[10px] text-muted-foreground">(optional)</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 space-y-2">
+                  {brandProfilesLoading ? (
+                    <div className="h-12 rounded-xl bg-muted animate-pulse" />
+                  ) : (
+                    <Select value={brandProfileId} onValueChange={setBrandProfileId}>
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue placeholder="Select brand profile (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brandProfiles.length === 0 ? (
+                          <div className="px-3 py-4 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">No profiles yet</p>
+                            <a href="/app/brand-profiles" className="text-xs text-primary hover:underline">Create one →</a>
+                          </div>
+                        ) : (
+                          brandProfiles.map(bp => (
+                            <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {/* Brand Profile Preview */}
+                  {brandProfileId && !brandProfilesLoading && (() => {
+                    const bp = brandProfiles.find(p => p.id === brandProfileId);
+                    if (!bp) return null;
+                    return (
+                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/50 border border-border/50 max-w-md">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Settings2 className="w-4 h-4 text-primary" />
                         </div>
-                      ) : (
-                        brandProfiles.map(bp => (
-                          <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium truncate">{bp.name}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{bp.tone} · {bp.color_temperature}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Progress Hint */}
+              <div className="flex items-center gap-1.5 pt-2">
+                <ArrowRight className="w-3 h-3 text-muted-foreground/40" />
+                <p className="text-[11px] text-muted-foreground/60">Next: Select products</p>
               </div>
 
               {/* Special Instructions moved to Delivery step */}
