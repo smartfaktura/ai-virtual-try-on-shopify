@@ -1,51 +1,57 @@
 
 
-# Improve Calendar View & Mobile Layout
+# Fix: Winter Theme Not Applied + Calendar Overlapping Feedback Banner
 
-## Current Issues
+## Two Issues
 
-From the screenshot at 390px mobile viewport:
-- Calendar cells are cramped with single-letter day headers
-- Day cells are small and hard to tap on mobile
-- The drop/scheduled indicators (tiny 4px bars) are barely visible
-- Popover for scheduled days may not work well on mobile (gets clipped)
-- The tabs + "Create" button row is tight on mobile
-- No visual distinction between months with activity vs empty months
-- Calendar doesn't show drop details inline — just dots
+### Issue 1: Theme field still saved as "custom" for existing schedules
+
+**Root cause confirmed in DB**: Both schedules show `theme: "custom"` despite having winter-themed `theme_notes`. Our wizard fix (`setTheme(presetId)`) only applies to NEW drops created going forward — the already-existing schedules were created before the fix.
+
+**Backend fallback fix**: Both `generate-tryon` (line 132) and `generate-workflow` (line 459) skip the `SEASONAL DIRECTION` block when `theme === "custom"`. The `theme_notes` field IS injected (line 147) but as weaker `CREATIVE DIRECTION` text. The model doesn't treat it as a strong seasonal constraint.
+
+**Fix in `trigger-creative-drop/index.ts`**: Add a fallback: if `theme === "custom"` but `theme_notes` contains seasonal keywords (winter, spring, summer, autumn, holiday), infer the theme from the notes. This handles legacy schedules.
+
+**Fix in `generate-tryon/index.ts` and `generate-workflow/index.ts`**: When `theme === "custom"` AND `theme_notes` exists, still inject the theme notes as `SEASONAL DIRECTION` (not just `CREATIVE DIRECTION`), with stronger language: "You MUST follow this seasonal aesthetic."
+
+### Issue 2: Calendar overlaps "Help us improve VOVV.AI" feedback banner
+
+The `FeedbackBanner` is rendered INSIDE the `CalendarView` component at line 706. It sits directly below the legend with no spacing, causing visual overlap at the bottom of the page.
+
+**Fix in `CalendarView`**: Move `<FeedbackBanner />` outside the calendar `max-w-lg` container, or add proper spacing (`mt-8`) and ensure it doesn't overlap. Better yet, remove it from CalendarView entirely — it should be at the page level, not inside a tab's sub-component.
 
 ## Changes
 
-### File 1: `src/pages/CreativeDrops.tsx` — CalendarView improvements
+### File 1: `supabase/functions/trigger-creative-drop/index.ts` (~line 249)
+Add theme inference from `theme_notes` when `theme === "custom"`:
+```ts
+let resolvedTheme = schedule.theme;
+if (resolvedTheme === 'custom' && schedule.theme_notes) {
+  const notes = schedule.theme_notes.toLowerCase();
+  const seasonMap = { winter: 'winter', spring: 'spring', summer: 'summer', autumn: 'autumn', holiday: 'holiday' };
+  for (const [keyword, value] of Object.entries(seasonMap)) {
+    if (notes.includes(keyword)) { resolvedTheme = value; break; }
+  }
+}
+```
+Then use `resolvedTheme` instead of `schedule.theme` in the payload (~lines 249, 296).
 
-**Calendar grid enhancements:**
-1. Use full 3-letter day headers on desktop, keep single-letter on mobile (`Su Mo Tu` vs `S M T`)
-2. Increase cell min-height on mobile from `min-h-[44px]` to `min-h-[48px]` for better tap targets
-3. Replace tiny bar indicators with small colored dots (easier to see at any size)
-4. For days with drops: show a small count badge (e.g., "2") if multiple drops exist
-5. Add status-aware dot colors: primary for completed, amber for generating, muted for scheduled
+### File 2: `supabase/functions/generate-tryon/index.ts` (line 147-149)
+Strengthen theme_notes injection when theme is "custom":
+```ts
+if (ctx.themeNotes) {
+  blocks.push(`SEASONAL DIRECTION: ${ctx.themeNotes}. You MUST incorporate this seasonal mood into the scene, lighting, and atmosphere.`);
+}
+```
 
-**Mobile popover fix:**
-- On mobile, use a bottom sheet style (or `side="bottom"`) for the popover content instead of `side="top"` which clips on small screens
-- Show drop details in the popover too (not just schedules) — clicking a day with completed drops should show drop names and "View Drop" links
+### File 3: `supabase/functions/generate-workflow/index.ts`
+Same strengthening of theme_notes injection for non-tryon workflows.
 
-**Today indicator:**
-- Add a subtle ring/border around today's date instead of just background color, making it more visible
-
-**Month navigation:**
-- Add "Today" button between arrows to quickly return to current month
-- Show dot summary below month name: "2 drops · 1 scheduled this month"
-
-### File 2: `src/pages/CreativeDrops.tsx` — Mobile tab bar improvements
-
-**Tab row layout on mobile:**
-- Make tabs full-width on mobile with equal sizing (`flex-1` on each trigger)
-- Move "Create" button below the tabs on mobile as a full-width secondary action, or keep it compact but ensure it doesn't overflow
-- Reduce tab text to shorter labels on mobile if needed
+### File 4: `src/pages/CreativeDrops.tsx` (line 706)
+Move `<FeedbackBanner />` out of `CalendarView` — place it at the page level after the `TabsContent` blocks with proper `mt-6` spacing so it doesn't overlap the calendar legend.
 
 ## Summary
-- 1 file, ~40 lines changed
-- Better tap targets and dot indicators for mobile calendar
-- Popovers show both drops and schedules with actions
-- "Today" quick-return button
-- Mobile-friendly tab layout
+- 4 files, ~20 lines changed
+- Winter/seasonal theme will now be correctly applied even for legacy schedules with `theme: "custom"`
+- Calendar no longer overlaps with the feedback banner
 
