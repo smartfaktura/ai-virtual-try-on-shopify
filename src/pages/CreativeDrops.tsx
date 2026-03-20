@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
