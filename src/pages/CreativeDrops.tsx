@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -80,6 +80,8 @@ export default function CreativeDrops() {
     enabled: !!user,
   });
 
+  const lastGeneratingRef = useRef<number>(0);
+
   const { data: drops = [], isLoading: dropsLoading } = useQuery({
     queryKey: ['creative-drops'],
     queryFn: async () => {
@@ -96,7 +98,16 @@ export default function CreativeDrops() {
     enabled: !!user,
     refetchInterval: (query) => {
       const data = query.state.data;
-      return data?.some((d: CreativeDrop) => d.status === 'generating') ? 10_000 : false;
+      const hasGenerating = data?.some((d: CreativeDrop) => d.status === 'generating');
+      if (hasGenerating) {
+        lastGeneratingRef.current = Date.now();
+        return 5_000;
+      }
+      // Keep polling 30s after last generating drop disappears to catch completion
+      if (lastGeneratingRef.current > 0 && Date.now() - lastGeneratingRef.current < 30_000) {
+        return 5_000;
+      }
+      return false;
     },
   });
 
@@ -426,6 +437,7 @@ export default function CreativeDrops() {
                 ...selectedDrop,
                 images: (selectedDrop.images || []) as { url: string; workflow_name?: string; scene_name?: string; product_title?: string }[],
                 generation_job_ids: selectedDrop.generation_job_ids || [],
+                schedule_name: selectedDrop.schedule_name || (selectedDrop.schedule_id ? scheduleNameMap.get(selectedDrop.schedule_id) : undefined) || undefined,
               }}
             />
           )}
