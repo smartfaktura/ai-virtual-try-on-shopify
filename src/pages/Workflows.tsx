@@ -478,7 +478,7 @@ export default function Workflows() {
             ))}
           </div>
         ) : (
-          <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+          <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'}`}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="rounded-lg border overflow-hidden">
                 <Skeleton className="w-full aspect-square" />
