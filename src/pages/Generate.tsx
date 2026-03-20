@@ -937,6 +937,9 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const needsModel = uiConfig?.show_model_picker && selectedModel;
+      const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+        ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
+        : needsModel ? [selectedModel!] : [];
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
 
@@ -948,14 +951,17 @@ export default function Generate() {
         const originalUp = userProducts.find(up => up.id === product.id);
         const productData = { title: product.title, productType: product.productType, description: product.description, dimensions: originalUp?.dimensions || undefined };
 
-        const [base64Image, base64ModelImage] = await Promise.all([
-          convertImageToBase64(sourceImageUrl),
-          needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
-        ]);
+        const base64Image = await convertImageToBase64(sourceImageUrl);
 
         const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
         const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
         const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+
+        // Model loop — at least one iteration even without models
+        const modelIterator = modelsToGenerate.length > 0 ? modelsToGenerate : [null];
+
+        for (const modelProfile of modelIterator) {
+          const base64ModelImage = modelProfile ? await convertImageToBase64(modelProfile.previewUrl) : undefined;
 
         for (const varIdx of variationIndices) {
          for (const ratioVal of ratiosToGen) {
@@ -980,10 +986,10 @@ export default function Generate() {
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
           };
-          if (needsModel && base64ModelImage) {
+          if (modelProfile && base64ModelImage) {
             payload.model = {
-              name: selectedModel!.name, gender: selectedModel!.gender, ethnicity: selectedModel!.ethnicity,
-              bodyType: selectedModel!.bodyType, ageRange: selectedModel!.ageRange, imageUrl: base64ModelImage,
+              name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
+              bodyType: modelProfile.bodyType, ageRange: modelProfile.ageRange, imageUrl: base64ModelImage,
             };
           }
 
@@ -997,14 +1003,14 @@ export default function Generate() {
               imageCount: angleMultiplier,
               quality,
               additionalProductCount: 0,
-              hasModel: !!needsModel,
+              hasModel: !!modelProfile,
               hasScene: false,
             }),
           });
 
           if (response.ok) {
             const result = await response.json();
-            jobMap.set(`${product.id}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
+            jobMap.set(`${product.id}_${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
@@ -1018,6 +1024,7 @@ export default function Generate() {
           } // end framingVal loop
          } // end ratioVal loop
         } // end varIdx loop
+        } // end model loop
       } // end product loop
 
       if (jobMap.size === 0) {
