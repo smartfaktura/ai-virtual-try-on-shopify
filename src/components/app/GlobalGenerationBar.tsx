@@ -65,6 +65,7 @@ export function GlobalGenerationBar() {
           job_type: row.job_type,
           quality: (payload?.quality as string) ?? null,
           resolution: (payload?.resolution as string) ?? null,
+          creative_drop_id: (payload?.creative_drop_id as string) ?? null,
         };
       });
 
