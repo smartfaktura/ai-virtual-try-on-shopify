@@ -1457,7 +1457,6 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
