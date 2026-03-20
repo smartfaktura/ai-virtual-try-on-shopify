@@ -1,38 +1,32 @@
 
 
-# Update Help Center FAQ Content
+# Revamp Changelog Page
 
 ## What Changes
 
-Update the `faqCategories` array in `src/pages/HelpCenter.tsx` to accurately reflect the app's actual features, workflows, and terminology. The landing FAQ already has accurate content — the Help Center should be consistent and more detailed.
+### 1. Rewrite release data with real timeline
+Replace the current `releases` array with an accurate, engaging changelog:
 
-### Key content fixes:
+**Recent (shown by default):**
+- **March 20, 2026** — Layout switcher for Workflows (rows/2-col/3-col), Help Center FAQ rewrite, Team page mobile fix, favicon audit
+- **March 10, 2026** — Freestyle Studio enhancements (Brand Profile chips, style presets, negative prompts chip), Workflow animated thumbnails, compact workflow cards
+- **February 2026** — AI video generation (5s/10s clips), Mobile upload via QR code, 40+ model library with filtering
+- **January 2026** — Creative Drops with scheduling, Bulk generation, Credit pack purchasing, Dashboard redesign
 
-**Getting Started**
-- Update workflow list to name all actual workflows: Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, and Picture Perspectives
-- Add a question about Freestyle mode (missing entirely)
-- Mention 2K resolution / PNG output standard
+**Older (collapsed by default):**
+- **December 2025** — Brand Profiles, Virtual Try-On, Pose library (20+ poses)
+- **October 2025** — Launch: product upload, 4 workflows, template library, jobs library, auth
+- **Summer 2025** — Early development: core architecture, AI pipeline prototyping, initial design system
 
-**Credits & Billing**
-- Fix credit costs: Freestyle = 4 credits (6 with model/scene), Workflows = 6 credits, Video = 30 credits
-- Remove "roll over for one billing cycle" — landing FAQ says they don't roll over
-- Add mention of free 20 credits for new accounts
-- Add mention that top-up credits never expire
+### 2. Add "Show full history" toggle
+- Use React `useState` to track `showAll` (default `false`)
+- Show only the first 4 releases by default (2026 entries)
+- A "View full history" button at the bottom expands to show all entries
+- When expanded, show "Show less" to collapse back
 
-**Workflows & Generation**
-- Fix Workflows description — replace generic "Lifestyle, Studio, Social Media" with actual workflow names
-- Add Picture Perspectives workflow explanation (generates front/back/side/close-up angle sets, 6 credits per angle)
-- Add question about Upscale feature
-- Update Creative Drops to mention "monthly or biweekly" schedule, Growth plans requirement
-- Add batch generation details
-
-**Image Quality**
-- Mention 2K resolution and PNG output as defaults
-- Update upscale info — it's a real feature in the app, not just "from the Library"
-
-**Account & Data**
-- Keep mostly as-is, content is accurate
+### 3. Keep the existing timeline UI structure
+No layout/design changes — same hero, same timeline dots, same badge system. Just better data and the collapsible cutoff.
 
 ### File
-`src/pages/HelpCenter.tsx` — replace the `faqCategories` array (lines 9–111) with updated content. No structural/UI changes.
+`src/pages/Changelog.tsx` — rewrite `releases` array, add `useState` for show/hide, slice releases conditionally, add toggle button.
 
