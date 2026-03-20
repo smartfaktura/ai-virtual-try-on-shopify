@@ -108,11 +108,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How is my product data stored?',
-        a: 'All product images and data are stored securely in our cloud infrastructure with encryption at rest and in transit. Your images are private and never used to train our AI models. You can delete your data at any time from Settings.',
-      },
-      {
-        q: 'Can I invite team members?',
-        a: 'Team collaboration features are available on Growth and Pro plans. You can manage team access and permissions from Settings > Team & Permissions.',
+        a: 'All product images and data are stored securely in our cloud infrastructure with encryption at rest and in transit. Your images are private and never used to train our AI models. Contact hello@vovv.ai to request data deletion.',
       },
       {
         q: 'How do I export my generated images?',
