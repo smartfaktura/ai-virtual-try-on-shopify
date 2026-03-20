@@ -1274,8 +1274,6 @@ export default function Generate() {
 
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
-      const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
-      const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
       for (const product of productQueue) {
         for (const model of modelsToGenerate) {
           for (const pose of posesToGenerate) {
