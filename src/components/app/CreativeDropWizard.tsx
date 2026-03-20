@@ -945,15 +945,24 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
                         )}
                       >
-                        <div className="w-14 h-14 rounded-xl border border-border/50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
-                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="max-w-full max-h-full object-contain" aspectRatio="1/1" />
+                        <div className="w-16 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
+                          <ShimmerImage src={WORKFLOW_FALLBACK_IMAGES[wf.name] || wf.preview_image_url || ''} alt={wf.name} className="w-full h-full object-cover object-top" aspectRatio="4/5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{wf.name}</p>
                           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{wf.description}</p>
                           <div className="flex gap-1.5 mt-1.5">
                             {needsModels && <Badge variant="secondary" className="text-[10px] rounded-full px-1.5 py-0">Model</Badge>}
-                            {variations.length > 0 && <Badge variant="secondary" className="text-[10px] rounded-full px-1.5 py-0">{variations.length} scenes</Badge>}
+                            {(() => {
+                              const wfUsesVariationsOnly = !wf.uses_tryon && variations.length > 0;
+                              const wfSceneCount = wfUsesVariationsOnly
+                                ? variations.length
+                                : (() => {
+                                    const cats = wf.uses_tryon ? ON_MODEL_CATEGORIES : PRODUCT_CATEGORIES;
+                                    return filterVisible(mockTryOnPoses).filter(p => cats.includes(p.category)).length + customScenePoses.filter(p => cats.includes(p.category)).length;
+                                  })();
+                              return wfSceneCount > 0 ? <Badge variant="secondary" className="text-[10px] rounded-full px-1.5 py-0">{wfSceneCount} scenes</Badge> : null;
+                            })()}
                           </div>
                         </div>
                         <div className={cn(
