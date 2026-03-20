@@ -19,6 +19,8 @@ export interface ActiveJob {
   imageCount?: number;
   /** From result.generatedCount — images generated so far */
   generatedCount?: number;
+  /** Present when job originates from a creative drop */
+  creative_drop_id?: string | null;
 }
 
 export interface BatchGroup {
