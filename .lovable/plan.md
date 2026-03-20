@@ -1,33 +1,23 @@
 
 
-# Fix Creative Drops Wizard — Step 1 UX Polish
+# Fix Press Page Logo SVGs — Uniform Colors
 
-## Issues from Screenshot
-1. Back button says "Back to Schedules" — should say "Back to Creative Drops"
-2. Page title "Creative Drops" + wizard heading "Create Your Drop" + step label "Details" = triple-redundant header stack on mobile
-3. Placeholder text "e.g. Summer 2026 Collection" feels informal/unprofessional
-4. Special Instructions textarea is on step 0 (Details) — user hasn't configured anything yet and doesn't know what instructions to give. Should move to the end.
-5. Overall step 0 feels cluttered on mobile with too many sections crammed in
+## Problem
+The downloadable logo SVGs use a two-tone style where ".AI" is a different shade from "VOVV". The user wants:
+- **Dark logo**: entire "VOVV.AI" in the same dark color (`#1a2332`)
+- **White logo**: entire "VOVV.AI" in white (`#ffffff`)
 
-## Changes
+## Changes — `src/pages/Press.tsx`
 
-### 1. Fix back button text — `src/pages/CreativeDrops.tsx`
-Change `'Back to Schedules'` to `'Back to Creative Drops'` on line 243.
+### 1. Dark logo SVG (line 11)
+Change `.AI` fill from `#6b7d93` → `#1a2332` (same as "VOVV")
 
-### 2. Clean up redundant headers — `src/components/app/CreativeDropWizard.tsx`
-- Remove the "Create Your Drop" / "Edit Drop" heading (line 559) — the page title + progress stepper already provide context
-- Keep the step label and progress bar as the only navigation indicators
-- This eliminates the triple-stacked text on mobile
+### 2. White logo SVG (line 16)
+Change `.AI` fill from `#a3b1c2` → `#ffffff` (same as "VOVV")
 
-### 3. Better placeholder — `src/components/app/CreativeDropWizard.tsx`
-Change the drop name placeholder from `"e.g. Summer 2026 Collection"` to something cleaner like `"Spring Campaign"` — short, no "e.g." prefix.
+### 3. Update preview text in the cards
+- Dark preview: change `<span className="text-muted-foreground">.AI</span>` to inherit the same foreground color
+- White preview: change `<span className="text-white/60">.AI</span>` to `text-white`
 
-### 4. Move Special Instructions to last step before Review — `src/components/app/CreativeDropWizard.tsx`
-- Remove the Special Instructions section from step 0 (Details)
-- Add it to the Schedule/Delivery step (scheduleStepIndex) — this is the last config step before Review, so the user has full context about their drop by then
-- Keep the seasonal preset auto-fill behavior intact (it still writes to `themeNotes`)
-
-### Files
-- `src/pages/CreativeDrops.tsx` — back button text
-- `src/components/app/CreativeDropWizard.tsx` — remove redundant heading, fix placeholder, relocate Special Instructions
+Single file edit, 4 small line changes.
 
