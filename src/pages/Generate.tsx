@@ -53,7 +53,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuth } from '@/contexts/AuthContext';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { MultiProductProgressBanner } from '@/components/app/MultiProductProgressBanner';
-import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
+import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
@@ -134,7 +134,7 @@ import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 import type { Tables } from '@/integrations/supabase/types';
 import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
-import { FramingSelector } from '@/components/app/FramingSelector';
+import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { detectDefaultFraming } from '@/lib/framingUtils';
@@ -344,8 +344,10 @@ export default function Generate() {
 
   const [imageCount, setImageCount] = useState<'1' | '2' | '3' | '4'>('1');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
+  const [selectedAspectRatios, setSelectedAspectRatios] = useState<Set<AspectRatio>>(new Set());
   const [quality, setQuality] = useState<ImageQuality>('standard');
   const [framing, setFraming] = useState<FramingOption | null>(null);
+  const [selectedFramings, setSelectedFramings] = useState<Set<string>>(new Set(['auto']));
 
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -935,8 +937,12 @@ export default function Generate() {
         ]);
 
         const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
+        const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+        const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
 
         for (const varIdx of variationIndices) {
+         for (const ratioVal of ratiosToGen) {
+          for (const framingVal of framingsToGen) {
           const payload: Record<string, unknown> = {
             workflow_id: activeWorkflow!.id,
             workflow_name: activeWorkflow!.name,
@@ -953,8 +959,8 @@ export default function Generate() {
             } : undefined,
             selected_variations: [varIdx],
             product_angles: productAngle !== 'front' ? productAngle : undefined,
-            quality, aspectRatio,
-            framing: framing || undefined,
+            quality, aspectRatio: ratioVal,
+            framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
           };
           if (needsModel && base64ModelImage) {
@@ -981,7 +987,7 @@ export default function Generate() {
 
           if (response.ok) {
             const result = await response.json();
-            jobMap.set(`${product.id}_${varIdx}`, result.jobId);
+            jobMap.set(`${product.id}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
@@ -992,8 +998,10 @@ export default function Generate() {
             const err = await response.json().catch(() => ({}));
             toast.error(err.error || `Failed to queue "${product.title}"`);
           }
-        }
-      }
+          } // end framingVal loop
+         } // end ratioVal loop
+        } // end varIdx loop
+      } // end product loop
 
       if (jobMap.size === 0) {
         toast.error('Could not queue any products');
@@ -1066,8 +1074,8 @@ export default function Generate() {
       selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
       product_angles: productAngle !== 'front' ? productAngle : undefined,
       quality,
-      aspectRatio,
-      framing: framing || undefined,
+      aspectRatio: selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios)[0] : aspectRatio,
+      framing: selectedFramings.has('auto') ? undefined : (selectedFramings.size > 0 ? Array.from(selectedFramings)[0] : (framing || undefined)),
       styling_notes: flatLayStylingNotes || undefined,
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
@@ -1104,51 +1112,70 @@ export default function Generate() {
       };
     }
 
-    // Decide: single job or batch — always batch when multiple images for parallel processing
-    if (workflowImageCount <= 1) {
-      // Single job — existing behavior
-      const enqueueResult = await enqueue({
-        jobType: 'workflow',
-        payload,
-        imageCount: workflowImageCount,
-        quality: 'high',
-        additionalProductCount: 0,
-      }, {
-        imageCount: workflowImageCount,
-        quality: 'high',
-        hasModel: !!needsModel,
-        hasScene: false,
-        hasProduct: true,
-      });
-      if (enqueueResult) {
-        setBalanceFromServer(enqueueResult.newBalance);
-        injectActiveJob(queryClient, {
-          jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
-          job_type: 'workflow', quality: 'high', imageCount: workflowImageCount,
-        });
+    // Build all ratio × framing combos
+    const ratiosToGenerate = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+    const framingsToGenerate: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+
+    // If only one combo, use the original logic; otherwise loop
+    if (ratiosToGenerate.length === 1 && framingsToGenerate.length === 1) {
+      payload.aspectRatio = ratiosToGenerate[0];
+      payload.framing = framingsToGenerate[0] || undefined;
+      const baseImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
+
+      if (baseImageCount <= 1) {
+        const enqueueResult = await enqueue({
+          jobType: 'workflow', payload, imageCount: baseImageCount, quality: 'high', additionalProductCount: 0,
+        }, { imageCount: baseImageCount, quality: 'high', hasModel: !!needsModel, hasScene: false, hasProduct: true });
+        if (enqueueResult) {
+          setBalanceFromServer(enqueueResult.newBalance);
+          injectActiveJob(queryClient, { jobId: enqueueResult.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: baseImageCount });
+        } else { setCurrentStep('settings'); }
       } else {
-        setCurrentStep('settings');
+        const success = await startBatch({
+          payload, selectedVariationIndices: Array.from(selectedVariationIndices), angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: !!needsModel, hasScene: false,
+          onJobEnqueued: (jobId) => injectActiveJob(queryClient, { jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 }),
+        });
+        if (!success) { setCurrentStep('settings'); }
       }
     } else {
-      // Batch mode — split into multiple jobs
-      const success = await startBatch({
-        payload,
-        selectedVariationIndices: Array.from(selectedVariationIndices),
-        angleMultiplier,
-        quality: 'high',
-        imageCount: workflowImageCount,
-        hasModel: !!needsModel,
-        hasScene: false,
-        onJobEnqueued: (jobId) => injectActiveJob(queryClient, {
-          jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-          workflow_slug: activeWorkflow?.slug, product_name: productData.title,
-          job_type: 'workflow', quality: 'high', imageCount: 1,
-        }),
-      });
-      if (!success) {
-        setCurrentStep('settings');
+      // Multiple combos — enqueue each as a separate batch
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+      const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
+
+      for (const ratio of ratiosToGenerate) {
+        for (const framingVal of framingsToGenerate) {
+          for (const varIdx of variationIndices) {
+            const comboPayload = { ...payload, aspectRatio: ratio, framing: framingVal || undefined, selected_variations: [varIdx] };
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!needsModel, hasScene: false }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              jobMap.set(`${varIdx}_${ratio}_${framingVal}`, result.jobId);
+              lastBalance = result.newBalance;
+              injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+            } else {
+              const err = await response.json().catch(() => ({}));
+              if (response.status === 402) { toast.error('Insufficient credits'); break; }
+              toast.error(err.error || 'Failed to queue generation');
+            }
+          }
+        }
       }
+
+      if (jobMap.size === 0) { toast.error('Could not queue any images'); setCurrentStep('settings'); return; }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
       console.error('Workflow generation failed:', err);
@@ -1158,7 +1185,7 @@ export default function Generate() {
   };
 
   // Helper: enqueue a single try-on job via direct fetch (used for multi-product upfront)
-  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose, modelOverride?: ModelProfile): Promise<{ jobId: string; newBalance: number } | null> => {
+  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose, modelOverride?: ModelProfile, ratioOverride?: AspectRatio, framingOverride?: FramingOption | null): Promise<{ jobId: string; newBalance: number } | null> => {
     const pose = poseOverride || selectedPose;
     const model = modelOverride || selectedModel;
     if (!model || !pose) return null;
@@ -1173,6 +1200,9 @@ export default function Generate() {
       pose.previewUrl ? convertImageToBase64(pose.previewUrl) : Promise.resolve(undefined),
     ]);
 
+    const effectiveRatio = ratioOverride || (selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios)[0] : aspectRatio);
+    const effectiveFraming = framingOverride !== undefined ? framingOverride : (selectedFramings.has('auto') ? null : (selectedFramings.size > 0 ? Array.from(selectedFramings)[0] as FramingOption : framing));
+
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
       method: 'POST',
@@ -1183,8 +1213,8 @@ export default function Generate() {
           product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
           model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
-          aspectRatio, imageCount: parseInt(imageCount),
-          framing: framing || undefined,
+          aspectRatio: effectiveRatio, imageCount: parseInt(imageCount),
+          framing: effectiveFraming || undefined,
           workflow_id: activeWorkflow?.id || null,
           workflow_name: activeWorkflow?.name || null,
           workflow_slug: activeWorkflow?.slug || null,
@@ -1231,18 +1261,24 @@ export default function Generate() {
 
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
+      const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+      const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
       for (const product of productQueue) {
         for (const model of modelsToGenerate) {
           for (const pose of posesToGenerate) {
-            const result = await enqueueTryOnForProduct(product, token, pose, model);
-            if (result) {
-              jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}`, result.jobId);
-              lastBalance = result.newBalance;
-              injectActiveJob(queryClient, {
-                jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-                workflow_slug: activeWorkflow?.slug, product_name: product.title,
-                job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-              });
+            for (const ratioVal of ratiosToGen) {
+              for (const framingVal of framingsToGen) {
+                const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
+                if (result) {
+                  jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                  lastBalance = result.newBalance;
+                  injectActiveJob(queryClient, {
+                    jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+                    workflow_slug: activeWorkflow?.slug, product_name: product.title,
+                    job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                  });
+                }
+              }
             }
           }
         }
@@ -1277,8 +1313,12 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    if (modelsToGenerate.length === 1 && posesToGenerate.length === 1) {
-      // Single model + single scene — use existing enqueue hook for real-time tracking
+    const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+    const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+    const needsMultiJobs = modelsToGenerate.length > 1 || posesToGenerate.length > 1 || ratiosToGen.length > 1 || framingsToGen.length > 1;
+
+    if (!needsMultiJobs) {
+      // Single model + single scene + single ratio + single framing
       const model = modelsToGenerate[0];
       const pose = posesToGenerate[0];
       const base64ProductImage = await convertImageToBase64(sourceImageUrl);
@@ -1290,8 +1330,8 @@ export default function Generate() {
           product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
           model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
-          aspectRatio, imageCount: parseInt(imageCount),
-          framing: framing || undefined,
+          aspectRatio: ratiosToGen[0], imageCount: parseInt(imageCount),
+          framing: framingsToGen[0] || undefined,
           workflow_id: activeWorkflow?.id || null,
           workflow_name: activeWorkflow?.name || null,
           workflow_slug: activeWorkflow?.slug || null,
@@ -1320,7 +1360,7 @@ export default function Generate() {
         setCurrentStep('settings');
       }
     } else {
-      // Multi-model and/or multi-scene — use direct fetch for each combination
+      // Multi-model/scene/ratio/framing — use direct fetch for each combination
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
@@ -1331,15 +1371,19 @@ export default function Generate() {
 
       for (const model of modelsToGenerate) {
         for (const pose of posesToGenerate) {
-          const result = await enqueueTryOnForProduct(product as Product, token, pose, model);
-          if (result) {
-            jobMap.set(`${model.modelId}_${pose.poseId}`, result.jobId);
-            lastBalance = result.newBalance;
-            injectActiveJob(queryClient, {
-              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-              workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
-              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-            });
+          for (const ratioVal of ratiosToGen) {
+            for (const framingVal of framingsToGen) {
+              const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal);
+              if (result) {
+                jobMap.set(`${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                lastBalance = result.newBalance;
+                injectActiveJob(queryClient, {
+                  jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+                  workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+                  job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                });
+              }
+            }
           }
         }
       }
@@ -1351,7 +1395,7 @@ export default function Generate() {
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''} (${modelsToGenerate.length} model${modelsToGenerate.length > 1 ? 's' : ''} × ${posesToGenerate.length} scene${posesToGenerate.length > 1 ? 's' : ''})`);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''}`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
@@ -1698,7 +1742,9 @@ export default function Generate() {
   };
 
   const angleMultiplier = productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2;
-  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
+  const aspectRatioCount = Math.max(1, selectedAspectRatios.size);
+  const framingCount = selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size);
+  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount : parseInt(imageCount);
   const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
@@ -1707,7 +1753,7 @@ export default function Generate() {
   const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
   const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 15 : 10) : 0;
   const workflowCostPerImage = 6;
-  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
+  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
@@ -3556,8 +3602,12 @@ export default function Generate() {
             setQuality={setQuality}
             aspectRatio={aspectRatio}
             setAspectRatio={setAspectRatio}
+            selectedAspectRatios={selectedAspectRatios}
+            setSelectedAspectRatios={setSelectedAspectRatios}
             framing={framing}
             setFraming={setFraming}
+            selectedFramings={selectedFramings}
+            setSelectedFramings={setSelectedFramings}
             productAngle={productAngle}
             setProductAngle={setProductAngle}
             selectedBrandProfile={selectedBrandProfile}
@@ -3569,6 +3619,8 @@ export default function Generate() {
             workflowImageCount={workflowImageCount}
             multiProductCount={multiProductCount}
             angleMultiplier={angleMultiplier}
+            aspectRatioCount={aspectRatioCount}
+            framingCount={framingCount}
             interiorType={interiorType}
             isAdmin={isAdmin}
             isGeneratingPreviews={isGeneratingPreviews}
@@ -3596,8 +3648,12 @@ export default function Generate() {
             setQuality={setQuality}
             framing={framing}
             setFraming={setFraming}
+            selectedFramings={selectedFramings}
+            setSelectedFramings={setSelectedFramings}
             aspectRatio={aspectRatio}
             setAspectRatio={setAspectRatio}
+            selectedAspectRatios={selectedAspectRatios}
+            setSelectedAspectRatios={setSelectedAspectRatios}
             balance={balance}
             isFreeUser={isFreeUser}
             isMultiProductMode={isMultiProductMode}
@@ -3680,7 +3736,7 @@ export default function Generate() {
                 generatingProgress={generatingProgress}
                 activeJob={activeJob}
                 onCancel={cancelQueue}
-                totalExpectedImages={productQueue.length * tryOnSceneCount}
+                totalExpectedImages={productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount}
               />
             )}
 

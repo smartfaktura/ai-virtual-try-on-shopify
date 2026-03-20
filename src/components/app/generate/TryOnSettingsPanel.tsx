@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { TryOnPreview } from '@/components/app/TryOnPreview';
-import { FramingSelector } from '@/components/app/FramingSelector';
-import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
+import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
+import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import type { Product, ScratchUpload, ModelProfile, TryOnPose, AspectRatio, ImageQuality, FramingOption } from '@/types';
 
 interface TryOnSettingsPanelProps {
@@ -33,8 +33,12 @@ interface TryOnSettingsPanelProps {
   setQuality: (v: ImageQuality) => void;
   framing: FramingOption | null;
   setFraming: (f: FramingOption | null) => void;
+  selectedFramings: Set<string>;
+  setSelectedFramings: (s: Set<string>) => void;
   aspectRatio: AspectRatio;
   setAspectRatio: (ar: AspectRatio) => void;
+  selectedAspectRatios: Set<AspectRatio>;
+  setSelectedAspectRatios: (s: Set<AspectRatio>) => void;
   balance: number;
   isFreeUser: boolean;
   isMultiProductMode: boolean;
@@ -52,14 +56,17 @@ export default function TryOnSettingsPanel({
   selectedPose,
   selectedPoses, selectedPoseMap, creditCost,
   imageCount, setImageCount, quality, setQuality,
-  framing, setFraming, aspectRatio, setAspectRatio,
+  framing, setFraming, selectedFramings, setSelectedFramings,
+  aspectRatio, setAspectRatio, selectedAspectRatios, setSelectedAspectRatios,
   balance, isFreeUser, isMultiProductMode, multiProductCount, productQueue,
   tryOnSceneCount, openBuyModal, handleGenerateClick, setCurrentStep,
 }: TryOnSettingsPanelProps) {
   const posesArray = Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean);
   const modelsArray = selectedModelMap ? Array.from(selectedModelMap.values()) : selectedModel ? [selectedModel] : [];
   const modelCount = Math.max(1, modelsArray.length);
-  const totalImages = parseInt(imageCount) * tryOnSceneCount * modelCount * multiProductCount;
+  const ratioCount = Math.max(1, selectedAspectRatios.size);
+  const frmCount = selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size);
+  const totalImages = parseInt(imageCount) * tryOnSceneCount * modelCount * multiProductCount * ratioCount * frmCount;
 
   return (
     <div className="space-y-4">
@@ -140,8 +147,8 @@ export default function TryOnSettingsPanel({
             </Select>
           </div>
         </div>
-        <FramingSelector framing={framing} onFramingChange={setFraming} />
-        <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+        <FramingMultiSelector selectedFramings={selectedFramings} onSelectedFramingsChange={setSelectedFramings} />
+        <AspectRatioMultiSelector value={selectedAspectRatios} onChange={setSelectedAspectRatios} />
       </CardContent></Card>
 
       <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
@@ -153,6 +160,8 @@ export default function TryOnSettingsPanel({
               parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
               if (modelCount > 1) parts.push(`${modelCount} models`);
               if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
+              if (ratioCount > 1) parts.push(`${ratioCount} sizes`);
+              if (frmCount > 1) parts.push(`${frmCount} framings`);
               if (isMultiProductMode) parts.push(`${multiProductCount} products`);
               parts.push(`6 credits each`);
               return parts.join(' × ');

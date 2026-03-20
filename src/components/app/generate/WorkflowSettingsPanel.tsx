@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Package, Clock, Palette, Loader2 } from 'lucide-react';
-import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
-import { FramingSelector } from '@/components/app/FramingSelector';
+import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
+import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toast } from 'sonner';
 import type { Product, ScratchUpload, GenerationSourceType, AspectRatio, ImageQuality, FramingOption, ModelProfile } from '@/types';
@@ -101,8 +101,12 @@ interface WorkflowSettingsPanelProps {
   setQuality: (q: ImageQuality) => void;
   aspectRatio: AspectRatio;
   setAspectRatio: (ar: AspectRatio) => void;
+  selectedAspectRatios: Set<AspectRatio>;
+  setSelectedAspectRatios: (s: Set<AspectRatio>) => void;
   framing: FramingOption | null;
   setFraming: (f: FramingOption | null) => void;
+  selectedFramings: Set<string>;
+  setSelectedFramings: (s: Set<string>) => void;
   productAngle: 'front' | 'front-side' | 'front-back' | 'all';
   setProductAngle: (a: 'front' | 'front-side' | 'front-back' | 'all') => void;
 
@@ -120,6 +124,8 @@ interface WorkflowSettingsPanelProps {
   workflowImageCount: number;
   multiProductCount: number;
   angleMultiplier: number;
+  aspectRatioCount: number;
+  framingCount: number;
   interiorType: 'interior' | 'exterior';
 
   // Admin
@@ -148,11 +154,13 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
     mirrorSettingsPhase,
     ugcMood, setUgcMood,
     quality, setQuality, aspectRatio, setAspectRatio,
+    selectedAspectRatios, setSelectedAspectRatios,
     framing, setFraming,
+    selectedFramings, setSelectedFramings,
     productAngle, setProductAngle,
     selectedBrandProfile, selectedBrandProfileId, brandProfiles,
     balance, creditCost, isFreeUser,
-    workflowImageCount, multiProductCount, angleMultiplier, interiorType,
+    workflowImageCount, multiProductCount, angleMultiplier, aspectRatioCount, framingCount, interiorType,
     isAdmin, isGeneratingPreviews,
     openBuyModal, handleGenerateClick, handleGenerateScenePreviews, setCurrentStep,
   } = props;
@@ -607,7 +615,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               </div>
               <div className="space-y-2">
                 <Label>Aspect Ratio</Label>
-                <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                <AspectRatioMultiSelector value={selectedAspectRatios} onChange={setSelectedAspectRatios} />
               </div>
             </div>
           </CardContent></Card>
@@ -685,7 +693,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
       {/* Framing Selector — only for Selfie/UGC */}
       {isSelfieUgc && (
         <Card><CardContent className="p-5">
-          <FramingSelector framing={framing} onFramingChange={setFraming} />
+          <FramingMultiSelector selectedFramings={selectedFramings} onSelectedFramingsChange={setSelectedFramings} />
         </CardContent></Card>
       )}
 
@@ -758,7 +766,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                     <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
                   </div>
                 ) : (
-                  <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                  <AspectRatioMultiSelector value={selectedAspectRatios} onChange={setSelectedAspectRatios} />
                 )}
               </div>
             </div>
@@ -771,7 +779,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               <p className="text-xs text-muted-foreground">
                 {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                 {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
-                {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
+                {angleMultiplier > 1 ? ` × ${angleMultiplier} angles` : ''}
+                {aspectRatioCount > 1 ? ` × ${aspectRatioCount} sizes` : ''}
+                {framingCount > 1 ? ` × ${framingCount} framings` : ''}
                 {' '}× 6 credits
               </p>
             </div>
@@ -797,7 +807,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             }}>Back</Button>
             <Button
               onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-              disabled={selectedVariationIndices.size === 0}
+              disabled={selectedVariationIndices.size === 0 || selectedAspectRatios.size === 0}
               className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
             >
               {balance >= creditCost ? (isInteriorDesign ? `Generate ${selectedVariationIndices.size} Staging Image${selectedVariationIndices.size !== 1 ? 's' : ''}` : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
