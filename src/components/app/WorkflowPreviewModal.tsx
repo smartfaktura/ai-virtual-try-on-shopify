@@ -5,7 +5,8 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
-import { downloadDropAsZip, downloadSingleImage } from '@/lib/dropDownload';
+import { downloadDropAsZip } from '@/lib/dropDownload';
+import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';

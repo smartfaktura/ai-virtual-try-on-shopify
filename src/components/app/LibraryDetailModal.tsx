@@ -65,22 +65,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
   if (!open || !item) return null;
 
   const handleDownload = async () => {
-    try {
-      const response = await fetch(item.imageUrl);
-      const contentType = response.headers.get('content-type');
-      const ext = getExtensionFromContentType(contentType);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Download failed');
-    }
+    await saveOrShareImage(item.imageUrl, `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}`);
   };
 
   const handleDelete = async () => {
