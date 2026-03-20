@@ -96,6 +96,7 @@ export interface CreativeDropWizardInitialData {
 
 interface CreativeDropWizardProps {
   onClose: () => void;
+  onLaunched?: () => void;
   initialData?: CreativeDropWizardInitialData;
   editingScheduleId?: string;
 }
