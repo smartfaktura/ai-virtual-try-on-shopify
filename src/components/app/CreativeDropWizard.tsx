@@ -273,16 +273,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
 
-  const allScenePoses = useMemo(() => {
-    const raw = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customScenePoses]);
-    return sortScenes(raw);
-  }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides]);
-
-  const sceneCategories = useMemo(() => {
-    const order = deriveCategoryOrder(allScenePoses);
-    return order.length > 0 ? order : Object.keys(poseCategoryLabels);
-  }, [allScenePoses, deriveCategoryOrder]);
-
   const allModels = [
     ...mockModelItems,
     ...(customModels || []).map((m: any) => ({
@@ -297,6 +287,29 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     () => workflows.find(w => w.id === selectedWorkflowId) || null,
     [workflows, selectedWorkflowId]
   );
+
+  const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
+  const PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor'];
+
+  const allScenePoses = useMemo(() => {
+    const raw = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customScenePoses]);
+    const sorted = sortScenes(raw);
+    if (!selectedWorkflow) return sorted;
+    if (selectedWorkflow.uses_tryon) {
+      return sorted.filter(p => ON_MODEL_CATEGORIES.includes(p.category));
+    }
+    const needsModelsForWf = selectedWorkflow.generation_config?.ui_config?.show_model_picker;
+    if (!needsModelsForWf) {
+      return sorted.filter(p => PRODUCT_CATEGORIES.includes(p.category));
+    }
+    return sorted;
+  }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides, selectedWorkflow]);
+
+  const sceneCategories = useMemo(() => {
+    const order = deriveCategoryOrder(allScenePoses);
+    return order.length > 0 ? order : Object.keys(poseCategoryLabels);
+  }, [allScenePoses, deriveCategoryOrder]);
+
 
   const progressPercent = TOTAL_STEPS > 1 ? Math.round((step / (TOTAL_STEPS - 1)) * 100) : 0;
 
@@ -353,7 +366,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setPoseSelections([]);
     setCustomSettings({});
     setImageCount(25);
-    setFormats(['1:1']);
+    setFormats([]);
     setIsRandomModelsFlag(false);
     setIsRandomScenesFlag(false);
     setCustomImageCountStr('');
@@ -1091,7 +1104,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </button>
                           )}
                         </div>
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="space-y-4">
                           {sceneCategories.map(cat => {
                             const catPoses = allScenePoses.filter(p => p.category === cat);
                             if (catPoses.length === 0) return null;
@@ -1117,7 +1130,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                         )}
                                       >
                                         <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
-                                          <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                                          <ShimmerImage src={getOptimizedUrl(pose.optimizedImageUrl || pose.previewUrl, { quality: 60 })} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
                                         </div>
                                         {isPoseSelected && (
                                           <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
