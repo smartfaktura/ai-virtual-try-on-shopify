@@ -268,6 +268,21 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
   });
 
+  // Full scene list (all categories + custom scenes)
+  const { asPoses: customScenePoses } = useCustomScenes();
+  const { filterVisible } = useHiddenScenes();
+  const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
+
+  const allScenePoses = useMemo(() => {
+    const raw = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customScenePoses]);
+    return sortScenes(raw);
+  }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides]);
+
+  const sceneCategories = useMemo(() => {
+    const order = deriveCategoryOrder(allScenePoses);
+    return order.length > 0 ? order : Object.keys(poseCategoryLabels);
+  }, [allScenePoses, deriveCategoryOrder]);
+
   const allModels = [
     ...mockModelItems,
     ...(customModels || []).map((m: any) => ({
