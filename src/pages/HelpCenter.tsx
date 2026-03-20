@@ -16,7 +16,7 @@ const faqCategories = [
       },
       {
         q: 'What image formats are supported for uploads?',
-        a: 'We accept JPG, PNG, and WebP files. For best results, use images with clean backgrounds and at least 1024×1024 resolution. You can upload up to 5 images per product.',
+        a: 'We accept JPG, PNG, and WebP files. For best results, use images with clean backgrounds and at least 1024×1024 resolution.',
       },
       {
         q: 'Do I need to remove the background from my product photos?',
@@ -24,7 +24,7 @@ const faqCategories = [
       },
       {
         q: 'What is Freestyle mode?',
-        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision. Freestyle costs 6 credits per image.',
+        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene.',
       },
       {
         q: 'What is a Brand Profile and why should I create one?',
@@ -37,7 +37,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each generation costs credits based on the mode: Workflows and Freestyle cost 6 credits per image. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
+        a: 'Each generation costs credits based on the mode: Workflows cost 6 credits per image. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
       },
       {
         q: 'What happens if I run out of credits?',
@@ -108,11 +108,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How is my product data stored?',
-        a: 'All product images and data are stored securely in our cloud infrastructure with encryption at rest and in transit. Your images are private and never used to train our AI models. You can delete your data at any time from Settings.',
-      },
-      {
-        q: 'Can I invite team members?',
-        a: 'Team collaboration features are available on Growth and Pro plans. You can manage team access and permissions from Settings > Team & Permissions.',
+        a: 'All product images and data are stored securely in our cloud infrastructure with encryption at rest and in transit. Your images are private and never used to train our AI models. Contact hello@vovv.ai to request data deletion.',
       },
       {
         q: 'How do I export my generated images?',
