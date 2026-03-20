@@ -1,100 +1,180 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
-import { Megaphone, Download, Mail, ExternalLink } from 'lucide-react';
+import { Megaphone, Download, Mail, Palette, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-const brandFacts = [
-  { label: 'Founded', value: '2024' },
-  { label: 'Team Size', value: '25+' },
-  { label: 'Images Generated', value: '2M+' },
-  { label: 'Brands Using VOVV.AI', value: '5,000+' },
-  { label: 'Headquarters', value: 'Remote-first (US/EU)' },
-  { label: 'Funding', value: 'Seed Stage' },
+const LOGO_DARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
+  <text x="0" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="4" fill="#1a2332">VOVV</text>
+  <text x="195" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="2" fill="#6b7d93">.AI</text>
+</svg>`;
+
+const LOGO_WHITE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
+  <text x="0" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="4" fill="#ffffff">VOVV</text>
+  <text x="195" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="2" fill="#a3b1c2">.AI</text>
+</svg>`;
+
+const brandColors = [
+  { name: 'Navy', hsl: 'hsl(217, 33%, 17%)', hex: '#1D2B3A' },
+  { name: 'Steel', hsl: 'hsl(210, 17%, 70%)', hex: '#A3B1C2' },
+  { name: 'Slate', hsl: 'hsl(215, 20%, 45%)', hex: '#5A6E82' },
+  { name: 'Ivory', hsl: 'hsl(40, 33%, 96%)', hex: '#F7F4EF' },
+  { name: 'White', hsl: 'hsl(0, 0%, 100%)', hex: '#FFFFFF' },
 ];
 
-const mediaMentions = [
-  {
-    outlet: 'TechCrunch',
-    headline: 'VOVV.AI raises seed round to automate product photography with generative AI',
-    date: 'December 2025',
-  },
-  {
-    outlet: 'Retail Dive',
-    headline: 'How AI-generated product images are transforming e-commerce listings',
-    date: 'November 2025',
-  },
-  {
-    outlet: 'The Verge',
-    headline: 'This startup lets brands create studio-quality photos from a single product image',
-    date: 'October 2025',
-  },
-];
+function downloadBlob(content: string, fileName: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast.success(`Downloaded ${fileName}`);
+}
+
+function downloadBrandColors() {
+  const json = JSON.stringify({ brand: 'VOVV.AI', colors: brandColors }, null, 2);
+  downloadBlob(json, 'vovv-brand-colors.json', 'application/json');
+}
 
 export default function Press() {
   return (
     <PageLayout>
-      <SEOHead title="VOVV AI in the Press — Media Coverage & Brand Assets" description="Read about VOVV AI in the press. Download brand assets, logos, and get in touch for media inquiries." canonical={`${SITE_URL}/press`} />
+      <SEOHead
+        title="Press & Media Resources — VOVV AI"
+        description="Download VOVV AI brand assets, logos, and color palette. Media inquiries welcome."
+        canonical={`${SITE_URL}/press`}
+      />
+
       {/* Hero */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+      <section className="relative py-24 sm:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
             <Megaphone className="w-4 h-4" />
             Press & Media
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-6">
-            VOVV.AI in the News
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6 leading-[1.1]">
+            Media Resources
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Resources for journalists, bloggers, and media partners covering VOVV.AI and the future of AI-powered visual commerce.
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            Everything journalists and partners need — brand assets, product information, and contact details.
           </p>
         </div>
       </section>
 
-      {/* Brand Facts */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Company at a Glance</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {brandFacts.map((fact) => (
-              <div key={fact.label} className="text-center p-4 rounded-xl bg-card border border-border">
-                <div className="text-xl font-bold text-foreground">{fact.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{fact.label}</div>
-              </div>
-            ))}
+      {/* What is VOVV.AI */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">What is VOVV.AI?</h2>
+          <div className="space-y-4 text-muted-foreground text-base sm:text-lg leading-relaxed">
+            <p>
+              VOVV.AI is an AI-powered visual studio built for e-commerce brands. Upload a product photo and generate studio-quality images across multiple workflows — from virtual try-on to lifestyle scenes to product listing shots — in seconds.
+            </p>
+            <p>
+              The platform helps brands create professional visual content without traditional photoshoots, reducing time and cost while maintaining high-quality, on-brand imagery.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Brand Kit */}
-      <section className="py-16">
+      {/* Brand Assets */}
+      <section className="py-16 sm:py-20 bg-muted/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-8 rounded-2xl bg-card border border-border text-center">
-            <Download className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-foreground mb-3">Brand Assets</h2>
-            <p className="text-muted-foreground mb-2 max-w-lg mx-auto">
-              Download our official logos, brand colors, and product screenshots for media use. Please follow the included brand guidelines.
+          <div className="text-center mb-12">
+            <Download className="w-8 h-8 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Brand Assets</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">
+              Download official logos and brand colors for media use.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mt-6">
-              <Button className="rounded-full px-6 gap-2" onClick={() => toast.info('Brand kit download coming soon')}>
-                <Download className="w-4 h-4" />
-                Download Brand Kit
-              </Button>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Includes: Logo (SVG, PNG), Colors, Screenshots</span>
-              </div>
-            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6">
+            {/* Logo Dark */}
+            <Card className="group bg-card border-border hover:border-primary/30 transition-all hover:shadow-lg">
+              <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+                <div className="w-full h-24 rounded-lg bg-muted/50 flex items-center justify-center p-4">
+                  <span className="text-2xl font-extrabold tracking-widest text-foreground">VOVV<span className="text-muted-foreground">.AI</span></span>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">Logo — Dark</p>
+                  <p className="text-xs text-muted-foreground mt-1">SVG, transparent background</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-full gap-2"
+                  onClick={() => downloadBlob(LOGO_DARK_SVG, 'vovv-logo-dark.svg', 'image/svg+xml')}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Logo White */}
+            <Card className="group bg-card border-border hover:border-primary/30 transition-all hover:shadow-lg">
+              <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+                <div className="w-full h-24 rounded-lg bg-foreground flex items-center justify-center p-4">
+                  <span className="text-2xl font-extrabold tracking-widest text-white">VOVV<span className="text-white/60">.AI</span></span>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">Logo — White</p>
+                  <p className="text-xs text-muted-foreground mt-1">SVG, transparent background</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-full gap-2"
+                  onClick={() => downloadBlob(LOGO_WHITE_SVG, 'vovv-logo-white.svg', 'image/svg+xml')}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Brand Colors */}
+            <Card className="group bg-card border-border hover:border-primary/30 transition-all hover:shadow-lg">
+              <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+                <div className="w-full h-24 rounded-lg overflow-hidden flex">
+                  {brandColors.map((c) => (
+                    <div key={c.name} className="flex-1 relative group/swatch" style={{ backgroundColor: c.hex }}>
+                      <span className="absolute inset-0 flex items-end justify-center pb-1 text-[9px] font-mono opacity-0 group-hover/swatch:opacity-100 transition-opacity"
+                        style={{ color: c.name === 'Navy' || c.name === 'Slate' ? '#fff' : '#1D2B3A' }}>
+                        {c.hex}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">Brand Colors</p>
+                  <p className="text-xs text-muted-foreground mt-1">JSON with HSL & HEX values</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-full gap-2"
+                  onClick={downloadBrandColors}
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                  Download
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Brand Guidelines */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Brand Guidelines</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-10">Brand Guidelines</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="bg-card border-border">
               <CardContent className="pt-6">
@@ -122,45 +202,23 @@ export default function Press() {
         </div>
       </section>
 
-      {/* Media Mentions */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Recent Coverage</h2>
-          <div className="space-y-4">
-            {mediaMentions.map((mention) => (
-              <Card key={mention.headline} className="bg-card border-border hover:border-primary/30 transition-colors">
-                <CardContent className="py-5 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <Badge variant="secondary" className="rounded-full text-xs">
-                        {mention.outlet}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{mention.date}</span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground">{mention.headline}</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
-                </CardContent>
-              </Card>
-            ))}
+      {/* Press Inquiries */}
+      <section className="py-20 sm:py-24 bg-muted/30">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="p-10 sm:p-14 rounded-2xl bg-card border border-border shadow-sm">
+            <Mail className="w-10 h-10 text-primary mx-auto mb-5" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Press Inquiries</h2>
+            <p className="text-muted-foreground mb-8 leading-relaxed">
+              For interviews, commentary, product demos, or media partnerships — we'd love to hear from you.
+            </p>
+            <Button asChild className="rounded-full px-8 gap-2 text-base h-12">
+              <a href="mailto:hello@vovv.ai">
+                <Mail className="w-4 h-4" />
+                hello@vovv.ai
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </Button>
           </div>
-        </div>
-      </section>
-
-      {/* Contact */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Mail className="w-10 h-10 text-primary mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-3">Press Inquiries</h2>
-          <p className="text-muted-foreground mb-4">
-            For interviews, commentary, or media partnerships, reach out to our communications team.
-          </p>
-          <a
-            href="mailto:hello@vovv.ai"
-            className="text-primary font-medium hover:underline"
-          >
-            hello@vovv.ai
-          </a>
         </div>
       </section>
     </PageLayout>
