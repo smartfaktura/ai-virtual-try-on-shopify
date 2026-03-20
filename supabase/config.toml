@@ -69,3 +69,7 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.capture-lead]
     verify_jwt = false
+  [functions.complete-creative-drop]
+    verify_jwt = false
+  [functions.run-scheduled-drops]
+    verify_jwt = false

@@ -393,6 +393,14 @@ async function completeQueueJob(
         }).catch((e) => console.warn("[generate-tryon] Failed email send failed:", e.message));
       }
     } catch (e) { console.warn("[generate-tryon] Failed email lookup failed:", e); }
+    // Fire-and-forget: check if creative drop is complete (even on failure)
+    if (payload.creative_drop_id) {
+      fetch(`${supabaseUrl}/functions/v1/complete-creative-drop`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ creative_drop_id: payload.creative_drop_id }),
+      }).catch((e) => console.warn("[generate-tryon] Drop completion check failed:", e.message));
+    }
     return;
   }
 
