@@ -978,7 +978,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 const wfCustomSettings = uiConfig?.custom_settings || [];
                 const lockAspectRatio = uiConfig?.lock_aspect_ratio;
                 const showPosePicker = uiConfig?.show_pose_picker;
-                const showCampaignMode = needsModels || variations.length > 0;
+                const showCampaignMode = !isPerspectives && (needsModels || variations.length > 0);
                 const isMixMode = campaignMode === 'mix';
 
                 return (
