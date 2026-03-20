@@ -372,6 +372,7 @@ export default function Generate() {
   const [multiProductResults, setMultiProductResults] = useState<Map<string, { images: string[]; labels: string[] }>>(new Map());
   const [multiProductAutoAdvancing, setMultiProductAutoAdvancing] = useState(false);
   const isMultiProductMode = productQueue.length > 1;
+  const hasMultipleJobs = multiProductJobIds.size > 1;
   // Upfront multi-product: map of productId → jobId for all enqueued products
   const [multiProductJobIds, setMultiProductJobIds] = useState<Map<string, string>>(new Map());
   // Per-job metadata for reliable grouping (avoids brittle key parsing)
