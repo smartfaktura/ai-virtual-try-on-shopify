@@ -3606,8 +3606,12 @@ export default function Generate() {
             setQuality={setQuality}
             framing={framing}
             setFraming={setFraming}
+            selectedFramings={selectedFramings}
+            setSelectedFramings={setSelectedFramings}
             aspectRatio={aspectRatio}
             setAspectRatio={setAspectRatio}
+            selectedAspectRatios={selectedAspectRatios}
+            setSelectedAspectRatios={setSelectedAspectRatios}
             balance={balance}
             isFreeUser={isFreeUser}
             isMultiProductMode={isMultiProductMode}
