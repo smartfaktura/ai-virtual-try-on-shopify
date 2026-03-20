@@ -55,7 +55,7 @@ serve(async (req) => {
       .from("generation_queue")
       .select("id")
       .filter("payload->>creative_drop_id", "eq", creative_drop_id)
-      .not("status", "in", '("completed","failed","cancelled")');
+      .in("status", ["queued", "processing"]);
 
     if (pendingJobs && pendingJobs.length > 0) {
       return new Response(JSON.stringify({ skipped: true, reason: "Jobs still pending", remaining: pendingJobs.length }), {

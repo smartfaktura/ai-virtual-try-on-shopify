@@ -13,6 +13,19 @@ serve(async (req) => {
   }
 
   try {
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (authHeader !== `Bearer ${serviceRoleKey}`) {
+      // Also allow anon key calls from pg_cron via pg_net
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+      if (!anonKey || authHeader !== `Bearer ${anonKey}`) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
