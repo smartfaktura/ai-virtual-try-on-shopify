@@ -1,37 +1,31 @@
 
 
-# Fix: Wrong Image Count in Progress Banner Estimate
+# Improve: Show Credit Refund Info on Failed Workflow Activity Cards
 
 ## Problem
-The estimate line shows "Est. ~1-1 min for 2 images" when generating 8 images. Two issues:
+When a generation fails (rate limit, timeout, etc.), credits **are refunded** by the backend. But the activity card on the Workflows page only shows "1 image failed · Rate limit exceeded. Please wait and try again." — it never tells the user their credits were returned. This causes confusion ("will Retry charge me again?").
 
-1. **Wrong total**: `totalExpectedImages` is calculated as `productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount` — but for workflows, `tryOnSceneCount` and `tryOnModelCount` are both 1 (they only count for `virtual-try-on` mode), so the total is wrong.
-2. **Bad format**: When `estLowMin === estHighMin`, it shows "~1-1 min" which looks broken.
+## Solution
+Add a subtle refund note to the failed activity card so users know their credits are safe.
 
 ## Changes
 
-### File 1: `src/pages/Generate.tsx` (line 3891)
-Use `workflowImageCount * multiProductCount` for workflows instead of the try-on formula:
+### File: `src/components/app/WorkflowActivityCard.tsx`
 
-```
-totalExpectedImages={
-  hasWorkflowConfig || isSelfieUgc || isMirrorSelfie
-    ? workflowImageCount * multiProductCount
-    : productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
-}
-```
+In the failed card layout (line ~290-330), add a small reassurance line below the error message:
 
-### File 2: `src/components/app/MultiProductProgressBanner.tsx` (line 107)
-Fix the "~1-1 min" display — when low equals high, show just one value:
+**Current:** `1 image failed · Rate limit exceeded. Please wait and try again.`
 
+**After:** 
 ```
-Est. ~{estLowMin === estHighMin ? `${estLowMin}` : `${estLowMin}-${estHighMin}`} min for {totalImages} images
+1 image failed · Rate limit exceeded. Please wait and try again.
+Credits refunded automatically
 ```
 
-Also, for short estimates under 1 minute, show seconds instead of "~1 min":
-```
-const totalEstSeconds = totalImages * estimatePerImage;
-if (totalEstSeconds < 60) → show "Est. ~X-Y seconds"
-else → show "Est. ~X-Y min"
-```
+The "Credits refunded automatically" text will be styled as a muted, smaller line (e.g., `text-xs text-muted-foreground`) so it's informative but not noisy. This applies to all failed states, since the backend always refunds on failure.
+
+## Summary
+- 1 file, ~3 lines added
+- Users see "Credits refunded automatically" on every failed activity card
+- No backend changes needed — refunds already happen
 
