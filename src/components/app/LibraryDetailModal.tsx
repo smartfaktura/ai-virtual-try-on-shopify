@@ -198,7 +198,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                   onClick={handleDownload}
                   className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
-                  <Download className="w-4 h-4 mr-2" /> Download Image
+                  <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
                 </Button>
 
                 {isUpscaling ? (
