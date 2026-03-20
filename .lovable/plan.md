@@ -1,20 +1,22 @@
 
 
-# Add Social Links to Footer
+# Fix Remaining Audit Issues (3 items)
 
-## Changes — `src/components/landing/LandingFooter.tsx`
+## 1. Add 5 missing feature pages to sitemap
+**File:** `public/sitemap.xml`
+Add URLs for: `/features/ai-models-backgrounds`, `/features/shopify-image-generator`, `/features/upscale`, `/features/perspectives`, `/features/real-estate-staging`
 
-1. Import `Instagram` and `Facebook` icons from `lucide-react`
-2. Add Instagram and Facebook icon links below the brand description text (in the brand column)
-3. Links open in new tab with `target="_blank"` and `rel="noopener noreferrer"`
-4. Style: muted foreground icons that brighten on hover, displayed as a horizontal row with a small gap
+## 2. Fix robots.txt mobile upload path
+**File:** `public/robots.txt`
+Change `Disallow: /mobile-upload` → `Disallow: /upload/` (in all 3 user-agent blocks)
 
-### Placement
-Below the brand tagline paragraph, before the link columns — keeps social links visually grouped with the brand identity.
+## 3. Fix hardcoded credits in Onboarding Resend sync
+**File:** `src/pages/Onboarding.tsx` line 117
+Change `credits_balance: 20` → `credits_balance: 60`
 
-### URLs
-- Instagram: `https://www.instagram.com/vovv.ai`
-- Facebook: `https://www.facebook.com/vovvaistudio/`
+## 4. Fix resendTimer initial value
+**File:** `src/pages/Auth.tsx` line 38
+Change `useState(60)` → `useState(30)`
 
-Single file, ~10 lines added.
+4 small edits across 4 files.
 
