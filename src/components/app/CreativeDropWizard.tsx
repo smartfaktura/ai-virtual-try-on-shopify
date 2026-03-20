@@ -168,12 +168,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(initWfId);
 
   // Flat config state (for the single selected workflow)
-  const [sceneSelections, setSceneSelections] = useState<Set<string>>(() => {
-    if (initWfId && initialData?.workflowSceneSelections?.[initWfId]) {
-      return new Set(initialData.workflowSceneSelections[initWfId]);
-    }
-    return new Set();
-  });
+  // sceneSelections removed — scene selection is now purely through poseSelections (Scene Library)
   const [modelSelections, setModelSelections] = useState<string[]>(() => {
     if (initWfId && initialData?.workflowModelSelections?.[initWfId]) {
       return initialData.workflowModelSelections[initWfId];
