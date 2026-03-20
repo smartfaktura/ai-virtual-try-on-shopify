@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { TryOnPreview } from '@/components/app/TryOnPreview';
-import { FramingSelector } from '@/components/app/FramingSelector';
-import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
+import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
+import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import type { Product, ScratchUpload, ModelProfile, TryOnPose, AspectRatio, ImageQuality, FramingOption } from '@/types';
 
 interface TryOnSettingsPanelProps {
