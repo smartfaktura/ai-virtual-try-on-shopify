@@ -130,6 +130,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const creditCtx = useCredits();
+  const insufficientCredits = profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance;
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
