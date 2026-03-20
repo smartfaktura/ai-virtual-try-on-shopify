@@ -359,7 +359,10 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                       const next = new Set(prev);
                       if (next.has(i)) { next.delete(i); }
                       else {
-                        const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : PAID_SCENE_LIMIT;
+                        if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
+                          toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
+                          return prev;
+                        }
                         if (!isFreeUser && isFlatLay && next.size >= FLAT_LAY_SURFACE_LIMIT) {
                           toast.error(`Maximum ${FLAT_LAY_SURFACE_LIMIT} surfaces per generation.`);
                           return prev;
