@@ -779,7 +779,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               <p className="text-xs text-muted-foreground">
                 {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                 {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
-                {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
+                {angleMultiplier > 1 ? ` × ${angleMultiplier} angles` : ''}
+                {aspectRatioCount > 1 ? ` × ${aspectRatioCount} sizes` : ''}
+                {framingCount > 1 ? ` × ${framingCount} framings` : ''}
                 {' '}× 6 credits
               </p>
             </div>
