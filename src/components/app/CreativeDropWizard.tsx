@@ -348,7 +348,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }
     setSelectedWorkflowId(wfId);
     // Reset config for new workflow
-    setSceneSelections(new Set());
+    // sceneSelections removed
     setModelSelections([]);
     setPoseSelections([]);
     setCustomSettings({});
