@@ -331,7 +331,7 @@ export function DropCard(props: Props) {
             </div>
           ) : (
             <div className={cn(
-              'w-[68px] h-[68px] rounded-xl flex items-center justify-center flex-shrink-0',
+              'w-[56px] h-[56px] sm:w-[68px] sm:h-[68px] rounded-xl flex items-center justify-center flex-shrink-0',
               drop.status === 'generating' ? 'bg-primary/5' : 'bg-accent'
             )}>
               <StatusIcon className={cn(
