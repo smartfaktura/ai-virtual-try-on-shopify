@@ -599,14 +599,13 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           <Progress value={progressPercent} className="h-1.5 mb-3" />
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">{getStepLabel(step)}</span>
-          {isConfigStep && configStepCount > 1 && (
+        {isConfigStep && configStepCount > 1 && (
+          <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-[10px] rounded-full px-2">
               {configWorkflowIndex + 1} of {configStepCount} workflows
             </Badge>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <Separator />
