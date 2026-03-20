@@ -515,7 +515,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         name,
         theme,
         theme_notes: themeNotes,
-        frequency: deliveryMode === 'now' ? 'one-time' : frequency,
+        frequency: deliveryMode === 'now' || frequency === 'none' ? 'one-time' : frequency,
         products_scope: 'selected',
         selected_product_ids: Array.from(selectedProductIds),
         workflow_ids: [selectedWorkflowId],
