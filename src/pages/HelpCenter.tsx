@@ -12,7 +12,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do I create my first product image?',
-        a: 'Upload your product photo in the Products section, then head to Workflows to choose a style. Select your product, pick a workflow (like Virtual Try-On, Product Listing, or Flat Lay), and hit Generate. Your images will be ready in about 60 seconds.',
+        a: 'Upload your product photo in the Products section, then head to Workflows. Choose from seven core workflows — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Picture Perspectives — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format.',
       },
       {
         q: 'What image formats are supported for uploads?',
@@ -23,8 +23,12 @@ const faqCategories = [
         a: 'No — our AI handles background removal automatically. However, starting with a clean, well-lit product photo on a simple background will give you the best results.',
       },
       {
+        q: 'What is Freestyle mode?',
+        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision. Freestyle costs 6 credits per image.',
+      },
+      {
         q: 'What is a Brand Profile and why should I create one?',
-        a: 'A Brand Profile teaches our AI your visual identity — your preferred colors, lighting style, scenes, and tone. Once set up, every image you generate will automatically align with your brand aesthetic. Create one under Brand Profiles in the sidebar.',
+        a: 'A Brand Profile teaches our AI your visual identity — your preferred colors, lighting style, scenes, tone, color temperature, and composition rules. Once set up, every image you generate across Workflows and Freestyle will automatically align with your brand aesthetic. Create one under Brand Profiles in the sidebar.',
       },
     ],
   },
@@ -33,11 +37,15 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each image generation costs credits based on the mode you use. Freestyle costs 4 credits per image (or 6 credits when using a model or scene). Workflows and Virtual Try-On cost 6 credits per image. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
+        a: 'Each generation costs credits based on the mode: Workflows and Freestyle cost 6 credits per image. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
       },
       {
         q: 'What happens if I run out of credits?',
-        a: 'You\'ll see a notification when your credits are running low. You can purchase additional credit packs from Settings > Plans & Credits at any time. Unused monthly credits roll over for one billing cycle.',
+        a: 'You\'ll see a notification when your credits are running low. You can purchase additional credit packs from Settings > Plans & Credits at any time. Monthly plan credits reset each billing cycle and do not roll over, but top-up credit packs never expire.',
+      },
+      {
+        q: 'Is there a free trial?',
+        a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Workflow or try Freestyle and see the quality before committing to a plan.',
       },
       {
         q: 'Can I change my plan?',
@@ -45,7 +53,7 @@ const faqCategories = [
       },
       {
         q: 'Do you offer refunds?',
-        a: 'We offer refunds for unused credit packs purchased within the last 14 days. Monthly plan charges are non-refundable, but you can cancel anytime to prevent future charges. Contact hello@vovv.ai for refund requests.',
+        a: 'We offer refunds for unused credit packs purchased within the last 14 days. Monthly plan charges are non-refundable, but you can cancel anytime to prevent future charges. There are no long-term contracts or cancellation fees. Contact hello@vovv.ai for refund requests.',
       },
     ],
   },
@@ -53,12 +61,16 @@ const faqCategories = [
     name: 'Workflows & Generation',
     questions: [
       {
-        q: 'What\'s the difference between Workflows and Freestyle?',
-        a: 'Workflows are pre-configured generation pipelines optimized for specific use cases (Lifestyle, Studio, Social Media, etc.). Freestyle gives you full control with a text prompt — describe exactly what you want and our AI will create it.',
+        q: 'What Workflows are available?',
+        a: 'VOVV.AI offers seven core Workflows, each pre-configured with the right prompts, aspect ratios, and model settings: Virtual Try-On (clothing on AI models), Product Listing (clean e-commerce shots), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Picture Perspectives (multi-angle product sets).',
       },
       {
         q: 'How does Virtual Try-On work?',
-        a: 'Virtual Try-On places your clothing product on an AI model. Upload your garment image, select a model from our diverse library (40+ models across body types, ethnicities, and ages), choose a pose and scene, and generate. Works best with tops, dresses, and outerwear.',
+        a: 'Upload a clothing item and choose from our library of 40+ diverse AI models across different ethnicities, body types, and ages. Select a pose, framing, and scene, and the AI generates realistic photos of the model wearing your product. Works best with tops, dresses, and outerwear. Costs 6 credits per image.',
+      },
+      {
+        q: 'What is Picture Perspectives?',
+        a: 'Picture Perspectives generates a cohesive set of branded angles — front, back, sides, and close-ups — from a single source image. The AI detects the environment and lighting from your source photo and ensures all angles match. Costs 6 credits per angle. You select which perspectives you want before generating.',
       },
       {
         q: 'Can I generate images in bulk?',
@@ -66,7 +78,11 @@ const faqCategories = [
       },
       {
         q: 'What are Creative Drops?',
-        a: 'Creative Drops are automated monthly content deliveries. Set up a schedule with your preferred workflows and products, and VOVV.AI will generate fresh visual content for you every month — like having a studio on retainer.',
+        a: 'Creative Drops are automated, recurring visual runs. Choose your products, select your Workflows, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+      },
+      {
+        q: 'Can I upscale my images?',
+        a: 'Yes — the Upscale feature lets you enhance any generated image to higher resolution. You can access it from the Library by selecting an image and choosing Upscale. Great for hero banners, print materials, and large-format displays.',
       },
     ],
   },
@@ -74,16 +90,16 @@ const faqCategories = [
     name: 'Image Quality',
     questions: [
       {
+        q: 'What resolution and format are generated images?',
+        a: 'All generated images are output at 2K resolution in PNG format by default. We support common aspect ratios (1:1, 4:5, 16:9, 9:16) suitable for e-commerce listings, social media, ads, and print. You can also upscale images for even higher resolution.',
+      },
+      {
         q: 'What\'s the difference between Standard and High Quality?',
-        a: 'Standard uses fast generation suitable for social media and web listings. High Quality uses a more advanced model for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. Both quality levels cost the same number of credits. You can also upscale images from the Library for even higher resolution.',
+        a: 'Standard uses fast generation suitable for social media and web listings. High Quality uses a more advanced model for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. Both quality levels cost the same number of credits.',
       },
       {
         q: 'My generated images don\'t look right. What can I do?',
-        a: 'Try these tips: 1) Use a higher-quality source image with good lighting. 2) Create a Brand Profile to guide the AI\'s style decisions. 3) Use negative prompts to exclude unwanted elements. 4) Try different workflows — some work better for certain product types.',
-      },
-      {
-        q: 'Can I edit or refine generated images?',
-        a: 'Currently, you can regenerate with different settings or prompts. We\'re working on in-app editing tools including inpainting and outpainting. For now, you can download your images and edit them in your preferred tool.',
+        a: 'Try these tips: 1) Use a higher-quality source image with good lighting. 2) Create a Brand Profile to guide the AI\'s style decisions. 3) Use negative prompts to exclude unwanted elements. 4) Try different workflows — some work better for certain product types. 5) Try Freestyle mode for full creative control with a custom prompt.',
       },
     ],
   },
@@ -100,7 +116,7 @@ const faqCategories = [
       },
       {
         q: 'How do I export my generated images?',
-        a: 'You can download individual images from the Library or Jobs view. Bulk export is available — select multiple images and download them as a ZIP file. You can also set default export preferences (format, naming convention) in Settings.',
+        a: 'You can download individual images from the Library or Jobs view. Bulk export is available — select multiple images and download them as a ZIP file. All images are output in PNG format at 2K resolution by default.',
       },
       {
         q: 'Can I use generated images commercially?',
@@ -109,7 +125,6 @@ const faqCategories = [
     ],
   },
 ];
-
 export default function HelpCenter() {
   const [search, setSearch] = useState('');
 
