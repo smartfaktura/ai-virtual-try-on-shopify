@@ -43,7 +43,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
-const opt = (url: string) => getOptimizedUrl(url, { width: 120, quality: 60 });
+const opt = (url: string) => getOptimizedUrl(url, { width: 200, quality: 60 });
 
 const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
   'Virtual Try-On Set': opt(getLandingAssetUrl('workflows/workflow-tryon-result.png')),
