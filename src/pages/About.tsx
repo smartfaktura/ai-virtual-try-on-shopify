@@ -1,10 +1,11 @@
 import { PageLayout } from '@/components/landing/PageLayout';
-import { Users, Lightbulb, Heart, Zap } from 'lucide-react';
+import { Users, Lightbulb, Heart, Zap, Linkedin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
+import founderImg from '@/assets/founder-tomas.jpg';
 
 const values = [
   {
@@ -27,29 +28,27 @@ const values = [
   },
 ];
 
-const stats = [
-  { value: '2M+', label: 'Images Generated' },
-  { value: '5,000+', label: 'Brands Served' },
-  { value: '40+', label: 'AI Models Available' },
-  { value: '99.9%', label: 'Platform Uptime' },
-];
-
 export default function About() {
   return (
     <PageLayout>
-      <SEOHead title="About VOVV AI — The Team Behind AI Product Photography" description="Meet the team building the future of e-commerce visual content with AI-powered photography and automation." canonical={`${SITE_URL}/about`} />
+      <SEOHead
+        title="About VOVV AI — The Team Behind AI Product Photography"
+        description="Meet the team building the future of e-commerce visual content with AI-powered photography and automation."
+        canonical={`${SITE_URL}/about`}
+      />
+
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Users className="w-4 h-4" />
-            Our Story
+            About VOVV.AI
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-6">
-            We're eliminating the bottleneck of product photography
+            Studio-quality product photography, powered by AI
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            VOVV.AI was founded with a simple belief: every e-commerce brand deserves stunning product visuals — without the cost, complexity, or delays of traditional photoshoots.
+            VOVV.AI is an AI-powered visual studio for e-commerce brands. Upload a product photo, generate professional images across workflows — from virtual try-on to lifestyle scenes — in seconds.
           </p>
         </div>
       </section>
@@ -59,43 +58,29 @@ export default function About() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Our Mission</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-4">The Problem</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 Traditional product photography is expensive, slow, and doesn't scale. A single lifestyle shoot can cost thousands and take weeks — and you still only get a handful of images.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                We built VOVV.AI to change that. Our AI-powered visual studio generates professional product photography in minutes — on-model shots, lifestyle scenes, flat lays, and more. All from a single product image.
+                Brands need fresh content constantly — for listings, ads, social, and seasonal campaigns. The old model can't keep up.
               </p>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Our Vision</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-4">Our Approach</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                We envision a world where visual content creation is instant, unlimited, and accessible to brands of every size.
+                We built VOVV.AI to make professional product visuals accessible to every brand, regardless of size or budget.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                From solo Etsy sellers to global fashion houses, VOVV.AI is the creative engine that powers the next generation of e-commerce imagery.
+                One product image is all it takes. Our AI workflows handle on-model shots, lifestyle scenes, flat lays, upscaling, and more — delivering studio-quality results in minutes.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
       {/* Values */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-foreground text-center mb-10">What Drives Us</h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -114,13 +99,13 @@ export default function About() {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="py-20">
+      {/* AI Team */}
+      <section className="py-20 bg-muted/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-3">Meet the Team</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-3">Meet the AI Team</h2>
             <p className="text-muted-foreground">
-              A diverse crew of engineers, designers, and creatives building the future of product imagery.
+              A diverse crew of AI-powered specialists — each trained to handle a different aspect of product imagery.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
@@ -135,6 +120,32 @@ export default function About() {
                 </div>
               </TeamAvatarHoverCard>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Founder */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-border mb-4">
+              <img
+                src={founderImg}
+                alt="Tomas Simkus"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">Tomas Simkus</h3>
+            <p className="text-sm text-muted-foreground mb-3">Founder</p>
+            <a
+              href="https://www.linkedin.com/in/tomassimkusprofile/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+              <Linkedin className="w-4 h-4" />
+              LinkedIn
+            </a>
           </div>
         </div>
       </section>
