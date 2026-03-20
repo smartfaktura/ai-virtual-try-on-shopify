@@ -1121,8 +1121,93 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* ── Scenes (full library, grouped by category) ── */}
-                    {(needsModels || showPosePicker) && !isMixMode && (
+                    {/* ── Scenes: Workflow Variations (non-try-on) ── */}
+                    {useVariationsAsScenes && !isMixMode && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="section-label">{isFlatLay ? 'Surfaces' : isPerspectives ? 'Angles' : 'Scenes'}</p>
+                          {selectedVariationIndices.size > 0 && (
+                            <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSelectedVariationIndices(new Set())}>
+                              Clear ({selectedVariationIndices.size})
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Mirror Selfie Tips */}
+                        {isMirrorSelfie && (
+                          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
+                            <Smartphone className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <p className="font-semibold text-foreground">Mirror Selfie Composition</p>
+                              <ul className="space-y-0.5 list-disc list-inside">
+                                <li>Model appears holding a smartphone, capturing their reflection</li>
+                                <li>Each scene places your product in a different mirror setting</li>
+                                <li>4:5 portrait recommended for Instagram</li>
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className={cn(
+                          "grid gap-3",
+                          (isMirrorSelfie || isSelfieUgc) ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+                        )}>
+                          {variations.map((v: any, i: number) => {
+                            const isSelected = selectedVariationIndices.has(i);
+                            const hasPreview = !!v.preview_url;
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  setSelectedVariationIndices(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(i)) next.delete(i);
+                                    else next.add(i);
+                                    return next;
+                                  });
+                                }}
+                                className={cn(
+                                  'relative rounded-xl overflow-hidden border-2 transition-all text-left',
+                                  isSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                                )}
+                              >
+                                <div className={cn("relative", (isMirrorSelfie || isSelfieUgc) ? "aspect-[9/16]" : "aspect-square")}>
+                                  {hasPreview ? (
+                                    <ShimmerImage
+                                      src={getOptimizedUrl(v.preview_url, { quality: 60 })}
+                                      alt={v.label}
+                                      className="w-full h-full object-cover"
+                                      aspectRatio={(isMirrorSelfie || isSelfieUgc) ? "9/16" : "1/1"}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                                      <Package className="w-8 h-8 text-muted-foreground/40" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
+                                    <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
+                                    {v.category && <span className="text-[9px] text-white/60 font-medium">{v.category}</span>}
+                                  </div>
+                                  {isSelected && (
+                                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                      <Check className="w-3 h-3 text-primary-foreground" />
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedVariationIndices.size > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {selectedVariationIndices.size} {isFlatLay ? 'surface' : isPerspectives ? 'angle' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''} selected
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── Scenes: Full Library (Try-On only) ── */}
+                    {!useVariationsAsScenes && (needsModels || showPosePicker) && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Scenes</p>
@@ -1184,6 +1269,34 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
+                    {/* ── Product Listing: Product Angles ── */}
+                    {isProductListing && !isMixMode && (
+                      <div className="space-y-3">
+                        <p className="section-label">Product Angles</p>
+                        <p className="text-xs text-muted-foreground">Generate multiple angles per product for a complete listing</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {([
+                            { key: 'front' as const, label: 'Front Only', multiplier: '×1' },
+                            { key: 'front-side' as const, label: 'Front + Side', multiplier: '×2' },
+                            { key: 'front-back' as const, label: 'Front + Back', multiplier: '×2' },
+                            { key: 'all' as const, label: 'All Angles', multiplier: '×3' },
+                          ]).map(opt => (
+                            <button
+                              key={opt.key}
+                              onClick={() => setProductAngle(opt.key)}
+                              className={cn(
+                                'px-3 py-3 rounded-xl border-2 text-left transition-all',
+                                productAngle === opt.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                              )}
+                            >
+                              <p className={cn('text-sm font-medium', productAngle === opt.key && 'text-primary')}>{opt.label}</p>
+                              <Badge variant="secondary" className="text-[10px] rounded-full mt-1">{opt.multiplier}</Badge>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* ── Custom Settings ── */}
                     {wfCustomSettings.length > 0 && (
                       <div className="space-y-4">
@@ -1215,7 +1328,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     )}
 
                     {/* ── UGC Mood ── */}
-                    {(wf.name.toLowerCase().includes('selfie') || wf.name.toLowerCase().includes('ugc')) && (
+                    {(isSelfieUgc || isMirrorSelfie) && (
                       <div className="space-y-3">
                         <p className="section-label">UGC Mood</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1248,8 +1361,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* ── Flat Lay Aesthetic ── */}
-                    {wf.name.toLowerCase().includes('flat lay') && (
+                    {/* ── Flat Lay: Composition & Aesthetics ── */}
+                    {isFlatLay && (
                       <>
                         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-muted/40 border border-border/50">
                           <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -1258,34 +1371,73 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             <p>Oversized items (furniture, appliances) may not render naturally in a top-down arrangement.</p>
                           </div>
                         </div>
+
+                        {/* Composition Style */}
                         <div className="space-y-3">
-                          <p className="section-label">Aesthetic Style</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {[
-                              { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
-                              { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
-                              { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
-                              { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
-                              { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
-                              { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
-                            ].map(aesthetic => {
-                              const isSelected = customSettings['Aesthetic'] === aesthetic.id;
-                              return (
-                                <button
-                                  key={aesthetic.id}
-                                  onClick={() => setCustomSettings(prev => ({ ...prev, Aesthetic: aesthetic.id }))}
-                                  className={cn(
-                                    'px-4 py-3 rounded-xl border-2 text-left transition-all',
-                                    isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
-                                  )}
-                                >
-                                  <p className={cn('text-sm font-medium', isSelected && 'text-primary')}>{aesthetic.label}</p>
-                                  <p className="text-[10px] text-muted-foreground">{aesthetic.hint}</p>
-                                </button>
-                              );
-                            })}
+                          <p className="section-label">Composition Style</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {([
+                              { key: 'clean' as const, label: 'Products Only', desc: 'Clean layout with just your products' },
+                              { key: 'decorated' as const, label: 'Add Styling Props', desc: 'Include decorative elements around products' },
+                            ]).map(opt => (
+                              <button
+                                key={opt.key}
+                                onClick={() => {
+                                  setFlatLayPropStyle(opt.key);
+                                  if (opt.key === 'clean') { setSelectedAesthetics([]); setStylingNotes(''); }
+                                }}
+                                className={cn(
+                                  'p-4 rounded-xl border-2 text-left transition-all',
+                                  flatLayPropStyle === opt.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                                )}
+                              >
+                                <p className={cn('text-sm font-semibold', flatLayPropStyle === opt.key && 'text-primary')}>{opt.label}</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">{opt.desc}</p>
+                              </button>
+                            ))}
                           </div>
                         </div>
+
+                        {/* Aesthetic quick-chips — only when decorated */}
+                        {flatLayPropStyle === 'decorated' && (
+                          <div className="space-y-3">
+                            <p className="section-label">Styling & Aesthetics</p>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
+                                { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
+                                { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
+                                { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
+                                { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
+                                { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
+                              ].map(aesthetic => {
+                                const isAesthActive = selectedAesthetics.includes(aesthetic.id);
+                                return (
+                                  <button
+                                    key={aesthetic.id}
+                                    onClick={() => setSelectedAesthetics(prev =>
+                                      isAesthActive ? prev.filter(x => x !== aesthetic.id) : [...prev, aesthetic.id]
+                                    )}
+                                    className={cn(
+                                      'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                                      isAesthActive ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground hover:border-primary/40'
+                                    )}
+                                    title={aesthetic.hint}
+                                  >
+                                    {aesthetic.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <Textarea
+                              placeholder="Styling notes: e.g. eucalyptus leaves, silk ribbon, warm tones..."
+                              value={stylingNotes}
+                              onChange={e => setStylingNotes(e.target.value)}
+                              rows={2}
+                              className="rounded-xl text-sm"
+                            />
+                          </div>
+                        )}
                       </>
                     )}
 
