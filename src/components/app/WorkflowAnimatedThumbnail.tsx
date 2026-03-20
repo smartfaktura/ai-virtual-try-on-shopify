@@ -666,9 +666,6 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
           objectPosition: scene.objectPosition ?? 'center',
           transform: 'translateZ(0)',
         }}
-        style={{
-          transform: 'translateZ(0)',
-        }}
         onLoad={() => setBgLoaded(true)}
       />
 
