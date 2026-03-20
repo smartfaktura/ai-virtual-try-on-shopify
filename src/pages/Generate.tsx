@@ -3923,8 +3923,12 @@ export default function Generate() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => {
-                    setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
-                  }}>Select All</Button>
+                    if (selectedForPublish.size === generatedImages.length) {
+                      setSelectedForPublish(new Set());
+                    } else {
+                      setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
+                    }
+                  }}>{selectedForPublish.size === generatedImages.length ? 'Deselect All' : 'Select All'}</Button>
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={handleDownloadAll}>
                     <Download className="w-3.5 h-3.5 mr-1.5" /> Download All
                   </Button>
