@@ -273,6 +273,21 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
 
+  const allModels = [
+    ...mockModelItems,
+    ...(customModels || []).map((m: any) => ({
+      id: m.id,
+      name: m.name,
+      image_url: m.image_url,
+    })),
+  ];
+
+  // Selected workflow object
+  const selectedWorkflow = useMemo(
+    () => workflows.find(w => w.id === selectedWorkflowId) || null,
+    [workflows, selectedWorkflowId]
+  );
+
   const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
   const PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor'];
 
@@ -295,20 +310,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     return order.length > 0 ? order : Object.keys(poseCategoryLabels);
   }, [allScenePoses, deriveCategoryOrder]);
 
-  const allModels = [
-    ...mockModelItems,
-    ...(customModels || []).map((m: any) => ({
-      id: m.id,
-      name: m.name,
-      image_url: m.image_url,
-    })),
-  ];
-
-  // Selected workflow object
-  const selectedWorkflow = useMemo(
-    () => workflows.find(w => w.id === selectedWorkflowId) || null,
-    [workflows, selectedWorkflowId]
-  );
 
   const progressPercent = TOTAL_STEPS > 1 ? Math.round((step / (TOTAL_STEPS - 1)) * 100) : 0;
 
