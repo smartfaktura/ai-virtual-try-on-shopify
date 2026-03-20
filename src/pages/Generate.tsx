@@ -1204,43 +1204,66 @@ export default function Generate() {
     const effectiveFraming = framingOverride !== undefined ? framingOverride : (selectedFramings.has('auto') ? null : (selectedFramings.size > 0 ? Array.from(selectedFramings)[0] as FramingOption : framing));
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        jobType: 'tryon',
-        payload: {
-          product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
-          model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
-          pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
-          aspectRatio: effectiveRatio, imageCount: parseInt(imageCount),
-          framing: effectiveFraming || undefined,
-          workflow_id: activeWorkflow?.id || null,
-          workflow_name: activeWorkflow?.name || null,
-          workflow_slug: activeWorkflow?.slug || null,
-          product_id: userProducts.some(up => up.id === product.id) ? product.id : null,
-          product_name: product.title,
-          brand_profile_id: selectedBrandProfileId || null,
-        },
-        imageCount: parseInt(imageCount),
-        quality,
-        hasModel: true,
-        hasScene: true,
-      }),
-    });
+    const maxRetries = 4;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            jobType: 'tryon',
+            payload: {
+              product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
+              model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
+              pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
+              aspectRatio: effectiveRatio, imageCount: parseInt(imageCount),
+              framing: effectiveFraming || undefined,
+              workflow_id: activeWorkflow?.id || null,
+              workflow_name: activeWorkflow?.name || null,
+              workflow_slug: activeWorkflow?.slug || null,
+              product_id: userProducts.some(up => up.id === product.id) ? product.id : null,
+              product_name: product.title,
+              brand_profile_id: selectedBrandProfileId || null,
+            },
+            imageCount: parseInt(imageCount),
+            quality,
+            hasModel: true,
+            hasScene: true,
+            skipWake: true,
+          }),
+        });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      if (response.status === 402) {
-        toast.error(`Not enough credits for "${product.title}"`);
-      } else if (response.status === 429) {
-        toast.error(err.message || `Rate limit reached for "${product.title}"`);
-      } else {
-        toast.error(err.error || `Failed to queue "${product.title}"`);
+        if (response.ok) return response.json();
+
+        const err = await response.json().catch(() => ({}));
+        const errMsg = String(err.error || err.message || '');
+        const isRateLimit = response.status === 429 || response.status === 502 || response.status === 503
+          || errMsg.toLowerCase().includes('too many requests')
+          || errMsg.toLowerCase().includes('burst')
+          || errMsg.toLowerCase().includes('concurrent');
+
+        if (isRateLimit && attempt < maxRetries - 1) {
+          console.warn(`[enqueue] Rate limited for "${product.title}", retry ${attempt + 1}/${maxRetries - 1}`);
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          continue;
+        }
+
+        if (response.status === 402 && !isRateLimit) {
+          toast.error(`Not enough credits for "${product.title}"`);
+        } else if (!isRateLimit) {
+          toast.error(err.error || `Failed to queue "${product.title}"`);
+        }
+        return null;
+      } catch (fetchErr) {
+        if (attempt < maxRetries - 1) {
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          continue;
+        }
+        console.error(`[enqueue] Network error for "${product.title}":`, fetchErr);
+        return null;
       }
-      return null;
     }
-    return response.json();
+    return null;
   };
 
   const handleTryOnConfirmGenerate = async () => {
