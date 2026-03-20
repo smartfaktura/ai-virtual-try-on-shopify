@@ -436,10 +436,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const genConfig = selectedWorkflow?.generation_config as any;
       const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
 
-      const selectedLabels = Array.from(sceneSelections);
-      const selectedVariationIndices = selectedLabels
-        .map(label => variations.findIndex(v => v.label === label))
-        .filter(i => i >= 0);
+      const selectedLabels: string[] = [];
+      const selectedVariationIndices: number[] = [];
 
       const resolvedModels = modelSelections.map(mId => {
         const m = allModels.find(am => am.id === mId);
