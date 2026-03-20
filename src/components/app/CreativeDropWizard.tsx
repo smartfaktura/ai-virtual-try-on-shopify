@@ -369,14 +369,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       if (!selectedWorkflowId || !selectedWorkflow) return false;
       const genConfig = selectedWorkflow.generation_config as any;
       const uiConfig = genConfig?.ui_config;
-      const variations = genConfig?.variation_strategy?.variations || [];
-      if (variations.length > 0) {
-        if (!isRandomScenesFlag && sceneSelections.size === 0) return false;
-      }
-      if (selectedWorkflow.uses_tryon || uiConfig?.show_model_picker) {
-        if (!isRandomModelsFlag && modelSelections.length === 0) return false;
-      }
-      if (imageCount <= 0) return false;
+      const needsModels = selectedWorkflow.uses_tryon || uiConfig?.show_model_picker;
+      if (campaignMode === 'curated' && needsModels && modelSelections.length === 0) return false;
+      if (formats.length === 0) return false;
       return true;
     }
     if (step === 3) return deliveryMode === 'now' || !!startDate;
