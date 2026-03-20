@@ -1305,7 +1305,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </div>
                             {modelSelections.length > 0 && (
                               <p className="text-xs text-muted-foreground">
-                                {imageCount} images distributed across {modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''} (~{Math.round(imageCount / modelSelections.length)} each)
+                                {modelSelections.length} model{modelSelections.length !== 1 ? 's' : ''} selected — each model generates with every selected scene
                               </p>
                             )}
                           </>
