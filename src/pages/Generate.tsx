@@ -1207,7 +1207,7 @@ export default function Generate() {
     const effectiveFraming = framingOverride !== undefined ? framingOverride : (selectedFramings.has('auto') ? null : (selectedFramings.size > 0 ? Array.from(selectedFramings)[0] as FramingOption : framing));
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const maxRetries = 4;
+    const maxRetries = 6;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
