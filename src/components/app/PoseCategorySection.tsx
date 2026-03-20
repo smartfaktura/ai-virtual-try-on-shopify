@@ -26,7 +26,7 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   outdoor: { title: 'Outdoor', recommendation: 'Best for lifestyle & seasonal campaigns' },
 };
 
-export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender, maxSelectable }: PoseCategorySectionProps) {
+export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender }: PoseCategorySectionProps) {
   const info = categoryInfo[category];
   if (poses.length === 0) return null;
 
