@@ -189,7 +189,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       <img
         src={backgrounds[current]}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-top"
+        className="absolute inset-0 w-full h-full object-cover object-center"
         onLoad={() => {
           if (!initialLoaded) setInitialLoaded(true);
         }}
