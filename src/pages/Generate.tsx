@@ -1297,11 +1297,16 @@ export default function Generate() {
 
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
+      let enqueueCount = 0;
       for (const product of productQueue) {
         for (const model of modelsToGenerate) {
           for (const pose of posesToGenerate) {
             for (const ratioVal of ratiosToGen) {
               for (const framingVal of framingsToGen) {
+                // Stagger requests to avoid platform rate limits
+                if (enqueueCount > 0) {
+                  await new Promise(r => setTimeout(r, 300));
+                }
                 const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
                 if (result) {
                   jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
@@ -1312,10 +1317,21 @@ export default function Generate() {
                     job_type: 'tryon', quality, imageCount: parseInt(imageCount),
                   });
                 }
+                enqueueCount++;
               }
             }
           }
         }
+      }
+
+      // Single wake to process-queue after all jobs are enqueued
+      if (jobMap.size > 0) {
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ jobType: 'tryon', payload: {}, imageCount: 0, wakeOnly: true }),
+        }).catch(() => {});
       }
 
       if (jobMap.size === 0) {
