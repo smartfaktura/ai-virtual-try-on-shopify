@@ -140,7 +140,7 @@ export function DropCard(props: Props) {
       <>
         <Card className={cn(
           'rounded-2xl transition-all',
-          isPaused && 'opacity-50'
+          (isPaused || isCompleted) && 'opacity-60'
         )}>
           <CardContent className="p-5 space-y-4">
             {/* Top row: name + status + actions */}
