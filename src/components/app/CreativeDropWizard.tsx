@@ -27,7 +27,7 @@ import {
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
-  Settings2, Wallet, Users, Calculator,
+  Settings2, Wallet, Users, Calculator, Smartphone, Layers,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -205,7 +205,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [customImageCountStr, setCustomImageCountStr] = useState('');
   const [campaignMode, setCampaignMode] = useState<'curated' | 'mix'>('curated');
   const [selectedFramings, setSelectedFramings] = useState<Set<string>>(new Set(['auto']));
-
+  const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
+  const [flatLayPropStyle, setFlatLayPropStyle] = useState<'clean' | 'decorated'>('clean');
+  const [stylingNotes, setStylingNotes] = useState('');
+  const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
+  const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
   // Freestyle
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
   const [freestylePrompts, setFreestylePrompts] = useState<string[]>(
@@ -288,6 +292,15 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     [workflows, selectedWorkflowId]
   );
 
+  // Workflow type detection
+  const isFlatLay = selectedWorkflow?.name?.toLowerCase().includes('flat lay') ?? false;
+  const isMirrorSelfie = selectedWorkflow?.name === 'Mirror Selfie Set';
+  const isSelfieUgc = !isMirrorSelfie && (selectedWorkflow?.name?.toLowerCase().includes('selfie') || selectedWorkflow?.name?.toLowerCase().includes('ugc')) || false;
+  const isPerspectives = selectedWorkflow?.name?.toLowerCase().includes('perspectives') ?? false;
+  const isProductListing = selectedWorkflow?.name?.toLowerCase().includes('product listing') ?? false;
+  const hasVariations = !!((selectedWorkflow?.generation_config as any)?.variation_strategy?.variations?.length);
+  const useVariationsAsScenes = hasVariations && !selectedWorkflow?.uses_tryon;
+
   const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
   const PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor'];
 
@@ -319,12 +332,17 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     if (!selectedWorkflow) return imageCount;
     const genConfig = selectedWorkflow.generation_config as any;
     const needsModels = selectedWorkflow.uses_tryon || genConfig?.ui_config?.show_model_picker;
-    const effectiveScenes = Math.max(poseSelections.length, 1);
+    // For workflows with variations (non-try-on), use variation indices as scene count
+    const effectiveScenes = useVariationsAsScenes
+      ? Math.max(selectedVariationIndices.size, 1)
+      : Math.max(poseSelections.length, 1);
     const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
     const formatCount = Math.max(formats.length, 1);
     const framingCount = selectedFramings.has('auto') ? 1 : Math.max(selectedFramings.size, 1);
-    return effectiveScenes * modelCount * formatCount * framingCount;
-  }, [campaignMode, imageCount, selectedWorkflow, poseSelections.length, modelSelections.length, formats.length, selectedFramings]);
+    // Product listing angle multiplier
+    const angleMultiplier = isProductListing ? (productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2) : 1;
+    return effectiveScenes * modelCount * formatCount * framingCount * angleMultiplier;
+  }, [campaignMode, imageCount, selectedWorkflow, poseSelections.length, modelSelections.length, formats.length, selectedFramings, selectedVariationIndices.size, useVariationsAsScenes, isProductListing, productAngle]);
 
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = selectedWorkflow ? [{
@@ -371,6 +389,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setIsRandomScenesFlag(false);
     setCustomImageCountStr('');
     setSelectedFramings(new Set(['auto']));
+    setSelectedVariationIndices(new Set());
+    setFlatLayPropStyle('clean');
+    setStylingNotes('');
+    setSelectedAesthetics([]);
+    setProductAngle('front');
     markDirty();
   };
 
@@ -446,11 +469,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         'Styling': 'styling_notes',
       };
 
-      const genConfig = selectedWorkflow?.generation_config as any;
-      const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
+      const saveGenConfig = selectedWorkflow?.generation_config as any;
+      const saveVariations: { label: string }[] = saveGenConfig?.variation_strategy?.variations || [];
 
-      const selectedLabels: string[] = [];
-      const selectedVariationIndices: number[] = [];
+      // Build selected labels from variation indices
+      const selectedLabels: string[] = Array.from(selectedVariationIndices).map(i => saveVariations[i]?.label).filter(Boolean);
+      const selectedVarIndicesArr: number[] = Array.from(selectedVariationIndices);
 
       const resolvedModels = modelSelections.map(mId => {
         const m = allModels.find(am => am.id === mId);
@@ -468,7 +492,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           aspect_ratios: formats,
           aspect_ratio: formats[0],
           selected_scenes: isRandomScenesFlag ? ['__random__'] : selectedLabels,
-          selected_variation_indices: isRandomScenesFlag ? [] : selectedVariationIndices,
+          selected_variation_indices: isRandomScenesFlag ? [] : selectedVarIndicesArr,
           pose_ids: poseSelections,
           model_ids: isRandomModelsFlag ? ['__random__'] : modelSelections,
           models: isRandomModelsFlag ? [{ id: '__random__', name: 'Random / Diverse' }] : resolvedModels,
@@ -478,6 +502,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           random_scenes: isRandomScenesFlag,
           image_count: computedImageCount,
           selected_framings: Array.from(selectedFramings),
+          flat_lay_prop_style: flatLayPropStyle,
+          selected_aesthetics: selectedAesthetics,
+          styling_notes: stylingNotes,
+          product_angle: productAngle,
         },
       };
 
@@ -950,7 +978,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 const wfCustomSettings = uiConfig?.custom_settings || [];
                 const lockAspectRatio = uiConfig?.lock_aspect_ratio;
                 const showPosePicker = uiConfig?.show_pose_picker;
-                const showCampaignMode = needsModels || variations.length > 0;
+                const showCampaignMode = !isPerspectives && (needsModels || variations.length > 0);
                 const isMixMode = campaignMode === 'mix';
 
                 return (
@@ -1093,8 +1121,93 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* ── Scenes (full library, grouped by category) ── */}
-                    {(needsModels || showPosePicker) && !isMixMode && (
+                    {/* ── Scenes: Workflow Variations (non-try-on) ── */}
+                    {useVariationsAsScenes && !isMixMode && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="section-label">{isFlatLay ? 'Surfaces' : isPerspectives ? 'Angles' : 'Scenes'}</p>
+                          {selectedVariationIndices.size > 0 && (
+                            <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSelectedVariationIndices(new Set())}>
+                              Clear ({selectedVariationIndices.size})
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Mirror Selfie Tips */}
+                        {isMirrorSelfie && (
+                          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
+                            <Smartphone className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <p className="font-semibold text-foreground">Mirror Selfie Composition</p>
+                              <ul className="space-y-0.5 list-disc list-inside">
+                                <li>Model appears holding a smartphone, capturing their reflection</li>
+                                <li>Each scene places your product in a different mirror setting</li>
+                                <li>4:5 portrait recommended for Instagram</li>
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className={cn(
+                          "grid gap-3",
+                          (isMirrorSelfie || isSelfieUgc) ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+                        )}>
+                          {variations.map((v: any, i: number) => {
+                            const isSelected = selectedVariationIndices.has(i);
+                            const hasPreview = !!v.preview_url;
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  setSelectedVariationIndices(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(i)) next.delete(i);
+                                    else next.add(i);
+                                    return next;
+                                  });
+                                }}
+                                className={cn(
+                                  'relative rounded-xl overflow-hidden border-2 transition-all text-left',
+                                  isSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                                )}
+                              >
+                                <div className={cn("relative", (isMirrorSelfie || isSelfieUgc) ? "aspect-[9/16]" : "aspect-square")}>
+                                  {hasPreview ? (
+                                    <ShimmerImage
+                                      src={getOptimizedUrl(v.preview_url, { quality: 60 })}
+                                      alt={v.label}
+                                      className="w-full h-full object-cover"
+                                      aspectRatio={(isMirrorSelfie || isSelfieUgc) ? "9/16" : "1/1"}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                                      <Package className="w-8 h-8 text-muted-foreground/40" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
+                                    <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
+                                    {v.category && <span className="text-[9px] text-white/60 font-medium">{v.category}</span>}
+                                  </div>
+                                  {isSelected && (
+                                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                      <Check className="w-3 h-3 text-primary-foreground" />
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedVariationIndices.size > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {selectedVariationIndices.size} {isFlatLay ? 'surface' : isPerspectives ? 'angle' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''} selected
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── Scenes: Full Library (Try-On only) ── */}
+                    {!useVariationsAsScenes && (needsModels || showPosePicker) && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Scenes</p>
@@ -1156,6 +1269,34 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
+                    {/* ── Product Listing: Product Angles ── */}
+                    {isProductListing && !isMixMode && (
+                      <div className="space-y-3">
+                        <p className="section-label">Product Angles</p>
+                        <p className="text-xs text-muted-foreground">Generate multiple angles per product for a complete listing</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {([
+                            { key: 'front' as const, label: 'Front Only', multiplier: '×1' },
+                            { key: 'front-side' as const, label: 'Front + Side', multiplier: '×2' },
+                            { key: 'front-back' as const, label: 'Front + Back', multiplier: '×2' },
+                            { key: 'all' as const, label: 'All Angles', multiplier: '×3' },
+                          ]).map(opt => (
+                            <button
+                              key={opt.key}
+                              onClick={() => setProductAngle(opt.key)}
+                              className={cn(
+                                'px-3 py-3 rounded-xl border-2 text-left transition-all',
+                                productAngle === opt.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                              )}
+                            >
+                              <p className={cn('text-sm font-medium', productAngle === opt.key && 'text-primary')}>{opt.label}</p>
+                              <Badge variant="secondary" className="text-[10px] rounded-full mt-1">{opt.multiplier}</Badge>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* ── Custom Settings ── */}
                     {wfCustomSettings.length > 0 && (
                       <div className="space-y-4">
@@ -1187,7 +1328,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     )}
 
                     {/* ── UGC Mood ── */}
-                    {(wf.name.toLowerCase().includes('selfie') || wf.name.toLowerCase().includes('ugc')) && (
+                    {(isSelfieUgc || isMirrorSelfie) && (
                       <div className="space-y-3">
                         <p className="section-label">UGC Mood</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1220,8 +1361,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* ── Flat Lay Aesthetic ── */}
-                    {wf.name.toLowerCase().includes('flat lay') && (
+                    {/* ── Flat Lay: Composition & Aesthetics ── */}
+                    {isFlatLay && (
                       <>
                         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-muted/40 border border-border/50">
                           <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -1230,34 +1371,73 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             <p>Oversized items (furniture, appliances) may not render naturally in a top-down arrangement.</p>
                           </div>
                         </div>
+
+                        {/* Composition Style */}
                         <div className="space-y-3">
-                          <p className="section-label">Aesthetic Style</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {[
-                              { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
-                              { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
-                              { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
-                              { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
-                              { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
-                              { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
-                            ].map(aesthetic => {
-                              const isSelected = customSettings['Aesthetic'] === aesthetic.id;
-                              return (
-                                <button
-                                  key={aesthetic.id}
-                                  onClick={() => setCustomSettings(prev => ({ ...prev, Aesthetic: aesthetic.id }))}
-                                  className={cn(
-                                    'px-4 py-3 rounded-xl border-2 text-left transition-all',
-                                    isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
-                                  )}
-                                >
-                                  <p className={cn('text-sm font-medium', isSelected && 'text-primary')}>{aesthetic.label}</p>
-                                  <p className="text-[10px] text-muted-foreground">{aesthetic.hint}</p>
-                                </button>
-                              );
-                            })}
+                          <p className="section-label">Composition Style</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {([
+                              { key: 'clean' as const, label: 'Products Only', desc: 'Clean layout with just your products' },
+                              { key: 'decorated' as const, label: 'Add Styling Props', desc: 'Include decorative elements around products' },
+                            ]).map(opt => (
+                              <button
+                                key={opt.key}
+                                onClick={() => {
+                                  setFlatLayPropStyle(opt.key);
+                                  if (opt.key === 'clean') { setSelectedAesthetics([]); setStylingNotes(''); }
+                                }}
+                                className={cn(
+                                  'p-4 rounded-xl border-2 text-left transition-all',
+                                  flatLayPropStyle === opt.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30 bg-card'
+                                )}
+                              >
+                                <p className={cn('text-sm font-semibold', flatLayPropStyle === opt.key && 'text-primary')}>{opt.label}</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">{opt.desc}</p>
+                              </button>
+                            ))}
                           </div>
                         </div>
+
+                        {/* Aesthetic quick-chips — only when decorated */}
+                        {flatLayPropStyle === 'decorated' && (
+                          <div className="space-y-3">
+                            <p className="section-label">Styling & Aesthetics</p>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { id: 'minimal', label: 'Minimal', hint: 'Clean, few props, whitespace' },
+                                { id: 'botanical', label: 'Botanical', hint: 'Greenery accents, dried flowers' },
+                                { id: 'coffee-books', label: 'Coffee & Books', hint: 'Cup, open pages' },
+                                { id: 'textured', label: 'Textured', hint: 'Linen, kraft paper, washi tape' },
+                                { id: 'soft-glam', label: 'Soft Glam', hint: 'Silk ribbon, dried petals' },
+                                { id: 'cozy', label: 'Cozy', hint: 'Knit blanket, candle, warm tones' },
+                              ].map(aesthetic => {
+                                const isAesthActive = selectedAesthetics.includes(aesthetic.id);
+                                return (
+                                  <button
+                                    key={aesthetic.id}
+                                    onClick={() => setSelectedAesthetics(prev =>
+                                      isAesthActive ? prev.filter(x => x !== aesthetic.id) : [...prev, aesthetic.id]
+                                    )}
+                                    className={cn(
+                                      'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                                      isAesthActive ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground hover:border-primary/40'
+                                    )}
+                                    title={aesthetic.hint}
+                                  >
+                                    {aesthetic.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <Textarea
+                              placeholder="Styling notes: e.g. eucalyptus leaves, silk ribbon, warm tones..."
+                              value={stylingNotes}
+                              onChange={e => setStylingNotes(e.target.value)}
+                              rows={2}
+                              className="rounded-xl text-sm"
+                            />
+                          </div>
+                        )}
                       </>
                     )}
 
@@ -1407,14 +1587,18 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           {!isMixMode ? (
                             <p className="text-xs text-muted-foreground">
                               {(() => {
-                                const effectiveScenes = Math.max(poseSelections.length, 1);
+                                const effectiveScenes = useVariationsAsScenes
+                                  ? Math.max(selectedVariationIndices.size, 1)
+                                  : Math.max(poseSelections.length, 1);
                                 const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
                                 const formatCount = Math.max(formats.length, 1);
+                                const angleMultiplier = isProductListing ? (productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2) : 1;
                                 const parts: string[] = [];
-                                if (effectiveScenes > 1) parts.push(`${effectiveScenes} scene${effectiveScenes !== 1 ? 's' : ''}`);
+                                if (effectiveScenes > 1) parts.push(`${effectiveScenes} ${isFlatLay ? 'surface' : isPerspectives ? 'angle' : 'scene'}${effectiveScenes !== 1 ? 's' : ''}`);
                                 if (needsModels) parts.push(`${modelCount} model${modelCount !== 1 ? 's' : ''}`);
                                 if (formatCount > 1) parts.push(`${formatCount} format${formatCount !== 1 ? 's' : ''}`);
                                 if (framingCount > 1) parts.push(`${framingCount} framing${framingCount !== 1 ? 's' : ''}`);
+                                if (angleMultiplier > 1) parts.push(`${angleMultiplier} angles`);
                                 const formula = parts.length > 0 ? parts.join(' × ') + ' = ' : '';
                                 return <>{formula}<span className="font-semibold text-foreground">{computedImageCount} image{computedImageCount !== 1 ? 's' : ''}</span> per product</>;
                               })()}
