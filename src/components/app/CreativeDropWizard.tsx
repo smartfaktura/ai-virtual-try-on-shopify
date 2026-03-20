@@ -1027,7 +1027,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         </div>
 
 
-                        {!isRandomModelsFlag && (
+                        {(
                           <>
                             {modelSelections.length > 0 && (
                               <div className="flex justify-end">
