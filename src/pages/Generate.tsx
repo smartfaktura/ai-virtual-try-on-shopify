@@ -4071,13 +4071,23 @@ export default function Generate() {
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
               <div className="flex flex-col sm:flex-row gap-2.5">
-                <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => {
-                  if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
-                  selectedForPublish.forEach(idx => handleDownloadImage(idx));
-                }}><Download className="w-4 h-4 mr-2" /> Download Selected ({selectedForPublish.size})</Button>
                 <Button className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
               </div>
             </div>
+
+            {/* Floating selection bar */}
+            {selectedForPublish.size > 0 && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-5 py-3">
+                <span className="text-sm font-medium whitespace-nowrap">{selectedForPublish.size} selected</span>
+                <Separator orientation="vertical" className="h-6" />
+                <Button size="sm" variant="outline" className="rounded-xl" onClick={() => handleDownloadZip(Array.from(selectedForPublish))} disabled={zipDownloading}>
+                  {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" />Download ZIP</>}
+                </Button>
+                <button onClick={() => setSelectedForPublish(new Set())} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
