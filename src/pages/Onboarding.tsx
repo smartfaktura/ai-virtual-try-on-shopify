@@ -114,7 +114,7 @@ export default function Onboarding() {
           opted_in: marketingOptIn,
           properties: {
             plan: 'free',
-            credits_balance: 20,
+            credits_balance: 60,
             has_generated: false,
             signup_date: user.created_at || new Date().toISOString(),
           },

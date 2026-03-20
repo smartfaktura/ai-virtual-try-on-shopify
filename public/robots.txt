@@ -26,6 +26,6 @@ Disallow: /app/
 Disallow: /auth
 Disallow: /onboarding
 Disallow: /reset-password
-Disallow: /mobile-upload
+Disallow: /upload/
 
 Sitemap: https://vovv.ai/sitemap.xml
