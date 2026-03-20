@@ -256,7 +256,7 @@ serve(async (req) => {
                 quality: "standard",
                 aspectRatio,
                 brand_profile: brandProfile,
-                theme: schedule.theme || undefined,
+                theme: resolvedTheme || undefined,
                 theme_notes: schedule.theme_notes || undefined,
                 creative_drop_id: "__placeholder__", // filled after drop record is created
                 pose: {
