@@ -70,7 +70,35 @@ serve(async (req) => {
       .eq("creative_drop_id", creative_drop_id)
       .eq("status", "completed");
 
-    const allImages: { url: string; workflow_id?: string; product_id?: string }[] = [];
+    // Collect unique workflow_ids and product_ids for name resolution
+    const workflowIds = new Set<string>();
+    const productIds = new Set<string>();
+    for (const job of completedJobs || []) {
+      if (job.workflow_id) workflowIds.add(job.workflow_id);
+      if (job.product_id) productIds.add(job.product_id);
+    }
+
+    // Batch-resolve names
+    const workflowNames: Record<string, string> = {};
+    const productTitles: Record<string, string> = {};
+
+    if (workflowIds.size > 0) {
+      const { data: wfs } = await supabase
+        .from("workflows")
+        .select("id, name")
+        .in("id", Array.from(workflowIds));
+      for (const wf of wfs || []) workflowNames[wf.id] = wf.name;
+    }
+
+    if (productIds.size > 0) {
+      const { data: prods } = await supabase
+        .from("user_products")
+        .select("id, title")
+        .in("id", Array.from(productIds));
+      for (const p of prods || []) productTitles[p.id] = p.title;
+    }
+
+    const allImages: { url: string; workflow_name?: string; product_title?: string }[] = [];
     for (const job of completedJobs || []) {
       const results = job.results;
       if (Array.isArray(results)) {
@@ -82,8 +110,8 @@ serve(async (req) => {
           if (url) {
             allImages.push({
               url,
-              workflow_id: job.workflow_id || undefined,
-              product_id: job.product_id || undefined,
+              workflow_name: job.workflow_id ? workflowNames[job.workflow_id] : undefined,
+              product_title: job.product_id ? productTitles[job.product_id] : undefined,
             });
           }
         }

@@ -310,7 +310,7 @@ export function DropCard(props: Props) {
               </p>
               <p className="text-xs text-muted-foreground">
                 {drop.status === 'generating'
-                  ? `${completedImages} of ${targetImages} images`
+                  ? targetImages > 0 ? `${completedImages} of ${targetImages} images` : `Processing ${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`
                   : drop.total_images > 0
                     ? `${drop.total_images} images`
                     : `${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`}
