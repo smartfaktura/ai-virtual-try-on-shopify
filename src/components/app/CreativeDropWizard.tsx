@@ -460,7 +460,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           mapped_settings: mappedSettings,
           random_models: isRandomModelsFlag,
           random_scenes: isRandomScenesFlag,
-          image_count: imageCount,
+          image_count: computedImageCount,
         },
       };
 
