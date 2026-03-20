@@ -327,6 +327,8 @@ export default function Generate() {
 
   const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+  const [selectedModelMap, setSelectedModelMap] = useState<Map<string, ModelProfile>>(new Map());
   const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
   const [selectedPoses, setSelectedPoses] = useState<Set<string>>(new Set());
   const [selectedPoseMap, setSelectedPoseMap] = useState<Map<string, TryOnPose>>(new Map());
