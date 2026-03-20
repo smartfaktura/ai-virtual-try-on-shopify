@@ -315,7 +315,7 @@ export function DropCard(props: Props) {
       )}
       onClick={isClickable ? onViewDrop : undefined}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <div className="flex gap-3">
           {/* Left: Thumbnails or status icon */}
           {drop.status === 'ready' && dropImages.length > 0 ? (
