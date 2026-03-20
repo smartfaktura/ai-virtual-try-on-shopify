@@ -58,6 +58,8 @@ interface Props {
   scene: WorkflowScene;
   isActive?: boolean;
   compact?: boolean;
+  /** True when rendered inside the mobile 2-col grid — uses true compact sizes instead of CSS scale */
+  mobileCompact?: boolean;
 }
 
 /* ── Floating element renderer ── */
