@@ -299,11 +299,11 @@ export default function CreativeDrops() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex items-center justify-between gap-3">
               <TabsList className="bg-muted/50 rounded-xl p-1 h-auto">
-                <TabsTrigger value="schedules" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
-                  Schedules
-                </TabsTrigger>
                 <TabsTrigger value="drops" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Drops
+                </TabsTrigger>
+                <TabsTrigger value="schedules" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
+                  Scheduled
                 </TabsTrigger>
                 <TabsTrigger value="calendar" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Calendar
@@ -311,7 +311,7 @@ export default function CreativeDrops() {
               </TabsList>
               <Button onClick={openWizard} className="rounded-xl gap-2 hidden sm:inline-flex">
                 <Calendar className="w-4 h-4" />
-                Create Schedule
+                Create Drop
               </Button>
               <Button onClick={openWizard} size="icon" className="rounded-xl sm:hidden">
                 <Calendar className="w-4 h-4" />
