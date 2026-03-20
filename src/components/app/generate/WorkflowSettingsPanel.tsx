@@ -122,6 +122,7 @@ interface WorkflowSettingsPanelProps {
 
   // Derived
   workflowImageCount: number;
+  workflowModelCount: number;
   multiProductCount: number;
   angleMultiplier: number;
   aspectRatioCount: number;
