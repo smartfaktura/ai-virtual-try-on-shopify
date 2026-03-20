@@ -1,54 +1,60 @@
 
 
-# Fix Rate Limiting for Bulk Enqueue Requests
+# Fix Generated Results Not Grouping by Format
 
-## Root Cause
-
-The multi-product loop in `Generate.tsx` fires 25+ `enqueue-generation` edge function calls in a tight `for` loop with zero delay. The Deno edge function platform rate-limits concurrent invocations, returning 402/429 errors. The client then incorrectly shows "Not enough credits" (because 402 is mapped to credit errors), when the real issue is platform-level rate limiting.
-
-The queue system is working correctly — it is designed to handle processing at scale. The bottleneck is only the **enqueue step** flooding too many HTTP requests at once.
+## Problem
+The results grid shows all images in a flat layout with ugly white space because:
+1. The try-on edge function doesn't return `variations` labels
+2. The aggregation code (line 1586-1594) tries to match job keys like `productId_modelId_poseId_ratio_framing` against `product.id` — never matches, so labels are always empty
+3. Empty labels → grouping code is skipped → flat grid with mixed aspect ratios
 
 ## Solution
+Build labels client-side from the composite job keys during aggregation, grouping by aspect ratio and framing.
 
-### 1. Add staggered delay between enqueue calls
-**File**: `src/pages/Generate.tsx` (~line 1277-1296)
+### File: `src/pages/Generate.tsx` (~lines 1582-1594)
 
-Add a 300ms delay between each `enqueueTryOnForProduct` call to avoid hitting edge function rate limits. This adds ~7.5s for 25 products, which is acceptable since the user sees the progress banner immediately.
-
-### 2. Add silent retry with backoff on 429 errors
-**File**: `src/pages/Generate.tsx` (~line 1232-1243)
-
-Instead of showing a toast on 429 or platform 402 errors, silently retry up to 3 times with exponential backoff (1s, 2s, 4s). Only show an error toast if all retries fail. The key insight: the "Too many requests" error from the screenshot is a platform rate limit, not a credit issue.
+**Change the aggregation loop** to:
+1. Parse the composite key (`productId_modelId_poseId_ratio_framing`) to extract ratio and framing
+2. Look up product name from `productQueue` using the product ID portion of the key
+3. Build a label like `"Product Name — 4:5 Portrait"` or `"Product Name — 1:1 Close-Up"` for each image
+4. When the edge function returns no `variations` labels, generate them from the key parts
 
 ```typescript
-// Retry logic in enqueueTryOnForProduct
-for (let attempt = 0; attempt < maxRetries; attempt++) {
-  const response = await fetch(...);
-  if (response.ok) return response.json();
-  if (response.status === 429 || response.status === 502 || response.status === 503) {
-    await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
-    continue; // silent retry
+for (const [key] of multiProductJobIds) {
+  const r = completedResults.get(key);
+  if (r) {
+    // Parse key: productId_modelId_poseId_ratio_framing
+    const parts = key.split('_');
+    const productId = parts[0];
+    const ratioVal = parts[parts.length - 2]; // e.g. "4:5"
+    const framingVal = parts[parts.length - 1]; // e.g. "close_up" or "null"
+    const product = productQueue.find(p => p.id === productId);
+    const prefix = product?.title || '';
+    
+    // Build label from key if edge function didn't provide one
+    const labels = r.labels.length > 0
+      ? r.labels
+      : r.images.map(() => {
+          const parts = [ratioVal];
+          if (framingVal && framingVal !== 'null') parts.push(framingVal.replace(/_/g, ' '));
+          return parts.join(' · ');
+        });
+    
+    allImages.push(...r.images);
+    allLabels.push(...labels.map(l => prefix ? `${prefix} — ${l}` : l));
   }
-  // Only show error for genuine failures (402 credit, 400 bad request)
-  break;
 }
 ```
 
-### 3. Only wake process-queue once after all jobs are enqueued
-**File**: `supabase/functions/enqueue-generation/index.ts` (line 161-170)
+### Also fix: single-product multi-job path (~lines 1408-1440)
+The same issue exists for single product with multiple models/poses/ratios. Apply the same label-building from key parts.
 
-Currently every enqueue call fires a wake to `process-queue`, creating 25 parallel process-queue invocations. Add a `skipWake` parameter so the client can suppress the wake for all but the last job. The client will trigger one final wake after the loop.
+### Result
+Images will be grouped by format sections like:
+- **Product A — 1:1**
+- **Product A — 4:5**
+- **Product B — 1:1**
+- **Product B — 4:5**
 
-### 4. Fix misleading error message for 402
-**File**: `src/pages/Generate.tsx` (~line 1234)
-
-Check the actual error body: if it contains "Too many requests" or "concurrent", treat it as a rate limit (retry silently) rather than a credit error.
-
-## Architecture Note
-
-The queue system is exactly the right design for multi-user scale. The `claim_next_job` with `FOR UPDATE SKIP LOCKED` handles concurrent workers. The issue is purely at the **enqueue ingestion** layer — too many simultaneous HTTP calls to a single edge function. The staggered delay + retry pattern solves this without architectural changes.
-
-### Files to edit
-- `src/pages/Generate.tsx` — add delay between calls + silent retry logic
-- `supabase/functions/enqueue-generation/index.ts` — add `skipWake` parameter
+Each group renders in its own uniform grid — no mixed sizes, no white space.
 
