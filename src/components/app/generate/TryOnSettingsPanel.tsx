@@ -21,6 +21,8 @@ interface TryOnSettingsPanelProps {
   selectedProduct: Product | null;
   scratchUpload: ScratchUpload | null;
   selectedModel: ModelProfile;
+  selectedModels?: Set<string>;
+  selectedModelMap?: Map<string, ModelProfile>;
   selectedPose: TryOnPose | null;
   selectedPoses: Set<string>;
   selectedPoseMap: Map<string, TryOnPose>;
@@ -45,7 +47,9 @@ interface TryOnSettingsPanelProps {
 }
 
 export default function TryOnSettingsPanel({
-  selectedProduct, scratchUpload, selectedModel, selectedPose,
+  selectedProduct, scratchUpload, selectedModel,
+  selectedModels, selectedModelMap,
+  selectedPose,
   selectedPoses, selectedPoseMap, creditCost,
   imageCount, setImageCount, quality, setQuality,
   framing, setFraming, aspectRatio, setAspectRatio,
@@ -53,6 +57,9 @@ export default function TryOnSettingsPanel({
   tryOnSceneCount, openBuyModal, handleGenerateClick, setCurrentStep,
 }: TryOnSettingsPanelProps) {
   const posesArray = Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean);
+  const modelsArray = selectedModelMap ? Array.from(selectedModelMap.values()) : selectedModel ? [selectedModel] : [];
+  const modelCount = Math.max(1, modelsArray.length);
+  const totalImages = parseInt(imageCount) * tryOnSceneCount * modelCount * multiProductCount;
 
   return (
     <div className="space-y-4">
@@ -60,6 +67,7 @@ export default function TryOnSettingsPanel({
         product={selectedProduct}
         scratchUpload={scratchUpload}
         model={selectedModel}
+        models={modelsArray}
         pose={selectedPose}
         poses={posesArray}
         creditCost={creditCost}
@@ -69,36 +77,40 @@ export default function TryOnSettingsPanel({
 
       <Card><CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Selected Model & {selectedPoses.size > 1 ? 'Scenes' : 'Scene'}</span>
+          <span className="text-sm text-muted-foreground">Selected Model{modelsArray.length > 1 ? 's' : ''} & {selectedPoses.size > 1 ? 'Scenes' : 'Scene'}</span>
           <Button variant="link" size="sm" onClick={() => setCurrentStep('model')}>Change</Button>
         </div>
-        <div className="flex items-center gap-6 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
-              <img src={selectedModel.previewUrl} alt="" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Model</p>
-              <p className="text-sm font-medium">{selectedModel.name}</p>
-            </div>
-          </div>
-          <Separator orientation="vertical" className="h-10" />
-          {Array.from(selectedPoses).map(poseId => {
-            const p = selectedPoseMap.get(poseId);
-            if (!p) return null;
-            const img = p.previewUrl;
-            return (
-              <div key={poseId} className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-primary/20">
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+
+        {/* Models section */}
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Model{modelsArray.length > 1 ? `s (${modelsArray.length})` : ''}</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            {modelsArray.map(m => (
+              <div key={m.modelId} className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/20 flex-shrink-0">
+                  <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
                 </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Scene</p>
-                  <p className="text-sm font-medium">{p.name}</p>
-                </div>
+                <p className="text-xs font-medium truncate">{m.name}</p>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Scenes section */}
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Scene{selectedPoses.size > 1 ? `s (${selectedPoses.size})` : ''}</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            {posesArray.map(p => (
+              <div key={p.poseId} className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-primary/20 flex-shrink-0">
+                  <img src={p.previewUrl} alt="" className="w-full h-full object-cover" />
+                </div>
+                <p className="text-xs font-medium truncate">{p.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent></Card>
 
@@ -139,6 +151,7 @@ export default function TryOnSettingsPanel({
             {(() => {
               const parts: string[] = [];
               parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
+              if (modelCount > 1) parts.push(`${modelCount} models`);
               if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
               if (isMultiProductMode) parts.push(`${multiProductCount} products`);
               parts.push(`6 credits each`);
@@ -162,7 +175,7 @@ export default function TryOnSettingsPanel({
           onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
           className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
         >
-          {balance >= creditCost ? `Generate ${parseInt(imageCount) * tryOnSceneCount * multiProductCount} Try-On Images` : 'Buy Credits'}
+          {balance >= creditCost ? `Generate ${totalImages} Try-On Images` : 'Buy Credits'}
         </Button>
       </div>
     </div>

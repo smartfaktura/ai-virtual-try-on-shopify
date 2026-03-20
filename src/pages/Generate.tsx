@@ -327,6 +327,8 @@ export default function Generate() {
 
   const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+  const [selectedModelMap, setSelectedModelMap] = useState<Map<string, ModelProfile>>(new Map());
   const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
   const [selectedPoses, setSelectedPoses] = useState<Set<string>>(new Set());
   const [selectedPoseMap, setSelectedPoseMap] = useState<Map<string, TryOnPose>>(new Map());
@@ -722,7 +724,41 @@ export default function Generate() {
     toast.success(`"${template.name}" selected! Click Continue when ready.`);
   };
 
-  const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); };
+  const handleSelectModel = (model: ModelProfile) => {
+    setSelectedModels(prev => {
+      const next = new Set(prev);
+      const nextMap = new Map(selectedModelMap);
+      if (next.has(model.modelId)) {
+        next.delete(model.modelId);
+        nextMap.delete(model.modelId);
+      } else {
+        if (isFreeUser && next.size >= 1) {
+          // Free users: replace single selection
+          next.clear();
+          nextMap.clear();
+        }
+        next.add(model.modelId);
+        nextMap.set(model.modelId, model);
+
+        // Credit warning for paid users
+        if (!isFreeUser && next.size > 1) {
+          const newModelCount = next.size;
+          const sceneCount = Math.max(1, selectedPoses.size);
+          const imgCount = parseInt(imageCount);
+          const prodCount = isMultiProductMode ? productQueue.length : 1;
+          const projectedCost = newModelCount * sceneCount * imgCount * 6 * prodCount;
+          if (projectedCost > balance) {
+            toast.warning(`${newModelCount} models × ${sceneCount} scenes will cost ${projectedCost} credits — you have ${balance}. Top up before generating.`, { duration: 4000 });
+          }
+        }
+      }
+      setSelectedModelMap(nextMap);
+      // Keep selectedModel in sync (first selected) for backward compat
+      const firstId = Array.from(next)[0];
+      setSelectedModel(firstId ? nextMap.get(firstId) || null : null);
+      return next;
+    });
+  };
   const handleSelectPose = (pose: TryOnPose) => {
     const maxScenes = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
     setSelectedPoses(prev => {
@@ -856,7 +892,7 @@ export default function Generate() {
       return;
     }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
-      if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
+      if (selectedModels.size === 0 || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
     }
     // Workflow-config path: skip template requirement
@@ -1122,9 +1158,10 @@ export default function Generate() {
   };
 
   // Helper: enqueue a single try-on job via direct fetch (used for multi-product upfront)
-  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose): Promise<{ jobId: string; newBalance: number } | null> => {
+  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose, modelOverride?: ModelProfile): Promise<{ jobId: string; newBalance: number } | null> => {
     const pose = poseOverride || selectedPose;
-    if (!selectedModel || !pose) return null;
+    const model = modelOverride || selectedModel;
+    if (!model || !pose) return null;
     const selectedImageId = Array.from(selectedSourceImages)[0];
     const sourceImage = product.images.find(img => img.id === selectedImageId);
     const sourceImageUrl = sourceImage?.url || product.images[0]?.url || '';
@@ -1132,7 +1169,7 @@ export default function Generate() {
 
     const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
       convertImageToBase64(sourceImageUrl),
-      convertImageToBase64(selectedModel.previewUrl),
+      convertImageToBase64(model.previewUrl),
       pose.previewUrl ? convertImageToBase64(pose.previewUrl) : Promise.resolve(undefined),
     ]);
 
@@ -1144,7 +1181,7 @@ export default function Generate() {
         jobType: 'tryon',
         payload: {
           product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
-          model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+          model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
           framing: framing || undefined,
@@ -1178,8 +1215,9 @@ export default function Generate() {
 
   const handleTryOnConfirmGenerate = async () => {
     try {
-    if (!selectedModel || selectedPoses.size === 0) return;
+    if (selectedModels.size === 0 || selectedPoses.size === 0) return;
     const posesToGenerate = Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean);
+    const modelsToGenerate = Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean);
 
     // Multi-product upfront enqueue
     if (isMultiProductMode) {
@@ -1194,16 +1232,18 @@ export default function Generate() {
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       for (const product of productQueue) {
-        for (const pose of posesToGenerate) {
-          const result = await enqueueTryOnForProduct(product, token, pose);
-          if (result) {
-            jobMap.set(`${product.id}_${pose.poseId}`, result.jobId);
-            lastBalance = result.newBalance;
-            injectActiveJob(queryClient, {
-              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-              workflow_slug: activeWorkflow?.slug, product_name: product.title,
-              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-            });
+        for (const model of modelsToGenerate) {
+          for (const pose of posesToGenerate) {
+            const result = await enqueueTryOnForProduct(product, token, pose, model);
+            if (result) {
+              jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}`, result.jobId);
+              lastBalance = result.newBalance;
+              injectActiveJob(queryClient, {
+                jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+                workflow_slug: activeWorkflow?.slug, product_name: product.title,
+                job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+              });
+            }
           }
         }
       }
@@ -1237,18 +1277,18 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    const base64ProductImage = await convertImageToBase64(sourceImageUrl);
-    const base64ModelImage = await convertImageToBase64(selectedModel.previewUrl);
-
-    if (posesToGenerate.length === 1) {
-      // Single scene — use existing enqueue hook for real-time tracking
+    if (modelsToGenerate.length === 1 && posesToGenerate.length === 1) {
+      // Single model + single scene — use existing enqueue hook for real-time tracking
+      const model = modelsToGenerate[0];
       const pose = posesToGenerate[0];
+      const base64ProductImage = await convertImageToBase64(sourceImageUrl);
+      const base64ModelImage = await convertImageToBase64(model.previewUrl);
       const base64SceneImage = pose.previewUrl ? await convertImageToBase64(pose.previewUrl) : undefined;
       const enqueueResult = await enqueue({
         jobType: 'tryon',
         payload: {
           product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
-          model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+          model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
           framing: framing || undefined,
@@ -1280,7 +1320,7 @@ export default function Generate() {
         setCurrentStep('settings');
       }
     } else {
-      // Multi-scene — use direct fetch for each pose (upfront batch enqueue)
+      // Multi-model and/or multi-scene — use direct fetch for each combination
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
@@ -1289,27 +1329,29 @@ export default function Generate() {
       let lastBalance: number | null = null;
       const product = selectedProduct || { id: 'scratch', title: productData.title, description: productData.description, productType: productData.productType, vendor: '', tags: [], images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active' as const, createdAt: '', updatedAt: '' };
 
-      for (const pose of posesToGenerate) {
-        const result = await enqueueTryOnForProduct(product as Product, token, pose);
-        if (result) {
-          jobMap.set(pose.poseId, result.jobId);
-          lastBalance = result.newBalance;
-          injectActiveJob(queryClient, {
-            jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-            workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
-            job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-          });
+      for (const model of modelsToGenerate) {
+        for (const pose of posesToGenerate) {
+          const result = await enqueueTryOnForProduct(product as Product, token, pose, model);
+          if (result) {
+            jobMap.set(`${model.modelId}_${pose.poseId}`, result.jobId);
+            lastBalance = result.newBalance;
+            injectActiveJob(queryClient, {
+              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+              workflow_slug: activeWorkflow?.slug, product_name: (selectedProduct?.title || productData?.title) ?? null,
+              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+            });
+          }
         }
       }
 
       if (jobMap.size === 0) {
-        toast.error('Could not queue any scenes');
+        toast.error('Could not queue any combinations');
         setCurrentStep('settings');
         return;
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      toast.success(`Queued ${jobMap.size} scene${jobMap.size > 1 ? 's' : ''} for generation`);
+      toast.success(`Queued ${jobMap.size} generation${jobMap.size > 1 ? 's' : ''} (${modelsToGenerate.length} model${modelsToGenerate.length > 1 ? 's' : ''} × ${posesToGenerate.length} scene${posesToGenerate.length > 1 ? 's' : ''})`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
@@ -1661,10 +1703,11 @@ export default function Generate() {
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
+  const tryOnModelCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedModels.size) : 1;
   const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
   const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 15 : 10) : 0;
   const workflowCostPerImage = 6;
-  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
+  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
@@ -3092,22 +3135,31 @@ export default function Generate() {
         {/* Model Selection */}
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4 pb-20">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
-                <h2 className="text-base font-semibold">Select a Model</h2>
-                <p className="text-sm text-muted-foreground">
-                  {activeWorkflow?.name === 'Mirror Selfie Set'
-                    ? 'This model will appear taking a mirror selfie wearing your product'
-                    : 'Choose the model who will wear your clothing'}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold">Select Model{!isFreeUser ? 's' : ''}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {activeWorkflow?.name === 'Mirror Selfie Set'
+                        ? 'This model will appear taking a mirror selfie wearing your product'
+                        : isFreeUser ? 'Choose the model who will wear your clothing' : 'Select one or more models for your shoot'}
+                    </p>
+                  </div>
+                  {selectedModels.size > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedModels.size} selected{!isFreeUser && selectedModels.size > 0 ? ` · ${selectedModels.size * Math.max(1, selectedPoses.size) * parseInt(imageCount) * 6 * (isMultiProductMode ? productQueue.length : 1)} credits` : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {filteredModels.map(model => (
-                  <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
-                ))}
+                 {filteredModels.map(model => (
+                   <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModels.has(model.modelId)} onSelect={() => handleSelectModel(model)} />
+                 ))}
               </div>
               <MissingRequestBanner
                 category="model"
@@ -3125,15 +3177,17 @@ export default function Generate() {
                     setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product');
                   }
                 }}>Back</Button>
-                {!selectedModel && (
+                {selectedModels.size === 0 && (
                   <span className="text-xs text-muted-foreground text-center flex-1">Select a model to continue</span>
                 )}
                 {isMirrorSelfie ? (
-                  <Button disabled={!selectedModel} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
+                  <Button disabled={selectedModels.size === 0} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
                 ) : isSelfieUgc || (uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon) ? (
-                  <Button disabled={!selectedModel} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
+                  <Button disabled={selectedModels.size === 0} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
                 ) : (
-                  <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
+                  <Button disabled={selectedModels.size === 0} onClick={() => setCurrentStep('pose')}>
+                    Continue to Scene {selectedModels.size > 1 && `(${selectedModels.size} models)`}
+                  </Button>
                 )}
               </div>
             </div>
@@ -3143,7 +3197,7 @@ export default function Generate() {
         {/* Pose Selection */}
         {currentStep === 'pose' && selectedModel && (
           <div className="space-y-4 pb-20">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <div className="flex items-center justify-between">
@@ -3525,11 +3579,13 @@ export default function Generate() {
           />
         )}
 
-        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPoses.size > 0 && (
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModels.size > 0 && selectedPoses.size > 0 && (
           <TryOnSettingsPanel
             selectedProduct={selectedProduct}
             scratchUpload={scratchUpload}
-            selectedModel={selectedModel}
+            selectedModel={selectedModel!}
+            selectedModels={selectedModels}
+            selectedModelMap={selectedModelMap}
             selectedPose={selectedPose}
             selectedPoses={selectedPoses}
             selectedPoseMap={selectedPoseMap}
@@ -3901,7 +3957,7 @@ export default function Generate() {
 
       {/* Modals */}
       <TryOnConfirmModal open={tryOnConfirmModalOpen} onClose={() => setTryOnConfirmModalOpen(false)} onConfirm={handleTryOnConfirmGenerate}
-        product={selectedProduct} model={selectedModel} pose={selectedPose}
+        product={selectedProduct} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose}
         imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isEnqueuing} onBuyCredits={openBuyModal}
         sourceImageUrl={selectedProduct && selectedSourceImages.size > 0 ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url : undefined} />
       <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}

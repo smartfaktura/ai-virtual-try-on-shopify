@@ -13,6 +13,7 @@ interface TryOnConfirmModalProps {
   onConfirm: () => void;
   product: Product | null;
   model: ModelProfile | null;
+  models?: ModelProfile[];
   pose: TryOnPose | null;
   imageCount: number;
   aspectRatio: AspectRatio;
@@ -28,6 +29,7 @@ export function TryOnConfirmModal({
   onConfirm,
   product,
   model,
+  models,
   pose,
   imageCount,
   aspectRatio,
@@ -36,7 +38,8 @@ export function TryOnConfirmModal({
   sourceImageUrl,
   onBuyCredits,
 }: TryOnConfirmModalProps) {
-  if (!product || !model || !pose) return null;
+  const allModels = models && models.length > 0 ? models : model ? [model] : [];
+  if (!product || allModels.length === 0 || !pose) return null;
 
   const displaySourceImage = sourceImageUrl || product.images[0]?.url || '/placeholder.svg';
   const creditsPerImage = 6;
@@ -58,7 +61,7 @@ export function TryOnConfirmModal({
         </DialogHeader>
         
         <div className="space-y-5">
-          {/* Summary cards - 3 column */}
+          {/* Summary cards */}
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-lg border-2 border-primary bg-primary/5 space-y-2">
               <p className="text-xs font-semibold">Source</p>
@@ -74,16 +77,29 @@ export function TryOnConfirmModal({
             </div>
 
             <div className="p-3 rounded-lg border border-border bg-muted/50 space-y-2">
-              <p className="text-xs font-semibold">Model</p>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                  <img src={model.previewUrl} alt={model.name} className="w-full h-full object-cover" />
+              <p className="text-xs font-semibold">Model{allModels.length > 1 ? `s (${allModels.length})` : ''}</p>
+              {allModels.length === 1 ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <img src={allModels[0].previewUrl} alt={allModels[0].name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold truncate">{allModels[0].name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{allModels[0].ethnicity}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold truncate">{model.name}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{model.ethnicity}</p>
+              ) : (
+                <div className="flex items-center gap-1">
+                  {allModels.slice(0, 3).map((m) => (
+                    <div key={m.modelId} className="w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0">
+                      <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                  {allModels.length > 3 && (
+                    <span className="text-[10px] font-medium text-muted-foreground">+{allModels.length - 3}</span>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="p-3 rounded-lg border border-border bg-muted/50 space-y-2">
@@ -109,13 +125,14 @@ export function TryOnConfirmModal({
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-muted-foreground" />
                 <p className="text-sm">
-                  AI-generated photos of <strong>{model.name}</strong> wearing your <strong>{product.title}</strong>
+                  AI-generated photos of {allModels.length > 1 ? <strong>{allModels.length} models</strong> : <strong>{allModels[0].name}</strong>} wearing your <strong>{product.title}</strong>
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground">The garment will be digitally placed on the model with realistic fabric draping</p>
+              <p className="text-xs text-muted-foreground">The garment will be digitally placed on the model{allModels.length > 1 ? 's' : ''} with realistic fabric draping</p>
             </div>
             <div className="flex gap-2 flex-wrap">
               <Badge variant="secondary">{`${imageCount} images`}</Badge>
+              {allModels.length > 1 && <Badge variant="secondary">{`${allModels.length} models`}</Badge>}
               <Badge variant="secondary">{aspectRatioLabels[aspectRatio]}</Badge>
               <Badge>High Quality</Badge>
             </div>
