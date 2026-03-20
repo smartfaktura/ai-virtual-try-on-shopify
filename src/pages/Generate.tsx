@@ -3852,7 +3852,7 @@ export default function Generate() {
             <div className="text-center">
               <h2 className="text-lg font-semibold">
                 {isUpscale ? `Enhancing to ${upscaleResolution === '4k' ? '4K' : '2K'}...` :
-                 (hasWorkflowConfig || isSelfieUgc) ? `Creating ${activeWorkflow?.name}...` :
+                 (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie) ? `Creating ${activeWorkflow?.name}...` :
                  generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
