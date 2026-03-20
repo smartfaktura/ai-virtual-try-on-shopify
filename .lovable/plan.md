@@ -1,33 +1,23 @@
 
 
-# Improve About Page
+# Fix Workflow Grid & Try-On Thumbnail
 
-## Changes
+## Issue 1: 2-column grid not working on mobile
+The grid uses `grid-cols-1 sm:grid-cols-2` — `sm:` kicks in at 640px, but mobile devices (390-414px) stay at 1 column. Fix: change to `grid-cols-2` as the base so it's always 2 columns in grid mode.
 
-### 1. Copy the founder image into the project
-Copy the uploaded image to `src/assets/founder-tomas.jpg` for use in the component.
+### Files
+**`src/pages/Workflows.tsx`** — 3 places where the grid class is used (lines 481, 508, and the skeleton grid):
+- Change `grid-cols-1 sm:grid-cols-2` → `grid-cols-2` for 2col layout
+- Keep `lg:grid-cols-3` for 3col layout
 
-### 2. Remove fake stats section
-The current stats (2M+ images, 5,000+ brands, etc.) are not real. Remove the entire stats section.
+## Issue 2: Virtual Try-On thumbnail should be top-aligned
+The background image shows a woman's face — centering crops it out. Only this workflow needs `object-top`.
 
-### 3. Refine hero and mission copy
-- Keep the hero message but tighten it — more professional, less startup-cliché
-- Refine mission/vision copy to sound grounded and credible
+### Files
+**`src/components/app/WorkflowAnimatedThumbnail.tsx`**:
+- Add optional `objectPosition` field to the `WorkflowScene` interface
+- Use `scene.objectPosition ?? 'center'` in all 4 `object-center` class locations (replace hardcoded `object-center` with a dynamic style)
 
-### 4. Keep the AI Team section and Values
-These are good and truthful — the AI team members are the product's virtual team. Keep as-is.
-
-### 5. Add a "Founder" section at the bottom
-After the AI team section, add a minimal, elegant founder block:
-- Optimized photo of Tomas Simkus (rounded, professional)
-- Name: Tomas Simkus
-- Title: Founder
-- LinkedIn link (icon button) pointing to `https://www.linkedin.com/in/tomassimkusprofile/`
-- No bio text beyond what's truthful — just the name, title, and LinkedIn
-
-### File: `src/pages/About.tsx`
-- Remove `stats` array and the stats `<section>`
-- Import the founder image from `@/assets/founder-tomas.jpg`
-- Add founder section after the team grid
-- Add LinkedIn icon from lucide-react (`Linkedin`)
+**`src/components/app/workflowAnimationData.tsx`**:
+- Add `objectPosition: 'top'` to the `'Virtual Try-On Set'` scene entry
 
