@@ -41,7 +41,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id }: Props) {
       {/* Square thumbnail */}
       <div className="relative w-full aspect-[3/4] overflow-hidden">
         {scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact />
         ) : (
           <img
             src={workflow.preview_image_url || imgFallback}

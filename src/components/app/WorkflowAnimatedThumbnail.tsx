@@ -57,6 +57,7 @@ export interface WorkflowScene {
 interface Props {
   scene: WorkflowScene;
   isActive?: boolean;
+  compact?: boolean;
 }
 
 /* ── Floating element renderer ── */
