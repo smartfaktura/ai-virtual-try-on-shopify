@@ -1,66 +1,66 @@
 
 
-# Add "Campaign Mode" Selector to Creative Drops Workflow Step
+# Fix: Replace "Images per Product" with Matrix-Based Calculation
 
-## What the User Wants
-When selecting a workflow like Virtual Try-On or Mirror Selfie, the user wants a clear choice between:
-1. **Curated** — manually pick specific models, scenes, settings
-2. **Mix** — system auto-randomizes models and scenes for maximum diversity based on the selected products
+## Problem
+The wizard has two conflicting image-count concepts:
+1. **"Images per Product"** — an arbitrary number (10/25/50/100) the user picks
+2. **Model × Scene selections** — e.g., 5 models × 3 scenes = 15 combinations
 
-Currently, the "Random / Diverse" toggles exist separately for scenes and models buried in the config panel. The user wants a top-level, prominent choice before diving into details.
+These are contradictory. If you select 5 models and 3 scenes, the system should generate 15 images per product — not an unrelated "25" that the user separately chose.
+
+## Solution
+Make the image count work differently based on campaign mode:
+
+### Curated Mode
+Remove the "Images per Product" preset buttons entirely. The image count is **calculated automatically** from the matrix:
+- `scenes × models × formats = images per product`
+- Example: 3 scenes × 5 models × 2 formats = 30 images per product
+- Show a live summary: "3 scenes × 5 models × 2 formats = 30 images per product"
+
+For workflows without models (Product Listing Set), the matrix is just `scenes × formats`. If no scenes exist either, show a simple image count input.
+
+### Mix Mode
+Keep the "Images per Product" selector (10/25/50/100) since the system auto-randomizes and the user needs to specify how many total images they want.
 
 ## Changes
 
 ### File: `src/components/app/CreativeDropWizard.tsx`
 
-**A. Add Campaign Mode selector (after workflow is selected, before config panel)**
-
-When a workflow is selected and it has scenes/models, show a two-card selector:
-
-```text
-┌─────────────────────┐  ┌─────────────────────┐
-│  🎨 Curated         │  │  🔀 Mix             │
-│  Pick models &      │  │  Auto-diverse mix   │
-│  scenes manually    │  │  of all models &    │
-│                     │  │  scenes             │
-└─────────────────────┘  └─────────────────────┘
+**A. Compute image count from matrix in Curated mode** (near line 290)
+```
+const computedImageCount = (() => {
+  if (campaignMode === 'mix') return imageCount; // user-chosen
+  const sceneCount = Math.max(sceneSelections.size, 1);
+  const modelCount = needsModels ? Math.max(modelSelections.length, 1) : 1;
+  const formatCount = Math.max(formats.length, 1);
+  return sceneCount * modelCount * formatCount;
+})();
 ```
 
-- **Curated**: Shows the full config panel (scenes grid, models grid) — current behavior
-- **Mix**: Auto-sets `isRandomModelsFlag = true` and `isRandomScenesFlag = true`, collapses the manual selection panels, shows a simple summary card: "System will automatically select diverse models and scenes for each image"
+Use `computedImageCount` in the credit calculation and save logic instead of raw `imageCount`.
 
-**B. State: Add `campaignMode: 'curated' | 'mix'`** (default: `'curated'`)
+**B. Conditionally show "Images per Product" section** (lines 1001-1034)
+- **Mix mode**: Show the preset buttons (10/25/50/100) as-is — user picks how many
+- **Curated mode**: Replace with a read-only summary showing the matrix breakdown:
+  ```
+  3 scenes × 5 models × 2 formats = 30 images per product
+  ```
 
-When user switches to "Mix":
-- Set `isRandomModelsFlag = true`, `isRandomScenesFlag = true`
-- Hide scene/model grids (they're irrelevant in mix mode)
-- Show a compact summary instead
+**C. Update Credit Summary** (lines 1422-1441)
+Use `computedImageCount` instead of `imageCount`. The breakdown text adjusts based on mode:
+- Curated: "2 products × (3 scenes × 5 models × 2 formats) = 60 images"
+- Mix: "2 products × 25 images × 2 formats = 100 images"
 
-When user switches to "Curated":
-- Set `isRandomModelsFlag = false`, `isRandomScenesFlag = false`
-- Show full scene/model grids as current
+**D. Update save logic** (line 449)
+Store `computedImageCount` as `image_count` in `sceneConfig`.
 
-**C. Simplify the config panel in Mix mode**
-When `campaignMode === 'mix'`, only show:
-- Images per Product count
-- Aspect Ratios
-- Workflow-specific settings (UGC Mood, Flat Lay Aesthetic)
-- Credit Summary
-- A summary card: "Auto Mix: System picks diverse models & scenes for each product"
-
-Hide: Scene grid, Model grid, Pose picker (since they're all randomized)
-
-**D. For workflows without models (Product Listing Set)**
-Don't show the campaign mode selector — go straight to config since there's nothing to "mix".
-
-## What's NOT Changing
-- Backend/save logic — `isRandomModelsFlag` and `isRandomScenesFlag` already exist and are saved
-- Credit calculation — unchanged
-- Workflow selection cards — unchanged
-- Steps 0, 1, 3 — unchanged
+**E. Update the helper text under Models** (line 1273)
+Remove the "25 images distributed across 5 models (~5 each)" text — it's misleading. In Curated mode, each model × scene combination is an explicit image.
 
 ## Summary
-- 1 file modified, ~40 lines added
-- Prominent "Curated vs Mix" choice replaces buried Random toggles
-- Mix mode auto-enables all randomization and hides manual selection UI
+- 1 file, ~30 lines changed
+- Curated mode: image count = scenes × models × formats (auto-calculated, no manual input)
+- Mix mode: image count = user-chosen preset (10/25/50/100)
+- Credit summary reflects the actual formula used
 
