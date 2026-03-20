@@ -13,7 +13,7 @@ const LOGO_DARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 
 
 const LOGO_WHITE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
   <text x="0" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="4" fill="#ffffff">VOVV</text>
-  <text x="195" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="2" fill="#a3b1c2">.AI</text>
+  <text x="195" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="2" fill="#ffffff">.AI</text>
 </svg>`;
 
 const brandColors = [
