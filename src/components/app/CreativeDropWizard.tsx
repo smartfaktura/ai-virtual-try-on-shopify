@@ -1455,9 +1455,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
                     {/* Credit Summary */}
                     {(() => {
-                      const formatCount = Math.max(formats.length, 1);
                       const productCount = selectedProductIds.size;
-                      const totalImages = productCount * imageCount * formatCount;
+                      const totalImages = productCount * computedImageCount;
                       const totalCredits = totalImages * 6;
                       return (
                         <Card className="p-4 bg-muted/30 border-dashed space-y-2">
@@ -1466,7 +1465,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             <p className="text-sm font-semibold">Credit Estimate</p>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {productCount} product{productCount !== 1 ? 's' : ''} × {imageCount} image{imageCount !== 1 ? 's' : ''} × {formatCount} format{formatCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{totalImages} images</span>
+                            {productCount} product{productCount !== 1 ? 's' : ''} × {computedImageCount} image{computedImageCount !== 1 ? 's' : ''} = <span className="font-medium text-foreground">{totalImages} images</span>
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {totalImages} × 6 credits = <span className="font-semibold text-foreground">{totalCredits} credits</span>
