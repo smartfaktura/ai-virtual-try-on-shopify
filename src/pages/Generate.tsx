@@ -1711,9 +1711,20 @@ export default function Generate() {
     setZipDownloading(true);
     setZipPct(0);
     try {
-      const productName = selectedProduct?.title || scratchUpload?.productInfo.title || 'generation';
-      const images = urls.map((url, i) => ({ url, workflow_name: activeWorkflow?.name || productName, scene_name: `image_${(indices?.[i] ?? i) + 1}` }));
-      await downloadDropAsZip(images, productName, pct => setZipPct(pct));
+      const dateStr = new Date().toISOString().split('T')[0];
+      const workflowName = activeWorkflow?.name || 'Virtual Try On Set';
+      const zipName = `${dateStr}-${workflowName} (VOVV.AI)`;
+
+      // Build per-product counters for sequential numbering
+      const counters: Record<string, number> = {};
+      const images = urls.map((url, i) => {
+        const originalIdx = indices?.[i] ?? i;
+        const label = workflowVariationLabels[originalIdx] || '';
+        const productName = (label.split(' — ')[0] || selectedProduct?.title || scratchUpload?.productInfo.title || 'Generated').trim();
+        counters[productName] = (counters[productName] || 0) + 1;
+        return { url, workflow_name: zipName, scene_name: `${productName}_${counters[productName]}` };
+      });
+      await downloadDropAsZip(images, zipName, pct => setZipPct(pct));
     } catch { toast.error('Download failed'); }
     finally { setZipDownloading(false); }
   };
