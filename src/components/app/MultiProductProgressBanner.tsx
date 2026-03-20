@@ -75,7 +75,7 @@ export function MultiProductProgressBanner({
   const estHigh = useSeconds ? estHighSec : Math.max(estLow, Math.ceil(estHighSec / 60));
   const estUnit = useSeconds ? 'sec' : 'min';
 
-  const ratio = elapsed / totalEstimate;
+  const ratio = elapsed / totalEstSeconds;
   const overtimeMsg = ratio >= 2
     ? 'Almost there — high-quality results take a little extra time…'
     : ratio >= 1.3
