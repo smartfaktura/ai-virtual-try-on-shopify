@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useCredits } from '@/contexts/CreditContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FramingMultiSelector } from '@/components/app/FramingSelector';
 import { format } from 'date-fns';
@@ -129,6 +130,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const creditCtx = useCredits();
+  
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -357,6 +360,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
   const effectiveFrequency = deliveryMode === 'now' ? 'one-time' : frequency;
   const costEstimate = calculateDropCredits(workflowConfigs, 25, effectiveFrequency, selectedProductIds.size);
+  const insufficientCredits = profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance;
 
   const handleSeasonalPreset = (presetId: string) => {
     setSeasonalPreset(presetId);
@@ -1733,9 +1737,26 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               {/* Review Summary */}
               {profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2 text-sm animate-fade-in">
-                  <Wallet className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>This drop costs <strong>{costEstimate.totalCredits}</strong> credits but you only have <strong>{profile.credits_balance}</strong>.</span>
+                <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 animate-fade-in">
+                  <div className="flex items-start gap-3">
+                    <Wallet className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        You need {costEstimate.totalCredits - profile.credits_balance} more credits
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        This drop costs <strong>{costEstimate.totalCredits}</strong> credits — you have <strong>{profile.credits_balance}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 ml-8">
+                    <Button size="sm" className="rounded-full h-8 px-4 text-xs gap-1.5" onClick={() => creditCtx.openBuyModal()}>
+                      <CreditCard className="w-3.5 h-3.5" /> Buy Credits
+                    </Button>
+                    <Button size="sm" variant="ghost" className="rounded-full h-8 px-3 text-xs text-muted-foreground" asChild>
+                      <a href="/app/settings">Upgrade Plan</a>
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -1913,12 +1934,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           ) : (
             <Button
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || (deliveryMode === 'now' && profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance)}
+              disabled={saveMutation.isPending || (deliveryMode === 'now' && insufficientCredits)}
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               {saveMutation.isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
-                : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
+                : (deliveryMode === 'now' && insufficientCredits)
+                  ? <><Wallet className="w-4 h-4" /> Not Enough Credits</>
+                  : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
               }
             </Button>
           )}
