@@ -1553,7 +1553,7 @@ export default function Generate() {
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${jobIds.join(',')})\&select=id,status,result,error_message,completed_at`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${jobIds.join(',')})&select=id,status,result,error_message,completed_at`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) return;
