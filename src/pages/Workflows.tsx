@@ -505,7 +505,7 @@ export default function Workflows() {
           <FeedbackBanner />
         </div>
       ) : (
-        <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+        <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'}`}>
           {workflows.map((workflow) => (
             <WorkflowCardCompact
               key={workflow.id}
