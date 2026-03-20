@@ -3197,7 +3197,7 @@ export default function Generate() {
         {/* Pose Selection */}
         {currentStep === 'pose' && selectedModel && (
           <div className="space-y-4 pb-20">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} models={Array.from(selectedModelMap.values())} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <div className="flex items-center justify-between">
