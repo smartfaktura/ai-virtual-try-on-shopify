@@ -343,6 +343,8 @@ serve(async (req) => {
         });
     }
 
+    const replyTo = type === "contact_form" && data?.email ? data.email : undefined;
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -352,6 +354,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: "VOVV.AI <notifications@vovv.ai>",
         to: [to],
+        ...(replyTo ? { reply_to: replyTo } : {}),
         subject,
         html,
       }),
