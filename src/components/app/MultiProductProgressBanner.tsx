@@ -66,10 +66,14 @@ export function MultiProductProgressBanner({
   const completedCount = multiProductResults.size;
   const totalJobCount = totalJobs || multiProductJobIds.size;
   const totalImages = totalExpectedImages || totalJobCount;
-  const estimatePerImage = 8; // seconds per image (realistic for standard quality)
-  const totalEstimate = totalImages * estimatePerImage;
-  const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
-  const estHighMin = Math.max(estLowMin, Math.ceil((totalEstimate * 1.3) / 60));
+  const estimatePerImage = 8;
+  const totalEstSeconds = totalImages * estimatePerImage;
+  const estLowSec = Math.round(totalEstSeconds * 0.7);
+  const estHighSec = Math.round(totalEstSeconds * 1.3);
+  const useSeconds = estHighSec < 60;
+  const estLow = useSeconds ? estLowSec : Math.max(1, Math.ceil(estLowSec / 60));
+  const estHigh = useSeconds ? estHighSec : Math.max(estLow, Math.ceil(estHighSec / 60));
+  const estUnit = useSeconds ? 'sec' : 'min';
 
   const ratio = elapsed / totalEstimate;
   const overtimeMsg = ratio >= 2
