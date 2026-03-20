@@ -387,12 +387,11 @@ export default function CreativeDrops() {
               ) : filteredDrops.length === 0 && drops.length === 0 ? (
                 <EmptyStateCard
                   heading="No drops yet"
-                  description="Create your first schedule to start generating creative assets automatically."
+                  description="Create your first drop to start generating creative assets automatically."
                   action={{
-                    content: 'Create your first schedule',
+                    content: 'Create your first drop',
                     onAction: () => {
-                      setActiveTab('schedules');
-                      setTimeout(() => openWizard(), 100);
+                      openWizard();
                     },
                   }}
                   icon={<Zap className="w-10 h-10 text-muted-foreground" />}
