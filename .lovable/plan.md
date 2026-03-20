@@ -1,33 +1,28 @@
 
 
-# Fix Progress Banner Text, Results UI, and Toast Noise
+# Fix Results Page: Download, Selection Bar, and Cleanup
 
-## Issues from Screenshots
-1. Banner says "Generating 0 jobs for 2 products" / "2 of 32 jobs done" — should say **images**, not jobs
-2. Toast "Queued 32 generations for 2 products" is unnecessary noise — remove it
-3. Est. time 6-11 min is too high — reduce per-image estimate from 15s to ~8s for 3-7 min range
-4. Results page shows a huge "VARIATIONS" section with 32 badges — remove it entirely
-5. Images are too large in results grid — use smaller thumbnails (5-6 columns)
-6. Images are separated into groups by label — show all in one flat grid instead
+## Issues
+1. **Download All broken** — downloads images one-by-one (triggers popup blockers, slow). Should ZIP like Library.
+2. **Select All has no floating action bar** — should show a compact floating bar like Library page with "X selected" + "Download ZIP" (no Enhance 2K/4K for workflow).
+3. **Label text still visible** — "Product — 9:16 · full body" text still renders above grid from `workflowVariationLabels`. Remove it entirely.
 
 ## Changes
 
-### 1. MultiProductProgressBanner.tsx — Fix text + time estimate
-- Replace "jobs" with "images" everywhere: "2 of 32 images done", "Generating 32 images for 2 products"
-- Change `estimatePerImage` from 15 to 8 seconds (gives ~3-7 min for 32 images)
+### File: `src/pages/Generate.tsx`
 
-### 2. Generate.tsx — Remove toast noise
-- Remove the 4 `toast.success("Queued ...")` calls (lines ~1016, ~1180, ~1353, ~1462)
+1. **Fix `handleDownloadAll`** — replace sequential download with JSZip bulk download (same pattern as Library page). Already imports JSZip.
 
-### 3. Generate.tsx — Remove VARIATIONS section in results
-- Remove the "Variation labels" block (lines ~3996-4006) that renders all those badges
+2. **Remove label rendering** — ensure no `workflowVariationLabels` text is rendered in the results section. The label "Žiedas su deimantais — 9:16 · full body" visible in screenshot needs to be removed if still present.
 
-### 4. Generate.tsx — Flat grid with smaller thumbnails, no grouping
-- Remove the grouped rendering path (lines ~4042-4077) that splits images by label
-- Always use flat grid with more columns: `grid-cols-3 md:grid-cols-5 lg:grid-cols-6`
-- This makes thumbnails smaller — user clicks to enlarge via lightbox
+3. **Add floating selection bar** — when `selectedForPublish.size > 0`, show a fixed bottom bar:
+   - "X selected" count
+   - "Download ZIP" button (uses JSZip)
+   - Close button to deselect all
+   - No "Enhance 2K/4K" button (workflow context)
 
-### Files to edit
-- `src/components/app/MultiProductProgressBanner.tsx`
-- `src/pages/Generate.tsx`
+4. **Simplify top action buttons** — keep Select All / Deselect All, Adjust, Start Over. Replace "Download All" with ZIP-based download. Remove "Download Selected" from bottom section since the floating bar handles it.
+
+### Files
+- `src/pages/Generate.tsx` only
 
