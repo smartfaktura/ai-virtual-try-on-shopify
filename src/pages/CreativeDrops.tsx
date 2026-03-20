@@ -498,7 +498,7 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
   );
 }
 
-// Calendar view with interactive days
+// Calendar view — premium 2026 aesthetic
 function CalendarView({
   schedules,
   drops,
@@ -516,7 +516,8 @@ function CalendarView({
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const monthName = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthLabel = viewDate.toLocaleDateString('en-US', { month: 'long' });
+  const yearLabel = viewDate.getFullYear();
 
   const dropDays = new Map<number, CreativeDrop[]>();
   drops.forEach(d => {
@@ -543,11 +544,12 @@ function CalendarView({
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  // Pad trailing cells to fill last row
+  while (cells.length % 7 !== 0) cells.push(null);
 
   const isToday = (day: number) => day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
   const isCurrentMonth = monthOffset === 0;
 
-  // Month activity summary
   const dropsThisMonth = drops.filter(d => {
     const date = new Date(d.run_date);
     return date.getFullYear() === year && date.getMonth() === month;
@@ -558,153 +560,199 @@ function CalendarView({
     return date.getFullYear() === year && date.getMonth() === month;
   }).length;
 
-  const desktopDayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const mobileDayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="max-w-lg mx-auto">
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-2">
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => setMonthOffset(o => o - 1)}>
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold tracking-tight">{monthName}</h3>
-          {!isCurrentMonth && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs rounded-lg px-2.5"
-              onClick={() => setMonthOffset(0)}
-            >
-              Today
-            </Button>
-          )}
-        </div>
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => setMonthOffset(o => o + 1)}>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
+    <div className="max-w-2xl mx-auto w-full">
+      {/* Card wrapper */}
+      <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 sm:p-6">
+        {/* Month navigation header */}
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl hover:bg-muted/60"
+            onClick={() => setMonthOffset(o => o - 1)}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
 
-      {/* Month summary */}
-      {(dropsThisMonth > 0 || scheduledThisMonth > 0) && (
-        <p className="text-xs text-muted-foreground text-center mb-4">
-          {[
-            dropsThisMonth > 0 ? `${dropsThisMonth} drop${dropsThisMonth !== 1 ? 's' : ''}` : null,
-            scheduledThisMonth > 0 ? `${scheduledThisMonth} scheduled` : null,
-          ].filter(Boolean).join(' · ')}
-        </p>
-      )}
-
-      {/* Day grid */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center">
-        {desktopDayHeaders.map((d, i) => (
-          <div key={`hdr-${i}`} className="text-[11px] text-muted-foreground/70 py-1.5 font-medium">
-            <span className="hidden sm:inline">{d}</span>
-            <span className="sm:hidden">{mobileDayHeaders[i]}</span>
-          </div>
-        ))}
-        {cells.map((day, i) => {
-          const dayDrops = day ? dropDays.get(day) || [] : [];
-          const daySchedules = day ? scheduledDayMap.get(day) || [] : [];
-          const hasDrop = dayDrops.length > 0;
-          const hasScheduled = daySchedules.length > 0;
-          const isInteractive = hasDrop || hasScheduled;
-
-          // Status-aware dots
-          const hasReady = dayDrops.some(d => d.status === 'ready');
-          const hasGenerating = dayDrops.some(d => d.status === 'generating');
-          const hasFailed = dayDrops.some(d => d.status === 'failed');
-          const totalEvents = dayDrops.length + daySchedules.length;
-
-          const dayContent = (
-            <div
-              className={cn(
-                'aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl text-sm min-h-[48px] transition-all relative',
-                day && isToday(day) && 'ring-2 ring-primary/30 bg-primary/5 font-semibold text-primary',
-                day && !isToday(day) && isInteractive && 'cursor-pointer hover:bg-muted/60',
-                day && !isToday(day) && !isInteractive && 'cursor-default hover:bg-muted/20',
-                !day && 'pointer-events-none',
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{monthLabel}</h3>
+              <span className="text-xl sm:text-2xl font-light text-muted-foreground/60">{yearLabel}</span>
+            </div>
+            {/* Month summary + legend inline */}
+            <div className="flex items-center gap-3 mt-1">
+              {(dropsThisMonth > 0 || scheduledThisMonth > 0) && (
+                <span className="text-[10px] sm:text-[11px] text-muted-foreground">
+                  {[
+                    dropsThisMonth > 0 ? `${dropsThisMonth} drop${dropsThisMonth !== 1 ? 's' : ''}` : null,
+                    scheduledThisMonth > 0 ? `${scheduledThisMonth} scheduled` : null,
+                  ].filter(Boolean).join(' · ')}
+                </span>
               )}
-              onClick={() => {
-                if (!day) return;
-                if (hasDrop) onDayClick?.(day, 'drop');
-                else if (hasScheduled) onDayClick?.(day, 'scheduled');
-              }}
-            >
-              {day && (
-                <>
-                  <span className="text-[13px]">{day}</span>
-                  {isInteractive && (
-                    <div className="flex items-center gap-[3px] mt-0.5">
-                      {hasReady && <div className="w-[5px] h-[5px] rounded-full bg-primary" />}
-                      {hasGenerating && <div className="w-[5px] h-[5px] rounded-full bg-amber-500 animate-pulse" />}
-                      {hasFailed && <div className="w-[5px] h-[5px] rounded-full bg-destructive" />}
-                      {hasScheduled && <div className="w-[5px] h-[5px] rounded-full bg-muted-foreground/50" />}
-                    </div>
-                  )}
-                  {totalEvents > 1 && (
-                    <span className="absolute top-0.5 right-1 text-[9px] font-medium text-muted-foreground">{totalEvents}</span>
-                  )}
-                </>
+              {!isCurrentMonth && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[10px] rounded-full px-2.5 text-muted-foreground hover:text-foreground"
+                  onClick={() => setMonthOffset(0)}
+                >
+                  Today
+                </Button>
               )}
             </div>
-          );
+          </div>
 
-          if (day && isInteractive) {
-            return (
-              <Popover key={i}>
-                <PopoverTrigger asChild>{dayContent}</PopoverTrigger>
-                <PopoverContent className="w-60 p-3 rounded-xl" side="bottom" align="center">
-                  <p className="text-xs font-semibold mb-2">{monthName.split(' ')[0]} {day}</p>
-                  {dayDrops.length > 0 && (
-                    <div className="space-y-1 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl hover:bg-muted/60"
+            onClick={() => setMonthOffset(o => o + 1)}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Legend pills */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/40 text-[10px] sm:text-[11px] font-medium text-muted-foreground">
+            <div className="w-[6px] h-[6px] rounded-full bg-primary" />
+            Ready
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/40 text-[10px] sm:text-[11px] font-medium text-muted-foreground">
+            <div className="w-[6px] h-[6px] rounded-full bg-amber-500" />
+            Generating
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/40 text-[10px] sm:text-[11px] font-medium text-muted-foreground">
+            <div className="w-[6px] h-[6px] rounded-full bg-muted-foreground/50" />
+            Scheduled
+          </div>
+        </div>
+
+        {/* Day headers */}
+        <div className="grid grid-cols-7 border-b border-border/40">
+          {dayHeaders.map((d, i) => (
+            <div key={`hdr-${i}`} className="py-2 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-muted-foreground/50">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Day grid with grid lines */}
+        <div className="grid grid-cols-7">
+          {cells.map((day, i) => {
+            const dayDrops = day ? dropDays.get(day) || [] : [];
+            const daySchedules = day ? scheduledDayMap.get(day) || [] : [];
+            const hasDrop = dayDrops.length > 0;
+            const hasScheduled = daySchedules.length > 0;
+            const isInteractive = hasDrop || hasScheduled;
+
+            const hasReady = dayDrops.some(d => d.status === 'ready');
+            const hasGenerating = dayDrops.some(d => d.status === 'generating');
+            const hasFailed = dayDrops.some(d => d.status === 'failed');
+
+            const isLastRow = i >= cells.length - 7;
+            const isLastCol = (i + 1) % 7 === 0;
+
+            const dayContent = (
+              <div
+                className={cn(
+                  'relative flex flex-col items-start p-1.5 sm:p-2 min-h-[52px] sm:min-h-[72px] transition-colors duration-200',
+                  !isLastCol && 'border-r border-border/20',
+                  !isLastRow && 'border-b border-border/20',
+                  day && isInteractive && 'cursor-pointer hover:bg-muted/40',
+                  day && !isInteractive && 'hover:bg-muted/15',
+                  !day && 'bg-muted/5',
+                )}
+                onClick={() => {
+                  if (!day) return;
+                  if (hasDrop) onDayClick?.(day, 'drop');
+                  else if (hasScheduled) onDayClick?.(day, 'scheduled');
+                }}
+              >
+                {day && (
+                  <>
+                    {/* Day number — Apple-style today circle */}
+                    <span
+                      className={cn(
+                        'text-xs sm:text-sm leading-none',
+                        isToday(day)
+                          ? 'bg-primary text-primary-foreground w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-semibold'
+                          : 'text-foreground/80 font-normal',
+                      )}
+                    >
+                      {day}
+                    </span>
+
+                    {/* Status dots — bottom area */}
+                    {isInteractive && (
+                      <div className="flex items-center gap-[3px] mt-auto pt-1">
+                        {hasReady && <div className="w-[5px] h-[5px] sm:w-[6px] sm:h-[6px] rounded-full bg-primary" />}
+                        {hasGenerating && <div className="w-[5px] h-[5px] sm:w-[6px] sm:h-[6px] rounded-full bg-amber-500 animate-pulse" />}
+                        {hasFailed && <div className="w-[5px] h-[5px] sm:w-[6px] sm:h-[6px] rounded-full bg-destructive" />}
+                        {hasScheduled && <div className="w-[5px] h-[5px] sm:w-[6px] sm:h-[6px] rounded-full bg-muted-foreground/50" />}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+
+            if (day && isInteractive) {
+              return (
+                <Popover key={i}>
+                  <PopoverTrigger asChild>{dayContent}</PopoverTrigger>
+                  <PopoverContent
+                    className="w-64 sm:w-72 p-0 rounded-2xl shadow-lg border-border/50 backdrop-blur-xl overflow-hidden"
+                    side="bottom"
+                    align="center"
+                  >
+                    {/* Popover header */}
+                    <div className="px-4 py-3 border-b border-border/30 bg-muted/20">
+                      <p className="text-sm font-semibold">
+                        {viewDate.toLocaleDateString('en-US', { month: 'long' })} {day}
+                      </p>
+                    </div>
+                    <div className="p-3 space-y-1">
                       {dayDrops.map(d => (
-                        <div key={d.id} className="flex items-center gap-2 text-xs py-1">
+                        <div key={d.id} className="flex items-center gap-2.5 text-xs py-1.5 px-1 rounded-lg hover:bg-muted/30 transition-colors">
                           <div className={cn(
-                            'w-1.5 h-1.5 rounded-full flex-shrink-0',
+                            'w-2 h-2 rounded-full flex-shrink-0',
                             d.status === 'ready' ? 'bg-primary' : d.status === 'generating' ? 'bg-amber-500' : 'bg-destructive'
                           )} />
-                          <span className="truncate flex-1">{d.schedule_name || 'Drop'}</span>
-                          <span className="text-muted-foreground">{d.total_images} img</span>
+                          <span className="truncate flex-1 font-medium">{d.schedule_name || 'Drop'}</span>
+                          <span className={cn(
+                            'px-1.5 py-0.5 rounded-full text-[10px] font-medium',
+                            d.status === 'ready' ? 'bg-primary/10 text-primary' :
+                            d.status === 'generating' ? 'bg-amber-500/10 text-amber-600' :
+                            'bg-destructive/10 text-destructive'
+                          )}>
+                            {d.status === 'ready' ? `${d.total_images} img` : d.status}
+                          </span>
                         </div>
                       ))}
-                    </div>
-                  )}
-                  {daySchedules.length > 0 && (
-                    <div className="space-y-1">
-                      {dayDrops.length > 0 && <div className="border-t border-border/50 my-1" />}
+                      {daySchedules.length > 0 && dayDrops.length > 0 && (
+                        <div className="border-t border-border/30 my-1" />
+                      )}
                       {daySchedules.map(s => (
-                        <div key={s.id} className="flex items-center gap-2 text-xs py-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 flex-shrink-0" />
-                          <span className="truncate flex-1">{s.name}</span>
-                          <span className="text-muted-foreground capitalize">{s.frequency}</span>
+                        <div key={s.id} className="flex items-center gap-2.5 text-xs py-1.5 px-1 rounded-lg hover:bg-muted/30 transition-colors">
+                          <div className="w-2 h-2 rounded-full bg-muted-foreground/40 flex-shrink-0" />
+                          <span className="truncate flex-1 font-medium">{s.name}</span>
+                          <span className="px-1.5 py-0.5 rounded-full bg-muted/60 text-[10px] font-medium text-muted-foreground capitalize">
+                            {s.frequency}
+                          </span>
                         </div>
                       ))}
                     </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-            );
-          }
+                  </PopoverContent>
+                </Popover>
+              );
+            }
 
-          return <React.Fragment key={i}>{dayContent}</React.Fragment>;
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 sm:gap-6 mt-5 pt-4 border-t border-border/50 text-xs text-muted-foreground justify-center">
-        <div className="flex items-center gap-1.5">
-          <div className="w-[6px] h-[6px] rounded-full bg-primary" />
-          Ready
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-[6px] h-[6px] rounded-full bg-amber-500" />
-          Generating
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-[6px] h-[6px] rounded-full bg-muted-foreground/50" />
-          Scheduled
+            return <React.Fragment key={i}>{dayContent}</React.Fragment>;
+          })}
         </div>
       </div>
     </div>
