@@ -1061,7 +1061,7 @@ export default function Generate() {
     const base64Image = await convertImageToBase64(sourceImageUrl);
 
     // Determine models to iterate over
-    const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+    const modelsToGenerate = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
       ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
       : needsModel ? [selectedModel!] : [];
 
