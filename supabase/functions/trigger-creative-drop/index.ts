@@ -168,6 +168,16 @@ serve(async (req) => {
 
     const sceneConfig = (schedule.scene_config || {}) as Record<string, Record<string, unknown>>;
 
+    // Resolve theme from theme_notes for legacy schedules saved with "custom"
+    let resolvedTheme = schedule.theme as string;
+    if (resolvedTheme === 'custom' && schedule.theme_notes) {
+      const notes = (schedule.theme_notes as string).toLowerCase();
+      const seasonMap: Record<string, string> = { winter: 'winter', spring: 'spring', summer: 'summer', autumn: 'autumn', holiday: 'holiday' };
+      for (const [keyword, value] of Object.entries(seasonMap)) {
+        if (notes.includes(keyword)) { resolvedTheme = value; break; }
+      }
+    }
+
     // 4. Build job payloads with fully resolved data
     let totalCreditCost = 0;
     const jobPayloads: {
