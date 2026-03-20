@@ -293,7 +293,7 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
           <img
             src={bgSrc}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-top"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             style={{
               clipPath: showSharpLayer
                 ? (phase === 'wiping' ? undefined : 'inset(0 0% 0 0)')
