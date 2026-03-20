@@ -66,19 +66,25 @@ serve(async (req) => {
     // 3. All jobs are terminal — collect images from generation_jobs
     const { data: completedJobs } = await supabase
       .from("generation_jobs")
-      .select("results")
+      .select("results, workflow_id, product_id")
       .eq("creative_drop_id", creative_drop_id)
       .eq("status", "completed");
 
-    const allImages: string[] = [];
+    const allImages: { url: string; workflow_id?: string; product_id?: string }[] = [];
     for (const job of completedJobs || []) {
       const results = job.results;
       if (Array.isArray(results)) {
         for (const img of results) {
-          if (typeof img === "string") {
-            allImages.push(img);
-          } else if (typeof img === "object" && img !== null && "url" in img) {
-            allImages.push((img as Record<string, string>).url);
+          const url = typeof img === "string" ? img
+            : (typeof img === "object" && img !== null && "url" in img)
+              ? (img as Record<string, string>).url
+              : null;
+          if (url) {
+            allImages.push({
+              url,
+              workflow_id: job.workflow_id || undefined,
+              product_id: job.product_id || undefined,
+            });
           }
         }
       }

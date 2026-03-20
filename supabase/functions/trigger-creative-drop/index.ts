@@ -223,6 +223,7 @@ serve(async (req) => {
 
           const payload: Record<string, unknown> = {
             workflow_id: wfId,
+            product_id: productId,
             product: productObject,
             imageCount: actualImageCount,
             quality: "standard",
