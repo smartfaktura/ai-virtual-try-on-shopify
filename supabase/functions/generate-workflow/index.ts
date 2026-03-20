@@ -742,6 +742,15 @@ async function completeQueueJob(
 
   console.log(`[generate-workflow] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
 
+  // Fire-and-forget: check if creative drop is complete
+  if (payload.creative_drop_id) {
+    fetch(`${supabaseUrl}/functions/v1/complete-creative-drop`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ creative_drop_id: payload.creative_drop_id }),
+    }).catch((e) => console.warn("[generate-workflow] Drop completion check failed:", e.message));
+  }
+
   // Fire-and-forget: send generation complete email (only if user opted in)
   try {
     const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
