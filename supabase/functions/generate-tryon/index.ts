@@ -181,8 +181,14 @@ function buildPrompt(req: TryOnRequest, dropContext?: DropContext): string {
   const dropBlocks = dropContext ? buildDropDirectionBlocks(dropContext) : "";
 
   // Build environment/background section based on whether scene image is provided
+  const hasDropTheme = dropContext?.theme && dropContext.theme !== "custom";
   let environmentBlock: string;
-  if (hasSceneImage) {
+  if (hasSceneImage && hasDropTheme) {
+    // Creative drop with seasonal theme: use scene image for POSE only, override environment with theme
+    environmentBlock = `   - Pose Reference: Use the POSE and BODY POSITIONING from [SCENE IMAGE] (stance, angle, framing, body direction).
+   - Background & Environment: Do NOT replicate the background or environment from [SCENE IMAGE]. Instead, create the environment described in the SEASONAL DIRECTION below. Only use [SCENE IMAGE] for pose reference.
+   - IMPORTANT: The person's IDENTITY (face, skin tone, hair, body type) MUST come exclusively from [MODEL IMAGE]. Do NOT copy the face or appearance of any person in [SCENE IMAGE].`;
+  } else if (hasSceneImage) {
     environmentBlock = `   - Background & Environment: Replicate the environment, lighting, backdrop, composition, pose direction, and body positioning shown in [SCENE IMAGE]. Match the mood, color palette, spatial depth, camera angle, and the way the subject is posed (e.g. side profile, back turned, walking, leaning).
    - IMPORTANT: The person's IDENTITY (face, skin tone, hair, body type) MUST come exclusively from [MODEL IMAGE]. Do NOT copy the face or appearance of any person in [SCENE IMAGE] -- only copy their pose, stance, and the environment around them.`;
   } else {
@@ -210,6 +216,7 @@ ${identityBlock}
 3. Photography style:
    - Pose: ${req.pose.name} - ${req.pose.description}
 ${environmentBlock}
+${dropBlocks}
    - Lighting: Professional studio lighting with soft key light and rim light for depth
    - Camera: Shot on Canon EOS R5, 85mm f/1.4 lens, fashion editorial quality
 
@@ -218,8 +225,8 @@ ${environmentBlock}
    - Perfect anatomy with natural hands
    - No AI artifacts or distortions
    - Ultra high resolution
-${dropBlocks}
-${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
+
+${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage && !hasDropTheme ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : hasSceneImage ? " Use the pose from [SCENE IMAGE], but the environment MUST follow the SEASONAL DIRECTION, not the scene image." : ""}`;
 }
 
 const negativePrompt =
