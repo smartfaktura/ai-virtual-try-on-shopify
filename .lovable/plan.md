@@ -1,37 +1,71 @@
 
 
-# Elevate the About Page — Premium, Founder-Centric Redesign
+# Fix Contact Form Email + Remove Discord Card
 
-## What's Wrong Now
-- The page feels flat and generic — plain white sections, no visual richness
-- The founder section is an afterthought — tiny circle photo, just "Founder" and a LinkedIn link
-- No narrative arc connecting the founder's vision to the product
-- The hero is functional but lacks personality and premium feel
+## Problem
+1. The `/contact` form inserts into `contact_submissions` table but never sends an email to hello@vovv.ai — the DB record is saved but no notification reaches the team.
+2. The "Community / Join our Discord" sidebar card is false — there is no Discord community.
 
-## Changes
+## Root Cause
+The contact page only does `supabase.from('contact_submissions').insert(...)`. The `send-contact` edge function (which forwards to `send-email`) is only used by the in-app `ChatContactForm` and requires JWT auth. The public `/contact` page has no mechanism to trigger an email.
 
-### 1. Elevated Hero with subtle gradient backdrop
-Replace the plain hero with a refined section using a subtle gradient background (`bg-gradient-to-b from-primary/5 via-background to-background`). Add a thin decorative line or accent element above the heading for visual distinction.
+## Solution
 
-### 2. Redesign the Founder section as the emotional anchor
-Move the founder section between Mission and Values (or after Values, before AI Team) so it flows narratively: Problem → Approach → Founder's Vision → Values → Team.
+### 1. Database trigger to send email on new contact submission
+Create a migration with a trigger function on `contact_submissions` INSERT that calls the `send-email` edge function via `net.http_post` — the same pattern already used by `notify_new_user()` and `deduct_credits()`.
 
-Redesign to a horizontal card layout:
-- Left: larger photo (w-32 h-32 or bigger), rounded-2xl with a subtle shadow and ring
-- Right: Name, title, a short 1-2 sentence founder quote/vision statement (italic, styled as a quote with a left border accent), LinkedIn icon button
-- Wrap in a card with subtle border and premium feel
+```sql
+CREATE FUNCTION notify_contact_submission()
+  RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+  SET search_path TO 'public'
+AS $$
+DECLARE v_url text; v_key text;
+BEGIN
+  -- Get credentials from vault (same pattern as notify_new_user)
+  SELECT decrypted_secret INTO v_url FROM vault.decrypted_secrets WHERE name = 'SUPABASE_URL' LIMIT 1;
+  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'SUPABASE_SERVICE_ROLE_KEY' LIMIT 1;
 
-### 3. Add a founder quote
-Add a compelling, short quote: *"Every brand deserves visuals that look like they came from a professional studio — without the cost, the wait, or the complexity."* This anchors the page emotionally.
+  IF v_url IS NOT NULL AND v_key IS NOT NULL THEN
+    PERFORM net.http_post(
+      url := v_url || '/functions/v1/send-email',
+      body := jsonb_build_object(
+        'type', 'contact_form',
+        'to', 'hello@vovv.ai',
+        'data', jsonb_build_object(
+          'name', NEW.name,
+          'email', NEW.email,
+          'message', NEW.message,
+          'inquiryType', NEW.inquiry_type
+        )
+      ),
+      headers := jsonb_build_object(
+        'Authorization', 'Bearer ' || v_key,
+        'Content-Type', 'application/json'
+      )
+    );
+  END IF;
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'notify_contact_submission failed: %', SQLERRM;
+  RETURN NEW;
+END;
+$$;
 
-### 4. Polish section spacing and typography
-- Increase section padding consistency
-- Add subtle section dividers or gradient transitions between sections
-- Use `tracking-tight` on all headings for premium feel
+CREATE TRIGGER on_contact_submission_insert
+  AFTER INSERT ON contact_submissions
+  FOR EACH ROW EXECUTE FUNCTION notify_contact_submission();
+```
 
-### File: `src/pages/About.tsx`
-- Restructure section order: Hero → Mission → Founder (redesigned) → Values → AI Team
-- Founder section: horizontal layout with quote, larger photo, subtle card treatment
-- Hero: add gradient background
-- Minor spacing/typography polish throughout
+This is the same battle-tested pattern used by `notify_new_user`. No client-side changes needed — the existing DB insert will now automatically trigger the email.
+
+### 2. Update `contactFormEmail` template in `send-email`
+Add the `inquiryType` field to the email template so the team can see the selected subject category.
+
+### 3. Remove the Discord/Community card
+In `src/pages/Contact.tsx`, delete lines 148-156 (the Community card with the Discord mention).
+
+## Files
+- **New migration** — trigger function + trigger on `contact_submissions`
+- **`supabase/functions/send-email/index.ts`** — add `inquiryType` row to `contactFormEmail` template
+- **`src/pages/Contact.tsx`** — remove the Community sidebar card
 
