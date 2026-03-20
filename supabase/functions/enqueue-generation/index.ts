@@ -168,9 +168,11 @@ serve(async (req) => {
 
     if (result.error) {
       const errorStr = String(result.error);
-      const status = errorStr.includes("concurrent") ? 429 : 402;
+      // Burst/rate limit → 429; insufficient credits → 402
+      const isBurst = errorStr.includes("Too many requests") || errorStr.includes("burst") || errorStr.includes("concurrent");
+      const status = isBurst ? 429 : 402;
       return new Response(
-        JSON.stringify({ error: result.error, balance: result.balance, max_concurrent: result.max_concurrent }),
+        JSON.stringify({ error: result.error, balance: result.balance, max_concurrent: result.max_concurrent, retry_after_seconds: result.retry_after_seconds || (isBurst ? 5 : undefined) }),
         { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
