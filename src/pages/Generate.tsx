@@ -1261,18 +1261,24 @@ export default function Generate() {
 
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
+      const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+      const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
       for (const product of productQueue) {
         for (const model of modelsToGenerate) {
           for (const pose of posesToGenerate) {
-            const result = await enqueueTryOnForProduct(product, token, pose, model);
-            if (result) {
-              jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}`, result.jobId);
-              lastBalance = result.newBalance;
-              injectActiveJob(queryClient, {
-                jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-                workflow_slug: activeWorkflow?.slug, product_name: product.title,
-                job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-              });
+            for (const ratioVal of ratiosToGen) {
+              for (const framingVal of framingsToGen) {
+                const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
+                if (result) {
+                  jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}_${ratioVal}_${framingVal}`, result.jobId);
+                  lastBalance = result.newBalance;
+                  injectActiveJob(queryClient, {
+                    jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+                    workflow_slug: activeWorkflow?.slug, product_name: product.title,
+                    job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                  });
+                }
+              }
             }
           }
         }
