@@ -328,9 +328,9 @@ export default function CreativeDrops() {
                 </div>
               ) : schedules.length === 0 ? (
                 <EmptyStateCard
-                  heading="No schedules yet"
-                  description="Set up your first Creative Drop schedule to automate visual generation for your products."
-                  action={{ content: 'Create Schedule', onAction: openWizard }}
+                  heading="No scheduled drops yet"
+                  description="Set up your first scheduled drop to automate visual generation for your products."
+                  action={{ content: 'Create Drop', onAction: openWizard }}
                   icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
                 />
               ) : (
