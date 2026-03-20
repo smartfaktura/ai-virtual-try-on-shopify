@@ -3152,16 +3152,16 @@ export default function Generate() {
                     <p className="text-sm text-muted-foreground">
                       {isFreeUser
                         ? 'Free plan: 1 scene per generation'
-                        : `Choose up to ${PAID_SCENE_LIMIT} scenes for your shoot`}
+                        : 'Select scenes for your shoot'}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {selectedPoses.size} / {isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT}
+                    {selectedPoses.size} selected{!isFreeUser && selectedPoses.size > 0 ? ` · ${selectedPoses.size * parseInt(imageCount) * 6 * (isMultiProductMode ? productQueue.length : 1)} credits` : ''}
                   </Badge>
                 </div>
               </div>
               {Object.entries(posesByCategory).map(([category, poses]) => (
-                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} maxSelectable={isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} />
+                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} />
               ))}
               <MissingRequestBanner
                 category="scene"
