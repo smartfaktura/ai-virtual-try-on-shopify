@@ -1,22 +1,23 @@
 
 
-# Fix: Launch Step Scrolls to Top When Navigating
+# Fix: Workflow Preview Images in Creative Drops — Show Full Image, Not Zoomed Crop
 
 ## Problem
-When navigating to Step 3 (Launch), the scroll position stays at the bottom because the wizard uses `window.scrollTo({ top: 0 })` but the actual scroll container is `#app-main-scroll` (the AppShell main content area). The window itself doesn't scroll — the main content div does.
+Workflow card thumbnails are `w-14 h-14` (56px) squares with `object-cover`, forcefully cropping the preview images into tiny squares. Combined with `width: 120` optimization, the images look zoomed-in and unrecognizable. Only Picture Perspectives looks okay because it uses a local image that happens to crop well.
 
-## Change
+## Changes
 
-### File: `src/components/app/CreativeDropWizard.tsx` (lines 421-429)
+### File: `src/components/app/CreativeDropWizard.tsx`
 
-Replace both `window.scrollTo({ top: 0, behavior: 'smooth' })` calls in `handleNext` and `handleBack` with:
-```ts
-document.getElementById('app-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
-```
+**A. Enlarge thumbnail and use natural aspect ratio** (line 920-921)
+Change the thumbnail container from a tiny square to a larger rectangle:
+- `w-14 h-14` → `w-20 h-24` (80×96px, roughly 5:6 ratio)
+- Keep `rounded-xl bg-muted overflow-hidden flex-shrink-0`
+- Change `aspectRatio="1/1"` → `aspectRatio="5/6"` on `ShimmerImage`
 
-This targets the correct scroll container used by AppShell (`<main id="app-main-scroll">`), ensuring the user sees the top of each step when navigating forward or backward.
+**B. Remove aggressive width optimization** (line 46)
+Change `width: 120` → `width: 200` so images are less compressed at the slightly larger display size.
 
 ## Summary
-- 1 file, 2 lines changed
-- Fixes scroll-to-top on step navigation so Launch step shows from the top
-
+- 1 file, 3 lines changed
+- Thumbnails go from 56px squares to 80×96px rectangles showing the full image naturally
