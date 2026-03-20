@@ -145,15 +145,6 @@ export default function Contact() {
                   </p>
                 </CardContent>
               </Card>
-              <Card className="bg-card border-border">
-                <CardContent className="pt-6">
-                  <MessageSquare className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="font-semibold text-foreground mb-1">Community</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Join our Discord for real-time help, tips, and feature discussions.
-                  </p>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

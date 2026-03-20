@@ -151,17 +151,26 @@ function lowCreditsEmail(data: { balance?: number; displayName?: string }): stri
   `);
 }
 
-function contactFormEmail(data: { name?: string; email?: string; message?: string; userId?: string }): string {
+function contactFormEmail(data: { name?: string; email?: string; message?: string; userId?: string; inquiryType?: string }): string {
   const senderName = data.name || "Unknown";
   const senderEmail = data.email || "Unknown";
   const msg = (data.message || "").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>");
   const timestamp = new Date().toUTCString();
+  const inquiryLabels: Record<string, string> = {
+    general: "General Question",
+    billing: "Billing & Plans",
+    technical: "Technical Support",
+    feature: "Feature Request",
+    enterprise: "Enterprise Inquiry",
+    partnership: "Partnership",
+  };
+  const inquiryLabel = inquiryLabels[data.inquiryType || ""] || data.inquiryType || "General";
   return emailWrapper(`
     <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
       New Contact Form Message
     </h1>
     <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
-      A user reached out via the Studio Chat contact form.
+      A visitor reached out via the contact form.
     </p>
     <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -176,8 +185,8 @@ function contactFormEmail(data: { name?: string; email?: string; message?: strin
           </td>
         </tr>
         <tr>
-          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;">User ID</td>
-          <td style="font-family:'Inter',sans-serif;font-size:11px;color:${BRAND.muted};font-weight:400;padding:6px 0;font-family:monospace;">${data.userId || "N/A"}</td>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;">Subject</td>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:6px 0;">${inquiryLabel}</td>
         </tr>
         <tr>
           <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;">Sent</td>
