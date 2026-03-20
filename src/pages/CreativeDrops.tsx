@@ -339,7 +339,7 @@ export default function CreativeDrops() {
                     <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
                   ))}
                 </div>
-              ) : filteredDrops.length === 0 && drops.length === 0 ? (
+              ) : filteredDrops.length === 0 ? (
                 <EmptyStateCard
                   heading="No drops yet"
                   description="Create your first drop to start generating creative assets automatically."
