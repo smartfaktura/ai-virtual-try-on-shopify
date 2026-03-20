@@ -1232,16 +1232,18 @@ export default function Generate() {
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       for (const product of productQueue) {
-        for (const pose of posesToGenerate) {
-          const result = await enqueueTryOnForProduct(product, token, pose);
-          if (result) {
-            jobMap.set(`${product.id}_${pose.poseId}`, result.jobId);
-            lastBalance = result.newBalance;
-            injectActiveJob(queryClient, {
-              jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
-              workflow_slug: activeWorkflow?.slug, product_name: product.title,
-              job_type: 'tryon', quality, imageCount: parseInt(imageCount),
-            });
+        for (const model of modelsToGenerate) {
+          for (const pose of posesToGenerate) {
+            const result = await enqueueTryOnForProduct(product, token, pose, model);
+            if (result) {
+              jobMap.set(`${product.id}_${model.modelId}_${pose.poseId}`, result.jobId);
+              lastBalance = result.newBalance;
+              injectActiveJob(queryClient, {
+                jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
+                workflow_slug: activeWorkflow?.slug, product_name: product.title,
+                job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+              });
+            }
           }
         }
       }
