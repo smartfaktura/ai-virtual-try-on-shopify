@@ -615,7 +615,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               </div>
               <div className="space-y-2">
                 <Label>Aspect Ratio</Label>
-                <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                <AspectRatioMultiSelector value={selectedAspectRatios} onChange={setSelectedAspectRatios} />
               </div>
             </div>
           </CardContent></Card>
