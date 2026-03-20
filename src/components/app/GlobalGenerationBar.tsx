@@ -110,6 +110,7 @@ export function GlobalGenerationBar() {
             job_type: original?.job_type ?? null,
             quality: original?.quality ?? null,
             resolution: original?.resolution ?? null,
+            isCreativeDrop: original?.isCreativeDrop ?? false,
             totalImageCount: original?.totalImageCount ?? 0,
             generatedImageCount: original?.generatedImageCount ?? 0,
           };
