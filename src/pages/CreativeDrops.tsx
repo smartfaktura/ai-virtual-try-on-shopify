@@ -63,7 +63,7 @@ export default function CreativeDrops() {
   const [wizardInitialData, setWizardInitialData] = useState<CreativeDropWizardInitialData | undefined>(undefined);
   const [editingScheduleId, setEditingScheduleId] = useState<string | undefined>(undefined);
   const [selectedDrop, setSelectedDrop] = useState<CreativeDrop | null>(null);
-  const [activeTab, setActiveTab] = useState('schedules');
+  const [activeTab, setActiveTab] = useState('drops');
   const [dropStatusFilter, setDropStatusFilter] = useState<string>('all');
   const [dropSortAsc, setDropSortAsc] = useState(false);
 
@@ -250,7 +250,7 @@ export default function CreativeDrops() {
   return (
     <PageHeader
       title={wizardOpen ? '' : 'Creative Drops'}
-      subtitle={wizardOpen ? undefined : "Automate recurring visual creation. Set up schedules and receive fresh assets on autopilot."}
+      subtitle={wizardOpen ? undefined : "Automate recurring visual creation. Set up drops and receive fresh assets on autopilot."}
       backAction={wizardOpen ? { content: 'Back', onAction: closeWizard } : undefined}
     >
       {wizardOpen ? (
@@ -273,7 +273,7 @@ export default function CreativeDrops() {
           <div className="rounded-2xl bg-card shadow-sm overflow-hidden mb-8">
             <div className="flex overflow-x-auto scrollbar-hide divide-x divide-border">
               {[
-                { value: activeCount, label: 'Active Schedules' },
+                { value: activeCount, label: 'Scheduled' },
                 { value: totalDrops, label: 'Total Drops' },
                 { value: totalImages, label: 'Images Generated' },
                 { value: totalCredits, label: 'Credits Used' },
@@ -299,11 +299,11 @@ export default function CreativeDrops() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex items-center justify-between gap-3">
               <TabsList className="bg-muted/50 rounded-xl p-1 h-auto">
-                <TabsTrigger value="schedules" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
-                  Schedules
-                </TabsTrigger>
                 <TabsTrigger value="drops" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Drops
+                </TabsTrigger>
+                <TabsTrigger value="schedules" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
+                  Scheduled
                 </TabsTrigger>
                 <TabsTrigger value="calendar" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Calendar
@@ -311,36 +311,12 @@ export default function CreativeDrops() {
               </TabsList>
               <Button onClick={openWizard} className="rounded-xl gap-2 hidden sm:inline-flex">
                 <Calendar className="w-4 h-4" />
-                Create Schedule
+                Create Drop
               </Button>
               <Button onClick={openWizard} size="icon" className="rounded-xl sm:hidden">
                 <Calendar className="w-4 h-4" />
               </Button>
             </div>
-
-            <TabsContent value="schedules" className="space-y-4">
-
-              {schedulesLoading ? (
-                <div className="space-y-3">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
-                  ))}
-                </div>
-              ) : schedules.length === 0 ? (
-                <EmptyStateCard
-                  heading="No schedules yet"
-                  description="Set up your first Creative Drop schedule to automate visual generation for your products."
-                  action={{ content: 'Create Schedule', onAction: openWizard }}
-                  icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {schedules.map(schedule => (
-                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} onEdit={handleEdit} workflowNames={schedule.workflow_ids.map(id => workflowNameMap.get(id)).filter(Boolean) as string[]} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
 
             <TabsContent value="drops" className="space-y-4">
               {/* Filter & Sort bar */}
@@ -387,12 +363,11 @@ export default function CreativeDrops() {
               ) : filteredDrops.length === 0 && drops.length === 0 ? (
                 <EmptyStateCard
                   heading="No drops yet"
-                  description="Create your first schedule to start generating creative assets automatically."
+                  description="Create your first drop to start generating creative assets automatically."
                   action={{
-                    content: 'Create your first schedule',
+                    content: 'Create your first drop',
                     onAction: () => {
-                      setActiveTab('schedules');
-                      setTimeout(() => openWizard(), 100);
+                      openWizard();
                     },
                   }}
                   icon={<Zap className="w-10 h-10 text-muted-foreground" />}
@@ -411,6 +386,29 @@ export default function CreativeDrops() {
                       onViewDrop={() => setSelectedDrop(drop)}
                       scheduleName={drop.schedule_name || (drop.schedule_id ? scheduleNameMap.get(drop.schedule_id) : undefined) || undefined}
                     />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="schedules" className="space-y-4">
+              {schedulesLoading ? (
+                <div className="space-y-3">
+                  {[1, 2].map(i => (
+                    <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : schedules.length === 0 ? (
+                <EmptyStateCard
+                  heading="No scheduled drops yet"
+                  description="Set up your first scheduled drop to automate visual generation for your products."
+                  action={{ content: 'Create Drop', onAction: openWizard }}
+                  icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {schedules.map(schedule => (
+                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} onEdit={handleEdit} workflowNames={schedule.workflow_ids.map(id => workflowNameMap.get(id)).filter(Boolean) as string[]} />
                   ))}
                 </div>
               )}
