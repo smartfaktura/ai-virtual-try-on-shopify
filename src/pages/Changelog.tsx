@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
-import { History } from 'lucide-react';
+import { History, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const changeTypes = {
   new: { label: 'New', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
@@ -12,60 +14,91 @@ const changeTypes = {
 
 const releases = [
   {
-    version: 'v1.3.0',
-    date: 'February 1, 2026',
-    title: 'Freestyle Studio & Video Generation',
+    version: 'v1.5.0',
+    date: 'March 20, 2026',
+    title: 'Layout Switcher, Help Center & Polish',
     changes: [
-      { type: 'new' as const, text: 'Freestyle generation mode — describe any scene with a text prompt' },
+      { type: 'new' as const, text: 'Workflow layout switcher — toggle between rows, 2-column, and 3-column grid views' },
+      { type: 'improved' as const, text: 'Help Center FAQ completely rewritten for clarity' },
+      { type: 'fixed' as const, text: 'Team page layout issues on mobile devices' },
+      { type: 'improved' as const, text: 'Favicon and metadata audit across all pages' },
+    ],
+  },
+  {
+    version: 'v1.4.0',
+    date: 'March 10, 2026',
+    title: 'Freestyle Studio Enhancements',
+    changes: [
+      { type: 'new' as const, text: 'Brand Profile chip selector in Freestyle — apply your brand identity to any prompt' },
+      { type: 'new' as const, text: 'Style presets chip bar for quick creative direction' },
+      { type: 'new' as const, text: 'Negative prompts chip for fine-tuned generation control' },
+      { type: 'improved' as const, text: 'Workflow cards now show animated thumbnail previews on hover' },
+      { type: 'improved' as const, text: 'Compact workflow card variant for denser layouts' },
+    ],
+  },
+  {
+    version: 'v1.3.0',
+    date: 'February 2026',
+    title: 'Video Generation & Mobile Upload',
+    changes: [
       { type: 'new' as const, text: 'AI video generation from product images (5s and 10s clips)' },
       { type: 'new' as const, text: 'Mobile upload — scan a QR code to capture product photos from your phone' },
       { type: 'improved' as const, text: 'Model selector now shows 40+ diverse AI models with filtering by body type, ethnicity, and age' },
       { type: 'improved' as const, text: 'Gallery view with full-screen lightbox and download options' },
-      { type: 'fixed' as const, text: 'Brand Profile color palette picker not saving custom colors' },
     ],
   },
   {
     version: 'v1.2.0',
-    date: 'January 10, 2026',
+    date: 'January 2026',
     title: 'Creative Drops & Bulk Generation',
     changes: [
-      { type: 'new' as const, text: 'Creative Drops — automated monthly content delivery with scheduling' },
+      { type: 'new' as const, text: 'Creative Drops — automated content delivery with scheduling' },
       { type: 'new' as const, text: 'Bulk generation — process multiple products across workflows in one batch' },
       { type: 'new' as const, text: 'Credit pack purchasing with tiered pricing' },
-      { type: 'improved' as const, text: 'Workflow cards now show animated previews on hover' },
       { type: 'improved' as const, text: 'Dashboard redesigned with quick actions and onboarding checklist' },
-      { type: 'fixed' as const, text: 'CSV import failing on files with special characters in product names' },
     ],
   },
   {
     version: 'v1.1.0',
-    date: 'December 5, 2025',
+    date: 'December 2025',
     title: 'Brand Profiles & Virtual Try-On',
     changes: [
       { type: 'new' as const, text: 'Brand Profiles — save your visual identity for consistent generation' },
       { type: 'new' as const, text: 'Virtual Try-On workflow for clothing and accessories' },
       { type: 'new' as const, text: 'Pose library with 20+ curated poses across studio, lifestyle, editorial, and streetwear categories' },
       { type: 'improved' as const, text: 'Generation quality improved with negative prompt support' },
-      { type: 'fixed' as const, text: 'Image aspect ratio not applying correctly in some templates' },
-      { type: 'fixed' as const, text: 'Job status not updating in real-time on the Jobs page' },
     ],
   },
   {
     version: 'v1.0.0',
-    date: 'October 15, 2025',
-    title: 'Launch — VOVV.AI Visual Studio',
+    date: 'October 2025',
+    title: 'Launch',
     changes: [
       { type: 'new' as const, text: 'Product upload with multi-image support and automatic categorization' },
       { type: 'new' as const, text: '4 specialized workflows: Virtual Try-On, Product Listing, Selfie / UGC, and Flat Lay' },
-      { type: 'new' as const, text: 'Template library with 15+ professionally designed scene templates' },
+      { type: 'new' as const, text: 'Template library with professionally designed scene templates' },
       { type: 'new' as const, text: 'Jobs library with search, filtering, and batch download' },
-      { type: 'new' as const, text: 'Settings with plan management and notification preferences' },
       { type: 'new' as const, text: 'Secure authentication with email and password' },
+    ],
+  },
+  {
+    version: 'v0.1.0',
+    date: 'Summer 2025',
+    title: 'Early Development',
+    changes: [
+      { type: 'new' as const, text: 'Core architecture and AI generation pipeline' },
+      { type: 'new' as const, text: 'Initial design system and component library' },
+      { type: 'new' as const, text: 'Prototype workflows and internal testing' },
     ],
   },
 ];
 
+const DEFAULT_VISIBLE = 4;
+
 export default function Changelog() {
+  const [showAll, setShowAll] = useState(false);
+  const visibleReleases = showAll ? releases : releases.slice(0, DEFAULT_VISIBLE);
+
   return (
     <PageLayout>
       <SEOHead title="Changelog — VOVV AI Product Updates" description="A timeline of everything we've shipped. Follow along as VOVV AI builds the future of AI product photography." canonical={`${SITE_URL}/changelog`} />
@@ -89,9 +122,8 @@ export default function Changelog() {
       <section className="pb-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-12">
-            {releases.map((release) => (
+            {visibleReleases.map((release) => (
               <div key={release.version} className="relative pl-8 border-l-2 border-border">
-                {/* Dot */}
                 <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-background" />
 
                 <div className="mb-4">
@@ -118,6 +150,18 @@ export default function Changelog() {
               </div>
             ))}
           </div>
+
+          {releases.length > DEFAULT_VISIBLE && (
+            <div className="mt-12 text-center">
+              <Button variant="outline" onClick={() => setShowAll((v) => !v)}>
+                {showAll ? (
+                  <>Show less <ChevronUp className="w-4 h-4 ml-1" /></>
+                ) : (
+                  <>View full history <ChevronDown className="w-4 h-4 ml-1" /></>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </section>
     </PageLayout>
