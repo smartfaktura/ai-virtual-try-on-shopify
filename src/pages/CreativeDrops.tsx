@@ -319,34 +319,14 @@ export default function CreativeDrops() {
             </div>
 
             <TabsContent value="drops" className="space-y-4">
-              {/* Filter & Sort bar */}
+              {/* Count + Sort row */}
               {drops.length > 0 && (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="relative flex-1 overflow-hidden">
-                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-4">
-                      {DROP_STATUSES.map(s => (
-                        <Button
-                          key={s}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            'text-xs capitalize rounded-full h-7 px-3',
-                            dropStatusFilter === s
-                              ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background'
-                              : 'text-muted-foreground hover:text-foreground'
-                          )}
-                          onClick={() => setDropStatusFilter(s)}
-                        >
-                          {s}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">{filteredDrops.length} drop{filteredDrops.length !== 1 ? 's' : ''}</p>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs h-7"
+                    className="text-xs h-7 text-muted-foreground"
                     onClick={() => setDropSortAsc(prev => !prev)}
                   >
                     {dropSortAsc ? 'Oldest first' : 'Newest first'}
