@@ -3148,9 +3148,9 @@ export default function Generate() {
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {filteredModels.map(model => (
-                  <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
-                ))}
+                 {filteredModels.map(model => (
+                   <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModels.has(model.modelId)} onSelect={() => handleSelectModel(model)} />
+                 ))}
               </div>
               <MissingRequestBanner
                 category="model"
