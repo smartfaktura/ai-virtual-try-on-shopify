@@ -693,7 +693,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
       {/* Framing Selector — only for Selfie/UGC */}
       {isSelfieUgc && (
         <Card><CardContent className="p-5">
-          <FramingSelector framing={framing} onFramingChange={setFraming} />
+          <FramingMultiSelector selectedFramings={selectedFramings} onSelectedFramingsChange={setSelectedFramings} />
         </CardContent></Card>
       )}
 
