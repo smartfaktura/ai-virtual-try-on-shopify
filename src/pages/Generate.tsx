@@ -3560,8 +3560,12 @@ export default function Generate() {
             setQuality={setQuality}
             aspectRatio={aspectRatio}
             setAspectRatio={setAspectRatio}
+            selectedAspectRatios={selectedAspectRatios}
+            setSelectedAspectRatios={setSelectedAspectRatios}
             framing={framing}
             setFraming={setFraming}
+            selectedFramings={selectedFramings}
+            setSelectedFramings={setSelectedFramings}
             productAngle={productAngle}
             setProductAngle={setProductAngle}
             selectedBrandProfile={selectedBrandProfile}
@@ -3573,6 +3577,8 @@ export default function Generate() {
             workflowImageCount={workflowImageCount}
             multiProductCount={multiProductCount}
             angleMultiplier={angleMultiplier}
+            aspectRatioCount={aspectRatioCount}
+            framingCount={framingCount}
             interiorType={interiorType}
             isAdmin={isAdmin}
             isGeneratingPreviews={isGeneratingPreviews}
