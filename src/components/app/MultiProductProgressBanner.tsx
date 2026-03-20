@@ -61,7 +61,8 @@ export function MultiProductProgressBanner({
 
   const totalProducts = productQueue.length;
   const completedCount = multiProductResults.size;
-  const totalImages = totalExpectedImages || totalProducts;
+  const totalJobCount = totalJobs || multiProductJobIds.size;
+  const totalImages = totalExpectedImages || totalJobCount;
   const estimatePerImage = 15; // seconds per image (realistic for standard quality)
   const totalEstimate = totalImages * estimatePerImage;
   const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
