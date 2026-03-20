@@ -461,7 +461,7 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
 Generate imagery with a ${theme} aesthetic and mood.
 ${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
     : themeNotes
-      ? `\nCREATIVE DIRECTION:\n${themeNotes}\n`
+      ? `\nSEASONAL DIRECTION: ${themeNotes}. You MUST incorporate this seasonal mood, color palette, and atmosphere into the scene, lighting, and overall feel.\n`
       : "";
 
   // Issue 6: Merge brand do_not_rules into negative prompts

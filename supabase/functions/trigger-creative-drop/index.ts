@@ -168,6 +168,16 @@ serve(async (req) => {
 
     const sceneConfig = (schedule.scene_config || {}) as Record<string, Record<string, unknown>>;
 
+    // Resolve theme from theme_notes for legacy schedules saved with "custom"
+    let resolvedTheme = schedule.theme as string;
+    if (resolvedTheme === 'custom' && schedule.theme_notes) {
+      const notes = (schedule.theme_notes as string).toLowerCase();
+      const seasonMap: Record<string, string> = { winter: 'winter', spring: 'spring', summer: 'summer', autumn: 'autumn', holiday: 'holiday' };
+      for (const [keyword, value] of Object.entries(seasonMap)) {
+        if (notes.includes(keyword)) { resolvedTheme = value; break; }
+      }
+    }
+
     // 4. Build job payloads with fully resolved data
     let totalCreditCost = 0;
     const jobPayloads: {
@@ -246,7 +256,7 @@ serve(async (req) => {
                 quality: "standard",
                 aspectRatio,
                 brand_profile: brandProfile,
-                theme: schedule.theme || undefined,
+                theme: resolvedTheme || undefined,
                 theme_notes: schedule.theme_notes || undefined,
                 creative_drop_id: "__placeholder__", // filled after drop record is created
                 pose: {
@@ -293,7 +303,7 @@ serve(async (req) => {
             aspectRatio,
             selected_variations: variationIndices.length > 0 ? variationIndices : undefined,
             brand_profile: brandProfile,
-            theme: schedule.theme || undefined,
+            theme: resolvedTheme || undefined,
             theme_notes: schedule.theme_notes || undefined,
             prop_style: (wfSceneConfig.flat_lay_prop_style as string) || undefined,
             styling_notes: (wfSceneConfig.styling_notes as string) || undefined,
