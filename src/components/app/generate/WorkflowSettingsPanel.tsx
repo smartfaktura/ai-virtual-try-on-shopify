@@ -101,8 +101,12 @@ interface WorkflowSettingsPanelProps {
   setQuality: (q: ImageQuality) => void;
   aspectRatio: AspectRatio;
   setAspectRatio: (ar: AspectRatio) => void;
+  selectedAspectRatios: Set<AspectRatio>;
+  setSelectedAspectRatios: (s: Set<AspectRatio>) => void;
   framing: FramingOption | null;
   setFraming: (f: FramingOption | null) => void;
+  selectedFramings: Set<string>;
+  setSelectedFramings: (s: Set<string>) => void;
   productAngle: 'front' | 'front-side' | 'front-back' | 'all';
   setProductAngle: (a: 'front' | 'front-side' | 'front-back' | 'all') => void;
 
