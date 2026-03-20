@@ -389,6 +389,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     setIsRandomScenesFlag(false);
     setCustomImageCountStr('');
     setSelectedFramings(new Set(['auto']));
+    setSelectedVariationIndices(new Set());
+    setFlatLayPropStyle('clean');
+    setStylingNotes('');
+    setSelectedAesthetics([]);
+    setProductAngle('front');
     markDirty();
   };
 
