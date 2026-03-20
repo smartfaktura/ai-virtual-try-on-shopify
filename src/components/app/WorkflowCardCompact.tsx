@@ -39,7 +39,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id }: Props) {
       className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300 flex flex-col"
     >
       {/* Square thumbnail */}
-      <div className="relative w-full aspect-square overflow-hidden">
+      <div className="relative w-full aspect-[3/4] overflow-hidden">
         {scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
         ) : (
