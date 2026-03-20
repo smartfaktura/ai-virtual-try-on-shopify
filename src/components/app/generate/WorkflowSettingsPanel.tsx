@@ -773,26 +773,30 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           </CardContent></Card>
 
           {/* Cost summary */}
-          <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
-            <div>
-              <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-              <p className="text-xs text-muted-foreground">
-                {isMultiProductMode ? `${productQueue.length} products × ` : ''}
-                {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
-                {angleMultiplier > 1 ? ` × ${angleMultiplier} angles` : ''}
-                {aspectRatioCount > 1 ? ` × ${aspectRatioCount} sizes` : ''}
-                {framingCount > 1 ? ` × ${framingCount} framings` : ''}
-                {' '}× 6 credits
-              </p>
+          <div className={cn("p-4 rounded-lg border", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold">
+                  {workflowImageCount * multiProductCount} image{workflowImageCount * multiProductCount !== 1 ? 's' : ''} · {creditCost} credits
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isMultiProductMode ? `${productQueue.length} products × ` : ''}
+                  {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
+                  {angleMultiplier > 1 ? ` × ${angleMultiplier} angles` : ''}
+                  {aspectRatioCount > 1 ? ` × ${aspectRatioCount} sizes` : ''}
+                  {framingCount > 1 ? ` × ${framingCount} framings` : ''}
+                  {' '}× 6 credits
+                </p>
+              </div>
+              {balance >= creditCost ? (
+                <p className="text-sm text-muted-foreground whitespace-nowrap">{balance} credits available</p>
+              ) : (
+                <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline whitespace-nowrap">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {balance} / {creditCost} credits. Top up
+                </button>
+              )}
             </div>
-            {balance >= creditCost ? (
-              <p className="text-sm text-muted-foreground">{balance} credits available</p>
-            ) : (
-              <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {balance} credits — need {creditCost}. Top up
-              </button>
-            )}
           </div>
 
           <div className="flex justify-end gap-2">
@@ -810,7 +814,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               disabled={selectedVariationIndices.size === 0 || selectedAspectRatios.size === 0}
               className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
             >
-              {balance >= creditCost ? (isInteriorDesign ? `Generate ${selectedVariationIndices.size} Staging Image${selectedVariationIndices.size !== 1 ? 's' : ''}` : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
+              {balance >= creditCost ? 'Generate' : 'Buy Credits'}
             </Button>
           </div>
         </>
