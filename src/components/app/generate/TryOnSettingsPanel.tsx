@@ -56,7 +56,8 @@ export default function TryOnSettingsPanel({
   selectedPose,
   selectedPoses, selectedPoseMap, creditCost,
   imageCount, setImageCount, quality, setQuality,
-  framing, setFraming, aspectRatio, setAspectRatio,
+  framing, setFraming, selectedFramings, setSelectedFramings,
+  aspectRatio, setAspectRatio, selectedAspectRatios, setSelectedAspectRatios,
   balance, isFreeUser, isMultiProductMode, multiProductCount, productQueue,
   tryOnSceneCount, openBuyModal, handleGenerateClick, setCurrentStep,
 }: TryOnSettingsPanelProps) {
