@@ -107,7 +107,8 @@ export function DropCard(props: Props) {
       const res = await supabase.functions.invoke('trigger-creative-drop', {
         body: { schedule_id: schedule.id },
       });
-      if (res.error) throw new Error(res.error.message);
+      const errorMsg = res.data?.error || res.error?.message;
+      if (errorMsg) throw new Error(errorMsg);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creative-drops'] });

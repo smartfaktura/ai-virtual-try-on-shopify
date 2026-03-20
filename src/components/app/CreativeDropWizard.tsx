@@ -554,9 +554,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           const res = await supabase.functions.invoke('trigger-creative-drop', {
             body: { schedule_id: scheduleId },
           });
-          if (res.error) {
-            console.error('Trigger error:', res.error);
-            toast.error(`Generation trigger failed: ${res.error.message}`);
+          const errorMsg = res.data?.error || res.error?.message;
+          if (errorMsg) {
+            console.error('Trigger error:', errorMsg);
+            toast.error(`Generation failed: ${errorMsg}`);
           }
         } catch (e) {
           console.error('Trigger error:', e);
@@ -1912,7 +1913,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           ) : (
             <Button
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || (deliveryMode === 'now' && profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance)}
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               {saveMutation.isPending
