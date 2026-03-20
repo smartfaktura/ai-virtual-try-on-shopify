@@ -24,7 +24,7 @@ const faqCategories = [
       },
       {
         q: 'What is Freestyle mode?',
-        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision. Freestyle costs 6 credits per image.',
+        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene.',
       },
       {
         q: 'What is a Brand Profile and why should I create one?',
