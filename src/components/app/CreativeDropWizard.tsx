@@ -566,9 +566,6 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
       return { scheduleId: scheduleId!, isNow: deliveryMode === 'now' };
     },
     onSuccess: async ({ scheduleId, isNow }) => {
-      queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
-      queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
-
       if (isNow && !editingScheduleId) {
         try {
           const res = await supabase.functions.invoke('trigger-creative-drop', {
@@ -578,16 +575,25 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
           if (errorMsg) {
             console.error('Trigger error:', errorMsg);
             toast.error(`Generation failed: ${errorMsg}`);
+            onClose();
+            return;
           }
+          // Switch to Drops tab FIRST, then wait for data, then close
           onLaunched?.();
+          await queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
+          await queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
+          onClose();
         } catch (e) {
           console.error('Trigger error:', e);
           toast.error('Failed to trigger generation');
+          onClose();
         }
       } else {
+        await queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
+        await queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
         toast.success(editingScheduleId ? 'Drop updated!' : 'Drop saved — it will run on the scheduled date');
+        onClose();
       }
-      onClose();
     },
     onError: (error: Error) => toast.error(
       editingScheduleId
@@ -1955,7 +1961,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               {saveMutation.isPending
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {deliveryMode === 'now' && !editingScheduleId ? 'Launching Drop...' : editingScheduleId ? 'Saving...' : 'Creating...'}</>
                 : (deliveryMode === 'now' && insufficientCredits)
                   ? <><Wallet className="w-4 h-4" /> Not Enough Credits</>
                   : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
