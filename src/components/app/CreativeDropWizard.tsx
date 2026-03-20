@@ -919,9 +919,85 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 const wfCustomSettings = uiConfig?.custom_settings || [];
                 const lockAspectRatio = uiConfig?.lock_aspect_ratio;
                 const showPosePicker = uiConfig?.show_pose_picker;
+                const showCampaignMode = needsModels || variations.length > 0;
+                const isMixMode = campaignMode === 'mix';
 
                 return (
                   <div className="space-y-8 pt-4 border-t border-border/50 animate-fade-in">
+                    {/* Campaign Mode Selector */}
+                    {showCampaignMode && (
+                      <div className="space-y-3">
+                        <p className="section-label">Campaign Mode</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => {
+                              setCampaignMode('curated');
+                              setIsRandomModelsFlag(false);
+                              setIsRandomScenesFlag(false);
+                            }}
+                            className={cn(
+                              'relative flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all text-center',
+                              campaignMode === 'curated'
+                                ? 'border-primary bg-primary/5 shadow-sm'
+                                : 'border-border hover:border-primary/30 bg-card'
+                            )}
+                          >
+                            <div className={cn(
+                              'w-10 h-10 rounded-xl flex items-center justify-center',
+                              campaignMode === 'curated' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                            )}>
+                              <Settings2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className={cn('text-sm font-semibold', campaignMode === 'curated' && 'text-primary')}>Curated</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">Pick specific models & scenes</p>
+                            </div>
+                            {campaignMode === 'curated' && (
+                              <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setCampaignMode('mix');
+                              setIsRandomModelsFlag(true);
+                              setIsRandomScenesFlag(true);
+                            }}
+                            className={cn(
+                              'relative flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all text-center',
+                              campaignMode === 'mix'
+                                ? 'border-primary bg-primary/5 shadow-sm'
+                                : 'border-border hover:border-primary/30 bg-card'
+                            )}
+                          >
+                            <div className={cn(
+                              'w-10 h-10 rounded-xl flex items-center justify-center',
+                              campaignMode === 'mix' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                            )}>
+                              <Shuffle className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className={cn('text-sm font-semibold', campaignMode === 'mix' && 'text-primary')}>Mix</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">Auto-diverse models & scenes</p>
+                            </div>
+                            {campaignMode === 'mix' && (
+                              <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </button>
+                        </div>
+                        {isMixMode && (
+                          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
+                            <Shuffle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <p className="text-xs text-muted-foreground">
+                              The system will automatically select diverse models and scenes for each image, maximizing variety across your drop.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {/* Images count */}
                     <div className="space-y-3">
                       <p className="section-label">Images per Product</p>
