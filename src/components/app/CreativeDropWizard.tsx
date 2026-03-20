@@ -387,15 +387,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       if (selectedWorkflow) {
         const genConfig = selectedWorkflow.generation_config as any;
         const uiConfig = genConfig?.ui_config;
-        const variations = genConfig?.variation_strategy?.variations || [];
-        if (variations.length > 0 && !isRandomScenesFlag && sceneSelections.size === 0) {
-          return 'Select at least one scene or enable Random';
-        }
-        if ((selectedWorkflow.uses_tryon || uiConfig?.show_model_picker) && !isRandomModelsFlag && modelSelections.length === 0) {
-          return 'Select at least one model or enable Random';
+        const needsModels = selectedWorkflow.uses_tryon || uiConfig?.show_model_picker;
+        if (campaignMode === 'curated' && needsModels && modelSelections.length === 0) {
+          return 'Select at least one model';
         }
         if (formats.length === 0) return 'Select at least one aspect ratio';
-        if (imageCount <= 0) return 'Set the number of images';
       }
     }
     if (step === 3 && deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
