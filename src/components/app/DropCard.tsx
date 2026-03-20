@@ -121,8 +121,9 @@ export function DropCard(props: Props) {
   // ── Schedule Card ──
   if (props.type === 'schedule') {
     const { schedule, onDuplicate, onEdit, workflowNames } = props;
-    const isPaused = !schedule.active;
     const isOneTime = schedule.frequency === 'one-time';
+    const isCompleted = isOneTime && !schedule.active;
+    const isPaused = !schedule.active && !isCompleted;
     const productCount = schedule.selected_product_ids?.length || 0;
 
     const getFrequencyLabel = (freq: string) => {
