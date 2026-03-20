@@ -21,6 +21,7 @@ interface MultiProductProgressBannerProps {
   onCancel?: () => void;
   totalExpectedImages?: number;
   totalJobs?: number;
+  workflowName?: string;
 }
 
 function formatElapsed(seconds: number): string {
@@ -39,6 +40,7 @@ export function MultiProductProgressBanner({
   onCancel,
   totalExpectedImages,
   totalJobs,
+  workflowName,
 }: MultiProductProgressBannerProps) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
@@ -85,9 +87,11 @@ export function MultiProductProgressBanner({
         <span className="font-medium">
           {completedCount > 0
             ? `${completedCount} of ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} done`
-            : totalProducts > 1
-              ? `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} products`
-              : `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''}...`}
+            : workflowName
+              ? `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${workflowName}...`
+              : totalProducts > 1
+                ? `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''} for ${totalProducts} products`
+                : `Generating ${totalJobCount} image${totalJobCount !== 1 ? 's' : ''}...`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />

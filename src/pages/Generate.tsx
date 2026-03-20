@@ -938,7 +938,7 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       const needsModel = uiConfig?.show_model_picker && selectedModel;
-      const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+      const modelsToGenerate = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
         ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
         : needsModel ? [selectedModel!] : [];
       const jobMap = new Map<string, string>();
@@ -1061,7 +1061,7 @@ export default function Generate() {
     const base64Image = await convertImageToBase64(sourceImageUrl);
 
     // Determine models to iterate over
-    const modelsToGenerate = isSelfieUgc && selectedModels.size > 0
+    const modelsToGenerate = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
       ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
       : needsModel ? [selectedModel!] : [];
 
@@ -3852,12 +3852,12 @@ export default function Generate() {
             <div className="text-center">
               <h2 className="text-lg font-semibold">
                 {isUpscale ? `Enhancing to ${upscaleResolution === '4k' ? '4K' : '2K'}...` :
-                 (hasWorkflowConfig || isSelfieUgc) ? `Creating ${activeWorkflow?.name}...` :
+                 (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie) ? `Creating ${activeWorkflow?.name}...` :
                  generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
-                 (hasWorkflowConfig || isSelfieUgc) ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
+                 (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie) ? `Generating ${hasMultipleJobs ? multiProductJobIds.size : selectedVariationIndices.size} image${(hasMultipleJobs ? multiProductJobIds.size : selectedVariationIndices.size) !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
                  generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
                  isInteriorDesign ? (() => { const styles = Array.from(selectedVariationIndices).map(i => variationStrategy?.variations[i]?.label).filter(Boolean); return styles.length > 1 ? `Staging your ${interiorRoomType || 'room'} in ${styles.length} styles: ${styles.join(', ')}` : `Staging your ${interiorRoomType || 'room'} in ${styles[0] || 'selected'} style`; })() :
@@ -3888,6 +3888,7 @@ export default function Generate() {
                 onCancel={cancelQueue}
                 totalExpectedImages={productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount}
                 totalJobs={multiProductJobIds.size}
+                workflowName={activeWorkflow?.name}
               />
             )}
 
