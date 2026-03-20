@@ -1,48 +1,51 @@
 
 
-# Fix: Post-Launch UX — Show Generating Drop Immediately
+# Fix: Creative Drops — Real-Time Updates & Better Preview Modal
 
-## Problem
+## Problems
 
-After clicking "Generate Now":
-1. Wizard closes instantly via `onClose()`
-2. Tab switches to "Drops" via `onLaunched()`
-3. But the drops query hasn't refetched yet — the new "generating" drop doesn't exist in the cache
-4. User sees "No drops yet" empty state or stale data — no indication anything is happening
-5. The only feedback is the small GlobalGenerationBar pill in the bottom-right corner
+1. **No real-time updates**: After generation completes, the Drops tab stays stale. The polling (`refetchInterval: 10_000`) only runs when a drop has `status: 'generating'` — but when the drop transitions to `ready`, the page has already stopped polling by the next cycle, so the UI doesn't update. Only a hard refresh shows the result.
 
-## Fix
+2. **Bad preview modal**: `DropDetailModal` uses a basic `Dialog` with a grid of checkboxes — completely different from the polished split-panel `WorkflowPreviewModal` used everywhere else. No signed URLs, no shimmer loading, no upscale/perspectives actions.
 
-### File 1: `src/components/app/CreativeDropWizard.tsx` (~lines 568-590)
+## Changes
 
-**Don't close the wizard immediately after triggering.** Instead:
-1. After successful `trigger-creative-drop` invoke, wait for the drops query to refetch before closing
-2. Add a brief "Launching your drop..." loading state with a spinner before closing
-3. Use `await queryClient.invalidateQueries({ queryKey: ['creative-drops'] })` (awaited!) so the drop appears in the list before closing
+### File 1: `src/pages/CreativeDrops.tsx` — Fix polling & auto-refresh
 
-Change the `onSuccess` flow:
-```
-onLaunched?.();                    // switch tab to "drops" 
-await queryClient.invalidateQueries({ queryKey: ['creative-drops'] });  // wait for fresh data
-await queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
-onClose();                         // NOW close wizard
+**Problem**: `refetchInterval` checks current data for `generating` status. Once the drop transitions to `ready` on the server, the client still has old data showing `generating`, so it polls once more — but by that time the data is already `ready` and polling stops. The issue is the query also needs a short continued poll after all drops become non-generating (to catch the final transition).
+
+**Fix**: Keep polling for 30 seconds after the last generating drop disappears. Add a `useRef` tracking `lastGeneratingTime` and extend the `refetchInterval` logic:
+```ts
+refetchInterval: () => {
+  const hasGenerating = data?.some(d => d.status === 'generating');
+  if (hasGenerating) { lastGeneratingRef.current = Date.now(); return 5_000; }
+  // Keep polling briefly after generation finishes to catch completion
+  if (Date.now() - lastGeneratingRef.current < 30_000) return 5_000;
+  return false;
+}
 ```
 
-Also add `setIsLaunching(true)` state before the trigger call and show a fullscreen "Launching..." overlay on the wizard so the user knows something is happening.
+Also reduce polling interval from 10s to 5s for snappier updates.
 
-### File 2: `src/pages/CreativeDrops.tsx` (~line 246)
+### File 2: `src/components/app/DropDetailModal.tsx` — Replace with WorkflowPreviewModal pattern
 
-**Call `onLaunched` BEFORE `onClose`** — currently `onLaunched` sets the tab, but `onClose` resets wizard state. The order in the wizard already handles this correctly (line 582 calls `onLaunched`, line 590 calls `onClose`). No change needed here.
+**Replace the entire modal** with a split-panel fullscreen overlay matching `WorkflowPreviewModal`:
+- Left panel: large image with arrow navigation
+- Right panel: title, thumbnail grid, download current, download all, upscale & perspectives buttons
+- Use `toSignedUrls` for proper signed URL resolution
+- Use `ShimmerImage` for loading states
+- Fetch images from `generation_jobs` when `drop.images` is empty (keep existing logic)
+- Include the schedule name as the title
+- Keep keyboard navigation (Escape, arrows)
 
-### File 3: `src/components/app/DropCard.tsx` (~line 301)
+This reuses the exact same visual pattern as `WorkflowPreviewModal` but adapted for creative drop data (multiple images from jobs, schedule name as title).
 
-**Make generating drop cards more prominent:**
-- Add a subtle pulsing border animation for `generating` status cards
-- Make the card clickable even during generating (currently only `ready` cards are clickable)
+### File 3: `src/components/app/DropCard.tsx` — Make generating cards clickable
+
+Currently generating cards aren't clickable (`onClick={drop.status === 'ready' ? onViewDrop : undefined}`). Allow clicking generating cards too — the modal will show a "Generating..." state with the spinner.
 
 ## Summary
-- 2 files changed, ~15 lines
-- Key fix: await query invalidation before closing wizard so the generating drop card is visible
-- Add "Launching..." state to the wizard button so user sees immediate feedback
-- Add visual emphasis to generating drop cards
+- 3 files changed
+- Fixes: real-time status updates without hard refresh, polished split-panel preview modal matching workflow UX, generating cards become interactive
+- Polling extended briefly after completion to catch the `generating→ready` transition
 
