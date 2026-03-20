@@ -505,13 +505,14 @@ export default function Workflows() {
           <FeedbackBanner />
         </div>
       ) : (
-        <div className={`grid gap-4 ${effectiveLayout === '3col' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'}`}>
           {workflows.map((workflow) => (
             <WorkflowCardCompact
               key={workflow.id}
               id={`workflow-${workflow.id}`}
               workflow={workflow}
               onSelect={() => handleCreateVisualSet(workflow)}
+              mobileCompact={isMobile && effectiveLayout === '2col'}
             />
           ))}
         </div>

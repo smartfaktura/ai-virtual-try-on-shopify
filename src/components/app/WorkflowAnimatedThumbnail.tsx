@@ -64,7 +64,7 @@ interface Props {
 
 /* ── Floating element renderer ── */
 
-const FloatingEl = memo(function FloatingEl({ element, compact }: { element: SceneElement; compact?: boolean }) {
+const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact }: { element: SceneElement; compact?: boolean; mobileCompact?: boolean }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
@@ -76,13 +76,87 @@ const FloatingEl = memo(function FloatingEl({ element, compact }: { element: Sce
     ...element.position,
     opacity: 0,
     animation: `${animName} 0.55s cubic-bezier(.22,1,.36,1) ${element.enterDelay}s forwards`,
-    ...(compact ? { transform: 'scale(0.72)', transformOrigin: 'top left' } : {}),
   };
 
   // Optimize element images — model circles use quality-only to preserve face crop
   const optimizedImage = element.image
     ? getOptimizedUrl(element.image, { quality: 60 })
     : undefined;
+
+  // Mobile compact: use genuinely smaller elements instead of CSS scale
+  if (mobileCompact) {
+    switch (element.type) {
+      case 'product':
+      case 'scene':
+        return (
+          <div className="absolute" style={style}>
+            <div className="wf-card bg-white rounded-lg overflow-hidden flex items-center gap-1.5 pr-2">
+              <img
+                src={optimizedImage}
+                className="w-9 h-10 object-cover bg-neutral-50"
+                alt=""
+                style={{ imageRendering: 'auto' }}
+              />
+              <div className="min-w-0 py-0.5">
+                {element.sublabel && (
+                  <div className="text-[7px] text-neutral-400 uppercase tracking-[0.08em] leading-none mb-0.5 font-medium">
+                    {element.sublabel}
+                  </div>
+                )}
+                <div className="text-[10px] font-semibold leading-tight whitespace-nowrap text-neutral-800">
+                  {element.label}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'model':
+        return (
+          <div className="absolute flex flex-col items-center gap-1" style={style}>
+            <div className="wf-card-circle rounded-full p-[2px] bg-white">
+              <img
+                src={optimizedImage}
+                className="w-[38px] h-[38px] rounded-full object-cover"
+                alt=""
+                style={{ imageRendering: 'auto' }}
+              />
+            </div>
+            <span className="text-[9px] font-semibold bg-white/95 text-neutral-700 px-1.5 py-[2px] rounded-full wf-card-shadow">
+              {element.label}
+            </span>
+          </div>
+        );
+
+      case 'action':
+        return (
+          <div className="absolute" style={style}>
+            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center wf-card-shadow">
+              {element.icon}
+            </div>
+          </div>
+        );
+
+      case 'badge':
+        return (
+          <div className="absolute" style={style}>
+            <div className="bg-white rounded-full px-2 py-1 wf-card-shadow flex items-center gap-1">
+              <span className="text-primary">{element.icon}</span>
+              <span className="text-[9px] font-semibold text-neutral-700">{element.label}</span>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  }
+
+  // Default / desktop compact: use CSS scale for backward compat
+  if (compact) {
+    style.transform = 'scale(0.72)';
+    style.transformOrigin = 'top left';
+  }
 
   switch (element.type) {
     case 'product':
