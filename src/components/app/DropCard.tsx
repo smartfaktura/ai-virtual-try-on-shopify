@@ -121,8 +121,9 @@ export function DropCard(props: Props) {
   // ── Schedule Card ──
   if (props.type === 'schedule') {
     const { schedule, onDuplicate, onEdit, workflowNames } = props;
-    const isPaused = !schedule.active;
     const isOneTime = schedule.frequency === 'one-time';
+    const isCompleted = isOneTime && !schedule.active;
+    const isPaused = !schedule.active && !isCompleted;
     const productCount = schedule.selected_product_ids?.length || 0;
 
     const getFrequencyLabel = (freq: string) => {
@@ -139,7 +140,7 @@ export function DropCard(props: Props) {
       <>
         <Card className={cn(
           'rounded-2xl transition-all',
-          isPaused && 'opacity-50'
+          (isPaused || isCompleted) && 'opacity-60'
         )}>
           <CardContent className="p-5 space-y-4">
             {/* Top row: name + status + actions */}
@@ -151,12 +152,14 @@ export function DropCard(props: Props) {
                     variant="secondary"
                     className={cn(
                       'text-[10px] rounded-full px-2 py-0.5 flex-shrink-0',
-                      schedule.active
+                      isCompleted
                         ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                        : 'bg-muted text-muted-foreground'
+                        : schedule.active
+                          ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                          : 'bg-muted text-muted-foreground'
                     )}
                   >
-                    {schedule.active ? 'Active' : 'Paused'}
+                    {isCompleted ? <><CheckCircle className="w-3 h-3 mr-1 inline" />Completed</> : schedule.active ? 'Active' : 'Paused'}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -165,18 +168,20 @@ export function DropCard(props: Props) {
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 rounded-lg text-xs gap-1.5"
-                  onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
-                >
-                  {schedule.active ? (
-                    <><Pause className="w-3 h-3" /> <span className="hidden sm:inline">Pause</span></>
-                  ) : (
-                    <><Play className="w-3 h-3" /> <span className="hidden sm:inline">Resume</span></>
-                  )}
-                </Button>
+                {!isCompleted && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 rounded-lg text-xs gap-1.5"
+                    onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
+                  >
+                    {schedule.active ? (
+                      <><Pause className="w-3 h-3" /> <span className="hidden sm:inline">Pause</span></>
+                    ) : (
+                      <><Play className="w-3 h-3" /> <span className="hidden sm:inline">Resume</span></>
+                    )}
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -190,9 +195,11 @@ export function DropCard(props: Props) {
                     <DropdownMenuItem onClick={() => onDuplicate?.(schedule)}>
                       <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => runNowMutation.mutate(schedule)}>
-                      <RocketIcon className="w-3.5 h-3.5 mr-2" /> Run Now
-                    </DropdownMenuItem>
+                    {!isCompleted && (
+                      <DropdownMenuItem onClick={() => runNowMutation.mutate(schedule)}>
+                        <RocketIcon className="w-3.5 h-3.5 mr-2" /> Run Now
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
