@@ -1,45 +1,60 @@
 
 
-# Creative Drops: Schedule, Run Now & Next Month — Status Report
+# Inject Theme & Brand into Try-On for Creative Drops
 
-## What's Working Correctly
+## Situation
 
-1. **"Run Now" button** — Works. `DropCard` calls `supabase.functions.invoke('trigger-creative-drop')` with user JWT auth. The function reads the schedule, builds payloads, creates a `creative_drops` record with `status: "generating"`, enqueues jobs via `enqueue_generation` RPC, and triggers `process-queue`. No bugs here.
+Creative drops dispatch jobs to two different generation functions based on the workflow type:
 
-2. **Wizard "Generate Now" delivery mode** — Works. When `deliveryMode === 'now'`, the wizard saves the schedule with `frequency: 'one-time'` and `next_run_at: null`, then immediately invokes `trigger-creative-drop`. After execution, `trigger-creative-drop` deactivates one-time schedules (`active: false`).
+- **Non-try-on workflows** → `generate-workflow` → Already injects `SEASONAL DIRECTION` and `BRAND GUIDELINES` into the prompt ✅
+- **Try-on workflows** → `generate-tryon` → Ignores theme and brand entirely ❌
 
-3. **Next run calculation after execution** — Works. `trigger-creative-drop` (lines 347-373) correctly advances `next_run_at` for recurring schedules: +7 days (weekly), +14 days (biweekly), +1 month (monthly). One-time schedules get deactivated.
+So the gap is **only in `generate-tryon`**, but that's the only function that breaks the chain. All other workflow types already work correctly with themes and brand profiles in creative drops.
 
-4. **Scheduled execution via cron** — Works. `run-scheduled-drops` queries `creative_schedules` where `active = true AND next_run_at <= now()`, then calls `trigger-creative-drop` with internal auth. The daily 7 AM UTC cron job fires this.
+## Change
 
-5. **Drop completion tracking** — Works. `complete-creative-drop` checks pending queue jobs, collects images with resolved names, and transitions drops to `ready`/`failed`.
+### File: `supabase/functions/generate-tryon/index.ts`
 
-6. **UI polling** — Works. The drops query re-fetches every 10 seconds when any drop is `generating`.
+**1. Update `buildPrompt()` signature** to accept optional creative drop context:
 
-## One Bug Found
-
-### Wizard: `next_run_at` set to start date, not first *scheduled* run date
-
-**Lines 461-464** in `CreativeDropWizard.tsx`:
 ```ts
-let nextRun: Date | null = null;
-if (deliveryMode === 'scheduled') {
-  nextRun = new Date(effectiveStartDate);
-}
+function buildPrompt(req: TryOnRequest, dropContext?: {
+  theme?: string;
+  themeNotes?: string;
+  brandProfile?: Record<string, unknown>;
+}): string
 ```
 
-When `deliveryMode === 'now'`, `nextRun` is `null` — so one-time "Run Now" drops correctly have no next run. But for **scheduled recurring** drops, `nextRun` is just the `startDate` without any frequency offset. This means:
+**2. Add conditional blocks** between section 3 (Photography style) and section 4 (Quality requirements), ~line 170:
 
-- User creates a monthly schedule with start date = March 20
-- `next_run_at` is set to March 20
-- The cron at 7 AM UTC on March 20 triggers it (correct for the first run)
-- After that first run, `trigger-creative-drop` advances `next_run_at` to April 20 (correct)
+- If `dropContext.theme` exists and isn't `'custom'` → inject `SEASONAL DIRECTION` block (e.g., "autumn aesthetic — warm golden lighting, fall atmosphere")
+- If `dropContext.themeNotes` exists → inject `CREATIVE DIRECTION` block with user's notes
+- If `dropContext.brandProfile` exists → inject `BRAND GUIDELINES` block (tone, lighting_style, color_temperature, background_style)
 
-This actually works correctly for the first run and subsequent runs. The start date IS the first scheduled run date, which is the intended behavior.
+These blocks are only appended when the data exists — standalone try-on from `/app/generate` passes no drop context, so behavior is unchanged.
 
-## Verdict
+**3. Pass fields from the payload** (~line 519 where `body` is read):
 
-**Everything is working correctly.** The schedule system, Run Now, recurring next-month calculation, and cron execution are all properly wired. No code changes needed.
+```ts
+const prompt = buildPrompt(body, body.creative_drop_id ? {
+  theme: body.theme,
+  themeNotes: body.theme_notes,
+  brandProfile: body.brand_profile,
+} : undefined);
+```
 
-The only consideration: if the daily cron hasn't been set up yet via the SQL insert tool, scheduled drops won't auto-execute. But the code itself is correct.
+## What This Covers
+
+| Workflow Type | Function | Theme/Brand Support |
+|---|---|---|
+| Product Photography | `generate-workflow` | Already works ✅ |
+| Flat Lay | `generate-workflow` | Already works ✅ |
+| Interior Design | `generate-workflow` | Already works ✅ |
+| All other non-try-on | `generate-workflow` | Already works ✅ |
+| Virtual Try-On | `generate-tryon` | **Fixed by this change** |
+
+## Summary
+- 1 file, ~30 lines added
+- Only `generate-tryon` needs the fix — all other workflow types already support themes/brand in creative drops
+- Zero impact on standalone try-on (no `creative_drop_id` = no theme blocks)
 
