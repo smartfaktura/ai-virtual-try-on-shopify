@@ -892,7 +892,7 @@ export default function Generate() {
       return;
     }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
-      if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
+      if (selectedModels.size === 0 || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
     }
     // Workflow-config path: skip template requirement
