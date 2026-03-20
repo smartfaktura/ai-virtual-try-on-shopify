@@ -437,6 +437,7 @@ export default function CreativeDrops() {
                 ...selectedDrop,
                 images: (selectedDrop.images || []) as { url: string; workflow_name?: string; scene_name?: string; product_title?: string }[],
                 generation_job_ids: selectedDrop.generation_job_ids || [],
+                schedule_name: selectedDrop.schedule_name || (selectedDrop.schedule_id ? scheduleNameMap.get(selectedDrop.schedule_id) : undefined) || undefined,
               }}
             />
           )}
