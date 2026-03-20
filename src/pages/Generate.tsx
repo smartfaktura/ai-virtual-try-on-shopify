@@ -3756,6 +3756,7 @@ export default function Generate() {
             creditCost={creditCost}
             isFreeUser={isFreeUser}
             workflowImageCount={workflowImageCount}
+            workflowModelCount={workflowModelCount}
             multiProductCount={multiProductCount}
             angleMultiplier={angleMultiplier}
             aspectRatioCount={aspectRatioCount}
