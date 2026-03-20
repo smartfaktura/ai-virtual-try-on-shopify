@@ -1251,6 +1251,19 @@ export default function Generate() {
 
     // Multi-product upfront enqueue
     if (isMultiProductMode) {
+      // Pre-check total credits needed before starting
+      const ratiosToGen = selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios) : [aspectRatio];
+      const framingsToGen: Array<FramingOption | null> = selectedFramings.has('auto') ? [null] : Array.from(selectedFramings) as FramingOption[];
+      const totalJobs = productQueue.length * modelsToGenerate.length * posesToGenerate.length * ratiosToGen.length * framingsToGen.length;
+      const creditsPerJob = parseInt(imageCount) * 6;
+      const totalCreditsNeeded = totalJobs * creditsPerJob;
+
+      if (balance < totalCreditsNeeded) {
+        toast.error(`Need ${totalCreditsNeeded} credits for ${totalJobs} generations but you only have ${balance}. Please top up first.`);
+        openBuyModal();
+        return;
+      }
+
       setTryOnConfirmModalOpen(false);
       setCurrentStep('generating');
       setGeneratingProgress(0);
