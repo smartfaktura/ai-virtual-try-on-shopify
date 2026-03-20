@@ -26,6 +26,27 @@ export default function Workflows() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const prevActiveCountRef = useRef(0);
+  const isMobile = useIsMobile();
+
+  // ── Layout preference ──
+  type LayoutMode = 'rows' | '2col' | '3col';
+  const [layout, setLayout] = useState<LayoutMode>(() => {
+    try {
+      const saved = localStorage.getItem('workflow-layout') as LayoutMode | null;
+      if (saved && ['rows', '2col', '3col'].includes(saved)) return saved;
+    } catch {}
+    return 'rows';
+  });
+
+  const handleLayoutChange = (value: string) => {
+    if (!value) return;
+    const v = value as LayoutMode;
+    setLayout(v);
+    localStorage.setItem('workflow-layout', v);
+  };
+
+  // On mobile/tablet, clamp to 2col max
+  const effectiveLayout = isMobile && layout === '3col' ? '2col' : layout;
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
