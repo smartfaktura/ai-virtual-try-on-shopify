@@ -1,69 +1,53 @@
 
 
-# Fix: Mirror Selfie Set — Multi-Model + Loading State
+# Fix: Mirror Selfie Image Count Doesn't Include Model Count
 
-## Issues
+## Problem
+With 2 scenes × 2 models × 1 product selected, the settings panel shows "2 images · 12 credits" instead of "4 images · 24 credits". The model count is completely missing from the credit/image calculation for workflows.
 
-### 1. Only 1 model generates when 2 are selected
-`handleWorkflowGenerate` checks `isSelfieUgc` (line 1064) to enable multi-model iteration, but Mirror Selfie Set uses `isMirrorSelfie` — a separate flag. The multi-model loop never activates for Mirror Selfie.
+## Root Cause
 
-**Same issue exists in multi-product path** (line 941).
-
-### 2. Loading state missing elapsed time, estimates, and proper image counts
-Mirror Selfie with 3 scenes + 1 model uses the `startBatch` path (line 1138), which renders the **batch progress** section (lines 3895-3949). This section lacks:
-- Elapsed timer
-- Time estimate
-- Rotating team member
-- It says "0 of 3 done" (referring to jobs), not images
-
-The richer `MultiProductProgressBanner` (with elapsed time, estimates, team member) only shows when `hasMultipleJobs` is true — which requires `multiProductJobIds.size > 1`. The batch path doesn't populate `multiProductJobIds`.
-
-### 3. Subtitle says "variations" but should say total images
-"Generating 3 variations" is technically correct but confusing. With 2 models × 3 scenes = 6 images, it should reflect that.
-
----
-
-## Plan
-
-### File 1: `src/pages/Generate.tsx`
-
-**A. Fix multi-model for Mirror Selfie** (lines 941, 1064)
-Change both occurrences of:
+**`src/pages/Generate.tsx` line 1885:**
 ```
-isSelfieUgc && selectedModels.size > 0
+workflowImageCount = hasWorkflowConfig
+  ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount
+  : parseInt(imageCount);
 ```
-to:
-```
-(isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
+This formula doesn't multiply by model count. For Mirror Selfie/Selfie UGC with 2 models selected, it should be × 2.
+
+**Line 1894 (credit cost):** Uses `workflowImageCount * workflowCostPerImage` — also missing model multiplier.
+
+**`WorkflowSettingsPanel.tsx` line 776:** Displays `workflowImageCount * multiProductCount` — no model count shown.
+
+## Changes
+
+### File 1: `src/pages/Generate.tsx` (line 1885)
+
+Add a `workflowModelCount` for workflows that use multi-model (Mirror Selfie, Selfie/UGC):
+
+```typescript
+const workflowModelCount = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 1
+  ? selectedModels.size : 1;
+const workflowImageCount = hasWorkflowConfig
+  ? selectedVariationIndices.size * angleMultiplier * aspectRatioCount * framingCount * workflowModelCount
+  : parseInt(imageCount);
 ```
 
-**B. Route Mirror Selfie multi-model to multi-job path**
-Line 1138 condition: `ratiosToGenerate.length === 1 && framingsToGenerate.length === 1 && !useMultiModelLoop`
-Currently `useMultiModelLoop` checks `modelsToGenerate.length > 1`, which now works since fix A makes `modelsToGenerate` include all selected models for Mirror Selfie. No change needed here — fix A is sufficient to make this work.
+This fixes both the image count display and the credit cost calculation (since `creditCost` derives from `workflowImageCount`).
 
-**C. Fix subtitle text** (line 3860)
-When `hasMultipleJobs` or multiple models, show total image count instead of "variations":
+### File 2: `src/components/app/generate/WorkflowSettingsPanel.tsx` (lines 778-784)
+
+Pass `workflowModelCount` as a new prop and include it in the breakdown text:
+
 ```
-`Generating ${multiProductJobIds.size || selectedVariationIndices.size} images of "${productTitle}"...`
+{workflowModelCount > 1 ? `${workflowModelCount} models × ` : ''}
+{selectedVariationIndices.size} scenes ...
 ```
 
-**D. Add `workflowName` prop to MultiProductProgressBanner** (line 3882)
-Pass `workflowName={activeWorkflow?.name}` so the banner can show contextual text.
-
-### File 2: `src/components/app/MultiProductProgressBanner.tsx`
-
-**E. Accept and use `workflowName` prop**
-- Add `workflowName?: string` to props
-- Update initial status text (line 88-90):
-  - If `workflowName`: `"Generating X images for {workflowName}..."`
-  - Else if `totalProducts > 1`: `"Generating X images for Y products"`
-  - Else: `"Generating X images..."`
-
----
+Add `workflowModelCount: number` to the props interface and pass it from Generate.tsx.
 
 ## Summary
-- 2 files, ~10 lines changed
-- Mirror Selfie multi-model generation fixed by including `isMirrorSelfie` in the model iteration condition
-- Progress banner shows workflow name for context
-- Subtitle shows total image count instead of confusing "variations" label
+- 2 files, ~8 lines changed
+- Multiplies model count into `workflowImageCount` for Mirror Selfie and Selfie/UGC workflows
+- Updates cost summary breakdown to show model count
 
