@@ -616,14 +616,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
           {/* ─── Step 0: Details ─── */}
           {step === 0 && (
-            <div className="space-y-8 animate-fade-in">
+            <div className="space-y-5 animate-fade-in">
               <div className="space-y-2">
                 <p className="section-label">Drop Name</p>
                 <Input
                   placeholder="Spring Campaign"
                   value={name}
                   onChange={e => { setName(e.target.value); markDirty(); }}
-                  className={cn('h-12 rounded-xl text-sm', attempted && !name.trim() && 'border-destructive')}
+                  className={cn('h-12 rounded-xl text-sm max-w-md', attempted && !name.trim() && 'border-destructive')}
                 />
                 {attempted && !name.trim() && (
                   <p className="text-xs text-destructive">Give your drop a name to continue</p>

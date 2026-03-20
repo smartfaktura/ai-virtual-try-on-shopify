@@ -238,9 +238,9 @@ export default function CreativeDrops() {
 
   return (
     <PageHeader
-      title="Creative Drops"
+      title={wizardOpen ? '' : 'Creative Drops'}
       subtitle={wizardOpen ? undefined : "Automate recurring visual creation. Set up schedules and receive fresh assets on autopilot."}
-      backAction={wizardOpen ? { content: 'Back to Creative Drops', onAction: closeWizard } : undefined}
+      backAction={wizardOpen ? { content: 'Back', onAction: closeWizard } : undefined}
     >
       {wizardOpen ? (
         <CreativeDropWizard onClose={closeWizard} initialData={wizardInitialData} editingScheduleId={editingScheduleId} />
