@@ -3895,8 +3895,6 @@ export default function Generate() {
 
                 {/* Settings chips */}
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="text-[10px] font-normal">Aspect: {aspectRatio}</Badge>
-                  <Badge variant="outline" className="text-[10px] font-normal">Quality: {quality === 'high' ? 'High' : 'Standard'}</Badge>
                   {framing && <Badge variant="outline" className="text-[10px] font-normal">Framing: {framing.replace(/_/g, ' ')}</Badge>}
                   {selectedBrandProfile && (
                     <Badge variant="outline" className="text-[10px] font-normal">Brand: {selectedBrandProfile.name}</Badge>
