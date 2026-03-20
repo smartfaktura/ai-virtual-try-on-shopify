@@ -1734,9 +1734,26 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               {/* Review Summary */}
               {profile?.credits_balance != null && costEstimate.totalCredits > profile.credits_balance && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2 text-sm animate-fade-in">
-                  <Wallet className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>This drop costs <strong>{costEstimate.totalCredits}</strong> credits but you only have <strong>{profile.credits_balance}</strong>.</span>
+                <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 animate-fade-in">
+                  <div className="flex items-start gap-3">
+                    <Wallet className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        You need {costEstimate.totalCredits - profile.credits_balance} more credits
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        This drop costs <strong>{costEstimate.totalCredits}</strong> credits — you have <strong>{profile.credits_balance}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 ml-8">
+                    <Button size="sm" className="rounded-full h-8 px-4 text-xs gap-1.5" onClick={() => creditCtx.openBuyModal()}>
+                      <CreditCard className="w-3.5 h-3.5" /> Buy Credits
+                    </Button>
+                    <Button size="sm" variant="ghost" className="rounded-full h-8 px-3 text-xs text-muted-foreground" asChild>
+                      <a href="/app/settings">Upgrade Plan</a>
+                    </Button>
+                  </div>
                 </div>
               )}
 
