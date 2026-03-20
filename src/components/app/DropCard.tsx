@@ -315,11 +315,11 @@ export function DropCard(props: Props) {
       )}
       onClick={isClickable ? onViewDrop : undefined}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <div className="flex gap-3">
           {/* Left: Thumbnails or status icon */}
           {drop.status === 'ready' && dropImages.length > 0 ? (
-            <div className="flex-shrink-0 grid grid-cols-2 gap-0.5 w-[68px] h-[68px] rounded-xl overflow-hidden">
+            <div className="flex-shrink-0 grid grid-cols-2 gap-0.5 w-[56px] h-[56px] sm:w-[68px] sm:h-[68px] rounded-xl overflow-hidden">
               {dropImages.slice(0, 4).map((img, i) => (
                 <div key={i} className="bg-muted overflow-hidden">
                   <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -331,7 +331,7 @@ export function DropCard(props: Props) {
             </div>
           ) : (
             <div className={cn(
-              'w-[68px] h-[68px] rounded-xl flex items-center justify-center flex-shrink-0',
+              'w-[56px] h-[56px] sm:w-[68px] sm:h-[68px] rounded-xl flex items-center justify-center flex-shrink-0',
               drop.status === 'generating' ? 'bg-primary/5' : 'bg-accent'
             )}>
               <StatusIcon className={cn(
@@ -354,8 +354,8 @@ export function DropCard(props: Props) {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               {new Date(drop.run_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              {drop.total_images > 0 && ` · ${drop.total_images} image${drop.total_images !== 1 ? 's' : ''}`}
-              {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
+              {drop.status !== 'generating' && drop.total_images > 0 && ` · ${drop.total_images} image${drop.total_images !== 1 ? 's' : ''}`}
+              {drop.status !== 'generating' && drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
             </p>
             {drop.status === 'generating' && (() => {
               const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
@@ -366,7 +366,7 @@ export function DropCard(props: Props) {
                 <div className="mt-1.5">
                   <Progress value={progressPct} className="h-1" />
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    {progressPct}% · {remainingMin > 0 ? `~${remainingMin} min remaining` : 'Finishing up…'}
+                    Generating… {remainingMin > 0 ? `~${remainingMin} min remaining` : 'Finishing up…'}
                   </p>
                 </div>
               );

@@ -365,6 +365,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
 
   const handleSeasonalPreset = (presetId: string) => {
     setSeasonalPreset(presetId);
+    setTheme(presetId === 'none' ? 'custom' : presetId);
     const preset = SEASONAL_PRESETS.find(p => p.id === presetId);
     if (preset && preset.instructions) {
       setThemeNotes(preset.instructions);
@@ -582,6 +583,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
           onLaunched?.();
           await queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
           await queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
+          creditCtx.refreshBalance();
           onClose();
         } catch (e) {
           console.error('Trigger error:', e);

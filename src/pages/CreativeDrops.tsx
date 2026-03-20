@@ -279,9 +279,9 @@ export default function CreativeDrops() {
                 ...(generatingCount > 0 ? [{ value: generatingCount, label: 'Generating Now', generating: true }] :
                   nextRun?.next_run_at ? [{ value: new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), label: 'Next Run' }] : []),
               ].map((stat: any) => (
-                <div key={stat.label} className="flex-1 min-w-[110px] px-5 py-4 text-center">
+                <div key={stat.label} className="flex-1 min-w-[80px] sm:min-w-[110px] px-3 sm:px-5 py-3 sm:py-4 text-center">
                   <div className="flex items-center justify-center gap-1.5">
-                    <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
+                    <p className="text-lg sm:text-2xl font-semibold tracking-tight">{stat.value}</p>
                     {stat.generating && (
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75" />
@@ -312,8 +312,9 @@ export default function CreativeDrops() {
                 <Calendar className="w-4 h-4" />
                 Create Drop
               </Button>
-              <Button onClick={openWizard} size="icon" className="rounded-xl sm:hidden">
+              <Button onClick={openWizard} className="rounded-xl gap-2 sm:hidden text-sm px-3">
                 <Calendar className="w-4 h-4" />
+                Create
               </Button>
             </div>
 
