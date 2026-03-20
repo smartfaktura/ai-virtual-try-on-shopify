@@ -1026,18 +1026,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           </Badge>
                         </div>
 
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
-                          <Switch
-                            checked={isRandomModelsFlag}
-                            onCheckedChange={setIsRandomModelsFlag}
-                          />
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-1.5">
-                              <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
-                            </p>
-                            <p className="text-xs text-muted-foreground">Each image will feature a different model, selected randomly</p>
-                          </div>
-                        </div>
 
                         {!isRandomModelsFlag && (
                           <>
