@@ -1086,8 +1086,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                     )}
 
-                    {/* Scenes */}
-                    {variations.length > 0 && (
+                    {/* Scenes — hidden in Mix mode */}
+                    {variations.length > 0 && !isMixMode && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="section-label">Scenes</p>
