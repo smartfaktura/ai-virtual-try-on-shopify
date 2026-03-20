@@ -682,21 +682,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="section-label">Special Instructions</p>
-                  {seasonalPreset !== 'none' && (
-                    <Badge variant="secondary" className="text-[10px] rounded-full">{activePreset?.label} preset applied</Badge>
-                  )}
-                </div>
-                <Textarea
-                  placeholder="Any specific mood, style, or seasonal directions for this drop..."
-                  value={themeNotes}
-                  onChange={e => setThemeNotes(e.target.value)}
-                  rows={3}
-                  className="rounded-xl text-base sm:text-sm"
-                />
-              </div>
+              {/* Special Instructions moved to Delivery step */}
             </div>
           )}
 
