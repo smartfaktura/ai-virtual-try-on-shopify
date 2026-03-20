@@ -1158,9 +1158,10 @@ export default function Generate() {
   };
 
   // Helper: enqueue a single try-on job via direct fetch (used for multi-product upfront)
-  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose): Promise<{ jobId: string; newBalance: number } | null> => {
+  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose, modelOverride?: ModelProfile): Promise<{ jobId: string; newBalance: number } | null> => {
     const pose = poseOverride || selectedPose;
-    if (!selectedModel || !pose) return null;
+    const model = modelOverride || selectedModel;
+    if (!model || !pose) return null;
     const selectedImageId = Array.from(selectedSourceImages)[0];
     const sourceImage = product.images.find(img => img.id === selectedImageId);
     const sourceImageUrl = sourceImage?.url || product.images[0]?.url || '';
@@ -1168,7 +1169,7 @@ export default function Generate() {
 
     const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
       convertImageToBase64(sourceImageUrl),
-      convertImageToBase64(selectedModel.previewUrl),
+      convertImageToBase64(model.previewUrl),
       pose.previewUrl ? convertImageToBase64(pose.previewUrl) : Promise.resolve(undefined),
     ]);
 
@@ -1180,7 +1181,7 @@ export default function Generate() {
         jobType: 'tryon',
         payload: {
           product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
-          model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+          model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
           framing: framing || undefined,
