@@ -137,8 +137,8 @@ export function MultiProductProgressBanner({
         </div>
       )}
 
-      {/* Active job indicator with team avatar */}
-      {activeJob && (
+      {/* Active job indicator with team avatar — suppress "completed" while batch is still running */}
+      {activeJob && !(activeJob.status === 'completed' && completedCount < totalJobCount) && (
         <QueuePositionIndicator job={activeJob} onCancel={onCancel} />
       )}
 
