@@ -7,6 +7,7 @@ import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThum
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { cn } from '@/lib/utils';
 
 const imgFallback = getLandingAssetUrl('templates/universal-clean.jpg');
 
@@ -14,9 +15,11 @@ interface Props {
   workflow: Workflow;
   onSelect: () => void;
   id?: string;
+  /** True when rendered inside the mobile 2-col grid */
+  mobileCompact?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -38,10 +41,13 @@ export function WorkflowCardCompact({ workflow, onSelect, id }: Props) {
       ref={ref}
       className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300 flex flex-col"
     >
-      {/* Square thumbnail */}
-      <div className="relative w-full aspect-[3/4] overflow-hidden">
+      {/* Thumbnail — taller on mobile 2-col for breathing room */}
+      <div className={cn(
+        "relative w-full overflow-hidden",
+        mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
+      )}>
         {scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact />
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
         ) : (
           <img
             src={workflow.preview_image_url || imgFallback}
@@ -52,9 +58,12 @@ export function WorkflowCardCompact({ workflow, onSelect, id }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-2 p-4 flex-1">
+      <div className={cn("flex flex-col gap-2 flex-1", mobileCompact ? "p-2.5" : "p-4")}>
         <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="text-sm font-bold tracking-tight leading-tight">
+          <h3 className={cn(
+            "font-bold tracking-tight leading-tight",
+            mobileCompact ? "text-xs" : "text-sm"
+          )}>
             {workflow.name}
           </h3>
           {workflow.uses_tryon && workflow.name !== 'Selfie / UGC Set' && (
@@ -65,18 +74,23 @@ export function WorkflowCardCompact({ workflow, onSelect, id }: Props) {
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-          {workflow.description}
-        </p>
+        {!mobileCompact && (
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+            {workflow.description}
+          </p>
+        )}
 
         <div className="pt-1 mt-auto">
           <Button
             size="sm"
-            className="rounded-full font-semibold gap-1.5 h-8 px-5 w-full"
+            className={cn(
+              "rounded-full font-semibold gap-1.5 w-full",
+              mobileCompact ? "h-7 px-3 text-xs" : "h-8 px-5"
+            )}
             onClick={onSelect}
           >
             Create Set
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className={mobileCompact ? "w-3 h-3" : "w-3.5 h-3.5"} />
           </Button>
         </div>
       </div>

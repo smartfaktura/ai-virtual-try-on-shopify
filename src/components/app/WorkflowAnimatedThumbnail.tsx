@@ -58,11 +58,13 @@ interface Props {
   scene: WorkflowScene;
   isActive?: boolean;
   compact?: boolean;
+  /** True when rendered inside the mobile 2-col grid — uses true compact sizes instead of CSS scale */
+  mobileCompact?: boolean;
 }
 
 /* ── Floating element renderer ── */
 
-const FloatingEl = memo(function FloatingEl({ element, compact }: { element: SceneElement; compact?: boolean }) {
+const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact }: { element: SceneElement; compact?: boolean; mobileCompact?: boolean }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
@@ -74,13 +76,87 @@ const FloatingEl = memo(function FloatingEl({ element, compact }: { element: Sce
     ...element.position,
     opacity: 0,
     animation: `${animName} 0.55s cubic-bezier(.22,1,.36,1) ${element.enterDelay}s forwards`,
-    ...(compact ? { transform: 'scale(0.72)', transformOrigin: 'top left' } : {}),
   };
 
   // Optimize element images — model circles use quality-only to preserve face crop
   const optimizedImage = element.image
     ? getOptimizedUrl(element.image, { quality: 60 })
     : undefined;
+
+  // Mobile compact: use genuinely smaller elements instead of CSS scale
+  if (mobileCompact) {
+    switch (element.type) {
+      case 'product':
+      case 'scene':
+        return (
+          <div className="absolute" style={style}>
+            <div className="wf-card bg-white rounded-lg overflow-hidden flex items-center gap-1.5 pr-2">
+              <img
+                src={optimizedImage}
+                className="w-9 h-10 object-cover bg-neutral-50"
+                alt=""
+                style={{ imageRendering: 'auto' }}
+              />
+              <div className="min-w-0 py-0.5">
+                {element.sublabel && (
+                  <div className="text-[7px] text-neutral-400 uppercase tracking-[0.08em] leading-none mb-0.5 font-medium">
+                    {element.sublabel}
+                  </div>
+                )}
+                <div className="text-[10px] font-semibold leading-tight whitespace-nowrap text-neutral-800">
+                  {element.label}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'model':
+        return (
+          <div className="absolute flex flex-col items-center gap-1" style={style}>
+            <div className="wf-card-circle rounded-full p-[2px] bg-white">
+              <img
+                src={optimizedImage}
+                className="w-[38px] h-[38px] rounded-full object-cover"
+                alt=""
+                style={{ imageRendering: 'auto' }}
+              />
+            </div>
+            <span className="text-[9px] font-semibold bg-white/95 text-neutral-700 px-1.5 py-[2px] rounded-full wf-card-shadow">
+              {element.label}
+            </span>
+          </div>
+        );
+
+      case 'action':
+        return (
+          <div className="absolute" style={style}>
+            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center wf-card-shadow">
+              {element.icon}
+            </div>
+          </div>
+        );
+
+      case 'badge':
+        return (
+          <div className="absolute" style={style}>
+            <div className="bg-white rounded-full px-2 py-1 wf-card-shadow flex items-center gap-1">
+              <span className="text-primary">{element.icon}</span>
+              <span className="text-[9px] font-semibold text-neutral-700">{element.label}</span>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  }
+
+  // Default / desktop compact: use CSS scale for backward compat
+  if (compact) {
+    style.transform = 'scale(0.72)';
+    style.transformOrigin = 'top left';
+  }
 
   switch (element.type) {
     case 'product':
@@ -151,7 +227,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact }: { element: Sce
 
 /* ── Carousel mode component ── */
 
-function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
+function CarouselThumbnail({ scene, isActive, mobileCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
     () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
@@ -210,7 +286,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       {isActive && elementsReady && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
-            <FloatingEl key={i} element={el} />
+            <FloatingEl key={i} element={el} mobileCompact={mobileCompact} />
           ))}
         </div>
       )}
@@ -610,7 +686,7 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
 
 /* ── Main component ── */
 
-export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false }: Props) {
+export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false, mobileCompact = false }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const isUpscale = scene.mode === 'upscale';
   const isStaging = scene.mode === 'staging';
@@ -643,7 +719,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
   }, [isActive, totalDuration, isCarousel, isUpscale, isStaging]);
 
   // Delegate to specialized components
-  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} />;
+  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} mobileCompact={mobileCompact} />;
   if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
   if (isStaging) return <StagingThumbnail scene={scene} isActive={isActive} />;
 
@@ -691,7 +767,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
             }}
           >
             {scene.elements.map((el, i) => (
-              <FloatingEl key={i} element={el} compact={compact} />
+              <FloatingEl key={i} element={el} compact={compact} mobileCompact={mobileCompact} />
             ))}
           </div>
 
@@ -714,15 +790,15 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
 
           {/* "Generated" badge */}
           <div
-            className={`absolute ${compact ? 'bottom-3' : 'bottom-4'} left-1/2 -translate-x-1/2 z-20`}
+            className={`absolute ${mobileCompact ? 'bottom-2' : compact ? 'bottom-3' : 'bottom-4'} left-1/2 -translate-x-1/2 z-20`}
             style={{
               opacity: 0,
               animation: `wf-badge-pop 0.45s cubic-bezier(.34,1.56,.64,1) ${badgeAt}s forwards`,
             }}
           >
-            <div className={`flex items-center gap-2 bg-white ${compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2'} rounded-full wf-card-shadow`}>
-              <Sparkles className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-primary`} />
-              <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-bold text-primary tracking-wide`}>Generated</span>
+            <div className={`flex items-center gap-2 bg-white ${mobileCompact ? 'px-2 py-1' : compact ? 'px-2.5 py-1.5' : 'px-3.5 py-2'} rounded-full wf-card-shadow`}>
+              <Sparkles className={`${mobileCompact || compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-primary`} />
+              <span className={`${mobileCompact ? 'text-[9px]' : compact ? 'text-[10px]' : 'text-[11px]'} font-bold text-primary tracking-wide`}>Generated</span>
             </div>
           </div>
         </div>
