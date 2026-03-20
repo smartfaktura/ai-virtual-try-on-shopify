@@ -3888,6 +3888,7 @@ export default function Generate() {
                 onCancel={cancelQueue}
                 totalExpectedImages={productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount}
                 totalJobs={multiProductJobIds.size}
+                workflowName={activeWorkflow?.name}
               />
             )}
 
