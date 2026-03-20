@@ -232,6 +232,9 @@ serve(async (req) => {
             brand_profile: brandProfile,
             theme: schedule.theme || undefined,
             theme_notes: schedule.theme_notes || undefined,
+            prop_style: (wfSceneConfig.flat_lay_prop_style as string) || undefined,
+            styling_notes: (wfSceneConfig.styling_notes as string) || undefined,
+            product_angles: (wfSceneConfig.product_angle as string) || undefined,
             ...mappedSettings,
           };
 
