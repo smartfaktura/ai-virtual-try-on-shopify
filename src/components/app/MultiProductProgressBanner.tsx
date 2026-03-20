@@ -64,7 +64,7 @@ export function MultiProductProgressBanner({
   const completedCount = multiProductResults.size;
   const totalJobCount = totalJobs || multiProductJobIds.size;
   const totalImages = totalExpectedImages || totalJobCount;
-  const estimatePerImage = 15; // seconds per image (realistic for standard quality)
+  const estimatePerImage = 8; // seconds per image (realistic for standard quality)
   const totalEstimate = totalImages * estimatePerImage;
   const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
   const estHighMin = Math.max(estLowMin, Math.ceil((totalEstimate * 1.3) / 60));
