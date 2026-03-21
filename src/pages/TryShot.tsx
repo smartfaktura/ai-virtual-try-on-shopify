@@ -180,10 +180,10 @@ export default function TryShot() {
               <div
                 key={wordIndex}
                 className="h-full bg-white/80 rounded-r-full"
-                style={{
-                  width: `${progress}%`,
-                  transition: progress === 0 ? 'none' : 'width 2400ms linear',
-                }}
+                  style={{
+                    width: `${progress}%`,
+                    transition: progress === 0 ? 'none' : `width ${cycleDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+                  }}
               />
             </div>
           </div>
