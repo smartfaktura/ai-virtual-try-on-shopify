@@ -1,31 +1,33 @@
 
 
-# Make Rotating Words Stand Out More
-
-## Problem
-The rotating words (sneakers, skincare, furniture...) use `text-primary` which is dark navy on a dark heading — not enough contrast to distinguish them.
+# Restyle TryShot Rotating Word & Center Layout
 
 ## Changes
 
-### File: `src/pages/TryShot.tsx` (line 147)
+### File: `src/pages/TryShot.tsx`
 
-Make the rotating word visually distinct with a highlighted background pill + italic style:
+**1. Rotating word styling (line 147)**
+
+Remove italic and underline. Instead, use a soft background highlight to differentiate:
 
 ```tsx
-<span className="text-primary italic underline decoration-primary/30 underline-offset-4 decoration-2">
+<span className="text-primary bg-primary/8 px-3 py-1 rounded-lg">
 ```
 
-This adds:
-- **Italic** — immediately differentiates the dynamic word from "Product shots for"
-- **Underline with offset** — subtle navy underline decoration draws the eye
-- **30% opacity underline** — elegant, not heavy
+This gives a light navy-tinted pill behind the word — no italic, no underline, clean and modern.
 
-Alternative if you want even bolder: swap to a background highlight approach:
+**2. Vertically center the hero area**
+
+Change the `<main>` wrapper (line 142) to use flexbox centering with `min-h-[calc(100vh-64px)]` so the hero content sits in the vertical center of the viewport on load:
+
 ```tsx
-<span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md">
+<main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
 ```
-This puts a light navy tinted box behind the word.
+
+This removes the fixed `pt-16 sm:pt-24` top padding and instead vertically centers the entire hero block (headline + image + input + subtitle) in the viewport.
 
 ## Summary
-- 1 line changed — class update on the rotating word `<span>`
+- 2 lines changed in 1 file
+- Rotating word: no italic/underline, soft background highlight instead
+- Hero section vertically centered in viewport
 
