@@ -152,7 +152,7 @@ export default function TryShot() {
         </h1>
 
         {/* Hero showcase image — synced to typewriter word */}
-        <div className="flex justify-center mb-6">
+        <div className="flex flex-col items-center mb-6">
           <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
@@ -163,17 +163,13 @@ export default function TryShot() {
                 style={{ opacity: i === wordIndex ? 1 : 0 }}
               />
             ))}
-          </div>
-          <div className="flex justify-center gap-1.5 mt-3">
-            {ROTATING_WORDS.map((_, i) => (
+            {/* Progress bar at bottom of image */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
               <div
-                key={i}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-500',
-                  i === wordIndex ? 'bg-primary w-4' : 'bg-border w-1.5'
-                )}
+                className="h-full bg-white/80 rounded-r-full transition-all duration-300 ease-linear"
+                style={{ width: `${((wordIndex + 1) / ROTATING_WORDS.length) * 100}%` }}
               />
-            ))}
+            </div>
           </div>
         </div>
 
