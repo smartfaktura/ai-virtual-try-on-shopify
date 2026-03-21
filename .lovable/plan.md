@@ -1,12 +1,18 @@
 
 
-# Lighter Heading + Dark Blue Accent Word (No Background)
+# Fix TryShot Headline Color Contrast
 
-## Changes
+## Problem
+Both "Product shots for" (`text-muted-foreground` = grey) and the rotating word (`text-primary` = dark navy) look too similar against the warm white background — everything blends together.
+
+## Solution
+Create clear visual hierarchy with proper contrast:
 
 ### File: `src/pages/TryShot.tsx`
 
-**Line 143**: Make "Product shots for" lighter weight — change from `font-bold` to `font-medium text-muted-foreground` so it's a softer grey tone.
+**Line 143 — Static heading**: Change from `text-muted-foreground` to `text-foreground` (near-black). This makes "Product shots for" strong and readable.
 
-**Line 147**: Remove the background highlight from the rotating word. Change from `text-primary bg-primary/[0.08] px-3 py-1 rounded-lg` to just `text-primary font-bold` — pure dark navy blue text, no pill background. The contrast between the lighter grey heading and the bold dark blue word will make it stand out naturally.
+**Line 147 — Rotating word**: Change from `text-primary` (dark navy `hsl(217,33%,17%)`) to a brighter blue using an inline style or a custom utility. Use `text-[hsl(217,60%,45%)]` — a vibrant medium blue that clearly pops against the near-black static text.
+
+Result: near-black "Product shots for" + bright blue **electronics** = clear distinction, premium feel.
 
