@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
+import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 import { GlobalGenerationBar } from '@/components/app/GlobalGenerationBar';
 
 import { toast } from '@/hooks/use-toast';
