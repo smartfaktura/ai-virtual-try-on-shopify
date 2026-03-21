@@ -144,7 +144,7 @@ export default function TryShot() {
           Product shots
           <br />
           for{' '}
-          <span className="text-muted-foreground">
+          <span className="text-primary">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
@@ -152,7 +152,7 @@ export default function TryShot() {
 
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex justify-center mb-6">
-          <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg]">
+          <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
                 key={i}
@@ -185,7 +185,7 @@ export default function TryShot() {
             <button
               onClick={handleGenerate}
               disabled={isLoading || !url.trim()}
-              className="flex-shrink-0 w-11 h-11 mr-1.5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 disabled:opacity-40 transition-colors flex items-center justify-center"
+              className="flex-shrink-0 w-11 h-11 mr-1.5 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin text-foreground" />
@@ -279,9 +279,10 @@ export default function TryShot() {
 
       {/* Works with most products */}
       <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-10">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-3">
           Works with most products
         </h2>
+        <div className="w-12 h-0.5 bg-primary mx-auto mb-10" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
             <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
@@ -291,7 +292,7 @@ export default function TryShot() {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <span className="absolute bottom-3 left-3 bg-white/90 text-foreground text-xs font-medium px-3 py-1 rounded-full">
+              <span className="absolute bottom-3 left-3 bg-primary text-white text-xs font-medium px-3 py-1 rounded-full">
                 {cat.label}
               </span>
             </div>
@@ -302,7 +303,7 @@ export default function TryShot() {
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-muted-foreground/60">
         Powered by{' '}
-        <a href="https://vovv.ai" className="text-foreground hover:text-foreground/80 transition-colors font-medium">
+        <a href="https://vovv.ai" className="text-primary hover:text-primary/80 transition-colors font-medium">
           VOVV.AI
         </a>{' '}
         · AI product photography
