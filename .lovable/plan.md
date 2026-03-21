@@ -1,33 +1,12 @@
 
 
-# Restyle TryShot Rotating Word & Center Layout
+# Lighter Heading + Dark Blue Accent Word (No Background)
 
 ## Changes
 
 ### File: `src/pages/TryShot.tsx`
 
-**1. Rotating word styling (line 147)**
+**Line 143**: Make "Product shots for" lighter weight — change from `font-bold` to `font-medium text-muted-foreground` so it's a softer grey tone.
 
-Remove italic and underline. Instead, use a soft background highlight to differentiate:
-
-```tsx
-<span className="text-primary bg-primary/8 px-3 py-1 rounded-lg">
-```
-
-This gives a light navy-tinted pill behind the word — no italic, no underline, clean and modern.
-
-**2. Vertically center the hero area**
-
-Change the `<main>` wrapper (line 142) to use flexbox centering with `min-h-[calc(100vh-64px)]` so the hero content sits in the vertical center of the viewport on load:
-
-```tsx
-<main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-```
-
-This removes the fixed `pt-16 sm:pt-24` top padding and instead vertically centers the entire hero block (headline + image + input + subtitle) in the viewport.
-
-## Summary
-- 2 lines changed in 1 file
-- Rotating word: no italic/underline, soft background highlight instead
-- Hero section vertically centered in viewport
+**Line 147**: Remove the background highlight from the rotating word. Change from `text-primary bg-primary/[0.08] px-3 py-1 rounded-lg` to just `text-primary font-bold` — pure dark navy blue text, no pill background. The contrast between the lighter grey heading and the bold dark blue word will make it stand out naturally.
 
