@@ -1,22 +1,46 @@
 
 
-# Add /tryshot Preview Route
+# Restyle TryShot Page to Match VOVV.AI White Brand
 
 ## Problem
-The TryShot page only renders when `window.location.hostname === 'try.vovv.ai'`, so it's inaccessible in the Lovable preview.
+The TryShot page uses a dark navy theme with hardcoded HSL colors. The main VOVV.AI site uses a warm white background with dark navy text — premium, clean, editorial.
 
-## Change
+## Changes
 
-### File: `src/App.tsx`
+### File: `src/pages/TryShot.tsx`
 
-Add a `/tryshot` route in the public routes section (alongside `/landing`, `/auth`, etc.):
+Replace all hardcoded dark-theme colors with the design system tokens used across VOVV.AI:
 
-```tsx
-<Route path="/tryshot" element={<TryShot />} />
-<Route path="/tryshot/:domain" element={<TryShot />} />
-```
+**Page container**: `bg-background text-foreground` (warm white `#faf9f7`, dark navy text)
 
-The `TryShot` lazy import already exists. This just adds two routes to the main route tree so you can visit `/tryshot` or `/tryshot/nike.com` in the preview.
+**Nav**: 
+- Logo: `text-foreground` with `.AI` in `text-muted-foreground`
+- Sign up link: `text-muted-foreground hover:text-foreground`
 
-The subdomain hostname detection stays unchanged — on `try.vovv.ai` it still renders the isolated route tree.
+**Hero badge**: `bg-secondary text-muted-foreground` (light stone chip)
+
+**Headline**: `text-foreground` with rotating word in `text-muted-foreground`
+
+**Subtitle**: `text-muted-foreground`
+
+**Input**: `bg-white border-border text-foreground placeholder:text-muted-foreground` (clean white input with subtle border)
+
+**Generate button**: `bg-primary text-primary-foreground hover:bg-primary/90` (dark navy button matching main site CTA)
+
+**Progress bar**: `bg-secondary` track, `bg-primary` fill, `text-primary` dot and label
+
+**Result cards**: `bg-white border border-border` with `text-foreground` labels, download button with `bg-black/60`
+
+**CTA section**: `border-border`, text in `text-muted-foreground`, "60 free credits" in `text-foreground font-semibold`, CTA button same as primary
+
+**Error text**: `text-destructive`
+
+**Empty state**: `text-muted-foreground`
+
+**Footer**: `text-muted-foreground/60` with link in `text-primary hover:text-foreground`
+
+## Result
+- TryShot page matches the warm white, editorial VOVV.AI brand identity
+- Uses design system tokens instead of hardcoded HSL values
+- Consistent with main landing page look and feel
 
