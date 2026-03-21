@@ -185,6 +185,21 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </nav>
 
+        {/* Earn Credits */}
+        <div className={cn('px-4 pb-2', isCollapsed && 'px-2')}>
+          <button
+            onClick={() => setEarnCreditsOpen(true)}
+            className={cn(
+              'w-full flex items-center gap-2.5 rounded-xl text-amber-400/70 hover:text-amber-400 hover:bg-amber-400/10 transition-all duration-200',
+              isCollapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5 text-sm font-medium'
+            )}
+            title={isCollapsed ? 'Earn Credits' : undefined}
+          >
+            <Gift className="w-[18px] h-[18px] flex-shrink-0" />
+            {!isCollapsed && 'Earn Credits'}
+          </button>
+        </div>
+
         {/* Credits */}
         <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
           {isCollapsed ? (
