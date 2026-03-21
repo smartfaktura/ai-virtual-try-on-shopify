@@ -144,7 +144,7 @@ export default function TryShot() {
           Product shots
           <br />
           for{' '}
-          <span className="text-primary">
+          <span className="text-primary italic underline decoration-primary/30 underline-offset-4 decoration-2">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
