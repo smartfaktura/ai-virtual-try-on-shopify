@@ -80,10 +80,14 @@ export default function TryShot() {
   }, [displayWord, isDeleting, wordIndex]);
 
   // Smooth progress bar — resets on word change, fills to 100%
+  const cycleDuration = ROTATING_WORDS[wordIndex].length * 120 + 2000;
+
   useEffect(() => {
     setProgress(0);
-    const raf = requestAnimationFrame(() => setProgress(100));
-    return () => cancelAnimationFrame(raf);
+    const raf1 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setProgress(100));
+    });
+    return () => cancelAnimationFrame(raf1);
   }, [wordIndex]);
 
   const handleGenerate = async () => {
