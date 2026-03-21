@@ -47,7 +47,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
             <Gift className="w-7 h-7 text-primary" />
           </div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">
-            Unlock 50 Free Credits
+            Unlock 200 Free Credits
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Share your best creation and get rewarded
