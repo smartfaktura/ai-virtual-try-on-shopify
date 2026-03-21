@@ -110,15 +110,15 @@ export default function TryShot() {
   const isLoading = step === 'scraping' || step === 'extracting' || step === 'generating';
 
   return (
-    <div className="min-h-screen bg-[hsl(222,47%,8%)] text-[hsl(210,20%,98%)]">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
-        <a href="https://vovv.ai" className="text-xl font-bold tracking-tight">
-          VOVV<span className="text-[hsl(210,17%,70%)]">.AI</span>
+        <a href="https://vovv.ai" className="text-xl font-bold tracking-tight text-foreground">
+          VOVV<span className="text-muted-foreground">.AI</span>
         </a>
         <a
           href="https://vovv.ai/auth"
-          className="text-sm text-[hsl(210,17%,70%)] hover:text-white transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           Sign up free →
         </a>
@@ -126,27 +126,27 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[hsl(222,47%,18%)] text-xs text-[hsl(210,17%,70%)] mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-xs text-muted-foreground mb-8">
           <Sparkles className="w-3 h-3" />
           Free — no sign-up required
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
           Product shots for{' '}
-          <span className="text-[hsl(210,17%,70%)]">
+          <span className="text-muted-foreground">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
         </h1>
 
-        <p className="text-lg text-[hsl(215,14%,65%)] max-w-xl mx-auto mb-12">
+        <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-12">
           Enter any store URL. We'll find products and generate AI-styled product photos in seconds.
         </p>
 
         {/* URL Input */}
         <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto mb-4">
           <div className="relative flex-1">
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(215,14%,65%)]" />
+            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="nike.com"
@@ -154,13 +154,13 @@ export default function TryShot() {
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleGenerate()}
               disabled={isLoading}
-              className="pl-10 h-12 bg-[hsl(222,47%,11%)] border-[hsl(222,47%,22%)] text-white placeholder:text-[hsl(215,14%,45%)] text-base"
+              className="pl-10 h-12 bg-white border-border text-foreground placeholder:text-muted-foreground text-base"
             />
           </div>
           <Button
             onClick={handleGenerate}
             disabled={isLoading || !url.trim()}
-            className="h-12 px-6 bg-[hsl(210,17%,70%)] text-[hsl(222,47%,8%)] hover:bg-[hsl(210,17%,80%)] font-semibold"
+            className="h-12 px-6 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,19 +173,19 @@ export default function TryShot() {
         </div>
 
         {error && (
-          <p className="text-sm text-[hsl(0,62%,45%)] mt-2">{error}</p>
+          <p className="text-sm text-destructive mt-2">{error}</p>
         )}
 
         {/* Progress */}
         {isLoading && (
           <div className="mt-12 space-y-4">
             <div className="flex items-center justify-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[hsl(210,17%,70%)] animate-pulse" />
-              <span className="text-sm text-[hsl(210,17%,70%)]">{STEP_LABELS[step]}</span>
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm text-primary">{STEP_LABELS[step]}</span>
             </div>
-            <div className="w-64 mx-auto h-1 bg-[hsl(222,47%,18%)] rounded-full overflow-hidden">
+            <div className="w-64 mx-auto h-1 bg-secondary rounded-full overflow-hidden">
               <div
-                className="h-full bg-[hsl(210,17%,70%)] rounded-full transition-all duration-1000 ease-out"
+                className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
                 style={{
                   width: step === 'scraping' ? '30%' : step === 'extracting' ? '60%' : '85%',
                 }}
@@ -202,7 +202,7 @@ export default function TryShot() {
               {results.map((r, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl overflow-hidden bg-[hsl(222,47%,11%)] border border-[hsl(222,47%,22%)]"
+                  className="rounded-2xl overflow-hidden bg-white border border-border"
                 >
                   <div className="aspect-square relative group">
                     <img
@@ -217,23 +217,23 @@ export default function TryShot() {
                       rel="noopener noreferrer"
                       className="absolute bottom-3 right-3 p-2 rounded-lg bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="w-4 h-4 text-white" />
                     </a>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-sm font-medium truncate">{r.product_name}</p>
+                    <p className="text-sm font-medium truncate text-foreground">{r.product_name}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* CTA */}
-            <div className="pt-8 border-t border-[hsl(222,47%,22%)]">
-              <p className="text-[hsl(215,14%,65%)] mb-4">
-                Want more? Get <span className="text-white font-semibold">60 free credits</span> when you sign up.
+            <div className="pt-8 border-t border-border">
+              <p className="text-muted-foreground mb-4">
+                Want more? Get <span className="text-foreground font-semibold">60 free credits</span> when you sign up.
               </p>
               <a href="https://vovv.ai/auth">
-                <Button className="h-12 px-8 bg-white text-[hsl(222,47%,8%)] hover:bg-white/90 font-semibold">
+                <Button className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                   Start creating for free
                   <ExternalLink className="w-4 h-4 ml-2" />
                 </Button>
@@ -243,16 +243,16 @@ export default function TryShot() {
         )}
 
         {step === 'done' && results.length === 0 && (
-          <div className="mt-12 text-[hsl(215,14%,65%)]">
+          <div className="mt-12 text-muted-foreground">
             <p>We couldn't find any product images on this site. Try a different store URL.</p>
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-8 text-xs text-[hsl(215,14%,45%)]">
+      <footer className="text-center py-8 text-xs text-muted-foreground/60">
         Powered by{' '}
-        <a href="https://vovv.ai" className="text-[hsl(210,17%,70%)] hover:text-white transition-colors">
+        <a href="https://vovv.ai" className="text-primary hover:text-foreground transition-colors">
           VOVV.AI
         </a>{' '}
         · AI product photography
