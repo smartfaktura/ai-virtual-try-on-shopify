@@ -1061,6 +1061,30 @@ export type Database = {
         }
         Relationships: []
       }
+      try_shot_sessions: {
+        Row: {
+          created_at: string | null
+          domain: string
+          id: string
+          ip_address: string
+          results: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain: string
+          id?: string
+          ip_address: string
+          results?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string
+          id?: string
+          ip_address?: string
+          results?: Json | null
+        }
+        Relationships: []
+      }
       user_products: {
         Row: {
           created_at: string
