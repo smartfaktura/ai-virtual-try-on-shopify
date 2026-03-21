@@ -303,7 +303,7 @@ export default function TryShot() {
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-muted-foreground/60">
         Powered by{' '}
-        <a href="https://vovv.ai" className="text-foreground hover:text-foreground/80 transition-colors font-medium">
+        <a href="https://vovv.ai" className="text-primary hover:text-primary/80 transition-colors font-medium">
           VOVV.AI
         </a>{' '}
         · AI product photography
