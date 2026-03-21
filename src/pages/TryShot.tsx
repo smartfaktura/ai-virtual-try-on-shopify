@@ -127,7 +127,7 @@ export default function TryShot() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
+      <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto border-b border-border/30">
         <a href="https://vovv.ai" className="text-xl font-bold tracking-tight text-foreground">
           VOVV.AI
         </a>
@@ -140,7 +140,8 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-medium tracking-tight leading-[1.1] mb-6 text-foreground">
+        <div className="animate-fade-in" style={{ animationDuration: '600ms' }}>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-[-0.03em] leading-[1.1] mb-6 text-foreground">
           Product shots
           <br />
           for{' '}
@@ -152,7 +153,7 @@ export default function TryShot() {
 
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex justify-center mb-6">
-          <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
+          <div className="relative w-56 sm:w-72 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-black/10 ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
                 key={i}
@@ -166,13 +167,13 @@ export default function TryShot() {
         </div>
 
         {/* Subtitle */}
-        <p className="text-base text-muted-foreground max-w-md mx-auto mb-5">
+        <p className="text-[15px] leading-relaxed tracking-wide text-muted-foreground max-w-md mx-auto mb-5">
           Enter your online store URL to create AI product shots
         </p>
 
         {/* URL Input — pill style with embedded submit */}
         <div className="max-w-lg mx-auto mb-3">
-          <div className="relative flex items-center bg-secondary rounded-full border border-border overflow-hidden">
+          <div className="relative flex items-center bg-white/80 backdrop-blur-sm rounded-full border border-border/50 overflow-hidden shadow-lg shadow-black/[0.03]">
             <input
               type="text"
               placeholder="Enter online store URL"
@@ -196,9 +197,11 @@ export default function TryShot() {
           </div>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/50 mt-1 mb-2">
-          Free · No sign-up required
-        </p>
+        <span className="inline-flex items-center gap-1.5 bg-secondary/60 px-3 py-1 rounded-full mt-1 mb-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-[11px] text-muted-foreground/60">Free · No sign-up required</span>
+        </span>
+        </div>
 
         {error && (
           <p className="text-sm text-destructive mt-2">{error}</p>
@@ -278,20 +281,20 @@ export default function TryShot() {
       </main>
 
       {/* Works with most products */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
+      <section className="max-w-5xl mx-auto px-6 py-20 border-t border-border/40">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-3">
           Works with most products
         </h2>
         <div className="w-12 h-0.5 bg-primary mx-auto mb-10" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
-            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
+            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4] transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
               <img
                 src={cat.image}
                 alt={cat.label}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               <span className="absolute bottom-3 left-3 bg-primary text-white text-xs font-medium px-3 py-1 rounded-full">
                 {cat.label}
               </span>
