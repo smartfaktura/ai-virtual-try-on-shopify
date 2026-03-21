@@ -389,6 +389,9 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Global Generation Progress */}
       <GlobalGenerationBar />
+
+      {/* Earn Credits Modal */}
+      <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
     </div>
   );
 }
