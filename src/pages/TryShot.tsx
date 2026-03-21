@@ -127,7 +127,7 @@ export default function TryShot() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
+      <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto border-b border-border/30">
         <a href="https://vovv.ai" className="text-xl font-bold tracking-tight text-foreground">
           VOVV.AI
         </a>
