@@ -87,29 +87,37 @@ export function AppShell({ children }: AppShellProps) {
 
   const NavItemButton = ({ item }: { item: typeof navItems[0] }) => {
     const isComingSoon = item.comingSoon && !isAdmin;
+    const isEarnCredits = item.path === '#earn-credits';
+
+    const handleClick = () => {
+      if (isComingSoon) {
+        toast({ title: 'Coming soon!', description: 'Video generation will be available soon.' });
+        return;
+      }
+      if (isEarnCredits) {
+        setEarnCreditsOpen(true);
+        return;
+      }
+      handleNav(item.path);
+    };
 
     return (
       <button
-        onClick={() => {
-          if (isComingSoon) {
-            toast({ title: 'Coming soon!', description: 'Video generation will be available soon.' });
-            return;
-          }
-          handleNav(item.path);
-        }}
+        onClick={handleClick}
         className={cn(
           'w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative group',
           collapsed ? 'justify-center px-0 py-3' : 'px-3 py-3',
           isComingSoon
             ? 'text-white/30 cursor-default'
-            : isActive(item.path)
-              ? 'bg-white/[0.08] text-white'
-              : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
+            : isEarnCredits
+              ? 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
+              : isActive(item.path)
+                ? 'bg-white/[0.08] text-white'
+                : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
         )}
         title={collapsed ? item.label : undefined}
       >
-        {/* Active accent bar */}
-        {!isComingSoon && isActive(item.path) && (
+        {!isComingSoon && !isEarnCredits && isActive(item.path) && (
           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
         )}
         <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
