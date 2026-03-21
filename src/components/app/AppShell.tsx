@@ -52,6 +52,7 @@ export function AppShell({ children }: AppShellProps) {
     try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
   });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
