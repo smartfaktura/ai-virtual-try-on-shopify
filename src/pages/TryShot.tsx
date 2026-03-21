@@ -1,10 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowRight, Download, ExternalLink, Sparkles, Globe, Loader2 } from 'lucide-react';
+import { ArrowUp, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+
+import showcaseBeauty from '@/assets/tryshot/showcase-beauty.jpg';
+import showcaseSneakers from '@/assets/tryshot/showcase-sneakers.jpg';
+import showcaseElectronics from '@/assets/tryshot/showcase-electronics.jpg';
+import showcaseSkincare from '@/assets/tryshot/showcase-skincare.jpg';
+import showcaseHome from '@/assets/tryshot/showcase-home.jpg';
+import showcaseJewelry from '@/assets/tryshot/showcase-jewelry.jpg';
 
 const ROTATING_WORDS = ['sneakers', 'skincare', 'furniture', 'fashion', 'electronics', 'jewelry'];
+
+const CATEGORIES = [
+  { label: 'Beauty', image: showcaseBeauty },
+  { label: 'Sneakers', image: showcaseSneakers },
+  { label: 'Electronics', image: showcaseElectronics },
+  { label: 'Skincare', image: showcaseSkincare },
+  { label: 'Home & Living', image: showcaseHome },
+  { label: 'Jewelry', image: showcaseJewelry },
+];
 
 type GenerationResult = {
   product_name: string;
@@ -73,7 +88,6 @@ export default function TryShot() {
     setStep('scraping');
 
     try {
-      // Simulate step progression with actual call
       const stepTimer1 = setTimeout(() => setStep('extracting'), 3000);
       const stepTimer2 = setTimeout(() => setStep('generating'), 7000);
 
@@ -112,65 +126,74 @@ export default function TryShot() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+      <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
         <a href="https://vovv.ai" className="text-xl font-bold tracking-tight text-foreground">
-          VOVV<span className="text-muted-foreground">.AI</span>
+          VOVV.AI
         </a>
-        <a
-          href="https://vovv.ai/auth"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Sign up free →
+        <a href="https://vovv.ai/auth">
+          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-xs font-semibold">
+            Get started
+          </Button>
         </a>
       </nav>
 
       {/* Hero */}
-      <main className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-xs text-muted-foreground mb-8">
-          <Sparkles className="w-3 h-3" />
-          Free — no sign-up required
-        </div>
-
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-          Product shots for{' '}
+      <main className="max-w-3xl mx-auto px-6 pt-16 sm:pt-24 pb-12 text-center">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-10">
+          Product shots
+          <br />
+          for{' '}
           <span className="text-muted-foreground">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
         </h1>
 
-        <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-12">
-          Enter any store URL. We'll find products and generate AI-styled product photos in seconds.
+        {/* Hero showcase image */}
+        <div className="flex justify-center mb-10">
+          <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg]">
+            <img
+              src={showcaseBeauty}
+              alt="AI product photography example"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        {/* Subtitle */}
+        <p className="text-base text-muted-foreground max-w-md mx-auto mb-8">
+          Enter your online store URL to create AI product shots
         </p>
 
-        {/* URL Input */}
-        <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto mb-4">
-          <div className="relative flex-1">
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
+        {/* URL Input — pill style with embedded submit */}
+        <div className="max-w-lg mx-auto mb-3">
+          <div className="relative flex items-center bg-secondary rounded-full border border-border overflow-hidden">
+            <input
               type="text"
-              placeholder="nike.com"
+              placeholder="Enter online store URL"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleGenerate()}
               disabled={isLoading}
-              className="pl-10 h-12 bg-white border-border text-foreground placeholder:text-muted-foreground text-base"
+              className="flex-1 h-14 pl-6 pr-4 bg-transparent text-foreground placeholder:text-muted-foreground text-base outline-none"
             />
+            <button
+              onClick={handleGenerate}
+              disabled={isLoading || !url.trim()}
+              className="flex-shrink-0 w-11 h-11 mr-1.5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 disabled:opacity-40 transition-colors flex items-center justify-center"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin text-foreground" />
+              ) : (
+                <ArrowUp className="w-4 h-4 text-foreground" />
+              )}
+            </button>
           </div>
-          <Button
-            onClick={handleGenerate}
-            disabled={isLoading || !url.trim()}
-            className="h-12 px-6 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                Generate <ArrowRight className="w-4 h-4 ml-1" />
-              </>
-            )}
-          </Button>
         </div>
+
+        <p className="text-xs text-muted-foreground/60 mb-2">
+          Free · No sign-up required
+        </p>
 
         {error && (
           <p className="text-sm text-destructive mt-2">{error}</p>
@@ -178,12 +201,12 @@ export default function TryShot() {
 
         {/* Progress */}
         {isLoading && (
-          <div className="mt-12 space-y-4">
+          <div className="mt-10 space-y-4">
             <div className="flex items-center justify-center gap-3">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm text-primary">{STEP_LABELS[step]}</span>
+              <span className="text-sm text-muted-foreground">{STEP_LABELS[step]}</span>
             </div>
-            <div className="w-64 mx-auto h-1 bg-secondary rounded-full overflow-hidden">
+            <div className="w-48 mx-auto h-1 bg-secondary rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
                 style={{
@@ -196,9 +219,9 @@ export default function TryShot() {
 
         {/* Results */}
         {step === 'done' && results.length > 0 && (
-          <div className="mt-16 space-y-8">
+          <div className="mt-14 space-y-8">
             <h2 className="text-2xl font-bold">Your product shots</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {results.map((r, i) => (
                 <div
                   key={i}
@@ -221,7 +244,7 @@ export default function TryShot() {
                     </a>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-sm font-medium truncate text-foreground">{r.product_name}</p>
+                    <p className="text-sm font-medium truncate">{r.product_name}</p>
                   </div>
                 </div>
               ))}
@@ -233,7 +256,7 @@ export default function TryShot() {
                 Want more? Get <span className="text-foreground font-semibold">60 free credits</span> when you sign up.
               </p>
               <a href="https://vovv.ai/auth">
-                <Button className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+                <Button className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-full">
                   Start creating for free
                   <ExternalLink className="w-4 h-4 ml-2" />
                 </Button>
@@ -249,10 +272,32 @@ export default function TryShot() {
         )}
       </main>
 
+      {/* Works with most products */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-10">
+          Works with most products
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {CATEGORIES.map((cat) => (
+            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-square">
+              <img
+                src={cat.image}
+                alt={cat.label}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <span className="absolute bottom-3 left-3 text-sm font-semibold text-white">
+                {cat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-muted-foreground/60">
         Powered by{' '}
-        <a href="https://vovv.ai" className="text-primary hover:text-foreground transition-colors">
+        <a href="https://vovv.ai" className="text-foreground hover:text-foreground/80 transition-colors font-medium">
           VOVV.AI
         </a>{' '}
         · AI product photography
