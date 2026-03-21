@@ -79,6 +79,13 @@ export default function TryShot() {
     return () => clearTimeout(intervalRef.current);
   }, [displayWord, isDeleting, wordIndex]);
 
+  // Smooth progress bar — resets on word change, fills to 100%
+  useEffect(() => {
+    setProgress(0);
+    const raf = requestAnimationFrame(() => setProgress(100));
+    return () => cancelAnimationFrame(raf);
+  }, [wordIndex]);
+
   const handleGenerate = async () => {
     const cleanDomain = url.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     if (!cleanDomain || !cleanDomain.includes('.')) {
