@@ -172,7 +172,7 @@ export default function TryShot() {
 
         {/* URL Input — pill style with embedded submit */}
         <div className="max-w-lg mx-auto mb-3">
-          <div className="relative flex items-center bg-secondary rounded-full border border-border overflow-hidden">
+          <div className="relative flex items-center bg-white rounded-full border border-border/60 overflow-hidden shadow-sm">
             <input
               type="text"
               placeholder="Enter online store URL"
