@@ -76,7 +76,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
         <div className="px-6 pb-4">
           <a
             href={mailtoHref}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-semibold text-sm transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm transition-colors"
           >
             Claim My Credits
             <Send className="w-4 h-4" />
