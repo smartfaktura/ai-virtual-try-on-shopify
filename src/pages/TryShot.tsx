@@ -196,7 +196,7 @@ export default function TryShot() {
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground/60 mb-2">
+        <p className="text-[11px] text-muted-foreground/50 mt-1 mb-2">
           Free · No sign-up required
         </p>
 
