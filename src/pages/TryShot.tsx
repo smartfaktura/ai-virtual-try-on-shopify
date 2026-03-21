@@ -292,7 +292,7 @@ export default function TryShot() {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <span className="absolute bottom-3 left-3 bg-white/90 text-foreground text-xs font-medium px-3 py-1 rounded-full">
+              <span className="absolute bottom-3 left-3 bg-primary text-white text-xs font-medium px-3 py-1 rounded-full">
                 {cat.label}
               </span>
             </div>
