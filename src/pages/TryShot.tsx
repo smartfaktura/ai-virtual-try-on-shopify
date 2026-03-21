@@ -49,6 +49,7 @@ export default function TryShot() {
   const [wordIndex, setWordIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Typewriter effect
@@ -77,6 +78,13 @@ export default function TryShot() {
 
     return () => clearTimeout(intervalRef.current);
   }, [displayWord, isDeleting, wordIndex]);
+
+  // Smooth progress bar — resets on word change, fills to 100%
+  useEffect(() => {
+    setProgress(0);
+    const raf = requestAnimationFrame(() => setProgress(100));
+    return () => cancelAnimationFrame(raf);
+  }, [wordIndex]);
 
   const handleGenerate = async () => {
     const cleanDomain = url.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
@@ -141,7 +149,7 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-semibold tracking-tight leading-[1.1] mb-6 text-foreground">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
           Product shots
           <br />
           for{' '}
@@ -153,7 +161,7 @@ export default function TryShot() {
 
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex flex-col items-center mb-6">
-          <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
+          <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
                 key={i}
@@ -166,8 +174,12 @@ export default function TryShot() {
             {/* Progress bar at bottom of image */}
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
               <div
-                className="h-full bg-white/80 rounded-r-full transition-all duration-300 ease-linear"
-                style={{ width: `${((wordIndex + 1) / ROTATING_WORDS.length) * 100}%` }}
+                key={wordIndex}
+                className="h-full bg-white/80 rounded-r-full"
+                style={{
+                  width: `${progress}%`,
+                  transition: progress === 0 ? 'none' : 'width 2400ms linear',
+                }}
               />
             </div>
           </div>
