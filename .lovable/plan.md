@@ -1,31 +1,36 @@
 
 
-# Improve TryShot Hero Headline
+# Bolder Hero Title + Smaller Image with Carousel Indicator
 
-## Problem
-The grey `text-muted-foreground` (muted blue-grey at 47% lightness) paired with `text-primary` (very dark navy at 17% lightness) creates an awkward contrast — the grey feels washed out while the navy is too dark, making them clash rather than complement.
-
-## Proposal: All-dark heading with the rotating word as the accent color
-
-Make the entire heading dark (`text-foreground` — the near-black navy used site-wide) and make **only the rotating word** use a brighter, more vivid blue accent. This creates a clean "black text with one colored word" effect — similar to how Stripe, Linear, and Vercel handle hero headlines.
+## Changes
 
 ### File: `src/pages/TryShot.tsx`
 
-**Line 143 — Heading**: Change `text-muted-foreground` → `text-foreground`. Keep `font-medium`.
+**1. Bolder heading (line 143)**
+Change `font-medium` → `font-semibold` on the `<h1>` so the full title feels heavier.
 
-**Line 147 — Rotating word span**: Change `text-primary font-bold` → a richer blue that pops against the dark heading. Use an inline style with a more vivid blue (`hsl(217, 60%, 35%)`) or add a custom utility. This is brighter than the current `primary` (which is essentially black-navy) while staying on-brand.
+**2. Smaller showcase image (line 155)**
+Reduce from `w-56 sm:w-64` → `w-44 sm:w-52` to make it less dominant.
+
+**3. Add carousel dots below the image (after line 165)**
+Add a row of 6 small dots below the image, highlighting the active one synced to `wordIndex`:
 
 ```tsx
-<h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-medium tracking-tight leading-[1.1] mb-6 text-foreground">
-  Product shots
-  <br />
-  for{' '}
-  <span className="font-bold" style={{ color: 'hsl(217, 60%, 35%)' }}>
-    {displayWord}
-    <span className="animate-pulse">|</span>
-  </span>
-</h1>
+<div className="flex justify-center gap-1.5 mt-3">
+  {ROTATING_WORDS.map((_, i) => (
+    <div
+      key={i}
+      className={cn(
+        'w-1.5 h-1.5 rounded-full transition-all duration-500',
+        i === wordIndex ? 'bg-primary w-4' : 'bg-border'
+      )}
+    />
+  ))}
+</div>
 ```
 
-The result: clean dark heading with a rich royal blue accent word — high contrast, editorial, no grey.
+The active dot stretches wider (`w-4`) and turns dark navy, while inactive dots stay as small circles — a clear indicator that images are rotating.
+
+## Summary
+- 1 file, 3 changes: bolder heading, smaller image, animated dot indicator
 
