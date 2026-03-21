@@ -140,19 +140,19 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tighter leading-[1.05] mb-6 text-foreground">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-medium tracking-tight leading-[1.1] mb-6 text-muted-foreground">
           Product shots
           <br />
           for{' '}
-          <span className="text-[hsl(220,70%,50%)] font-bold">
+          <span className="text-primary font-bold">
             {displayWord}
-            <span className="animate-[blink_1s_step-end_infinite] text-[hsl(220,70%,50%)]">|</span>
+            <span className="animate-pulse">|</span>
           </span>
         </h1>
 
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex justify-center mb-6">
-          <div className="relative w-60 sm:w-72 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-primary/10">
+          <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
                 key={i}
@@ -166,13 +166,13 @@ export default function TryShot() {
         </div>
 
         {/* Subtitle */}
-        <p className="text-lg font-light text-muted-foreground max-w-lg mx-auto mb-5">
+        <p className="text-base text-muted-foreground max-w-md mx-auto mb-5">
           Enter your online store URL to create AI product shots
         </p>
 
         {/* URL Input — pill style with embedded submit */}
         <div className="max-w-lg mx-auto mb-3">
-          <div className="relative flex items-center bg-white rounded-full border border-border/60 overflow-hidden shadow-sm">
+          <div className="relative flex items-center bg-secondary rounded-full border border-border overflow-hidden">
             <input
               type="text"
               placeholder="Enter online store URL"
@@ -196,7 +196,7 @@ export default function TryShot() {
           </div>
         </div>
 
-        <p className="text-xs tracking-wide uppercase text-muted-foreground/40 font-medium mt-1 mb-2">
+        <p className="text-[11px] text-muted-foreground/50 mt-1 mb-2">
           Free · No sign-up required
         </p>
 
