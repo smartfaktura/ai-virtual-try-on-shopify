@@ -279,9 +279,10 @@ export default function TryShot() {
 
       {/* Works with most products */}
       <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-10">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-3">
           Works with most products
         </h2>
+        <div className="w-12 h-0.5 bg-primary mx-auto mb-10" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
             <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
