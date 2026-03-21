@@ -1,31 +1,41 @@
 
 
-# Improve TryShot Hero Headline
+# Premium Polish for TryShot Landing Page
 
-## Problem
-The grey `text-muted-foreground` (muted blue-grey at 47% lightness) paired with `text-primary` (very dark navy at 17% lightness) creates an awkward contrast — the grey feels washed out while the navy is too dark, making them clash rather than complement.
+Small, high-impact refinements following 2026 landing page trends (glass morphism, generous whitespace, micro-interactions, editorial typography).
 
-## Proposal: All-dark heading with the rotating word as the accent color
+## Changes — `src/pages/TryShot.tsx`
 
-Make the entire heading dark (`text-foreground` — the near-black navy used site-wide) and make **only the rotating word** use a brighter, more vivid blue accent. This creates a clean "black text with one colored word" effect — similar to how Stripe, Linear, and Vercel handle hero headlines.
+### 1. Entrance animation
+Add a fade-in + slide-up on page load. Wrap the hero content in a div with a CSS animation class using Tailwind's `animate-` utility. Add a simple keyframe via inline style or a small `<style>` tag:
+- `opacity: 0 → 1`, `translateY(16px) → 0` over 600ms ease-out
 
-### File: `src/pages/TryShot.tsx`
+### 2. Input field — glass morphism upgrade
+Change from `bg-secondary border-border` to `bg-white/80 backdrop-blur-sm border-border/50 shadow-lg shadow-black/[0.03]`. This gives a frosted glass feel that's very 2026.
 
-**Line 143 — Heading**: Change `text-muted-foreground` → `text-foreground`. Keep `font-medium`.
+### 3. Hero showcase image — add floating shadow + remove rotation
+Remove `rotate-[-2deg]` (feels gimmicky). Instead add `shadow-2xl shadow-black/10` for a premium floating card effect. Increase size slightly on desktop: `sm:w-72` instead of `sm:w-64`.
 
-**Line 147 — Rotating word span**: Change `text-primary font-bold` → a richer blue that pops against the dark heading. Use an inline style with a more vivid blue (`hsl(217, 60%, 35%)`) or add a custom utility. This is brighter than the current `primary` (which is essentially black-navy) while staying on-brand.
+### 4. Tighter letter-spacing on headline
+Change `tracking-tight` to `tracking-[-0.03em]` (tighter than tight) for modern editorial feel. Bump size slightly: `md:text-6xl`.
 
-```tsx
-<h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-medium tracking-tight leading-[1.1] mb-6 text-foreground">
-  Product shots
-  <br />
-  for{' '}
-  <span className="font-bold" style={{ color: 'hsl(217, 60%, 35%)' }}>
-    {displayWord}
-    <span className="animate-pulse">|</span>
-  </span>
-</h1>
-```
+### 5. Subtitle — upgrade typography
+Change from `text-base` to `text-[15px] leading-relaxed` with `tracking-wide` for refined spacing.
 
-The result: clean dark heading with a rich royal blue accent word — high contrast, editorial, no grey.
+### 6. "Free · No sign-up" text — subtle badge style
+Wrap in a small pill: `inline-flex items-center gap-1.5 bg-secondary/60 px-3 py-1 rounded-full` with a tiny green dot before text to signal "live/free".
+
+### 7. Category cards — hover lift effect
+Add `transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1` for a subtle lift on hover. Change gradient to `from-black/50` for deeper text contrast.
+
+### 8. Section spacing
+Add `border-t border-border/40` above "Works with most products" section for visual separation. Increase `py-16` to `py-20`.
+
+### 9. Nav — add subtle bottom border
+Add `border-b border-border/30` to nav for clean separation from content.
+
+## Summary
+- 1 file, ~15 class tweaks
+- No structural changes, no new dependencies
+- Adds: entrance animation, glass input, floating image, editorial typography, hover lifts, refined spacing
 
