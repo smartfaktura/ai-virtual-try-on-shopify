@@ -197,9 +197,11 @@ export default function TryShot() {
           </div>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/50 mt-1 mb-2">
-          Free · No sign-up required
-        </p>
+        <span className="inline-flex items-center gap-1.5 bg-secondary/60 px-3 py-1 rounded-full mt-1 mb-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-[11px] text-muted-foreground/60">Free · No sign-up required</span>
+        </span>
+        </div>
 
         {error && (
           <p className="text-sm text-destructive mt-2">{error}</p>
