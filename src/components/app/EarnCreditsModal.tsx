@@ -61,7 +61,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
               key={step.num}
               className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 text-xs font-bold flex-shrink-0 mt-0.5">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
                 {step.num}
               </div>
               <div className="min-w-0">
