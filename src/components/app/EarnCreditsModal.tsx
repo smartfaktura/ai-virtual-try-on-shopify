@@ -42,9 +42,9 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl">
         {/* Hero */}
-        <div className="relative px-6 pt-8 pb-6 text-center bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-transparent">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400/15 mb-4">
-            <Gift className="w-7 h-7 text-amber-400" />
+        <div className="relative px-6 pt-8 pb-6 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-4">
+            <Gift className="w-7 h-7 text-primary" />
           </div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">
             Unlock 50 Free Credits
@@ -61,7 +61,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
               key={step.num}
               className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 text-xs font-bold flex-shrink-0 mt-0.5">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
                 {step.num}
               </div>
               <div className="min-w-0">
@@ -76,7 +76,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
         <div className="px-6 pb-4">
           <a
             href={mailtoHref}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-semibold text-sm transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm transition-colors"
           >
             Claim My Credits
             <Send className="w-4 h-4" />
