@@ -81,7 +81,24 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  // try.vovv.ai subdomain gets its own minimal route tree
+  if (isTryShotHost) {
+    return (
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[hsl(222,47%,8%)]"><div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(210,17%,70%)] border-t-transparent" /></div>}>
+            <Routes>
+              <Route path="/" element={<TryShot />} />
+              <Route path="/:domain" element={<TryShot />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </ErrorBoundary>
+    );
+  }
+
+  return (
   <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
