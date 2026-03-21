@@ -140,7 +140,7 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pt-16 sm:pt-24 pb-12 text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-10">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6">
           Product shots
           <br />
           for{' '}
@@ -150,19 +150,23 @@ export default function TryShot() {
           </span>
         </h1>
 
-        {/* Hero showcase image */}
-        <div className="flex justify-center mb-10">
+        {/* Hero showcase image — synced to typewriter word */}
+        <div className="flex justify-center mb-6">
           <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg]">
-            <img
-              src={showcaseBeauty}
-              alt="AI product photography example"
-              className="w-full h-full object-cover"
-            />
+            {WORD_IMAGES.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt={`${ROTATING_WORDS[i]} product shot`}
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+                style={{ opacity: i === wordIndex ? 1 : 0 }}
+              />
+            ))}
           </div>
         </div>
 
         {/* Subtitle */}
-        <p className="text-base text-muted-foreground max-w-md mx-auto mb-8">
+        <p className="text-base text-muted-foreground max-w-md mx-auto mb-5">
           Enter your online store URL to create AI product shots
         </p>
 
