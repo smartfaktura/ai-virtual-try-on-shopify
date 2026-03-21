@@ -1,46 +1,40 @@
 
 
-# Restyle TryShot Page to Match VOVV.AI White Brand
-
-## Problem
-The TryShot page uses a dark navy theme with hardcoded HSL colors. The main VOVV.AI site uses a warm white background with dark navy text — premium, clean, editorial.
+# Improve TryShot Hero & Category Section
 
 ## Changes
 
 ### File: `src/pages/TryShot.tsx`
 
-Replace all hardcoded dark-theme colors with the design system tokens used across VOVV.AI:
+**1. Hero showcase — rotating images synced to typewriter word**
 
-**Page container**: `bg-background text-foreground` (warm white `#faf9f7`, dark navy text)
+Replace the single static `showcaseBeauty` image with a rotating showcase that changes based on the current `wordIndex`. Map each rotating word to its corresponding category image:
+- sneakers → showcaseSneakers
+- skincare → showcaseSkincare  
+- furniture → showcaseHome
+- fashion → showcaseBeauty
+- electronics → showcaseElectronics
+- jewelry → showcaseJewelry
 
-**Nav**: 
-- Logo: `text-foreground` with `.AI` in `text-muted-foreground`
-- Sign up link: `text-muted-foreground hover:text-foreground`
+Add a crossfade transition (opacity) so the image smoothly swaps when the word changes. Stack two `<img>` elements absolutely positioned, toggling opacity.
 
-**Hero badge**: `bg-secondary text-muted-foreground` (light stone chip)
+**2. "Works with most products" — image cards with category labels**
 
-**Headline**: `text-foreground` with rotating word in `text-muted-foreground`
+Change from plain image grid to richer cards:
+- Each card shows the category image with an overlay gradient
+- Category label as a pill/chip badge at bottom-left (`bg-white/90 text-foreground text-xs font-medium px-3 py-1 rounded-full`)
+- 2-col on mobile, 3-col on desktop (keep current grid)
+- Slightly taller aspect ratio: `aspect-[3/4]` instead of `aspect-square` for better product visibility
 
-**Subtitle**: `text-muted-foreground`
+**3. Minor spacing/polish fixes**
+- Remove the `mb-10` gap between headline and showcase, reduce to `mb-6`
+- Move subtitle closer to input: `mb-5` instead of `mb-8`
+- "Free · No sign-up required" → smaller, lighter: `text-[11px] text-muted-foreground/50`
+- Add `mt-1` to the free text so it tucks right under the input
 
-**Input**: `bg-white border-border text-foreground placeholder:text-muted-foreground` (clean white input with subtle border)
-
-**Generate button**: `bg-primary text-primary-foreground hover:bg-primary/90` (dark navy button matching main site CTA)
-
-**Progress bar**: `bg-secondary` track, `bg-primary` fill, `text-primary` dot and label
-
-**Result cards**: `bg-white border border-border` with `text-foreground` labels, download button with `bg-black/60`
-
-**CTA section**: `border-border`, text in `text-muted-foreground`, "60 free credits" in `text-foreground font-semibold`, CTA button same as primary
-
-**Error text**: `text-destructive`
-
-**Empty state**: `text-muted-foreground`
-
-**Footer**: `text-muted-foreground/60` with link in `text-primary hover:text-foreground`
-
-## Result
-- TryShot page matches the warm white, editorial VOVV.AI brand identity
-- Uses design system tokens instead of hardcoded HSL values
-- Consistent with main landing page look and feel
+## Summary
+- 1 file modified
+- Hero image rotates with the typewriter word (crossfade)
+- Category grid gets pill-style labels on image cards
+- Tighter spacing throughout hero section
 
