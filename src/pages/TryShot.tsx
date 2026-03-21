@@ -144,7 +144,7 @@ export default function TryShot() {
           Product shots
           <br />
           for{' '}
-          <span className="text-primary italic underline decoration-primary/30 underline-offset-4 decoration-2">
+          <span className="text-primary bg-primary/[0.08] px-3 py-1 rounded-lg">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
