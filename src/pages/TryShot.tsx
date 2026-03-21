@@ -11,6 +11,7 @@ import showcaseHome from '@/assets/tryshot/showcase-home.jpg';
 import showcaseJewelry from '@/assets/tryshot/showcase-jewelry.jpg';
 
 const ROTATING_WORDS = ['sneakers', 'skincare', 'furniture', 'fashion', 'electronics', 'jewelry'];
+const WORD_IMAGES = [showcaseSneakers, showcaseSkincare, showcaseHome, showcaseBeauty, showcaseElectronics, showcaseJewelry];
 
 const CATEGORIES = [
   { label: 'Beauty', image: showcaseBeauty },
