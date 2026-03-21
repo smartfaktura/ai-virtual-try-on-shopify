@@ -49,6 +49,7 @@ export default function TryShot() {
   const [wordIndex, setWordIndex] = useState(0);
   const [displayWord, setDisplayWord] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Typewriter effect
