@@ -142,7 +142,7 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-semibold tracking-tight leading-[1.1] mb-6 text-foreground">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
           Product shots
           <br />
           for{' '}
