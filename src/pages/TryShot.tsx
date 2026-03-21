@@ -144,7 +144,7 @@ export default function TryShot() {
           Product shots
           <br />
           for{' '}
-          <span className="text-muted-foreground">
+          <span className="text-primary">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
