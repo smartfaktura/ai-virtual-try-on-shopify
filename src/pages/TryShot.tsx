@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { cn } from '@/lib/utils';
 import { useParams } from 'react-router-dom';
 import { ArrowUp, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -140,7 +141,7 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-medium tracking-tight leading-[1.1] mb-6 text-foreground">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-semibold tracking-tight leading-[1.1] mb-6 text-foreground">
           Product shots
           <br />
           for{' '}
@@ -152,7 +153,7 @@ export default function TryShot() {
 
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex justify-center mb-6">
-          <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
+          <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
                 key={i}
@@ -160,6 +161,17 @@ export default function TryShot() {
                 alt={`${ROTATING_WORDS[i]} product shot`}
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
                 style={{ opacity: i === wordIndex ? 1 : 0 }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-center gap-1.5 mt-3">
+            {ROTATING_WORDS.map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'h-1.5 rounded-full transition-all duration-500',
+                  i === wordIndex ? 'bg-primary w-4' : 'bg-border w-1.5'
+                )}
               />
             ))}
           </div>
