@@ -284,14 +284,14 @@ export default function TryShot() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
-            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-square">
+            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
               <img
                 src={cat.image}
                 alt={cat.label}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <span className="absolute bottom-3 left-3 text-sm font-semibold text-white">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <span className="absolute bottom-3 left-3 bg-white/90 text-foreground text-xs font-medium px-3 py-1 rounded-full">
                 {cat.label}
               </span>
             </div>
