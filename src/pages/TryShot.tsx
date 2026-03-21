@@ -167,8 +167,12 @@ export default function TryShot() {
             {/* Progress bar at bottom of image */}
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
               <div
-                className="h-full bg-white/80 rounded-r-full transition-all duration-300 ease-linear"
-                style={{ width: `${((wordIndex + 1) / ROTATING_WORDS.length) * 100}%` }}
+                key={wordIndex}
+                className="h-full bg-white/80 rounded-r-full"
+                style={{
+                  width: `${progress}%`,
+                  transition: progress === 0 ? 'none' : 'width 2400ms linear',
+                }}
               />
             </div>
           </div>
