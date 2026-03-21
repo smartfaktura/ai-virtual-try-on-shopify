@@ -167,7 +167,7 @@ export default function TryShot() {
         </div>
 
         {/* Subtitle */}
-        <p className="text-base text-muted-foreground max-w-md mx-auto mb-5">
+        <p className="text-[15px] leading-relaxed tracking-wide text-muted-foreground max-w-md mx-auto mb-5">
           Enter your online store URL to create AI product shots
         </p>
 
