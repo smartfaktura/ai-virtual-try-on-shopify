@@ -42,9 +42,9 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl">
         {/* Hero */}
-        <div className="relative px-6 pt-8 pb-6 text-center bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-transparent">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400/15 mb-4">
-            <Gift className="w-7 h-7 text-amber-400" />
+        <div className="relative px-6 pt-8 pb-6 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-4">
+            <Gift className="w-7 h-7 text-primary" />
           </div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">
             Unlock 50 Free Credits
