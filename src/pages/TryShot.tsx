@@ -154,7 +154,7 @@ export default function TryShot() {
 
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex flex-col items-center mb-6">
-          <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg] ring-2 ring-primary/10">
+          <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl ring-2 ring-primary/10">
             {WORD_IMAGES.map((img, i) => (
               <img
                 key={i}
