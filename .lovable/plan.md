@@ -1,36 +1,44 @@
 
 
-# Bolder Hero Title + Smaller Image with Carousel Indicator
+# TryShot Mobile Hero Improvements
 
 ## Changes
 
 ### File: `src/pages/TryShot.tsx`
 
-**1. Bolder heading (line 143)**
-Change `font-medium` → `font-semibold` on the `<h1>` so the full title feels heavier.
+**1. Bolder heading on mobile (line 144)**
+Change `font-semibold` → `font-bold` on the `<h1>` for more impact on small screens.
 
-**2. Smaller showcase image (line 155)**
-Reduce from `w-56 sm:w-64` → `w-44 sm:w-52` to make it less dominant.
+**2. Remove image rotation (line 156)**
+Remove `rotate-[-2deg]` from the image container — the card will sit straight.
 
-**3. Add carousel dots below the image (after line 165)**
-Add a row of 6 small dots below the image, highlighting the active one synced to `wordIndex`:
+**3. Replace step-based progress bar with a smooth auto-filling timer bar**
+Instead of the current bar that jumps by word index, implement a bar that smoothly fills from 0% to 100% over the duration of each word interval (~2.5s), then resets when the word changes. This gives a clear visual cue that the next image is coming.
 
+Change the progress bar (lines 167-172) to use a CSS animation approach:
+- Add a `key={wordIndex}` to force re-render/restart animation on each word change
+- Use inline style with `transition: width 2.5s linear` starting at 0% and going to 100%
+- Or simpler: use a `@keyframes` approach with `animation: fill 2.5s linear forwards` and reset via key
+
+Implementation:
 ```tsx
-<div className="flex justify-center gap-1.5 mt-3">
-  {ROTATING_WORDS.map((_, i) => (
-    <div
-      key={i}
-      className={cn(
-        'w-1.5 h-1.5 rounded-full transition-all duration-500',
-        i === wordIndex ? 'bg-primary w-4' : 'bg-border'
-      )}
-    />
-  ))}
+<div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
+  <div
+    key={wordIndex}
+    className="h-full bg-white/80 rounded-r-full"
+    style={{
+      animation: 'progressFill 2500ms linear forwards',
+    }}
+  />
 </div>
 ```
 
-The active dot stretches wider (`w-4`) and turns dark navy, while inactive dots stay as small circles — a clear indicator that images are rotating.
+Add the keyframe to `index.css` or use inline `@keyframes` isn't possible — instead, use a `useEffect` + state approach:
+- State `progress` starts at 0, set to 100 on mount/word change after a tick
+- `transition: width 2400ms linear` handles the smooth fill
+- Reset to 0 on `wordIndex` change, then set to 100 in a `requestAnimationFrame`
 
 ## Summary
-- 1 file, 3 changes: bolder heading, smaller image, animated dot indicator
+- 1 file modified
+- Bolder title, no rotation, smooth per-cycle progress bar on image
 
