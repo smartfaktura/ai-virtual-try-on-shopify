@@ -139,12 +139,12 @@ export default function TryShot() {
       </nav>
 
       {/* Hero */}
-      <main className="max-w-3xl mx-auto px-6 pt-16 sm:pt-24 pb-12 text-center">
+      <main className="max-w-3xl mx-auto px-6 pb-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
         <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6">
           Product shots
           <br />
           for{' '}
-          <span className="text-primary italic underline decoration-primary/30 underline-offset-4 decoration-2">
+          <span className="text-primary bg-primary/[0.08] px-3 py-1 rounded-lg">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
