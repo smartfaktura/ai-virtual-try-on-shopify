@@ -144,7 +144,7 @@ export default function TryShot() {
           Product shots
           <br />
           for{' '}
-          <span className="text-primary font-bold">
+          <span className="text-[hsl(217,60%,45%)] font-bold">
             {displayWord}
             <span className="animate-pulse">|</span>
           </span>
