@@ -11,6 +11,7 @@ import showcaseHome from '@/assets/tryshot/showcase-home.jpg';
 import showcaseJewelry from '@/assets/tryshot/showcase-jewelry.jpg';
 
 const ROTATING_WORDS = ['sneakers', 'skincare', 'furniture', 'fashion', 'electronics', 'jewelry'];
+const WORD_IMAGES = [showcaseSneakers, showcaseSkincare, showcaseHome, showcaseBeauty, showcaseElectronics, showcaseJewelry];
 
 const CATEGORIES = [
   { label: 'Beauty', image: showcaseBeauty },
@@ -139,7 +140,7 @@ export default function TryShot() {
 
       {/* Hero */}
       <main className="max-w-3xl mx-auto px-6 pt-16 sm:pt-24 pb-12 text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-10">
+        <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6">
           Product shots
           <br />
           for{' '}
@@ -149,19 +150,23 @@ export default function TryShot() {
           </span>
         </h1>
 
-        {/* Hero showcase image */}
-        <div className="flex justify-center mb-10">
+        {/* Hero showcase image — synced to typewriter word */}
+        <div className="flex justify-center mb-6">
           <div className="relative w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl rotate-[-2deg]">
-            <img
-              src={showcaseBeauty}
-              alt="AI product photography example"
-              className="w-full h-full object-cover"
-            />
+            {WORD_IMAGES.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt={`${ROTATING_WORDS[i]} product shot`}
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+                style={{ opacity: i === wordIndex ? 1 : 0 }}
+              />
+            ))}
           </div>
         </div>
 
         {/* Subtitle */}
-        <p className="text-base text-muted-foreground max-w-md mx-auto mb-8">
+        <p className="text-base text-muted-foreground max-w-md mx-auto mb-5">
           Enter your online store URL to create AI product shots
         </p>
 
@@ -191,7 +196,7 @@ export default function TryShot() {
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground/60 mb-2">
+        <p className="text-[11px] text-muted-foreground/50 mt-1 mb-2">
           Free · No sign-up required
         </p>
 
@@ -279,14 +284,14 @@ export default function TryShot() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
-            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-square">
+            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
               <img
                 src={cat.image}
                 alt={cat.label}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <span className="absolute bottom-3 left-3 text-sm font-semibold text-white">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <span className="absolute bottom-3 left-3 bg-white/90 text-foreground text-xs font-medium px-3 py-1 rounded-full">
                 {cat.label}
               </span>
             </div>
