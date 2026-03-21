@@ -188,9 +188,9 @@ export default function TryShot() {
               className="flex-shrink-0 w-11 h-11 mr-1.5 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-foreground" />
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
               ) : (
-                <ArrowUp className="w-4 h-4 text-foreground" />
+                <ArrowUp className="w-4 h-4 text-white" />
               )}
             </button>
           </div>
