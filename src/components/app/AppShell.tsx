@@ -31,6 +31,7 @@ const navItems = [
   { label: 'Video', icon: Film, path: '/app/video', comingSoon: true },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
+  { label: 'Earn Credits', icon: Gift, path: '#earn-credits' },
 ];
 
 const configItems = [
