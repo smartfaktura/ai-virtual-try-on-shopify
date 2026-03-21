@@ -13,6 +13,10 @@ import { AppShell } from '@/components/app/AppShell';
 import { AppShellLoading } from '@/components/app/AppShellLoading';
 import Landing from '@/pages/Landing';
 
+const TryShot = lazy(() => import('@/pages/TryShot'));
+
+const isTryShotHost = window.location.hostname === 'try.vovv.ai';
+
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
@@ -77,7 +81,24 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  // try.vovv.ai subdomain gets its own minimal route tree
+  if (isTryShotHost) {
+    return (
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[hsl(222,47%,8%)]"><div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(210,17%,70%)] border-t-transparent" /></div>}>
+            <Routes>
+              <Route path="/" element={<TryShot />} />
+              <Route path="/:domain" element={<TryShot />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </ErrorBoundary>
+    );
+  }
+
+  return (
   <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
@@ -184,6 +205,7 @@ const App = () => (
     </AuthProvider>
   </QueryClientProvider>
   </ErrorBoundary>
-);
+  );
+};
 
 export default App;
