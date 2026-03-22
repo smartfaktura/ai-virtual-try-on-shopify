@@ -31,7 +31,7 @@ export function AddToDiscoverModal({
   quality = 'standard',
 }: AddToDiscoverModalProps) {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<string>('lifestyle');
+  const [category, setCategory] = useState<string>('fashion');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
