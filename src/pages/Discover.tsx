@@ -417,16 +417,18 @@ export default function Discover() {
   return (
     <div className="space-y-8 py-8 px-1">
       {/* Header */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Discover</h1>
+      <div className="text-center space-y-3">
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">Discover</h1>
           {isAdmin && adminPendingCount > 0 && (
             <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
               {adminPendingCount} pending
             </span>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">Browse curated prompts and styles for inspiration</p>
+        <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+          Every image here was created by AI. Yours can be next.
+        </p>
       </div>
 
 
@@ -444,7 +446,7 @@ export default function Discover() {
 
       {/* Category filter bar */}
       {!similarTo && (
-        <div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2">
+        <div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2 cursor-grab active:cursor-grabbing scroll-smooth">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
