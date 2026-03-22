@@ -9,7 +9,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
-  'cinematic', 'commercial', 'photography', 'styling', 'ads', 'lifestyle',
+  'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
+  'home', 'food', 'electronics', 'sports', 'supplements',
 ] as const;
 
 interface AddToDiscoverModalProps {
@@ -30,7 +31,7 @@ export function AddToDiscoverModal({
   quality = 'standard',
 }: AddToDiscoverModalProps) {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<string>('lifestyle');
+  const [category, setCategory] = useState<string>('fashion');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
@@ -42,7 +43,7 @@ export function AddToDiscoverModal({
     if (!open) return;
     // Reset state
     setTitle('');
-    setCategory('lifestyle');
+    setCategory('fashion');
     setTags([]);
     setTagInput('');
     setAiLoading(true);
