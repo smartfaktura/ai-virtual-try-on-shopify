@@ -323,7 +323,7 @@ export default function Products() {
                   {/* Thumbnail */}
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
                     <img
-                      src={product.image_url}
+                      src={getOptimizedUrl(product.image_url, { width: 112, quality: 70 })}
                       alt={product.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
