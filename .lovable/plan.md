@@ -1,43 +1,43 @@
 
-## Dashboard personalization reset (clean + single-choice)
 
-### What I’ll change
+# Replace static subtitle with personalized headline
 
-1. **Make dashboard selector single-choice only (no multi-select UI)**
-   - Update `src/components/app/DashboardPersonalizationHero.tsx` to remove:
-     - multi-select toggling logic
-     - checkbox-style multi rows
-     - `Save preferences` button in the dropdown/sheet
-   - Replace with **one-tap selection**:
-     - user clicks one category
-     - dropdown closes immediately
-     - hero text updates instantly
+## Idea
+Remove "Here's what's happening with your studio." and move the category-based headline up into its place. The `DashboardPersonalizationHero` component already shows the headline — just remove the duplicate static line and restructure slightly.
 
-2. **Stop showing “Category A & Category B” in dashboard**
-   - Update category helper logic in `src/lib/categoryConstants.ts` so dashboard always resolves to **one primary category**:
-     - if `any` exists → show **All products**
-     - otherwise use first valid category
-   - Remove two-category and three-category display behavior from dashboard label/headline logic.
+## Changes
 
-3. **Match existing VOVV dashboard typography/style (remove “Apple-ish” feel)**
-   - In `DashboardPersonalizationHero`, revert to brand-consistent text rhythm:
-     - no uppercase micro-label styling
-     - no extra-light “whisper” headline treatment
-     - use standard dashboard font weights/sizing/colors
-   - Keep pill and dropdown minimal, but closer to existing VOVV components.
+### File: `src/pages/Dashboard.tsx` (line 407)
+Remove the static `<p>` line:
+```
+<p className="text-muted-foreground mt-1">Here's what's happening with your studio.</p>
+```
 
-4. **Improve dropdown appearance (clean list, not heavy control panel)**
-   - Desktop: simple popover list with one active item + subtle check indicator.
-   - Mobile: same list in `MobilePickerSheet`, single-select tap behavior, auto-close.
-   - Keep interaction lightweight and fast, with only error toast on failed save (no success spam).
+### File: `src/components/app/DashboardPersonalizationHero.tsx`
+Swap order so the personalized headline comes first (as subtitle), then the selector below:
 
-### Scope decisions
-- **Dashboard only behavior is simplified to single category.**
-- Onboarding/Settings data can still exist as array in storage, but dashboard will use one primary value and persist a single selected category when changed from dashboard.
+```
+<div className="space-y-1.5 mt-1">
+  <p className="text-muted-foreground transition-opacity duration-300">
+    {headline}
+  </p>
+  <div className="flex items-center gap-2">
+    <span className="text-sm text-muted-foreground">Personalized for</span>
+    [pill selector — unchanged]
+  </div>
+</div>
+```
 
-### Technical details
-- Files to edit:
-  - `src/components/app/DashboardPersonalizationHero.tsx`
-  - `src/lib/categoryConstants.ts`
-- No database migration needed (reuse `profiles.product_categories`).
-- Persistence model remains `string[]`, but dashboard writes `[selectedCategory]` for clarity and consistency.
+This way the dashboard reads:
+```text
+Welcome back, Tomas 👋
+Highlight every detail with premium, light-perfect jewelry visuals.
+Personalized for: [Jewelry ▼]
+```
+
+The headline replaces the static subtitle and feels contextual. The selector sits below as a small control.
+
+## Summary
+- 2 files, ~3 lines changed
+- No new dependencies
+
