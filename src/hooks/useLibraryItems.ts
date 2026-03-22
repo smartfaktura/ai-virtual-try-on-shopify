@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 import { toSignedUrls } from '@/lib/signedUrl';
+import { mockModels, mockTryOnPoses } from '@/data/mockData';
 
 export type LibrarySortBy = 'newest' | 'oldest';
 
