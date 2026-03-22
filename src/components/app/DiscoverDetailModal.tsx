@@ -15,7 +15,7 @@ import { mockModels, mockTryOnPoses } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 
-const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements'] as const;
+const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements', 'editorial', 'commercial', 'lifestyle', 'campaign', 'cinematic', 'photography', 'styling', 'ads'] as const;
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
