@@ -34,6 +34,8 @@ export interface LibraryItem {
   sceneImageUrl?: string;
   modelImageUrl?: string;
   workflowSlug?: string;
+  productName?: string;
+  productImageUrl?: string;
 }
 
 interface LibraryImageCardProps {

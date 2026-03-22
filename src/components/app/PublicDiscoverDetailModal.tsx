@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, X, Eye, Workflow } from 'lucide-react';
+import { ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -22,7 +22,6 @@ export function PublicDiscoverDetailModal({
   onSelectRelated,
 }: PublicDiscoverDetailModalProps) {
   const navigate = useNavigate();
-  const [promptExpanded, setPromptExpanded] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -49,8 +48,10 @@ export function PublicDiscoverDetailModal({
   const isPreset = item.type === 'preset';
   const imageUrl = isPreset ? item.data.image_url : item.data.previewUrl;
   const title = isPreset ? item.data.title : item.data.name;
-  const description = isPreset ? item.data.prompt : item.data.description;
-  const category = isPreset ? item.data.category : item.data.category;
+
+  const workflowLabel = isPreset && item.data.workflow_name
+    ? `${item.data.workflow_name} Workflow`
+    : isPreset ? 'Freestyle' : 'Scene';
 
   return (
     <div
@@ -64,7 +65,6 @@ export function PublicDiscoverDetailModal({
       {/* Split layout */}
       <div
         className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
@@ -77,7 +77,7 @@ export function PublicDiscoverDetailModal({
         </div>
 
         {/* Right — Controls panel */}
-        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
           {/* Close button */}
           <button
             onClick={onClose}
@@ -87,40 +87,26 @@ export function PublicDiscoverDetailModal({
           </button>
 
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
-            {/* Category label + title */}
+            {/* Title */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {category}
-                </p>
-                {isPreset && item.data.workflow_name && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
-                    · <Workflow className="w-3 h-3" /> {item.data.workflow_name}
-                  </span>
-                )}
-              </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
-              {isPreset && (
-                <div className="flex items-center gap-2 pt-0.5">
-                  <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{item.data.aspect_ratio}</span>
-                  {item.data.quality === 'high' && (
-                    <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Created with section */}
-            {isPreset && (item.data.scene_name || item.data.model_name || item.data.workflow_name) ? (
-              <div className="space-y-2">
+            {isPreset && (
+              <div className="space-y-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  Created with
+                  {workflowLabel}
                 </p>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                   {item.data.scene_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.scene_image_url && (
-                        <img src={item.data.scene_image_url} alt={item.data.scene_name} className="w-9 h-9 rounded-lg object-cover ring-1 ring-border/30" />
+                        <img
+                          src={getOptimizedUrl(item.data.scene_image_url, { width: 80, quality: 50 })}
+                          alt={item.data.scene_name}
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
+                        />
                       )}
                       <div>
                         <p className="text-xs font-medium text-foreground">{item.data.scene_name}</p>
@@ -131,7 +117,11 @@ export function PublicDiscoverDetailModal({
                   {item.data.model_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.model_image_url && (
-                        <img src={item.data.model_image_url} alt={item.data.model_name} className="w-9 h-9 rounded-full object-cover ring-1 ring-border/30" />
+                        <img
+                          src={getOptimizedUrl(item.data.model_image_url, { width: 80, quality: 50 })}
+                          alt={item.data.model_name}
+                          className="w-10 h-10 rounded-full object-cover ring-1 ring-border/30"
+                        />
                       )}
                       <div>
                         <p className="text-xs font-medium text-foreground">{item.data.model_name}</p>
@@ -139,30 +129,22 @@ export function PublicDiscoverDetailModal({
                       </div>
                     </div>
                   )}
+                  {(item.data as any).product_name && (
+                    <div className="flex items-center gap-2.5">
+                      {(item.data as any).product_image_url && (
+                        <img
+                          src={getOptimizedUrl((item.data as any).product_image_url, { width: 80, quality: 50 })}
+                          alt={(item.data as any).product_name}
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
+                        />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{(item.data as any).product_name}</p>
+                        <p className="text-[10px] text-muted-foreground/60">Product</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : isPreset ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">Created with</span>
-                <span className="text-xs font-medium text-muted-foreground">Freestyle</span>
-              </div>
-            ) : null}
-
-            {/* Prompt (presets only) */}
-            {isPreset && (
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  Prompt
-                </p>
-                <p className={cn("text-sm leading-relaxed text-muted-foreground", !promptExpanded && "line-clamp-4")}>
-                  {description}
-                </p>
-                <button
-                  onClick={() => setPromptExpanded(!promptExpanded)}
-                  className="text-xs text-primary/70 hover:text-primary font-medium transition-colors"
-                >
-                  {promptExpanded ? 'Show less' : 'Show more'}
-                </button>
               </div>
             )}
 

@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2 } from 'lucide-react';
+import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
-import { convertImageToBase64 } from '@/lib/imageUtils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements'] as const;
 
@@ -47,9 +47,6 @@ export function DiscoverDetailModal({
   onDelete,
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
-  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [promptExpanded, setPromptExpanded] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -57,7 +54,6 @@ export function DiscoverDetailModal({
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      setGeneratedPrompt(null);
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
@@ -77,55 +73,11 @@ export function DiscoverDetailModal({
   const isPreset = item.type === 'preset';
   const imageUrl = isPreset ? item.data.image_url : item.data.previewUrl;
   const title = isPreset ? item.data.title : item.data.name;
-  const description = isPreset ? item.data.prompt : item.data.description;
   const category = isPreset ? item.data.category : item.data.category;
 
-  const handleCopy = () => {
-    if (isPreset) {
-      navigator.clipboard.writeText(item.data.prompt);
-      toast.success('Prompt copied to clipboard');
-    }
-  };
-
-  const handleGeneratePrompt = async () => {
-    setIsGenerating(true);
-    setGeneratedPrompt(null);
-    try {
-      const resolvedUrl = await convertImageToBase64(imageUrl);
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/describe-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ imageUrl: resolvedUrl }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to generate prompt');
-      }
-      const data = await resp.json();
-      setGeneratedPrompt(data.prompt);
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to generate prompt');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleCopyGenerated = () => {
-    if (generatedPrompt) {
-      navigator.clipboard.writeText(generatedPrompt);
-      toast.success('Generated prompt copied');
-    }
-  };
-
-  const handleUseGenerated = () => {
-    if (generatedPrompt) {
-      onUseItem({ ...item, _generatedPrompt: generatedPrompt } as any);
-      onClose();
-    }
-  };
+  const workflowLabel = isPreset && item.data.workflow_name
+    ? `${item.data.workflow_name} Workflow`
+    : isPreset ? 'Freestyle' : 'Scene';
 
   return (
     <div
@@ -152,7 +104,7 @@ export function DiscoverDetailModal({
 
         {/* Right — Controls panel */}
         <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
-          {/* Close button — black, inside right panel */}
+          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-5 right-5 z-20 text-foreground/70 hover:text-foreground transition-colors"
@@ -161,45 +113,33 @@ export function DiscoverDetailModal({
           </button>
 
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
-            {/* Category label + title */}
+            {/* Admin category selector (admin only) */}
+            {isAdmin && isPreset && (
+              <Select
+                value={category}
+                onValueChange={async (val) => {
+                  const { error } = await supabase
+                    .from('discover_presets')
+                    .update({ category: val })
+                    .eq('id', item.data.id);
+                  if (error) { toast.error('Failed to update category'); return; }
+                  (item.data as any).category = val;
+                  toast.success(`Category → ${val}`);
+                }}
+              >
+                <SelectTrigger className="h-6 w-auto px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 border-dashed">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[300]">
+                  {DISCOVER_CATEGORIES.map(c => (
+                    <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Title + views */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                {isAdmin && isPreset ? (
-                  <Select
-                    value={category}
-                    onValueChange={async (val) => {
-                      const { error } = await supabase
-                        .from('discover_presets')
-                        .update({ category: val })
-                        .eq('id', item.data.id);
-                      if (error) { toast.error('Failed to update category'); return; }
-                      (item.data as any).category = val;
-                      toast.success(`Category → ${val}`);
-                    }}
-                  >
-                    <SelectTrigger className="h-6 w-auto px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 border-dashed">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-[300]">
-                      {DISCOVER_CATEGORIES.map(c => (
-                        <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                    {category}
-                  </p>
-                )}
-                {!isPreset && (
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
-                )}
-                {isPreset && item.data.workflow_name && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
-                    · {item.data.workflow_name}
-                  </span>
-                )}
-              </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
               {typeof viewCount === 'number' && (
                 <div className="flex items-center gap-1.5 text-muted-foreground/60 mt-1">
@@ -207,27 +147,23 @@ export function DiscoverDetailModal({
                   <span className="text-xs font-medium">{viewCount} views</span>
                 </div>
               )}
-              {isPreset && (
-                <div className="flex items-center gap-2 pt-0.5">
-                  <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{item.data.aspect_ratio}</span>
-                  {item.data.quality === 'high' && (
-                    <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Created with section */}
-            {isPreset && (item.data.scene_name || item.data.model_name || item.data.workflow_name) ? (
-              <div className="space-y-2">
+            {isPreset && (
+              <div className="space-y-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  Created with
+                  {workflowLabel}
                 </p>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                   {item.data.scene_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.scene_image_url && (
-                        <img src={item.data.scene_image_url} alt={item.data.scene_name} className="w-9 h-9 rounded-lg object-cover ring-1 ring-border/30" />
+                        <img
+                          src={getOptimizedUrl(item.data.scene_image_url, { width: 80, quality: 50 })}
+                          alt={item.data.scene_name}
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
+                        />
                       )}
                       <div>
                         <p className="text-xs font-medium text-foreground">{item.data.scene_name}</p>
@@ -238,7 +174,11 @@ export function DiscoverDetailModal({
                   {item.data.model_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.model_image_url && (
-                        <img src={item.data.model_image_url} alt={item.data.model_name} className="w-9 h-9 rounded-full object-cover ring-1 ring-border/30" />
+                        <img
+                          src={getOptimizedUrl(item.data.model_image_url, { width: 80, quality: 50 })}
+                          alt={item.data.model_name}
+                          className="w-10 h-10 rounded-full object-cover ring-1 ring-border/30"
+                        />
                       )}
                       <div>
                         <p className="text-xs font-medium text-foreground">{item.data.model_name}</p>
@@ -246,67 +186,22 @@ export function DiscoverDetailModal({
                       </div>
                     </div>
                   )}
+                  {(item.data as any).product_name && (
+                    <div className="flex items-center gap-2.5">
+                      {(item.data as any).product_image_url && (
+                        <img
+                          src={getOptimizedUrl((item.data as any).product_image_url, { width: 80, quality: 50 })}
+                          alt={(item.data as any).product_name}
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
+                        />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{(item.data as any).product_name}</p>
+                        <p className="text-[10px] text-muted-foreground/60">Product</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : isPreset ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">Created with</span>
-                <span className="text-xs font-medium text-muted-foreground">Freestyle</span>
-              </div>
-            ) : null}
-
-            {/* Generate Prompt */}
-            <div className="space-y-3">
-              <button
-                onClick={handleGeneratePrompt}
-                disabled={isGenerating}
-                className={cn(
-                  'w-full h-12 rounded-xl text-sm font-medium transition-all duration-300',
-                  'bg-muted/40 backdrop-blur-md border border-border/50',
-                  'hover:bg-muted/60 hover:border-border/80 hover:shadow-md',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  'flex items-center justify-center gap-2'
-                )}
-              >
-                {isGenerating ? (
-                  <><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Analyzing image…</span></>
-                ) : (
-                  <><Sparkles className="w-4 h-4 text-primary/80" /> <span>Generate Prompt from Image</span></>
-                )}
-              </button>
-
-              {generatedPrompt && (
-                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="bg-muted/30 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed border border-primary/10 max-h-36 overflow-y-auto shadow-inner">
-                    {generatedPrompt}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1 rounded-xl h-10 border-border/40 hover:bg-muted/50">
-                      <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
-                    </Button>
-                    <Button size="sm" onClick={handleUseGenerated} className="flex-1 rounded-xl h-10">
-                      Use in Freestyle <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Prompt (presets only) */}
-            {isPreset && (
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  Prompt
-                </p>
-                <p className={cn("text-sm leading-relaxed text-muted-foreground", !promptExpanded && "line-clamp-4")}>
-                  {description}
-                </p>
-                <button
-                  onClick={() => setPromptExpanded(!promptExpanded)}
-                  className="text-xs text-primary/70 hover:text-primary font-medium transition-colors"
-                >
-                  {promptExpanded ? 'Show less' : 'Show more'}
-                </button>
               </div>
             )}
 
@@ -343,14 +238,6 @@ export function DiscoverDetailModal({
 
             {/* Secondary actions */}
             <div className="flex gap-2">
-              {isPreset && (
-                <button
-                  onClick={handleCopy}
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
-                >
-                  <Copy className="w-3.5 h-3.5" /> Copy
-                </button>
-              )}
               {onToggleSave && (
                 <button
                   onClick={onToggleSave}

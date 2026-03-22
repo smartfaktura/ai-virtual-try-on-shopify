@@ -353,6 +353,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
           modelName={item.modelName}
           sceneImageUrl={item.sceneImageUrl}
           modelImageUrl={item.modelImageUrl}
+          productName={item.productName}
+          productImageUrl={item.productImageUrl}
         />
       )}
       {submitDiscoverOpen && item && (

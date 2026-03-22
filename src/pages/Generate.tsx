@@ -1003,6 +1003,7 @@ export default function Generate() {
             workflow_slug: activeWorkflow!.slug,
             product: { ...productData, imageUrl: base64Image },
             product_name: product.title,
+            product_image_url: product.images[0]?.url || null,
             brand_profile: selectedBrandProfile ? {
               tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
               lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
@@ -1294,6 +1295,7 @@ export default function Generate() {
               workflow_slug: activeWorkflow?.slug || null,
               product_id: userProducts.some(up => up.id === product.id) ? product.id : null,
               product_name: product.title,
+              product_image_url: sourceImageUrl || product.images[0]?.url || null,
               brand_profile_id: selectedBrandProfileId || null,
             },
             imageCount: parseInt(imageCount),
@@ -1463,6 +1465,7 @@ export default function Generate() {
           workflow_slug: activeWorkflow?.slug || null,
           product_id: selectedProduct && userProducts.some(up => up.id === selectedProduct.id) ? selectedProduct.id : null,
           product_name: selectedProduct?.title || productData.title,
+          product_image_url: selectedProduct?.images[0]?.url || null,
           brand_profile_id: selectedBrandProfileId || null,
         },
         imageCount: parseInt(imageCount),
