@@ -19,10 +19,10 @@ export function PageHeader({ title, subtitle, backAction, children }: PageHeader
               {backAction.content}
             </Button>
           )}
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
         </div>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-2 max-w-lg">{subtitle}</p>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-lg">{subtitle}</p>
         )}
       </div>
       {children}
