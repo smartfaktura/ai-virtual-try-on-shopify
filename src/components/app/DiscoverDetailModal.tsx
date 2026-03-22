@@ -90,6 +90,7 @@ export function DiscoverDetailModal({
       setEditModelName(item.type === 'preset' ? (item.data.model_name || '__none__') : '__none__');
       setEditSceneName(item.type === 'preset' ? (item.data.scene_name || '__none__') : '__none__');
       setEditCategory(item.type === 'preset' ? (item.data.category || 'fashion') : 'fashion');
+      setEditWorkflowSlug(item.type === 'preset' ? (item.data.workflow_slug || '__freestyle__') : '__freestyle__');
     }
   }, [item, open]);
 
