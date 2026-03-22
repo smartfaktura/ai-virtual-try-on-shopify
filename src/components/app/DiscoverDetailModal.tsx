@@ -240,7 +240,12 @@ export function DiscoverDetailModal({
                     <SelectContent className="z-[300] max-h-60">
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allModelOptions.map(m => (
-                        <SelectItem key={m.name} value={m.name} className="text-xs">{m.name}</SelectItem>
+                        <SelectItem key={m.name} value={m.name} className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                            <span>{m.name}</span>
+                          </div>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -251,7 +256,12 @@ export function DiscoverDetailModal({
                     <SelectContent className="z-[300] max-h-60">
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allSceneOptions.map(s => (
-                        <SelectItem key={s.name} value={s.name} className="text-xs">{s.name}</SelectItem>
+                        <SelectItem key={s.name} value={s.name} className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <img src={getOptimizedUrl(s.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                            <span>{s.name}</span>
+                          </div>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
