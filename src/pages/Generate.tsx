@@ -1003,7 +1003,7 @@ export default function Generate() {
             workflow_slug: activeWorkflow!.slug,
             product: { ...productData, imageUrl: base64Image },
             product_name: product.title,
-            product_image_url: product.image_url || null,
+            product_image_url: product.images[0]?.url || null,
             brand_profile: selectedBrandProfile ? {
               tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
               lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
