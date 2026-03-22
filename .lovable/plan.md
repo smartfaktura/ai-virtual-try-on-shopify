@@ -1,46 +1,43 @@
 
+## Dashboard personalization reset (clean + single-choice)
 
-# Premium Personalization Hero — Apple-Inspired Refinement
+### What I’ll change
 
-## Problem
-The current hero has too much clutter (AI team line, duplicate CTAs, heavy spacing). It doesn't feel premium.
+1. **Make dashboard selector single-choice only (no multi-select UI)**
+   - Update `src/components/app/DashboardPersonalizationHero.tsx` to remove:
+     - multi-select toggling logic
+     - checkbox-style multi rows
+     - `Save preferences` button in the dropdown/sheet
+   - Replace with **one-tap selection**:
+     - user clicks one category
+     - dropdown closes immediately
+     - hero text updates instantly
 
-## Changes
+2. **Stop showing “Category A & Category B” in dashboard**
+   - Update category helper logic in `src/lib/categoryConstants.ts` so dashboard always resolves to **one primary category**:
+     - if `any` exists → show **All products**
+     - otherwise use first valid category
+   - Remove two-category and three-category display behavior from dashboard label/headline logic.
 
-### File: `src/components/app/DashboardPersonalizationHero.tsx`
+3. **Match existing VOVV dashboard typography/style (remove “Apple-ish” feel)**
+   - In `DashboardPersonalizationHero`, revert to brand-consistent text rhythm:
+     - no uppercase micro-label styling
+     - no extra-light “whisper” headline treatment
+     - use standard dashboard font weights/sizing/colors
+   - Keep pill and dropdown minimal, but closer to existing VOVV components.
 
-**1. Remove all clutter (lines 155-182)**
-Delete: AI team text, "Meet your AI team" link, both CTA buttons. Quick Actions below already handles navigation.
+4. **Improve dropdown appearance (clean list, not heavy control panel)**
+   - Desktop: simple popover list with one active item + subtle check indicator.
+   - Mobile: same list in `MobilePickerSheet`, single-select tap behavior, auto-close.
+   - Keep interaction lightweight and fast, with only error toast on failed save (no success spam).
 
-**2. Tighten spacing**
-Change container from `space-y-3 mt-4` to `space-y-2 mt-3`.
+### Scope decisions
+- **Dashboard only behavior is simplified to single category.**
+- Onboarding/Settings data can still exist as array in storage, but dashboard will use one primary value and persist a single selected category when changed from dashboard.
 
-**3. Refine the pill selector — Apple style**
-- Softer label: change "Personalized for:" to lighter weight, tracking-wide uppercase micro-label (`text-xs font-medium uppercase tracking-wider text-muted-foreground/70`)
-- Pill: remove `bg-muted`, use transparent background with a subtle border (`border border-border/50`), lighter font weight (`font-normal`), and a smooth `transition-all duration-200`. On hover: `hover:border-border hover:shadow-sm`. This gives a glass-like, understated feel.
-- Shrink chevron to `w-3 h-3` with lower opacity
-
-**4. Refine headline text**
-- Change from `text-base text-muted-foreground` to `text-[15px] leading-relaxed text-muted-foreground/80 font-light`
-- The lighter weight + slightly reduced opacity creates that Apple "whisper" feel where text is present but doesn't compete
-
-**5. Add smooth transition on headline change**
-Keep `transition-opacity duration-300` for category switches.
-
-### Result
-```text
-Welcome back, Tomas 👋
-Here's what's happening with your studio.
-
-PERSONALIZED FOR   [ Fashion & Apparel ▾ ]
-Create campaign-ready fashion visuals without photoshoots.
-
-[Upload Product] [Generate Images] [Browse Workflows] [Brand Profiles]
-```
-
-Two lines total. Whisper-quiet label, understated bordered pill, light headline. Feels like Apple's "Designed for iPhone" badge — present but effortless.
-
-### Summary
-- 1 file, remove ~30 lines of clutter, restyle ~5 lines
-- No new dependencies
-
+### Technical details
+- Files to edit:
+  - `src/components/app/DashboardPersonalizationHero.tsx`
+  - `src/lib/categoryConstants.ts`
+- No database migration needed (reuse `profiles.product_categories`).
+- Persistence model remains `string[]`, but dashboard writes `[selectedCategory]` for clarity and consistency.
