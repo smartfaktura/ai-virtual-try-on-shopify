@@ -44,45 +44,46 @@ function toTryOnPose(scene: PublicCustomScene): TryOnPose {
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'editorial', label: 'Editorial' },
-  { id: 'commercial', label: 'Commercial' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'campaign', label: 'Campaign' },
+  { id: 'fashion', label: 'Fashion & Apparel' },
+  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'jewelry', label: 'Jewelry' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'home', label: 'Home & Decor' },
+  { id: 'food', label: 'Food & Beverage' },
+  { id: 'electronics', label: 'Electronics' },
+  { id: 'sports', label: 'Sports & Fitness' },
+  { id: 'supplements', label: 'Health & Supplements' },
 ] as const;
 
-const CATEGORY_ALIAS: Record<string, string> = {
-  cinematic: 'editorial',
-  photography: 'commercial',
-  styling: 'fashion',
-  ads: 'campaign',
-};
-
-function resolveCategory(cat: string): string {
-  return CATEGORY_ALIAS[cat] ?? cat;
-}
-
-const SCENE_CATEGORY_MAP: Record<string, string[]> = {
-  studio: ['commercial', 'editorial'],
-  lifestyle: ['lifestyle'],
-  editorial: ['editorial'],
-  streetwear: ['fashion', 'lifestyle'],
-  fitness: ['lifestyle', 'campaign'],
-  athletic: ['lifestyle', 'campaign'],
-  gym: ['lifestyle', 'campaign'],
-  beauty: ['fashion', 'commercial'],
-  desert: ['lifestyle', 'editorial'],
-  outdoor: ['lifestyle', 'editorial'],
-  beach: ['lifestyle'],
-  garden: ['lifestyle'],
-  industrial: ['editorial', 'campaign'],
-  urban: ['fashion', 'lifestyle'],
-  rooftop: ['lifestyle', 'editorial'],
-  cafe: ['lifestyle'],
-  mirror: ['lifestyle', 'fashion'],
-  casual: ['lifestyle'],
-  cozy: ['lifestyle', 'fashion'],
-  professional: ['commercial'],
+const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
+  editorial: ['fashion', 'fragrances', 'jewelry'],
+  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  lifestyle: ['home', 'food', 'accessories', 'fashion'],
+  fashion: ['fashion', 'accessories'],
+  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
+  cinematic: ['fashion', 'fragrances', 'jewelry'],
+  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  styling: ['fashion', 'accessories', 'jewelry'],
+  ads: ['fashion', 'sports', 'beauty', 'electronics'],
+  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  streetwear: ['fashion', 'accessories'],
+  fitness: ['sports', 'supplements'],
+  athletic: ['sports', 'supplements'],
+  gym: ['sports', 'supplements'],
+  beauty: ['beauty', 'fragrances'],
+  desert: ['fashion', 'fragrances'],
+  outdoor: ['sports', 'home', 'fashion'],
+  beach: ['fashion', 'accessories'],
+  garden: ['home', 'beauty', 'fragrances'],
+  industrial: ['electronics', 'fashion'],
+  urban: ['fashion', 'accessories'],
+  rooftop: ['fashion', 'food'],
+  cafe: ['food', 'home'],
+  mirror: ['beauty', 'fashion'],
+  casual: ['fashion', 'accessories'],
+  cozy: ['home', 'fashion'],
+  professional: ['electronics', 'accessories'],
 };
 
 function getItemId(item: DiscoverItem): string {
