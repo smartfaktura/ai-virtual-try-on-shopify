@@ -1,37 +1,23 @@
 
 
-# Move Saved Back Into Category Scroll List
+# Fix Category Bar Left Alignment
 
 ## Problem
-The separate heart icon on mobile doesn't show the count and feels disconnected. Better to put "Saved" back as the last pill inside the scrollable row, showing the count, on both mobile and desktop.
+The category bar doesn't align with the title/subtitle/grid because:
+1. The outer `flex` container has `gap-1.5` — even when the left arrow collapses to `w-0`, the gap still reserves space
+2. The left arrow element itself still occupies DOM space in the flex layout
 
 ## Changes
 
-### File: `src/components/app/DiscoverCategoryBar.tsx`
+### `src/components/app/DiscoverCategoryBar.tsx` (line 52)
+- Change `gap-1.5` to `gap-0` on the outer container
+- Move the gap to only apply between the scroll area and the right arrow using `ml-1.5` on the right arrow button
+- This ensures the scrollable pills start flush left when the left arrow is hidden
 
-1. **Remove the separate Saved section** (lines 98-129) — delete the divider, desktop pill, and mobile heart icon entirely.
+### Specifically:
+- Line 52: `gap-1.5` → remove gap (or `gap-0`)
+- Line 57-58: Add `ml-1.5` to the left arrow when visible (already has `w-0` when hidden, so no gap)
+- Line 102-103: Add `ml-1.5` to the right arrow button
 
-2. **Add Saved pill inside the scrollable container** (after the `categories.map` loop, still inside the scroll div), only when `savedCount > 0`:
-
-```tsx
-{savedCount !== undefined && savedCount > 0 && (
-  <button
-    key="saved"
-    onClick={() => onSelectCategory('saved')}
-    className={cn(
-      'px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
-      selectedCategory === 'saved'
-        ? 'bg-foreground text-background shadow-sm'
-        : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
-    )}
-  >
-    Saved<span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>
-  </button>
-)}
-```
-
-3. **Remove `Heart` import** since it's no longer used.
-
-### Result
-"Saved · N" appears as the last pill in the scrollable row on both mobile and desktop. Hidden when no saved items. Same styling as all other pills.
+This is a 1-file, 3-line fix.
 
