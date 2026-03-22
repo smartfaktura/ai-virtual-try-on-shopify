@@ -1,37 +1,28 @@
 
 
-# Fix "Created with" Label: Same Line + Subtle Hover Color
+# Fix: Scroll Right Panel to Top When Selecting "More Like This" Item
 
 ## Problem
-1. "CREATED WITH" and "FREESTYLE" are on separate lines — should be on the same line.
-2. Hover color is vivid blue (`text-blue-600`) — too bright, should be subtle.
+When clicking an image in "More like this", the right panel stays at whatever scroll position the user was at (e.g. scrolled down to the grid). It should reset to the top.
 
 ## Changes
 
-### `src/components/app/DiscoverDetailModal.tsx` (lines 187-202)
+### `src/components/app/DiscoverDetailModal.tsx`
 
-Replace the `<div className="space-y-3">` + separate `<p>` and `<button>` with a single inline layout:
+1. **Add a ref** to the right panel's scrollable div:
+   ```tsx
+   const panelRef = useRef<HTMLDivElement>(null);
+   ```
 
-```tsx
-<div className="flex items-baseline gap-1.5">
-  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-    Created with
-  </span>
-  <button
-    onClick={...}
-    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 hover:text-foreground/90 transition-colors cursor-pointer"
-  >
-    {workflowLabel}
-  </button>
-</div>
-```
+2. **Scroll to top when item changes** — add to the existing `useEffect` that runs on `[itemId, open]` (line ~86):
+   ```tsx
+   panelRef.current?.scrollTo({ top: 0 });
+   ```
 
-- Same line using `flex items-baseline gap-1.5`
-- Hover changes from `text-blue-600` to `text-foreground/90` (subtle darken, not vivid blue)
+3. **Attach ref** to the right panel div (line 163):
+   ```tsx
+   <div ref={panelRef} className="relative w-full md:w-[40%] ...overflow-y-auto...">
+   ```
 
-### `src/components/app/PublicDiscoverDetailModal.tsx`
-
-Same inline layout change for consistency (public modal has no click behavior, just restyle to inline).
-
-Two files, ~5 lines each.
+One file, 3 lines added.
 
