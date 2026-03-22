@@ -1,30 +1,44 @@
 
 
-# Remove Search Bar + Bigger Premium Category Pills on Discover Pages
+# Fit Category Bar to Screen — Desktop & Mobile
 
-## Changes
+## Problem
+11 category pills wrap to 2 rows on desktop (Health orphaned on row 2). On mobile, the row is too wide and needs a modern invisible scroller.
 
-### 1. `src/pages/PublicDiscover.tsx`
+## Solution
 
-**Remove search bar** (lines 364-373): Delete the entire search input block. Remove `searchQuery` state and `Search` import (keep `Compass` for empty state). Remove search filtering logic from the `filtered` useMemo.
+### Desktop: Single-row horizontal scroll with fade edges
+Instead of `flex-wrap`, use a single scrollable row with gradient fade masks on left/right edges to hint at more content. This is the modern pattern used by Netflix, Airbnb, etc.
 
-**Bigger, more premium pills** (lines 376-390): Update pill styling:
-- `px-6 py-2.5 text-[15px]` — larger, more generous padding
-- Unselected: `bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground` — softer, more refined
-- Selected: keep `bg-foreground text-background shadow-sm`
-- Add `tracking-wide` for a slightly more editorial/luxury feel
-- Container: `gap-2.5` for more breathing room between pills
+- Remove `flex-wrap justify-center`
+- Use `overflow-x-auto scrollbar-hide` with `justify-start` (or center if content fits)
+- Add CSS gradient masks on the container edges using `mask-image: linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent)` — fades out pills at edges to signal scrollability
+- Slightly reduce pill size: `px-5 py-2 text-sm` — this should let all 11 fit or nearly fit on most desktops without wrapping
 
-### 2. `src/pages/Discover.tsx`
+### Mobile: Same invisible scroller
+- Same horizontal scroll behavior
+- `scrollbar-hide` already in CSS
+- Gradient fade edges work here too
+- Pills stay `shrink-0 whitespace-nowrap`
 
-**Remove search bar** (lines 449-458): Delete the search input block. Remove `searchQuery` state, `Search` import, and search filtering from `filtered` useMemo. Keep the "Similar to" chip functionality.
+### Files changed
+- `src/pages/PublicDiscover.tsx` (line 346) — update container classes
+- `src/pages/Discover.tsx` (line 447) — same update
+- `src/index.css` — add `.fade-scroll` utility with mask-image for the gradient edge effect
 
-**Same premium pill styling** as PublicDiscover: `px-6 py-2.5 text-[15px] tracking-wide`, softer unselected colors, `gap-2.5`.
+### Container markup (both pages)
+```html
+<div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2">
+```
 
-### 3. Cleanup
-- Remove unused `Search` import from both files (keep if used elsewhere)
-- Remove unused `Input` import from PublicDiscover if no longer needed
+### CSS utility
+```css
+.fade-scroll {
+  mask-image: linear-gradient(to right, transparent, black 32px, black calc(100% - 32px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 32px, black calc(100% - 32px), transparent);
+}
+```
 
-### Result
-Clean, search-free discover pages with larger, more luxurious category pills that feel editorial and premium.
+### Pill size adjustment
+Slightly smaller to maximize fit: `px-5 py-2 text-sm` (from `px-6 py-2.5 text-[15px]`). Still generous, still premium — just not wasteful with space.
 
