@@ -76,6 +76,7 @@ export function DiscoverDetailModal({
   const [editSceneName, setEditSceneName] = useState('__none__');
   const [editCategory, setEditCategory] = useState('fashion');
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
+  const [editPrompt, setEditPrompt] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
