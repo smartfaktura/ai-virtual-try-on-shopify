@@ -1,33 +1,45 @@
 
 
-# Fix Admin Metadata Editor: Add Workflow Selector + Fix Select Dropdown Closing Modal
+# Fix Admin Select Dropdowns Flashing/Not Showing Selection
 
-## Problems
-1. **Missing workflow selector** — The admin can't set which workflow (or Freestyle) was used to create the image. The `discover_presets` table already has `workflow_name` and `workflow_slug` columns.
-2. **Select dropdown flashes/closes** — When clicking a model or scene option, the Radix `SelectContent` renders in a portal outside the right panel. The click event reaches the outer backdrop div's `onClick={onClose}`, closing the entire modal before the selection registers.
+## Root Cause
+The Radix `SelectContent` renders in a **portal** outside the modal DOM tree. When clicking a dropdown option, the pointer event passes through to the backdrop `div` (which has `onClick={onClose}`), closing the entire modal before the selection registers. The `e.stopPropagation()` on the right panel doesn't help because the portal is not a child of that panel.
+
+Additionally, the Category dropdown appears empty in the screenshot — likely because `editCategory` initializes to an empty string momentarily before the `useEffect` fires.
 
 ## Changes
 
 ### `src/components/app/DiscoverDetailModal.tsx`
 
-**1. Fix dropdown closing the modal**
-Add `pointer-events-none` to the outer backdrop div and move `onClick={onClose}` only to the actual backdrop `<div>` and the left image area — OR simpler: add `onPointerDownOutside` prevention on the `SelectContent` components. Actually the simplest fix: change the outer div's `onClick` to only close if the click target IS the backdrop itself, not a portal element. Best approach: move `onClick={onClose}` from the outermost wrapper to just the backdrop div and the left image panel.
+**1. Prevent SelectContent portal clicks from closing the modal**
+Add `onPointerDownOutside={(e) => e.preventDefault()}` to all four `SelectContent` components. This stops the Radix "click outside" behavior from propagating to the backdrop.
 
-**2. Add Workflow selector**
-- Fetch workflows from `supabase.from('workflows').select('id, name, slug').order('sort_order')` using `useQuery`.
-- Add `editWorkflowSlug` state (initialized from `item.data.workflow_slug`), with "Freestyle" as a special `__freestyle__` value (meaning `workflow_name=null, workflow_slug=null`).
-- Add a 4th dropdown in the admin grid (`grid-cols-4` or `grid-cols-2 gap-2` with two rows).
-- On save, include `workflow_name` and `workflow_slug` in the update payload.
+```tsx
+<SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+```
 
-**3. Layout change**
-Change from `grid-cols-3` to `grid-cols-2` (4 selectors in 2 rows of 2) for better readability with the additional dropdown.
+Applied to: Category, Workflow, Model, Scene — all four selects.
 
-### Summary
-| Change | Detail |
-|--------|--------|
-| Fix select closing modal | Move `onClick={onClose}` from outer wrapper to backdrop + image area only |
-| Add workflow dropdown | Fetch from DB, add state + selector, include in save |
-| Layout | `grid-cols-3` → `grid-cols-2` for 4 selectors |
+**2. Fix category not showing current value**
+Change `editCategory` default from `''` to `'fashion'` (line 76) so it always has a valid value even before the useEffect runs:
+```
+Before: const [editCategory, setEditCategory] = useState('');
+After:  const [editCategory, setEditCategory] = useState('fashion');
+```
 
-One file changed.
+Similarly for workflow:
+```
+Before: const [editWorkflowSlug, setEditWorkflowSlug] = useState('');
+After:  const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
+```
+
+And for model/scene:
+```
+Before: const [editModelName, setEditModelName] = useState('');
+        const [editSceneName, setEditSceneName] = useState('');
+After:  const [editModelName, setEditModelName] = useState('__none__');
+        const [editSceneName, setEditSceneName] = useState('__none__');
+```
+
+One file, ~8 lines changed. Fixes both the flash-close and empty-field issues.
 
