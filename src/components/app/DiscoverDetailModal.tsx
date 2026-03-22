@@ -298,6 +298,15 @@ export function DiscoverDetailModal({
                     </SelectContent>
                   </Select>
                 </div>
+                {editWorkflowSlug === '__freestyle__' && (
+                  <Textarea
+                    value={editPrompt}
+                    onChange={(e) => setEditPrompt(e.target.value)}
+                    placeholder="Prompt for Recreate this..."
+                    className="text-xs min-h-[60px]"
+                    rows={3}
+                  />
+                )}
                 <Button
                   size="sm"
                   variant="outline"
