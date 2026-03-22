@@ -35,6 +35,12 @@ export function AddToDiscoverModal({
   prompt,
   aspectRatio = '1:1',
   quality = 'standard',
+  workflowSlug,
+  workflowName,
+  sceneName,
+  modelName,
+  sceneImageUrl,
+  modelImageUrl,
 }: AddToDiscoverModalProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>('fashion');
