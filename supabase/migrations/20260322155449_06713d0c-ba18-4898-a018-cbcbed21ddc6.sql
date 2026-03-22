@@ -1,0 +1,1 @@
+ALTER TABLE public.discover_presets ADD COLUMN scene_image_url text, ADD COLUMN model_image_url text;

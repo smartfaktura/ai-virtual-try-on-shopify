@@ -371,9 +371,11 @@ export type Database = {
           id: string
           image_url: string
           is_featured: boolean
+          model_image_url: string | null
           model_name: string | null
           prompt: string
           quality: string
+          scene_image_url: string | null
           scene_name: string | null
           sort_order: number
           tags: string[] | null
@@ -388,9 +390,11 @@ export type Database = {
           id?: string
           image_url: string
           is_featured?: boolean
+          model_image_url?: string | null
           model_name?: string | null
           prompt: string
           quality?: string
+          scene_image_url?: string | null
           scene_name?: string | null
           sort_order?: number
           tags?: string[] | null
@@ -405,9 +409,11 @@ export type Database = {
           id?: string
           image_url?: string
           is_featured?: boolean
+          model_image_url?: string | null
           model_name?: string | null
           prompt?: string
           quality?: string
+          scene_image_url?: string | null
           scene_name?: string | null
           sort_order?: number
           tags?: string[] | null
