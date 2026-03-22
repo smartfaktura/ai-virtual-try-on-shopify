@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
+import { mockModels, mockTryOnPoses } from '@/data/mockData';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
