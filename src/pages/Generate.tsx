@@ -169,8 +169,10 @@ export default function Generate() {
   const initialTemplateId = searchParams.get('template');
   const prefillModelName = searchParams.get('model');
   const prefillSceneName = searchParams.get('scene');
-  const [recreateSource, setRecreateSource] = useState<{ modelName?: string; sceneName?: string } | null>(
-    (prefillModelName || prefillSceneName) ? { modelName: prefillModelName || undefined, sceneName: prefillSceneName || undefined } : null
+  const prefillModelImage = searchParams.get('modelImage');
+  const prefillSceneImage = searchParams.get('sceneImage');
+  const [recreateSource, setRecreateSource] = useState<{ modelName?: string; sceneName?: string; modelImageUrl?: string; sceneImageUrl?: string } | null>(
+    (prefillModelName || prefillSceneName) ? { modelName: prefillModelName || undefined, sceneName: prefillSceneName || undefined, modelImageUrl: prefillModelImage || undefined, sceneImageUrl: prefillSceneImage || undefined } : null
   );
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
@@ -1960,10 +1962,20 @@ export default function Generate() {
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-muted-foreground">Recreating look from Discover</span>
                   {recreateSource.modelName && (
-                    <Badge variant="secondary" className="text-xs">{recreateSource.modelName}</Badge>
+                    <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
+                      {recreateSource.modelImageUrl && (
+                        <img src={recreateSource.modelImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                      )}
+                      {recreateSource.modelName}
+                    </Badge>
                   )}
                   {recreateSource.sceneName && (
-                    <Badge variant="secondary" className="text-xs">{recreateSource.sceneName}</Badge>
+                    <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
+                      {recreateSource.sceneImageUrl && (
+                        <img src={recreateSource.sceneImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                      )}
+                      {recreateSource.sceneName}
+                    </Badge>
                   )}
                 </div>
                 <button onClick={() => setRecreateSource(null)} className="text-muted-foreground/60 hover:text-foreground">
