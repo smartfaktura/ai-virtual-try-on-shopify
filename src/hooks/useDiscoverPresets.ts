@@ -19,6 +19,8 @@ export interface DiscoverPreset {
   is_featured: boolean;
   workflow_slug: string | null;
   workflow_name: string | null;
+  product_name: string | null;
+  product_image_url: string | null;
   created_at: string;
 }
 

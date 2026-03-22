@@ -122,7 +122,9 @@ export function AddToDiscoverModal({
       model_name: modelName || null,
       scene_image_url: sceneImageUrl || null,
       model_image_url: modelImageUrl || null,
-    });
+      product_name: productName || null,
+      product_image_url: productImageUrl || null,
+    } as any);
     if (error) {
       toast.error('Failed to publish to Discover');
     } else {
