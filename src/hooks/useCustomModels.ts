@@ -57,9 +57,10 @@ export function useCustomModels() {
     enabled: !!user,
   });
 
-  const asProfiles = (query.data ?? []).map(toModelProfile);
+  const models = query.data ?? [];
+  const asProfiles = useMemo(() => models.map(toModelProfile), [models]);
 
-  return { ...query, models: query.data ?? [], asProfiles };
+  return { ...query, models, asProfiles };
 }
 
 export function useAddCustomModel() {
