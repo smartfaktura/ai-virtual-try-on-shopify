@@ -1948,7 +1948,29 @@ export default function Generate() {
           </Alert>
         )}
 
-        {/* Progress Steps */}
+        {/* Recreate from Discover banner */}
+        {recreateSource && (
+          <Alert className="border-primary/20 bg-primary/5">
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground">Recreating look from Discover</span>
+                  {recreateSource.modelName && (
+                    <Badge variant="secondary" className="text-xs">{recreateSource.modelName}</Badge>
+                  )}
+                  {recreateSource.sceneName && (
+                    <Badge variant="secondary" className="text-xs">{recreateSource.sceneName}</Badge>
+                  )}
+                </div>
+                <button onClick={() => setRecreateSource(null)} className="text-muted-foreground/60 hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-hidden">
