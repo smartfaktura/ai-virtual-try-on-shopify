@@ -179,7 +179,16 @@ export function PublicDiscoverDetailModal({
 
             {/* Primary CTA — Sign Up */}
             <Button
-              onClick={() => navigate('/auth')}
+              onClick={() => {
+                if (isPreset && item.data.workflow_slug) {
+                  const params = new URLSearchParams();
+                  if (item.data.model_name) params.set('model', item.data.model_name);
+                  if (item.data.scene_name) params.set('scene', item.data.scene_name);
+                  navigate(`/auth?redirect=/app/generate/${item.data.workflow_slug}?${params.toString()}`);
+                } else {
+                  navigate('/auth');
+                }
+              }}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
               Create account for free to generate results like this

@@ -335,7 +335,13 @@ export function DiscoverDetailModal({
             {isPreset && item.data.workflow_slug && (
               <Button
                 variant="outline"
-                onClick={() => { onClose(); navigate(`/app/generate?workflow=${item.data.workflow_slug}`); }}
+                onClick={() => {
+                  onClose();
+                  const params = new URLSearchParams();
+                  if (item.data.model_name) params.set('model', item.data.model_name);
+                  if (item.data.scene_name) params.set('scene', item.data.scene_name);
+                  navigate(`/app/generate/${item.data.workflow_slug}?${params.toString()}`);
+                }}
                 className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
               >
                 <Workflow className="w-4 h-4" />

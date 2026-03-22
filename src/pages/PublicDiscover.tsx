@@ -307,12 +307,20 @@ export default function PublicDiscover() {
     if (item.type === 'scene') {
       navigate(`/app/freestyle?scene=${item.data.poseId}`);
     } else {
-      const params = new URLSearchParams({
-        prompt: item.data.prompt,
-        ratio: item.data.aspect_ratio,
-        quality: item.data.quality,
-      });
-      navigate(`/app/freestyle?${params.toString()}`);
+      const d = item.data;
+      if (d.workflow_slug) {
+        const params = new URLSearchParams();
+        if (d.model_name) params.set('model', d.model_name);
+        if (d.scene_name) params.set('scene', d.scene_name);
+        navigate(`/app/generate/${d.workflow_slug}?${params.toString()}`);
+      } else {
+        const params = new URLSearchParams({
+          prompt: d.prompt,
+          ratio: d.aspect_ratio,
+          quality: d.quality,
+        });
+        navigate(`/app/freestyle?${params.toString()}`);
+      }
     }
   }, [navigate]);
 
