@@ -76,7 +76,7 @@ export function DiscoverDetailModal({
   const category = isPreset ? item.data.category : item.data.category;
 
   const workflowLabel = isPreset && item.data.workflow_name
-    ? `${item.data.workflow_name} Workflow`
+    ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
     : isPreset ? 'Freestyle' : 'Scene';
 
   return (
