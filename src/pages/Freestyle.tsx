@@ -738,8 +738,45 @@ export default function Freestyle() {
 
       {/* Scrollable content area */}
       <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
-        <div className="px-3 lg:px-1">
+        <div className="px-3 lg:px-1 space-y-2">
           <LowCreditsBanner />
+          {recreateSource && (
+            <Alert className="border-primary/20 bg-primary/5">
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm flex-wrap">
+                    <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">Recreating look from Discover</span>
+                    {recreateSource.modelName && (
+                      <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
+                        {recreateSource.modelImageUrl && (
+                          <img src={recreateSource.modelImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                        )}
+                        {recreateSource.modelName}
+                      </Badge>
+                    )}
+                    {recreateSource.sceneName && (
+                      <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
+                        {recreateSource.sceneImageUrl && (
+                          <img src={recreateSource.sceneImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                        )}
+                        {recreateSource.sceneName}
+                      </Badge>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setRecreateSource(null)}
+                    className="text-muted-foreground/60 hover:text-foreground transition-colors shrink-0 ml-2"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground/70 mt-1.5 ml-6">
+                  Add your product to generate this type of result
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
