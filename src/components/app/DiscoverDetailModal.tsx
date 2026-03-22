@@ -247,7 +247,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Workflow" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__freestyle__" className="text-xs">Freestyle</SelectItem>
                       {(workflows ?? []).map(w => (
                         <SelectItem key={w.slug} value={w.slug} className="text-xs">{w.name}</SelectItem>
