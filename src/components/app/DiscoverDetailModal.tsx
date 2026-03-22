@@ -71,10 +71,10 @@ export function DiscoverDetailModal({
     return items;
   }, [customSceneProfiles]);
 
-  const [editModelName, setEditModelName] = useState('');
-  const [editSceneName, setEditSceneName] = useState('');
-  const [editCategory, setEditCategory] = useState('');
-  const [editWorkflowSlug, setEditWorkflowSlug] = useState('');
+  const [editModelName, setEditModelName] = useState('__none__');
+  const [editSceneName, setEditSceneName] = useState('__none__');
+  const [editCategory, setEditCategory] = useState('fashion');
+  const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
@@ -237,7 +237,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       {DISCOVER_CATEGORIES.map(c => (
                         <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
                       ))}
@@ -247,7 +247,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Workflow" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__freestyle__" className="text-xs">Freestyle</SelectItem>
                       {(workflows ?? []).map(w => (
                         <SelectItem key={w.slug} value={w.slug} className="text-xs">{w.name}</SelectItem>
@@ -258,7 +258,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allModelOptions.map(m => (
                         <SelectItem key={m.name} value={m.name} className="text-xs">
@@ -274,7 +274,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Scene" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allSceneOptions.map(s => (
                         <SelectItem key={s.name} value={s.name} className="text-xs">
