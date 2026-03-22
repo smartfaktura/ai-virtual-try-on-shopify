@@ -254,7 +254,7 @@ export default function Discover() {
   const { filterVisible, hideScene } = useHiddenScenes();
   const { pendingCount: adminPendingCount } = useAdminSubmissions();
   const columnCount = useColumnCount();
-  const [searchQuery, setSearchQuery] = useState('');
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
