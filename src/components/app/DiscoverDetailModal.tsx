@@ -192,7 +192,7 @@ export function DiscoverDetailModal({
                         <img
                           src={getOptimizedUrl((item.data as any).product_image_url, { quality: 60 })}
                           alt={(item.data as any).product_name}
-                          className="w-10 h-10 rounded-lg object-contain bg-muted"
+                          className="w-10 h-10 rounded-lg object-cover"
                         />
                       )}
                       <div>
