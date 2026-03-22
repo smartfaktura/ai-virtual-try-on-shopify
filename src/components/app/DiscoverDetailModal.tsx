@@ -74,7 +74,16 @@ export function DiscoverDetailModal({
   const [editModelName, setEditModelName] = useState('');
   const [editSceneName, setEditSceneName] = useState('');
   const [editCategory, setEditCategory] = useState('');
+  const [editWorkflowSlug, setEditWorkflowSlug] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
+
+  const { data: workflows } = useQuery({
+    queryKey: ['workflows-list'],
+    queryFn: async () => {
+      const { data } = await supabase.from('workflows').select('id, name, slug').order('sort_order');
+      return data ?? [];
+    },
+  });
 
   useEffect(() => {
     if (item && open) {
