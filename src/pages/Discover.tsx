@@ -429,16 +429,6 @@ export default function Discover() {
         <p className="text-sm text-muted-foreground">Browse curated prompts and styles for inspiration</p>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-lg">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60" />
-        <Input
-          placeholder="Search prompts, scenes, tags..."
-          value={searchQuery}
-          onChange={(e) => { setSearchQuery(e.target.value); setSimilarTo(null); }}
-          className="pl-11 h-12 rounded-2xl border-border/50 bg-muted/30 text-sm placeholder:text-muted-foreground/50"
-        />
-      </div>
 
       {/* Similar-to chip */}
       {similarTo && (
