@@ -315,17 +315,10 @@ export default function Discover() {
     return allItems.filter((item) => {
       // Similar filter
       if (similarTo) {
-        const simCat = getItemCategory(similarTo);
-        const itemCat = getItemCategory(item);
-        if (itemCat !== simCat) return false;
-        if (similarTo.type === 'preset' && item.type === 'preset') {
-          const simTags = similarTo.data.tags ?? [];
-          const itemTags = item.data.tags ?? [];
-          if (simTags.length > 0 && itemTags.length > 0) {
-            const overlap = simTags.some((t) => itemTags.includes(t));
-            if (!overlap) return false;
-          }
-        }
+        const simScene = similarTo.type === 'preset' ? similarTo.data.scene_name : similarTo.data.name;
+        if (!simScene) return true;
+        const itemScene = item.type === 'preset' ? item.data.scene_name : item.data.name;
+        if (itemScene !== simScene) return false;
         if (item.type === similarTo.type && getItemId(item) === getItemId(similarTo)) return false;
         return true;
       }
@@ -451,7 +444,7 @@ export default function Discover() {
       {similarTo && (
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium">
-            Similar to: {getItemName(similarTo)}
+            Similar to: {similarTo.type === 'preset' ? (similarTo.data.scene_name || getItemName(similarTo)) : getItemName(similarTo)}
             <button onClick={() => setSimilarTo(null)} className="ml-1.5 hover:text-primary/70">
               <X className="w-3.5 h-3.5" />
             </button>
