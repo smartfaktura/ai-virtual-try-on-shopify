@@ -1,4 +1,4 @@
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -12,6 +12,7 @@ export type DiscoverItem =
 interface DiscoverCardProps {
   item: DiscoverItem;
   onClick: () => void;
+  onRecreate?: (e: React.MouseEvent) => void;
   isSaved?: boolean;
   onToggleSave?: (e: React.MouseEvent) => void;
   isFeatured?: boolean;
@@ -20,9 +21,24 @@ interface DiscoverCardProps {
   hideLabels?: boolean;
 }
 
-export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels }: DiscoverCardProps) {
+function getGenerationLabel(item: DiscoverItem): string {
+  if (item.type === 'scene') return 'Scene';
+  const d = item.data;
+  if (d.workflow_name) return d.workflow_name;
+  if (d.scene_name) return `Freestyle · ${d.scene_name}`;
+  return 'Freestyle';
+}
+
+export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
+  const isPreset = item.type === 'preset';
+
+  const sceneThumb = isPreset ? item.data.scene_image_url : null;
+  const sceneName = isPreset ? item.data.scene_name : null;
+  const modelThumb = isPreset ? item.data.model_image_url : null;
+  const modelName = isPreset ? item.data.model_name : null;
+  const genLabel = getGenerationLabel(item);
 
   return (
     <div
@@ -67,18 +83,50 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
         </button>
       )}
 
-
       {/* Hover overlay (desktop) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 hidden [@media(hover:hover)]:flex">
-        {isScene ? (
-          <div className="flex items-center gap-2">
-            <span className="text-white/80 text-xs flex-1">{item.data.name}</span>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 gap-2 hidden [@media(hover:hover)]:flex">
+        {/* Scene & Model thumbnails */}
+        {isPreset && (sceneThumb || modelThumb) && (
+          <div className="flex flex-col gap-1.5 mb-1">
+            {sceneThumb && sceneName && (
+              <div className="flex items-center gap-2">
+                <img src={sceneThumb} alt={sceneName} className="w-7 h-7 rounded-md object-cover ring-1 ring-white/20" />
+                <span className="text-white/90 text-[11px] font-medium truncate">{sceneName}</span>
+              </div>
+            )}
+            {modelThumb && modelName && (
+              <div className="flex items-center gap-2">
+                <img src={modelThumb} alt={modelName} className="w-7 h-7 rounded-full object-cover ring-1 ring-white/20" />
+                <span className="text-white/90 text-[11px] font-medium truncate">{modelName}</span>
+              </div>
+            )}
           </div>
-        ) : (
-          <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">
-            {item.data.prompt}
-          </p>
         )}
+
+        {/* Recreate CTA */}
+        {onRecreate ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRecreate(e); }}
+            className="self-center px-4 py-1.5 rounded-full bg-white/95 text-black text-xs font-semibold hover:bg-white transition-colors flex items-center gap-1.5 shadow-lg"
+          >
+            {isScene ? 'Use this scene' : 'Recreate this'} <ArrowRight className="w-3 h-3" />
+          </button>
+        ) : (
+          <div className="text-center">
+            {isScene ? (
+              <span className="text-white/80 text-xs">{item.data.name}</span>
+            ) : (
+              <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">{item.data.prompt}</p>
+            )}
+          </div>
+        )}
+
+        {/* Generation type badge */}
+        <div className="flex items-center justify-center">
+          <span className="text-white/50 text-[10px] font-medium tracking-wide uppercase">
+            {genLabel}
+          </span>
+        </div>
       </div>
 
       {/* Scene badge */}

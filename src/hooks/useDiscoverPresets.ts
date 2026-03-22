@@ -10,6 +10,8 @@ export interface DiscoverPreset {
   category: string;
   model_name: string | null;
   scene_name: string | null;
+  scene_image_url: string | null;
+  model_image_url: string | null;
   aspect_ratio: string;
   quality: string;
   tags: string[] | null;

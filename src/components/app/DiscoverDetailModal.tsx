@@ -218,6 +218,44 @@ export function DiscoverDetailModal({
               )}
             </div>
 
+            {/* Created with section */}
+            {isPreset && (item.data.scene_name || item.data.model_name || item.data.workflow_name) ? (
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                  Created with
+                </p>
+                <div className="flex flex-col gap-2">
+                  {item.data.scene_name && (
+                    <div className="flex items-center gap-2.5">
+                      {item.data.scene_image_url && (
+                        <img src={item.data.scene_image_url} alt={item.data.scene_name} className="w-9 h-9 rounded-lg object-cover ring-1 ring-border/30" />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{item.data.scene_name}</p>
+                        <p className="text-[10px] text-muted-foreground/60">Scene</p>
+                      </div>
+                    </div>
+                  )}
+                  {item.data.model_name && (
+                    <div className="flex items-center gap-2.5">
+                      {item.data.model_image_url && (
+                        <img src={item.data.model_image_url} alt={item.data.model_name} className="w-9 h-9 rounded-full object-cover ring-1 ring-border/30" />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{item.data.model_name}</p>
+                        <p className="text-[10px] text-muted-foreground/60">Model</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : isPreset ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">Created with</span>
+                <span className="text-xs font-medium text-muted-foreground">Freestyle</span>
+              </div>
+            ) : null}
+
             {/* Generate Prompt */}
             <div className="space-y-3">
               <button
@@ -289,7 +327,7 @@ export function DiscoverDetailModal({
               onClick={() => { onUseItem(item); onClose(); }}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              {isPreset ? 'Use Prompt' : 'Use Scene'}
+              {isPreset ? 'Recreate this' : 'Use Scene'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 

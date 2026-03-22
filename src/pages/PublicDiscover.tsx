@@ -282,6 +282,17 @@ export default function PublicDiscover() {
   // Related items for modal
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
+    
+    // Prioritize same scene_name for presets
+    if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
+      const sameScene = allItems.filter((i) =>
+        i.type === 'preset' &&
+        i.data.scene_name === selectedItem.data.scene_name &&
+        i.data.id !== selectedItem.data.id
+      );
+      if (sameScene.length >= 3) return sameScene.slice(0, 9);
+    }
+    
     const selCat = resolveCategory(getItemCategory(selectedItem));
     return allItems
       .filter((i) => {
@@ -383,6 +394,7 @@ export default function PublicDiscover() {
                             key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
                             item={item}
                             onClick={() => handleCardClick(item)}
+                            onRecreate={() => navigate('/auth')}
                             hideLabels
                             {...(user ? {
                               isSaved: isSaved(item.type, itemId),
