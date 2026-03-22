@@ -1,45 +1,53 @@
 
+## What’s actually broken
 
-# Fix Admin Select Dropdowns Flashing/Not Showing Selection
+I checked the current code, and the “select flashes then deselects” issue is caused by **state being reset repeatedly**, not by the dropdown UI itself.
 
-## Root Cause
-The Radix `SelectContent` renders in a **portal** outside the modal DOM tree. When clicking a dropdown option, the pointer event passes through to the backdrop `div` (which has `onClick={onClose}`), closing the entire modal before the selection registers. The `e.stopPropagation()` on the right panel doesn't help because the portal is not a child of that panel.
+### Root causes
+1. **`selectedItem` gets reassigned repeatedly in `Discover.tsx`**
+   - The URL auto-open effect runs on `[urlItemId, allItems]`.
+   - `allItems` changes too often because `customScenePoses` is recreated each render.
+   - That keeps replacing `selectedItem` with a fresh object, so modal edit state is reinitialized.
 
-Additionally, the Category dropdown appears empty in the screenshot — likely because `editCategory` initializes to an empty string momentarily before the `useEffect` fires.
+2. **Admin edit state in `DiscoverDetailModal` resets on any `item` reference change**
+   - Current effect depends on `[item, open]`, so even same-id item object refresh resets selected values.
 
-## Changes
+3. **Category appears blank for many presets**
+   - DB categories include legacy values (`commercial`, `lifestyle`, `photography`, etc.) that are missing from the dropdown options.
+   - When current value is not in options, Select shows empty.
 
-### `src/components/app/DiscoverDetailModal.tsx`
+## Implementation plan
 
-**1. Prevent SelectContent portal clicks from closing the modal**
-Add `onPointerDownOutside={(e) => e.preventDefault()}` to all four `SelectContent` components. This stops the Radix "click outside" behavior from propagating to the backdrop.
+### 1) Stabilize derived arrays to stop unnecessary parent churn
+- **File:** `src/hooks/useCustomScenes.ts`
+- Wrap `asPoses` in `useMemo` so the reference stays stable when query data didn’t change.
 
-```tsx
-<SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
-```
+- **File:** `src/hooks/useCustomModels.ts`
+- Do the same for `asProfiles` to reduce unnecessary re-renders in admin selectors.
 
-Applied to: Category, Workflow, Model, Scene — all four selects.
+### 2) Stop auto-open effect from clobbering current modal item
+- **File:** `src/pages/Discover.tsx`
+- Update the URL auto-open effect to only call `setSelectedItem` when the found item ID/type is actually different from the currently selected one.
+- This keeps `selectedItem` stable while modal is open and user edits metadata.
 
-**2. Fix category not showing current value**
-Change `editCategory` default from `''` to `'fashion'` (line 76) so it always has a valid value even before the useEffect runs:
-```
-Before: const [editCategory, setEditCategory] = useState('');
-After:  const [editCategory, setEditCategory] = useState('fashion');
-```
+### 3) Prevent admin editor from reinitializing while editing
+- **File:** `src/components/app/DiscoverDetailModal.tsx`
+- Change metadata init logic to run only when:
+  - modal opens for a new preset id, or
+  - selected item id changes.
+- Do **not** reinit on same-id object reference refresh.
 
-Similarly for workflow:
-```
-Before: const [editWorkflowSlug, setEditWorkflowSlug] = useState('');
-After:  const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
-```
+### 4) Fix blank category select
+- **File:** `src/components/app/DiscoverDetailModal.tsx`
+- Expand category options to include both current product categories and legacy discover categories:
+  - `editorial`, `commercial`, `lifestyle`, `campaign`, `cinematic`, `photography`, `styling`, `ads` (plus existing ones).
+- Keep current value always present in options.
 
-And for model/scene:
-```
-Before: const [editModelName, setEditModelName] = useState('');
-        const [editSceneName, setEditSceneName] = useState('');
-After:  const [editModelName, setEditModelName] = useState('__none__');
-        const [editSceneName, setEditSceneName] = useState('__none__');
-```
+### 5) Harden model/scene select display
+- **File:** `src/components/app/DiscoverDetailModal.tsx`
+- Add `textValue` on model/scene `SelectItem`s (with thumbnails) so Radix reliably renders selected label in trigger.
 
-One file, ~8 lines changed. Fixes both the flash-close and empty-field issues.
-
+## Expected result after fix
+- Selecting Category / Workflow / Model / Scene will persist in the field immediately (no flash-reset).
+- Category field will show current value even for legacy presets.
+- Admin metadata form remains stable until you explicitly change item or close modal.
