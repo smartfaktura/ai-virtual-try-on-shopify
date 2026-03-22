@@ -23,7 +23,6 @@ import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'saved', label: 'Saved' },
   { id: 'fashion', label: 'Fashion' },
   { id: 'beauty', label: 'Beauty' },
   { id: 'fragrances', label: 'Fragrances' },
