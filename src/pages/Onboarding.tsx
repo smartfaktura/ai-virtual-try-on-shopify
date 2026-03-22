@@ -214,8 +214,44 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 2: Where did you hear about us */}
+          {/* Step 2: Product categories */}
           {step === 2 && (
+            <div className="space-y-6 animate-fade-in">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+                  What do you sell?
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  Pick the categories you work with — we'll tailor your dashboard and recommendations
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {PRODUCT_CATEGORIES.map(({ id, label }) => {
+                  const isSelected = selectedCategories.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggleCategory(id)}
+                      className={`relative flex items-center gap-2 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/5 text-foreground'
+                          : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      )}
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: How did you find us */}
+          {step === 3 && (
             <div className="space-y-6 animate-fade-in">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -240,42 +276,6 @@ export default function Onboarding() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Product categories */}
-          {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-                  What do you sell?
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  Select all that apply — this helps us personalize your experience
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {PRODUCT_CATEGORIES.map(({ id, label }) => {
-                  const isSelected = selectedCategories.includes(id);
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => toggleCategory(id)}
-                      className={`relative flex items-center gap-2 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/5 text-foreground'
-                          : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
-                    >
-                      {isSelected && (
-                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                      )}
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
               </div>
             </div>
           )}
