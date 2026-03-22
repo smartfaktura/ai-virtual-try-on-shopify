@@ -70,7 +70,11 @@ export function DashboardPersonalizationHero() {
   );
 
   return (
-    <div className="space-y-1.5 mt-2">
+    <div className="space-y-1.5 mt-1">
+      <p className="text-muted-foreground transition-opacity duration-300">
+        {headline}
+      </p>
+
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Personalized for</span>
         {isMobile ? (
@@ -104,10 +108,6 @@ export function DashboardPersonalizationHero() {
           </Popover>
         )}
       </div>
-
-      <p className="text-sm text-muted-foreground transition-opacity duration-300">
-        {headline}
-      </p>
     </div>
   );
 }
