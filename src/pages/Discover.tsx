@@ -534,7 +534,7 @@ export default function Discover() {
         onUseItem={handleUseItem}
         onSearchSimilar={handleSearchSimilar}
         relatedItems={relatedItems}
-        onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
+        onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
         viewCount={viewCount ?? undefined}
