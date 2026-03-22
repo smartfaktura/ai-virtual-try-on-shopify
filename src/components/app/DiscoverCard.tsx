@@ -76,7 +76,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
           <div className="flex flex-col gap-1.5 mb-1">
             {sceneThumb && sceneName && (
               <div className="flex items-center gap-2">
-                <img src={sceneThumb} alt={sceneName} className="w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20" />
+                <img src={getOptimizedUrl(sceneThumb, { width: 56, quality: 60 })} alt={sceneName} className="w-7 h-7 rounded-md object-cover" />
                 <span className="text-white/90 text-[11px] font-medium truncate">{sceneName}</span>
               </div>
             )}
