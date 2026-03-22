@@ -138,7 +138,7 @@ export function DiscoverDetailModal({
         className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
       >
         {/* Left — Image showcase */}
-        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
+        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12" onClick={onClose}>
           <ShimmerImage
             src={imageUrl}
             alt={title}
