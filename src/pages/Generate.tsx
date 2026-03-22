@@ -169,8 +169,10 @@ export default function Generate() {
   const initialTemplateId = searchParams.get('template');
   const prefillModelName = searchParams.get('model');
   const prefillSceneName = searchParams.get('scene');
-  const [recreateSource, setRecreateSource] = useState<{ modelName?: string; sceneName?: string } | null>(
-    (prefillModelName || prefillSceneName) ? { modelName: prefillModelName || undefined, sceneName: prefillSceneName || undefined } : null
+  const prefillModelImage = searchParams.get('modelImage');
+  const prefillSceneImage = searchParams.get('sceneImage');
+  const [recreateSource, setRecreateSource] = useState<{ modelName?: string; sceneName?: string; modelImageUrl?: string; sceneImageUrl?: string } | null>(
+    (prefillModelName || prefillSceneName) ? { modelName: prefillModelName || undefined, sceneName: prefillSceneName || undefined, modelImageUrl: prefillModelImage || undefined, sceneImageUrl: prefillSceneImage || undefined } : null
   );
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
