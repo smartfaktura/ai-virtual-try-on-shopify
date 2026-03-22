@@ -341,16 +341,6 @@ export default function PublicDiscover() {
           </a>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-lg mx-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60" />
-          <Input
-            placeholder="Search prompts, scenes, tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-12 rounded-2xl border-border/50 bg-muted/30 text-sm placeholder:text-muted-foreground/50"
-          />
-        </div>
 
         {/* Category filter bar */}
         <div className="flex flex-wrap justify-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1">
