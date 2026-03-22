@@ -1,41 +1,54 @@
 
 
-# Fix Discover Card & Detail Modal Issues
+# Fix: Discover Presets Missing Metadata + "Recreate This" Going to Freestyle
 
-## Problems from Screenshot
+## Root Cause
 
-1. **"Virtual Try-On Set" label in top-left corner of card** — user doesn't want it
-2. **Scene/model thumbnails not showing on hover** — data exists but `scene_image_url`/`model_image_url` are null for recently created presets (metadata wasn't populated when publishing)
-3. **Detail modal "Recreate this" button** — should navigate to the workflow with pre-selected model/scene (and show the banner), but the primary CTA currently goes to freestyle for non-workflow items. The workflow CTA exists as a *separate secondary button* — should be the *primary* one when workflow data exists.
-4. **Detail modal not showing scene/model thumbnails** — same null data issue as hover
+The edge functions (`generate-tryon`, `generate-workflow`) had the correct code to save `scene_name`, `model_name`, `scene_image_url`, `model_image_url`, `workflow_slug` into `generation_jobs`, but **they were never redeployed** after the code was added. I've now deployed them — future generations will correctly store metadata.
 
-## Changes
+However, existing presets (like "Effortless Chic" and "City Chic") already have null metadata in the `discover_presets` table. The "Recreate this" button checks `workflow_slug` — since it's null, it falls through to the freestyle/scene fallback instead of navigating to the workflow.
 
-### 1. `src/components/app/DiscoverCard.tsx` — Remove workflow badge from top-left
+## What Was Already Fixed
 
-Delete lines 119-124 (the `{!isScene && !hideLabels && item.data.workflow_name && ...}` block that renders the workflow name badge in the top-left corner). The workflow name is already shown in the hover overlay as the generation type label at the bottom.
+- Edge functions `generate-tryon` and `generate-workflow` have been **redeployed** just now. New generations will store all metadata correctly.
 
-### 2. `src/components/app/DiscoverDetailModal.tsx` — Merge workflow CTA into primary
+## Remaining Changes
 
-When `workflow_slug` exists, make the primary "Recreate this" button navigate to the Generate page with model/scene params (currently done by the secondary "Try Workflow" button). Remove the separate secondary workflow button to avoid duplication.
+### 1. Manual Backfill — Update existing presets via migration
 
-Change lines 325-331: If `isPreset && item.data.workflow_slug`, onClick navigates to `/app/generate/${workflow_slug}?model=X&scene=Y`. Otherwise keep current behavior (freestyle or use scene).
+For the "Effortless Chic" preset (`c82f0cc0`), update it with the correct metadata:
 
-Delete lines 333-350 (the separate "Try Workflow" button) since it's now merged into the primary CTA.
+```sql
+UPDATE discover_presets 
+SET workflow_slug = 'virtual-try-on-set',
+    scene_name = (known scene name if available),
+    model_name = (known model name if available)
+WHERE id = 'c82f0cc0-ec27-4127-aa87-77806f637d5e';
+```
 
-### 3. `src/components/app/AddToDiscoverModal.tsx` — Verify metadata is being passed
+Since we can't automatically determine which scene/model were used for old presets, we should at minimum set `workflow_slug` so "Recreate this" routes correctly to the Virtual Try-On workflow.
 
-The modal already accepts `sceneName`, `modelName`, `sceneImageUrl`, `modelImageUrl` props and inserts them. The issue is the *callers* may not be passing image URLs. Check `LibraryDetailModal.tsx` — it passes `sceneName` and `modelName` from library item but may not pass `sceneImageUrl`/`modelImageUrl`.
+### 2. `AddToDiscoverModal.tsx` — Derive `workflow_slug` from `workflow_name` as fallback
 
-### 4. `src/components/app/LibraryDetailModal.tsx` — Pass image URLs
+Currently if the library item has `workflowName` but no `workflowSlug` (because the generation_job was created before the column existed), the slug is null. Add a simple fallback that derives the slug from the name:
 
-Add `sceneImageUrl={item.sceneImageUrl}` and `modelImageUrl={item.modelImageUrl}` to the `AddToDiscoverModal` props. These fields were added to `LibraryItem` but may not be wired to the modal.
+```ts
+const effectiveSlug = workflowSlug || (workflowName ? workflowName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null);
+```
 
-## Files
+This ensures even old items published from the library get a working slug.
+
+### 3. Verify the full pipeline works for new generations
+
+After these changes:
+- Generate a new Virtual Try-On image → verify `generation_jobs` row has `scene_name`, `model_name`, `workflow_slug` populated
+- Open it in Library → publish to Discover → verify the preset has all metadata
+- Open it in Discover → "Recreate this" → should navigate to `/app/generate/virtual-try-on-set?model=X&scene=Y`
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/app/DiscoverCard.tsx` | Remove workflow badge from top-left (lines 119-124) |
-| `src/components/app/DiscoverDetailModal.tsx` | Merge workflow CTA into primary button, remove separate secondary |
-| `src/components/app/LibraryDetailModal.tsx` | Pass `sceneImageUrl`/`modelImageUrl` to AddToDiscoverModal |
+| **Migration** | Backfill `workflow_slug` for existing presets that have `workflow_name` but null slug |
+| `src/components/app/AddToDiscoverModal.tsx` | Derive `workflow_slug` from `workflow_name` as fallback (~2 lines) |
 
