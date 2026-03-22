@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, Compass, X } from 'lucide-react';
+import { Compass, X } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
+
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
@@ -254,7 +254,7 @@ export default function Discover() {
   const { filterVisible, hideScene } = useHiddenScenes();
   const { pendingCount: adminPendingCount } = useAdminSubmissions();
   const columnCount = useColumnCount();
-  const [searchQuery, setSearchQuery] = useState('');
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
@@ -341,26 +341,9 @@ export default function Discover() {
         if (!itemMatchesProductCategory(item, selectedCategory)) return false;
       }
 
-      // Search filter
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (item.type === 'preset') {
-          return (
-            item.data.title.toLowerCase().includes(q) ||
-            item.data.prompt.toLowerCase().includes(q) ||
-            item.data.tags?.some((t) => t.toLowerCase().includes(q))
-          );
-        } else {
-          return (
-            item.data.name.toLowerCase().includes(q) ||
-            item.data.description.toLowerCase().includes(q) ||
-            item.data.category.toLowerCase().includes(q)
-          );
-        }
-      }
       return true;
     });
-  }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
+  }, [allItems, selectedCategory, similarTo, isSaved, savedItems]);
 
   // Sort: featured items first (by created_at desc), then newest first
   const sorted = useMemo(() => {
@@ -419,7 +402,7 @@ export default function Discover() {
   const handleSearchSimilar = (item: DiscoverItem) => {
     setSimilarTo(item);
     setSelectedCategory('all');
-    setSearchQuery('');
+    
   };
 
   const handleToggleSave = (item: DiscoverItem) => {
@@ -446,16 +429,6 @@ export default function Discover() {
         <p className="text-sm text-muted-foreground">Browse curated prompts and styles for inspiration</p>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-lg">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60" />
-        <Input
-          placeholder="Search prompts, scenes, tags..."
-          value={searchQuery}
-          onChange={(e) => { setSearchQuery(e.target.value); setSimilarTo(null); }}
-          className="pl-11 h-12 rounded-2xl border-border/50 bg-muted/30 text-sm placeholder:text-muted-foreground/50"
-        />
-      </div>
 
       {/* Similar-to chip */}
       {similarTo && (
@@ -471,16 +444,16 @@ export default function Discover() {
 
       {/* Category filter bar */}
       {!similarTo && (
-        <div className="flex flex-wrap justify-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1">
+        <div className="flex flex-wrap justify-center gap-2.5 overflow-x-auto scrollbar-hide pb-1 -mb-1">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                'px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0',
+                'px-6 py-2.5 rounded-full text-[15px] font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
                 selectedCategory === cat.id
                   ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                  : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
               )}
             >
               {cat.label}
@@ -502,7 +475,7 @@ export default function Discover() {
           <p className="text-xs text-muted-foreground/70 max-w-xs">
             Try different keywords or{' '}
             <button
-              onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSimilarTo(null); }}
+              onClick={() => { setSelectedCategory('all'); setSimilarTo(null); }}
               className="text-primary hover:underline"
             >
               browse all
