@@ -49,7 +49,7 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
   const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center">
       {/* Left arrow — desktop only, collapses when hidden */}
       <button
         onClick={scrollLeft}
