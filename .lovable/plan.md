@@ -1,45 +1,37 @@
 
 
-# Add Thumbnail Images to "Recreating look from Discover" Banner
+# Rename "Virtual Try-On Set" → "Virtual Try-On Workflow" in Discover UI
 
 ## Problem
-The banner on the Generate page shows "Recreating look from Discover" with text-only badges for model/scene names (e.g. "Zara", "Canon G7X @Dining"). User wants small thumbnail images next to each name, matching the style used in the Discover detail modal.
+The card hover badge and detail modal show "Virtual Try-On Set" (the raw `workflow_name` from the DB). User wants it displayed as "VIRTUAL TRY-ON WORKFLOW" instead.
+
+## Approach
+Add a display transform function that replaces "Set" with "Workflow" in workflow names. This avoids changing DB data and applies everywhere the workflow name appears in Discover.
 
 ## Changes
 
-### 1. `src/components/app/DiscoverDetailModal.tsx` — Pass image URLs in navigation params
-
-When navigating to the workflow on "Recreate this" click, also pass `modelImage` and `sceneImage` as URL params:
-```
-params.set('modelImage', item.data.model_image_url)
-params.set('sceneImage', item.data.scene_image_url)
-```
-
-### 2. `src/pages/Generate.tsx` — Read image URLs + show thumbnails in banner
-
-**Extend `recreateSource` state** to include `modelImageUrl` and `sceneImageUrl`:
+### 1. `src/components/app/DiscoverCard.tsx`
+Update `getGenerationLabel` (line 27): Replace "Set" suffix with "Workflow" in the workflow name:
 ```ts
-const prefillModelImage = searchParams.get('modelImage');
-const prefillSceneImage = searchParams.get('sceneImage');
+if (d.workflow_name) return d.workflow_name.replace(/\bSet$/i, 'Workflow');
 ```
 
-**Update the banner** (lines 1962-1967): Add small `w-5 h-5 rounded object-cover` thumbnail images inside each Badge, before the text name:
-```tsx
-{recreateSource.modelName && (
-  <Badge variant="secondary" className="text-xs gap-1.5 pl-1">
-    {recreateSource.modelImageUrl && (
-      <img src={recreateSource.modelImageUrl} className="w-5 h-5 rounded object-cover" />
-    )}
-    {recreateSource.modelName}
-  </Badge>
-)}
+### 2. `src/components/app/DiscoverDetailModal.tsx`
+Update `workflowLabel` (line 78-79): Same replacement:
+```ts
+const workflowLabel = isPreset && item.data.workflow_name
+  ? `${item.data.workflow_name.replace(/\bSet$/i, 'Workflow')} Workflow`
 ```
-Same pattern for scene badge.
+Wait — this would produce "Virtual Try-On Workflow Workflow". The current code appends " Workflow" already. So just replace "Set" with nothing, or change the whole line:
+```ts
+const workflowLabel = isPreset && item.data.workflow_name
+  ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
+  : isPreset ? 'Freestyle' : 'Scene';
+```
+This removes the extra " Workflow" suffix and replaces "Set" with "Workflow".
 
-## Files
+### 3. `src/components/app/PublicDiscoverDetailModal.tsx`
+Same change to `workflowLabel` (line 52-54).
 
-| File | Change |
-|------|--------|
-| `src/components/app/DiscoverDetailModal.tsx` | Add `modelImage`/`sceneImage` URL params to navigation |
-| `src/pages/Generate.tsx` | Read image URL params, extend state, render thumbnails in badges |
+Three files, one-line changes each. All "Set" workflow names become "Workflow" in display only — DB data unchanged.
 
