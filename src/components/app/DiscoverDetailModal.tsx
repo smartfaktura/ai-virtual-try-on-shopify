@@ -162,7 +162,7 @@ export function DiscoverDetailModal({
                         <img
                           src={getOptimizedUrl(item.data.scene_image_url, { quality: 60 })}
                           alt={item.data.scene_name}
-                          className="w-10 h-10 rounded-lg object-contain bg-muted/30 ring-1 ring-border/30"
+                           className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
                         />
                       )}
                       <div>
@@ -205,16 +205,6 @@ export function DiscoverDetailModal({
               </div>
             )}
 
-            {/* Tags */}
-            {isPreset && item.data.tags && item.data.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {item.data.tags.map((tag) => (
-                  <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
 
             {/* Primary CTA */}
             <Button

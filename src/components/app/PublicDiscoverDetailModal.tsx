@@ -103,9 +103,9 @@ export function PublicDiscoverDetailModal({
                     <div className="flex items-center gap-2.5">
                       {item.data.scene_image_url && (
                         <img
-                          src={getOptimizedUrl(item.data.scene_image_url, { width: 80, quality: 50 })}
+                          src={getOptimizedUrl(item.data.scene_image_url, { quality: 60 })}
                           alt={item.data.scene_name}
-                          className="w-10 h-10 rounded-lg object-contain bg-muted/30 ring-1 ring-border/30"
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
                         />
                       )}
                       <div>
@@ -118,9 +118,9 @@ export function PublicDiscoverDetailModal({
                     <div className="flex items-center gap-2.5">
                       {item.data.model_image_url && (
                         <img
-                          src={getOptimizedUrl(item.data.model_image_url, { width: 80, quality: 50 })}
+                          src={getOptimizedUrl(item.data.model_image_url, { quality: 60 })}
                           alt={item.data.model_name}
-                          className="w-10 h-10 rounded-lg object-contain bg-muted/30 ring-1 ring-border/30"
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
                         />
                       )}
                       <div>
@@ -133,9 +133,9 @@ export function PublicDiscoverDetailModal({
                     <div className="flex items-center gap-2.5">
                       {(item.data as any).product_image_url && (
                         <img
-                          src={getOptimizedUrl((item.data as any).product_image_url, { width: 80, quality: 50 })}
+                          src={getOptimizedUrl((item.data as any).product_image_url, { quality: 60 })}
                           alt={(item.data as any).product_name}
-                          className="w-10 h-10 rounded-lg object-contain bg-muted/30 ring-1 ring-border/30"
+                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
                         />
                       )}
                       <div>
@@ -148,16 +148,6 @@ export function PublicDiscoverDetailModal({
               </div>
             )}
 
-            {/* Tags */}
-            {isPreset && item.data.tags && item.data.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {item.data.tags.map((tag: string) => (
-                  <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
 
             {/* Primary CTA — Sign Up */}
             <Button
