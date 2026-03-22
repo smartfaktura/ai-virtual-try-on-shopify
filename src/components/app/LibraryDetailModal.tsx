@@ -348,6 +348,11 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
           aspectRatio={item.aspectRatio}
           quality={item.quality}
           workflowName={item.source === 'generation' ? item.label : undefined}
+          workflowSlug={item.workflowSlug}
+          sceneName={item.sceneName}
+          modelName={item.modelName}
+          sceneImageUrl={item.sceneImageUrl}
+          modelImageUrl={item.modelImageUrl}
         />
       )}
       {submitDiscoverOpen && item && (

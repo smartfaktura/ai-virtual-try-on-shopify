@@ -652,16 +652,21 @@ export type Database = {
           credits_used: number
           error_message: string | null
           id: string
+          model_image_url: string | null
+          model_name: string | null
           product_id: string | null
           prompt_final: string | null
           quality: string
           ratio: string
           requested_count: number
           results: Json | null
+          scene_image_url: string | null
+          scene_name: string | null
           status: string
           template_id: string | null
           user_id: string
           workflow_id: string | null
+          workflow_slug: string | null
         }
         Insert: {
           brand_profile_id?: string | null
@@ -671,16 +676,21 @@ export type Database = {
           credits_used?: number
           error_message?: string | null
           id?: string
+          model_image_url?: string | null
+          model_name?: string | null
           product_id?: string | null
           prompt_final?: string | null
           quality?: string
           ratio?: string
           requested_count?: number
           results?: Json | null
+          scene_image_url?: string | null
+          scene_name?: string | null
           status?: string
           template_id?: string | null
           user_id: string
           workflow_id?: string | null
+          workflow_slug?: string | null
         }
         Update: {
           brand_profile_id?: string | null
@@ -690,16 +700,21 @@ export type Database = {
           credits_used?: number
           error_message?: string | null
           id?: string
+          model_image_url?: string | null
+          model_name?: string | null
           product_id?: string | null
           prompt_final?: string | null
           quality?: string
           ratio?: string
           requested_count?: number
           results?: Json | null
+          scene_image_url?: string | null
+          scene_name?: string | null
           status?: string
           template_id?: string | null
           user_id?: string
           workflow_id?: string | null
+          workflow_slug?: string | null
         }
         Relationships: [
           {

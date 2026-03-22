@@ -29,6 +29,11 @@ export interface LibraryItem {
   status?: string;
   aspectRatio?: string;
   quality?: string;
+  sceneName?: string;
+  modelName?: string;
+  sceneImageUrl?: string;
+  modelImageUrl?: string;
+  workflowSlug?: string;
 }
 
 interface LibraryImageCardProps {

@@ -26,7 +26,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         // Build jobs query
         let jobsQuery = supabase
           .from('generation_jobs')
-          .select('id, results, created_at, status, ratio, quality, prompt_final, workflows(name), user_products(title)')
+          .select('id, results, created_at, status, ratio, quality, prompt_final, scene_name, model_name, scene_image_url, model_image_url, workflow_slug, workflows(name), user_products(title)')
           .order('created_at', { ascending })
           .limit(JOB_FETCH_LIMIT);
 
@@ -101,6 +101,11 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
                 status: job.status,
                 aspectRatio: job.ratio,
                 quality: job.quality,
+                sceneName: job.scene_name || undefined,
+                modelName: job.model_name || undefined,
+                sceneImageUrl: job.scene_image_url || undefined,
+                modelImageUrl: job.model_image_url || undefined,
+                workflowSlug: job.workflow_slug || undefined,
               },
             });
           }
