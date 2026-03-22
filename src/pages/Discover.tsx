@@ -557,6 +557,6 @@ export default function Discover() {
           setSelectedItem(null);
         } : undefined}
       />
-    </div>
+    </PageHeader>
   );
 }
