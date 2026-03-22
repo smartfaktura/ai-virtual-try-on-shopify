@@ -297,7 +297,7 @@ export default function Discover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
-  // Auto-open item from URL param
+  // Auto-open item from URL param — only set if different item
   useEffect(() => {
     if (!urlItemId || allItems.length === 0) return;
     const found = allItems.find((item) => {
@@ -306,7 +306,14 @@ export default function Discover() {
       }
       return item.type === 'preset' && item.data.id === urlItemId;
     });
-    if (found) setSelectedItem(found);
+    if (found) {
+      setSelectedItem(prev => {
+        const prevId = prev ? getItemId(prev) : null;
+        const foundId = getItemId(found);
+        if (prevId === foundId && prev?.type === found.type) return prev;
+        return found;
+      });
+    }
   }, [urlItemId, allItems]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
