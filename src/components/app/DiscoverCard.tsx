@@ -1,4 +1,4 @@
-import { Heart, Star, ArrowRight } from 'lucide-react';
+import { Star, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -53,20 +53,6 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
         aspectRatio="3/4"
       />
 
-      {/* Save button overlay */}
-      {onToggleSave && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleSave(e); }}
-          className={cn(
-            'absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
-            isSaved
-              ? 'bg-destructive text-destructive-foreground'
-              : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
-          )}
-        >
-          <Heart className={cn('w-4 h-4', isSaved && 'fill-current')} />
-        </button>
-      )}
 
       {/* Admin featured toggle */}
       {isAdmin && onToggleFeatured && (
@@ -129,12 +115,6 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
         </div>
       </div>
 
-      {/* Scene badge */}
-      {isScene && !hideLabels && (
-        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 text-white text-[10px] font-medium">
-          Scene
-        </div>
-      )}
 
       {/* Workflow badge */}
       {!isScene && !hideLabels && item.data.workflow_name && (
