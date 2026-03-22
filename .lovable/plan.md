@@ -1,43 +1,31 @@
 
 
-# Replace static subtitle with personalized headline
+# Polish Personalization Selector Styling
 
-## Idea
-Remove "Here's what's happening with your studio." and move the category-based headline up into its place. The `DashboardPersonalizationHero` component already shows the headline — just remove the duplicate static line and restructure slightly.
+## Current Issue
+The "Personalized for" label and pill look flat and slightly disconnected. Needs more visual refinement to feel integrated and premium.
 
-## Changes
-
-### File: `src/pages/Dashboard.tsx` (line 407)
-Remove the static `<p>` line:
-```
-<p className="text-muted-foreground mt-1">Here's what's happening with your studio.</p>
-```
+## Changes (1 file only)
 
 ### File: `src/components/app/DashboardPersonalizationHero.tsx`
-Swap order so the personalized headline comes first (as subtitle), then the selector below:
 
-```
-<div className="space-y-1.5 mt-1">
-  <p className="text-muted-foreground transition-opacity duration-300">
-    {headline}
-  </p>
-  <div className="flex items-center gap-2">
-    <span className="text-sm text-muted-foreground">Personalized for</span>
-    [pill selector — unchanged]
-  </div>
-</div>
-```
+**Visual improvements only — no structural changes:**
 
-This way the dashboard reads:
-```text
-Welcome back, Tomas 👋
-Highlight every detail with premium, light-perfect jewelry visuals.
-Personalized for: [Jewelry ▼]
-```
+1. **"Personalized for" label**: Change from `text-sm text-muted-foreground` to `text-sm text-muted-foreground/70` — slightly softer so the pill stands out more as the interactive element
 
-The headline replaces the static subtitle and feels contextual. The selector sits below as a small control.
+2. **Pill button styling**: Replace current `border border-border` with:
+   - `bg-muted/50 border border-border/40` — softer background tint instead of stark border
+   - `hover:bg-muted hover:border-border/60` — gentle hover lift
+   - `shadow-sm` — tiny shadow for depth
+   - `transition-all duration-200` — smooth state changes
+   - Keep `rounded-full`, `text-sm`, `font-medium`
 
-## Summary
-- 2 files, ~3 lines changed
-- No new dependencies
+3. **Chevron icon**: Reduce to `w-3 h-3` and `text-muted-foreground/50` — more subtle
+
+4. **Headline text**: Add `max-w-lg` so it doesn't stretch too wide on large screens. Keeps it readable and elegant.
+
+5. **Container spacing**: Change `gap-2` to `gap-2.5` between label and pill for better breathing room
+
+### Result
+Same layout, same structure — just more refined surfaces, softer contrasts, and smoother interactions. The pill will feel like a polished interactive element rather than a raw button.
 
