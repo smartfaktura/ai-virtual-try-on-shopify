@@ -494,6 +494,7 @@ export default function Discover() {
                         key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
                         item={item}
                         onClick={() => handleItemClick(item)}
+                        onRecreate={() => handleUseItem(item)}
                         isSaved={isSaved(item.type, itemId)}
                         onToggleSave={() => handleToggleSave(item)}
                         isFeatured={isFeatured(item.type, itemId)}
