@@ -493,7 +493,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
-  const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
+  const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ id: string; url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
 
@@ -580,27 +580,18 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           sourceGenerationId={shareImg.id}
         />
       )}
-      {addToDiscoverImg && (() => {
-        const model = addToDiscoverImg.modelId
-          ? mockModels.find(m => m.modelId === addToDiscoverImg.modelId)
-          : null;
-        const scene = addToDiscoverImg.sceneId
-          ? mockTryOnPoses.find(p => p.poseId === addToDiscoverImg.sceneId)
-          : null;
-        return (
+      {addToDiscoverImg && (
           <AddToDiscoverModal
             open={!!addToDiscoverImg}
             onClose={() => setAddToDiscoverImg(null)}
             imageUrl={addToDiscoverImg.url}
             prompt={addToDiscoverImg.prompt}
             aspectRatio={addToDiscoverImg.aspectRatio}
-            modelName={model?.name}
-            modelImageUrl={model?.previewUrl}
-            sceneName={scene?.name}
-            sceneImageUrl={scene?.previewUrl}
+            modelId={addToDiscoverImg.modelId}
+            sceneId={addToDiscoverImg.sceneId}
+            sourceGenerationId={addToDiscoverImg.id}
           />
-        );
-      })()}
+      )}
     </>
   );
 
