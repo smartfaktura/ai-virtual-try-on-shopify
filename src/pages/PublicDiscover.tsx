@@ -224,31 +224,12 @@ export default function PublicDiscover() {
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
-      // Category filter
       if (selectedCategory !== 'all') {
         if (!itemMatchesProductCategory(item, selectedCategory)) return false;
       }
-
-      // Search filter
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (item.type === 'preset') {
-          return (
-            item.data.title.toLowerCase().includes(q) ||
-            item.data.prompt.toLowerCase().includes(q) ||
-            item.data.tags?.some((t: string) => t.toLowerCase().includes(q))
-          );
-        } else {
-          return (
-            item.data.name.toLowerCase().includes(q) ||
-            item.data.description.toLowerCase().includes(q) ||
-            item.data.category.toLowerCase().includes(q)
-          );
-        }
-      }
       return true;
     });
-  }, [allItems, selectedCategory, searchQuery]);
+  }, [allItems, selectedCategory]);
 
   // Sort: featured items first, then newest first
   const sorted = useMemo(() => {
