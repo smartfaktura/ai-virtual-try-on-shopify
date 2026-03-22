@@ -1,37 +1,41 @@
 
 
-# Rename "Virtual Try-On Set" → "Virtual Try-On Workflow" in Discover UI
+# Fix: Modal Reopens After Clicking X
 
-## Problem
-The card hover badge and detail modal show "Virtual Try-On Set" (the raw `workflow_name` from the DB). User wants it displayed as "VIRTUAL TRY-ON WORKFLOW" instead.
+## Root Cause
 
-## Approach
-Add a display transform function that replaces "Set" with "Workflow" in workflow names. This avoids changing DB data and applies everywhere the workflow name appears in Discover.
+When clicking X, `handleClose` calls:
+1. `setSelectedItem(null)` — clears the item ✓
+2. `window.history.replaceState(null, '', '/app/discover')` — changes URL but **doesn't trigger React Router**
 
-## Changes
+Since React Router's `useParams` still holds the old `urlItemId`, the `useEffect` on line 298-307 fires again and calls `setSelectedItem(found)`, immediately reopening the modal.
 
-### 1. `src/components/app/DiscoverCard.tsx`
-Update `getGenerationLabel` (line 27): Replace "Set" suffix with "Workflow" in the workflow name:
+Same issue exists in `handleItemClick` (line 391) which uses `window.history.pushState` — this also bypasses React Router.
+
+## Fix
+
+### `src/pages/Discover.tsx`
+
+**`handleClose` (line 395-398)**: Replace `window.history.replaceState` with React Router's `navigate`:
 ```ts
-if (d.workflow_name) return d.workflow_name.replace(/\bSet$/i, 'Workflow');
+const handleClose = useCallback(() => {
+  setSelectedItem(null);
+  navigate('/app/discover', { replace: true });
+}, [navigate]);
 ```
 
-### 2. `src/components/app/DiscoverDetailModal.tsx`
-Update `workflowLabel` (line 78-79): Same replacement:
+**`handleItemClick` (line 390-393)**: Replace `window.history.pushState` with `navigate`:
 ```ts
-const workflowLabel = isPreset && item.data.workflow_name
-  ? `${item.data.workflow_name.replace(/\bSet$/i, 'Workflow')} Workflow`
+const handleItemClick = (item: DiscoverItem) => {
+  navigate(getItemUrl(item));
+  setSelectedItem(item);
+};
 ```
-Wait — this would produce "Virtual Try-On Workflow Workflow". The current code appends " Workflow" already. So just replace "Set" with nothing, or change the whole line:
+
+**`onSelectRelated` (line 537)**: Same fix — replace `window.history.replaceState` with `navigate`:
 ```ts
-const workflowLabel = isPreset && item.data.workflow_name
-  ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
-  : isPreset ? 'Freestyle' : 'Scene';
+onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
 ```
-This removes the extra " Workflow" suffix and replaces "Set" with "Workflow".
 
-### 3. `src/components/app/PublicDiscoverDetailModal.tsx`
-Same change to `workflowLabel` (line 52-54).
-
-Three files, one-line changes each. All "Set" workflow names become "Workflow" in display only — DB data unchanged.
+Three URL-navigation calls fixed, all in one file. The `useEffect` watching `urlItemId` will now correctly see the cleared param and won't reopen the modal.
 
