@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Compass } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Compass } from 'lucide-react';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { PublicDiscoverDetailModal } from '@/components/app/PublicDiscoverDetailModal';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
