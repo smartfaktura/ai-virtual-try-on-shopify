@@ -49,6 +49,9 @@ export function AddToDiscoverModal({
   modelImageUrl,
   productName,
   productImageUrl,
+  modelId,
+  sceneId,
+  sourceGenerationId,
 }: AddToDiscoverModalProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>('fashion');
