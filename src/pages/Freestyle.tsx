@@ -663,6 +663,8 @@ export default function Freestyle() {
     prompt: img.prompt,
     userPrompt: img.userPrompt,
     aspectRatio: img.aspectRatio,
+    modelId: img.modelId,
+    sceneId: img.sceneId,
   }));
 
   const panelProps = {
