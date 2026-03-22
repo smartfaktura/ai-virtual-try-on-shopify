@@ -325,6 +325,7 @@ export function DiscoverDetailModal({
                       scene_image_url: selectedScene?.imageUrl ?? null,
                       workflow_slug: selectedWorkflow?.slug ?? null,
                       workflow_name: selectedWorkflow?.name ?? null,
+                      prompt: editPrompt || null,
                     };
                     const { error } = await supabase
                       .from('discover_presets')
