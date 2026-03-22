@@ -266,7 +266,7 @@ export default function Products() {
                 <Card key={product.id} className="group overflow-hidden">
                   <div className="aspect-square relative bg-muted">
                     <img
-                      src={product.image_url}
+                      src={getOptimizedUrl(product.image_url, { width: 400, quality: 70 })}
                       alt={product.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
