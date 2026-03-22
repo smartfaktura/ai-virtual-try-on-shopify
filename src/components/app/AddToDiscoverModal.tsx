@@ -111,6 +111,12 @@ export function AddToDiscoverModal({
       quality,
       sort_order: 0,
       is_featured: false,
+      workflow_slug: workflowSlug || null,
+      workflow_name: workflowName || null,
+      scene_name: sceneName || null,
+      model_name: modelName || null,
+      scene_image_url: sceneImageUrl || null,
+      model_image_url: modelImageUrl || null,
     });
     if (error) {
       toast.error('Failed to publish to Discover');
