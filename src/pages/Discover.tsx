@@ -23,16 +23,16 @@ import { cn } from '@/lib/utils';
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'saved', label: 'Saved' },
-  { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'beauty', label: 'Beauty' },
   { id: 'fragrances', label: 'Fragrances' },
   { id: 'jewelry', label: 'Jewelry' },
   { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home & Decor' },
-  { id: 'food', label: 'Food & Beverage' },
+  { id: 'home', label: 'Home' },
+  { id: 'food', label: 'Food & Drink' },
   { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports & Fitness' },
-  { id: 'supplements', label: 'Health & Supplements' },
+  { id: 'sports', label: 'Sports' },
+  { id: 'supplements', label: 'Health' },
 ] as const;
 
 // Map old style-based categories → new product categories
