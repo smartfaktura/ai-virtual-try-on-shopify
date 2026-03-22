@@ -1,23 +1,47 @@
 
 
-# Fix: Image Appearing in Both Categories After Admin Edit
+# Improve "Created With" Section Label
 
-## Root Cause
-
-Two issues:
-
-1. **Stale query cache**: The save handler in `DiscoverDetailModal` mutates `item.data` locally but never calls `queryClient.invalidateQueries({ queryKey: ['discover-presets'] })`. The cached query data retains the old category, so the masonry grid still renders the item under the old category too.
-
-2. **Direct category match missing**: `itemMatchesProductCategory()` only checks the `PRODUCT_CATEGORY_MAP` lookup — it never does a simple `itemCat === productCat` check. So if an admin sets category to `fashion` directly, it only works because `PRODUCT_CATEGORY_MAP['fashion']` happens to include `'fashion'`. But this indirect mapping can cause items to appear in multiple categories when the map entry covers several product categories.
+## Problem
+The label above the scene/model thumbnails just says "FREESTYLE" or a workflow name — it's unclear what it represents. The user wants it to say "CREATED WITH" as a section header, with the workflow/freestyle type shown differently.
 
 ## Changes
 
-### `src/components/app/DiscoverDetailModal.tsx`
-- Import `useQueryClient` from `@tanstack/react-query`
-- After successful save, call `queryClient.invalidateQueries({ queryKey: ['discover-presets'] })` to refresh the cached data with the updated category from the database.
+### `src/components/app/DiscoverDetailModal.tsx` (line 188-189)
 
-### `src/pages/Discover.tsx`
-- In `itemMatchesProductCategory()`, add a direct equality check first: `if (itemCat === productCat) return true;` — before the PRODUCT_CATEGORY_MAP lookup. This ensures that items with a direct product category (e.g., `fashion`, `beauty`) always match correctly without relying on the legacy mapping table.
+Change the label from just the workflow name to a two-part layout:
 
-Two files, ~3 lines each.
+```
+Before:
+  FREESTYLE
+
+After:
+  CREATED WITH
+  Freestyle  (as a small badge/chip below the header)
+```
+
+Replace:
+```tsx
+<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+  {workflowLabel}
+</p>
+```
+
+With:
+```tsx
+<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+  Created with
+</p>
+<span className="inline-block text-xs font-medium text-foreground/80 bg-muted px-2.5 py-1 rounded-md w-fit">
+  {workflowLabel}
+</span>
+```
+
+This makes it clear the section describes what tools were used, and the workflow type becomes a readable chip rather than a cryptic standalone label.
+
+### `src/components/app/PublicDiscoverDetailModal.tsx`
+
+Same change to keep public and authenticated modals consistent.
+
+Two files, ~4 lines each.
 
