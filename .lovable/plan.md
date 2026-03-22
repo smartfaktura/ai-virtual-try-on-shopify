@@ -1,56 +1,79 @@
 
 
-# Fix Discover Detail Modal: Close Issue + "Freestyle" Fallback + Category Mismatch
+# Fix "Created with Freestyle" — Store & Display Scene/Model Metadata
 
-## Problems
+## Problem
 
-1. **Modal can't close**: Clicking the left image area doesn't close because the entire inner flex container (line 142) has `stopPropagation()`. The backdrop click never fires. The close button (X) should work but may be visually obscured or unresponsive on certain viewports.
+When publishing a Virtual Try-On generation to Discover, it shows "Created with Freestyle" because:
+1. `generation_jobs` table has no columns for scene name, model name, or workflow slug
+2. The edge functions (`generate-tryon`, `generate-workflow`) don't save this metadata even though it's available in the payload
+3. The Library item type (`LibraryItem`) doesn't carry scene/model data
+4. `AddToDiscoverModal` only receives `workflowName` — no scene, model, or image URLs
 
-2. **Shows "Created with Freestyle" for items that have workflow/scene/model data**: The `AddToDiscoverModal` doesn't pass `workflow_name`, `workflow_slug`, `scene_name`, `model_name`, `scene_image_url`, or `model_image_url` when inserting into `discover_presets`. So newly published items have all those fields as null, triggering the "Freestyle" fallback in the detail modal.
-
-3. **DISCOVER_CATEGORIES in detail modal still uses old list**: Line 14 of `DiscoverDetailModal.tsx` still has `editorial, commercial, lifestyle, fashion, campaign` — not the updated product-based categories.
+The payload sent to the edge function already contains `model.name`, `pose.name`, `workflow_name`, `workflow_slug` — we just need to persist and surface it.
 
 ## Changes
 
-### 1. `src/components/app/DiscoverDetailModal.tsx`
+### 1. Database Migration — Add metadata columns to `generation_jobs`
 
-**Fix close behavior:**
-- Move `onClick={onClose}` from the outer wrapper to the backdrop div directly
-- Remove `stopPropagation` from the inner flex container
-- Add `stopPropagation` only to the right panel (the controls area) so clicking the image area closes the modal
+```sql
+ALTER TABLE public.generation_jobs
+  ADD COLUMN scene_name text,
+  ADD COLUMN model_name text,
+  ADD COLUMN scene_image_url text,
+  ADD COLUMN model_image_url text,
+  ADD COLUMN workflow_slug text;
+```
 
-**Fix categories:**
-- Update `DISCOVER_CATEGORIES` on line 14 to match: `fashion, beauty, fragrances, jewelry, accessories, home, food, electronics, sports, supplements`
+### 2. Edge Functions — Save metadata on insert
 
-### 2. `src/components/app/AddToDiscoverModal.tsx`
+**`supabase/functions/generate-tryon/index.ts`** (line ~467-481):
+Add to the `generation_jobs` insert:
+- `scene_name: payload.pose?.name || null`
+- `model_name: payload.model?.name || null`
+- `workflow_slug: payload.workflow_slug || null`
+- Scene/model image URLs from the payload (original URLs, not base64)
 
-**Pass workflow/scene/model metadata when publishing:**
-- Add optional props: `workflowSlug?`, `workflowName?`, `sceneName?`, `modelName?`, `sceneImageUrl?`, `modelImageUrl?`
-- Include these fields in the `insert` call on line 92-101
+**`supabase/functions/generate-workflow/index.ts`** (line ~726-740):
+Same additions where applicable (workflow jobs may have model/scene in payload).
 
-### 3. `src/components/app/LibraryDetailModal.tsx`
+### 3. `src/components/app/LibraryImageCard.tsx` — Extend `LibraryItem` interface
 
-**Pass metadata to AddToDiscoverModal:**
-- Library items from `generation_jobs` already join `workflows(name)` — extract and pass `workflowName`
-- Library items don't currently carry scene/model names. The `generation_jobs` table needs checking for those columns.
-- For now, pass what's available (`workflowName` from `item.label` if source is `generation`)
+Add optional fields:
+```ts
+sceneName?: string;
+modelName?: string;
+sceneImageUrl?: string;
+modelImageUrl?: string;
+workflowSlug?: string;
+```
 
-### 4. `src/components/app/freestyle/FreestyleGallery.tsx`
+### 4. `src/hooks/useLibraryItems.ts` — Fetch new columns
 
-**Pass metadata to AddToDiscoverModal:**
-- Freestyle items have `workflow_label` — pass as `workflowName`
-- Scene/model data isn't stored in `freestyle_generations` currently, so those remain null (correctly showing "Freestyle")
+Update the jobs query select to include the new columns and map them into `LibraryItem`.
 
-## Technical Details
+### 5. `src/components/app/LibraryDetailModal.tsx` — Pass full metadata to AddToDiscoverModal
 
-The `generation_jobs` table stores results but doesn't directly expose scene/model names as columns accessible from the library query. A future enhancement would add `scene_name`, `model_name`, `scene_image_url`, `model_image_url` columns to `generation_jobs` so the full metadata chain flows from generation → library → discover publish. For now, workflow name can be passed through.
+Pass `sceneName`, `modelName`, `sceneImageUrl`, `modelImageUrl`, `workflowSlug` from the library item.
 
-## Files
+### 6. Handle image URLs for scene/model
+
+The tryon payload sends base64 images (not URLs). We need to store the original URLs instead. The frontend (`Generate.tsx` line 1288-1289) sends `model.imageUrl` as base64 and `pose.imageUrl` as base64. We need to also send the original URLs in the payload:
+- Add `model.originalImageUrl` and `pose.originalImageUrl` to the enqueue payload in `Generate.tsx`
+- Store those in `generation_jobs` (not the base64 versions)
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/app/DiscoverDetailModal.tsx` | Fix close behavior, update categories |
-| `src/components/app/AddToDiscoverModal.tsx` | Accept + insert workflow/scene/model metadata |
-| `src/components/app/LibraryDetailModal.tsx` | Pass available metadata to AddToDiscoverModal |
-| `src/components/app/freestyle/FreestyleGallery.tsx` | Pass workflow_label to AddToDiscoverModal |
+| **Migration** | Add 5 columns to `generation_jobs` |
+| `supabase/functions/generate-tryon/index.ts` | Save scene/model/workflow metadata on insert |
+| `supabase/functions/generate-workflow/index.ts` | Save workflow metadata on insert |
+| `src/components/app/LibraryImageCard.tsx` | Extend `LibraryItem` interface |
+| `src/hooks/useLibraryItems.ts` | Select + map new columns |
+| `src/components/app/LibraryDetailModal.tsx` | Pass full metadata to AddToDiscoverModal |
+| `src/pages/Generate.tsx` | Add original image URLs to enqueue payload |
+
+## Note
+Existing `generation_jobs` rows will have null metadata (they'll correctly show "Freestyle" fallback). All future generations will preserve the full context chain.
 
