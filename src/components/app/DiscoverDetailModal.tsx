@@ -72,12 +72,14 @@ export function DiscoverDetailModal({
 
   const [editModelName, setEditModelName] = useState('');
   const [editSceneName, setEditSceneName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
 
   useEffect(() => {
     if (item && open) {
       setEditModelName(item.type === 'preset' ? (item.data.model_name || '__none__') : '__none__');
       setEditSceneName(item.type === 'preset' ? (item.data.scene_name || '__none__') : '__none__');
+      setEditCategory(item.type === 'preset' ? (item.data.category || 'fashion') : 'fashion');
     }
   }, [item, open]);
 
