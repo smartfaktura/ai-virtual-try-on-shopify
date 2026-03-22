@@ -373,6 +373,8 @@ export type Database = {
           is_featured: boolean
           model_image_url: string | null
           model_name: string | null
+          product_image_url: string | null
+          product_name: string | null
           prompt: string
           quality: string
           scene_image_url: string | null
@@ -392,6 +394,8 @@ export type Database = {
           is_featured?: boolean
           model_image_url?: string | null
           model_name?: string | null
+          product_image_url?: string | null
+          product_name?: string | null
           prompt: string
           quality?: string
           scene_image_url?: string | null
@@ -411,6 +415,8 @@ export type Database = {
           is_featured?: boolean
           model_image_url?: string | null
           model_name?: string | null
+          product_image_url?: string | null
+          product_name?: string | null
           prompt?: string
           quality?: string
           scene_image_url?: string | null
@@ -655,6 +661,8 @@ export type Database = {
           model_image_url: string | null
           model_name: string | null
           product_id: string | null
+          product_image_url: string | null
+          product_name: string | null
           prompt_final: string | null
           quality: string
           ratio: string
@@ -679,6 +687,8 @@ export type Database = {
           model_image_url?: string | null
           model_name?: string | null
           product_id?: string | null
+          product_image_url?: string | null
+          product_name?: string | null
           prompt_final?: string | null
           quality?: string
           ratio?: string
@@ -703,6 +713,8 @@ export type Database = {
           model_image_url?: string | null
           model_name?: string | null
           product_id?: string | null
+          product_image_url?: string | null
+          product_name?: string | null
           prompt_final?: string | null
           quality?: string
           ratio?: string
