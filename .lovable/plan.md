@@ -1,33 +1,29 @@
 
 
-# Admin Metadata Editor for Discover Presets
+# Consolidate Admin Controls into Single Section
 
-## What This Does
-Adds an admin-only section in the Discover detail modal that lets you manually pick/change the scene and model shown on a preset. A "Save" button persists changes to the database. This fixes presets that were published without metadata.
+## Problem
+The category selector sits above the title as a near-invisible dashed element, and the metadata editor is a separate block further down. The user wants all admin editing (category + model/scene) merged into one compact admin section.
 
 ## Changes
 
 ### `src/components/app/DiscoverDetailModal.tsx`
 
-1. **Add admin metadata editor section** (visible only when `isAdmin && isPreset`), placed after the existing "Created with" section:
-   - **Model selector**: Dropdown listing all mock models by name (from `mockModels`), plus a "None" option. Shows current `model_name` as default.
-   - **Scene selector**: Dropdown listing all mock scenes by name (from `mockTryOnPoses`), plus a "None" option. Shows current `scene_name` as default.
-   - **Save button**: Updates `discover_presets` row with the selected model's `name` + `previewUrl` and scene's `name` + `previewUrl`, then shows a success toast.
+1. **Remove the standalone category selector** (lines 149-172) from above the title.
 
-2. **State**: Two local state variables `editModel` and `editScene` (initialized from `item.data` when item changes). Only rendered for admin.
+2. **Merge category into the metadata editor block** (lines 242-303): Add the category dropdown as a third select in a `grid-cols-3` layout alongside Model and Scene selectors. Include category in the save handler so all three update in one click.
 
-3. **On save**: Calls `supabase.from('discover_presets').update({ model_name, model_image_url, scene_name, scene_image_url }).eq('id', item.data.id)`. Also mutates the local `item.data` for immediate UI feedback (same pattern as the existing category selector).
+3. **Add local state for category**: `editCategory` initialized from `item.data.category`, included in the save update payload.
 
-4. **UI**: Compact admin section with dashed border, two `<Select>` dropdowns side by side, and a small "Save metadata" button. Styled consistently with the existing admin category selector.
+4. **Move the combined admin block below the "Created with" section** (where it already is) — this keeps the title clean and groups all admin controls together.
 
-### Imports
-- Add `mockModels`, `mockTryOnPoses` from `@/data/mockData`
-- Add `useMemo` from React for memoizing the combined model/scene lists
+### Result layout (admin only):
+```text
+┌─ ADMIN: EDIT METADATA ──────────────────────┐
+│  [Category ▼]  [Model ▼]  [Scene ▼]         │
+│  [        Save metadata        ]             │
+└──────────────────────────────────────────────┘
+```
 
-### File
-| File | Change |
-|------|--------|
-| `src/components/app/DiscoverDetailModal.tsx` | Add admin metadata editor with model/scene selectors and save button |
-
-One file, ~60 lines added. No schema changes needed — `discover_presets` already has all the required columns.
+One file, ~20 lines changed. Category selector removed from top, merged into metadata editor grid.
 
