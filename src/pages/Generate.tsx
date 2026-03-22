@@ -1464,6 +1464,7 @@ export default function Generate() {
           workflow_slug: activeWorkflow?.slug || null,
           product_id: selectedProduct && userProducts.some(up => up.id === selectedProduct.id) ? selectedProduct.id : null,
           product_name: selectedProduct?.title || productData.title,
+          product_image_url: selectedProduct?.image_url || productData?.image_url || null,
           brand_profile_id: selectedBrandProfileId || null,
         },
         imageCount: parseInt(imageCount),
