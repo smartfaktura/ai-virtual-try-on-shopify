@@ -444,13 +444,13 @@ export default function Discover() {
 
       {/* Category filter bar */}
       {!similarTo && (
-        <div className="flex flex-wrap justify-center gap-2.5 overflow-x-auto scrollbar-hide pb-1 -mb-1">
+        <div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                'px-6 py-2.5 rounded-full text-[15px] font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
+                'px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
                 selectedCategory === cat.id
                   ? 'bg-foreground text-background shadow-sm'
                   : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
