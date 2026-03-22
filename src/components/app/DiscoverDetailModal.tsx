@@ -217,6 +217,18 @@ export function DiscoverDetailModal({
                   if (item.data.model_image_url) params.set('modelImage', item.data.model_image_url);
                   if (item.data.scene_image_url) params.set('sceneImage', item.data.scene_image_url);
                   navigate(`/app/generate/${item.data.workflow_slug}?${params.toString()}`);
+                } else if (isPreset) {
+                  onClose();
+                  const params = new URLSearchParams();
+                  if (item.data.prompt) params.set('prompt', item.data.prompt);
+                  if (item.data.aspect_ratio) params.set('ratio', item.data.aspect_ratio);
+                  if (item.data.quality) params.set('quality', item.data.quality);
+                  if (item.data.model_name) params.set('model', item.data.model_name);
+                  if (item.data.scene_name) params.set('scene', item.data.scene_name);
+                  if (item.data.model_image_url) params.set('modelImage', item.data.model_image_url);
+                  if (item.data.scene_image_url) params.set('sceneImage', item.data.scene_image_url);
+                  params.set('fromDiscover', '1');
+                  navigate(`/app/freestyle?${params.toString()}`);
                 } else {
                   onUseItem(item);
                   onClose();

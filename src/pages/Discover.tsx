@@ -411,6 +411,11 @@ export default function Discover() {
           ratio: d.aspect_ratio,
           quality: d.quality,
         });
+        if (d.model_name) params.set('model', d.model_name);
+        if (d.scene_name) params.set('scene', d.scene_name);
+        if (d.model_image_url) params.set('modelImage', d.model_image_url);
+        if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
+        params.set('fromDiscover', '1');
         navigate(`/app/freestyle?${params.toString()}`);
       }
     }
