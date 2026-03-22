@@ -186,8 +186,11 @@ export function DiscoverDetailModal({
             {isPreset && (
               <div className="space-y-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  {workflowLabel}
+                  Created with
                 </p>
+                <span className="inline-block text-xs font-medium text-foreground/80 bg-muted px-2.5 py-1 rounded-md w-fit">
+                  {workflowLabel}
+                </span>
                 <div className="flex flex-col gap-2.5">
                   {item.data.scene_name && (
                     <div className="flex items-center gap-2.5">
