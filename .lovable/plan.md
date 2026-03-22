@@ -1,22 +1,30 @@
 
 
-# Fix Scene/Model/Product Thumbnails — Square, No Zoom
+# Fix Thumbnail Aspect Ratios — Card Hover + Detail Modal
 
-## Problem
-The scene, model, and product thumbnail images in the Discover detail modal use `object-cover`, which crops and zooms into the image. User wants them displayed as square thumbnails showing the full image without cropping.
+## Problems from Screenshots
+
+1. **Card hover overlay**: Scene thumbnail uses `object-cover` (line 79) which crops the image. Model thumbnail uses `rounded-full object-cover` (line 85) which also crops. Both should be square with `object-contain`.
+
+2. **Detail modal**: The thumbnails already have `object-contain bg-muted/30` (fixed earlier), but the scene/model images themselves may still appear dark/broken because the source images are portrait-ratio being contained in a square — the `bg-muted/30` background is too subtle on dark surfaces. Need to ensure consistent styling.
 
 ## Changes
 
-### 1. `src/components/app/DiscoverDetailModal.tsx`
-Change all three thumbnail images from `object-cover` to `object-contain` and add a subtle background so the contain area looks clean:
+### 1. `src/components/app/DiscoverCard.tsx` — Fix hover thumbnails
 
-- **Scene** (line 165): `w-10 h-10 rounded-lg object-cover` → `w-10 h-10 rounded-lg object-contain bg-muted/30`
-- **Model** (line 180): `w-10 h-10 rounded-full object-cover` → `w-10 h-10 rounded-lg object-contain bg-muted/30` (also change from `rounded-full` to `rounded-lg` for consistency as square)
-- **Product** (line 195): `w-10 h-10 rounded-lg object-cover` → `w-10 h-10 rounded-lg object-contain bg-muted/30`
+**Line 79** (scene thumbnail):
+`w-7 h-7 rounded-md object-cover ring-1 ring-white/20` → `w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20`
 
-### 2. `src/components/app/PublicDiscoverDetailModal.tsx`
-Mirror same changes:
-- Scene (line 108), Model (line 123), Product (line 138) — same `object-cover` → `object-contain bg-muted/30`, model `rounded-full` → `rounded-lg`
+**Line 85** (model thumbnail):
+`w-7 h-7 rounded-full object-cover ring-1 ring-white/20` → `w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20`
 
-Two files, 6 class changes total.
+### 2. `src/components/app/DiscoverDetailModal.tsx` — Already fixed
+
+Thumbnails at lines 165, 180, 195 already use `object-contain bg-muted/30`. No changes needed — these should render correctly once image URLs are populated.
+
+### 3. `src/components/app/PublicDiscoverDetailModal.tsx` — Already fixed
+
+Same — already updated in previous round.
+
+Two class changes in one file.
 
