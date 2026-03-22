@@ -1,29 +1,29 @@
 
 
-# Match /app/discover with standard app page layout
+# Bump App Section Title & Subtitle Sizes
 
-## Problem
-Other app pages (Products, Workflows, Dashboard) use the `PageHeader` component with left-aligned `title` + `subtitle` and consistent `space-y-6` rhythm. The Discover page currently has a centered, oversized header (`text-4xl sm:text-5xl`) that looks out of place within the app shell.
+## Current
+- Title: `text-xl sm:text-2xl` (20px → 24px)
+- Subtitle: `text-sm` (14px)
 
-## Changes
+## Proposed: Use Tailwind's natural scale for a clean premium bump
 
-### File: `src/pages/Discover.tsx`
+### Option A — Subtle (+2px feel)
+- Title: `text-2xl sm:text-[26px]` — requires custom value, minor improvement
+- Subtitle: `text-[15px]` — barely noticeable
 
-1. **Use `PageHeader` component** — Replace the custom centered header with:
-   ```tsx
-   <PageHeader
-     title="Discover"
-     subtitle="Every image here was created by AI. Yours can be next."
-   >
-   ```
-   This gives left-aligned `text-xl sm:text-2xl` title + muted subtitle, matching Products/Workflows.
+### Option B — Premium step-up (recommended)
+- Title: `text-2xl sm:text-3xl` (24px → 30px) — noticeably more commanding
+- Subtitle: `text-sm sm:text-base` (14px → 16px) — cleaner readability
 
-2. **Move admin pending badge** into the header area (next to title or as a small badge after subtitle).
+Option B stays within Tailwind's type scale, avoids custom values, and creates a more noticeable premium feel. The jump from 24px to 30px on desktop gives headings real presence without feeling oversized.
 
-3. **Move category bar, similar-to chip, and masonry grid inside `<PageHeader>` children** — same as how Products/Workflows nest their content.
+## Change
 
-4. **Remove the custom `<div className="text-center space-y-3">` header block**.
+### File: `src/components/app/PageHeader.tsx` (1 file, 2 lines)
 
-### Result
-Discover page uses the same `PageHeader` wrapper as every other app page — consistent left-aligned title, subtitle, and spacing. Category bar and content sit below in the standard layout rhythm.
+- Line with title `h1`: change `text-xl sm:text-2xl` → `text-2xl sm:text-3xl`
+- Line with subtitle `p`: change `text-sm` → `text-sm sm:text-base`
+
+All app sections using `PageHeader` (Discover, Products, Workflows, Brand Profiles, Settings, etc.) get the update automatically.
 
