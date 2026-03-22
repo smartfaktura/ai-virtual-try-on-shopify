@@ -1,41 +1,36 @@
 
 
-# Fix: Modal Reopens After Clicking X
+# Link "Similar" to Discover Items with Same Scene
 
-## Root Cause
+## Problem
+Currently, clicking "Similar" filters by category and overlapping tags. User wants it to filter by **same scene name** instead — showing all Discover items that used the same scene.
 
-When clicking X, `handleClose` calls:
-1. `setSelectedItem(null)` — clears the item ✓
-2. `window.history.replaceState(null, '', '/app/discover')` — changes URL but **doesn't trigger React Router**
+## Changes
 
-Since React Router's `useParams` still holds the old `urlItemId`, the `useEffect` on line 298-307 fires again and calls `setSelectedItem(found)`, immediately reopening the modal.
+### `src/pages/Discover.tsx` — Update similar filter logic (lines 315-331)
 
-Same issue exists in `handleItemClick` (line 391) which uses `window.history.pushState` — this also bypasses React Router.
+Replace the category+tags matching with scene-based matching:
 
-## Fix
-
-### `src/pages/Discover.tsx`
-
-**`handleClose` (line 395-398)**: Replace `window.history.replaceState` with React Router's `navigate`:
 ```ts
-const handleClose = useCallback(() => {
-  setSelectedItem(null);
-  navigate('/app/discover', { replace: true });
-}, [navigate]);
+if (similarTo) {
+  // Get scene name from the source item
+  const simScene = similarTo.type === 'preset' ? similarTo.data.scene_name : similarTo.data.name;
+  if (!simScene) return true; // no scene info, show all
+  
+  // Match items with the same scene
+  const itemScene = item.type === 'preset' ? item.data.scene_name : item.data.name;
+  if (itemScene !== simScene) return false;
+  
+  // Exclude the source item itself
+  if (item.type === similarTo.type && getItemId(item) === getItemId(similarTo)) return false;
+  return true;
+}
 ```
 
-**`handleItemClick` (line 390-393)**: Replace `window.history.pushState` with `navigate`:
+Also update the "Similar to" chip label (line 454) to show the scene name:
 ```ts
-const handleItemClick = (item: DiscoverItem) => {
-  navigate(getItemUrl(item));
-  setSelectedItem(item);
-};
+Similar to: {similarTo.type === 'preset' ? (similarTo.data.scene_name || getItemName(similarTo)) : getItemName(similarTo)}
 ```
 
-**`onSelectRelated` (line 537)**: Same fix — replace `window.history.replaceState` with `navigate`:
-```ts
-onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
-```
-
-Three URL-navigation calls fixed, all in one file. The `useEffect` watching `urlItemId` will now correctly see the cleared param and won't reopen the modal.
+One file, ~10 lines changed.
 
