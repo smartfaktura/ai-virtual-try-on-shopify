@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CategoryItem {
@@ -81,6 +81,19 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
             {cat.label}
           </button>
         ))}
+        {savedCount !== undefined && savedCount > 0 && (
+          <button
+            onClick={() => onSelectCategory('saved')}
+            className={cn(
+              'px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
+              selectedCategory === 'saved'
+                ? 'bg-foreground text-background shadow-sm'
+                : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
+            )}
+          >
+            Saved<span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>
+          </button>
+        )}
       </div>
 
       {/* Right arrow — desktop only */}
@@ -94,39 +107,6 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
       >
         <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
       </button>
-
-      {/* Saved — only when user has saved items */}
-      {savedCount !== undefined && savedCount > 0 && (
-        <>
-          {/* Desktop: divider + text pill */}
-          <div className="hidden sm:block shrink-0 h-6 border-l border-border/30 ml-1" />
-          <button
-            onClick={() => onSelectCategory('saved')}
-            className={cn(
-              'hidden sm:flex shrink-0 px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap',
-              selectedCategory === 'saved'
-                ? 'bg-foreground text-background shadow-sm'
-                : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
-            )}
-          >
-            Saved<span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>
-          </button>
-
-          {/* Mobile: heart icon only */}
-          <button
-            onClick={() => onSelectCategory('saved')}
-            className={cn(
-              'sm:hidden shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200',
-              selectedCategory === 'saved'
-                ? 'bg-foreground text-background shadow-sm'
-                : 'bg-muted/20 text-muted-foreground/80'
-            )}
-            aria-label={`Saved · ${savedCount}`}
-          >
-            <Heart className={cn('w-4 h-4', selectedCategory === 'saved' && 'fill-current')} />
-          </button>
-        </>
-      )}
     </div>
   );
 }
