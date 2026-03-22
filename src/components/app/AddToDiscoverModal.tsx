@@ -20,6 +20,12 @@ interface AddToDiscoverModalProps {
   prompt: string;
   aspectRatio?: string;
   quality?: string;
+  workflowSlug?: string;
+  workflowName?: string;
+  sceneName?: string;
+  modelName?: string;
+  sceneImageUrl?: string;
+  modelImageUrl?: string;
 }
 
 export function AddToDiscoverModal({
