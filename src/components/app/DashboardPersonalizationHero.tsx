@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ChevronDown, Check, Sparkles, Layers } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MobilePickerSheet } from '@/components/app/freestyle/MobilePickerSheet';
@@ -17,7 +16,6 @@ import {
 
 export function DashboardPersonalizationHero() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [categories, setCategories] = useState<string[]>([]);
   const [editCategories, setEditCategories] = useState<string[]>([]);
@@ -111,18 +109,20 @@ export function DashboardPersonalizationHero() {
   );
 
   return (
-    <div className="space-y-3 mt-4">
+    <div className="space-y-2 mt-3">
       {/* Pill selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Personalized for:</span>
+      <div className="flex items-center gap-2.5">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
+          Personalized for
+        </span>
         {isMobile ? (
           <>
             <button
               onClick={() => handleOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-sm font-medium text-foreground hover:bg-muted/80 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/50 text-sm font-normal text-foreground hover:border-border hover:shadow-sm transition-all duration-200"
             >
               {label}
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
             </button>
             <MobilePickerSheet
               open={open}
@@ -135,9 +135,9 @@ export function DashboardPersonalizationHero() {
         ) : (
           <Popover open={open} onOpenChange={handleOpen}>
             <PopoverTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-sm font-medium text-foreground hover:bg-muted/80 transition-colors">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/50 text-sm font-normal text-foreground hover:border-border hover:shadow-sm transition-all duration-200">
                 {label}
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-72 p-3">
@@ -148,38 +148,9 @@ export function DashboardPersonalizationHero() {
       </div>
 
       {/* Dynamic headline */}
-      <p className="text-base text-muted-foreground transition-opacity duration-300">
+      <p className="text-[15px] leading-relaxed font-light text-muted-foreground/80 transition-opacity duration-300">
         {headline}
       </p>
-
-      {/* AI team line */}
-      <p className="text-sm text-muted-foreground">
-        Your AI creative team is ready to generate, refine, and scale your visuals.{' '}
-        <Link to="/team" className="text-primary hover:underline font-medium">
-          Meet your AI team
-        </Link>
-      </p>
-
-      {/* CTA buttons */}
-      <div className="flex items-center gap-3 pt-1">
-        <Button
-          onClick={() => navigate('/app/freestyle')}
-          size="sm"
-          className="rounded-full gap-1.5"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Generate new visuals
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/app/workflows')}
-          className="rounded-full gap-1.5"
-        >
-          <Layers className="w-3.5 h-3.5" />
-          Browse workflows
-        </Button>
-      </div>
     </div>
   );
 }
