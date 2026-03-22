@@ -314,7 +314,7 @@ function ImageCard({
   onDownload,
   onExpand,
   onDelete,
-  onCopySettings?: (settings: CopySettings) => void;
+  onCopySettings,
   onAddAsScene,
   onAddAsModel,
   onShareToDiscover,
