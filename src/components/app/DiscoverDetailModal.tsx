@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { mockModels, mockTryOnPoses } from '@/data/mockData';
+import { useCustomModels } from '@/hooks/useCustomModels';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
 
 const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements'] as const;
 
@@ -47,6 +50,36 @@ export function DiscoverDetailModal({
   onDelete,
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
+
+  const { asProfiles: customModelProfiles } = useCustomModels();
+  const { asPoses: customSceneProfiles } = useCustomScenes();
+
+  const allModelOptions = useMemo(() => {
+    const items: { name: string; imageUrl: string }[] = mockModels.map(m => ({ name: m.name, imageUrl: m.previewUrl }));
+    customModelProfiles?.forEach(cm => {
+      if (!items.find(i => i.name === cm.name)) items.push({ name: cm.name, imageUrl: cm.previewUrl });
+    });
+    return items;
+  }, [customModelProfiles]);
+
+  const allSceneOptions = useMemo(() => {
+    const items: { name: string; imageUrl: string }[] = mockTryOnPoses.map(s => ({ name: s.name, imageUrl: s.previewUrl }));
+    customSceneProfiles?.forEach(cs => {
+      if (!items.find(i => i.name === cs.name)) items.push({ name: cs.name, imageUrl: cs.previewUrl });
+    });
+    return items;
+  }, [customSceneProfiles]);
+
+  const [editModelName, setEditModelName] = useState('');
+  const [editSceneName, setEditSceneName] = useState('');
+  const [savingMeta, setSavingMeta] = useState(false);
+
+  useEffect(() => {
+    if (item && open) {
+      setEditModelName(item.type === 'preset' ? (item.data.model_name || '__none__') : '__none__');
+      setEditSceneName(item.type === 'preset' ? (item.data.scene_name || '__none__') : '__none__');
+    }
+  }, [item, open]);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -205,6 +238,69 @@ export function DiscoverDetailModal({
               </div>
             )}
 
+            {/* Admin metadata editor */}
+            {isAdmin && isPreset && (
+              <div className="space-y-3 p-3 border border-dashed border-border/50 rounded-xl">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                  Admin: Edit Metadata
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={editModelName} onValueChange={setEditModelName}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Model" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60">
+                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
+                      {allModelOptions.map(m => (
+                        <SelectItem key={m.name} value={m.name} className="text-xs">{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={editSceneName} onValueChange={setEditSceneName}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Scene" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60">
+                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
+                      {allSceneOptions.map(s => (
+                        <SelectItem key={s.name} value={s.name} className="text-xs">{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={savingMeta}
+                  className="w-full h-8 text-xs"
+                  onClick={async () => {
+                    setSavingMeta(true);
+                    const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
+                    const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
+                    const update: Record<string, string | null> = {
+                      model_name: selectedModel?.name ?? null,
+                      model_image_url: selectedModel?.imageUrl ?? null,
+                      scene_name: selectedScene?.name ?? null,
+                      scene_image_url: selectedScene?.imageUrl ?? null,
+                    };
+                    const { error } = await supabase
+                      .from('discover_presets')
+                      .update(update)
+                      .eq('id', item.data.id);
+                    setSavingMeta(false);
+                    if (error) { toast.error('Failed to save'); return; }
+                    // Mutate local data for immediate feedback
+                    (item.data as any).model_name = update.model_name;
+                    (item.data as any).model_image_url = update.model_image_url;
+                    (item.data as any).scene_name = update.scene_name;
+                    (item.data as any).scene_image_url = update.scene_image_url;
+                    toast.success('Metadata saved');
+                  }}
+                >
+                  {savingMeta ? 'Saving…' : 'Save metadata'}
+                </Button>
+              </div>
+            )}
 
             {/* Primary CTA */}
             <Button
