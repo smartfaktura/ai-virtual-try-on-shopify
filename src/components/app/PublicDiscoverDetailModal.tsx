@@ -105,7 +105,7 @@ export function PublicDiscoverDetailModal({
                          <img
                           src={getOptimizedUrl(item.data.scene_image_url, { width: 80, quality: 60 })}
                           alt={item.data.scene_name}
-           className="w-10 h-10 rounded-lg object-cover"
+           className="w-10 h-10 rounded-lg object-contain bg-muted"
                         />
                       )}
                       <div>
@@ -120,7 +120,7 @@ export function PublicDiscoverDetailModal({
                           <img
                            src={getOptimizedUrl(item.data.model_image_url, { width: 80, quality: 60 })}
                            alt={item.data.model_name}
-           className="w-10 h-10 rounded-lg object-cover"
+           className="w-10 h-10 rounded-lg object-contain bg-muted"
                         />
                       )}
                       <div>
@@ -135,7 +135,7 @@ export function PublicDiscoverDetailModal({
                          <img
                           src={getOptimizedUrl((item.data as any).product_image_url, { width: 80, quality: 60 })}
                           alt={(item.data as any).product_name}
-                          className="w-10 h-10 rounded-lg object-cover"
+                          className="w-10 h-10 rounded-lg object-contain bg-muted"
                         />
                       )}
                       <div>
