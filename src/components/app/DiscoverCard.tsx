@@ -115,12 +115,6 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
         </div>
       </div>
 
-      {/* Scene badge */}
-      {isScene && !hideLabels && (
-        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 text-white text-[10px] font-medium">
-          Scene
-        </div>
-      )}
 
       {/* Workflow badge */}
       {!isScene && !hideLabels && item.data.workflow_name && (
