@@ -26,19 +26,9 @@ const REFERRAL_OPTIONS = [
   'Other',
 ];
 
-const PRODUCT_CATEGORIES = [
-  { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'beauty', label: 'Beauty & Skincare' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home & Decor' },
-  { id: 'food', label: 'Food & Beverage' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports & Fitness' },
-  { id: 'supplements', label: 'Health & Supplements' },
-  { id: 'any', label: 'Any Product' },
-];
+const PRODUCT_CATEGORIES = SHARED_CATEGORIES.map((c) =>
+  c.id === 'any' ? { ...c, label: 'Any Product' } : c
+);
 
 const TOTAL_STEPS = 3;
 
