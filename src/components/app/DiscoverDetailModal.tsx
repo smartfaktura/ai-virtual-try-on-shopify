@@ -162,7 +162,7 @@ export function DiscoverDetailModal({
                         <img
                           src={getOptimizedUrl(item.data.scene_image_url, { width: 80, quality: 50 })}
                           alt={item.data.scene_name}
-                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
+                          className="w-10 h-10 rounded-lg object-contain bg-muted/30 ring-1 ring-border/30"
                         />
                       )}
                       <div>
