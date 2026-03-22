@@ -52,6 +52,7 @@ export function DiscoverDetailModal({
   onDelete,
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { asProfiles: customModelProfiles } = useCustomModels();
   const { asPoses: customSceneProfiles } = useCustomScenes();
