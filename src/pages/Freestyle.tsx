@@ -745,7 +745,7 @@ export default function Freestyle() {
         <div className="px-3 lg:px-1 space-y-2">
           <LowCreditsBanner />
           {recreateSource && (
-            <Alert className="border-primary/20 bg-primary/5">
+            <Alert className="border-primary/20 bg-primary/5 mb-2">
               <AlertDescription>
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-3 text-sm flex-wrap">
