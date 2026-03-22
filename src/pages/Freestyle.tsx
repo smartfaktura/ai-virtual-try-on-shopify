@@ -91,6 +91,12 @@ export default function Freestyle() {
   const [imageRole, setImageRole] = useState<ImageRole>('edit');
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
+  const [recreateSource, setRecreateSource] = useState<{
+    modelName?: string;
+    sceneName?: string;
+    modelImageUrl?: string;
+    sceneImageUrl?: string;
+  } | null>(null);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
   // First-time guide state
