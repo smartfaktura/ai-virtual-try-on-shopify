@@ -258,7 +258,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allModelOptions.map(m => (
                         <SelectItem key={m.name} value={m.name} className="text-xs">
