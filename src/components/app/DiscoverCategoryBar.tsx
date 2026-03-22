@@ -49,7 +49,7 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
   const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center">
       {/* Left arrow — desktop only, collapses when hidden */}
       <button
         onClick={scrollLeft}
@@ -100,7 +100,7 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
       <button
         onClick={scrollRight}
         className={cn(
-          'hidden sm:flex shrink-0 p-1 transition-opacity duration-200',
+          'hidden sm:flex shrink-0 p-1 ml-1.5 transition-opacity duration-200',
           canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         aria-label="Scroll right"
