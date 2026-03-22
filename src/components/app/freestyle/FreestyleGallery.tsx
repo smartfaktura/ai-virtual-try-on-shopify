@@ -59,6 +59,8 @@ interface GalleryImage {
   prompt: string;
   userPrompt?: string | null;
   aspectRatio?: string;
+  modelId?: string | null;
+  sceneId?: string | null;
 }
 
 interface FreestyleGalleryProps {
