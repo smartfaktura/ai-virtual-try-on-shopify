@@ -50,12 +50,12 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
 
   return (
     <div className="flex items-center gap-1.5">
-      {/* Left arrow — desktop only */}
+      {/* Left arrow — desktop only, collapses when hidden */}
       <button
         onClick={scrollLeft}
         className={cn(
-          'hidden sm:flex shrink-0 p-1 transition-opacity duration-200',
-          canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          'hidden sm:flex shrink-0 p-1 transition-all duration-200',
+          canScrollLeft ? 'opacity-100 w-6' : 'opacity-0 w-0 overflow-hidden pointer-events-none'
         )}
         aria-label="Scroll left"
       >
@@ -65,7 +65,7 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
       {/* Scrollable categories */}
       <div
         ref={scrollRef}
-        className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-1 cursor-grab active:cursor-grabbing scroll-smooth"
+        className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 cursor-grab active:cursor-grabbing scroll-smooth"
       >
         {categories.map((cat) => (
           <button
