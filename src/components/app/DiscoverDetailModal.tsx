@@ -220,7 +220,17 @@ export function DiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Admin: Edit Metadata
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <Select value={editCategory} onValueChange={setEditCategory}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60">
+                      {DISCOVER_CATEGORIES.map(c => (
+                        <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Select value={editModelName} onValueChange={setEditModelName}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
@@ -254,6 +264,7 @@ export function DiscoverDetailModal({
                     const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
                     const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
                     const update: Record<string, string | null> = {
+                      category: editCategory,
                       model_name: selectedModel?.name ?? null,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,
@@ -265,7 +276,7 @@ export function DiscoverDetailModal({
                       .eq('id', item.data.id);
                     setSavingMeta(false);
                     if (error) { toast.error('Failed to save'); return; }
-                    // Mutate local data for immediate feedback
+                    (item.data as any).category = editCategory;
                     (item.data as any).model_name = update.model_name;
                     (item.data as any).model_image_url = update.model_image_url;
                     (item.data as any).scene_name = update.scene_name;
