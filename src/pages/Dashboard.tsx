@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { DashboardPersonalizationHero } from '@/components/app/DashboardPersonalizationHero';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
