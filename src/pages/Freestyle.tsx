@@ -3,6 +3,8 @@ import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -22,7 +24,7 @@ import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
-import { mockTryOnPoses } from '@/data/mockData';
+import { mockTryOnPoses, mockModels } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,6 +91,12 @@ export default function Freestyle() {
   const [imageRole, setImageRole] = useState<ImageRole>('edit');
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
+  const [recreateSource, setRecreateSource] = useState<{
+    modelName?: string;
+    sceneName?: string;
+    modelImageUrl?: string;
+    sceneImageUrl?: string;
+  } | null>(null);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
   // First-time guide state
@@ -178,17 +186,23 @@ export default function Freestyle() {
     const r = searchParams.get('ratio');
     const q = searchParams.get('quality');
     const sceneParam = searchParams.get('scene');
+    const modelParam = searchParams.get('model');
+    const modelImageParam = searchParams.get('modelImage');
+    const sceneImageParam = searchParams.get('sceneImage');
+    const fromDiscover = searchParams.get('fromDiscover');
     if (p) setPrompt(p);
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    // quality param from URL
     const qualityParam = searchParams.get('quality');
     if (qualityParam === 'high' || qualityParam === 'standard') {
       setQuality(qualityParam);
     }
+    // Match scene by name first, then by poseId
     if (sceneParam) {
-      const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
+      const byName = filterVisible(mockTryOnPoses).find((s) => s.name === sceneParam);
+      const byId = !byName ? filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam) : null;
+      const matchedScene = byName || byId;
       if (matchedScene) {
         setSelectedScene(matchedScene);
         initialSceneParam.current = null;
@@ -197,7 +211,23 @@ export default function Freestyle() {
         }
       }
     }
-    if (p || r || q || sceneParam) {
+    // Match model by name
+    if (modelParam) {
+      const matchedModel = mockModels.find((m) => m.name === modelParam);
+      if (matchedModel) {
+        setSelectedModel(matchedModel);
+      }
+    }
+    // Set recreate banner if from Discover
+    if (fromDiscover === '1' && (modelParam || sceneParam)) {
+      setRecreateSource({
+        modelName: modelParam || undefined,
+        sceneName: sceneParam || undefined,
+        modelImageUrl: modelImageParam || undefined,
+        sceneImageUrl: sceneImageParam || undefined,
+      });
+    }
+    if (p || r || q || sceneParam || modelParam || fromDiscover) {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -708,8 +738,45 @@ export default function Freestyle() {
 
       {/* Scrollable content area */}
       <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
-        <div className="px-3 lg:px-1">
+        <div className="px-3 lg:px-1 space-y-2">
           <LowCreditsBanner />
+          {recreateSource && (
+            <Alert className="border-primary/20 bg-primary/5">
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm flex-wrap">
+                    <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">Recreating look from Discover</span>
+                    {recreateSource.modelName && (
+                      <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
+                        {recreateSource.modelImageUrl && (
+                          <img src={recreateSource.modelImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                        )}
+                        {recreateSource.modelName}
+                      </Badge>
+                    )}
+                    {recreateSource.sceneName && (
+                      <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
+                        {recreateSource.sceneImageUrl && (
+                          <img src={recreateSource.sceneImageUrl} alt="" className="w-5 h-5 rounded object-cover" />
+                        )}
+                        {recreateSource.sceneName}
+                      </Badge>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setRecreateSource(null)}
+                    className="text-muted-foreground/60 hover:text-foreground transition-colors shrink-0 ml-2"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground/70 mt-1.5 ml-6">
+                  Add your product to generate this type of result
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
