@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
@@ -16,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { trackViewContent } from '@/lib/fbPixel';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
@@ -264,7 +266,7 @@ export default function Products() {
                 <Card key={product.id} className="group overflow-hidden">
                   <div className="aspect-square relative bg-muted">
                     <img
-                      src={product.image_url}
+                      src={getOptimizedUrl(product.image_url, { width: 400, quality: 70 })}
                       alt={product.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -321,7 +323,7 @@ export default function Products() {
                   {/* Thumbnail */}
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
                     <img
-                      src={product.image_url}
+                      src={getOptimizedUrl(product.image_url, { width: 112, quality: 70 })}
                       alt={product.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
