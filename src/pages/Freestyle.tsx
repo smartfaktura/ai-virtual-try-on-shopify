@@ -3,6 +3,8 @@ import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
