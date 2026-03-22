@@ -323,31 +323,23 @@ export function DiscoverDetailModal({
 
             {/* Primary CTA */}
             <Button
-              onClick={() => { onUseItem(item); onClose(); }}
-              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
-            >
-              {isPreset ? 'Recreate this' : 'Use Scene'}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-
-            {/* Workflow CTA */}
-            {isPreset && item.data.workflow_slug && (
-              <Button
-                variant="outline"
-                onClick={() => {
+              onClick={() => {
+                if (isPreset && item.data.workflow_slug) {
                   onClose();
                   const params = new URLSearchParams();
                   if (item.data.model_name) params.set('model', item.data.model_name);
                   if (item.data.scene_name) params.set('scene', item.data.scene_name);
                   navigate(`/app/generate/${item.data.workflow_slug}?${params.toString()}`);
-                }}
-                className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
-              >
-                <Workflow className="w-4 h-4" />
-                Try {item.data.workflow_name || 'This Workflow'}
-                <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-              </Button>
-            )}
+                } else {
+                  onUseItem(item);
+                  onClose();
+                }
+              }}
+              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+            >
+              {isPreset ? 'Recreate this' : 'Use Scene'}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
 
             {/* Secondary actions */}
             <div className="flex gap-2">
