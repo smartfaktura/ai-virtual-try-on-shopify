@@ -471,6 +471,10 @@ export default function Settings() {
                 </div>
               ))}
             </div>
+
+            {/* Content Preferences */}
+            <Separator className="my-4" />
+            <ContentPreferencesSection />
           </CardContent>
         </Card>
 

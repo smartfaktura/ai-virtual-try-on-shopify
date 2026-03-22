@@ -406,6 +406,8 @@ export default function Dashboard() {
         </h1>
         <p className="text-muted-foreground mt-1">Here's what's happening with your studio.</p>
 
+        <DashboardPersonalizationHero />
+
         {/* Quick Actions */}
         <div className="mt-4">
           <DashboardQuickActions />
