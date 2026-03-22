@@ -54,20 +54,20 @@ export function DiscoverDetailModal({
   const { models: customModelProfiles } = useCustomModels();
   const { scenes: customSceneProfiles } = useCustomScenes();
 
-  const allModels = useMemo(() => {
-    const combined = [...mockModels];
+  const allModelOptions = useMemo(() => {
+    const items: { name: string; imageUrl: string }[] = mockModels.map(m => ({ name: m.name, imageUrl: m.previewUrl }));
     customModelProfiles?.forEach(cm => {
-      if (!combined.find(m => m.name === cm.name)) combined.push(cm);
+      if (!items.find(i => i.name === cm.name)) items.push({ name: cm.name, imageUrl: cm.previewUrl });
     });
-    return combined;
+    return items;
   }, [customModelProfiles]);
 
-  const allScenes = useMemo(() => {
-    const combined = [...mockTryOnPoses];
+  const allSceneOptions = useMemo(() => {
+    const items: { name: string; imageUrl: string }[] = mockTryOnPoses.map(s => ({ name: s.name, imageUrl: s.previewUrl }));
     customSceneProfiles?.forEach(cs => {
-      if (!combined.find(s => s.name === cs.name)) combined.push(cs);
+      if (!items.find(i => i.name === cs.name)) items.push({ name: cs.name, imageUrl: cs.previewUrl });
     });
-    return combined;
+    return items;
   }, [customSceneProfiles]);
 
   const [editModelName, setEditModelName] = useState('');
