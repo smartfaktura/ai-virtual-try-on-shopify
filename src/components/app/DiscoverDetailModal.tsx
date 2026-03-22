@@ -91,6 +91,7 @@ export function DiscoverDetailModal({
   const itemId = item?.type === 'preset' ? item.data.id : item?.type === 'scene' ? item.data.poseId : null;
   useEffect(() => {
     if (!itemId || !open) return;
+    panelRef.current?.scrollTo({ top: 0 });
     if (item?.type === 'preset') {
       setEditModelName(item.data.model_name || '__none__');
       setEditSceneName(item.data.scene_name || '__none__');
