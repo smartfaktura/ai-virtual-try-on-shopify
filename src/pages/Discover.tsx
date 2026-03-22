@@ -5,6 +5,7 @@ import { Compass, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { PageHeader } from '@/components/app/PageHeader';
+import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';

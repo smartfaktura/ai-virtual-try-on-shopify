@@ -14,6 +14,7 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
