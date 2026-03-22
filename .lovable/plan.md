@@ -1,31 +1,22 @@
 
 
-# Fix Zoomed Thumbnails — Use object-contain Instead of object-cover
+# Fix Spacing in Freestyle "Recreating look from Discover" Banner
 
 ## Problem
-`object-cover` crops images to fill the square, causing a "zoomed in" look on scene/model thumbnails. The user wants the full image visible without cropping.
+The banner badges (Jordan, Editorial Movement) run together without enough visual separation from the label text and from each other. The hint text below also needs better spacing.
 
-## Fix
-Change `object-cover` → `object-contain` on all scene/model/product thumbnails. Add a subtle `bg-muted/30` background so the empty space around non-square images doesn't look broken.
+## Changes
 
-### Files & Changes
+### `src/pages/Freestyle.tsx` (lines 750-779)
 
-**`src/components/app/DiscoverDetailModal.tsx`** (lines 165, 180, 195):
+1. Increase gap between label text and badges: change the inner flex container from `gap-2` to `gap-3`
+2. Add a subtle separator between the "Recreating look from Discover" text and the badges by adding `mr-1` to the span
+3. Increase hint text top margin from `mt-1.5` to `mt-2`
+
 ```
-Before: "w-10 h-10 rounded-lg object-cover"
-After:  "w-10 h-10 rounded-lg object-contain bg-muted/30"
+Before: <div className="flex items-center gap-2 text-sm flex-wrap">
+After:  <div className="flex items-center gap-3 text-sm flex-wrap">
 ```
 
-**`src/components/app/PublicDiscoverDetailModal.tsx`** — same 3 thumbnail lines, same change.
-
-**`src/components/app/DiscoverCard.tsx`** (lines 79, 85):
-```
-Before: "w-7 h-7 rounded-md object-cover"
-After:  "w-7 h-7 rounded-md object-contain bg-black/20"
-```
-(Card hover is on dark overlay, so `bg-black/20` instead of `bg-muted/30`)
-
-Keep `getOptimizedUrl` width optimization — that's fine, it's just the fitting mode that's wrong.
-
-Three files, one-word change per thumbnail.
+One file, minor spacing tweaks.
 
