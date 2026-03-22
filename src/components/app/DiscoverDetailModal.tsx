@@ -53,6 +53,7 @@ export function DiscoverDetailModal({
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const { asProfiles: customModelProfiles } = useCustomModels();
   const { asPoses: customSceneProfiles } = useCustomScenes();
