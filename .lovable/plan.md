@@ -1,99 +1,60 @@
 
 
-# Add Freestyle Recreate Support with Model/Scene Pre-fill + Hint Banner
+# Add Scene/Model Metadata to Freestyle Library Items for Discover Publishing
 
-## What's Happening Now
+## Problem
+Freestyle Discover items like "City Chic" show no scene/model thumbnails because:
+1. `freestyle_generations` stores only `model_id` and `scene_id` (IDs like "zara" or "custom-xxx"), not names or image URLs
+2. `useLibraryItems.ts` doesn't resolve these IDs when building freestyle library items
+3. So when publishing via AddToDiscoverModal, `sceneName`, `modelName`, and image URLs are all null
 
-When a Freestyle Discover item has model/scene data but no `workflow_slug`, clicking "Recreate this" navigates to `/app/freestyle` with only `prompt`, `ratio`, and `quality` params. The model and scene selections are lost. There's also no hint banner in Freestyle like the "Recreating look from Discover" banner on the Generate page.
+Workflow items work fine because `generation_jobs` already stores `scene_name`, `model_name`, `scene_image_url`, `model_image_url` directly.
 
 ## Changes
 
-### 1. `src/pages/Discover.tsx` — Pass model/scene params for freestyle recreate
+### 1. `src/hooks/useLibraryItems.ts` — Resolve model/scene from IDs for freestyle items
 
-In `handleUseItem` (line 408-414), when routing to freestyle (no `workflow_slug`), also pass `model`, `scene`, `modelImage`, `sceneImage` params:
+Update the freestyle item mapping (lines 116-138) to:
+- Read `model_id` and `scene_id` from `freestyle_generations` (already selected but not used)
+- Resolve model name + image from `mockModels` (by matching `modelId`) and `custom_models` table
+- Resolve scene name + image from `mockTryOnPoses` (by matching `poseId`) and `custom_scenes` table
+- Add `sceneName`, `modelName`, `sceneImageUrl`, `modelImageUrl` to the freestyle library item
 
-```ts
-const params = new URLSearchParams({
-  prompt: d.prompt,
-  ratio: d.aspect_ratio,
-  quality: d.quality,
-});
-if (d.model_name) params.set('model', d.model_name);
-if (d.scene_name) params.set('scene', d.scene_name);
-if (d.model_image_url) params.set('modelImage', d.model_image_url);
-if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
-params.set('fromDiscover', '1');
-navigate(`/app/freestyle?${params.toString()}`);
-```
-
-### 2. `src/components/app/DiscoverDetailModal.tsx` — Also pass model/scene for freestyle presets
-
-In the CTA click handler (line 220-223), when it's a preset without `workflow_slug`, also pass model/scene URL params instead of delegating to `onUseItem`:
+Since we need to resolve IDs to names, we'll batch-fetch custom models and scenes once per page load (only if any freestyle items reference them), then do local lookups.
 
 ```ts
-onClose();
-const params = new URLSearchParams();
-if (item.data.prompt) params.set('prompt', item.data.prompt);
-if (item.data.aspect_ratio) params.set('ratio', item.data.aspect_ratio);
-if (item.data.model_name) params.set('model', item.data.model_name);
-if (item.data.scene_name) params.set('scene', item.data.scene_name);
-if (item.data.model_image_url) params.set('modelImage', item.data.model_image_url);
-if (item.data.scene_image_url) params.set('sceneImage', item.data.scene_image_url);
-params.set('fromDiscover', '1');
-navigate(`/app/freestyle?${params.toString()}`);
+// After fetching fsData, collect unique model/scene IDs that start with "custom-"
+const customModelIds = fsData.map(f => f.model_id).filter(id => id?.startsWith('custom-')).map(id => id.replace('custom-', ''));
+const customSceneIds = fsData.map(f => f.scene_id).filter(id => id?.startsWith('custom-')).map(id => id.replace('custom-', ''));
+
+// Batch fetch custom models/scenes if needed
+const [customModelsData, customScenesData] = await Promise.all([
+  customModelIds.length ? supabase.from('custom_models').select('id, name, image_url').in('id', customModelIds) : { data: [] },
+  customSceneIds.length ? supabase.from('custom_scenes').select('id, name, image_url').in('id', customSceneIds) : { data: [] },
+]);
+
+// Build lookup maps
+// For each freestyle item, resolve modelId/sceneId → name + imageUrl
 ```
 
-### 3. `src/pages/Freestyle.tsx` — Read model/scene params + show recreate banner
+For mock models/scenes, use existing `mockModels` and `mockTryOnPoses` arrays with local `.find()`.
 
-**Pre-fill model from URL**: Read `model` param, match against available models (mockModels + custom), set `selectedModel`.
+### 2. `src/hooks/useLibraryItems.ts` — Add imports
 
-**Pre-fill scene from URL**: Already partially handled — extend to also match by name (not just poseId).
+Add imports for `mockModels` and `mockTryOnPoses` from mock data.
 
-**Add "Recreating look from Discover" banner**: Same style as Generate.tsx — an Alert with Sparkles icon, model/scene Badge chips with thumbnails, a dismiss X button, and a hint line: "Add your product to recreate this look".
+### 3. `freestyle_generations` select — Add `model_id, scene_id, product_id`
 
-```tsx
-{recreateSource && (
-  <Alert className="border-primary/20 bg-primary/5">
-    <AlertDescription>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm flex-wrap">
-          <Sparkles className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-muted-foreground">Recreating look from Discover</span>
-          {recreateSource.modelName && (
-            <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
-              {recreateSource.modelImageUrl && <img ... />}
-              {recreateSource.modelName}
-            </Badge>
-          )}
-          {recreateSource.sceneName && (
-            <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
-              {recreateSource.sceneImageUrl && <img ... />}
-              {recreateSource.sceneName}
-            </Badge>
-          )}
-        </div>
-        <button onClick={() => setRecreateSource(null)}>
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      <p className="text-xs text-muted-foreground/70 mt-1.5">
-        Add your product to generate this type of result
-      </p>
-    </AlertDescription>
-  </Alert>
-)}
+Update the freestyle query (line 42) to also select `model_id, scene_id, product_id`:
+```ts
+.select('id, image_url, prompt, user_prompt, aspect_ratio, quality, created_at, workflow_label, model_id, scene_id, product_id')
 ```
-
-### 4. `src/components/app/PublicDiscoverDetailModal.tsx` — Mirror changes
-
-Same CTA update: pass model/scene params to freestyle URL for non-workflow presets.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/pages/Discover.tsx` | Pass model/scene/image params for freestyle recreate |
-| `src/components/app/DiscoverDetailModal.tsx` | Route freestyle presets with full params |
-| `src/components/app/PublicDiscoverDetailModal.tsx` | Mirror freestyle routing |
-| `src/pages/Freestyle.tsx` | Read model/scene params, add recreate banner with product hint |
+| `src/hooks/useLibraryItems.ts` | Select model_id/scene_id, resolve to names/URLs, pass through to library items |
+
+This is the only code change needed. Once freestyle library items carry scene/model metadata, the existing AddToDiscoverModal publish flow will store them in `discover_presets`, and the detail modal will render the thumbnails.
 
