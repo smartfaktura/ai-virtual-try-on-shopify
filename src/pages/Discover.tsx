@@ -260,14 +260,17 @@ export default function Discover() {
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
 
-  // Track views when modal opens
+  // Track views when modal opens (deduplicated per session)
+  const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (selectedItem) {
-      supabase.from('discover_item_views').insert({
-        item_type: selectedItem.type,
-        item_id: getItemId(selectedItem),
-      }).then();
-    }
+    if (!selectedItem) return;
+    const key = `${selectedItem.type}:${getItemId(selectedItem)}`;
+    if (viewedItemsRef.current.has(key)) return;
+    viewedItemsRef.current.add(key);
+    supabase.from('discover_item_views').insert({
+      item_type: selectedItem.type,
+      item_id: getItemId(selectedItem),
+    }).then();
   }, [selectedItem]);
 
   // Fetch view count for selected item

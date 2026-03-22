@@ -164,14 +164,17 @@ export default function PublicDiscover() {
 
   const customScenePoses = useMemo(() => customScenes.map(toTryOnPose), [customScenes]);
 
-  // Track views when modal opens (for logged-in users)
+  // Track views when modal opens (deduplicated per session)
+  const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (selectedItem && user) {
-      supabase.from('discover_item_views').insert({
-        item_type: selectedItem.type,
-        item_id: getItemId(selectedItem),
-      }).then();
-    }
+    if (!selectedItem || !user) return;
+    const key = `${selectedItem.type}:${getItemId(selectedItem)}`;
+    if (viewedItemsRef.current.has(key)) return;
+    viewedItemsRef.current.add(key);
+    supabase.from('discover_item_views').insert({
+      item_type: selectedItem.type,
+      item_id: getItemId(selectedItem),
+    }).then();
   }, [selectedItem, user]);
 
   // Fetch view count for selected item
