@@ -469,16 +469,16 @@ export default function Discover() {
 
       {/* Category filter bar */}
       {!similarTo && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mb-1">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                'px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200',
+                'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0',
                 selectedCategory === cat.id
                   ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               {cat.label}
