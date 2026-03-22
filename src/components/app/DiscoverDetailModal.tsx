@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
@@ -53,6 +53,7 @@ export function DiscoverDetailModal({
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const { asProfiles: customModelProfiles } = useCustomModels();
   const { asPoses: customSceneProfiles } = useCustomScenes();
@@ -91,6 +92,7 @@ export function DiscoverDetailModal({
   const itemId = item?.type === 'preset' ? item.data.id : item?.type === 'scene' ? item.data.poseId : null;
   useEffect(() => {
     if (!itemId || !open) return;
+    panelRef.current?.scrollTo({ top: 0 });
     if (item?.type === 'preset') {
       setEditModelName(item.data.model_name || '__none__');
       setEditSceneName(item.data.scene_name || '__none__');
@@ -160,7 +162,7 @@ export function DiscoverDetailModal({
         </div>
 
         {/* Right — Controls panel */}
-        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
+        <div ref={panelRef} className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
           {/* Close button */}
           <button
             onClick={onClose}
