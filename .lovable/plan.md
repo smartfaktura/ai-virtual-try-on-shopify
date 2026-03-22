@@ -1,42 +1,33 @@
 
 
-# Fix Admin Metadata Editor: Show Current Category + Add Image Thumbnails to Dropdowns
+# Fix Admin Metadata Editor: Add Workflow Selector + Fix Select Dropdown Closing Modal
 
-## Problem
-1. The Category dropdown doesn't show the current category value — it appears blank.
-2. Model and Scene dropdowns are text-only, making it hard to identify items visually.
-
-## Root Cause
-The category `SelectTrigger` has no `placeholder` and the `SelectValue` doesn't render the current value visibly because the `editCategory` state initializes correctly but the trigger may not be displaying it. Looking at the code, the category Select uses `value={editCategory}` which should work — but the placeholder is missing so if `editCategory` is empty string on first render it shows blank.
+## Problems
+1. **Missing workflow selector** — The admin can't set which workflow (or Freestyle) was used to create the image. The `discover_presets` table already has `workflow_name` and `workflow_slug` columns.
+2. **Select dropdown flashes/closes** — When clicking a model or scene option, the Radix `SelectContent` renders in a portal outside the right panel. The click event reaches the outer backdrop div's `onClick={onClose}`, closing the entire modal before the selection registers.
 
 ## Changes
 
 ### `src/components/app/DiscoverDetailModal.tsx`
 
-**1. Fix Category showing current value**
-- Add `placeholder="Category"` to the category `SelectValue` (line 229).
-- The `editCategory` state already initializes from `item.data.category`, so this should be sufficient. If the issue is timing, ensure the `useEffect` fires before render by checking the default.
+**1. Fix dropdown closing the modal**
+Add `pointer-events-none` to the outer backdrop div and move `onClick={onClose}` only to the actual backdrop `<div>` and the left image area — OR simpler: add `onPointerDownOutside` prevention on the `SelectContent` components. Actually the simplest fix: change the outer div's `onClick` to only close if the click target IS the backdrop itself, not a portal element. Best approach: move `onClick={onClose}` from the outermost wrapper to just the backdrop div and the left image panel.
 
-**2. Add image thumbnails to Model and Scene dropdown items**
-- In model `SelectItem` (line 243): Add a small `<img>` thumbnail (20×20px, `object-cover rounded`) before the model name using a flex layout.
-- In scene `SelectItem` (line 254): Same pattern — small thumbnail + name.
-- Use `getOptimizedUrl(url, { quality: 40 })` for the dropdown thumbnails since they're tiny.
+**2. Add Workflow selector**
+- Fetch workflows from `supabase.from('workflows').select('id, name, slug').order('sort_order')` using `useQuery`.
+- Add `editWorkflowSlug` state (initialized from `item.data.workflow_slug`), with "Freestyle" as a special `__freestyle__` value (meaning `workflow_name=null, workflow_slug=null`).
+- Add a 4th dropdown in the admin grid (`grid-cols-4` or `grid-cols-2 gap-2` with two rows).
+- On save, include `workflow_name` and `workflow_slug` in the update payload.
 
-### Updated SelectItem pattern:
-```tsx
-// Model items with thumbnails
-{allModelOptions.map(m => (
-  <SelectItem key={m.name} value={m.name} className="text-xs">
-    <div className="flex items-center gap-2">
-      <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} 
-           alt="" className="w-5 h-5 rounded object-cover shrink-0" />
-      <span>{m.name}</span>
-    </div>
-  </SelectItem>
-))}
-```
+**3. Layout change**
+Change from `grid-cols-3` to `grid-cols-2` (4 selectors in 2 rows of 2) for better readability with the additional dropdown.
 
-Same for scene items.
+### Summary
+| Change | Detail |
+|--------|--------|
+| Fix select closing modal | Move `onClick={onClose}` from outer wrapper to backdrop + image area only |
+| Add workflow dropdown | Fetch from DB, add state + selector, include in save |
+| Layout | `grid-cols-3` → `grid-cols-2` for 4 selectors |
 
-One file, ~10 lines changed.
+One file changed.
 
