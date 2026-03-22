@@ -95,20 +95,35 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
         <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
       </button>
 
-      {/* Saved pill — only when savedCount is provided */}
-      {savedCount !== undefined && (
+      {/* Saved — only when user has saved items */}
+      {savedCount !== undefined && savedCount > 0 && (
         <>
+          {/* Desktop: divider + text pill */}
           <div className="hidden sm:block shrink-0 h-6 border-l border-border/30 ml-1" />
           <button
             onClick={() => onSelectCategory('saved')}
             className={cn(
-              'shrink-0 px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap',
+              'hidden sm:flex shrink-0 px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap',
               selectedCategory === 'saved'
                 ? 'bg-foreground text-background shadow-sm'
                 : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
             )}
           >
-            Saved{savedCount > 0 && <span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>}
+            Saved<span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>
+          </button>
+
+          {/* Mobile: heart icon only */}
+          <button
+            onClick={() => onSelectCategory('saved')}
+            className={cn(
+              'sm:hidden shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200',
+              selectedCategory === 'saved'
+                ? 'bg-foreground text-background shadow-sm'
+                : 'bg-muted/20 text-muted-foreground/80'
+            )}
+            aria-label={`Saved · ${savedCount}`}
+          >
+            <Heart className={cn('w-4 h-4', selectedCategory === 'saved' && 'fill-current')} />
           </button>
         </>
       )}
