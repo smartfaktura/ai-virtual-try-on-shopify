@@ -11,7 +11,7 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 
-const DISCOVER_CATEGORIES = ['editorial', 'commercial', 'lifestyle', 'fashion', 'campaign'] as const;
+const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements'] as const;
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
