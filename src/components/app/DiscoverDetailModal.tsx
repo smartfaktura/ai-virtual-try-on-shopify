@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { mockModels, mockTryOnPoses } from '@/data/mockData';
+import { useCustomModels } from '@/hooks/useCustomModels';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
 
 const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements'] as const;
 
