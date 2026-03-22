@@ -101,6 +101,7 @@ export function AddToDiscoverModal({
   const handlePublish = async () => {
     if (!title.trim()) return;
     setPublishing(true);
+    const effectiveSlug = workflowSlug || (workflowName ? workflowName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null);
     const { error } = await supabase.from('discover_presets').insert({
       title: title.trim(),
       prompt,
@@ -111,7 +112,7 @@ export function AddToDiscoverModal({
       quality,
       sort_order: 0,
       is_featured: false,
-      workflow_slug: workflowSlug || null,
+      workflow_slug: effectiveSlug,
       workflow_name: workflowName || null,
       scene_name: sceneName || null,
       model_name: modelName || null,
