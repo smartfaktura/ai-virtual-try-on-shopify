@@ -341,23 +341,6 @@ export default function Discover() {
         if (!itemMatchesProductCategory(item, selectedCategory)) return false;
       }
 
-      // Search filter
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (item.type === 'preset') {
-          return (
-            item.data.title.toLowerCase().includes(q) ||
-            item.data.prompt.toLowerCase().includes(q) ||
-            item.data.tags?.some((t) => t.toLowerCase().includes(q))
-          );
-        } else {
-          return (
-            item.data.name.toLowerCase().includes(q) ||
-            item.data.description.toLowerCase().includes(q) ||
-            item.data.category.toLowerCase().includes(q)
-          );
-        }
-      }
       return true;
     });
   }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
