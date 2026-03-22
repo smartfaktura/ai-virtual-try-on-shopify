@@ -167,6 +167,11 @@ export default function Generate() {
   // Support both slug-based routes and legacy query param
   const workflowIdFromQuery = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
+  const prefillModelName = searchParams.get('model');
+  const prefillSceneName = searchParams.get('scene');
+  const [recreateSource, setRecreateSource] = useState<{ modelName?: string; sceneName?: string } | null>(
+    (prefillModelName || prefillSceneName) ? { modelName: prefillModelName || undefined, sceneName: prefillSceneName || undefined } : null
+  );
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     jobTypes: ['workflow', 'tryon'],
@@ -571,6 +576,31 @@ export default function Generate() {
       }
     }
   }, [activeWorkflow, workflowConfig]);
+
+  // Pre-fill model and scene from URL params (Discover "Recreate this")
+  useEffect(() => {
+    if (!prefillModelName && !prefillSceneName) return;
+    // Wait for scenes/models to be available
+    const allScenes = [...filterVisible(mockTryOnPoses), ...customPoses];
+
+    if (prefillModelName) {
+      const matchedModel = mockModels.find(m => m.name.toLowerCase() === prefillModelName.toLowerCase());
+      if (matchedModel) {
+        setSelectedModel(matchedModel);
+        setSelectedModels(new Set([matchedModel.modelId]));
+        setSelectedModelMap(new Map([[matchedModel.modelId, matchedModel]]));
+      }
+    }
+
+    if (prefillSceneName) {
+      const matchedScene = allScenes.find(s => s.name.toLowerCase() === prefillSceneName.toLowerCase());
+      if (matchedScene) {
+        setSelectedPose(matchedScene);
+        setSelectedPoses(new Set([matchedScene.poseId]));
+        setSelectedPoseMap(new Map([[matchedScene.poseId, matchedScene]]));
+      }
+    }
+  }, [prefillModelName, prefillSceneName, customPoses]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -1918,7 +1948,29 @@ export default function Generate() {
           </Alert>
         )}
 
-        {/* Progress Steps */}
+        {/* Recreate from Discover banner */}
+        {recreateSource && (
+          <Alert className="border-primary/20 bg-primary/5">
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground">Recreating look from Discover</span>
+                  {recreateSource.modelName && (
+                    <Badge variant="secondary" className="text-xs">{recreateSource.modelName}</Badge>
+                  )}
+                  {recreateSource.sceneName && (
+                    <Badge variant="secondary" className="text-xs">{recreateSource.sceneName}</Badge>
+                  )}
+                </div>
+                <button onClick={() => setRecreateSource(null)} className="text-muted-foreground/60 hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-hidden">
