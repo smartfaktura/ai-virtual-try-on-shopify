@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { mockModels } from '@/data/mockData';
 
 const CATEGORIES = [
   'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
@@ -106,6 +107,40 @@ export function AddToDiscoverModal({
     if (!title.trim()) return;
     setPublishing(true);
     const effectiveSlug = workflowSlug || (workflowName ? workflowName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null);
+
+    // Resolve missing image URLs from known data
+    let resolvedSceneImageUrl = sceneImageUrl || null;
+    let resolvedModelImageUrl = modelImageUrl || null;
+
+    if (!resolvedSceneImageUrl && sceneName) {
+      try {
+        const { data } = await supabase
+          .from('custom_scenes' as any)
+          .select('image_url')
+          .eq('name', sceneName)
+          .limit(1)
+          .single();
+        if (data) resolvedSceneImageUrl = (data as any).image_url;
+      } catch {}
+    }
+
+    if (!resolvedModelImageUrl && modelName) {
+      // Check custom_models first, then mock data
+      try {
+        const { data } = await supabase
+          .from('custom_models' as any)
+          .select('image_url')
+          .eq('name', modelName)
+          .limit(1)
+          .single();
+        if (data) resolvedModelImageUrl = (data as any).image_url;
+      } catch {}
+      if (!resolvedModelImageUrl) {
+        const mock = mockModels.find(m => m.name === modelName);
+        if (mock) resolvedModelImageUrl = mock.previewUrl;
+      }
+    }
+
     const { error } = await supabase.from('discover_presets').insert({
       title: title.trim(),
       prompt,
@@ -120,8 +155,8 @@ export function AddToDiscoverModal({
       workflow_name: workflowName || null,
       scene_name: sceneName || null,
       model_name: modelName || null,
-      scene_image_url: sceneImageUrl || null,
-      model_image_url: modelImageUrl || null,
+      scene_image_url: resolvedSceneImageUrl,
+      model_image_url: resolvedModelImageUrl,
       product_name: productName || null,
       product_image_url: productImageUrl || null,
     } as any);
