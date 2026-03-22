@@ -388,7 +388,7 @@ export default function Discover() {
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
-    window.history.pushState(null, '', getItemUrl(item));
+    navigate(getItemUrl(item));
     setSelectedItem(item);
   };
 
