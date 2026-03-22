@@ -1,31 +1,32 @@
 
 
-# Polish Personalization Selector Styling
+# Premium Spacing Polish
 
-## Current Issue
-The "Personalized for" label and pill look flat and slightly disconnected. Needs more visual refinement to feel integrated and premium.
-
-## Changes (1 file only)
+## Changes
 
 ### File: `src/components/app/DashboardPersonalizationHero.tsx`
 
-**Visual improvements only — no structural changes:**
+**Line 73**: Change container spacing from `space-y-1.5 mt-1` to `space-y-2 mt-2.5`
 
-1. **"Personalized for" label**: Change from `text-sm text-muted-foreground` to `text-sm text-muted-foreground/70` — slightly softer so the pill stands out more as the interactive element
+- `mt-2.5` — more breathing room between "Welcome back" greeting and the headline (currently too tight)
+- `space-y-2` — slightly more air between headline and selector row
 
-2. **Pill button styling**: Replace current `border border-border` with:
-   - `bg-muted/50 border border-border/40` — softer background tint instead of stark border
-   - `hover:bg-muted hover:border-border/60` — gentle hover lift
-   - `shadow-sm` — tiny shadow for depth
-   - `transition-all duration-200` — smooth state changes
-   - Keep `rounded-full`, `text-sm`, `font-medium`
+### File: `src/pages/Dashboard.tsx`
 
-3. **Chevron icon**: Reduce to `w-3 h-3` and `text-muted-foreground/50` — more subtle
+**Line 412**: Change Quick Actions margin from `mt-4` to `mt-5`
 
-4. **Headline text**: Add `max-w-lg` so it doesn't stretch too wide on large screens. Keeps it readable and elegant.
-
-5. **Container spacing**: Change `gap-2` to `gap-2.5` between label and pill for better breathing room
+- More separation between the personalization block and the action buttons below
 
 ### Result
-Same layout, same structure — just more refined surfaces, softer contrasts, and smoother interactions. The pill will feel like a polished interactive element rather than a raw button.
+```text
+Welcome back, Tomas 👋
+                              ← 10px gap (was 4px)
+Create clean, high-end skincare visuals...
+                              ← 8px gap (was 6px)
+Personalized for [Beauty & Skincare ▼]
+                              ← 20px gap (was 16px)
+[Upload Product] [Generate Images] ...
+```
+
+Each section gets room to breathe without feeling disconnected. Two files, two lines changed.
 
