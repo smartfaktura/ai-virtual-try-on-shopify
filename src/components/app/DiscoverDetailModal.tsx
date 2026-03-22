@@ -196,7 +196,7 @@ export function DiscoverDetailModal({
                 )}
                 {isPreset && item.data.workflow_name && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
-                    · <Workflow className="w-3 h-3" /> {item.data.workflow_name}
+                    · {item.data.workflow_name}
                   </span>
                 )}
               </div>
