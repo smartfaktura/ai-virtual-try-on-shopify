@@ -145,12 +145,14 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
     if (a.data.workflow_slug && a.data.workflow_slug === b.data.workflow_slug) score += 2;
   }
 
-  // Cross-type category overlap via scene mapping
+  // Cross-type category overlap via product mapping
   if (a.type !== b.type) {
     const sceneCat = a.type === 'scene' ? getItemCategory(a) : getItemCategory(b);
-    const presetCat = a.type === 'preset' ? aCat : bCat;
-    const mapped = SCENE_CATEGORY_MAP[sceneCat] ?? [];
-    if (mapped.includes(presetCat)) score += 2;
+    const presetCat = a.type === 'preset' ? getItemCategory(a) : getItemCategory(b);
+    const mapped = PRODUCT_CATEGORY_MAP[sceneCat] ?? [];
+    const presetMapped = PRODUCT_CATEGORY_MAP[presetCat] ?? [];
+    const overlap = mapped.some((c) => presetMapped.includes(c));
+    if (overlap) score += 2;
   }
 
   // Description keyword overlap

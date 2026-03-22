@@ -94,6 +94,23 @@ function getItemCategory(item: DiscoverItem): string {
   return item.data.category;
 }
 
+function resolveCategory(cat: string): string {
+  return cat;
+}
+
+function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
+  const itemCat = item.data.category;
+  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
+  if (mapped.includes(productCat)) return true;
+  if (item.type === 'preset' && item.data.tags) {
+    return item.data.tags.some((t: string) => {
+      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
+      return tagMapped.includes(productCat);
+    });
+  }
+  return false;
+}
+
 function useColumnCount() {
   const [count, setCount] = useState(() => {
     if (typeof window === 'undefined') return 4;
