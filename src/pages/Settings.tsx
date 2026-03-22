@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
-import { Building2, Check, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
+import { Building2, Check, ExternalLink, Loader2, RefreshCw, RotateCcw } from 'lucide-react';
+import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { AdminFeedbackPanel } from '@/components/app/AdminFeedbackPanel';
@@ -42,6 +43,82 @@ const DEFAULT_SETTINGS: UserSettings = {
   inAppFailed: true,
   inAppTips: true,
 };
+
+function ContentPreferencesSection() {
+  const { user } = useAuth();
+  const [cats, setCats] = useState<string[]>([]);
+  const [original, setOriginal] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('product_categories')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        const c = (data?.product_categories as string[]) ?? [];
+        setCats(c);
+        setOriginal(c);
+      });
+  }, [user]);
+
+  const toggle = (id: string) =>
+    setCats((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ product_categories: cats })
+      .eq('user_id', user.id);
+    if (error) toast.error('Failed to save');
+    else {
+      setOriginal(cats);
+      toast.success('Preferences saved');
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold">Content Preferences</h3>
+        <p className="text-xs text-muted-foreground">
+          Select categories that match your products. This helps tailor your dashboard experience.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {PRODUCT_CATEGORIES.map(({ id, label }) => (
+          <div key={id} className="flex items-center space-x-2">
+            <Checkbox
+              id={`pref-${id}`}
+              checked={cats.includes(id)}
+              onCheckedChange={() => toggle(id)}
+            />
+            <Label htmlFor={`pref-${id}`} className="text-sm cursor-pointer">
+              {label}
+            </Label>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-3">
+        <Button size="sm" onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving…' : 'Save preferences'}
+        </Button>
+        <button
+          onClick={() => setCats(original)}
+          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+        >
+          <RotateCcw className="w-3 h-3" />
+          Reset to onboarding selection
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Settings() {
   const { user } = useAuth();
@@ -471,6 +548,10 @@ export default function Settings() {
                 </div>
               ))}
             </div>
+
+            {/* Content Preferences */}
+            <Separator className="my-4" />
+            <ContentPreferencesSection />
           </CardContent>
         </Card>
 

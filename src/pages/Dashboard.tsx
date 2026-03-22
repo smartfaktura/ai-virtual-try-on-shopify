@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { DashboardPersonalizationHero } from '@/components/app/DashboardPersonalizationHero';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
@@ -404,6 +405,8 @@ export default function Dashboard() {
           Welcome back, {firstName} 👋
         </h1>
         <p className="text-muted-foreground mt-1">Here's what's happening with your studio.</p>
+
+        <DashboardPersonalizationHero />
 
         {/* Quick Actions */}
         <div className="mt-4">

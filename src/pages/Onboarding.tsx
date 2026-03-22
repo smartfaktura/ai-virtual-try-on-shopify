@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
 import { ArrowRight, Check } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
@@ -25,19 +26,9 @@ const REFERRAL_OPTIONS = [
   'Other',
 ];
 
-const PRODUCT_CATEGORIES = [
-  { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'beauty', label: 'Beauty & Skincare' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home & Decor' },
-  { id: 'food', label: 'Food & Beverage' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports & Fitness' },
-  { id: 'supplements', label: 'Health & Supplements' },
-  { id: 'any', label: 'Any Product' },
-];
+const PRODUCT_CATEGORIES = SHARED_CATEGORIES.map((c) =>
+  c.id === 'any' ? { ...c, label: 'Any Product' } : c
+);
 
 const TOTAL_STEPS = 3;
 
