@@ -82,7 +82,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
             )}
             {modelThumb && modelName && (
               <div className="flex items-center gap-2">
-                <img src={modelThumb} alt={modelName} className="w-7 h-7 rounded-full object-cover ring-1 ring-white/20" />
+                <img src={modelThumb} alt={modelName} className="w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20" />
                 <span className="text-white/90 text-[11px] font-medium truncate">{modelName}</span>
               </div>
             )}
