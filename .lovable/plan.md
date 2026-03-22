@@ -1,33 +1,61 @@
 
 
-# Add Prompt Editor to Admin Metadata (Freestyle Only)
+# Enhance Copy Button to Restore Full Generation Context
 
-## Change
+## What
+Currently the copy button on freestyle gallery images only copies the text prompt to the editor. The user wants it to also restore the model, scene, and product selections — effectively "reloading" the full generation settings.
 
-### `src/components/app/DiscoverDetailModal.tsx`
+## Changes
 
-1. **Add state** `editPrompt` (line ~78): `const [editPrompt, setEditPrompt] = useState('');`
+### 1. `src/components/app/freestyle/FreestyleGallery.tsx`
 
-2. **Initialize in useEffect** (line ~95): `setEditPrompt(item.data.prompt || '');`
+**Extend the callback signature:**
+- Change `onCopyPrompt` from `(prompt: string) => void` to a new `onCopySettings` callback that passes the full image metadata:
+  ```ts
+  onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
+  ```
+- Add `productId` to `GalleryImage` interface (it's already available in the data, just not passed through).
+- Update the copy button click handler to call `onCopySettings` with all fields from the image.
+- Update toast message to "Settings copied to editor".
 
-3. **Add Textarea** between the Scene selector grid and the Save button (after line 296), conditionally shown only when `editWorkflowSlug === '__freestyle__'`:
-```tsx
-{editWorkflowSlug === '__freestyle__' && (
-  <Textarea
-    value={editPrompt}
-    onChange={(e) => setEditPrompt(e.target.value)}
-    placeholder="Prompt for Recreate this..."
-    className="text-xs min-h-[60px]"
-    rows={3}
-  />
-)}
+### 2. `src/pages/Freestyle.tsx`
+
+**Add `productId` to `galleryImages` mapping** (line 662-670):
+```ts
+productId: img.productId,
 ```
 
-4. **Include in save handler** (line ~307): Add `prompt: editPrompt || null` to the update object.
+**Replace `onCopyPrompt={setPrompt}` with a new handler** that resolves IDs to objects:
+```ts
+const handleCopySettings = useCallback((settings) => {
+  setPrompt(settings.prompt || '');
+  
+  // Resolve model
+  if (settings.modelId) {
+    const model = mockModels.find(m => m.id === settings.modelId);
+    if (model) setSelectedModel(model);
+  } else { setSelectedModel(null); }
+  
+  // Resolve scene (mock + custom)
+  if (settings.sceneId) {
+    const scene = filterVisible(mockTryOnPoses).find(s => s.poseId === settings.sceneId)
+      || customScenePoses.find(s => s.poseId === settings.sceneId);
+    if (scene) setSelectedScene(scene);
+  } else { setSelectedScene(null); }
+  
+  // Resolve product
+  if (settings.productId) {
+    const product = products.find(p => p.id === settings.productId);
+    if (product) setSelectedProduct(product);
+  } else { setSelectedProduct(null); }
+  
+  // Restore aspect ratio
+  if (settings.aspectRatio) setAspectRatio(settings.aspectRatio);
+}, [products, customScenePoses, filterVisible]);
+```
 
-5. **Update local state on save** (line ~328): Add `(item.data as any).prompt = editPrompt || null;`
+Pass `onCopySettings={handleCopySettings}` to `FreestyleGallery`.
 
-6. **Import** `Textarea` from `@/components/ui/textarea`.
-
-One file, ~10 lines added. Prompt textarea only appears when Freestyle is selected in the workflow dropdown.
+### Result
+Clicking the copy button restores prompt + model + scene + product + aspect ratio in one click. Toast says "Settings copied to editor".
 
