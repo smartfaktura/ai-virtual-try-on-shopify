@@ -62,6 +62,15 @@ interface GalleryImage {
   aspectRatio?: string;
   modelId?: string | null;
   sceneId?: string | null;
+  productId?: string | null;
+}
+
+export interface CopySettings {
+  prompt: string;
+  modelId?: string | null;
+  sceneId?: string | null;
+  productId?: string | null;
+  aspectRatio?: string;
 }
 
 interface FreestyleGalleryProps {
