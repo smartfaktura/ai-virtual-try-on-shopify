@@ -95,11 +95,13 @@ export function DiscoverDetailModal({
       setEditSceneName(item.data.scene_name || '__none__');
       setEditCategory(item.data.category || 'fashion');
       setEditWorkflowSlug(item.data.workflow_slug || '__freestyle__');
+      setEditPrompt(item.data.prompt || '');
     } else {
       setEditModelName('__none__');
       setEditSceneName('__none__');
       setEditCategory('fashion');
       setEditWorkflowSlug('__freestyle__');
+      setEditPrompt('');
     }
   }, [itemId, open]);
 
