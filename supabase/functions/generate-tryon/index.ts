@@ -478,6 +478,11 @@ async function completeQueueJob(
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
     prompt_final: payload.prompt || null,
+    scene_name: payload.pose?.name || null,
+    model_name: payload.model?.name || null,
+    scene_image_url: payload.pose?.originalImageUrl || null,
+    model_image_url: payload.model?.originalImageUrl || null,
+    workflow_slug: payload.workflow_slug || null,
   });
 
   if (generatedCount < requestedCount) {

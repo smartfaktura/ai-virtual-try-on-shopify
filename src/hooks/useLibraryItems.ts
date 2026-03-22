@@ -101,6 +101,11 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
                 status: job.status,
                 aspectRatio: job.ratio,
                 quality: job.quality,
+                sceneName: job.scene_name || undefined,
+                modelName: job.model_name || undefined,
+                sceneImageUrl: job.scene_image_url || undefined,
+                modelImageUrl: job.model_image_url || undefined,
+                workflowSlug: job.workflow_slug || undefined,
               },
             });
           }

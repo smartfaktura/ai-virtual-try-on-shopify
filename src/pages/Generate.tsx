@@ -1285,8 +1285,8 @@ export default function Generate() {
             jobType: 'tryon',
             payload: {
               product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
-              model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage },
-              pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
+              model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage, originalImageUrl: model.previewUrl },
+              pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage, originalImageUrl: pose.previewUrl },
               aspectRatio: effectiveRatio, imageCount: parseInt(imageCount),
               framing: effectiveFraming || undefined,
               workflow_id: activeWorkflow?.id || null,
