@@ -51,8 +51,8 @@ export function DiscoverDetailModal({
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
 
-  const { models: customModelProfiles } = useCustomModels();
-  const { scenes: customSceneProfiles } = useCustomScenes();
+  const { asProfiles: customModelProfiles } = useCustomModels();
+  const { asPoses: customSceneProfiles } = useCustomScenes();
 
   const allModelOptions = useMemo(() => {
     const items: { name: string; imageUrl: string }[] = mockModels.map(m => ({ name: m.name, imageUrl: m.previewUrl }));
