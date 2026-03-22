@@ -148,16 +148,6 @@ export function PublicDiscoverDetailModal({
               </div>
             )}
 
-            {/* Tags */}
-            {isPreset && item.data.tags && item.data.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {item.data.tags.map((tag: string) => (
-                  <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
 
             {/* Primary CTA — Sign Up */}
             <Button
