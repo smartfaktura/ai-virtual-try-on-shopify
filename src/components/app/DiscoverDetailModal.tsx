@@ -340,6 +340,7 @@ export function DiscoverDetailModal({
                     (item.data as any).scene_image_url = update.scene_image_url;
                     (item.data as any).workflow_slug = update.workflow_slug;
                     (item.data as any).workflow_name = update.workflow_name;
+                    (item.data as any).prompt = editPrompt || null;
                     toast.success('Metadata saved');
                   }}
                 >
