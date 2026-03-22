@@ -72,12 +72,14 @@ export function DiscoverDetailModal({
 
   const [editModelName, setEditModelName] = useState('');
   const [editSceneName, setEditSceneName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
 
   useEffect(() => {
     if (item && open) {
       setEditModelName(item.type === 'preset' ? (item.data.model_name || '__none__') : '__none__');
       setEditSceneName(item.type === 'preset' ? (item.data.scene_name || '__none__') : '__none__');
+      setEditCategory(item.type === 'preset' ? (item.data.category || 'fashion') : 'fashion');
     }
   }, [item, open]);
 
@@ -146,30 +148,6 @@ export function DiscoverDetailModal({
           </button>
 
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
-            {/* Admin category selector (admin only) */}
-            {isAdmin && isPreset && (
-              <Select
-                value={category}
-                onValueChange={async (val) => {
-                  const { error } = await supabase
-                    .from('discover_presets')
-                    .update({ category: val })
-                    .eq('id', item.data.id);
-                  if (error) { toast.error('Failed to update category'); return; }
-                  (item.data as any).category = val;
-                  toast.success(`Category → ${val}`);
-                }}
-              >
-                <SelectTrigger className="h-6 w-auto px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 border-dashed">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[300]">
-                  {DISCOVER_CATEGORIES.map(c => (
-                    <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
 
             {/* Title + views */}
             <div className="space-y-2">
@@ -244,7 +222,17 @@ export function DiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Admin: Edit Metadata
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <Select value={editCategory} onValueChange={setEditCategory}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60">
+                      {DISCOVER_CATEGORIES.map(c => (
+                        <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Select value={editModelName} onValueChange={setEditModelName}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
@@ -278,6 +266,7 @@ export function DiscoverDetailModal({
                     const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
                     const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
                     const update: Record<string, string | null> = {
+                      category: editCategory,
                       model_name: selectedModel?.name ?? null,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,
@@ -289,7 +278,7 @@ export function DiscoverDetailModal({
                       .eq('id', item.data.id);
                     setSavingMeta(false);
                     if (error) { toast.error('Failed to save'); return; }
-                    // Mutate local data for immediate feedback
+                    (item.data as any).category = editCategory;
                     (item.data as any).model_name = update.model_name;
                     (item.data as any).model_image_url = update.model_image_url;
                     (item.data as any).scene_name = update.scene_name;
