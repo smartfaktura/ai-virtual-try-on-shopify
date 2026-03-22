@@ -44,45 +44,46 @@ function toTryOnPose(scene: PublicCustomScene): TryOnPose {
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'editorial', label: 'Editorial' },
-  { id: 'commercial', label: 'Commercial' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'campaign', label: 'Campaign' },
+  { id: 'fashion', label: 'Fashion & Apparel' },
+  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'jewelry', label: 'Jewelry' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'home', label: 'Home & Decor' },
+  { id: 'food', label: 'Food & Beverage' },
+  { id: 'electronics', label: 'Electronics' },
+  { id: 'sports', label: 'Sports & Fitness' },
+  { id: 'supplements', label: 'Health & Supplements' },
 ] as const;
 
-const CATEGORY_ALIAS: Record<string, string> = {
-  cinematic: 'editorial',
-  photography: 'commercial',
-  styling: 'fashion',
-  ads: 'campaign',
-};
-
-function resolveCategory(cat: string): string {
-  return CATEGORY_ALIAS[cat] ?? cat;
-}
-
-const SCENE_CATEGORY_MAP: Record<string, string[]> = {
-  studio: ['commercial', 'editorial'],
-  lifestyle: ['lifestyle'],
-  editorial: ['editorial'],
-  streetwear: ['fashion', 'lifestyle'],
-  fitness: ['lifestyle', 'campaign'],
-  athletic: ['lifestyle', 'campaign'],
-  gym: ['lifestyle', 'campaign'],
-  beauty: ['fashion', 'commercial'],
-  desert: ['lifestyle', 'editorial'],
-  outdoor: ['lifestyle', 'editorial'],
-  beach: ['lifestyle'],
-  garden: ['lifestyle'],
-  industrial: ['editorial', 'campaign'],
-  urban: ['fashion', 'lifestyle'],
-  rooftop: ['lifestyle', 'editorial'],
-  cafe: ['lifestyle'],
-  mirror: ['lifestyle', 'fashion'],
-  casual: ['lifestyle'],
-  cozy: ['lifestyle', 'fashion'],
-  professional: ['commercial'],
+const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
+  editorial: ['fashion', 'fragrances', 'jewelry'],
+  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  lifestyle: ['home', 'food', 'accessories', 'fashion'],
+  fashion: ['fashion', 'accessories'],
+  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
+  cinematic: ['fashion', 'fragrances', 'jewelry'],
+  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  styling: ['fashion', 'accessories', 'jewelry'],
+  ads: ['fashion', 'sports', 'beauty', 'electronics'],
+  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  streetwear: ['fashion', 'accessories'],
+  fitness: ['sports', 'supplements'],
+  athletic: ['sports', 'supplements'],
+  gym: ['sports', 'supplements'],
+  beauty: ['beauty', 'fragrances'],
+  desert: ['fashion', 'fragrances'],
+  outdoor: ['sports', 'home', 'fashion'],
+  beach: ['fashion', 'accessories'],
+  garden: ['home', 'beauty', 'fragrances'],
+  industrial: ['electronics', 'fashion'],
+  urban: ['fashion', 'accessories'],
+  rooftop: ['fashion', 'food'],
+  cafe: ['food', 'home'],
+  mirror: ['beauty', 'fashion'],
+  casual: ['fashion', 'accessories'],
+  cozy: ['home', 'fashion'],
+  professional: ['electronics', 'accessories'],
 };
 
 function getItemId(item: DiscoverItem): string {
@@ -91,6 +92,23 @@ function getItemId(item: DiscoverItem): string {
 
 function getItemCategory(item: DiscoverItem): string {
   return item.data.category;
+}
+
+function resolveCategory(cat: string): string {
+  return cat;
+}
+
+function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
+  const itemCat = item.data.category;
+  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
+  if (mapped.includes(productCat)) return true;
+  if (item.type === 'preset' && item.data.tags) {
+    return item.data.tags.some((t: string) => {
+      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
+      return tagMapped.includes(productCat);
+    });
+  }
+  return false;
 }
 
 function useColumnCount() {
@@ -209,13 +227,7 @@ export default function PublicDiscover() {
     return allItems.filter((item) => {
       // Category filter
       if (selectedCategory !== 'all') {
-        if (item.type === 'scene') {
-          const sceneCat = item.data.category;
-          const mappedCategories = SCENE_CATEGORY_MAP[sceneCat] ?? [];
-          if (!mappedCategories.includes(selectedCategory)) return false;
-        } else {
-          if (resolveCategory(item.data.category) !== selectedCategory) return false;
-        }
+        if (!itemMatchesProductCategory(item, selectedCategory)) return false;
       }
 
       // Search filter
@@ -361,16 +373,16 @@ export default function PublicDiscover() {
         </div>
 
         {/* Category filter bar */}
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex justify-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mb-1">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                'px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200',
+                'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0',
                 selectedCategory === cat.id
                   ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               {cat.label}

@@ -23,42 +23,49 @@ import { cn } from '@/lib/utils';
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'saved', label: 'Saved' },
-  { id: 'editorial', label: 'Editorial' },
-  { id: 'commercial', label: 'Commercial' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'campaign', label: 'Campaign' },
+  { id: 'fashion', label: 'Fashion & Apparel' },
+  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'jewelry', label: 'Jewelry' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'home', label: 'Home & Decor' },
+  { id: 'food', label: 'Food & Beverage' },
+  { id: 'electronics', label: 'Electronics' },
+  { id: 'sports', label: 'Sports & Fitness' },
+  { id: 'supplements', label: 'Health & Supplements' },
 ] as const;
 
-// Map old preset categories to new ones for backward compat
-const CATEGORY_ALIAS: Record<string, string> = {
-  cinematic: 'editorial',
-  photography: 'commercial',
-  styling: 'fashion',
-  ads: 'campaign',
-};
-
-const SCENE_CATEGORY_MAP: Record<string, string[]> = {
-  studio: ['commercial', 'editorial'],
-  lifestyle: ['lifestyle'],
-  editorial: ['editorial'],
-  streetwear: ['fashion', 'lifestyle'],
-  fitness: ['lifestyle', 'campaign'],
-  athletic: ['lifestyle', 'campaign'],
-  gym: ['lifestyle', 'campaign'],
-  beauty: ['fashion', 'commercial'],
-  desert: ['lifestyle', 'editorial'],
-  outdoor: ['lifestyle', 'editorial'],
-  beach: ['lifestyle'],
-  garden: ['lifestyle'],
-  industrial: ['editorial', 'campaign'],
-  urban: ['fashion', 'lifestyle'],
-  rooftop: ['lifestyle', 'editorial'],
-  cafe: ['lifestyle'],
-  mirror: ['lifestyle', 'fashion'],
-  casual: ['lifestyle'],
-  cozy: ['lifestyle', 'fashion'],
-  professional: ['commercial'],
+// Map old style-based categories → new product categories
+const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
+  // Preset style categories
+  editorial: ['fashion', 'fragrances', 'jewelry'],
+  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  lifestyle: ['home', 'food', 'accessories', 'fashion'],
+  fashion: ['fashion', 'accessories'],
+  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
+  cinematic: ['fashion', 'fragrances', 'jewelry'],
+  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  styling: ['fashion', 'accessories', 'jewelry'],
+  ads: ['fashion', 'sports', 'beauty', 'electronics'],
+  // Scene categories
+  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
+  streetwear: ['fashion', 'accessories'],
+  fitness: ['sports', 'supplements'],
+  athletic: ['sports', 'supplements'],
+  gym: ['sports', 'supplements'],
+  beauty: ['beauty', 'fragrances'],
+  desert: ['fashion', 'fragrances'],
+  outdoor: ['sports', 'home', 'fashion'],
+  beach: ['fashion', 'accessories'],
+  garden: ['home', 'beauty', 'fragrances'],
+  industrial: ['electronics', 'fashion'],
+  urban: ['fashion', 'accessories'],
+  rooftop: ['fashion', 'food'],
+  cafe: ['food', 'home'],
+  mirror: ['beauty', 'fashion'],
+  casual: ['fashion', 'accessories'],
+  cozy: ['home', 'fashion'],
+  professional: ['electronics', 'accessories'],
 };
 
 // Stop words for keyword extraction
@@ -99,7 +106,21 @@ function extractKeywords(text: string): string[] {
 }
 
 function resolveCategory(cat: string): string {
-  return CATEGORY_ALIAS[cat] ?? cat;
+  return cat;
+}
+
+function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
+  const itemCat = item.data.category;
+  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
+  if (mapped.includes(productCat)) return true;
+  // Also check tags for presets
+  if (item.type === 'preset' && item.data.tags) {
+    return item.data.tags.some((t: string) => {
+      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
+      return tagMapped.includes(productCat);
+    });
+  }
+  return false;
 }
 
 function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
@@ -124,12 +145,14 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
     if (a.data.workflow_slug && a.data.workflow_slug === b.data.workflow_slug) score += 2;
   }
 
-  // Cross-type category overlap via scene mapping
+  // Cross-type category overlap via product mapping
   if (a.type !== b.type) {
     const sceneCat = a.type === 'scene' ? getItemCategory(a) : getItemCategory(b);
-    const presetCat = a.type === 'preset' ? aCat : bCat;
-    const mapped = SCENE_CATEGORY_MAP[sceneCat] ?? [];
-    if (mapped.includes(presetCat)) score += 2;
+    const presetCat = a.type === 'preset' ? getItemCategory(a) : getItemCategory(b);
+    const mapped = PRODUCT_CATEGORY_MAP[sceneCat] ?? [];
+    const presetMapped = PRODUCT_CATEGORY_MAP[presetCat] ?? [];
+    const overlap = mapped.some((c) => presetMapped.includes(c));
+    if (overlap) score += 2;
   }
 
   // Description keyword overlap
@@ -315,13 +338,7 @@ export default function Discover() {
 
       // Category filter
       if (selectedCategory !== 'all') {
-        if (item.type === 'scene') {
-          const sceneCat = item.data.category;
-          const mappedCategories = SCENE_CATEGORY_MAP[sceneCat] ?? [];
-          if (!mappedCategories.includes(selectedCategory)) return false;
-        } else {
-          if (resolveCategory(item.data.category) !== selectedCategory) return false;
-        }
+        if (!itemMatchesProductCategory(item, selectedCategory)) return false;
       }
 
       // Search filter
@@ -454,16 +471,16 @@ export default function Discover() {
 
       {/* Category filter bar */}
       {!similarTo && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mb-1">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                'px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200',
+                'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0',
                 selectedCategory === cat.id
                   ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               {cat.label}
