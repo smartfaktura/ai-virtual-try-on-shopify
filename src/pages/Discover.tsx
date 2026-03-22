@@ -367,6 +367,17 @@ export default function Discover() {
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
+    
+    // Prioritize same scene_name for presets
+    if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
+      const sameScene = allItems.filter((i) =>
+        i.type === 'preset' &&
+        i.data.scene_name === selectedItem.data.scene_name &&
+        i.data.id !== selectedItem.data.id
+      );
+      if (sameScene.length >= 3) return sameScene.slice(0, 9);
+    }
+    
     return allItems
       .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
       .map((i) => ({ item: i, score: scoreSimilarity(selectedItem, i) }))
