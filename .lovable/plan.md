@@ -1,16 +1,16 @@
 
 
-# Update Onboarding: New Categories, Reorder Steps, Improve Copy
+# Personalized Dashboard Selector + Settings Preferences
 
-## Changes
+## Overview
+Add a "Personalized for: [category]" pill below the welcome greeting, with dynamic headline text, AI team line, and CTAs. Add "Content Preferences" section in Settings. All data saved to existing `profiles.product_categories`.
 
-### File: `src/pages/Onboarding.tsx`
+## Files
 
-**1. Update `PRODUCT_CATEGORIES` array (lines 28-37)**
+### 1. New: `src/lib/categoryConstants.ts`
 
-Replace with 11 new categories:
 ```typescript
-const PRODUCT_CATEGORIES = [
+export const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },
   { id: 'beauty', label: 'Beauty & Skincare' },
   { id: 'fragrances', label: 'Fragrances' },
@@ -21,28 +21,62 @@ const PRODUCT_CATEGORIES = [
   { id: 'electronics', label: 'Electronics' },
   { id: 'sports', label: 'Sports & Fitness' },
   { id: 'supplements', label: 'Health & Supplements' },
-  { id: 'any', label: 'Any Product' },
+  { id: 'any', label: 'All products' },
 ];
+
+export const CATEGORY_HEADLINES: Record<string, string> = {
+  fashion: 'Create campaign-ready fashion visuals without photoshoots.',
+  beauty: 'Create clean, high-end skincare visuals that feel like luxury campaigns.',
+  fragrances: 'Capture the mood of your fragrance through cinematic, emotional visuals.',
+  jewelry: 'Highlight every detail with premium, light-perfect jewelry visuals.',
+  accessories: 'Turn everyday products into styled, scroll-stopping visuals.',
+  home: 'Place your products into beautifully designed interiors instantly.',
+  food: 'Create delicious, ad-ready visuals that make people crave your product.',
+  electronics: 'Showcase your product in sleek, modern environments built for conversion.',
+  sports: 'Create dynamic visuals with energy, movement, and performance.',
+  supplements: 'Build trust with clean, premium visuals that feel credible and strong.',
+  any: 'Turn your ideas into high-quality, brand-ready visuals in seconds.',
+};
 ```
 
-**2. Swap step 2 and step 3 order**
+Helper functions:
+- `getCategoryLabel(ids: string[])` — 0 or only "any" → "All products", 1 → category name, 2 → "A & B", 3+ → "Your product mix"
+- `getCategoryHeadline(ids: string[])` — 0 or "any" → all products headline, 1 → exact match, 2 → "Create high-quality visuals tailored to your products — from styled campaigns to real-life scenes.", 3+ → "Turn your product mix into consistent, high-quality visuals in seconds."
 
-Currently: Step 1 (Profile) → Step 2 (Referral) → Step 3 (Categories)
+### 2. New: `src/components/app/DashboardPersonalizationHero.tsx`
 
-New order: Step 1 (Profile) → Step 2 (Categories) → Step 3 (Referral / "How did you find us?")
+Self-contained component. Placed between welcome text and Quick Actions on the returning-user dashboard.
 
-Swap the JSX blocks for step 2 and step 3, and update the `canProceed()` logic accordingly. Categories become step 2, referral becomes step 3 (last question before "Get Started").
+**Data**: Fetches `product_categories` from `profiles` on mount. Local editing state. Saves to `profiles.product_categories` on "Save preferences".
 
-**3. Update subtitle copy (categories step)**
+**UI structure** (top to bottom):
+1. **Pill selector**: `Personalized for: [label ▼]` — `rounded-full bg-muted px-3 py-1.5 text-sm font-medium` with `ChevronDown` icon. Hover: slightly darker bg. Click opens Popover (desktop) or MobilePickerSheet (mobile).
+2. **Dropdown content**: Header "Select your focus". All 11 categories with checkmarks. Multi-select. Footer: "Save preferences" button.
+3. **Dynamic headline**: Text from `getCategoryHeadline()`. `text-base text-muted-foreground`. Smooth opacity transition on change.
+4. **AI team line**: "Your AI creative team is ready to generate, refine, and scale your visuals." — `text-sm text-muted-foreground`
+5. **"Meet your AI team"** — subtle text link → `https://vovv.ai/team`
+6. **CTA buttons**: Primary "Generate new visuals" → `/app/freestyle`, Secondary outline "Browse workflows" → `/app/workflows`
 
-Change `"Select all that apply — this helps us personalize your experience"` to something like:
-`"Pick the categories you work with — we'll tailor your dashboard and recommendations"`
+**Mobile**: Uses existing `MobilePickerSheet` for category picker. Save button at bottom of sheet.
 
-This makes it clearer what the personalization does.
+### 3. Edit: `src/pages/Dashboard.tsx` (lines 402-412)
 
-## Summary
-- 1 file changed
-- 11 categories replacing 8
-- Steps reordered so "How did you find us?" is last
-- Better subtitle copy for the categories step
+Insert `<DashboardPersonalizationHero />` between `<p>Here's what's happening...</p>` (line 406) and the Quick Actions div (line 408).
+
+### 4. Edit: `src/pages/Settings.tsx` (lines 473-475)
+
+After "In-App Notifications" section, before `</CardContent>`, add:
+- `<Separator />`
+- Section header: "Content Preferences"
+- Description: "Select categories that match your products. This helps tailor your dashboard experience."
+- Checkbox list of all 11 categories (same from `categoryConstants.ts`, showing "All products" for "any")
+- "Save preferences" button (writes to `profiles.product_categories`)
+- "Reset to onboarding selection" text button (re-fetches and restores original)
+
+### 5. Edit: `src/pages/Onboarding.tsx`
+
+Replace local `PRODUCT_CATEGORIES` array with import from `categoryConstants.ts`. Map "any" label back to "Any Product" in onboarding UI only (or keep consistent as "All products" everywhere).
+
+## No database changes needed
+`profiles.product_categories` (text array) already exists.
 
