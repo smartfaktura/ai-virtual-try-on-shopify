@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Compass } from 'lucide-react';
+import { Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { PublicDiscoverDetailModal } from '@/components/app/PublicDiscoverDetailModal';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
@@ -14,6 +14,7 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
@@ -337,22 +338,11 @@ export default function PublicDiscover() {
 
 
         {/* Category filter bar */}
-        <div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2 cursor-grab active:cursor-grabbing scroll-smooth">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={cn(
-                'px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
-                selectedCategory === cat.id
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
-              )}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
+        <PublicDiscoverCategoryBar
+          categories={CATEGORIES}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
 
         {/* Masonry grid */}
         {isLoading ? (
