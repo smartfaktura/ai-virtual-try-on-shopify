@@ -347,6 +347,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
           prompt={item.prompt || ''}
           aspectRatio={item.aspectRatio}
           quality={item.quality}
+          workflowName={item.source === 'generation' ? item.label : undefined}
         />
       )}
       {submitDiscoverOpen && item && (

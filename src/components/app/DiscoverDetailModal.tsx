@@ -11,7 +11,7 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 
-const DISCOVER_CATEGORIES = ['editorial', 'commercial', 'lifestyle', 'fashion', 'campaign'] as const;
+const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements'] as const;
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -139,7 +139,6 @@ export function DiscoverDetailModal({
       {/* Split layout */}
       <div
         className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
@@ -152,7 +151,7 @@ export function DiscoverDetailModal({
         </div>
 
         {/* Right — Controls panel */}
-        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
           {/* Close button — black, inside right panel */}
           <button
             onClick={onClose}
