@@ -394,6 +394,7 @@ export default function PublicDiscover() {
                             key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
                             item={item}
                             onClick={() => handleCardClick(item)}
+                            onRecreate={() => navigate('/auth')}
                             hideLabels
                             {...(user ? {
                               isSaved: isSaved(item.type, itemId),
