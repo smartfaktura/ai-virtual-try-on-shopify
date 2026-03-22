@@ -1,40 +1,33 @@
 
 
-# Fix Discover Detail Thumbnails: Letterboxing from object-contain
+# Admin Metadata Editor for Discover Presets
 
-## Problem Identified
+## What This Does
+Adds an admin-only section in the Discover detail modal that lets you manually pick/change the scene and model shown on a preset. A "Save" button persists changes to the database. This fixes presets that were published without metadata.
 
-The thumbnails use `object-contain bg-muted`, which fits the entire image inside the 40x40px square without cropping. For non-square images (like the Editorial Movement scene or Jordan model headshot), this creates visible letterboxing — the `bg-muted` background shows through as padding around the image, making it look like the image doesn't fill the container.
+## Changes
 
-Comparing the two screenshots: the first one (Canon G7X / Zara) looks correct because those source images happen to be closer to square. The second (Editorial Movement / Jordan) looks broken because those images are portrait-oriented, so `object-contain` shrinks them to fit height, leaving side padding.
+### `src/components/app/DiscoverDetailModal.tsx`
 
-## Root Cause
+1. **Add admin metadata editor section** (visible only when `isAdmin && isPreset`), placed after the existing "Created with" section:
+   - **Model selector**: Dropdown listing all mock models by name (from `mockModels`), plus a "None" option. Shows current `model_name` as default.
+   - **Scene selector**: Dropdown listing all mock scenes by name (from `mockTryOnPoses`), plus a "None" option. Shows current `scene_name` as default.
+   - **Save button**: Updates `discover_presets` row with the selected model's `name` + `previewUrl` and scene's `name` + `previewUrl`, then shows a success toast.
 
-`object-contain` and `object-cover` are opposite trade-offs:
-- `object-contain` = full image visible, but doesn't fill the container (letterboxing)
-- `object-cover` = fills the container, but crops edges
+2. **State**: Two local state variables `editModel` and `editScene` (initialized from `item.data` when item changes). Only rendered for admin.
 
-The earlier "zoomed" complaint was caused by the `width` optimization parameter distorting aspect ratios on the server side — not by `object-cover` itself. That width param has since been removed.
+3. **On save**: Calls `supabase.from('discover_presets').update({ model_name, model_image_url, scene_name, scene_image_url }).eq('id', item.data.id)`. Also mutates the local `item.data` for immediate UI feedback (same pattern as the existing category selector).
 
-## Fix
+4. **UI**: Compact admin section with dashed border, two `<Select>` dropdowns side by side, and a small "Save metadata" button. Styled consistently with the existing admin category selector.
 
-Switch back to `object-cover` and remove `bg-muted` / `bg-black/40`. Now that the width optimization parameter is gone, `object-cover` will receive the full-resolution image (at quality 60) and crop naturally to fill the square — no distortion, no letterboxing.
+### Imports
+- Add `mockModels`, `mockTryOnPoses` from `@/data/mockData`
+- Add `useMemo` from React for memoizing the combined model/scene lists
 
-### Files & Changes
+### File
+| File | Change |
+|------|--------|
+| `src/components/app/DiscoverDetailModal.tsx` | Add admin metadata editor with model/scene selectors and save button |
 
-**`src/components/app/DiscoverDetailModal.tsx`** (lines 165, 180, 195):
-```
-Before: "w-10 h-10 rounded-lg object-contain bg-muted"
-After:  "w-10 h-10 rounded-lg object-cover"
-```
-
-**`src/components/app/PublicDiscoverDetailModal.tsx`** — same 3 thumbnail lines.
-
-**`src/components/app/DiscoverCard.tsx`** — hover thumbnails:
-```
-Before: "w-7 h-7 rounded-md object-contain bg-black/40"
-After:  "w-7 h-7 rounded-md object-cover"
-```
-
-Three files, class-only changes. Quality optimization stays at 60.
+One file, ~60 lines added. No schema changes needed — `discover_presets` already has all the required columns.
 
