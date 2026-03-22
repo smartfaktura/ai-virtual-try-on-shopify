@@ -1,22 +1,19 @@
 
 
-# Fix Vertical Line Artifacts on Scene/Model/Product Thumbnails
+# Fix Scene Thumbnail Shape + Hide Tags
 
-## Problem
-The thumbnails use `getOptimizedUrl(url, { width: 80, quality: 50 })` which forces Supabase to resize the image to 80px width server-side. Portrait-ratio images get heavily squeezed, causing visible vertical line artifacts. The `object-contain` CSS then tries to fit this already-distorted image into a square.
+## Changes
 
-## Fix
+### 1. `src/components/app/DiscoverDetailModal.tsx`
 
-### `src/components/app/DiscoverDetailModal.tsx` (lines 163, 178, 193)
-Remove the `width` parameter from all three `getOptimizedUrl` calls — keep only quality compression:
+**Scene thumbnail (line 165)**: The scene image uses `object-contain` which shows the full image but doesn't fill the square. Change to `object-cover` to match the model thumbnail's visual appearance — both will be filled rounded squares:
+- `w-10 h-10 rounded-lg object-contain bg-muted/30` → `w-10 h-10 rounded-lg object-cover ring-1 ring-border/30`
 
-```ts
-// Before
-getOptimizedUrl(url, { width: 80, quality: 50 })
+**Remove tags section (lines 208-216)**: Delete the entire tags block that renders `#curlyhair`, `#datenight`, etc.
 
-// After  
-getOptimizedUrl(url, { quality: 60 })
-```
+### 2. `src/components/app/PublicDiscoverDetailModal.tsx`
 
-Three line changes in one file. The images will load at natural resolution with quality compression only, and CSS `object-contain` will handle the visual sizing without distortion.
+Mirror both changes — scene thumbnail to `object-cover`, remove tags section.
+
+Two files, ~15 lines removed total.
 
