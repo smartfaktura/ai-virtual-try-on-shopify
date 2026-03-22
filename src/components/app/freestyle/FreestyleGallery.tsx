@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
+import { mockModels, mockTryOnPoses } from '@/data/mockData';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -59,6 +60,8 @@ interface GalleryImage {
   prompt: string;
   userPrompt?: string | null;
   aspectRatio?: string;
+  modelId?: string | null;
+  sceneId?: string | null;
 }
 
 interface FreestyleGalleryProps {
@@ -490,7 +493,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
-  const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ url: string; prompt: string; aspectRatio?: string } | null>(null);
+  const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
 
@@ -513,7 +516,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
   const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setShareImg(img);
-  const addToDiscoverHandler = isAdmin ? (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setAddToDiscoverImg(img) : undefined;
+  const addToDiscoverHandler = isAdmin ? (img: GalleryImage) => setAddToDiscoverImg(img) : undefined;
 
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
@@ -577,15 +580,27 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           sourceGenerationId={shareImg.id}
         />
       )}
-      {addToDiscoverImg && (
-        <AddToDiscoverModal
-          open={!!addToDiscoverImg}
-          onClose={() => setAddToDiscoverImg(null)}
-          imageUrl={addToDiscoverImg.url}
-          prompt={addToDiscoverImg.prompt}
-          aspectRatio={addToDiscoverImg.aspectRatio}
-        />
-      )}
+      {addToDiscoverImg && (() => {
+        const model = addToDiscoverImg.modelId
+          ? mockModels.find(m => m.modelId === addToDiscoverImg.modelId)
+          : null;
+        const scene = addToDiscoverImg.sceneId
+          ? mockTryOnPoses.find(p => p.poseId === addToDiscoverImg.sceneId)
+          : null;
+        return (
+          <AddToDiscoverModal
+            open={!!addToDiscoverImg}
+            onClose={() => setAddToDiscoverImg(null)}
+            imageUrl={addToDiscoverImg.url}
+            prompt={addToDiscoverImg.prompt}
+            aspectRatio={addToDiscoverImg.aspectRatio}
+            modelName={model?.name}
+            modelImageUrl={model?.previewUrl}
+            sceneName={scene?.name}
+            sceneImageUrl={scene?.previewUrl}
+          />
+        );
+      })()}
     </>
   );
 
