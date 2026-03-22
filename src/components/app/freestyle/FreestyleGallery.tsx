@@ -563,7 +563,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onDownload={onDownload}
       onExpand={onExpand}
       onDelete={onDelete}
-      onCopyPrompt={onCopyPrompt}
+      onCopySettings={onCopySettings}
       onAddAsScene={adminSceneHandler}
       onAddAsModel={adminModelHandler}
       onShareToDiscover={shareHandler}
