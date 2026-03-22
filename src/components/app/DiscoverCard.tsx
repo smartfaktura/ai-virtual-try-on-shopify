@@ -24,7 +24,7 @@ interface DiscoverCardProps {
 function getGenerationLabel(item: DiscoverItem): string {
   if (item.type === 'scene') return 'Scene';
   const d = item.data;
-  if (d.workflow_name) return d.workflow_name;
+  if (d.workflow_name) return d.workflow_name.replace(/\bSet$/i, 'Workflow');
   if (d.scene_name) return `Freestyle · ${d.scene_name}`;
   return 'Freestyle';
 }

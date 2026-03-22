@@ -50,7 +50,7 @@ export function PublicDiscoverDetailModal({
   const title = isPreset ? item.data.title : item.data.name;
 
   const workflowLabel = isPreset && item.data.workflow_name
-    ? `${item.data.workflow_name} Workflow`
+    ? item.data.workflow_name.replace(/\bSet$/i, 'Workflow')
     : isPreset ? 'Freestyle' : 'Scene';
 
   return (
