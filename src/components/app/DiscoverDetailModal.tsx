@@ -161,7 +161,7 @@ export function DiscoverDetailModal({
         </div>
 
         {/* Right — Controls panel */}
-        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
+        <div ref={panelRef} className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
           {/* Close button */}
           <button
             onClick={onClose}
