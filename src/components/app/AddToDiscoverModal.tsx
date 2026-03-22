@@ -43,7 +43,7 @@ export function AddToDiscoverModal({
     if (!open) return;
     // Reset state
     setTitle('');
-    setCategory('lifestyle');
+    setCategory('fashion');
     setTags([]);
     setTagInput('');
     setAiLoading(true);

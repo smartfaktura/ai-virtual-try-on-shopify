@@ -110,11 +110,16 @@ Be concise and catchy.`;
                     category: {
                       type: "string",
                       enum: [
-                        "editorial",
-                        "commercial",
-                        "lifestyle",
                         "fashion",
-                        "campaign",
+                        "beauty",
+                        "fragrances",
+                        "jewelry",
+                        "accessories",
+                        "home",
+                        "food",
+                        "electronics",
+                        "sports",
+                        "supplements",
                       ],
                       description:
                         "The single best-matching category. editorial=moody/dramatic/cinematic, commercial=clean product/studio/e-commerce, lifestyle=natural/outdoor/casual, fashion=outfit-centric/styling/streetwear, campaign=ad-style/bold/promotional.",
