@@ -330,15 +330,9 @@ export default function PublicDiscover() {
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
             Discover
           </h1>
-          <p className="text-base text-muted-foreground max-w-lg mx-auto">
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
             All images on this page were generated with VOVV.AI — explore styles, scenes and prompts
           </p>
-          <a
-            href={user ? '/app/freestyle' : '/auth'}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-          >
-            Start generating for free →
-          </a>
         </div>
 
 
