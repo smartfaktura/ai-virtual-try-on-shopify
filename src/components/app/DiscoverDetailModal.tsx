@@ -268,7 +268,7 @@ export function DiscoverDetailModal({
                     <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allModelOptions.map(m => (
-                        <SelectItem key={m.name} value={m.name} className="text-xs">
+                        <SelectItem key={m.name} value={m.name} className="text-xs" textValue={m.name}>
                           <div className="flex items-center gap-2">
                             <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
                             <span>{m.name}</span>
