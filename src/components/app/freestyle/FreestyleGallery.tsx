@@ -328,7 +328,7 @@ function ImageCard({
   onDownload: (imageUrl: string, index: number) => void;
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
-  onCopyPrompt?: (prompt: string) => void;
+  onCopySettings?: (settings: CopySettings) => void;
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
   onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
