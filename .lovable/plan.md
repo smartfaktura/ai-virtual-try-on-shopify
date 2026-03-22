@@ -1,39 +1,40 @@
 
 
-# "Recreate This" — Pre-Fill Without Skipping Steps
+# Fix Category Mismatch in Admin "Add to Discover" & User "Submit to Discover" Modals
 
-## Approach
+## Problem
+The Discover feed now uses product-based categories (Fashion, Beauty, Fragrances, Jewelry, etc.) but the two modals still use the old style-based categories:
 
-Keep the normal flow (Source → Product → Model → Scene → Settings) but **pre-select** the model and scene from URL params when the page loads. The user walks through every step as usual, sees the pre-selected items highlighted, and can add more or change them freely.
+- **AddToDiscoverModal**: `cinematic, commercial, photography, styling, ads, lifestyle`
+- **SubmitToDiscoverModal**: `editorial, commercial, lifestyle, fashion, campaign`
 
-A small banner at the top of the Generate page indicates: "Recreating look from Discover" with the model/scene names — dismissible.
+These don't match the Discover page categories: `fashion, beauty, fragrances, jewelry, accessories, home, food, electronics, sports, supplements`
 
 ## Changes
 
-### 1. `src/pages/Generate.tsx` — Pre-fill state from URL params
+### 1. `src/components/app/AddToDiscoverModal.tsx` (line 11-13)
+Replace old categories with product-based ones:
+```ts
+const CATEGORIES = [
+  'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
+  'home', 'food', 'electronics', 'sports', 'supplements',
+] as const;
+```
 
-- On mount, read `?model=charlotte&scene=editorial-minimal` from URL
-- Look up matching model from `mockModels` + custom models by name → pre-set into `selectedModel`, `selectedModels`, `selectedModelMap`
-- Look up matching scene from `mockTryOnPoses` + custom scenes by name → pre-set into `selectedPose`, `selectedPoses`, `selectedPoseMap`
-- Store a `recreateSource` state flag to show the banner
-- Show a small info banner (dismissible): "Recreating look from Discover — Charlotte · Editorial Minimal"
-- User proceeds through all steps normally, sees pre-selections when they reach Model/Scene steps, can modify freely
+### 2. `src/components/app/SubmitToDiscoverModal.tsx` (line 10-12)
+Same replacement:
+```ts
+const CATEGORIES = [
+  'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
+  'home', 'food', 'electronics', 'sports', 'supplements',
+] as const;
+```
 
-### 2. `src/pages/Discover.tsx` — Smart routing in `handleUseItem`
+### 3. Update AI auto-fill function
+Both modals call `describe-discover-metadata` edge function which returns a category. Need to check if that function also uses old categories — if so, update the edge function's category list too.
 
-- If preset has `workflow_slug`: navigate to `/app/generate/:workflow_slug?model=X&scene=Y`
-- If no workflow: navigate to `/app/freestyle` with prompt params (existing behavior)
+### 4. Update default category
+Both modals default to `'lifestyle'` which no longer exists. Change default to `'fashion'`.
 
-### 3. `src/pages/PublicDiscover.tsx` — Same routing with auth redirect
-
-### 4. `src/components/app/DiscoverDetailModal.tsx` — Update CTA routing
-
-## Files
-
-| File | Change |
-|------|--------|
-| `src/pages/Generate.tsx` | Read URL params, pre-fill model/scene state, show banner |
-| `src/pages/Discover.tsx` | Route workflow presets to Generate with params |
-| `src/pages/PublicDiscover.tsx` | Same with auth redirect |
-| `src/components/app/DiscoverDetailModal.tsx` | Update "Recreate this" CTA |
+Two files changed, ~4 lines each.
 
