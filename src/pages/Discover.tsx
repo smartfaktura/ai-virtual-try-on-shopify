@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Compass, X } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
+
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
