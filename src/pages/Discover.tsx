@@ -446,7 +446,7 @@ export default function Discover() {
 
       {/* Category filter bar */}
       {!similarTo && (
-        <div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2">
+        <div className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-2 cursor-grab active:cursor-grabbing scroll-smooth">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
