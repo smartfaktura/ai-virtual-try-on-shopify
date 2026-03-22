@@ -71,20 +71,20 @@ export function DashboardPersonalizationHero() {
 
   return (
     <div className="space-y-1.5 mt-1">
-      <p className="text-muted-foreground transition-opacity duration-300">
+      <p className="text-muted-foreground max-w-lg transition-opacity duration-300">
         {headline}
       </p>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Personalized for</span>
+      <div className="flex items-center gap-2.5">
+        <span className="text-sm text-muted-foreground/70">Personalized for</span>
         {isMobile ? (
           <>
             <button
               onClick={() => setOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-sm font-medium text-foreground shadow-sm hover:bg-muted hover:border-border/60 transition-all duration-200"
             >
               {currentLabel}
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <ChevronDown className="w-3 h-3 text-muted-foreground/50" />
             </button>
             <MobilePickerSheet
               open={open}
@@ -97,9 +97,9 @@ export function DashboardPersonalizationHero() {
         ) : (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-sm font-medium text-foreground shadow-sm hover:bg-muted hover:border-border/60 transition-all duration-200">
                 {currentLabel}
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <ChevronDown className="w-3 h-3 text-muted-foreground/50" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-56 p-1">
