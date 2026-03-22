@@ -27,13 +27,16 @@ const REFERRAL_OPTIONS = [
 
 const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'skincare', label: 'Skincare & Beauty' },
-  { id: 'food', label: 'Food & Drinks' },
-  { id: 'home', label: 'Home & Living' },
-  { id: 'supplements', label: 'Supplements & Health' },
-  { id: 'jewelry', label: 'Jewelry & Accessories' },
-  { id: 'electronics', label: 'Electronics & Tech' },
-  { id: 'other', label: 'Other' },
+  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'jewelry', label: 'Jewelry' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'home', label: 'Home & Decor' },
+  { id: 'food', label: 'Food & Beverage' },
+  { id: 'electronics', label: 'Electronics' },
+  { id: 'sports', label: 'Sports & Fitness' },
+  { id: 'supplements', label: 'Health & Supplements' },
+  { id: 'any', label: 'Any Product' },
 ];
 
 const TOTAL_STEPS = 3;
@@ -71,9 +74,9 @@ export default function Onboarding() {
       case 1:
         return firstName.trim().length > 0;
       case 2:
-        return referralSource.length > 0;
-      case 3:
         return selectedCategories.length > 0;
+      case 3:
+        return referralSource.length > 0;
       default:
         return true;
     }
@@ -211,8 +214,44 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 2: Where did you hear about us */}
+          {/* Step 2: Product categories */}
           {step === 2 && (
+            <div className="space-y-6 animate-fade-in">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+                  What do you sell?
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  Pick the categories you work with — we'll tailor your dashboard and recommendations
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {PRODUCT_CATEGORIES.map(({ id, label }) => {
+                  const isSelected = selectedCategories.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggleCategory(id)}
+                      className={`relative flex items-center gap-2 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/5 text-foreground'
+                          : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      )}
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: How did you find us */}
+          {step === 3 && (
             <div className="space-y-6 animate-fade-in">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -237,42 +276,6 @@ export default function Onboarding() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Product categories */}
-          {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-                  What do you sell?
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  Select all that apply — this helps us personalize your experience
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {PRODUCT_CATEGORIES.map(({ id, label }) => {
-                  const isSelected = selectedCategories.includes(id);
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => toggleCategory(id)}
-                      className={`relative flex items-center gap-2 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/5 text-foreground'
-                          : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
-                    >
-                      {isSelected && (
-                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                      )}
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
               </div>
             </div>
           )}
