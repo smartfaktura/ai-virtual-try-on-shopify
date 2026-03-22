@@ -580,27 +580,18 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           sourceGenerationId={shareImg.id}
         />
       )}
-      {addToDiscoverImg && (() => {
-        const model = addToDiscoverImg.modelId
-          ? mockModels.find(m => m.modelId === addToDiscoverImg.modelId)
-          : null;
-        const scene = addToDiscoverImg.sceneId
-          ? mockTryOnPoses.find(p => p.poseId === addToDiscoverImg.sceneId)
-          : null;
-        return (
+      {addToDiscoverImg && (
           <AddToDiscoverModal
             open={!!addToDiscoverImg}
             onClose={() => setAddToDiscoverImg(null)}
             imageUrl={addToDiscoverImg.url}
             prompt={addToDiscoverImg.prompt}
             aspectRatio={addToDiscoverImg.aspectRatio}
-            modelName={model?.name}
-            modelImageUrl={model?.previewUrl}
-            sceneName={scene?.name}
-            sceneImageUrl={scene?.previewUrl}
+            modelId={addToDiscoverImg.modelId}
+            sceneId={addToDiscoverImg.sceneId}
+            sourceGenerationId={addToDiscoverImg.id}
           />
-        );
-      })()}
+      )}
     </>
   );
 
