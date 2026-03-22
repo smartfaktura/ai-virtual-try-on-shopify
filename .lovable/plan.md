@@ -1,49 +1,30 @@
 
 
-# Fix Discover Category Bar — Shorter Labels, Better Styling
-
-## Problem
-Category labels are too long (e.g. "Fashion & Apparel", "Health & Supplements"), causing the bar to overflow badly on desktop and mobile. The pills are small and feel cramped.
+# Remove Search Bar + Bigger Premium Category Pills on Discover Pages
 
 ## Changes
 
-### 1. Shorten category labels for Discover pages only
+### 1. `src/pages/PublicDiscover.tsx`
 
-Both `src/pages/Discover.tsx` and `src/pages/PublicDiscover.tsx` — use shorter, single-word-ish labels:
+**Remove search bar** (lines 364-373): Delete the entire search input block. Remove `searchQuery` state and `Search` import (keep `Compass` for empty state). Remove search filtering logic from the `filtered` useMemo.
 
-```typescript
-const CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'beauty', label: 'Beauty' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports' },
-  { id: 'supplements', label: 'Health' },
-];
-```
+**Bigger, more premium pills** (lines 376-390): Update pill styling:
+- `px-6 py-2.5 text-[15px]` — larger, more generous padding
+- Unselected: `bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground` — softer, more refined
+- Selected: keep `bg-foreground text-background shadow-sm`
+- Add `tracking-wide` for a slightly more editorial/luxury feel
+- Container: `gap-2.5` for more breathing room between pills
 
-### 2. Improve category bar styling
+### 2. `src/pages/Discover.tsx`
 
-**Container**: Add `flex-wrap justify-center` on desktop so pills wrap naturally instead of forcing a single scrollable row. Keep `overflow-x-auto scrollbar-hide` as fallback for mobile.
+**Remove search bar** (lines 449-458): Delete the search input block. Remove `searchQuery` state, `Search` import, and search filtering from `filtered` useMemo. Keep the "Similar to" chip functionality.
 
-**Pills**: Slightly larger tap targets with more padding. Unselected state gets a subtle `bg-muted/30` background so they look like actual interactive elements instead of floating text.
+**Same premium pill styling** as PublicDiscover: `px-6 py-2.5 text-[15px] tracking-wide`, softer unselected colors, `gap-2.5`.
 
-```
-px-4 py-2 → px-5 py-2
-```
-
-Selected: `bg-foreground text-background` (keep)
-Unselected: `bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground`
-
-### 3. Files changed
-- `src/pages/Discover.tsx` — shorter labels, updated pill styling (Discover.tsx keeps "Saved" tab)
-- `src/pages/PublicDiscover.tsx` — same changes, no "Saved" tab
+### 3. Cleanup
+- Remove unused `Search` import from both files (keep if used elsewhere)
+- Remove unused `Input` import from PublicDiscover if no longer needed
 
 ### Result
-All categories fit comfortably in one or two rows on desktop. Labels are scannable. Pills feel clickable and consistent with the rest of VOVV's UI.
+Clean, search-free discover pages with larger, more luxurious category pills that feel editorial and premium.
 
