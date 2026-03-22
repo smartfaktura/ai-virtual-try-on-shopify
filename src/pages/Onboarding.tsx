@@ -74,9 +74,9 @@ export default function Onboarding() {
       case 1:
         return firstName.trim().length > 0;
       case 2:
-        return referralSource.length > 0;
-      case 3:
         return selectedCategories.length > 0;
+      case 3:
+        return referralSource.length > 0;
       default:
         return true;
     }
