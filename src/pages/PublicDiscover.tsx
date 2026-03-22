@@ -44,16 +44,16 @@ function toTryOnPose(scene: PublicCustomScene): TryOnPose {
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'beauty', label: 'Beauty' },
   { id: 'fragrances', label: 'Fragrances' },
   { id: 'jewelry', label: 'Jewelry' },
   { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home & Decor' },
-  { id: 'food', label: 'Food & Beverage' },
+  { id: 'home', label: 'Home' },
+  { id: 'food', label: 'Food & Drink' },
   { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports & Fitness' },
-  { id: 'supplements', label: 'Health & Supplements' },
+  { id: 'sports', label: 'Sports' },
+  { id: 'supplements', label: 'Health' },
 ] as const;
 
 const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
@@ -373,16 +373,16 @@ export default function PublicDiscover() {
         </div>
 
         {/* Category filter bar */}
-        <div className="flex justify-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mb-1">
+        <div className="flex flex-wrap justify-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0',
+                'px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0',
                 selectedCategory === cat.id
                   ? 'bg-foreground text-background shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  : 'bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
               )}
             >
               {cat.label}
