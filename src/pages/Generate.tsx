@@ -577,6 +577,31 @@ export default function Generate() {
     }
   }, [activeWorkflow, workflowConfig]);
 
+  // Pre-fill model and scene from URL params (Discover "Recreate this")
+  useEffect(() => {
+    if (!prefillModelName && !prefillSceneName) return;
+    // Wait for scenes/models to be available
+    const allScenes = [...filterVisible(mockTryOnPoses), ...customPoses];
+
+    if (prefillModelName) {
+      const matchedModel = mockModels.find(m => m.name.toLowerCase() === prefillModelName.toLowerCase());
+      if (matchedModel) {
+        setSelectedModel(matchedModel);
+        setSelectedModels(new Set([matchedModel.modelId]));
+        setSelectedModelMap(new Map([[matchedModel.modelId, matchedModel]]));
+      }
+    }
+
+    if (prefillSceneName) {
+      const matchedScene = allScenes.find(s => s.name.toLowerCase() === prefillSceneName.toLowerCase());
+      if (matchedScene) {
+        setSelectedPose(matchedScene);
+        setSelectedPoses(new Set([matchedScene.poseId]));
+        setSelectedPoseMap(new Map([[matchedScene.poseId, matchedScene]]));
+      }
+    }
+  }, [prefillModelName, prefillSceneName, customPoses]);
+
   // Scroll to top when step changes
   useEffect(() => {
     document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
