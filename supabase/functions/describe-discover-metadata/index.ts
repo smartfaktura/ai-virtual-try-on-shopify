@@ -52,11 +52,16 @@ serve(async (req) => {
     const systemPrompt = `You are a creative director for a fashion AI platform called VOVV.AI. Given an AI-generated image (and optionally the prompt used to create it), suggest metadata for publishing it to a public Discover feed.
 
 CATEGORY DEFINITIONS — pick the single best match:
-• editorial — Moody, artistic, dramatic lighting, film-like color grading, dark tones, cinematic compositions
-• commercial — Clean product photography, studio lighting, e-commerce ready, brand campaign shots, catalog-style
-• lifestyle — Natural settings, outdoor, casual, candid moments, everyday context, relatable
-• fashion — Fashion-forward, outfit-centric, styling focus, streetwear, model showcasing clothes/accessories
-• campaign — Social media ad style, bold compositions, eye-catching, promotional feel, marketing-ready
+• fashion — Fashion & apparel, clothing, streetwear, outfits
+• beauty — Beauty, skincare, cosmetics, makeup
+• fragrances — Perfumes, colognes, scent bottles
+• jewelry — Rings, necklaces, watches, earrings
+• accessories — Bags, hats, sunglasses, belts, scarves
+• home — Home decor, furniture, interior styling
+• food — Food & beverage, drinks, restaurant, packaging
+• electronics — Tech, gadgets, devices, modern products
+• sports — Sports gear, fitness, activewear, athletic
+• supplements — Health supplements, vitamins, wellness products
 
 Be concise and catchy.`;
 
