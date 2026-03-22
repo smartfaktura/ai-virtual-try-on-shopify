@@ -1,22 +1,20 @@
 
 
-# Optimize Product Image Loading with Thumbnails
+# Fix Zoomed-In Product Images
 
 ## Problem
-Products page loads full-size images for grid thumbnails and list thumbnails, which will get slow as the product count grows.
+Adding `width=400` to the image optimization URL causes the server to resize images to 400px width. When these smaller images are displayed in containers using `object-cover`, they appear zoomed-in/cropped because the server crops the image before delivery.
 
 ## Solution
-Use the existing `getOptimizedUrl()` utility to serve resized, compressed thumbnails instead of full-size images.
+Remove the `width` parameter and use quality-only compression — this matches the established pattern noted in the project's image rendering system: "quality-only compression (60-75%) and omits width constraints to prevent server-side cropping."
 
 ## Changes
 
 ### File: `src/pages/Products.tsx`
 
-1. **Import** `getOptimizedUrl` from `@/lib/imageOptimization`
+1. **Grid view** (line 269): Change `getOptimizedUrl(product.image_url, { width: 400, quality: 70 })` → `getOptimizedUrl(product.image_url, { quality: 70 })`
 
-2. **Grid view** (line 267): Replace `product.image_url` with `getOptimizedUrl(product.image_url, { width: 400, quality: 70 })` — grid cards are ~25% viewport width, 400px is plenty for 2x retina
+2. **List view** (line 325): Change `getOptimizedUrl(product.image_url, { width: 112, quality: 70 })` → `getOptimizedUrl(product.image_url, { quality: 70 })`
 
-3. **List view** (line 324): Replace `product.image_url` with `getOptimizedUrl(product.image_url, { width: 112, quality: 70 })` — list thumbnails are 56px (w-14), so 112px covers 2x retina
-
-Two `src` attribute changes + one import. Images load significantly faster with no visible quality loss.
+Two line changes, same file. Images stay compressed for fast loading but maintain their natural aspect ratio without server-side cropping.
 
