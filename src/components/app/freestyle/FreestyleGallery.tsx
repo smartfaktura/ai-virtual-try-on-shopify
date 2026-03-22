@@ -62,6 +62,15 @@ interface GalleryImage {
   aspectRatio?: string;
   modelId?: string | null;
   sceneId?: string | null;
+  productId?: string | null;
+}
+
+export interface CopySettings {
+  prompt: string;
+  modelId?: string | null;
+  sceneId?: string | null;
+  productId?: string | null;
+  aspectRatio?: string;
 }
 
 interface FreestyleGalleryProps {
@@ -69,7 +78,7 @@ interface FreestyleGalleryProps {
   onDownload: (imageUrl: string, index: number) => void;
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
-  onCopyPrompt?: (prompt: string) => void;
+  onCopySettings?: (settings: CopySettings) => void;
   generatingCount?: number;
   generatingProgress?: number;
   generatingAspectRatio?: string;
@@ -305,7 +314,7 @@ function ImageCard({
   onDownload,
   onExpand,
   onDelete,
-  onCopyPrompt,
+  onCopySettings,
   onAddAsScene,
   onAddAsModel,
   onShareToDiscover,
@@ -319,7 +328,7 @@ function ImageCard({
   onDownload: (imageUrl: string, index: number) => void;
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
-  onCopyPrompt?: (prompt: string) => void;
+  onCopySettings?: (settings: CopySettings) => void;
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
   onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
@@ -350,19 +359,21 @@ function ImageCard({
             <Trash2 className="w-4 h-4" />
           </button>
         )}
-        {onCopyPrompt && (
+        {onCopySettings && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (img.userPrompt) {
-                onCopyPrompt(img.userPrompt);
-                toast.success('Prompt copied to editor');
-              } else {
-                toast.info('No custom prompt to copy');
-              }
+              onCopySettings({
+                prompt: img.userPrompt || img.prompt,
+                modelId: img.modelId,
+                sceneId: img.sceneId,
+                productId: img.productId,
+                aspectRatio: img.aspectRatio,
+              });
+              toast.success('Settings copied to editor');
             }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
-            title="Copy prompt to editor"
+            title="Copy settings to editor"
           >
             <Copy className="w-4 h-4" />
           </button>
@@ -474,7 +485,7 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore, upscalingSourceIds }: FreestyleGalleryProps) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopySettings, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore, upscalingSourceIds }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -552,7 +563,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onDownload={onDownload}
       onExpand={onExpand}
       onDelete={onDelete}
-      onCopyPrompt={onCopyPrompt}
+      onCopySettings={onCopySettings}
       onAddAsScene={adminSceneHandler}
       onAddAsModel={adminModelHandler}
       onShareToDiscover={shareHandler}

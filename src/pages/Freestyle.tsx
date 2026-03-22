@@ -667,7 +667,42 @@ export default function Freestyle() {
     aspectRatio: img.aspectRatio,
     modelId: img.modelId,
     sceneId: img.sceneId,
+    productId: img.productId,
   }));
+
+  const handleCopySettings = useCallback((settings: import('@/components/app/freestyle/FreestyleGallery').CopySettings) => {
+    setPrompt(settings.prompt || '');
+
+    // Resolve model
+    if (settings.modelId) {
+      const model = mockModels.find(m => m.modelId === settings.modelId);
+      if (model) setSelectedModel(model);
+    } else {
+      setSelectedModel(null);
+    }
+
+    // Resolve scene (mock + custom)
+    if (settings.sceneId) {
+      const scene = filterVisible(mockTryOnPoses).find(s => s.poseId === settings.sceneId)
+        || customScenePoses.find(s => s.poseId === settings.sceneId);
+      if (scene) setSelectedScene(scene);
+    } else {
+      setSelectedScene(null);
+    }
+
+    // Resolve product
+    if (settings.productId) {
+      const product = products.find(p => p.id === settings.productId);
+      if (product) setSelectedProduct(product);
+    } else {
+      setSelectedProduct(null);
+    }
+
+    // Restore aspect ratio
+    if (settings.aspectRatio) setAspectRatio(settings.aspectRatio as FreestyleAspectRatio);
+
+    setIsPromptCollapsed(false);
+  }, [products, customScenePoses, filterVisible]);
 
   const panelProps = {
     prompt,
@@ -842,7 +877,7 @@ export default function Freestyle() {
               onDownload={handleDownload}
               onExpand={openLightbox}
               onDelete={handleDelete}
-              onCopyPrompt={setPrompt}
+              onCopySettings={handleCopySettings}
               generatingCount={(isLoading || isSaving || isProcessing) ? 1 : 0}
               generatingProgress={isSaving ? 100 : 0}
               generatingAspectRatio={aspectRatio}
