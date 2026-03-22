@@ -1,29 +1,59 @@
 
 
-# Bump App Section Title & Subtitle Sizes
+# Add Arrow Navigation + Move Saved to Right Side
 
-## Current
-- Title: `text-xl sm:text-2xl` (20px → 24px)
-- Subtitle: `text-sm` (14px)
+## Changes
 
-## Proposed: Use Tailwind's natural scale for a clean premium bump
+### File: `src/pages/Discover.tsx`
 
-### Option A — Subtle (+2px feel)
-- Title: `text-2xl sm:text-[26px]` — requires custom value, minor improvement
-- Subtitle: `text-[15px]` — barely noticeable
+1. **Move "Saved" out of CATEGORIES array** — Remove `{ id: 'saved', label: 'Saved' }` from the array. Render it separately on the right side of the bar.
 
-### Option B — Premium step-up (recommended)
-- Title: `text-2xl sm:text-3xl` (24px → 30px) — noticeably more commanding
-- Subtitle: `text-sm sm:text-base` (14px → 16px) — cleaner readability
+2. **Wrap category bar in a flex container** with left/right arrow buttons and Saved pill:
 
-Option B stays within Tailwind's type scale, avoids custom values, and creates a more noticeable premium feel. The jump from 24px to 30px on desktop gives headings real presence without feeling oversized.
+```text
+[←] [All] [Fashion] [Beauty] ... [Health] [→]    [Saved · 2]
+```
 
-## Change
+- **Left arrow**: `ChevronLeft` icon, `w-4 h-4`, `text-muted-foreground/50 hover:text-foreground`, no border/bg, just a bare icon. Hidden when scrolled to start.
+- **Right arrow**: Same with `ChevronRight`. Hidden when scrolled to end.
+- Arrows click to scroll the container by ~200px
+- **Saved pill**: Sits outside the scrollable area, right-aligned with `ml-auto`, separated by a subtle `border-l border-border/30` divider
 
-### File: `src/components/app/PageHeader.tsx` (1 file, 2 lines)
+3. **Use a `useRef` for scroll container** + state to track `canScrollLeft` / `canScrollRight` to show/hide arrows.
 
-- Line with title `h1`: change `text-xl sm:text-2xl` → `text-2xl sm:text-3xl`
-- Line with subtitle `p`: change `text-sm` → `text-sm sm:text-base`
+### File: `src/pages/PublicDiscover.tsx`
 
-All app sections using `PageHeader` (Discover, Products, Workflows, Brand Profiles, Settings, etc.) get the update automatically.
+Same arrow treatment for the category bar (no Saved pill since public page).
+
+### Layout structure
+```tsx
+<div className="flex items-center gap-2">
+  {/* Left arrow */}
+  <button onClick={scrollLeft} className={cn("shrink-0 p-1", !canScrollLeft && "invisible")}>
+    <ChevronLeft className="w-4 h-4 text-muted-foreground/50 hover:text-foreground" />
+  </button>
+  
+  {/* Scrollable categories */}
+  <div ref={scrollRef} className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide ...">
+    {categories pills}
+  </div>
+  
+  {/* Right arrow */}
+  <button onClick={scrollRight} className={cn("shrink-0 p-1", !canScrollRight && "invisible")}>
+    <ChevronRight className="w-4 h-4 text-muted-foreground/50 hover:text-foreground" />
+  </button>
+  
+  {/* Saved - Discover.tsx only */}
+  <div className="shrink-0 ml-2 pl-3 border-l border-border/30">
+    <SavedPill />
+  </div>
+</div>
+```
+
+### Desktop only arrows
+Hide arrows on mobile (`hidden sm:block`) — mobile keeps the touch-scroll behavior.
+
+### Files changed
+- `src/pages/Discover.tsx` — restructure category bar, move Saved right, add arrows
+- `src/pages/PublicDiscover.tsx` — add arrows (no Saved)
 
