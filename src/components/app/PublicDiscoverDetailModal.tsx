@@ -98,7 +98,7 @@ export function PublicDiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Created with
                 </p>
-                <span className="inline-block text-xs font-medium text-foreground/80 bg-muted px-2.5 py-1 rounded-md w-fit">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/70">
                   {workflowLabel}
                 </span>
                 <div className="flex flex-col gap-2.5">

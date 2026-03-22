@@ -188,9 +188,19 @@ export function DiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Created with
                 </p>
-                <span className="inline-block text-xs font-medium text-foreground/80 bg-muted px-2.5 py-1 rounded-md w-fit">
+                <button
+                  onClick={() => {
+                    onClose();
+                    if (isPreset && item.data.workflow_slug) {
+                      navigate(`/app/generate/${item.data.workflow_slug}`);
+                    } else {
+                      navigate('/app/freestyle');
+                    }
+                  }}
+                  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/70 hover:text-blue-600 transition-colors cursor-pointer w-fit"
+                >
                   {workflowLabel}
-                </span>
+                </button>
                 <div className="flex flex-col gap-2.5">
                   {item.data.scene_name && (
                     <div className="flex items-center gap-2.5">
