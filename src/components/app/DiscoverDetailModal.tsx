@@ -5,6 +5,7 @@ import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
@@ -75,6 +76,7 @@ export function DiscoverDetailModal({
   const [editSceneName, setEditSceneName] = useState('__none__');
   const [editCategory, setEditCategory] = useState('fashion');
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
+  const [editPrompt, setEditPrompt] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
@@ -93,11 +95,13 @@ export function DiscoverDetailModal({
       setEditSceneName(item.data.scene_name || '__none__');
       setEditCategory(item.data.category || 'fashion');
       setEditWorkflowSlug(item.data.workflow_slug || '__freestyle__');
+      setEditPrompt(item.data.prompt || '');
     } else {
       setEditModelName('__none__');
       setEditSceneName('__none__');
       setEditCategory('fashion');
       setEditWorkflowSlug('__freestyle__');
+      setEditPrompt('');
     }
   }, [itemId, open]);
 
@@ -294,6 +298,15 @@ export function DiscoverDetailModal({
                     </SelectContent>
                   </Select>
                 </div>
+                {editWorkflowSlug === '__freestyle__' && (
+                  <Textarea
+                    value={editPrompt}
+                    onChange={(e) => setEditPrompt(e.target.value)}
+                    placeholder="Prompt for Recreate this..."
+                    className="text-xs min-h-[60px]"
+                    rows={3}
+                  />
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -312,6 +325,7 @@ export function DiscoverDetailModal({
                       scene_image_url: selectedScene?.imageUrl ?? null,
                       workflow_slug: selectedWorkflow?.slug ?? null,
                       workflow_name: selectedWorkflow?.name ?? null,
+                      prompt: editPrompt || null,
                     };
                     const { error } = await supabase
                       .from('discover_presets')
@@ -326,6 +340,7 @@ export function DiscoverDetailModal({
                     (item.data as any).scene_image_url = update.scene_image_url;
                     (item.data as any).workflow_slug = update.workflow_slug;
                     (item.data as any).workflow_name = update.workflow_name;
+                    (item.data as any).prompt = editPrompt || null;
                     toast.success('Metadata saved');
                   }}
                 >
