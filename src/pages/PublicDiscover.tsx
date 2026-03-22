@@ -331,7 +331,7 @@ export default function PublicDiscover() {
             Discover
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            All images on this page were generated with VOVV.AI - explore styles, scenes and prompts
+            Every image here was created by AI. Yours can be next.
           </p>
         </div>
 
