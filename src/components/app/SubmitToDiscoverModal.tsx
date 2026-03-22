@@ -8,7 +8,8 @@ import { useSubmitToDiscover } from '@/hooks/useDiscoverSubmissions';
 import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
-  'editorial', 'commercial', 'lifestyle', 'fashion', 'campaign',
+  'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
+  'home', 'food', 'electronics', 'sports', 'supplements',
 ] as const;
 
 interface SubmitToDiscoverModalProps {
