@@ -29,6 +29,9 @@ interface AddToDiscoverModalProps {
   modelImageUrl?: string;
   productName?: string;
   productImageUrl?: string;
+  modelId?: string | null;
+  sceneId?: string | null;
+  sourceGenerationId?: string;
 }
 
 export function AddToDiscoverModal({
