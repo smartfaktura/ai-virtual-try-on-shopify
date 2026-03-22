@@ -85,14 +85,21 @@ export function DiscoverDetailModal({
     },
   });
 
+  const itemId = item?.type === 'preset' ? item.data.id : item?.type === 'scene' ? item.data.poseId : null;
   useEffect(() => {
-    if (item && open) {
-      setEditModelName(item.type === 'preset' ? (item.data.model_name || '__none__') : '__none__');
-      setEditSceneName(item.type === 'preset' ? (item.data.scene_name || '__none__') : '__none__');
-      setEditCategory(item.type === 'preset' ? (item.data.category || 'fashion') : 'fashion');
-      setEditWorkflowSlug(item.type === 'preset' ? (item.data.workflow_slug || '__freestyle__') : '__freestyle__');
+    if (!itemId || !open) return;
+    if (item?.type === 'preset') {
+      setEditModelName(item.data.model_name || '__none__');
+      setEditSceneName(item.data.scene_name || '__none__');
+      setEditCategory(item.data.category || 'fashion');
+      setEditWorkflowSlug(item.data.workflow_slug || '__freestyle__');
+    } else {
+      setEditModelName('__none__');
+      setEditSceneName('__none__');
+      setEditCategory('fashion');
+      setEditWorkflowSlug('__freestyle__');
     }
-  }, [item, open]);
+  }, [itemId, open]);
 
   // Lock body scroll when open
   useEffect(() => {
