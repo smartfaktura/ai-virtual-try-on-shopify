@@ -112,6 +112,7 @@ function resolveCategory(cat: string): string {
 
 function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
   const itemCat = item.data.category;
+  if (itemCat === productCat) return true;
   const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
   if (mapped.includes(productCat)) return true;
   // Also check tags for presets

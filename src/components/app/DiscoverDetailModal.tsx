@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,7 @@ export function DiscoverDetailModal({
   onDelete,
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { asProfiles: customModelProfiles } = useCustomModels();
   const { asPoses: customSceneProfiles } = useCustomScenes();
@@ -341,6 +342,7 @@ export function DiscoverDetailModal({
                     (item.data as any).workflow_slug = update.workflow_slug;
                     (item.data as any).workflow_name = update.workflow_name;
                     (item.data as any).prompt = editPrompt || null;
+                    queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
                     toast.success('Metadata saved');
                   }}
                 >
