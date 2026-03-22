@@ -1,61 +1,23 @@
 
 
-# Enhance Copy Button to Restore Full Generation Context
+# Fix: Image Appearing in Both Categories After Admin Edit
 
-## What
-Currently the copy button on freestyle gallery images only copies the text prompt to the editor. The user wants it to also restore the model, scene, and product selections — effectively "reloading" the full generation settings.
+## Root Cause
+
+Two issues:
+
+1. **Stale query cache**: The save handler in `DiscoverDetailModal` mutates `item.data` locally but never calls `queryClient.invalidateQueries({ queryKey: ['discover-presets'] })`. The cached query data retains the old category, so the masonry grid still renders the item under the old category too.
+
+2. **Direct category match missing**: `itemMatchesProductCategory()` only checks the `PRODUCT_CATEGORY_MAP` lookup — it never does a simple `itemCat === productCat` check. So if an admin sets category to `fashion` directly, it only works because `PRODUCT_CATEGORY_MAP['fashion']` happens to include `'fashion'`. But this indirect mapping can cause items to appear in multiple categories when the map entry covers several product categories.
 
 ## Changes
 
-### 1. `src/components/app/freestyle/FreestyleGallery.tsx`
+### `src/components/app/DiscoverDetailModal.tsx`
+- Import `useQueryClient` from `@tanstack/react-query`
+- After successful save, call `queryClient.invalidateQueries({ queryKey: ['discover-presets'] })` to refresh the cached data with the updated category from the database.
 
-**Extend the callback signature:**
-- Change `onCopyPrompt` from `(prompt: string) => void` to a new `onCopySettings` callback that passes the full image metadata:
-  ```ts
-  onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
-  ```
-- Add `productId` to `GalleryImage` interface (it's already available in the data, just not passed through).
-- Update the copy button click handler to call `onCopySettings` with all fields from the image.
-- Update toast message to "Settings copied to editor".
+### `src/pages/Discover.tsx`
+- In `itemMatchesProductCategory()`, add a direct equality check first: `if (itemCat === productCat) return true;` — before the PRODUCT_CATEGORY_MAP lookup. This ensures that items with a direct product category (e.g., `fashion`, `beauty`) always match correctly without relying on the legacy mapping table.
 
-### 2. `src/pages/Freestyle.tsx`
-
-**Add `productId` to `galleryImages` mapping** (line 662-670):
-```ts
-productId: img.productId,
-```
-
-**Replace `onCopyPrompt={setPrompt}` with a new handler** that resolves IDs to objects:
-```ts
-const handleCopySettings = useCallback((settings) => {
-  setPrompt(settings.prompt || '');
-  
-  // Resolve model
-  if (settings.modelId) {
-    const model = mockModels.find(m => m.id === settings.modelId);
-    if (model) setSelectedModel(model);
-  } else { setSelectedModel(null); }
-  
-  // Resolve scene (mock + custom)
-  if (settings.sceneId) {
-    const scene = filterVisible(mockTryOnPoses).find(s => s.poseId === settings.sceneId)
-      || customScenePoses.find(s => s.poseId === settings.sceneId);
-    if (scene) setSelectedScene(scene);
-  } else { setSelectedScene(null); }
-  
-  // Resolve product
-  if (settings.productId) {
-    const product = products.find(p => p.id === settings.productId);
-    if (product) setSelectedProduct(product);
-  } else { setSelectedProduct(null); }
-  
-  // Restore aspect ratio
-  if (settings.aspectRatio) setAspectRatio(settings.aspectRatio);
-}, [products, customScenePoses, filterVisible]);
-```
-
-Pass `onCopySettings={handleCopySettings}` to `FreestyleGallery`.
-
-### Result
-Clicking the copy button restores prompt + model + scene + product + aspect ratio in one click. Toast says "Settings copied to editor".
+Two files, ~3 lines each.
 
