@@ -114,40 +114,89 @@ export function AddToDiscoverModal({
     setPublishing(true);
     const effectiveSlug = workflowSlug || (workflowName ? workflowName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null);
 
-    // Resolve missing image URLs from known data
-    let resolvedSceneImageUrl = sceneImageUrl || null;
+    // Resolve names and image URLs from IDs if not already provided
+    let resolvedModelName = modelName || null;
     let resolvedModelImageUrl = modelImageUrl || null;
+    let resolvedSceneName = sceneName || null;
+    let resolvedSceneImageUrl = sceneImageUrl || null;
 
-    if (!resolvedSceneImageUrl && sceneName) {
+    // Resolve model by ID
+    if (modelId && (!resolvedModelName || !resolvedModelImageUrl)) {
+      if (modelId.startsWith('custom-')) {
+        try {
+          const { data } = await supabase
+            .from('custom_models' as any)
+            .select('name, image_url')
+            .eq('id', modelId.replace('custom-', ''))
+            .limit(1)
+            .single();
+          if (data) {
+            resolvedModelName = resolvedModelName || (data as any).name;
+            resolvedModelImageUrl = resolvedModelImageUrl || (data as any).image_url;
+          }
+        } catch {}
+      } else {
+        const mock = mockModels.find(m => m.modelId === modelId);
+        if (mock) {
+          resolvedModelName = resolvedModelName || mock.name;
+          resolvedModelImageUrl = resolvedModelImageUrl || mock.previewUrl;
+        }
+      }
+    }
+
+    // Resolve scene by ID
+    if (sceneId && (!resolvedSceneName || !resolvedSceneImageUrl)) {
+      if (sceneId.startsWith('custom-')) {
+        try {
+          const { data } = await supabase
+            .from('custom_scenes' as any)
+            .select('name, image_url')
+            .eq('id', sceneId.replace('custom-', ''))
+            .limit(1)
+            .single();
+          if (data) {
+            resolvedSceneName = resolvedSceneName || (data as any).name;
+            resolvedSceneImageUrl = resolvedSceneImageUrl || (data as any).image_url;
+          }
+        } catch {}
+      } else {
+        const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
+        if (mock) {
+          resolvedSceneName = resolvedSceneName || mock.name;
+          resolvedSceneImageUrl = resolvedSceneImageUrl || mock.previewUrl;
+        }
+      }
+    }
+
+    // Fallback: resolve by name if we have names but no images
+    if (!resolvedSceneImageUrl && resolvedSceneName) {
       try {
         const { data } = await supabase
           .from('custom_scenes' as any)
           .select('image_url')
-          .eq('name', sceneName)
+          .eq('name', resolvedSceneName)
           .limit(1)
           .single();
         if (data) resolvedSceneImageUrl = (data as any).image_url;
       } catch {}
     }
-
-    if (!resolvedModelImageUrl && modelName) {
-      // Check custom_models first, then mock data
+    if (!resolvedModelImageUrl && resolvedModelName) {
       try {
         const { data } = await supabase
           .from('custom_models' as any)
           .select('image_url')
-          .eq('name', modelName)
+          .eq('name', resolvedModelName)
           .limit(1)
           .single();
         if (data) resolvedModelImageUrl = (data as any).image_url;
       } catch {}
       if (!resolvedModelImageUrl) {
-        const mock = mockModels.find(m => m.name === modelName);
+        const mock = mockModels.find(m => m.name === resolvedModelName);
         if (mock) resolvedModelImageUrl = mock.previewUrl;
       }
     }
 
-    const { error } = await supabase.from('discover_presets').insert({
+    const presetData = {
       title: title.trim(),
       prompt,
       image_url: imageUrl,
@@ -159,13 +208,34 @@ export function AddToDiscoverModal({
       is_featured: false,
       workflow_slug: effectiveSlug,
       workflow_name: workflowName || null,
-      scene_name: sceneName || null,
-      model_name: modelName || null,
+      scene_name: resolvedSceneName,
+      model_name: resolvedModelName,
       scene_image_url: resolvedSceneImageUrl,
       model_image_url: resolvedModelImageUrl,
       product_name: productName || null,
       product_image_url: productImageUrl || null,
-    } as any);
+    } as any;
+
+    // Check for existing preset with same image_url that's missing metadata — update instead of duplicate
+    let error: any = null;
+    const { data: existing } = await supabase
+      .from('discover_presets' as any)
+      .select('id, model_name, scene_name')
+      .eq('image_url', imageUrl)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing && (!(existing as any).model_name || !(existing as any).scene_name)) {
+      const { error: updateErr } = await supabase
+        .from('discover_presets' as any)
+        .update(presetData)
+        .eq('id', (existing as any).id);
+      error = updateErr;
+    } else {
+      const { error: insertErr } = await supabase.from('discover_presets').insert(presetData);
+      error = insertErr;
+    }
+
     if (error) {
       toast.error('Failed to publish to Discover');
     } else {
