@@ -475,7 +475,7 @@ export default function Discover() {
           <p className="text-xs text-muted-foreground/70 max-w-xs">
             Try different keywords or{' '}
             <button
-              onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSimilarTo(null); }}
+              onClick={() => { setSelectedCategory('all'); setSimilarTo(null); }}
               className="text-primary hover:underline"
             >
               browse all

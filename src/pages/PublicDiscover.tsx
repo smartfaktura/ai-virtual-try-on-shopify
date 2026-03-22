@@ -374,7 +374,7 @@ export default function PublicDiscover() {
             <p className="text-xs text-muted-foreground/70 max-w-xs">
               Try different keywords or{' '}
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                onClick={() => { setSelectedCategory('all'); }}
                 className="text-primary hover:underline"
               >
                 browse all
