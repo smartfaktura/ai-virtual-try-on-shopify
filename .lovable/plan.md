@@ -1,25 +1,41 @@
 
 
-# Fix Incorrect Image Count in Generation Subtitle
+# Fix Discover Card & Detail Modal Issues
 
-## Problem
+## Problems from Screenshot
 
-When generating with a `uses_tryon` workflow (like "Virtual Try-On Set"), the subtitle says "Generating 4 images" but only 1 image is actually being generated. This happens because the subtitle logic on line 3914 hits the `hasWorkflowConfig` branch and shows `selectedVariationIndices.size` (which is 4 — set when the workflow's variation config initialized). But for try-on workflows, image count is determined by the model×scene×ratio×framing matrix, not by variation indices.
+1. **"Virtual Try-On Set" label in top-left corner of card** — user doesn't want it
+2. **Scene/model thumbnails not showing on hover** — data exists but `scene_image_url`/`model_image_url` are null for recently created presets (metadata wasn't populated when publishing)
+3. **Detail modal "Recreate this" button** — should navigate to the workflow with pre-selected model/scene (and show the banner), but the primary CTA currently goes to freestyle for non-workflow items. The workflow CTA exists as a *separate secondary button* — should be the *primary* one when workflow data exists.
+4. **Detail modal not showing scene/model thumbnails** — same null data issue as hover
 
-## Fix
+## Changes
 
-### `src/pages/Generate.tsx` (line 3912-3918)
+### 1. `src/components/app/DiscoverCard.tsx` — Remove workflow badge from top-left
 
-Add a check for `activeWorkflow?.uses_tryon` **before** the `hasWorkflowConfig` branch in the subtitle logic. For try-on workflows, compute the actual image count as `tryOnModelCount * tryOnSceneCount * aspectRatioCount * framingCount * multiProductCount`, and show a try-on-specific subtitle like:
+Delete lines 119-124 (the `{!isScene && !hideLabels && item.data.workflow_name && ...}` block that renders the workflow name badge in the top-left corner). The workflow name is already shown in the hover overlay as the generation type label at the bottom.
 
-```
-"Dressing Charlotte in "Racer Knitted Crop Top""
-```
+### 2. `src/components/app/DiscoverDetailModal.tsx` — Merge workflow CTA into primary
 
-This reuses the existing try-on subtitle format from line 3915 but ensures it fires for all try-on workflows (including ones with `hasWorkflowConfig`).
+When `workflow_slug` exists, make the primary "Recreate this" button navigate to the Generate page with model/scene params (currently done by the secondary "Try Workflow" button). Remove the separate secondary workflow button to avoid duplication.
 
-**Before:** `hasWorkflowConfig` check catches try-on workflows and shows variation count (4)
-**After:** `uses_tryon` check fires first and shows the correct model×scene count (1)
+Change lines 325-331: If `isPreset && item.data.workflow_slug`, onClick navigates to `/app/generate/${workflow_slug}?model=X&scene=Y`. Otherwise keep current behavior (freestyle or use scene).
 
-One line change in the conditional chain.
+Delete lines 333-350 (the separate "Try Workflow" button) since it's now merged into the primary CTA.
+
+### 3. `src/components/app/AddToDiscoverModal.tsx` — Verify metadata is being passed
+
+The modal already accepts `sceneName`, `modelName`, `sceneImageUrl`, `modelImageUrl` props and inserts them. The issue is the *callers* may not be passing image URLs. Check `LibraryDetailModal.tsx` — it passes `sceneName` and `modelName` from library item but may not pass `sceneImageUrl`/`modelImageUrl`.
+
+### 4. `src/components/app/LibraryDetailModal.tsx` — Pass image URLs
+
+Add `sceneImageUrl={item.sceneImageUrl}` and `modelImageUrl={item.modelImageUrl}` to the `AddToDiscoverModal` props. These fields were added to `LibraryItem` but may not be wired to the modal.
+
+## Files
+
+| File | Change |
+|------|--------|
+| `src/components/app/DiscoverCard.tsx` | Remove workflow badge from top-left (lines 119-124) |
+| `src/components/app/DiscoverDetailModal.tsx` | Merge workflow CTA into primary button, remove separate secondary |
+| `src/components/app/LibraryDetailModal.tsx` | Pass `sceneImageUrl`/`modelImageUrl` to AddToDiscoverModal |
 
