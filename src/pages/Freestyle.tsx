@@ -877,7 +877,7 @@ export default function Freestyle() {
               onDownload={handleDownload}
               onExpand={openLightbox}
               onDelete={handleDelete}
-              onCopyPrompt={setPrompt}
+              onCopySettings={handleCopySettings}
               generatingCount={(isLoading || isSaving || isProcessing) ? 1 : 0}
               generatingProgress={isSaving ? 100 : 0}
               generatingAspectRatio={aspectRatio}
