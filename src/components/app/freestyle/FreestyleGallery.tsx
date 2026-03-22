@@ -78,7 +78,7 @@ interface FreestyleGalleryProps {
   onDownload: (imageUrl: string, index: number) => void;
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
-  onCopyPrompt?: (prompt: string) => void;
+  onCopySettings?: (settings: CopySettings) => void;
   generatingCount?: number;
   generatingProgress?: number;
   generatingAspectRatio?: string;
