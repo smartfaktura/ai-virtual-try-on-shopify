@@ -1,39 +1,31 @@
 
 
-# Fix Discover Thumbnails: Remove Borders + Add Width Optimization
+# Fix Zoomed Thumbnails — Use object-contain Instead of object-cover
 
 ## Problem
-The scene/model/product thumbnails in the Discover detail modal and card hover show visible borders (`ring-1 ring-border/30`) and load full-resolution images despite being only 28-40px wide.
+`object-cover` crops images to fill the square, causing a "zoomed in" look on scene/model thumbnails. The user wants the full image visible without cropping.
 
-## Changes
+## Fix
+Change `object-cover` → `object-contain` on all scene/model/product thumbnails. Add a subtle `bg-muted/30` background so the empty space around non-square images doesn't look broken.
 
-### 1. Detail Modal Thumbnails — `src/components/app/DiscoverDetailModal.tsx` (lines 163, 178, 193)
-- Remove `ring-1 ring-border/30` from all three thumbnail `<img>` classes
-- Add `width: 80` to `getOptimizedUrl` calls (80px is 2x of 40px display size for retina)
+### Files & Changes
 
-### 2. Public Detail Modal — `src/components/app/PublicDiscoverDetailModal.tsx` (lines 106, 121, 136)
-- Same: remove ring classes, add `width: 80` optimization
-
-### 3. Card Hover Thumbnails — `src/components/app/DiscoverCard.tsx` (lines 79, 85)
-- Remove `ring-1 ring-white/20` and `bg-black/30` from both thumbnail classes
-- Change `object-contain` to `object-cover` (matches the detail modal style)
-- Add `getOptimizedUrl(url, { width: 56, quality: 60 })` wrapper (56px = 2x of 28px)
-
-### Summary of class changes
-
-**Detail modals** (w-10 = 40px):
+**`src/components/app/DiscoverDetailModal.tsx`** (lines 165, 180, 195):
 ```
-Before: "w-10 h-10 rounded-lg object-cover ring-1 ring-border/30"
-After:  "w-10 h-10 rounded-lg object-cover"
+Before: "w-10 h-10 rounded-lg object-cover"
+After:  "w-10 h-10 rounded-lg object-contain bg-muted/30"
 ```
 
-**Card hover** (w-7 = 28px):
-```
-Before: "w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20"
-After:  "w-7 h-7 rounded-md object-cover"
-```
+**`src/components/app/PublicDiscoverDetailModal.tsx`** — same 3 thumbnail lines, same change.
 
-**Image URLs**: All thumbnail URLs get width parameter for server-side resize (80px for detail, 56px for card hover), keeping quality at 60.
+**`src/components/app/DiscoverCard.tsx`** (lines 79, 85):
+```
+Before: "w-7 h-7 rounded-md object-cover"
+After:  "w-7 h-7 rounded-md object-contain bg-black/20"
+```
+(Card hover is on dark overlay, so `bg-black/20` instead of `bg-muted/30`)
 
-Three files, cosmetic-only changes.
+Keep `getOptimizedUrl` width optimization — that's fine, it's just the fitting mode that's wrong.
+
+Three files, one-word change per thumbnail.
 
