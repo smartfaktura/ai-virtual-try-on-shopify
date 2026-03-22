@@ -27,13 +27,16 @@ const REFERRAL_OPTIONS = [
 
 const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'skincare', label: 'Skincare & Beauty' },
-  { id: 'food', label: 'Food & Drinks' },
-  { id: 'home', label: 'Home & Living' },
-  { id: 'supplements', label: 'Supplements & Health' },
-  { id: 'jewelry', label: 'Jewelry & Accessories' },
-  { id: 'electronics', label: 'Electronics & Tech' },
-  { id: 'other', label: 'Other' },
+  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'jewelry', label: 'Jewelry' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'home', label: 'Home & Decor' },
+  { id: 'food', label: 'Food & Beverage' },
+  { id: 'electronics', label: 'Electronics' },
+  { id: 'sports', label: 'Sports & Fitness' },
+  { id: 'supplements', label: 'Health & Supplements' },
+  { id: 'any', label: 'Any Product' },
 ];
 
 const TOTAL_STEPS = 3;
