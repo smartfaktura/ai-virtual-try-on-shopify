@@ -1,22 +1,28 @@
 
 
-# Fix Spacing in Freestyle "Recreating look from Discover" Banner
+# Fix Thumbnail Vertical Letterboxing in Discover Detail Modal
 
 ## Problem
-The banner badges (Jordan, Editorial Movement) run together without enough visual separation from the label text and from each other. The hint text below also needs better spacing.
+After switching to `object-contain`, portrait images (like model headshots) show with empty space and appear as thin vertical strips. The user's original complaint was about borders, not about cropping — `object-cover` was actually fine for these small thumbnails.
 
-## Changes
+## Fix
+Switch back to `object-cover` for all thumbnails. Remove the `bg-muted/30` / `bg-black/20` backgrounds (no longer needed since `object-cover` fills the space). This gives clean, borderless, properly-fitted thumbnails.
 
-### `src/pages/Freestyle.tsx` (lines 750-779)
+### Files & Changes
 
-1. Increase gap between label text and badges: change the inner flex container from `gap-2` to `gap-3`
-2. Add a subtle separator between the "Recreating look from Discover" text and the badges by adding `mr-1` to the span
-3. Increase hint text top margin from `mt-1.5` to `mt-2`
-
+**`src/components/app/DiscoverDetailModal.tsx`** (lines 165, 180, 195):
 ```
-Before: <div className="flex items-center gap-2 text-sm flex-wrap">
-After:  <div className="flex items-center gap-3 text-sm flex-wrap">
+Before: "w-10 h-10 rounded-lg object-contain bg-muted/30"
+After:  "w-10 h-10 rounded-lg object-cover"
 ```
 
-One file, minor spacing tweaks.
+**`src/components/app/PublicDiscoverDetailModal.tsx`** — same 3 lines, same change.
+
+**`src/components/app/DiscoverCard.tsx`** — hover thumbnails:
+```
+Before: "w-7 h-7 rounded-md object-contain bg-black/20"
+After:  "w-7 h-7 rounded-md object-cover"
+```
+
+Three files, revert fitting mode only. Borders stay removed, optimization stays.
 
