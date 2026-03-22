@@ -114,12 +114,47 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           }
         }
 
+        // Resolve custom model/scene IDs to names + image URLs
+        const customModelIds = [...new Set(fsData.map(f => (f as any).model_id).filter((id: string | null) => id?.startsWith('custom-')).map((id: string) => id.replace('custom-', '')))];
+        const customSceneIds = [...new Set(fsData.map(f => (f as any).scene_id).filter((id: string | null) => id?.startsWith('custom-')).map((id: string) => id.replace('custom-', '')))];
+
+        const [customModelsRes, customScenesRes] = await Promise.all([
+          customModelIds.length ? supabase.from('custom_models').select('id, name, image_url').in('id', customModelIds) : Promise.resolve({ data: [] as any[] }),
+          customSceneIds.length ? supabase.from('custom_scenes').select('id, name, image_url').in('id', customSceneIds) : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        const customModelsMap = new Map((customModelsRes.data ?? []).map((m: any) => [m.id, m]));
+        const customScenesMap = new Map((customScenesRes.data ?? []).map((s: any) => [s.id, s]));
+
+        function resolveModel(modelId: string | null): { name?: string; imageUrl?: string } {
+          if (!modelId) return {};
+          if (modelId.startsWith('custom-')) {
+            const cm = customModelsMap.get(modelId.replace('custom-', ''));
+            return cm ? { name: cm.name, imageUrl: cm.image_url } : {};
+          }
+          const mock = mockModels.find(m => m.modelId === modelId);
+          return mock ? { name: mock.name, imageUrl: mock.previewUrl } : {};
+        }
+
+        function resolveScene(sceneId: string | null): { name?: string; imageUrl?: string } {
+          if (!sceneId) return {};
+          if (sceneId.startsWith('custom-')) {
+            const cs = customScenesMap.get(sceneId.replace('custom-', ''));
+            return cs ? { name: cs.name, imageUrl: cs.image_url } : {};
+          }
+          const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
+          return mock ? { name: mock.name, imageUrl: mock.previewUrl } : {};
+        }
+
         for (const f of fsData) {
           if (!f.image_url || f.image_url.startsWith('data:') || f.image_url === 'saved_to_storage') continue;
           const wfLabel = (f as any).workflow_label as string | null;
           const displayLabel = wfLabel || 'Freestyle';
           const userPrompt = (f as any).user_prompt as string | null;
           if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
+
+          const modelInfo = resolveModel((f as any).model_id);
+          const sceneInfo = resolveScene((f as any).scene_id);
 
           rawItems.push({
             url: f.image_url,
@@ -135,6 +170,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
               status: 'completed',
               aspectRatio: f.aspect_ratio,
               quality: f.quality,
+              modelName: modelInfo.name,
+              modelImageUrl: modelInfo.imageUrl,
+              sceneName: sceneInfo.name,
+              sceneImageUrl: sceneInfo.imageUrl,
             },
           });
         }
