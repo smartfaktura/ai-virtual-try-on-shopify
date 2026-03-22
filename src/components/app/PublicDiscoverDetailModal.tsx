@@ -117,10 +117,10 @@ export function PublicDiscoverDetailModal({
                   {item.data.model_name && (
                     <div className="flex items-center gap-2.5">
                       {item.data.model_image_url && (
-                         <img
-                          src={getOptimizedUrl(item.data.model_image_url, { width: 80, quality: 60 })}
-                          alt={item.data.model_name}
-                          className="w-10 h-10 rounded-lg object-cover"
+                          <img
+                           src={getOptimizedUrl(item.data.model_image_url, { width: 80, quality: 60 })}
+                           alt={item.data.model_name}
+                           className="w-10 h-10 rounded-lg object-contain bg-muted/30"
                         />
                       )}
                       <div>
