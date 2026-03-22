@@ -210,13 +210,7 @@ export default function PublicDiscover() {
     return allItems.filter((item) => {
       // Category filter
       if (selectedCategory !== 'all') {
-        if (item.type === 'scene') {
-          const sceneCat = item.data.category;
-          const mappedCategories = SCENE_CATEGORY_MAP[sceneCat] ?? [];
-          if (!mappedCategories.includes(selectedCategory)) return false;
-        } else {
-          if (resolveCategory(item.data.category) !== selectedCategory) return false;
-        }
+        if (!itemMatchesProductCategory(item, selectedCategory)) return false;
       }
 
       // Search filter
