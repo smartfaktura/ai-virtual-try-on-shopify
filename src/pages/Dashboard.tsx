@@ -409,7 +409,7 @@ export default function Dashboard() {
         <DashboardPersonalizationHero />
 
         {/* Quick Actions */}
-        <div className="mt-4">
+        <div className="mt-5">
           <DashboardQuickActions />
         </div>
       </div>

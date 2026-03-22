@@ -70,7 +70,7 @@ export function DashboardPersonalizationHero() {
   );
 
   return (
-    <div className="space-y-1.5 mt-1">
+    <div className="space-y-2 mt-2.5">
       <p className="text-muted-foreground max-w-lg transition-opacity duration-300">
         {headline}
       </p>
