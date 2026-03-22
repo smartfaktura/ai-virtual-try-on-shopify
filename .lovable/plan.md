@@ -1,32 +1,40 @@
 
 
-# Fix Discover Detail Modal Thumbnails — Thin Strip Issue
+# Fix Discover Detail Thumbnails: Letterboxing from object-contain
 
-## Problem
-The `object-contain` + `width=80` optimization combo causes portrait images (like model headshots) to render as thin vertical strips in the 40×40px container. The width-constrained optimized URL delivers an 80px-wide image, but for tall portraits, `object-contain` then shrinks it further to fit the height, resulting in a sliver.
+## Problem Identified
 
-## Solution
-Remove the `width` parameter from `getOptimizedUrl` for these thumbnails — only keep `quality: 60`. Without a width constraint, the image transform returns the original aspect ratio at reduced quality, and `object-contain` can properly fit it into the square. This applies to all three files.
+The thumbnails use `object-contain bg-muted`, which fits the entire image inside the 40x40px square without cropping. For non-square images (like the Editorial Movement scene or Jordan model headshot), this creates visible letterboxing — the `bg-muted` background shows through as padding around the image, making it look like the image doesn't fill the container.
 
-Alternatively (and more robustly): use `object-cover` for **model** thumbnails specifically (headshots always look better cropped to fill) while keeping `object-contain` for scenes. But since the user wants uniform "zoom out" fitting, the simpler fix is to drop the width param so `object-contain` has enough image data to work with.
+Comparing the two screenshots: the first one (Canon G7X / Zara) looks correct because those source images happen to be closer to square. The second (Editorial Movement / Jordan) looks broken because those images are portrait-oriented, so `object-contain` shrinks them to fit height, leaving side padding.
 
-## Changes
+## Root Cause
 
-### `src/components/app/DiscoverDetailModal.tsx` (lines 163, 178, 193)
-Remove `width: 80` from all three `getOptimizedUrl` calls — keep only `{ quality: 60 }`:
+`object-contain` and `object-cover` are opposite trade-offs:
+- `object-contain` = full image visible, but doesn't fill the container (letterboxing)
+- `object-cover` = fills the container, but crops edges
+
+The earlier "zoomed" complaint was caused by the `width` optimization parameter distorting aspect ratios on the server side — not by `object-cover` itself. That width param has since been removed.
+
+## Fix
+
+Switch back to `object-cover` and remove `bg-muted` / `bg-black/40`. Now that the width optimization parameter is gone, `object-cover` will receive the full-resolution image (at quality 60) and crop naturally to fill the square — no distortion, no letterboxing.
+
+### Files & Changes
+
+**`src/components/app/DiscoverDetailModal.tsx`** (lines 165, 180, 195):
 ```
-Before: getOptimizedUrl(url, { width: 80, quality: 60 })
-After:  getOptimizedUrl(url, { quality: 60 })
+Before: "w-10 h-10 rounded-lg object-contain bg-muted"
+After:  "w-10 h-10 rounded-lg object-cover"
 ```
 
-### `src/components/app/PublicDiscoverDetailModal.tsx` — same 3 lines
+**`src/components/app/PublicDiscoverDetailModal.tsx`** — same 3 thumbnail lines.
 
-### `src/components/app/DiscoverCard.tsx` — hover thumbnails
-Remove `width: 56` from both `getOptimizedUrl` calls:
+**`src/components/app/DiscoverCard.tsx`** — hover thumbnails:
 ```
-Before: getOptimizedUrl(url, { width: 56, quality: 60 })
-After:  getOptimizedUrl(url, { quality: 60 })
+Before: "w-7 h-7 rounded-md object-contain bg-black/40"
+After:  "w-7 h-7 rounded-md object-cover"
 ```
 
-Three files, removing width constraints only. `object-contain bg-muted` classes stay as-is.
+Three files, class-only changes. Quality optimization stays at 60.
 
