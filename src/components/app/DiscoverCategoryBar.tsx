@@ -1,0 +1,127 @@
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface CategoryItem {
+  id: string;
+  label: string;
+}
+
+interface DiscoverCategoryBarProps {
+  categories: readonly CategoryItem[];
+  selectedCategory: string;
+  onSelectCategory: (id: string) => void;
+  savedCount?: number;
+}
+
+function useScrollArrows(ref: React.RefObject<HTMLDivElement>) {
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, [ref]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [ref, update]);
+
+  const scrollBy = useCallback((dir: number) => {
+    ref.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
+  }, [ref]);
+
+  return { canScrollLeft, canScrollRight, scrollLeft: () => scrollBy(-1), scrollRight: () => scrollBy(1) };
+}
+
+export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCategory, savedCount }: DiscoverCategoryBarProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {/* Left arrow — desktop only */}
+      <button
+        onClick={scrollLeft}
+        className={cn(
+          'hidden sm:flex shrink-0 p-1 transition-opacity duration-200',
+          canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        aria-label="Scroll left"
+      >
+        <ChevronLeft className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
+      </button>
+
+      {/* Scrollable categories */}
+      <div
+        ref={scrollRef}
+        className="fade-scroll flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1 px-1 cursor-grab active:cursor-grabbing scroll-smooth"
+      >
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => onSelectCategory(cat.id)}
+            className={cn(
+              'px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap shrink-0',
+              selectedCategory === cat.id
+                ? 'bg-foreground text-background shadow-sm'
+                : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
+            )}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Right arrow — desktop only */}
+      <button
+        onClick={scrollRight}
+        className={cn(
+          'hidden sm:flex shrink-0 p-1 transition-opacity duration-200',
+          canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        aria-label="Scroll right"
+      >
+        <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
+      </button>
+
+      {/* Saved pill — only when savedCount is provided */}
+      {savedCount !== undefined && (
+        <>
+          <div className="hidden sm:block shrink-0 h-6 border-l border-border/30 ml-1" />
+          <button
+            onClick={() => onSelectCategory('saved')}
+            className={cn(
+              'shrink-0 px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap',
+              selectedCategory === 'saved'
+                ? 'bg-foreground text-background shadow-sm'
+                : 'bg-muted/20 text-muted-foreground/80 hover:bg-muted/50 hover:text-foreground'
+            )}
+          >
+            Saved{savedCount > 0 && <span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+export function PublicDiscoverCategoryBar({ categories, selectedCategory, onSelectCategory }: Omit<DiscoverCategoryBarProps, 'savedCount'>) {
+  return (
+    <DiscoverCategoryBar
+      categories={categories}
+      selectedCategory={selectedCategory}
+      onSelectCategory={onSelectCategory}
+    />
+  );
+}
