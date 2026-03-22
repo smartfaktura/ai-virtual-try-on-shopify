@@ -343,7 +343,7 @@ export default function Discover() {
 
       return true;
     });
-  }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
+  }, [allItems, selectedCategory, similarTo, isSaved, savedItems]);
 
   // Sort: featured items first (by created_at desc), then newest first
   const sorted = useMemo(() => {
