@@ -748,9 +748,9 @@ export default function Freestyle() {
             <Alert className="border-primary/20 bg-primary/5">
               <AlertDescription>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm flex-wrap">
+                   <div className="flex items-center gap-3 text-sm flex-wrap">
                     <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-muted-foreground">Recreating look from Discover</span>
+                    <span className="text-muted-foreground mr-1">Recreating look from Discover</span>
                     {recreateSource.modelName && (
                       <Badge variant="secondary" className="text-xs gap-1.5 pl-1 pr-2">
                         {recreateSource.modelImageUrl && (
@@ -775,7 +775,7 @@ export default function Freestyle() {
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground/70 mt-1.5 ml-6">
+                <p className="text-xs text-muted-foreground/70 mt-2 ml-6">
                   Add your product to generate this type of result
                 </p>
               </AlertDescription>
