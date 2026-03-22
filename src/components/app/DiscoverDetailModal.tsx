@@ -185,22 +185,24 @@ export function DiscoverDetailModal({
             {/* Created with section */}
             {isPreset && (
               <div className="space-y-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  Created with
-                </p>
-                <button
-                  onClick={() => {
-                    onClose();
-                    if (isPreset && item.data.workflow_slug) {
-                      navigate(`/app/generate/${item.data.workflow_slug}`);
-                    } else {
-                      navigate('/app/freestyle');
-                    }
-                  }}
-                  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/70 hover:text-blue-600 transition-colors cursor-pointer w-fit"
-                >
-                  {workflowLabel}
-                </button>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                    Created with
+                  </span>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      if (isPreset && item.data.workflow_slug) {
+                        navigate(`/app/generate/${item.data.workflow_slug}`);
+                      } else {
+                        navigate('/app/freestyle');
+                      }
+                    }}
+                    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 hover:text-foreground/90 transition-colors cursor-pointer"
+                  >
+                    {workflowLabel}
+                  </button>
+                </div>
                 <div className="flex flex-col gap-2.5">
                   {item.data.scene_name && (
                     <div className="flex items-center gap-2.5">

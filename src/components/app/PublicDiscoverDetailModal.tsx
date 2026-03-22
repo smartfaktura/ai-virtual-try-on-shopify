@@ -95,12 +95,14 @@ export function PublicDiscoverDetailModal({
             {/* Created with section */}
             {isPreset && (
               <div className="space-y-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  Created with
-                </p>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/70">
-                  {workflowLabel}
-                </span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                    Created with
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/70">
+                    {workflowLabel}
+                  </span>
+                </div>
                 <div className="flex flex-col gap-2.5">
                   {item.data.scene_name && (
                     <div className="flex items-center gap-2.5">
