@@ -402,7 +402,7 @@ export default function Discover() {
   const handleSearchSimilar = (item: DiscoverItem) => {
     setSimilarTo(item);
     setSelectedCategory('all');
-    setSearchQuery('');
+    
   };
 
   const handleToggleSave = (item: DiscoverItem) => {
