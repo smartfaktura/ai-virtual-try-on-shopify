@@ -359,19 +359,21 @@ function ImageCard({
             <Trash2 className="w-4 h-4" />
           </button>
         )}
-        {onCopyPrompt && (
+        {onCopySettings && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (img.userPrompt) {
-                onCopyPrompt(img.userPrompt);
-                toast.success('Prompt copied to editor');
-              } else {
-                toast.info('No custom prompt to copy');
-              }
+              onCopySettings({
+                prompt: img.userPrompt || img.prompt,
+                modelId: img.modelId,
+                sceneId: img.sceneId,
+                productId: img.productId,
+                aspectRatio: img.aspectRatio,
+              });
+              toast.success('Settings copied to editor');
             }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
-            title="Copy prompt to editor"
+            title="Copy settings to editor"
           >
             <Copy className="w-4 h-4" />
           </button>
