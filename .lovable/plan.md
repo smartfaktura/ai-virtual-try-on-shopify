@@ -1,46 +1,37 @@
 
 
-# Make "Created with" Workflow Label a Clickable Link
+# Fix "Created with" Label: Same Line + Subtle Hover Color
 
 ## Problem
-The workflow badge (e.g., "Freestyle") is styled as a static chip with a muted background. The user wants it to:
-1. Keep the same font style as the "CREATED WITH" header (uppercase tracking)
-2. Be a clickable link that navigates to the workflow/freestyle page
-3. Show deep blue on hover
+1. "CREATED WITH" and "FREESTYLE" are on separate lines — should be on the same line.
+2. Hover color is vivid blue (`text-blue-600`) — too bright, should be subtle.
 
 ## Changes
 
-### `src/components/app/DiscoverDetailModal.tsx` (line 191-193)
+### `src/components/app/DiscoverDetailModal.tsx` (lines 187-202)
 
-Replace the `<span>` badge with a clickable element that navigates to the correct destination (same logic as the "Recreate this" button):
+Replace the `<div className="space-y-3">` + separate `<p>` and `<button>` with a single inline layout:
 
 ```tsx
-// Before
-<span className="inline-block text-xs font-medium text-foreground/80 bg-muted px-2.5 py-1 rounded-md w-fit">
-  {workflowLabel}
-</span>
-
-// After
-<button
-  onClick={() => {
-    onClose();
-    if (item.data.workflow_slug) {
-      navigate(`/app/generate/${item.data.workflow_slug}`);
-    } else {
-      navigate('/app/freestyle');
-    }
-  }}
-  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/70 hover:text-blue-600 transition-colors cursor-pointer w-fit"
->
-  {workflowLabel}
-</button>
+<div className="flex items-baseline gap-1.5">
+  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+    Created with
+  </span>
+  <button
+    onClick={...}
+    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 hover:text-foreground/90 transition-colors cursor-pointer"
+  >
+    {workflowLabel}
+  </button>
+</div>
 ```
 
-This makes it match the "CREATED WITH" header font style (small uppercase tracking) and turns deep blue on hover, acting as a link to the workflow or freestyle page.
+- Same line using `flex items-baseline gap-1.5`
+- Hover changes from `text-blue-600` to `text-foreground/90` (subtle darken, not vivid blue)
 
-### `src/components/app/PublicDiscoverDetailModal.tsx` (line 101-103)
+### `src/components/app/PublicDiscoverDetailModal.tsx`
 
-Same change but for unauthenticated users, link to `/auth` or `/pricing` instead (since they can't access app routes). Or simply make it non-clickable text with the same styling (no bg-muted chip). Since public users can't navigate to workflows, just restyle to match the uppercase font without the link behavior.
+Same inline layout change for consistency (public modal has no click behavior, just restyle to inline).
 
 Two files, ~5 lines each.
 
