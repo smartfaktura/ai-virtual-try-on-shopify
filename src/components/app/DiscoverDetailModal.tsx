@@ -71,10 +71,10 @@ export function DiscoverDetailModal({
     return items;
   }, [customSceneProfiles]);
 
-  const [editModelName, setEditModelName] = useState('');
-  const [editSceneName, setEditSceneName] = useState('');
-  const [editCategory, setEditCategory] = useState('');
-  const [editWorkflowSlug, setEditWorkflowSlug] = useState('');
+  const [editModelName, setEditModelName] = useState('__none__');
+  const [editSceneName, setEditSceneName] = useState('__none__');
+  const [editCategory, setEditCategory] = useState('fashion');
+  const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
