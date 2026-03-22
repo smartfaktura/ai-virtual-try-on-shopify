@@ -1,30 +1,22 @@
 
 
-# Fix Thumbnail Aspect Ratios — Card Hover + Detail Modal
+# Fix Vertical Line Artifacts on Scene/Model/Product Thumbnails
 
-## Problems from Screenshots
+## Problem
+The thumbnails use `getOptimizedUrl(url, { width: 80, quality: 50 })` which forces Supabase to resize the image to 80px width server-side. Portrait-ratio images get heavily squeezed, causing visible vertical line artifacts. The `object-contain` CSS then tries to fit this already-distorted image into a square.
 
-1. **Card hover overlay**: Scene thumbnail uses `object-cover` (line 79) which crops the image. Model thumbnail uses `rounded-full object-cover` (line 85) which also crops. Both should be square with `object-contain`.
+## Fix
 
-2. **Detail modal**: The thumbnails already have `object-contain bg-muted/30` (fixed earlier), but the scene/model images themselves may still appear dark/broken because the source images are portrait-ratio being contained in a square — the `bg-muted/30` background is too subtle on dark surfaces. Need to ensure consistent styling.
+### `src/components/app/DiscoverDetailModal.tsx` (lines 163, 178, 193)
+Remove the `width` parameter from all three `getOptimizedUrl` calls — keep only quality compression:
 
-## Changes
+```ts
+// Before
+getOptimizedUrl(url, { width: 80, quality: 50 })
 
-### 1. `src/components/app/DiscoverCard.tsx` — Fix hover thumbnails
+// After  
+getOptimizedUrl(url, { quality: 60 })
+```
 
-**Line 79** (scene thumbnail):
-`w-7 h-7 rounded-md object-cover ring-1 ring-white/20` → `w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20`
-
-**Line 85** (model thumbnail):
-`w-7 h-7 rounded-full object-cover ring-1 ring-white/20` → `w-7 h-7 rounded-md object-contain bg-black/30 ring-1 ring-white/20`
-
-### 2. `src/components/app/DiscoverDetailModal.tsx` — Already fixed
-
-Thumbnails at lines 165, 180, 195 already use `object-contain bg-muted/30`. No changes needed — these should render correctly once image URLs are populated.
-
-### 3. `src/components/app/PublicDiscoverDetailModal.tsx` — Already fixed
-
-Same — already updated in previous round.
-
-Two class changes in one file.
+Three line changes in one file. The images will load at natural resolution with quality compression only, and CSS `object-contain` will handle the visual sizing without distortion.
 
