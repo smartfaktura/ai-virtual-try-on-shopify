@@ -742,6 +742,8 @@ async function completeQueueJob(
     scene_image_url: payload.pose?.originalImageUrl || null,
     model_image_url: payload.model?.originalImageUrl || null,
     workflow_slug: payload.workflow_slug || null,
+    product_name: payload.product_name || null,
+    product_image_url: payload.product_image_url || null,
   });
 
   if (generatedCount < requestedCount) {
