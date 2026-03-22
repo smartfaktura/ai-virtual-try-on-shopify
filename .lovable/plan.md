@@ -1,82 +1,46 @@
 
 
-# Personalized Dashboard Selector + Settings Preferences
+# Premium Personalization Hero — Apple-Inspired Refinement
 
-## Overview
-Add a "Personalized for: [category]" pill below the welcome greeting, with dynamic headline text, AI team line, and CTAs. Add "Content Preferences" section in Settings. All data saved to existing `profiles.product_categories`.
+## Problem
+The current hero has too much clutter (AI team line, duplicate CTAs, heavy spacing). It doesn't feel premium.
 
-## Files
+## Changes
 
-### 1. New: `src/lib/categoryConstants.ts`
+### File: `src/components/app/DashboardPersonalizationHero.tsx`
 
-```typescript
-export const PRODUCT_CATEGORIES = [
-  { id: 'fashion', label: 'Fashion & Apparel' },
-  { id: 'beauty', label: 'Beauty & Skincare' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home & Decor' },
-  { id: 'food', label: 'Food & Beverage' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports & Fitness' },
-  { id: 'supplements', label: 'Health & Supplements' },
-  { id: 'any', label: 'All products' },
-];
+**1. Remove all clutter (lines 155-182)**
+Delete: AI team text, "Meet your AI team" link, both CTA buttons. Quick Actions below already handles navigation.
 
-export const CATEGORY_HEADLINES: Record<string, string> = {
-  fashion: 'Create campaign-ready fashion visuals without photoshoots.',
-  beauty: 'Create clean, high-end skincare visuals that feel like luxury campaigns.',
-  fragrances: 'Capture the mood of your fragrance through cinematic, emotional visuals.',
-  jewelry: 'Highlight every detail with premium, light-perfect jewelry visuals.',
-  accessories: 'Turn everyday products into styled, scroll-stopping visuals.',
-  home: 'Place your products into beautifully designed interiors instantly.',
-  food: 'Create delicious, ad-ready visuals that make people crave your product.',
-  electronics: 'Showcase your product in sleek, modern environments built for conversion.',
-  sports: 'Create dynamic visuals with energy, movement, and performance.',
-  supplements: 'Build trust with clean, premium visuals that feel credible and strong.',
-  any: 'Turn your ideas into high-quality, brand-ready visuals in seconds.',
-};
+**2. Tighten spacing**
+Change container from `space-y-3 mt-4` to `space-y-2 mt-3`.
+
+**3. Refine the pill selector — Apple style**
+- Softer label: change "Personalized for:" to lighter weight, tracking-wide uppercase micro-label (`text-xs font-medium uppercase tracking-wider text-muted-foreground/70`)
+- Pill: remove `bg-muted`, use transparent background with a subtle border (`border border-border/50`), lighter font weight (`font-normal`), and a smooth `transition-all duration-200`. On hover: `hover:border-border hover:shadow-sm`. This gives a glass-like, understated feel.
+- Shrink chevron to `w-3 h-3` with lower opacity
+
+**4. Refine headline text**
+- Change from `text-base text-muted-foreground` to `text-[15px] leading-relaxed text-muted-foreground/80 font-light`
+- The lighter weight + slightly reduced opacity creates that Apple "whisper" feel where text is present but doesn't compete
+
+**5. Add smooth transition on headline change**
+Keep `transition-opacity duration-300` for category switches.
+
+### Result
+```text
+Welcome back, Tomas 👋
+Here's what's happening with your studio.
+
+PERSONALIZED FOR   [ Fashion & Apparel ▾ ]
+Create campaign-ready fashion visuals without photoshoots.
+
+[Upload Product] [Generate Images] [Browse Workflows] [Brand Profiles]
 ```
 
-Helper functions:
-- `getCategoryLabel(ids: string[])` — 0 or only "any" → "All products", 1 → category name, 2 → "A & B", 3+ → "Your product mix"
-- `getCategoryHeadline(ids: string[])` — 0 or "any" → all products headline, 1 → exact match, 2 → "Create high-quality visuals tailored to your products — from styled campaigns to real-life scenes.", 3+ → "Turn your product mix into consistent, high-quality visuals in seconds."
+Two lines total. Whisper-quiet label, understated bordered pill, light headline. Feels like Apple's "Designed for iPhone" badge — present but effortless.
 
-### 2. New: `src/components/app/DashboardPersonalizationHero.tsx`
-
-Self-contained component. Placed between welcome text and Quick Actions on the returning-user dashboard.
-
-**Data**: Fetches `product_categories` from `profiles` on mount. Local editing state. Saves to `profiles.product_categories` on "Save preferences".
-
-**UI structure** (top to bottom):
-1. **Pill selector**: `Personalized for: [label ▼]` — `rounded-full bg-muted px-3 py-1.5 text-sm font-medium` with `ChevronDown` icon. Hover: slightly darker bg. Click opens Popover (desktop) or MobilePickerSheet (mobile).
-2. **Dropdown content**: Header "Select your focus". All 11 categories with checkmarks. Multi-select. Footer: "Save preferences" button.
-3. **Dynamic headline**: Text from `getCategoryHeadline()`. `text-base text-muted-foreground`. Smooth opacity transition on change.
-4. **AI team line**: "Your AI creative team is ready to generate, refine, and scale your visuals." — `text-sm text-muted-foreground`
-5. **"Meet your AI team"** — subtle text link → `https://vovv.ai/team`
-6. **CTA buttons**: Primary "Generate new visuals" → `/app/freestyle`, Secondary outline "Browse workflows" → `/app/workflows`
-
-**Mobile**: Uses existing `MobilePickerSheet` for category picker. Save button at bottom of sheet.
-
-### 3. Edit: `src/pages/Dashboard.tsx` (lines 402-412)
-
-Insert `<DashboardPersonalizationHero />` between `<p>Here's what's happening...</p>` (line 406) and the Quick Actions div (line 408).
-
-### 4. Edit: `src/pages/Settings.tsx` (lines 473-475)
-
-After "In-App Notifications" section, before `</CardContent>`, add:
-- `<Separator />`
-- Section header: "Content Preferences"
-- Description: "Select categories that match your products. This helps tailor your dashboard experience."
-- Checkbox list of all 11 categories (same from `categoryConstants.ts`, showing "All products" for "any")
-- "Save preferences" button (writes to `profiles.product_categories`)
-- "Reset to onboarding selection" text button (re-fetches and restores original)
-
-### 5. Edit: `src/pages/Onboarding.tsx`
-
-Replace local `PRODUCT_CATEGORIES` array with import from `categoryConstants.ts`. Map "any" label back to "Any Product" in onboarding UI only (or keep consistent as "All products" everywhere).
-
-## No database changes needed
-`profiles.product_categories` (text array) already exists.
+### Summary
+- 1 file, remove ~30 lines of clutter, restyle ~5 lines
+- No new dependencies
 
