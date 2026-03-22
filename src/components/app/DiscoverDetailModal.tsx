@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2, Workflow } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -196,7 +196,7 @@ export function DiscoverDetailModal({
                 )}
                 {isPreset && item.data.workflow_name && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">
-                    · <Workflow className="w-3 h-3" /> {item.data.workflow_name}
+                    · {item.data.workflow_name}
                   </span>
                 )}
               </div>
@@ -323,31 +323,23 @@ export function DiscoverDetailModal({
 
             {/* Primary CTA */}
             <Button
-              onClick={() => { onUseItem(item); onClose(); }}
-              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
-            >
-              {isPreset ? 'Recreate this' : 'Use Scene'}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-
-            {/* Workflow CTA */}
-            {isPreset && item.data.workflow_slug && (
-              <Button
-                variant="outline"
-                onClick={() => {
+              onClick={() => {
+                if (isPreset && item.data.workflow_slug) {
                   onClose();
                   const params = new URLSearchParams();
                   if (item.data.model_name) params.set('model', item.data.model_name);
                   if (item.data.scene_name) params.set('scene', item.data.scene_name);
                   navigate(`/app/generate/${item.data.workflow_slug}?${params.toString()}`);
-                }}
-                className="w-full h-11 rounded-xl text-sm font-medium gap-2 border-primary/20 hover:bg-primary/5"
-              >
-                <Workflow className="w-4 h-4" />
-                Try {item.data.workflow_name || 'This Workflow'}
-                <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-              </Button>
-            )}
+                } else {
+                  onUseItem(item);
+                  onClose();
+                }
+              }}
+              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+            >
+              {isPreset ? 'Recreate this' : 'Use Scene'}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
 
             {/* Secondary actions */}
             <div className="flex gap-2">
