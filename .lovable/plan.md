@@ -1,56 +1,48 @@
 
 
-# Smooth Progress Bar Animation on TryShot
-
-## Problem
-The progress bar resets abruptly and uses a fixed 2400ms duration that doesn't match the actual word cycle time. The `linear` easing feels mechanical.
+# Update Onboarding: New Categories, Reorder Steps, Improve Copy
 
 ## Changes
 
-### File: `src/pages/TryShot.tsx`
+### File: `src/pages/Onboarding.tsx`
 
-**1. Calculate accurate duration per word cycle**
+**1. Update `PRODUCT_CATEGORIES` array (lines 28-37)**
 
-Each word has a different length, so the cycle time varies. Calculate it dynamically:
-- Typing: `chars × 80ms`
-- Pause: `2000ms`  
-- Deleting: `chars × 40ms`
-- Total: `chars × 120 + 2000`
-
-Store as a computed value and pass to the transition duration.
-
-**2. Use double-rAF for glitch-free reset**
-
-Replace the single `requestAnimationFrame` with a double-rAF to ensure the browser has fully painted the `width: 0%` before starting the fill transition:
-
-```tsx
-useEffect(() => {
-  setProgress(0);
-  const raf1 = requestAnimationFrame(() => {
-    requestAnimationFrame(() => setProgress(100));
-  });
-  return () => cancelAnimationFrame(raf1);
-}, [wordIndex]);
+Replace with 11 new categories:
+```typescript
+const PRODUCT_CATEGORIES = [
+  { id: 'fashion', label: 'Fashion & Apparel' },
+  { id: 'beauty', label: 'Beauty & Skincare' },
+  { id: 'fragrances', label: 'Fragrances' },
+  { id: 'jewelry', label: 'Jewelry' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'home', label: 'Home & Decor' },
+  { id: 'food', label: 'Food & Beverage' },
+  { id: 'electronics', label: 'Electronics' },
+  { id: 'sports', label: 'Sports & Fitness' },
+  { id: 'supplements', label: 'Health & Supplements' },
+  { id: 'any', label: 'Any Product' },
+];
 ```
 
-**3. Use `cubic-bezier` easing**
+**2. Swap step 2 and step 3 order**
 
-Replace `linear` with `cubic-bezier(0.4, 0, 0.2, 1)` (ease-in-out) so the bar starts gently, accelerates, and slows at the end — feels much more polished.
+Currently: Step 1 (Profile) → Step 2 (Referral) → Step 3 (Categories)
 
-**4. Update transition style**
+New order: Step 1 (Profile) → Step 2 (Categories) → Step 3 (Referral / "How did you find us?")
 
-```tsx
-style={{
-  width: `${progress}%`,
-  transition: progress === 0 ? 'none' : `width ${cycleDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-}}
-```
+Swap the JSX blocks for step 2 and step 3, and update the `canProceed()` logic accordingly. Categories become step 2, referral becomes step 3 (last question before "Get Started").
 
-Where `cycleDuration` = `ROTATING_WORDS[wordIndex].length * 120 + 2000`.
+**3. Update subtitle copy (categories step)**
+
+Change `"Select all that apply — this helps us personalize your experience"` to something like:
+`"Pick the categories you work with — we'll tailor your dashboard and recommendations"`
+
+This makes it clearer what the personalization does.
 
 ## Summary
-- 1 file, ~5 lines changed
-- Duration synced to actual word cycle length
-- Double-rAF eliminates reset flicker
-- Smooth ease-in-out curve instead of linear
+- 1 file changed
+- 11 categories replacing 8
+- Steps reordered so "How did you find us?" is last
+- Better subtitle copy for the categories step
 
