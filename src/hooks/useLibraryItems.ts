@@ -40,7 +40,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         // Build freestyle query
         let fsQuery = supabase
           .from('freestyle_generations')
-          .select('id, image_url, prompt, user_prompt, aspect_ratio, quality, created_at, workflow_label')
+          .select('id, image_url, prompt, user_prompt, aspect_ratio, quality, created_at, workflow_label, model_id, scene_id, product_id')
           .order('created_at', { ascending })
           .limit(FS_FETCH_LIMIT);
 
