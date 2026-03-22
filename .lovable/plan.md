@@ -1,78 +1,53 @@
 
 
-# Redesign Discover Detail Modal
+# Fix Missing Scene/Model/Product Thumbnails in Discover Detail Modal
 
-## Summary of Changes
+## Root Cause
 
-Remove clutter (category label, aspect ratio, prompt section, copy button, generate-prompt-from-image button). Add product thumbnail row. Show workflow name prominently as "VIRTUAL TRY-ON SET WORKFLOW". Keep scene/model thumbnails with small square previews.
+The edge functions (`generate-tryon`, `generate-workflow`) have the correct code to save `scene_image_url`, `model_image_url`, `product_name`, `product_image_url` into `generation_jobs`, but the data is still null for recent jobs. The functions need to be **redeployed**. Additionally, existing `discover_presets` entries like "Date Night Glow" have names but no image URLs — they need backfilling.
 
-## Database Migration
+Even after redeployment, there's a gap: if a user publishes an older library item (created before deployment), the image URLs will be null. The `AddToDiscoverModal` should have a fallback that resolves image URLs from known scene/model data.
 
-Add `product_name` and `product_image_url` columns to `discover_presets`:
+## Changes
 
-```sql
-ALTER TABLE public.discover_presets
-  ADD COLUMN product_name text,
-  ADD COLUMN product_image_url text;
-```
+### 1. Redeploy edge functions
+Redeploy `generate-tryon` and `generate-workflow` so future generations correctly persist all metadata columns.
 
-## File Changes
+### 2. `src/components/app/AddToDiscoverModal.tsx` — Resolve missing image URLs at publish time
 
-### 1. `src/hooks/useDiscoverPresets.ts`
-Add `product_name` and `product_image_url` to the `DiscoverPreset` interface.
+Add logic that, when `sceneImageUrl` or `modelImageUrl` are null but names exist, looks them up:
+- **Scene**: Query `custom_scenes` table by name, or match against `mockTryOnPoses` from mock data
+- **Model**: Match against `mockModels` by name to get `previewUrl`, or query `custom_models` table
+- **Product**: Already passed from Generate.tsx — just ensure it flows through
 
-### 2. `src/components/app/DiscoverDetailModal.tsx` — Major cleanup
+This ensures even old library items get proper thumbnails when published to Discover.
 
-**Remove:**
-- Category label (line 166-193 — the "fashion" text and admin category selector stays for admin only, hidden for regular users)
-- Aspect ratio display (lines 210-217 — "4:5" text)
-- Entire "Generate Prompt from Image" section (lines 258-293)
-- Entire "Prompt" section (lines 296-311)
-- "Copy" button from secondary actions (lines 346-353)
-- Remove unused imports: `Copy`, `Sparkles`, `Loader2`, `convertImageToBase64`
-- Remove `generatedPrompt`, `isGenerating`, `handleGeneratePrompt`, `handleCopy`, `handleCopyGenerated`, `handleUseGenerated` state/functions
+### 3. Backfill existing discover presets via SQL
 
-**Update "Created with" section:**
-- Show workflow name prominently: e.g. "VIRTUAL TRY-ON SET WORKFLOW" as a label above the thumbnails
-- Scene thumbnail: square `w-10 h-10 rounded-lg` with `object-cover` (using optimized small URL)
-- Model thumbnail: same size `w-10 h-10 rounded-full`
-- Product thumbnail: same size `w-10 h-10 rounded-lg` — new row if `product_name` exists
-- If no workflow/scene/model → show "FREESTYLE" as the workflow label
-
-**Keep:**
-- Title
-- View count
-- Tags
-- "Recreate this" primary CTA (unchanged)
-- Save, Similar, Feature (admin), Delete (admin) secondary buttons
-- "More like this" related items grid
-- Admin category selector (only visible to admins)
-
-### 3. `src/components/app/PublicDiscoverDetailModal.tsx` — Mirror changes
-
-Same removals: category label, aspect ratio, prompt section. Same "Created with" section updates with product row. Keep the signup CTA.
-
-### 4. `src/components/app/AddToDiscoverModal.tsx`
-
-Accept and insert `productName` and `productImageUrl` props.
-
-### 5. `src/components/app/LibraryDetailModal.tsx`
-
-Pass product metadata to `AddToDiscoverModal` if available from the library item.
-
-### 6. Edge functions (`generate-tryon`, `generate-workflow`)
-
-Store `product_name` and `product_image_url` in `generation_jobs` when generating (requires adding those columns to `generation_jobs` too — second migration).
-
-### 7. `src/hooks/useLibraryItems.ts`
-
-Select and map `product_name`, `product_image_url` from `generation_jobs`.
-
-## Second Migration — `generation_jobs`
+Update "Date Night Glow" (and any other presets with names but no image URLs) with the correct URLs from `custom_scenes` and known model data:
 
 ```sql
-ALTER TABLE public.generation_jobs
-  ADD COLUMN product_name text,
-  ADD COLUMN product_image_url text;
+-- Scene: Canon G7X @Dining → custom_scenes table
+-- Model: Zara → known URL from mock data
+UPDATE discover_presets dp
+SET scene_image_url = cs.image_url
+FROM custom_scenes cs
+WHERE dp.scene_name = cs.name AND dp.scene_image_url IS NULL;
+
+UPDATE discover_presets
+SET model_image_url = '<zara-model-url>'
+WHERE model_name = 'Zara' AND model_image_url IS NULL;
 ```
+
+### 4. `src/components/app/DiscoverDetailModal.tsx` — No code changes needed
+
+The modal already renders thumbnails when URLs exist. Once data is populated, thumbnails will appear.
+
+## Files
+
+| File | Change |
+|------|--------|
+| Edge functions | Redeploy `generate-tryon` and `generate-workflow` |
+| `src/components/app/AddToDiscoverModal.tsx` | Add fallback URL resolution from scene/model lookups (~15 lines) |
+| Migration | Backfill existing presets with image URLs from `custom_scenes` + mock model data |
 
