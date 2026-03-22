@@ -9,7 +9,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
-  'cinematic', 'commercial', 'photography', 'styling', 'ads', 'lifestyle',
+  'fashion', 'beauty', 'fragrances', 'jewelry', 'accessories',
+  'home', 'food', 'electronics', 'sports', 'supplements',
 ] as const;
 
 interface AddToDiscoverModalProps {
