@@ -142,7 +142,7 @@ export default function PublicDiscover() {
   const { isAdmin } = useIsAdmin();
   const columnCount = useColumnCount();
   const { filterVisible } = useHiddenScenes();
-  const [searchQuery, setSearchQuery] = useState('');
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
 
