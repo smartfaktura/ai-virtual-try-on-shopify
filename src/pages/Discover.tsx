@@ -444,7 +444,7 @@ export default function Discover() {
       {similarTo && (
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium">
-            Similar to: {getItemName(similarTo)}
+            Similar to: {similarTo.type === 'preset' ? (similarTo.data.scene_name || getItemName(similarTo)) : getItemName(similarTo)}
             <button onClick={() => setSimilarTo(null)} className="ml-1.5 hover:text-primary/70">
               <X className="w-3.5 h-3.5" />
             </button>
