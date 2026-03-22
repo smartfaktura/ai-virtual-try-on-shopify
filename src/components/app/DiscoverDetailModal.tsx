@@ -51,6 +51,36 @@ export function DiscoverDetailModal({
 }: DiscoverDetailModalProps) {
   const navigate = useNavigate();
 
+  const { models: customModelProfiles } = useCustomModels();
+  const { scenes: customSceneProfiles } = useCustomScenes();
+
+  const allModels = useMemo(() => {
+    const combined = [...mockModels];
+    customModelProfiles?.forEach(cm => {
+      if (!combined.find(m => m.name === cm.name)) combined.push(cm);
+    });
+    return combined;
+  }, [customModelProfiles]);
+
+  const allScenes = useMemo(() => {
+    const combined = [...mockTryOnPoses];
+    customSceneProfiles?.forEach(cs => {
+      if (!combined.find(s => s.name === cs.name)) combined.push(cs);
+    });
+    return combined;
+  }, [customSceneProfiles]);
+
+  const [editModelName, setEditModelName] = useState('');
+  const [editSceneName, setEditSceneName] = useState('');
+  const [savingMeta, setSavingMeta] = useState(false);
+
+  useEffect(() => {
+    if (item && open) {
+      setEditModelName(item.type === 'preset' ? (item.data.model_name || '__none__') : '__none__');
+      setEditSceneName(item.type === 'preset' ? (item.data.scene_name || '__none__') : '__none__');
+    }
+  }, [item, open]);
+
   // Lock body scroll when open
   useEffect(() => {
     if (open) {
