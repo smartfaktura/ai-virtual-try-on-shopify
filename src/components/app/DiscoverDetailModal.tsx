@@ -129,10 +129,9 @@ export function DiscoverDetailModal({
     <div
       className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
       style={{ margin: 0, padding: 0 }}
-      onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" />
+      <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" onClick={onClose} />
 
       {/* Split layout */}
       <div
