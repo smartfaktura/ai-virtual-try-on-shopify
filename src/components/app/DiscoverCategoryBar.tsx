@@ -100,7 +100,7 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
       <button
         onClick={scrollRight}
         className={cn(
-          'hidden sm:flex shrink-0 p-1 transition-opacity duration-200',
+          'hidden sm:flex shrink-0 p-1 ml-1.5 transition-opacity duration-200',
           canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         aria-label="Scroll right"
