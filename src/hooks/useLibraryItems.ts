@@ -106,6 +106,8 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
                 sceneImageUrl: job.scene_image_url || undefined,
                 modelImageUrl: job.model_image_url || undefined,
                 workflowSlug: job.workflow_slug || undefined,
+                productName: (job as any).product_name || undefined,
+                productImageUrl: (job as any).product_image_url || undefined,
               },
             });
           }
