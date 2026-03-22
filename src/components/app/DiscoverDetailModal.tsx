@@ -237,7 +237,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60">
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       {DISCOVER_CATEGORIES.map(c => (
                         <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
                       ))}
