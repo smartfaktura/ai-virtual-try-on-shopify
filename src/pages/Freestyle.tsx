@@ -186,17 +186,23 @@ export default function Freestyle() {
     const r = searchParams.get('ratio');
     const q = searchParams.get('quality');
     const sceneParam = searchParams.get('scene');
+    const modelParam = searchParams.get('model');
+    const modelImageParam = searchParams.get('modelImage');
+    const sceneImageParam = searchParams.get('sceneImage');
+    const fromDiscover = searchParams.get('fromDiscover');
     if (p) setPrompt(p);
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    // quality param from URL
     const qualityParam = searchParams.get('quality');
     if (qualityParam === 'high' || qualityParam === 'standard') {
       setQuality(qualityParam);
     }
+    // Match scene by name first, then by poseId
     if (sceneParam) {
-      const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
+      const byName = filterVisible(mockTryOnPoses).find((s) => s.name === sceneParam);
+      const byId = !byName ? filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam) : null;
+      const matchedScene = byName || byId;
       if (matchedScene) {
         setSelectedScene(matchedScene);
         initialSceneParam.current = null;
@@ -205,7 +211,23 @@ export default function Freestyle() {
         }
       }
     }
-    if (p || r || q || sceneParam) {
+    // Match model by name
+    if (modelParam) {
+      const matchedModel = mockModels.find((m) => m.name === modelParam);
+      if (matchedModel) {
+        setSelectedModel(matchedModel);
+      }
+    }
+    // Set recreate banner if from Discover
+    if (fromDiscover === '1' && (modelParam || sceneParam)) {
+      setRecreateSource({
+        modelName: modelParam || undefined,
+        sceneName: sceneParam || undefined,
+        modelImageUrl: modelImageParam || undefined,
+        sceneImageUrl: sceneImageParam || undefined,
+      });
+    }
+    if (p || r || q || sceneParam || modelParam || fromDiscover) {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
