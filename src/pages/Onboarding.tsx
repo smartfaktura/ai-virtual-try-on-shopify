@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
 import { ArrowRight, Check } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
