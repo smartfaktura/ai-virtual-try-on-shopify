@@ -258,7 +258,7 @@ export default function PublicDiscover() {
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(INITIAL_RENDER_COUNT);
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory]);
 
   // IntersectionObserver to load more items
   useEffect(() => {
