@@ -266,7 +266,7 @@ export default function Products() {
                 <Card key={product.id} className="group overflow-hidden">
                   <div className="aspect-square relative bg-muted">
                     <img
-                      src={getOptimizedUrl(product.image_url, { width: 400, quality: 70 })}
+                      src={getOptimizedUrl(product.image_url, { quality: 70 })}
                       alt={product.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -323,7 +323,7 @@ export default function Products() {
                   {/* Thumbnail */}
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
                     <img
-                      src={getOptimizedUrl(product.image_url, { width: 112, quality: 70 })}
+                      src={getOptimizedUrl(product.image_url, { quality: 70 })}
                       alt={product.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
