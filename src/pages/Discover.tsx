@@ -315,17 +315,10 @@ export default function Discover() {
     return allItems.filter((item) => {
       // Similar filter
       if (similarTo) {
-        const simCat = getItemCategory(similarTo);
-        const itemCat = getItemCategory(item);
-        if (itemCat !== simCat) return false;
-        if (similarTo.type === 'preset' && item.type === 'preset') {
-          const simTags = similarTo.data.tags ?? [];
-          const itemTags = item.data.tags ?? [];
-          if (simTags.length > 0 && itemTags.length > 0) {
-            const overlap = simTags.some((t) => itemTags.includes(t));
-            if (!overlap) return false;
-          }
-        }
+        const simScene = similarTo.type === 'preset' ? similarTo.data.scene_name : similarTo.data.name;
+        if (!simScene) return true;
+        const itemScene = item.type === 'preset' ? item.data.scene_name : item.data.name;
+        if (itemScene !== simScene) return false;
         if (item.type === similarTo.type && getItemId(item) === getItemId(similarTo)) return false;
         return true;
       }
