@@ -167,6 +167,11 @@ export default function Generate() {
   // Support both slug-based routes and legacy query param
   const workflowIdFromQuery = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
+  const prefillModelName = searchParams.get('model');
+  const prefillSceneName = searchParams.get('scene');
+  const [recreateSource, setRecreateSource] = useState<{ modelName?: string; sceneName?: string } | null>(
+    (prefillModelName || prefillSceneName) ? { modelName: prefillModelName || undefined, sceneName: prefillSceneName || undefined } : null
+  );
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     jobTypes: ['workflow', 'tryon'],
