@@ -232,7 +232,7 @@ export function DiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Admin: Edit Metadata
                 </p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Select value={editCategory} onValueChange={setEditCategory}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Category" />
@@ -240,6 +240,17 @@ export function DiscoverDetailModal({
                     <SelectContent className="z-[300] max-h-60">
                       {DISCOVER_CATEGORIES.map(c => (
                         <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Workflow" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60">
+                      <SelectItem value="__freestyle__" className="text-xs">Freestyle</SelectItem>
+                      {(workflows ?? []).map(w => (
+                        <SelectItem key={w.slug} value={w.slug} className="text-xs">{w.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -285,12 +296,15 @@ export function DiscoverDetailModal({
                     setSavingMeta(true);
                     const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
                     const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
+                    const selectedWorkflow = editWorkflowSlug !== '__freestyle__' ? (workflows ?? []).find(w => w.slug === editWorkflowSlug) : null;
                     const update: Record<string, string | null> = {
                       category: editCategory,
                       model_name: selectedModel?.name ?? null,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,
                       scene_image_url: selectedScene?.imageUrl ?? null,
+                      workflow_slug: selectedWorkflow?.slug ?? null,
+                      workflow_name: selectedWorkflow?.name ?? null,
                     };
                     const { error } = await supabase
                       .from('discover_presets')
@@ -303,6 +317,8 @@ export function DiscoverDetailModal({
                     (item.data as any).model_image_url = update.model_image_url;
                     (item.data as any).scene_name = update.scene_name;
                     (item.data as any).scene_image_url = update.scene_image_url;
+                    (item.data as any).workflow_slug = update.workflow_slug;
+                    (item.data as any).workflow_name = update.workflow_name;
                     toast.success('Metadata saved');
                   }}
                 >
