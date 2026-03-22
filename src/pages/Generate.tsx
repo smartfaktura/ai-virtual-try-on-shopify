@@ -3911,8 +3911,8 @@ export default function Generate() {
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
+                 (generationMode === 'virtual-try-on' || activeWorkflow?.uses_tryon) ? (() => { const tryOnTotal = hasMultipleJobs ? multiProductJobIds.size : (tryOnModelCount * tryOnSceneCount * (selectedAspectRatios.size > 0 ? selectedAspectRatios.size : 1) * (selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size)) * multiProductCount); return `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"${tryOnTotal > 1 ? ` · ${tryOnTotal} images` : ''}`; })() :
                  (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie) ? `Generating ${hasMultipleJobs ? multiProductJobIds.size : selectedVariationIndices.size} image${(hasMultipleJobs ? multiProductJobIds.size : selectedVariationIndices.size) !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
-                 generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"${hasMultipleJobs ? ` · ${multiProductJobIds.size} images` : ''}` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
                  isInteriorDesign ? (() => { const styles = Array.from(selectedVariationIndices).map(i => variationStrategy?.variations[i]?.label).filter(Boolean); return styles.length > 1 ? `Staging your ${interiorRoomType || 'room'} in ${styles.length} styles: ${styles.join(', ')}` : `Staging your ${interiorRoomType || 'room'} in ${styles[0] || 'selected'} style`; })() :
                  `Creating ${imageCount} images of "${selectedProduct?.title}"`}
