@@ -146,30 +146,6 @@ export function DiscoverDetailModal({
           </button>
 
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
-            {/* Admin category selector (admin only) */}
-            {isAdmin && isPreset && (
-              <Select
-                value={category}
-                onValueChange={async (val) => {
-                  const { error } = await supabase
-                    .from('discover_presets')
-                    .update({ category: val })
-                    .eq('id', item.data.id);
-                  if (error) { toast.error('Failed to update category'); return; }
-                  (item.data as any).category = val;
-                  toast.success(`Category → ${val}`);
-                }}
-              >
-                <SelectTrigger className="h-6 w-auto px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70 border-dashed">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[300]">
-                  {DISCOVER_CATEGORIES.map(c => (
-                    <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
 
             {/* Title + views */}
             <div className="space-y-2">
