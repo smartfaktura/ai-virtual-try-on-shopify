@@ -102,8 +102,6 @@ export function DashboardDiscoverSection() {
 
   const activeCategory = selectedCategory ?? defaultCategory;
 
-  // Reset visible count when category changes
-  useEffect(() => setVisibleCount(16), [activeCategory]);
 
   // Reorder categories: put user's preferred category right after "All"
   const orderedCategories = useMemo(() => {
