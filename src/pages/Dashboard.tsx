@@ -323,6 +323,9 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Find & Recreate */}
+        <DashboardDiscoverSection />
+
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
 
@@ -388,8 +391,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Discover */}
-        <DashboardDiscoverSection />
 
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
@@ -480,6 +481,9 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Find & Recreate */}
+      <DashboardDiscoverSection />
+
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
 
@@ -520,8 +524,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Discover */}
-      <DashboardDiscoverSection />
 
       {/* Your AI Studio Team */}
       <DashboardTeamCarousel />

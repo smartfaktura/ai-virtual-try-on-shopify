@@ -19,6 +19,7 @@ interface DiscoverCardProps {
   isAdmin?: boolean;
   onToggleFeatured?: (e: React.MouseEvent) => void;
   hideLabels?: boolean;
+  aspectRatioOverride?: string;
 }
 
 function getGenerationLabel(item: DiscoverItem): string {
@@ -29,7 +30,7 @@ function getGenerationLabel(item: DiscoverItem): string {
   return 'Freestyle';
 }
 
-export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, aspectRatioOverride }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
   const isPreset = item.type === 'preset';
@@ -50,7 +51,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
         alt={isScene ? item.data.name : item.data.title}
         className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
         loading="lazy"
-        aspectRatio="3/4"
+        aspectRatio={aspectRatioOverride ?? "3/4"}
       />
 
 
