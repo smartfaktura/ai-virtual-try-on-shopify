@@ -185,9 +185,6 @@ export function RecentCreationsGallery() {
           <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Creations</h2>
           <p className="text-base text-muted-foreground mt-1.5">Your latest generated visuals.</p>
         </div>
-        <Button variant="link" className="text-sm font-medium gap-1" onClick={() => navigate('/app/library')}>
-          View all <ArrowRight className="w-3.5 h-3.5" />
-        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
