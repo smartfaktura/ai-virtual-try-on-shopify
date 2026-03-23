@@ -72,6 +72,15 @@ export function FreestyleShowcaseSection() {
 
   const promptText = isMobile ? PROMPT_TEXT_MOBILE : PROMPT_TEXT_FULL;
 
+  // Preload tiny chip/avatar images so they're cached before animation reveals them
+  useEffect(() => {
+    const urls = [
+      ...MODEL_AVATARS.map(m => m.src),
+      ...CHIPS.map(c => c.thumb).filter(Boolean),
+    ];
+    urls.forEach(url => { const img = new Image(); img.src = url; });
+  }, []);
+
   useEffect(() => {
     setTypedText('');
     setActiveChips({ product: false, model: false, scene: false });
