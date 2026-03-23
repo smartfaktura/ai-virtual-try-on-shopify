@@ -76,6 +76,7 @@ export function DashboardDiscoverSection() {
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { featuredMap } = useFeaturedItems();
+  const { isSaved, toggleSave } = useSavedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const { data: profileCats } = useQuery({
