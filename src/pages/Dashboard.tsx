@@ -4,7 +4,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw, Compass } from 'lucide-react';
+import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
@@ -30,6 +30,7 @@ import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
+import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 
 /* ── Inline card with IntersectionObserver for animations ── */
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
@@ -93,6 +94,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { balance, openBuyModal } = useCredits();
   const [startModalOpen, setStartModalOpen] = useState(false);
+  const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
 
   // Fetch user profile (first_name)
   const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
@@ -325,8 +327,10 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Find & Recreate */}
         <DashboardDiscoverSection />
+
+        {/* Feedback Banner */}
+        <FeedbackBanner />
 
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
@@ -397,10 +401,9 @@ export default function Dashboard() {
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
 
-        {/* Feedback Banner */}
-        <FeedbackBanner />
 
         <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
+        <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
       </div>
     );
   }
@@ -436,6 +439,10 @@ export default function Dashboard() {
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/library')}>
                 <Image className="w-3.5 h-3.5" />
                 My Library
+              </Button>
+              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => setEarnCreditsOpen(true)}>
+                <Gift className="w-3.5 h-3.5" />
+                Earn Credits
               </Button>
             </div>
           </div>
@@ -483,8 +490,11 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Find & Recreate */}
+      {/* Steal This Look */}
       <DashboardDiscoverSection />
+
+      {/* Feedback Banner */}
+      <FeedbackBanner />
 
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
@@ -639,10 +649,11 @@ export default function Dashboard() {
       {/* Upcoming Drops */}
       <UpcomingDropsCard />
 
-      {/* Feedback Banner */}
-      <FeedbackBanner />
+
+
 
       <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
+      <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
     </div>
   );
 }
