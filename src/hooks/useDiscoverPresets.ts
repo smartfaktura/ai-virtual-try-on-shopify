@@ -32,7 +32,7 @@ export function useDiscoverPresets() {
       .channel('discover-presets-realtime')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'discover_presets' },
+        { event: '*', schema: 'public', table: 'discover_presets' },
         () => {
           queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
         }
