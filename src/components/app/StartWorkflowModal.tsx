@@ -89,6 +89,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     setUploadFile(null);
     setUploadPreview(null);
     setUploadTitle('');
+    setIsNavigating(false);
   };
 
   const handleOpenChange = (v: boolean) => {
