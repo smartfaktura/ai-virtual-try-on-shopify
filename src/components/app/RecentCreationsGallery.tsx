@@ -25,7 +25,7 @@ interface CreationItem {
 }
 
 export function RecentCreationsGallery() {
-  const navigate = useNavigate();
+  
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
