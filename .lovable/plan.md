@@ -1,38 +1,57 @@
 
 
-# Fix Workflow Animation Background + Product Image Display
+# Show Animated Cards in Modal with Optimized Sizing
 
 ## Problem
-
-The last change switched `WorkflowAnimatedThumbnail` background from `object-cover` to `object-contain`. This breaks the animated workflow cards on `/app/workflows` because:
-- The animated overlay elements (product chips, model avatars, scene badges) are positioned relative to a **filled** background
-- `object-contain` leaves empty space around the image, so overlays float over blank areas
-- The animation system was designed around `object-cover` filling the container
-
-The product images in the modal are a separate issue - they use `object-contain` which is correct.
+Currently `modalCompact` disables animations entirely (shows static image). The user wants animated cards in the modal but with smaller/optimized overlays. Also, the modal needs to be wider on desktop, and no visible borders on the card images.
 
 ## Changes
 
-### 1. `src/components/app/WorkflowAnimatedThumbnail.tsx` (line 742)
+### 1. `src/components/app/WorkflowCardCompact.tsx`
 
-**Revert** the background image back to `object-cover` (remove `bg-muted`). The animated cards need the background to fill the container so overlays align properly:
+**Enable animations for `modalCompact`** — instead of switching to a static image, pass the animated thumbnail with a new `modalCompact` flag so overlays render smaller:
 
 ```tsx
-// Revert to:
-className={`absolute inset-0 w-full h-full object-cover transition-opacity ...`}
+// Line 51: Change from blocking animation to enabling it with modalCompact
+{scene ? (
+  <WorkflowAnimatedThumbnail 
+    scene={scene} 
+    isActive={isVisible} 
+    compact 
+    mobileCompact={mobileCompact} 
+    modalCompact={modalCompact} 
+  />
+) : (
+  <img ... />
+)}
 ```
 
-### 2. `src/components/app/WorkflowCardCompact.tsx` (line 57)
+**Remove border from card when `modalCompact`** — use `border-0` or `border-none` to eliminate visible borders:
+```tsx
+className={cn(
+  "group overflow-hidden transition-shadow duration-300 flex flex-col",
+  modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
+)}
+```
 
-The **modal static images** (when `modalCompact` is true, no animation) stay as `object-contain bg-muted/50` - this is correct for the small modal cards where we want to show the full image without cropping.
+### 2. `src/components/app/WorkflowAnimatedThumbnail.tsx`
 
-No change needed here.
+**Accept `modalCompact` prop** and treat it similarly to `mobileCompact` for element sizing — use the same genuinely-smaller elements (the `mobileCompact` branch in `FloatingEl`) but for the modal context:
 
-### Summary
-- **Animated cards** (`/app/workflows`): `object-cover` (revert) - overlays need filled background
-- **Modal static cards** (StartWorkflowModal): `object-contain` - show full image, no animation
-- **Product thumbnails** (modal step 2): `object-contain` - show full product without cropping
+- Props: add `modalCompact?: boolean`
+- In `FloatingEl`: when `modalCompact`, use the same small element rendering as `mobileCompact` (smaller cards, smaller avatars, smaller text)
+- Pass `modalCompact` through to `FloatingEl` in the render loop
+- Background stays `object-cover` (no change)
 
-### File
-- `src/components/app/WorkflowAnimatedThumbnail.tsx` - line 742 only, revert to `object-cover`
+### 3. `src/components/app/StartWorkflowModal.tsx`
+
+**Widen desktop dialog** from `sm:max-w-[640px]` to `sm:max-w-[720px]`:
+```tsx
+<DialogContent className="sm:max-w-[720px] rounded-2xl p-0 gap-0 overflow-hidden">
+```
+
+### Files
+- `src/components/app/WorkflowCardCompact.tsx` — enable animation for `modalCompact`, remove borders
+- `src/components/app/WorkflowAnimatedThumbnail.tsx` — accept `modalCompact` prop, use small overlay sizes
+- `src/components/app/StartWorkflowModal.tsx` — widen desktop dialog to 720px
 
