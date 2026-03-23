@@ -1,39 +1,43 @@
 
 
-# Fix Dashboard Hero: Sync Headline with Pill + Premium CTA
+# Fix Dashboard Hero: Button Style, CTA Text, Shadow, and Dynamic Headlines
 
-## Problems
-1. **Headline doesn't update** when the "Personalized for" pill changes - the two components independently fetch `product_categories` from the database and don't share state.
-2. **"Start a Campaign" button** looks like a standard form button - not premium.
-3. **Helper text** (`Virtual Try-On · Product Editorial · Catalog Generation`) is plain unstyled text.
+## Changes
 
-## Solution
+### 1. `src/components/app/DashboardPersonalizationHero.tsx`
 
-### 1. Shared state between Hero and Pill (`src/pages/Dashboard.tsx`)
-Lift the `selected` category state into Dashboard. Pass it down as props to both `DashboardPersonalizationHero` and `PersonalizedForPill`. When the pill changes, the headline updates instantly.
-
-### 2. Premium CTA styling (`src/components/app/DashboardPersonalizationHero.tsx`)
-Replace the standard `<Button>` with a more refined styled button:
-- Slightly larger padding, subtle gradient or refined shadow
-- Arrow icon instead of sparkles for a cleaner editorial feel
-- Smooth hover transition
-
-### 3. Helper text as styled badges
-Replace the plain `<p>` with three small inline badges/chips with subtle borders and muted styling, giving them visual weight and structure:
-```
-[ Virtual Try-On ]  [ Product Editorial ]  [ Catalog Generation ]
+**Button style** - Match quick action buttons style (outline with border, not filled primary):
+```tsx
+// From: bg-primary text-primary-foreground shadow-lg...
+// To: same style as DashboardQuickActions
+className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all duration-200 shadow-sm"
 ```
 
-### Files Changed
+**CTA text**: Change "Start a Campaign" to "Start with a Workflow"
 
-**`src/pages/Dashboard.tsx`** (~15 lines):
-- Add `useState<string>('any')` + `useEffect` to fetch category once
-- Pass `selected` to `DashboardPersonalizationHero` and `onSelect`/`selected` to `PersonalizedForPill`
-- Remove duplicate fetching from both child components
+**Accept `hasGenerations` prop** to toggle between first-time and returning headlines.
 
-**`src/components/app/DashboardPersonalizationHero.tsx`** (~20 lines):
-- Accept `selected` as prop instead of fetching internally
-- Restyle the CTA button: refined look with `rounded-full`, subtle shadow, arrow icon
-- Replace helper text with three small styled chips/badges
-- `PersonalizedForPill` accepts `selected` + `onSelect` props instead of managing its own state
+### 2. `src/lib/categoryConstants.ts`
+
+Add a second set of headlines for returning users (post-first-generation):
+
+```ts
+export const CATEGORY_HEADLINES_RETURNING: Record<string, string> = {
+  fashion: 'Create campaign-ready fashion visuals - no photoshoot needed.',
+  beauty: 'Create campaign-ready beauty visuals - no photoshoot needed.',
+  // ... same pattern for all categories
+  any: 'Create campaign-ready visuals in seconds - no photoshoot needed.',
+};
+```
+
+Update `getCategoryHeadline` to accept an optional `isReturning` flag and pick the right map.
+
+### 3. `src/pages/Dashboard.tsx`
+
+Pass `hasGenerations={generatedCount > 0}` (already available from the existing query) to `DashboardPersonalizationHero`.
+
+### Files
+- `src/lib/categoryConstants.ts` - add returning headlines, update `getCategoryHeadline`
+- `src/components/app/DashboardPersonalizationHero.tsx` - button style, text, accept `hasGenerations`
+- `src/pages/Dashboard.tsx` - pass `hasGenerations` prop
 
