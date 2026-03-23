@@ -1,48 +1,23 @@
 
 
-# Fix Library Detail Modal: Better Naming + Remove HD
+# Fix: Toolbar Controls Not Aligned to Right Edge
 
-## Problems
-1. **Redundant/unclear naming**: Shows "GENERATION" as small label and "Picture Perspectives — Right Side" as big heading. The heading includes both the workflow name and the variation — verbose and unclear.
-2. **"HD" badge** shown unnecessarily (line 144-146).
+## Problem
+The search bar + sort/grid/select toolbar uses `flex flex-wrap items-center gap-2` but the search input has `sm:max-w-md sm:flex-1` and the controls div has no alignment. This means on wide screens, the controls sit right after the search bar instead of pushing to the right edge of the container — leaving empty space on the right.
 
-## Changes
+## Fix
 
-### `src/components/app/LibraryDetailModal.tsx`
+### `src/pages/Jobs.tsx` (line 263)
 
-**1. Improve the small label** (line 129-131):
-- For freestyle: keep "Freestyle Generation"
-- For workflow items: extract the workflow name from the label (e.g., "Picture Perspectives") and show it as the small label: `"Picture Perspectives"`
-- For enhanced: keep "Enhanced"
+Add `justify-between` to the toolbar wrapper so the search bar takes the left side and controls push to the right:
 
-**2. Improve the big heading** (line 132-138):
-- For workflow items like "Picture Perspectives — Right Side": show only the variation part as the heading: **"Right Side"**
-- For freestyle: show the dynamic label (model/scene name)
-- For enhanced: show "Enhanced"
+```tsx
+// Before
+<div className="flex flex-wrap items-center gap-2 sm:gap-3">
 
-Logic: if `item.label` contains " — ", split it:
-- Small label = part before " — " (e.g., "Picture Perspectives")  
-- Heading = part after " — " (e.g., "Right Side")
-
-If no " — ", use current behavior.
-
-**3. Remove HD badge** (lines 144-146): Delete the `{item.quality === 'high' && ...}` block.
-
-### Result
-
-Before:
-```
-GENERATION
-Picture Perspectives — Right Side
-MAR 22 · HD
+// After  
+<div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
 ```
 
-After:
-```
-PICTURE PERSPECTIVES
-Right Side
-MAR 22
-```
-
-One file, ~8 lines changed.
+One line change. The search input already has `sm:flex-1` so it will grow to fill available space, and the controls group will be pushed to the far right.
 
