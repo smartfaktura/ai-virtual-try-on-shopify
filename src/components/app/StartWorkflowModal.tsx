@@ -205,6 +205,8 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           <WorkflowCardCompact
             key={wf.slug}
             workflow={wf}
+            displayName={WORKFLOW_OPTIONS[i].displayName}
+            subtitle={WORKFLOW_OPTIONS[i].subtitle}
             onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
             modalCompact
           />

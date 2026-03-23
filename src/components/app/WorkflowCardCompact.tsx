@@ -91,13 +91,13 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           <Button
             size="sm"
             className={cn(
-              "rounded-full font-semibold gap-1.5 w-full",
-              (modalCompact || mobileCompact) ? "h-7 px-3 text-xs" : "h-8 px-5"
+              "rounded-full font-semibold gap-1 w-full",
+              (modalCompact || mobileCompact) ? "h-6 px-2 text-[10px]" : "h-8 px-5"
             )}
             onClick={onSelect}
           >
             Start Creating
-            <ArrowRight className={mobileCompact ? "w-3 h-3" : "w-3.5 h-3.5"} />
+            <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
       </div>
