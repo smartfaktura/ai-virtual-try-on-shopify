@@ -1,38 +1,50 @@
 
 
-# Zoom Out Workflow Backgrounds + Taller Portrait Containers
+# Hide Scene Category Pills Behind Filter Button on Mobile
 
 ## Problem
-Virtual Try-On Set and Product Listing Set background images are too zoomed in because `object-cover` crops aggressively in the current aspect ratios. The containers are too square-ish (modal: `aspect-square`, desktop: `aspect-[3/4]`). User wants more portrait-like proportions showing more of the image.
+On mobile, the scene category tabs (All, Studio Essentials, Surface & Texture, Lifestyle Context, etc.) take up too much space and don't fit well on the screen. They should be hidden behind a filter button that opens a dropdown/popover.
 
 ## Changes
 
-### 1. `src/components/app/WorkflowCardCompact.tsx` (line 52)
+### `src/components/app/generate/WorkflowSettingsPanel.tsx` (lines 303-331)
 
-Make containers taller/more portrait-like across all contexts:
+Replace the inline scrollable category pills with a responsive approach:
+
+**Desktop (`sm:` and up):** Keep the current inline wrapped pills — they fit fine on larger screens.
+
+**Mobile:** Show a single "Filter" button (with a `SlidersHorizontal` icon) that opens a `Popover` with the category options listed vertically. When a non-"all" filter is active, show the active filter name as a badge on the button.
 
 ```tsx
-// From:
-modalCompact ? "aspect-square" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
+// Mobile: Filter button with popover
+<div className="sm:hidden">
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5">
+        <SlidersHorizontal className="w-3.5 h-3.5" />
+        Filter
+        {sceneFilterCategory !== 'all' && (
+          <Badge variant="secondary" className="text-[10px] ml-1">{sceneFilterCategory}</Badge>
+        )}
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-48 p-2" align="start">
+      {/* All + category buttons stacked vertically */}
+    </PopoverContent>
+  </Popover>
+</div>
 
-// To:
-modalCompact ? "aspect-[3/4]" : mobileCompact ? "aspect-[2/3]" : "aspect-[2/3]"
+// Desktop: existing inline pills with "hidden sm:flex"
+<div className="hidden sm:flex gap-1.5 flex-wrap">
+  {/* existing pill buttons */}
+</div>
 ```
 
-- **Modal**: `aspect-square` → `aspect-[3/4]` (taller, more portrait)
-- **Desktop hub**: `aspect-[3/4]` → `aspect-[2/3]` (even taller, matching mobile)
-- **Mobile**: stays `aspect-[2/3]` (already good)
+- Import `SlidersHorizontal` from lucide-react
+- Import `Popover, PopoverTrigger, PopoverContent` from ui/popover
+- Category items in popover styled as full-width buttons with active state highlight
+- Popover closes on selection
 
-This gives the background images more vertical space so `object-cover` crops less.
-
-### 2. `src/components/app/workflowAnimationData.tsx`
-
-Adjust `objectPosition` to show more of the full composition:
-
-- **Virtual Try-On Set** (line 41): `'center'` → `'center 30%'` — shifts crop window up slightly to show more of the outfit/body
-- **Product Listing Set** (line 66): add `objectPosition: 'center 40%'` — shows more of the full bottle from top
-
-### Files
-- `src/components/app/WorkflowCardCompact.tsx` — line 52, taller aspect ratios
-- `src/components/app/workflowAnimationData.tsx` — lines 41, 66, adjust objectPosition
+### File
+- `src/components/app/generate/WorkflowSettingsPanel.tsx` — lines 303-331, wrap category tabs in responsive mobile filter button
 
