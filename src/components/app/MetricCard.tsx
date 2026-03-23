@@ -108,7 +108,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     </div>
   );
 
-  const cardClass = `rounded-xl border border-border/40 bg-card p-4 sm:p-5 transition-all duration-200 hover:border-border/80 hover:shadow-sm ${
+  const cardClass = `rounded-xl border border-border/40 bg-card p-4 sm:p-5 min-h-[120px] flex flex-col transition-all duration-200 hover:border-border/80 hover:shadow-sm ${
     onClick ? 'cursor-pointer' : ''
   }`;
 
