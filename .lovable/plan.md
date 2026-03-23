@@ -1,23 +1,21 @@
 
 
-# Fix: Toolbar Controls Not Aligned to Right Edge
+# Add Delete Button for Workflow Items in Library Detail Modal
 
 ## Problem
-The search bar + sort/grid/select toolbar uses `flex flex-wrap items-center gap-2` but the search input has `sm:max-w-md sm:flex-1` and the controls div has no alignment. This means on wide screens, the controls sit right after the search bar instead of pushing to the right edge of the container — leaving empty space on the right.
+The delete button in `LibraryDetailModal` only appears for freestyle items (`item.source === 'freestyle'`). Workflow-generated images have no delete option in the modal.
 
-## Fix
+## Changes
 
-### `src/pages/Jobs.tsx` (line 263)
+### `src/components/app/LibraryDetailModal.tsx`
 
-Add `justify-between` to the toolbar wrapper so the search bar takes the left side and controls push to the right:
+1. **Extend `handleDelete`** (lines 73-86) to handle workflow items too. For workflow items, the ID format is `{jobId}-{imageIndex}`. Need to:
+   - If freestyle: delete from `freestyle_generations` (existing logic)
+   - If generation: extract `jobId` and `imageIndex`, fetch the job, either delete the whole job (if 1 result) or remove that image from the results array (same logic as `Jobs.tsx` lines 198-222)
 
-```tsx
-// Before
-<div className="flex flex-wrap items-center gap-2 sm:gap-3">
+2. **Remove the `item.source === 'freestyle'` guard** on both the delete handler (line 74) and the delete button render (line 266). Show the delete button for all items.
 
-// After  
-<div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-```
+3. **Add `generation_jobs` invalidation** to query cache invalidation after delete.
 
-One line change. The search input already has `sm:flex-1` so it will grow to fill available space, and the controls group will be pushed to the far right.
+One file, ~20 lines changed.
 
