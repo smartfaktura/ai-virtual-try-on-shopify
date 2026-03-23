@@ -1,29 +1,20 @@
 
 
-# Move Tips Below Form on Mobile
+# Shorten Freestyle Studio Description
 
-## Changes
+## Change
 
-### `src/pages/AddProduct.tsx`
+### `src/components/app/OnboardingChecklist.tsx` (line 47)
 
-On mobile, hide `ProductUploadTips` from its current position (above tabs) and show it after the tabs content instead. On desktop, keep it where it is.
-
-**Line 69**: Wrap in `hidden sm:block`:
-```tsx
-<div className="hidden sm:block">
-  <ProductUploadTips />
-</div>
+Update description from:
 ```
-
-**After line 141** (after the closing `</div>` of tabs content, before `</Tabs>`): Add mobile-only tips:
-```tsx
-<div className="sm:hidden mt-6">
-  <ProductUploadTips />
-</div>
+'Any prompt, select product, model & scene — one-click generation like ChatGPT, but for your images.'
 ```
-
-This places tips after the form/upload area + Add Product button on mobile, while keeping them at the top on desktop.
+To:
+```
+'Prompt, pick a product, model & scene - generate stunning visuals in one click.'
+```
 
 ### File
-- `src/pages/AddProduct.tsx` — lines 69 and after 141
+- `src/components/app/OnboardingChecklist.tsx` - line 47
 
