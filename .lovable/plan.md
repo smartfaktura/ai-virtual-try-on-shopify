@@ -1,23 +1,32 @@
 
 
-# Fix: Deleted Discover Presets Still Showing to Other Users
+# Add Product Image Carousel to Product Listing Set Workflow Card
 
-## Root Cause
-In `useDiscoverPresets.ts`, the realtime subscription only listens for `INSERT` events (line 35). When admin deletes a preset, the `DELETE` event is not captured, so other users' cached query data (with `staleTime: 10 * 60 * 1000` = 10 minutes) is never invalidated. They keep seeing deleted items until they refresh or the cache expires.
+## What
+Upload the 7 product showcase images to the `landing-assets` storage bucket, then update the Product Listing Set scene data to use `mode: 'carousel'` with those images as rotating backgrounds — identical to how the Selfie/UGC Set already works.
 
-## Fix
+## Steps
 
-### `src/hooks/useDiscoverPresets.ts`
+### 1. Upload images to storage
+Upload all 7 images to `landing-assets/workflows/product-showcase/` in the storage bucket:
+- `Vovvai-products-1.jpg` (fragrance, dark)
+- `Vovvai-products-2.jpg` (perfume, marble)
+- `Vovvai-products-3.jpg` (body wash, wood)
+- `Vovvai-products-4.jpg` (facial oil, model)
+- `Vovvai-products-5.jpg` (serum, stone tray)
+- `Vovvai-products-6.jpg` (sneakers, green)
+- `Vovvai-products-7.jpg` (lamp, water)
 
-Change the realtime event filter from `'INSERT'` to `'*'` (all events: INSERT, UPDATE, DELETE). This ensures that when admin deletes or updates a preset, all connected clients invalidate their cache and refetch.
+### 2. Update `src/components/app/workflowAnimationData.tsx`
+- Add 7 new asset URL constants using `getLandingAssetUrl('workflows/product-showcase/...')`
+- Change the `'Product Listing Set'` scene definition:
+  - Add `mode: 'carousel'`
+  - Add `backgrounds: [showcase1, showcase2, ..., showcase7]` array
+  - Keep the existing `background` as the first image
+  - Keep existing floating elements (badges)
 
-```ts
-// Line 35: Change 'INSERT' → '*'
-{ event: '*', schema: 'public', table: 'discover_presets' }
-```
-
-Single line change. All other logic stays the same.
+This mirrors exactly how `'Selfie / UGC Set'` uses `mode: 'carousel'` with a `backgrounds` array — the `WorkflowAnimatedThumbnail` component already handles carousel rendering with crossfade transitions.
 
 ### Files
-- `src/hooks/useDiscoverPresets.ts` — line 35
+- `src/components/app/workflowAnimationData.tsx` — add carousel mode + background URLs
 
