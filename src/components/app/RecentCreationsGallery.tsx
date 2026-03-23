@@ -195,54 +195,38 @@ export function RecentCreationsGallery() {
         </Button>
       </div>
 
-      <div className="relative" onClick={handleContainerClick}>
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent z-10" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {creations.slice(0, 8).map((item) => {
+          const isActive = isMobile && activeItemId === item.id;
 
-        <div
-          className="flex gap-4 overflow-x-auto pb-2 px-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {creations.map((item) => {
-            const isActive = isMobile && activeItemId === item.id;
-
-            return (
-              <div
-                key={item.id}
-                className="flex-shrink-0 w-[180px] group cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCardClick(item);
-                }}
-              >
-                <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
-                  <ShimmerImage
-                    src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
-                    alt={item.label}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                    aspectRatio="4/5"
-                    onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
-                    <p className="text-xs font-semibold text-white">{item.label}</p>
-                    {item.subtitle && <p className="text-[10px] text-white/70 truncate">{item.subtitle}</p>}
-                    {item.date && <p className="text-[10px] text-white/50">{item.date}</p>}
-                  </div>
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-200 ${
-                      isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-                      <Eye className="w-3.5 h-3.5" /> View
-                    </span>
-                  </div>
+          return (
+            <div
+              key={item.id}
+              className="group cursor-pointer"
+              onClick={() => handleCardClick(item)}
+            >
+              <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border relative shadow-sm">
+                <ShimmerImage
+                  src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
+                  alt={item.label}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  aspectRatio="3/4"
+                  onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
+                />
+                <div
+                  className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-200 ${
+                    isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+                    <Eye className="w-3.5 h-3.5" /> View
+                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
 
       <LibraryDetailModal
