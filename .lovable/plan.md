@@ -1,38 +1,59 @@
 
 
-# Equal-Size Metric Cards with Inline Hover Info Panel
+# Fix Metric Cards: Unified Typography, Text Fitting, External Hover Tooltip
 
-## Concept
-Instead of a floating popover that feels disconnected, on hover the card content is replaced in-place by the team avatar + explanation — same card size, smooth crossfade. All cards get a fixed height matching the tallest card (Continue Last).
+## Problems
+1. **Too many font sizes** — titles use `tracking-widest uppercase` (not brand), values use different sizes, suffix is tiny and unreadable
+2. **Text doesn't fit** — tooltip text wraps badly in the flip view, large values overflow
+3. **In-card flip is bad UX** — user loses context when card content disappears on hover
+4. **Need external tooltip** — hover should show a floating popover outside the card, not replace card content
+
+## Design
+
+Unified typography following VOVV.AI brand (`tracking-tight`, `font-semibold`, no aggressive `tracking-widest uppercase`):
+
+```text
+Card (h-[140px], p-4):
+┌────────────────────┐
+│ Cost Saved         │  ← text-xs font-medium text-muted-foreground (no uppercase, no wide tracking)
+│                    │
+│ €42,930            │  ← text-xl font-bold tracking-tight (auto-scales to text-lg if needed)
+│ vs traditional     │  ← text-xs text-muted-foreground/70 (readable, not 10px)
+│ photoshoots        │
+│                    │
+└────────────────────┘
+      ↓ on hover, external popover appears below
+  ┌──────────────────────────┐
+  │ [avatar] Omar            │
+  │ Based on €30 avg per     │
+  │ professional product     │
+  │ photo                    │
+  └──────────────────────────┘
+```
 
 ## Changes
 
-### `src/components/app/MetricCard.tsx`
+### 1. `src/components/app/MetricCard.tsx` — Rework
 
-1. **Fixed equal height**: All cards use `h-[140px]` (matching the "Continue Last" card which has the most content). Remove `min-h-[120px]`.
+**Remove in-card flip**: Delete `flipped` state, `onMouseEnter`/`onMouseLeave` flip logic, the absolute-positioned dual content layers, and the mobile info dot.
 
-2. **Remove Popover entirely**: Delete the Radix Popover import and all popover-related code. No more floating external tooltip.
+**Use Radix Popover for external tooltip**: Import `Popover`, `PopoverTrigger`, `PopoverContent` from `@/components/ui/popover`. Control open state via `onMouseEnter`/`onMouseLeave` with 200ms delay (desktop) and tap-to-open (mobile).
 
-3. **Hover = in-card content swap**: Use `useState(hovered)` with `onMouseEnter`/`onMouseLeave` on the card itself. When hovered and tooltip exists:
-   - Hide the normal card content (opacity-0, scale-95)
-   - Show the tooltip content in its place (opacity-100, scale-100)
-   - Same card dimensions — just the inner content crossfades
+**Unified brand typography**:
+- Title: `text-xs font-medium text-muted-foreground` — no uppercase, no tracking-widest
+- Value: `text-xl font-bold text-foreground tracking-tight` with `whitespace-nowrap`
+- Suffix: `text-xs text-muted-foreground/70 leading-snug` — readable size, not 10px
+- Description: `text-sm font-medium text-foreground`
+- Action button: `text-xs font-semibold text-primary`
 
-   ```text
-   Normal state:           Hovered state:
-   ┌────────────────┐      ┌────────────────┐
-   │ € COST SAVED   │      │ 🟡 Omar        │
-   │ €42,930        │  →   │ Based on €30   │
-   │ vs photoshoots │      │ avg per photo  │
-   └────────────────┘      └────────────────┘
-   ```
+**Card container**: `rounded-xl border border-border/40 bg-card p-4 sm:p-5 h-[140px]` — fixed height, simple layout with `flex flex-col justify-between`.
 
-4. **Animation**: Use `transition-all duration-300` with opacity + slight translateY for smooth crossfade. Both content layers are `absolute inset-0` inside a `relative` container.
+**Popover content**: `max-w-[240px] p-3 rounded-xl shadow-lg` with avatar (24px), member name bold, explainer text below.
 
-5. **Mobile**: On mobile (no hover), show a small tap indicator (subtle info dot in top-right corner). On tap, toggle the same content swap.
+**Mobile**: Popover opens on card tap when tooltip exists (using `onClick` check for touch devices).
 
-6. **Loading skeleton**: Match `h-[140px]`.
+### 2. No Dashboard changes needed — props stay the same.
 
 ### Files
-- `src/components/app/MetricCard.tsx` — fixed height, remove popover, add in-card content swap on hover
+- `src/components/app/MetricCard.tsx`
 
