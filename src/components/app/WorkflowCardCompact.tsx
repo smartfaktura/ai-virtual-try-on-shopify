@@ -90,7 +90,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
             )}
             onClick={onSelect}
           >
-            Create Set
+            Start Creating
             <ArrowRight className={mobileCompact ? "w-3 h-3" : "w-3.5 h-3.5"} />
           </Button>
         </div>

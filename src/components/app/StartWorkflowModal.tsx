@@ -396,13 +396,13 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   );
 
   const stepTitle = step === 'workflow'
-    ? 'What do you want to create?'
+    ? "Let's create your first visuals"
     : step === 'upload'
       ? 'Upload your product'
       : 'Select a product';
 
   const stepDesc = step === 'workflow'
-    ? 'Choose a workflow to get started'
+    ? "Pick a style — we'll handle the rest"
     : step === 'upload'
       ? 'Add a product photo to begin'
       : hasProducts
