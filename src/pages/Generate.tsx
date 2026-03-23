@@ -786,7 +786,7 @@ export default function Generate() {
     }
   }, [prefillProductId, activeWorkflow, userProducts, isLoadingUserProducts]);
 
-
+  const handleBrandProfileContinue = () => {
     if (isFlatLay) {
       setFlatLayPhase('surfaces');
       setCurrentStep('settings');
