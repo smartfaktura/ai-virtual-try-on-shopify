@@ -14,6 +14,15 @@ const tryonResult = getLandingAssetUrl('workflows/workflow-tryon-result.png');
 const listingProduct = getLandingAssetUrl('workflows/product-listing-product.png');
 const listingResult = getLandingAssetUrl('workflows/product-listing-result.png');
 
+// Product Showcase Carousel
+const showcase1 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-1.jpg');
+const showcase2 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-2.jpg');
+const showcase3 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-3.jpg');
+const showcase4 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-4.jpg');
+const showcase5 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-5.jpg');
+const showcase6 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-6.jpg');
+const showcase7 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-7.jpg');
+
 // Selfie / UGC Set
 const ugcProduct = getLandingAssetUrl('products/ice-roller-white.png');
 const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
