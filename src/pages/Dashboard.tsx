@@ -490,15 +490,23 @@ export default function Dashboard() {
       {/* Low credits banner */}
       <LowCreditsBanner />
 
-      {/* Metrics Row — 2x2 on mobile, 4 on desktop */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      {/* Metrics Row — 5 value-driven cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <MetricCard
-          title="Images Generated"
-          value={generatedCount}
-          suffix="last 30 days"
-          icon={Image}
+          title="Cost Saved"
+          value={`€${(generatedCount * 30).toLocaleString()}`}
+          suffix="vs photoshoots"
+          icon={Euro}
           loading={generatedLoading}
-          progress={Math.min(100, Math.round((generatedCount / 300) * 100))}
+          tooltip="Based on €30 average cost per professional product photo"
+        />
+        <MetricCard
+          title="Time Saved"
+          value={`${Math.round(generatedCount * 20 / 60)}h`}
+          suffix="no shooting needed"
+          icon={Clock}
+          loading={generatedLoading}
+          tooltip="Estimated 20 min saved per image vs traditional workflow"
         />
         <MetricCard
           title="Credits Remaining"
@@ -508,20 +516,27 @@ export default function Dashboard() {
           onClick={openBuyModal}
           progress={Math.max(0, Math.round((balance / 300) * 100))}
           progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
+          tooltip="Credits refresh monthly based on your plan"
         />
         <MetricCard
-          title="Products"
-          value={productCount}
-          suffix="in library"
-          icon={Package}
-          loading={productsLoading}
+          title="Continue Last"
+          icon={Play}
+          description={(lastJob?.workflows as any)?.name || 'No recent workflow'}
+          action={lastJob ? {
+            label: 'Continue',
+            onClick: () => navigate(`/app/generate/${(lastJob.workflows as any)?.slug || 'product-on-model'}`),
+          } : undefined}
+          tooltip="Pick up where you left off"
         />
         <MetricCard
-          title="Active Schedules"
-          value={scheduleCount}
-          suffix="creative drops"
-          icon={CalendarClock}
-          loading={schedulesLoading}
+          title="Top Style"
+          icon={Palette}
+          description={topWorkflow?.name || 'Generate to discover'}
+          action={topWorkflow ? {
+            label: 'Recreate',
+            onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
+          } : undefined}
+          tooltip="Your most-used workflow based on completed jobs"
         />
       </div>
 
