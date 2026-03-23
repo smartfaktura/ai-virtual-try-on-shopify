@@ -423,10 +423,6 @@ export default function Dashboard() {
         </p>
 
         <div className="flex flex-col gap-3 mt-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span><strong className="text-foreground">{balance}</strong> credits available</span>
-          </div>
           <div className="relative">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
