@@ -39,6 +39,12 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Virtual Try-On Set': {
     background: tryonResult,
     objectPosition: 'center 20%',
+    recipe: [
+      { image: tryonProduct, label: 'Product' },
+      { image: tryonModel, label: 'Model' },
+      { image: tryonScene, label: 'Scene' },
+    ],
+    recipeResult: tryonResult,
     elements: [
       {
         type: 'product', image: tryonProduct, label: 'Crop Top', sublabel: 'Product',
