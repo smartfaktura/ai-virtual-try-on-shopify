@@ -15,9 +15,7 @@ interface Props {
   workflow: Workflow;
   onSelect: () => void;
   id?: string;
-  /** True when rendered inside the mobile 2-col grid */
   mobileCompact?: boolean;
-  /** True when rendered inside a modal - uses shorter aspect ratio */
   modalCompact?: boolean;
 }
 
@@ -25,6 +23,14 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
+
+  // Looping animation key for recipe strip
+  const [recipeKey, setRecipeKey] = useState(0);
+  useEffect(() => {
+    if (!modalCompact || !scene?.recipe) return;
+    const interval = setInterval(() => setRecipeKey(k => k + 1), 6000);
+    return () => clearInterval(interval);
+  }, [modalCompact, scene?.recipe]);
 
   useEffect(() => {
     const el = ref.current;
@@ -37,6 +43,10 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
     return () => observer.disconnect();
   }, []);
 
+  const recipeItems = scene?.recipe ?? [];
+  const totalItems = recipeItems.length;
+  const staggerDelay = 0.4;
+
   return (
     <Card
       id={id}
@@ -46,7 +56,48 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
-      {/* Thumbnail — taller on mobile 2-col for breathing room */}
+      {/* Recipe strip ABOVE image for modal */}
+      {modalCompact && scene?.recipe && isVisible && (
+        <div
+          key={recipeKey}
+          className="flex items-center justify-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 bg-muted/30"
+        >
+          {recipeItems.map((item, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && (
+                <Plus
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground shrink-0 opacity-0 animate-fade-in"
+                  style={{ animationDelay: `${i * staggerDelay}s`, animationFillMode: 'forwards' }}
+                />
+              )}
+              <div
+                className="w-5 h-5 sm:w-7 sm:h-7 rounded-md overflow-hidden shrink-0 border border-border opacity-0 animate-fade-in"
+                style={{ animationDelay: `${i * staggerDelay}s`, animationFillMode: 'forwards' }}
+              >
+                <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
+              </div>
+            </React.Fragment>
+          ))}
+          <span
+            className="text-muted-foreground text-[8px] sm:text-[10px] font-bold mx-0.5 sm:mx-1 opacity-0 animate-fade-in"
+            style={{ animationDelay: `${totalItems * staggerDelay}s`, animationFillMode: 'forwards' }}
+          >
+            =
+          </span>
+          <div
+            className="w-5 h-5 sm:w-7 sm:h-7 rounded-md overflow-hidden shrink-0 border-2 border-primary/30 opacity-0 animate-fade-in"
+            style={{
+              animationDelay: `${(totalItems + 0.5) * staggerDelay}s`,
+              animationFillMode: 'forwards',
+              animation: `fade-in 0.3s ease-out ${(totalItems + 0.5) * staggerDelay}s forwards, pulse 2s cubic-bezier(0.4,0,0.6,1) ${(totalItems + 1) * staggerDelay}s infinite`,
+            }}
+          >
+            <img src={scene.recipeResult} alt="Result" className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
+
+      {/* Thumbnail */}
       <div className={cn(
         "relative w-full overflow-hidden",
         modalCompact ? "aspect-[3/4]" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
@@ -61,30 +112,6 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           />
         )}
       </div>
-
-      {/* Recipe strip for modal */}
-      {modalCompact && scene?.recipe && isVisible && (
-        <div className="flex items-center justify-center gap-1 px-2 py-2 bg-muted/30">
-          {scene.recipe.map((item, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <Plus className="w-3 h-3 text-muted-foreground shrink-0 opacity-0 animate-fade-in" style={{ animationDelay: `${i * 0.12}s`, animationFillMode: 'forwards' }} />}
-              <div
-                className="w-7 h-7 rounded-md overflow-hidden shrink-0 border border-border opacity-0 animate-fade-in"
-                style={{ animationDelay: `${i * 0.12}s`, animationFillMode: 'forwards' }}
-              >
-                <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
-              </div>
-            </React.Fragment>
-          ))}
-          <span className="text-muted-foreground text-[10px] font-bold mx-1 opacity-0 animate-fade-in" style={{ animationDelay: `${scene.recipe.length * 0.12}s`, animationFillMode: 'forwards' }}>=</span>
-          <div
-            className="w-7 h-7 rounded-md overflow-hidden shrink-0 border-2 border-primary/30 opacity-0 animate-fade-in"
-            style={{ animationDelay: `${(scene.recipe.length + 1) * 0.12}s`, animationFillMode: 'forwards' }}
-          >
-            <img src={scene.recipeResult} alt="Result" className="w-full h-full object-cover" />
-          </div>
-        </div>
-      )}
 
       {/* Content */}
       <div className={cn("flex flex-col gap-2 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>

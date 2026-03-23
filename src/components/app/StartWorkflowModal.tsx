@@ -188,15 +188,27 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
 
   // --- Step 1: Workflow selection ---
   const workflowStep = (
-    <div className={cn("grid grid-cols-3", isMobile ? "gap-2" : "gap-3")}>
-      {WORKFLOW_CARDS.map((wf, i) => (
-        <WorkflowCardCompact
-          key={wf.slug}
-          workflow={wf}
-          onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
-          modalCompact
-        />
-      ))}
+    <div className="space-y-3">
+      <div className={cn("grid grid-cols-3", isMobile ? "gap-2" : "gap-3")}>
+        {WORKFLOW_CARDS.map((wf, i) => (
+          <WorkflowCardCompact
+            key={wf.slug}
+            workflow={wf}
+            onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
+            modalCompact
+          />
+        ))}
+      </div>
+      <div className="flex justify-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs text-muted-foreground gap-1.5"
+          onClick={() => { onOpenChange(false); navigate('/app/workflows'); }}
+        >
+          Browse all workflows <ArrowRight className="w-3 h-3" />
+        </Button>
+      </div>
     </div>
   );
 
