@@ -13,17 +13,17 @@ export const PRODUCT_CATEGORIES = [
 ];
 
 export const CATEGORY_HEADLINES: Record<string, string> = {
-  fashion: 'Create campaign-ready fashion visuals without photoshoots.',
-  beauty: 'Create clean, high-end skincare visuals that feel like luxury campaigns.',
-  fragrances: 'Capture the mood of your fragrance through cinematic, emotional visuals.',
-  jewelry: 'Highlight every detail with premium, light-perfect jewelry visuals.',
-  accessories: 'Turn everyday products into styled, scroll-stopping visuals.',
-  home: 'Place your products into beautifully designed interiors instantly.',
-  food: 'Create delicious, ad-ready visuals that make people crave your product.',
-  electronics: 'Showcase your product in sleek, modern environments built for conversion.',
-  sports: 'Create dynamic visuals with energy, movement, and performance.',
-  supplements: 'Build trust with clean, premium visuals that feel credible and strong.',
-  any: 'Turn your ideas into high-quality, brand-ready visuals in seconds.',
+  fashion: 'Create your first fashion campaign in seconds - no photoshoot needed.',
+  beauty: 'Launch your first beauty campaign in seconds - no photoshoot needed.',
+  fragrances: 'Create your first fragrance campaign in seconds - no photoshoot needed.',
+  jewelry: 'Launch your first jewelry campaign in seconds - no photoshoot needed.',
+  accessories: 'Create your first accessories campaign in seconds - no photoshoot needed.',
+  home: 'Launch your first home & decor campaign in seconds - no photoshoot needed.',
+  food: 'Create your first food campaign in seconds - no photoshoot needed.',
+  electronics: 'Launch your first electronics campaign in seconds - no photoshoot needed.',
+  sports: 'Create your first sports campaign in seconds - no photoshoot needed.',
+  supplements: 'Launch your first supplements campaign in seconds - no photoshoot needed.',
+  any: 'Create your first campaign in seconds - no photoshoot needed.',
 };
 
 /** Display label for the pill selector */
