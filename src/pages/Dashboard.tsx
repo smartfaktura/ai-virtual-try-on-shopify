@@ -495,7 +495,7 @@ export default function Dashboard() {
         <MetricCard
           title="Cost Saved"
           value={`€${(generatedCount * 30).toLocaleString()}`}
-          suffix="vs photoshoots"
+          suffix="vs traditional photoshoots"
           icon={Euro}
           loading={generatedLoading}
           tooltip={{ text: "Based on €30 average cost per professional product photo", memberName: "Omar", avatar: getLandingAssetUrl('team/avatar-omar.jpg') }}
