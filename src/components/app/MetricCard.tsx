@@ -46,12 +46,12 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
   const handleMouseEnter = () => {
     if (!tooltip) return;
     clearTimeout(hoverTimeout.current);
-    hoverTimeout.current = setTimeout(() => setHoverOpen(true), 300);
+    hoverTimeout.current = setTimeout(() => setHoverOpen(true), 200);
   };
 
   const handleMouseLeave = () => {
     clearTimeout(hoverTimeout.current);
-    hoverTimeout.current = setTimeout(() => setHoverOpen(false), 200);
+    hoverTimeout.current = setTimeout(() => setHoverOpen(false), 250);
   };
 
   const cardContent = (
