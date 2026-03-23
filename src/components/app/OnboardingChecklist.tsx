@@ -26,7 +26,7 @@ const steps = [
   {
     key: 'brand',
     title: 'Create Your Brand Profile',
-    description: 'Set your visual style — tone, lighting, colors.',
+    description: 'Set your visual style - tone, lighting, colors.',
     icon: Palette,
     path: '/app/brand-profiles',
     cta: 'Go to Brand Profiles',
@@ -35,7 +35,7 @@ const steps = [
   {
     key: 'generate',
     title: 'Generate Your First Visual Set',
-    description: 'Product Photos or Virtual Try-On — your choice.',
+    description: 'Product Photos or Virtual Try-On - your choice.',
     icon: Sparkles,
     path: '/app/workflows',
     cta: 'Go to Workflows',
@@ -44,7 +44,7 @@ const steps = [
   {
     key: 'freestyle',
     title: 'Try Freestyle Studio',
-    description: 'Prompt, pick a product, model & scene - generate stunning visuals in one click.',
+    description: 'Pick a product, model & scene - generate in one click.',
     icon: Wand2,
     path: '/app/freestyle',
     cta: 'Try Freestyle',
