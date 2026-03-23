@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Check, ArrowRight } from 'lucide-react';
+import { ChevronDown, Check, ArrowRight, Sparkles } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MobilePickerSheet } from '@/components/app/freestyle/MobilePickerSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
