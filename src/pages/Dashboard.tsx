@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { DashboardPersonalizationHero, PersonalizedForPill } from '@/components/app/DashboardPersonalizationHero';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
@@ -18,7 +17,6 @@ import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { DashboardTipCard } from '@/components/app/DashboardTipCard';
 import { ActivityFeed } from '@/components/app/ActivityFeed';
-import { DashboardQuickActions } from '@/components/app/DashboardQuickActions';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +27,7 @@ import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThum
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 
 /* ── Inline card with IntersectionObserver for animations ── */
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
@@ -90,6 +89,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { balance, openBuyModal } = useCredits();
+  const [startModalOpen, setStartModalOpen] = useState(false);
 
   // Fetch user profile (first_name)
   const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
@@ -251,22 +251,6 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Lifted category state for syncing headline with pill
-  const [selectedCategory, setSelectedCategory] = useState('any');
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('product_categories')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        const cats = (data?.product_categories as string[]) ?? [];
-        const primary = cats.includes('any') || cats.length === 0 ? 'any' : cats[0];
-        setSelectedCategory(primary);
-      });
-  }, [user]);
 
   // Critical error state — show recovery UI instead of blank skeletons
   const hasCriticalError = profileError && jobsError;
@@ -320,8 +304,8 @@ export default function Dashboard() {
               <Sparkles className="w-4 h-4 text-primary" />
               <span><strong className="text-foreground">{balance}</strong> credits available</span>
             </div>
-            <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={openBuyModal}>
-              Buy Credits
+            <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => setStartModalOpen(true)}>
+              Start with a Workflow
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -408,6 +392,8 @@ export default function Dashboard() {
 
         {/* Feedback Banner */}
         <FeedbackBanner />
+
+        <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
       </div>
     );
   }
@@ -421,14 +407,20 @@ export default function Dashboard() {
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        <DashboardPersonalizationHero selected={selectedCategory} hasGenerations={generatedCount > 0} />
-      </div>
+        <p className="text-lg text-muted-foreground mt-2 max-w-xl">
+          Your AI photography studio. Here's what's happening.
+        </p>
 
-      {/* Personalized pill + Quick Actions */}
-      <div className="flex flex-wrap items-center gap-4">
-        <PersonalizedForPill selected={selectedCategory} onSelect={setSelectedCategory} />
-        <div className="hidden sm:block w-px h-5 bg-border/60" />
-        <DashboardQuickActions />
+        <div className="flex items-center gap-4 mt-5 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span><strong className="text-foreground">{balance}</strong> credits available</span>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => setStartModalOpen(true)}>
+            Start with a Workflow
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Tip Card */}
@@ -624,6 +616,8 @@ export default function Dashboard() {
 
       {/* Feedback Banner */}
       <FeedbackBanner />
+
+      <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
     </div>
   );
 }
