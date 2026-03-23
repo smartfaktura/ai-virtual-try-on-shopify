@@ -12,6 +12,7 @@ interface DiscoverCategoryBarProps {
   selectedCategory: string;
   onSelectCategory: (id: string) => void;
   savedCount?: number;
+  hideArrows?: boolean;
 }
 
 function useScrollArrows(ref: React.RefObject<HTMLDivElement>) {
