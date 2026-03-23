@@ -117,6 +117,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Flat Lay Set': {
     background: flatResult,
+    recipe: [
+      { image: flatProduct1, label: 'Product 1' },
+      { image: flatProduct2, label: 'Product 2' },
+    ],
+    recipeResult: flatResult,
     elements: [
       {
         type: 'product', image: flatProduct1, label: 'Powder', sublabel: 'Product 1',
