@@ -1,38 +1,60 @@
 
 
-# Persist Freestyle Guide Dismissal Per User (Database)
+# ProductCategoryShowcase Placement: Pros & Cons Analysis
 
-## Problem
-The freestyle wizard guide dismissal is stored in `localStorage` (`freestyle_guide_dismissed`). This means:
-- Same user on a different browser/device sees the guide again
-- Different user on the same browser never sees the guide
-- Clearing browser data resets it
+## Current Order (after Hero)
+1. Hero
+2. StudioTeamSection (social proof — team avatars)
+3. HowItWorks (3-step explainer)
+4. FreestyleShowcaseSection (feature demo)
+5. **ProductCategoryShowcase** ← currently here
+6. ModelShowcaseSection
+7. EnvironmentShowcaseSection
+8. CreativeDropsSection
+9. Pricing → FAQ → CTA
 
-It should be tied to the authenticated user, shown once per account.
+---
 
-## Solution
+## Option A: Move Right After Hero (position #2)
 
-Store the dismissal flag in the user's `profiles.settings` JSONB column (which already exists and is used for other per-user settings like `emailOnFailed`, `inAppFailed`).
+**Pros:**
+- Immediately answers "does this work for MY product type?" — the #1 question visitors have after seeing the hero
+- Auto-cycling category cards create visual motion that keeps attention after the static hero
+- Reduces bounce — visitors in fashion/food/skincare see themselves represented instantly
+- Strong "show don't tell" — real AI outputs before any text explanation
 
-### `src/pages/Freestyle.tsx`
+**Cons:**
+- Pushes StudioTeamSection (social proof) down — visitors see product demos before knowing who's behind the tool
+- The "How It Works" 3-step flow gets delayed, so visitors see outputs without understanding the process yet
+- Two heavy image sections back-to-back (Hero + Categories) could feel repetitive on slow connections
+- The current flow builds a narrative: team → process → features → proof. Moving categories up breaks this storytelling arc
 
-1. **On mount**: Read `profiles.settings.freestyleGuideDismissed` from the database instead of `localStorage`. Show the guide only if `settings.freestyleGuideDismissed !== true`.
+---
 
-2. **On dismiss/complete**: Update `profiles.settings` in the database, merging `{ freestyleGuideDismissed: true }` into the existing JSONB. Also set `localStorage` as a fast cache to avoid flicker on subsequent visits.
+## Option B: Keep Current Position (#5)
 
-3. **Initialization logic**:
-   - Check `localStorage` first for instant render (no flicker)
-   - Then verify against the database profile
-   - If database says dismissed but localStorage doesn't have it, sync localStorage
-   - If database says not dismissed, show the guide
+**Pros:**
+- Maintains the logical narrative: credibility (team) → understanding (how it works) → capability (freestyle) → breadth (categories)
+- By the time visitors reach categories, they already understand what the tool does — the categories reinforce rather than confuse
+- Spacing between image-heavy sections prevents visual fatigue
 
-### No database migration needed
-The `profiles.settings` JSONB column already exists and accepts arbitrary keys. We just add `freestyleGuideDismissed: true` to it.
+**Cons:**
+- Many visitors never scroll to position #5 — typical landing page drop-off is 40-60% by section 3
+- The most universally relatable content ("your product type works here") is buried
+- Visitors who don't identify with the Freestyle showcase may bounce before seeing their category
 
-### Changes
+---
 
-**`src/pages/Freestyle.tsx`** (~15 lines changed):
-- Import `useAuth` and `supabase`
-- Replace `localStorage`-only init with a `useEffect` that checks `profiles.settings`
-- On dismiss, write to both `profiles.settings` (via Supabase update) and `localStorage`
+## Recommendation
+
+**Move it to position #2** (right after Hero). The category showcase directly answers the visitor's core question and is more universally engaging than the team section. The new order would be:
+
+1. Hero
+2. **ProductCategoryShowcase** — "yes, this works for your products"
+3. StudioTeamSection — credibility
+4. HowItWorks — process
+5. FreestyleShowcaseSection — deep feature demo
+6. ModelShowcaseSection → EnvironmentShowcaseSection → rest
+
+This is a 1-line reorder in `Landing.tsx`.
 
