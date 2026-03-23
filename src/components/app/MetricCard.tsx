@@ -124,7 +124,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
-        align="center"
+        align="start"
         sideOffset={6}
         className="w-[240px] p-3 rounded-xl shadow-lg border border-border/60"
         onMouseEnter={handleMouseEnter}
