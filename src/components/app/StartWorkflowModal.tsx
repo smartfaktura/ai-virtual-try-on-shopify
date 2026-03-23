@@ -221,7 +221,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
                   <img
                     src={getOptimizedUrl(p.image_url, { width: 200, quality: 70 })}
                     alt={p.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <p className="text-[11px] text-foreground font-medium text-center line-clamp-2 leading-tight">{p.title}</p>
