@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { ArrowRight, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
