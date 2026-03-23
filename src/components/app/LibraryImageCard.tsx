@@ -122,18 +122,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       {/* Hover overlay — hidden in select mode */}
       {!selectMode && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
-          {/* Top: badge */}
-          <div className="flex justify-between items-start">
-            <span className="text-[10px] px-2 py-0.5 rounded-md font-medium backdrop-blur-sm flex items-center gap-1 bg-black/40 text-white">
-              {item.quality?.startsWith('upscaled_') ? (
-                <><Sparkles className="w-3 h-3" /> Enhanced</>
-              ) : item.source === 'freestyle' ? (
-                <><Sparkles className="w-3 h-3" /> Freestyle</>
-              ) : (
-                <><Camera className="w-3 h-3" /> {item.label}</>
-              )}
-            </span>
-          </div>
+          <div />
 
           {/* Bottom: date + delete on left, download on right */}
           <div className="flex justify-between items-end">
