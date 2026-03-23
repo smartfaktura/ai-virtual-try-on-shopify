@@ -516,6 +516,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Your AI Studio Team */}
+      <DashboardTeamCarousel />
+
       {/* Recent Jobs */}
       <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
         <div className="p-5 space-y-4">
