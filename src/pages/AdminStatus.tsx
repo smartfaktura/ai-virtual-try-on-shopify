@@ -12,6 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface WorkflowBreakdown {
+  name: string;
+  total: number;
+  completed: number;
+}
+
 interface PlatformStats {
   total_users: number;
   active_generators: number;
@@ -23,6 +29,7 @@ interface PlatformStats {
   total_brand_profiles: number;
   total_drops: number;
   jobs_by_type: Record<string, number>;
+  workflows_breakdown: WorkflowBreakdown[];
 }
 type TimeRange = 'today' | 'yesterday' | 24 | 168 | 720;
 
@@ -143,6 +150,51 @@ export default function AdminStatus() {
           <MetricCard title="Brand Profiles" value={platformStats?.total_brand_profiles ?? '—'} icon={Palette} loading={platformLoading} />
           <MetricCard title="Creative Drops" value={platformStats?.total_drops ?? '—'} icon={Sparkles} loading={platformLoading} />
         </div>
+      </div>
+
+      {/* Workflow Usage Breakdown */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="font-semibold text-foreground">Workflow Usage</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">All-time breakdown by workflow type</p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Workflow</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Completed</TableHead>
+              <TableHead className="text-right">Success Rate</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {platformLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 w-32 bg-muted rounded animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-12 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                  <TableCell><div className="h-4 w-12 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                  <TableCell><div className="h-4 w-16 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : platformStats?.workflows_breakdown?.length ? (
+              platformStats.workflows_breakdown.map((w) => (
+                <TableRow key={w.name}>
+                  <TableCell className="font-medium text-sm">{w.name}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{w.total}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{w.completed}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {w.total > 0 ? `${Math.round((w.completed / w.total) * 100)}%` : '—'}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No data</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Time range toggle + refresh */}
