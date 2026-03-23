@@ -498,7 +498,7 @@ export default function Dashboard() {
           suffix="vs photoshoots"
           icon={Euro}
           loading={generatedLoading}
-          tooltip="Based on €30 average cost per professional product photo"
+          tooltip={{ text: "Based on €30 average cost per professional product photo", memberName: "Omar", avatar: getLandingAssetUrl('team/avatar-omar.jpg') }}
         />
         <MetricCard
           title="Time Saved"
@@ -506,7 +506,7 @@ export default function Dashboard() {
           suffix="no shooting needed"
           icon={Clock}
           loading={generatedLoading}
-          tooltip="Estimated 20 min saved per image vs traditional workflow"
+          tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getLandingAssetUrl('team/avatar-max.jpg') }}
         />
         <MetricCard
           title="Credits Remaining"
@@ -516,7 +516,7 @@ export default function Dashboard() {
           onClick={openBuyModal}
           progress={Math.max(0, Math.round((balance / 300) * 100))}
           progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
-          tooltip="Credits refresh monthly based on your plan"
+          tooltip={{ text: "Credits refresh monthly based on your plan", memberName: "Kenji", avatar: getLandingAssetUrl('team/avatar-kenji.jpg') }}
         />
         <MetricCard
           title="Continue Last"
@@ -526,7 +526,7 @@ export default function Dashboard() {
             label: 'Continue',
             onClick: () => navigate(`/app/generate/${(lastJob.workflows as any)?.slug || 'product-on-model'}`),
           } : undefined}
-          tooltip="Pick up where you left off"
+          tooltip={{ text: "Pick up where you left off", memberName: "Sophia", avatar: getLandingAssetUrl('team/avatar-sophia.jpg') }}
         />
         <div className="hidden md:block">
           <MetricCard
@@ -537,7 +537,7 @@ export default function Dashboard() {
               label: 'Recreate',
               onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
             } : undefined}
-            tooltip="Your most-used workflow based on completed jobs"
+            tooltip={{ text: "Your most-used workflow based on completed jobs", memberName: "Sienna", avatar: getLandingAssetUrl('team/avatar-sienna.jpg') }}
           />
         </div>
       </div>

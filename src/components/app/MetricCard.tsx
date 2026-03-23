@@ -1,14 +1,20 @@
 import type { LucideIcon } from 'lucide-react';
 import { Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+
+interface BrandedTooltip {
+  text: string;
+  memberName: string;
+  avatar: string;
+}
 
 interface MetricCardProps {
   title: string;
   value?: string | number;
   suffix?: string;
   icon?: LucideIcon;
-  tooltip?: string;
+  tooltip?: string | BrandedTooltip;
   trend?: {
     value: number;
     direction: 'up' | 'down';
@@ -31,35 +37,52 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     );
   }
 
+  const isBrandedTooltip = tooltip && typeof tooltip === 'object';
+  const tooltipText = typeof tooltip === 'string' ? tooltip : tooltip?.text;
+
   const content = (
     <div className="p-4 sm:p-5 space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground" />}
-          <p className="text-xs text-muted-foreground font-medium">{title}</p>
+        <div className="flex items-center gap-1.5 min-w-0">
+          {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+          <p className="text-xs text-muted-foreground font-medium truncate">{title}</p>
         </div>
         {tooltip && (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="w-3 h-3 text-muted-foreground/50 hover:text-muted-foreground cursor-help transition-colors" />
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[200px] text-xs">
-                {tooltip}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex-shrink-0 ml-1 focus:outline-none">
+                <Info className="w-3 h-3 text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="end" className="w-56 p-3" sideOffset={8}>
+              {isBrandedTooltip ? (
+                <div className="flex gap-2.5 items-start">
+                  <img
+                    src={(tooltip as BrandedTooltip).avatar}
+                    alt={(tooltip as BrandedTooltip).memberName}
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-border"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-foreground">{(tooltip as BrandedTooltip).memberName}</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{(tooltip as BrandedTooltip).text}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground leading-snug">{tooltipText}</p>
+              )}
+            </PopoverContent>
+          </Popover>
         )}
       </div>
 
       {/* Value or description */}
       {value !== undefined ? (
-        <div className="flex items-end gap-1">
-          <p className="text-2xl font-extrabold text-foreground tracking-tight leading-none">{value}</p>
-          {suffix && <span className="text-[10px] text-muted-foreground pb-0.5">{suffix}</span>}
+        <div className="flex items-end gap-1 min-w-0">
+          <p className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight leading-none truncate">{value}</p>
+          {suffix && <span className="text-[9px] sm:text-[10px] text-muted-foreground pb-0.5 leading-tight flex-shrink-0">{suffix}</span>}
         </div>
       ) : description ? (
-        <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">{description}</p>
+        <p className="text-xs sm:text-sm font-medium text-foreground leading-snug line-clamp-2">{description}</p>
       ) : null}
 
       {trend && (
@@ -94,10 +117,9 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     </div>
   );
 
-  const hasAction = !!action;
   const className = `rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 ${
-    hasAction ? 'border-l-2 border-l-primary/30' : ''
-  } ${onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/30' : ''}`;
+    onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/30' : ''
+  }`;
 
   if (onClick) {
     return <div className={className} onClick={onClick}>{content}</div>;
