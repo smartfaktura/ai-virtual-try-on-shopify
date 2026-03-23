@@ -1,26 +1,26 @@
 
 
-# Fix Zoomed-In Workflow Images in Modal
+# Fix Zoomed-In Product Images in Start Workflow Modal
 
 ## Problem
-The modal's static workflow preview images use `object-cover`, which crops/zooms the result images (especially Product Listing Set and Virtual Try-On Set). The images need to show the full composition.
+Product images use `object-cover` inside `aspect-square` containers. When product photos have the subject filling the frame (like a crop top or jacket), `object-cover` zooms/crops aggressively to fill the square. The previous fix (`object-contain p-1`) went too far - images floated with whitespace.
 
-## Fix
+## Solution
 
-### `src/components/app/WorkflowCardCompact.tsx` (line 57)
+Use `object-contain` (shows the full image without cropping) combined with a solid `bg-muted` background to fill the letterbox areas cleanly. No padding needed - the background color handles the empty space naturally.
 
-Change the static image (shown when `modalCompact` is true) from `object-cover` to `object-contain` with a matching background color so the full image is visible:
+### `src/components/app/StartWorkflowModal.tsx` (line 224)
 
 ```tsx
-<img
-  src={scene?.background || workflow.preview_image_url || imgFallback}
-  alt={workflow.name}
-  className="w-full h-full object-contain bg-muted/50"
-/>
+// From:
+className="w-full h-full object-cover"
+
+// To:
+className="w-full h-full object-contain"
 ```
 
-This ensures the workflow result images display fully within the square card without cropping, while the subtle `bg-muted/50` fills any letterbox space cleanly.
+The parent `div` already has `bg-muted`, so any letterbox space will blend with the card background rather than appearing as awkward whitespace. This is the middle ground: no aggressive cropping, no floating images with padding.
 
 ### File
-- `src/components/app/WorkflowCardCompact.tsx` - line 57, `object-cover` → `object-contain bg-muted/50`
+- `src/components/app/StartWorkflowModal.tsx` - line 224 only
 
