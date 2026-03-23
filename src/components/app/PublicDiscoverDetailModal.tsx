@@ -203,7 +203,7 @@ export function PublicDiscoverDetailModal({
                         onClick={() => onSelectRelated(ri)}
                         className="aspect-[3/4] rounded-xl overflow-hidden bg-muted hover:ring-2 ring-primary/50 transition-all duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md"
                       >
-                        <ShimmerImage src={riImage} alt={riTitle} className="w-full h-full object-cover" aspectRatio="3/4" />
+                        <ShimmerImage src={getOptimizedUrl(riImage, { quality: 60 })} alt={riTitle} className="w-full h-full object-cover" aspectRatio="3/4" />
                       </button>
                     );
                   })}
