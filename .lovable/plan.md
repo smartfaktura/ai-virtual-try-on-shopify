@@ -1,37 +1,38 @@
 
 
-# Fix Workflows Hub: Background Images Zoomed + Remove Try-On Badge
+# Fix Workflow Animation Background + Product Image Display
 
-## Problems
-1. **Background images for Product Listing Set and Virtual Try-On Set appear zoomed/cropped** on `/app/workflows` - the `WorkflowAnimatedThumbnail` uses `object-cover` which aggressively crops the result images inside `aspect-[3/4]` containers.
-2. **Try-On badge** clutters the cards unnecessarily.
+## Problem
+
+The last change switched `WorkflowAnimatedThumbnail` background from `object-cover` to `object-contain`. This breaks the animated workflow cards on `/app/workflows` because:
+- The animated overlay elements (product chips, model avatars, scene badges) are positioned relative to a **filled** background
+- `object-contain` leaves empty space around the image, so overlays float over blank areas
+- The animation system was designed around `object-cover` filling the container
+
+The product images in the modal are a separate issue - they use `object-contain` which is correct.
 
 ## Changes
 
 ### 1. `src/components/app/WorkflowAnimatedThumbnail.tsx` (line 742)
 
-Change the background image from `object-cover` to `object-contain` with a `bg-muted` fallback so the full workflow result composition is visible without cropping:
+**Revert** the background image back to `object-cover` (remove `bg-muted`). The animated cards need the background to fill the container so overlays align properly:
 
 ```tsx
-// From:
-className={`absolute inset-0 w-full h-full object-cover ...`}
-
-// To:
-className={`absolute inset-0 w-full h-full object-contain bg-muted ...`}
+// Revert to:
+className={`absolute inset-0 w-full h-full object-cover transition-opacity ...`}
 ```
 
-This affects the default animated thumbnail renderer (the one used by Virtual Try-On Set and Product Listing Set). Carousel, Staging, and Upscale modes have their own renderers and won't be affected.
+### 2. `src/components/app/WorkflowCardCompact.tsx` (line 57)
 
-### 2. `src/components/app/WorkflowCardCompact.tsx` (lines 71-76)
+The **modal static images** (when `modalCompact` is true, no animation) stay as `object-contain bg-muted/50` - this is correct for the small modal cards where we want to show the full image without cropping.
 
-Remove the Try-On badge block entirely.
+No change needed here.
 
-### 3. `src/components/app/WorkflowCard.tsx` (lines 120-125)
+### Summary
+- **Animated cards** (`/app/workflows`): `object-cover` (revert) - overlays need filled background
+- **Modal static cards** (StartWorkflowModal): `object-contain` - show full image, no animation
+- **Product thumbnails** (modal step 2): `object-contain` - show full product without cropping
 
-Remove the Try-On badge block from the large card as well.
-
-### Files
-- `src/components/app/WorkflowAnimatedThumbnail.tsx` - line 742: `object-cover` → `object-contain bg-muted`
-- `src/components/app/WorkflowCardCompact.tsx` - remove Try-On badge (lines 71-76)
-- `src/components/app/WorkflowCard.tsx` - remove Try-On badge (lines 120-125)
+### File
+- `src/components/app/WorkflowAnimatedThumbnail.tsx` - line 742 only, revert to `object-cover`
 
