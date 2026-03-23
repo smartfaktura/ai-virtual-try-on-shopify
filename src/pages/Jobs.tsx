@@ -388,6 +388,7 @@ export default function Jobs() {
                 </div>
               ))}
             </div>
+            </div>
             {hasNextPage && (
               <div className="flex justify-center pt-6 pb-2">
                 <Button
