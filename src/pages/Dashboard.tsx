@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { DashboardPersonalizationHero, PersonalizedForPill } from '@/components/app/DashboardPersonalizationHero';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
@@ -18,7 +17,6 @@ import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { DashboardTipCard } from '@/components/app/DashboardTipCard';
 import { ActivityFeed } from '@/components/app/ActivityFeed';
-import { DashboardQuickActions } from '@/components/app/DashboardQuickActions';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +27,7 @@ import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThum
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 
 /* ── Inline card with IntersectionObserver for animations ── */
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
