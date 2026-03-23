@@ -55,7 +55,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
   };
 
   const cardContent = (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 flex-1">
       {/* Title */}
       <div className="flex items-center gap-1.5">
         {Icon && <Icon className="w-3 h-3 text-muted-foreground/60" />}
