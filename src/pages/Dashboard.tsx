@@ -640,7 +640,19 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
         <div className="p-5 space-y-4">
 
-          {recentJobs.length > 0 ? (
+          {jobsLoading ? (
+            <div className="space-y-3 py-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-muted/40 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-32 bg-muted/40 rounded animate-pulse" />
+                    <div className="h-3 w-20 bg-muted/30 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentJobs.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
