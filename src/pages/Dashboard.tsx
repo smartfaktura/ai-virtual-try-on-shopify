@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const el = ref.current;
@@ -55,7 +57,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
     >
       <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
         {scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} mobileCompact={isMobile} />
         ) : (
           <img
             src={workflow.preview_image_url || '/placeholder.svg'}
