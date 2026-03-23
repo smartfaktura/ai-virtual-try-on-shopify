@@ -1,48 +1,31 @@
 
 
-# Replace Flat Items with Animated Workflow Cards in Modal
+# Fix Modal Card Sizing for Better Fit
 
-## What Changes
+## Problem
+The `WorkflowCardCompact` cards use `aspect-[3/4]` (desktop) or `aspect-[2/3]` (mobile) thumbnails designed for the full Workflows hub page. Inside a constrained modal/drawer, three of these cards are too tall and cramped - hard to see details, especially on mobile.
 
-Replace the plain button rows in Step 1 of `StartWorkflowModal` with `WorkflowCardCompact` components - the same animated cards used on the Workflows hub page (with product chips, model avatars, and scene overlays animating in).
+## Solution
 
-## Plan
+Add a `modalCompact` prop to `WorkflowCardCompact` that uses a shorter thumbnail ratio and tighter content spacing, specifically for the modal context.
+
+### `src/components/app/WorkflowCardCompact.tsx`
+
+- Add `modalCompact?: boolean` prop
+- When `modalCompact` is true:
+  - Thumbnail uses `aspect-square` instead of `aspect-[3/4]` or `aspect-[2/3]` - significantly shorter, fits 3-up in the modal
+  - Content area uses `p-2` with tighter spacing
+  - Title uses `text-xs`, description hidden
+  - Button uses compact `h-7` size
+- This keeps the animated thumbnails but in a size that fits the modal
 
 ### `src/components/app/StartWorkflowModal.tsx`
 
-**1. Import `WorkflowCardCompact` and `workflowScenes`**
-
-**2. Create mock `Workflow` objects** matching the three options so `WorkflowCardCompact` can render them. The card only needs `name`, `slug`, `description`, `uses_tryon`, and `preview_image_url`. The animation data is keyed by `workflow.name` inside `workflowScenes` (keys: `'Virtual Try-On Set'`, `'Product Listing Set'`, `'Selfie / UGC Set'`).
-
-```ts
-const WORKFLOW_CARDS: Workflow[] = [
-  { name: 'Virtual Try-On Set', slug: 'virtual-try-on-set', description: 'Show your product on real models', uses_tryon: true, ... },
-  { name: 'Product Listing Set', slug: 'product-listing-set', description: 'High-end lifestyle & studio shots', uses_tryon: false, ... },
-  { name: 'Selfie / UGC Set', slug: 'selfie-ugc-set', description: 'High-quality content like UGC creators', uses_tryon: false, ... },
-];
-```
-
-**3. Replace the `workflowStep` flat buttons** with a 3-column grid of `WorkflowCardCompact`:
-
-```tsx
-const workflowStep = (
-  <div className="grid grid-cols-3 gap-3">
-    {WORKFLOW_CARDS.map((wf, i) => (
-      <WorkflowCardCompact
-        key={wf.slug}
-        workflow={wf}
-        onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
-        mobileCompact={isMobile}
-      />
-    ))}
-  </div>
-);
-```
-
-**4. Widen the desktop dialog** from `sm:max-w-[480px]` to `sm:max-w-[640px]` so the 3 cards have breathing room with their animated thumbnails.
-
-**5. Remove `Package` icon import** (no longer used in step 1).
+- Pass `modalCompact` to `WorkflowCardCompact` instead of `mobileCompact={isMobile}`
+- Reduce gap in the grid: `gap-2` on mobile, `gap-3` on desktop
+- On mobile drawer, use `grid-cols-3 gap-2` so cards sit side-by-side without overflow
 
 ### Files
-- `src/components/app/StartWorkflowModal.tsx` - swap step 1 content, widen dialog
+- `src/components/app/WorkflowCardCompact.tsx` - add `modalCompact` prop with shorter aspect ratio
+- `src/components/app/StartWorkflowModal.tsx` - pass `modalCompact` instead of `mobileCompact`
 
