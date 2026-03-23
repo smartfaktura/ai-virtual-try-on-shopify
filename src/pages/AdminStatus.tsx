@@ -9,9 +9,21 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface PlatformStats {
+  total_users: number;
+  active_generators: number;
+  total_images: number;
+  total_freestyle: number;
+  total_videos: number;
+  total_products: number;
+  total_credits_spent: number;
+  total_brand_profiles: number;
+  total_drops: number;
+  jobs_by_type: Record<string, number>;
+}
 type TimeRange = 'today' | 'yesterday' | 24 | 168 | 720;
 
 function getRangeHours(range: TimeRange): number {
