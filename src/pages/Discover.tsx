@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Compass, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
