@@ -26,6 +26,20 @@ export const CATEGORY_HEADLINES: Record<string, string> = {
   any: 'Create your first campaign in seconds - no photoshoot needed.',
 };
 
+export const CATEGORY_HEADLINES_RETURNING: Record<string, string> = {
+  fashion: 'Create campaign-ready fashion visuals - no photoshoot needed.',
+  beauty: 'Create campaign-ready beauty visuals - no photoshoot needed.',
+  fragrances: 'Create campaign-ready fragrance visuals - no photoshoot needed.',
+  jewelry: 'Create campaign-ready jewelry visuals - no photoshoot needed.',
+  accessories: 'Create campaign-ready accessories visuals - no photoshoot needed.',
+  home: 'Create campaign-ready home & decor visuals - no photoshoot needed.',
+  food: 'Create campaign-ready food visuals - no photoshoot needed.',
+  electronics: 'Create campaign-ready electronics visuals - no photoshoot needed.',
+  sports: 'Create campaign-ready sports visuals - no photoshoot needed.',
+  supplements: 'Create campaign-ready supplements visuals - no photoshoot needed.',
+  any: 'Create campaign-ready visuals in seconds - no photoshoot needed.',
+};
+
 /** Display label for the pill selector */
 export function getCategoryLabel(ids: string[]): string {
   const filtered = ids.filter((id) => id !== 'any');
@@ -45,16 +59,21 @@ export function getCategoryLabel(ids: string[]): string {
 }
 
 /** Dynamic headline based on selected categories */
-export function getCategoryHeadline(ids: string[]): string {
+export function getCategoryHeadline(ids: string[], isReturning: boolean = false): string {
+  const headlineMap = isReturning ? CATEGORY_HEADLINES_RETURNING : CATEGORY_HEADLINES;
   const filtered = ids.filter((id) => id !== 'any');
   if (filtered.length === 0 || ids.includes('any')) {
-    return CATEGORY_HEADLINES.any;
+    return headlineMap.any;
   }
   if (filtered.length === 1) {
-    return CATEGORY_HEADLINES[filtered[0]] ?? CATEGORY_HEADLINES.any;
+    return headlineMap[filtered[0]] ?? headlineMap.any;
   }
   if (filtered.length === 2) {
-    return 'Create high-quality visuals tailored to your products — from styled campaigns to real-life scenes.';
+    return isReturning
+      ? 'Create high-quality visuals tailored to your products - no photoshoot needed.'
+      : 'Create high-quality visuals tailored to your products - from styled campaigns to real-life scenes.';
   }
-  return 'Turn your product mix into consistent, high-quality visuals in seconds.';
+  return isReturning
+    ? 'Turn your product mix into consistent, high-quality visuals - no photoshoot needed.'
+    : 'Turn your product mix into consistent, high-quality visuals in seconds.';
 }

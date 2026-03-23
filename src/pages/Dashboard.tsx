@@ -421,7 +421,7 @@ export default function Dashboard() {
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        <DashboardPersonalizationHero selected={selectedCategory} />
+        <DashboardPersonalizationHero selected={selectedCategory} hasGenerations={generatedCount > 0} />
       </div>
 
       {/* Personalized pill + Quick Actions */}
