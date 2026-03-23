@@ -327,8 +327,10 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Find & Recreate */}
         <DashboardDiscoverSection />
+
+        {/* Feedback Banner */}
+        <FeedbackBanner />
 
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
