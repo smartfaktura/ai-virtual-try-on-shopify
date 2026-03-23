@@ -149,12 +149,18 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         for (const f of fsData) {
           if (!f.image_url || f.image_url.startsWith('data:') || f.image_url === 'saved_to_storage') continue;
           const wfLabel = (f as any).workflow_label as string | null;
-          const displayLabel = wfLabel || 'Freestyle';
           const userPrompt = (f as any).user_prompt as string | null;
-          if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
 
           const modelInfo = resolveModel((f as any).model_id);
           const sceneInfo = resolveScene((f as any).scene_id);
+
+          const nameParts = [modelInfo.name, sceneInfo.name].filter(Boolean);
+          const freestyleLabel = nameParts.length > 0
+            ? nameParts.join(' · ')
+            : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
+          const displayLabel = wfLabel || freestyleLabel;
+
+          if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
 
           rawItems.push({
             url: f.image_url,
