@@ -214,11 +214,6 @@ export function DashboardDiscoverSection() {
         ))}
       </div>
 
-      <div className="flex justify-center pt-2">
-        <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6" onClick={() => navigate('/app/discover')}>
-          View all
-        </Button>
-      </div>
 
       <DiscoverDetailModal
         item={selectedItem}
