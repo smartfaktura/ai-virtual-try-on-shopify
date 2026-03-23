@@ -1,25 +1,24 @@
 
 
-# Dashboard Workflows: 3-Column Desktop, 2-Column Mobile
+# Team Carousel: Static Avatars, Bigger, Less Spacing, Move After Workflows
 
-## Change
+## Changes
 
-### `src/pages/Dashboard.tsx` (line 372)
+### 1. `src/components/app/DashboardTeamCarousel.tsx`
 
-Update the grid classes:
+- **Remove video loading** — always render `<img>` instead of `<video>`, using the static avatar for every member
+- **Bigger avatars** — increase from `w-16 h-16 sm:w-20 sm:h-20` to `w-20 h-20 sm:w-24 sm:h-24`
+- **Less spacing** — reduce gap from `gap-6` to `gap-4`, reduce card width from `w-[100px] sm:w-[120px]` to `w-[90px] sm:w-[110px]`
+- **Reduce section spacing** — `space-y-4` → `space-y-3`
 
-```
-// From:
-grid grid-cols-1 sm:grid-cols-2 gap-6
+### 2. `src/pages/Dashboard.tsx`
 
-// To:
-grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6
-```
+**Move `<DashboardTeamCarousel />` from before workflows to after workflows** in both the new-user and returning-user views:
 
-- **Mobile**: 2 columns
-- **Tablet (md+)**: 3 columns
-- Tighter gap on mobile (`gap-4`) for better fit
+- **New user (line 328-329)**: Remove from current position (before "Two Ways to Create"). Place it after the "Explore Workflows" section (after line 391), before `<FeedbackBanner />`.
+- **Returning user (line 482-483)**: Remove from current position (before "Create"). Place it after the "Create" section (after line 520), before "Recent Jobs".
 
-### File
-- `src/pages/Dashboard.tsx` — line 372
+### Files
+- `src/components/app/DashboardTeamCarousel.tsx` — static images only, bigger avatars, tighter spacing
+- `src/pages/Dashboard.tsx` — reorder sections in both views
 
