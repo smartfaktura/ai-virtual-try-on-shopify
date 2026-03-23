@@ -97,6 +97,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     background: ugcResult1,
     objectPosition: 'center',
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
+    recipe: [
+      { image: ugcProduct, label: 'Product' },
+      { image: ugcModel, label: 'Model' },
+    ],
+    recipeResult: ugcResult1,
     elements: [
       {
         type: 'product', image: ugcProduct, label: 'Ice Roller', sublabel: 'Product',
