@@ -359,6 +359,12 @@ export default function Jobs() {
           })()
         ) : (
           <>
+            <div className="relative">
+              {isFetching && !isLoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
             <div className={cn("flex gap-1 transition-opacity", isFetching && !isLoading && "opacity-50 pointer-events-none")}>
               {columns.map((col, i) => (
                 <div key={i} className="flex-1 flex flex-col gap-1">
@@ -381,6 +387,7 @@ export default function Jobs() {
                   ))}
                 </div>
               ))}
+            </div>
             </div>
             {hasNextPage && (
               <div className="flex justify-center pt-6 pb-2">
