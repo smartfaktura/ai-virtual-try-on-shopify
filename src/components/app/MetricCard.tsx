@@ -136,9 +136,9 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
-        align="start"
-        sideOffset={6}
-        className="w-auto max-w-[260px] p-3 rounded-lg shadow-lg border border-border/60 bg-popover"
+        align="center"
+        sideOffset={4}
+        className="w-auto max-w-[260px] p-3 rounded-xl shadow-md border border-border/40 bg-popover/95 backdrop-blur-sm"
         onMouseEnter={() => { clearTimeout(hoverTimeout.current); setHoverOpen(true); }}
         onMouseLeave={handleMouseLeave}
         onOpenAutoFocus={(e) => e.preventDefault()}
