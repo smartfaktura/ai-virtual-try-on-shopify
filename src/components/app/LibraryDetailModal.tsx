@@ -198,6 +198,26 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
                 </Button>
 
+                {item.source === 'freestyle' && onCopySettings && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      onCopySettings({
+                        prompt: item.prompt || '',
+                        modelId: item.modelId,
+                        sceneId: item.sceneId,
+                        productId: item.productId,
+                        aspectRatio: item.aspectRatio,
+                      });
+                      onClose();
+                    }}
+                    className="w-full h-11 rounded-xl text-sm font-medium"
+                  >
+                    <ClipboardCopy className="w-4 h-4 mr-2" />
+                    Copy to Editor
+                  </Button>
+                )}
+
                 {isUpscaling ? (
                   <Button
                     variant="outline"
@@ -238,15 +258,18 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 </Button>
 
                 {item.source === 'freestyle' && (
-                  <Button
-                    variant="ghost"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                    {deleting ? 'Deleting…' : 'Delete'}
-                  </Button>
+                  <>
+                    <Separator className="my-1" />
+                    <Button
+                      variant="ghost"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                      {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                  </>
                 )}
               </div>
 
