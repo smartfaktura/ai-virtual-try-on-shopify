@@ -21,7 +21,7 @@ interface Props {
   modalCompact?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
