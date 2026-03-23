@@ -212,7 +212,7 @@ export function DashboardDiscoverSection() {
 
       {hasMore && (
         <div className="flex justify-center pt-2">
-          <Button variant="outline" size="sm" onClick={() => setVisibleCount(c => c + 16)}>
+          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6" onClick={() => setVisibleCount(c => c + 16)}>
             Load more
           </Button>
         </div>
