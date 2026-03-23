@@ -1,33 +1,42 @@
 
 
-# Fix: Product Pre-selection from StartWorkflowModal
+# Fix Animation Overlaps in Modal + Product Image Zoom
 
-## Problem
-The `StartWorkflowModal` navigates to `/app/generate/{slug}?product={id}`, but `Generate.tsx` never reads the `product` query parameter. The page always starts at step `'source'`, so the user lands on "How do you want to start?" instead of having their product pre-selected and being on the model/settings step.
+## Problems
+1. **Workflow card animations overlap the background** - In the small `aspect-square` modal cards, the floating chips (Product, Model, Scene, badges) cover most of the background image, making it hard to see what the workflow actually produces.
+2. **Product images zoomed/cropped** - Step 2 product grid uses `object-cover` on `aspect-square`, which crops non-square product images (e.g. tall bottles get zoomed into the middle).
 
 ## Solution
 
-### `src/pages/Generate.tsx` (~20 lines added)
+### 1. `src/components/app/WorkflowCardCompact.tsx` (~2 lines)
 
-**1. Read the `product` query param** (alongside existing `template`, `model`, `scene` params):
+When `modalCompact` is true, **don't show animated overlays** - just show the static background image. The cards are too small in the modal for the floating elements to be readable anyway.
+
 ```tsx
-const prefillProductId = searchParams.get('product');
+// Change the thumbnail rendering for modalCompact
+{scene && !modalCompact ? (
+  <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
+) : (
+  <img
+    src={scene?.background || workflow.preview_image_url || imgFallback}
+    alt={workflow.name}
+    className="w-full h-full object-cover"
+  />
+)}
 ```
 
-**2. Add a `useEffect` that auto-selects the product** once `userProducts` have loaded and the workflow is resolved:
+This shows the workflow result image (the background from animation data) as a clean static preview - no overlapping chips.
 
-- If `prefillProductId` starts with `sample_` → match against `SAMPLE_TRYON_PRODUCT`, `SAMPLE_LISTING_PRODUCT`, `SAMPLE_UGC_PRODUCT`, `SAMPLE_MIRROR_PRODUCT`
-- Otherwise → find the matching `userProducts` entry and call `mapUserProductToProduct()`
-- Set `selectedProduct`, `selectedSourceImages`, `sourceType('products')`
-- Then advance the step using the same logic as `handleSelectProduct`:
-  - Skip brand profile (for modal-initiated flows)
-  - For try-on/UGC workflows → go to `'model'` step
-  - For workflows with config that skips template → go to `'settings'`
-  - Otherwise → go to `'template'` or `'mode'`
-- Use a ref to ensure this only fires once
+### 2. `src/components/app/StartWorkflowModal.tsx` (~1 line)
 
-**3. Handle the `selectedProductIds` Set** for try-on workflows - pre-add the product ID so multi-select state is consistent.
+Change product image grid from `object-cover` to `object-contain` with a subtle background so products display fully without cropping:
+
+```tsx
+// Line 224: change object-cover to object-contain
+className="w-full h-full object-contain p-1"
+```
 
 ### Files
-- `src/pages/Generate.tsx` - read `product` param, add auto-select effect (~20 lines)
+- `src/components/app/WorkflowCardCompact.tsx` - static image for `modalCompact` instead of animated overlays
+- `src/components/app/StartWorkflowModal.tsx` - `object-contain` for product thumbnails
 
