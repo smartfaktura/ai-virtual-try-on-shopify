@@ -244,56 +244,8 @@ export default function Generate() {
     }
   }, [activeWorkflow, navigate]);
 
-  // Auto-select product from query param (StartWorkflowModal flow)
   const prefillProductId = searchParams.get('product');
   const prefillAppliedRef = useRef(false);
-  useEffect(() => {
-    if (!prefillProductId || prefillAppliedRef.current || !activeWorkflow) return;
-    if (isLoadingUserProducts) return;
-
-    let product: Product | null = null;
-
-    // Check sample products first
-    const sampleMap: Record<string, Product> = {
-      sample_tryon_crop_top: SAMPLE_TRYON_PRODUCT,
-      sample_listing_ring: SAMPLE_LISTING_PRODUCT,
-      sample_ugc_ice_roller: SAMPLE_UGC_PRODUCT,
-      sample_mirror_sweater: SAMPLE_MIRROR_PRODUCT,
-    };
-    if (sampleMap[prefillProductId]) {
-      product = sampleMap[prefillProductId];
-    } else {
-      // Find in user products
-      const userProduct = userProducts.find(p => p.id === prefillProductId);
-      if (userProduct) {
-        product = mapUserProductToProduct(userProduct);
-      }
-    }
-
-    if (!product) return;
-    prefillAppliedRef.current = true;
-
-    // Set product state
-    setSelectedProduct(product);
-    setSourceType('products');
-    if (product.images.length > 0) {
-      setSelectedSourceImages(new Set([product.images[0].id]));
-    }
-    setSelectedProductIds(new Set([product.id]));
-
-    // Auto-detect framing
-    const detectedFraming = detectDefaultFraming(product.productType, product.tags);
-    if (detectedFraming) setFraming(detectedFraming);
-
-    // Skip brand profile for modal-initiated flows, go to model or settings
-    if (activeWorkflow.uses_tryon || uiConfig?.show_model_picker) {
-      setCurrentStep('model');
-    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
-      setCurrentStep('settings');
-    } else {
-      setCurrentStep('template');
-    }
-  }, [prefillProductId, activeWorkflow, userProducts, isLoadingUserProducts]);
 
   const { data: brandProfiles = [] } = useQuery({
     queryKey: ['brand-profiles'],
