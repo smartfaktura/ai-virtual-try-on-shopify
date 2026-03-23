@@ -1,32 +1,29 @@
 
 
-# Add Product Image Carousel to Product Listing Set Workflow Card
+# Update Workflow Card Names, Add Subtitles, Fix Mobile CTA
 
-## What
-Upload the 7 product showcase images to the `landing-assets` storage bucket, then update the Product Listing Set scene data to use `mode: 'carousel'` with those images as rotating backgrounds — identical to how the Selfie/UGC Set already works.
+## Changes
 
-## Steps
+### 1. `src/components/app/StartWorkflowModal.tsx`
 
-### 1. Upload images to storage
-Upload all 7 images to `landing-assets/workflows/product-showcase/` in the storage bucket:
-- `Vovvai-products-1.jpg` (fragrance, dark)
-- `Vovvai-products-2.jpg` (perfume, marble)
-- `Vovvai-products-3.jpg` (body wash, wood)
-- `Vovvai-products-4.jpg` (facial oil, model)
-- `Vovvai-products-5.jpg` (serum, stone tray)
-- `Vovvai-products-6.jpg` (sneakers, green)
-- `Vovvai-products-7.jpg` (lamp, water)
+**Update WORKFLOW_OPTIONS names** to include "Workflow" suffix:
+- `'Product Editorial'` → `'Product Editorial Workflow'`
+- `'Virtual Try-On'` → `'Virtual Try-On Workflow'`
+- `'UGC / Selfie'` → `'UGC / Selfie Workflow'`
 
-### 2. Update `src/components/app/workflowAnimationData.tsx`
-- Add 7 new asset URL constants using `getLandingAssetUrl('workflows/product-showcase/...')`
-- Change the `'Product Listing Set'` scene definition:
-  - Add `mode: 'carousel'`
-  - Add `backgrounds: [showcase1, showcase2, ..., showcase7]` array
-  - Keep the existing `background` as the first image
-  - Keep existing floating elements (badges)
+**Update WORKFLOW_CARDS mapping** — the `name` field maps to `workflowScenes` keys, so keep the scene-lookup name unchanged but pass a `displayName` via the description or a custom prop. Actually, the card name must match `workflowScenes` keys (`'Product Listing Set'`, `'Virtual Try-On Set'`, `'Selfie / UGC Set'`), so we keep that for animation lookup but pass a separate display name.
 
-This mirrors exactly how `'Selfie / UGC Set'` uses `mode: 'carousel'` with a `backgrounds` array — the `WorkflowAnimatedThumbnail` component already handles carousel rendering with crossfade transitions.
+Approach: Add a `displayName` to each WORKFLOW_OPTIONS entry and pass it through to WorkflowCardCompact via a new prop.
+
+### 2. `src/components/app/WorkflowCardCompact.tsx`
+
+**Add `displayName` and `subtitle` props** — when provided, render `displayName` instead of `workflow.name`, and show `subtitle` below the name even in `modalCompact` mode.
+
+**Fix mobile CTA fitting**: In `modalCompact` mode, reduce button text to just arrow icon or use `text-[10px]` and `h-6 px-2` to fit. Actually, better approach: use `text-[10px]` with shorter padding and keep "Start Creating →".
+
+**Show subtitle in modal cards**: Add a small `text-[10px] text-muted-foreground` line below the card title showing the subtitle.
 
 ### Files
-- `src/components/app/workflowAnimationData.tsx` — add carousel mode + background URLs
+- `src/components/app/StartWorkflowModal.tsx` — update display names, pass subtitle prop
+- `src/components/app/WorkflowCardCompact.tsx` — accept displayName/subtitle props, fix mobile button sizing
 
