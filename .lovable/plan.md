@@ -1,30 +1,23 @@
 
 
-# Fix: Blank Grey Spacing Below Collapsed Prompt Bar on Mobile
+# Fix: Grey Gap Below Open Prompt Panel on Mobile
 
 ## Problem
-When the prompt panel is collapsed on mobile, it shows just the drag handle but there's a visible grey gap between it and the bottom of the screen. This is caused by:
-1. The wrapper div has `pb-5` bottom padding that creates space below the collapsed bar
-2. The panel container isn't pinned to the very bottom of the viewport on mobile
+The wrapper div around the prompt panel uses `pb-5 sm:pb-6` when the panel is expanded. On mobile (390px), this creates a visible grey gap below the Generate button. The padding should only apply on larger screens where the panel floats above the page.
 
 ## Fix
 
-### `src/pages/Freestyle.tsx` (line 912-915)
+### `src/pages/Freestyle.tsx` (line 916)
 
-Make the bottom padding conditional — remove it when the prompt is collapsed on mobile:
+Change the non-collapsed padding to only apply on `sm` and up:
 
 ```tsx
 // Before
-<div className="px-0 sm:px-8 pb-5 sm:pb-6 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20">
+isPromptCollapsed ? "pb-0" : "pb-5 sm:pb-6"
 
 // After
-<div className={cn(
-  "px-0 sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20",
-  isPromptCollapsed ? "pb-0" : "pb-5 sm:pb-6"
-)}>
+isPromptCollapsed ? "pb-0" : "pb-0 sm:pb-6"
 ```
 
-This eliminates the grey gap when the panel is collapsed, making the drag handle sit flush at the bottom of the screen.
-
-One file, 1 line changed.
+One token changed. Mobile gets `pb-0` always; desktop keeps its spacing.
 
