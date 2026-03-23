@@ -33,7 +33,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-border/40 bg-card p-4 sm:p-5 space-y-3">
+      <div className="rounded-xl border border-border/40 bg-card p-4 sm:p-5 min-h-[120px] space-y-3">
         <div className="h-2.5 w-14 bg-muted rounded-full animate-pulse" />
         <div className="h-5 w-16 bg-muted rounded-full animate-pulse" />
         <div className="h-2 w-20 bg-muted rounded-full animate-pulse" />
