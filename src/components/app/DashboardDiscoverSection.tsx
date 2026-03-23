@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -77,8 +77,6 @@ export function DashboardDiscoverSection() {
   const { featuredMap } = useFeaturedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
-  const [visibleCount, setVisibleCount] = useState(16);
-
   const { data: profileCats } = useQuery({
     queryKey: ['dashboard-profile-cats', user?.id],
     queryFn: async () => {
@@ -104,8 +102,6 @@ export function DashboardDiscoverSection() {
 
   const activeCategory = selectedCategory ?? defaultCategory;
 
-  // Reset visible count when category changes
-  useEffect(() => setVisibleCount(16), [activeCategory]);
 
   // Reorder categories: put user's preferred category right after "All"
   const orderedCategories = useMemo(() => {
@@ -141,8 +137,7 @@ export function DashboardDiscoverSection() {
     });
   }, [allItems, activeCategory, featuredMap]);
 
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = filtered.length > visibleCount;
+  const visible = filtered.slice(0, 16);
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
@@ -195,14 +190,6 @@ export function DashboardDiscoverSection() {
           <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recreate What Works</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Click any visual to recreate it with your product.</p>
         </div>
-        <Button
-          variant="link"
-          size="sm"
-          className="text-sm font-medium gap-1"
-          onClick={() => navigate('/app/discover')}
-        >
-          View all <ArrowRight className="w-3.5 h-3.5" />
-        </Button>
       </div>
 
       <DiscoverCategoryBar
@@ -227,13 +214,11 @@ export function DashboardDiscoverSection() {
         ))}
       </div>
 
-      {hasMore && (
-        <div className="flex justify-center pt-2">
-          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6" onClick={() => setVisibleCount(c => c + 16)}>
-            Load more
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-center pt-2">
+        <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6" onClick={() => navigate('/app/discover')}>
+          View all
+        </Button>
+      </div>
 
       <DiscoverDetailModal
         item={selectedItem}
