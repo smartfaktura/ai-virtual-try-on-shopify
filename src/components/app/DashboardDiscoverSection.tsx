@@ -109,7 +109,7 @@ export function DashboardDiscoverSection() {
     const preferred = CATEGORIES.find(c => c.id === defaultCategory);
     if (!preferred) return CATEGORIES;
     const rest = CATEGORIES.filter(c => c.id !== 'all' && c.id !== defaultCategory);
-    return [CATEGORIES[0], preferred, ...rest];
+    return [preferred, CATEGORIES[0], ...rest];
   }, [defaultCategory]);
 
   const allItems = useMemo<DiscoverItem[]>(
