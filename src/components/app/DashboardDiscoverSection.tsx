@@ -247,8 +247,10 @@ export function DashboardDiscoverSection() {
         onClose={() => setSelectedItem(null)}
         onUseItem={handleUseItem}
         onSearchSimilar={() => {
+          if (!selectedItem) return;
+          const sceneName = selectedItem.type === 'preset' ? selectedItem.data.scene_name : selectedItem.data.name;
           setSelectedItem(null);
-          navigate('/app/discover');
+          navigate(`/app/discover${sceneName ? `?similar=${encodeURIComponent(sceneName)}` : ''}`);
         }}
         relatedItems={relatedItems}
         onSelectRelated={(item) => setSelectedItem(item)}
