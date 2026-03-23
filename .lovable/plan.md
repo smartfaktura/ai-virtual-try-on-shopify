@@ -1,24 +1,49 @@
 
 
-# Team Carousel: Static Avatars, Bigger, Less Spacing, Move After Workflows
+# Fix Mobile Scene Selection Layout in Workflow Settings
 
-## Changes
+## Problem
+On mobile (390px), the scene selection header is cluttered:
+- Title "Select Your Scenes" + "31 Scenes" badge + "Select 1" button all compete for horizontal space
+- Filter button sits awkwardly on its own line
+- The layout feels cramped and hard to parse
 
-### 1. `src/components/app/DashboardTeamCarousel.tsx`
+## Solution
+Restructure the header for mobile into a cleaner stacked layout:
 
-- **Remove video loading** — always render `<img>` instead of `<video>`, using the static avatar for every member
-- **Bigger avatars** — increase from `w-16 h-16 sm:w-20 sm:h-20` to `w-20 h-20 sm:w-24 sm:h-24`
-- **Less spacing** — reduce gap from `gap-6` to `gap-4`, reduce card width from `w-[100px] sm:w-[120px]` to `w-[90px] sm:w-[110px]`
-- **Reduce section spacing** — `space-y-4` → `space-y-3`
+### `src/components/app/generate/WorkflowSettingsPanel.tsx`
 
-### 2. `src/pages/Dashboard.tsx`
+**Lines 237-301** — Restructure the header section:
 
-**Move `<DashboardTeamCarousel />` from before workflows to after workflows** in both the new-user and returning-user views:
+1. **Stack title and action on mobile**: Change the outer `flex items-center justify-between` to wrap properly on mobile. On mobile, stack: title row (with scene count badge inline) on top, then subtitle, then a row with Filter + Select button side by side.
 
-- **New user (line 328-329)**: Remove from current position (before "Two Ways to Create"). Place it after the "Explore Workflows" section (after line 391), before `<FeedbackBanner />`.
-- **Returning user (line 482-483)**: Remove from current position (before "Create"). Place it after the "Create" section (after line 520), before "Recent Jobs".
+2. **Move the scene count badge next to title on its own line** (mobile): Instead of cramming "Select Your Scenes", "31 Scenes" badge, and "Select 1" button on one line, make the title + badge wrap naturally:
+   - Title: "Select Your Scenes" (full width on mobile)
+   - Below title: subtitle text
+   - Below subtitle: a flex row with Filter button on left and Select All/Select 1 button on right
+
+3. **Restructure mobile layout**:
+```tsx
+// Outer container: stack on mobile, row on desktop
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+  <div>
+    <div className="flex items-center gap-2 flex-wrap">
+      <h3>Select Your Scenes</h3>
+      <Badge>31 Scenes</Badge>
+    </div>
+    <p className="text-sm text-muted-foreground mt-1">Pick at least 1 scene</p>
+  </div>
+  <Button>Select 1 / Select All</Button>
+</div>
+```
+
+4. **Move filter inline on mobile** — Instead of the Filter popover button, use a horizontally scrollable pill row on mobile too (same as desktop), saving a tap. Replace the `sm:hidden` popover + `hidden sm:flex` inline split with a single scrollable row:
+```tsx
+<div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
+  {filterButtons()}
+</div>
+```
 
 ### Files
-- `src/components/app/DashboardTeamCarousel.tsx` — static images only, bigger avatars, tighter spacing
-- `src/pages/Dashboard.tsx` — reorder sections in both views
+- `src/components/app/generate/WorkflowSettingsPanel.tsx` — lines 237-365
 
