@@ -688,7 +688,7 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
 
 /* ── Main component ── */
 
-export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false, mobileCompact = false }: Props) {
+export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false, mobileCompact = false, modalCompact = false }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const isUpscale = scene.mode === 'upscale';
   const isStaging = scene.mode === 'staging';
