@@ -491,7 +491,7 @@ export default function Dashboard() {
 
       {/* Create */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground tracking-tight">Create</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Create</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
