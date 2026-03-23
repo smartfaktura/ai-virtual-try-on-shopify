@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { JobStatus } from '@/types';
 import type { Workflow } from '@/pages/Workflows';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
