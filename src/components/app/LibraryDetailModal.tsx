@@ -125,7 +125,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               {/* Source + label */}
               <div className="space-y-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {isUpscaled ? 'Enhanced' : item.source === 'freestyle' ? 'Freestyle' : 'Generation'}
+                  {isUpscaled ? 'Enhanced' : item.source === 'freestyle' ? 'Freestyle Generation' : 'Generation'}
                 </p>
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {isUpscaled ? 'Enhanced' : item.label}
@@ -139,11 +139,6 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                   <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
                     {item.date}
                   </span>
-                  {item.aspectRatio && (
-                    <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                      · {item.aspectRatio}
-                    </span>
-                  )}
                   {item.quality === 'high' && (
                     <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
                   )}
@@ -193,7 +188,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               })()}
 
               {/* Actions */}
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 pt-2">
                 <Button
                   onClick={handleDownload}
                   className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"

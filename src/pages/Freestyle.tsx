@@ -950,11 +950,22 @@ export default function Freestyle() {
 
       {savedImages.length > 0 && lightboxOpen && savedImages[lightboxIndex] && (() => {
         const img = savedImages[lightboxIndex];
+        // Build dynamic label from resolved metadata
+        const resolvedModel = img.modelId ? mockModels.find(m => m.modelId === img.modelId) : null;
+        const resolvedScene = img.sceneId
+          ? (filterVisible(mockTryOnPoses).find(s => s.poseId === img.sceneId) || customScenePoses.find(s => s.poseId === img.sceneId))
+          : null;
+        const resolvedProduct = img.productId ? products.find(p => p.id === img.productId) : null;
+        const nameParts = [resolvedModel?.name, resolvedScene?.name].filter(Boolean);
+        const dynamicLabel = nameParts.length > 0
+          ? nameParts.join(' · ')
+          : resolvedProduct?.title
+            || (img.userPrompt ? img.userPrompt.slice(0, 40) + (img.userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
         const libraryItem: LibraryItem = {
           id: img.id,
           imageUrl: img.url,
           source: 'freestyle',
-          label: 'Freestyle',
+          label: dynamicLabel,
           prompt: img.userPrompt || undefined,
           date: '',
           createdAt: '',
