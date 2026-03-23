@@ -76,7 +76,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           )}
         </div>
 
-        {!mobileCompact && (
+        {!mobileCompact && !modalCompact && (
           <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
             {workflow.description}
           </p>
