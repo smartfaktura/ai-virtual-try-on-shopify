@@ -1,27 +1,44 @@
 
 
-# Fix Workflow Card Images + Remove Nav Pills + Update Subtitle
+# Improve Returning User Dashboard: Better CTA Buttons + Subtitle
 
 ## Changes
 
-### 1. `src/components/app/workflowAnimationData.tsx`
+### `src/pages/Dashboard.tsx`
 
-**Virtual Try-On Set** (line 41): Change `objectPosition: 'top'` → `objectPosition: 'center top'` — the `top` position zooms into the head. Using `center` will show more of the full body/outfit.
+**1. Update returning user subtitle** (line 411):
+```
+"Your AI photography studio. Here's what's happening."
+→ "Your next visuals are just a click away."
+```
 
-**Product Listing Set** (line 66): Add `objectPosition: 'center'` — currently defaults to `center` but the image itself may be tightly framed. Since both scenes use `object-cover` in a `3/4` aspect container, the fix is to change `objectPosition` to show more of the composition.
+**2. Replace single "Start with a Workflow" button** (lines 414-423) with three action buttons with icons:
 
-Actually, the real issue is `object-cover` on tall aspect ratio (`aspect-[3/4]`) crops wide images aggressively. The `objectPosition` values control where the crop anchors. For these two workflows:
+```tsx
+<div className="flex items-center gap-3 mt-5 flex-wrap">
+  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <Sparkles className="w-4 h-4 text-primary" />
+    <span><strong className="text-foreground">{balance}</strong> credits available</span>
+  </div>
+  <div className="flex items-center gap-2">
+    <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
+      <Layers className="w-3.5 h-3.5" />
+      Create Visuals
+    </Button>
+    <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/discover')}>
+      <Compass className="w-3.5 h-3.5" />
+      Discover Ideas
+    </Button>
+    <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/library')}>
+      <Image className="w-3.5 h-3.5" />
+      My Library
+    </Button>
+  </div>
+</div>
+```
 
-- **Virtual Try-On Set**: `objectPosition: 'top'` crops from the top — showing the head but cutting the outfit. Change to `objectPosition: 'center'` to show the full model centered.
-- **Product Listing Set**: No `objectPosition` set (defaults to `center`). The image is likely a tall product that gets cropped. Change to `objectPosition: 'center'` explicitly (keep as-is, or use `'top center'` if the product is in the upper portion).
+Import `Compass` from lucide-react (already imported in AppShell, need to add to Dashboard imports).
 
-### 2. `src/pages/Workflows.tsx`
-
-**Remove quick-nav pills** (lines 381-398): Delete the entire `{!isLoading && workflows.length > 0 && (` block with the `flex-wrap gap-2` buttons.
-
-**Update subtitle** (line 379): Change from `"Pick a workflow to start generating — or jump to one below."` to `"Choose a workflow and generate brand-ready visuals instantly."`
-
-### Files
-- `src/components/app/workflowAnimationData.tsx` — adjust `objectPosition` for Virtual Try-On Set and Product Listing Set
-- `src/pages/Workflows.tsx` — remove nav pills block, update subtitle text
+### File
+- `src/pages/Dashboard.tsx` — update subtitle, replace single CTA with three navigation buttons
 
