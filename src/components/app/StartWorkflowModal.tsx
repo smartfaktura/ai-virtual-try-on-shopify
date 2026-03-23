@@ -37,6 +37,7 @@ const WORKFLOW_OPTIONS = [
   },
   {
     name: 'UGC / Selfie',
+    displayName: 'UGC / Selfie Workflow',
     slug: 'selfie-ugc-set',
     subtitle: 'Create content that feels real & social',
     sampleId: 'sample_ugc_ice_roller',
