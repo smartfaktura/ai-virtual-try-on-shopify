@@ -14,6 +14,15 @@ const tryonResult = getLandingAssetUrl('workflows/workflow-tryon-result.png');
 const listingProduct = getLandingAssetUrl('workflows/product-listing-product.png');
 const listingResult = getLandingAssetUrl('workflows/product-listing-result.png');
 
+// Product Showcase Carousel
+const showcase1 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-1.jpg');
+const showcase2 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-2.jpg');
+const showcase3 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-3.jpg');
+const showcase4 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-4.jpg');
+const showcase5 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-5.jpg');
+const showcase6 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-6.jpg');
+const showcase7 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-7.jpg');
+
 // Selfie / UGC Set
 const ugcProduct = getLandingAssetUrl('products/ice-roller-white.png');
 const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
@@ -69,25 +78,22 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Product Listing Set': {
-    background: listingResult,
+    mode: 'carousel',
+    background: showcase1,
     objectPosition: 'center',
+    backgrounds: [showcase1, showcase2, showcase3, showcase4, showcase5, showcase6, showcase7],
     recipe: [
       { image: listingProduct, label: 'Product' },
     ],
     recipeResult: listingResult,
     elements: [
       {
-        type: 'product', image: listingProduct, label: 'Serum', sublabel: 'Product',
-        icon: <Plus className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
-      },
-      {
         type: 'badge', label: '30+ Scenes', icon: <Sparkles className="w-3 h-3" />,
-        position: { top: '38%', right: '8%' }, enterDelay: 1.0, animation: 'slide-right',
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
         type: 'badge', label: '1 Click', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '24%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
