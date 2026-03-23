@@ -163,24 +163,36 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     }
   };
 
+  // Mock Workflow objects for the animated cards
+  const WORKFLOW_CARDS: Workflow[] = WORKFLOW_OPTIONS.map((wf) => ({
+    id: wf.slug,
+    name: wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
+      : wf.slug === 'product-listing-set' ? 'Product Listing Set'
+      : 'Selfie / UGC Set',
+    slug: wf.slug,
+    description: wf.subtitle,
+    default_image_count: 4,
+    required_inputs: [],
+    recommended_ratios: ['4:5'],
+    uses_tryon: wf.slug === 'virtual-try-on-set',
+    template_ids: [],
+    is_system: true,
+    created_at: '',
+    sort_order: 0,
+    preview_image_url: null,
+    generation_config: null,
+  }));
+
   // --- Step 1: Workflow selection ---
   const workflowStep = (
-    <div className="space-y-3">
-      {WORKFLOW_OPTIONS.map((wf) => (
-        <button
+    <div className="grid grid-cols-3 gap-3">
+      {WORKFLOW_CARDS.map((wf, i) => (
+        <WorkflowCardCompact
           key={wf.slug}
-          onClick={() => handleSelectWorkflow(wf)}
-          className="w-full flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all duration-200 text-left group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Package className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">{wf.name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{wf.subtitle}</p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
-        </button>
+          workflow={wf}
+          onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
+          mobileCompact={isMobile}
+        />
       ))}
     </div>
   );
