@@ -1,26 +1,23 @@
 
 
-# Improve Returning User Dashboard: Better CTA Buttons + Subtitle
+# Fix CTA Buttons Layout — "My Library" Getting Cut Off
 
-## Changes
+## Problem
+The three action buttons (Create Visuals, Discover Ideas, My Library) are inside a `flex items-center gap-2` container without `flex-wrap`. On the current viewport width, "My Library" text gets truncated/cut off at the edge.
 
-### `src/pages/Dashboard.tsx`
+## Fix
 
-**1. Update returning user subtitle** (line 411):
-```
-"Your AI photography studio. Here's what's happening."
-→ "Your next visuals are just a click away."
-```
+### `src/pages/Dashboard.tsx` (lines 414-433)
 
-**2. Replace single "Start with a Workflow" button** (lines 414-423) with three action buttons with icons:
+Restructure the layout so credits badge and buttons are on separate rows, and buttons wrap properly:
 
 ```tsx
-<div className="flex items-center gap-3 mt-5 flex-wrap">
+<div className="flex flex-col gap-3 mt-5">
   <div className="flex items-center gap-2 text-sm text-muted-foreground">
     <Sparkles className="w-4 h-4 text-primary" />
     <span><strong className="text-foreground">{balance}</strong> credits available</span>
   </div>
-  <div className="flex items-center gap-2">
+  <div className="flex flex-wrap items-center gap-2">
     <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
       <Layers className="w-3.5 h-3.5" />
       Create Visuals
@@ -37,8 +34,10 @@
 </div>
 ```
 
-Import `Compass` from lucide-react (already imported in AppShell, need to add to Dashboard imports).
+Key changes:
+- Outer container: `flex-col` instead of `flex-row` — credits on one line, buttons on next
+- Button container: add `flex-wrap` so buttons wrap on narrow screens instead of overflowing
 
 ### File
-- `src/pages/Dashboard.tsx` — update subtitle, replace single CTA with three navigation buttons
+- `src/pages/Dashboard.tsx` — lines 414-433, restructure layout
 
