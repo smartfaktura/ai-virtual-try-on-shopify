@@ -739,7 +739,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
         alt=""
         loading="eager"
         decoding="async"
-        className={`absolute inset-0 w-full h-full object-contain bg-muted transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           objectPosition: scene.objectPosition ?? 'center',
           transform: 'translateZ(0)',
