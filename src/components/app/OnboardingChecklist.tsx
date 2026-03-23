@@ -19,8 +19,8 @@ const steps = [
     title: 'Upload Your First Product',
     description: 'Add a product image to start generating visuals.',
     icon: Upload,
-    path: '/app/products',
-    cta: 'Go to Products',
+    path: '/app/products/new',
+    cta: 'Add Product',
     memberName: 'Sophia',
   },
   {
