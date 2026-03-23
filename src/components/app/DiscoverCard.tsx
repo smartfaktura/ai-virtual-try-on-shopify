@@ -19,6 +19,7 @@ interface DiscoverCardProps {
   isAdmin?: boolean;
   onToggleFeatured?: (e: React.MouseEvent) => void;
   hideLabels?: boolean;
+  aspectRatioOverride?: string;
 }
 
 function getGenerationLabel(item: DiscoverItem): string {
