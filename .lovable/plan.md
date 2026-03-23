@@ -1,34 +1,38 @@
 
 
-# Add Terms & Privacy Acceptance Checkbox to Signup
+# Persist Freestyle Guide Dismissal Per User (Database)
 
 ## Problem
-The signup form has a marketing opt-in checkbox but no required checkbox for accepting Terms of Service and Privacy Policy. This is a legal requirement, especially for GDPR compliance.
+The freestyle wizard guide dismissal is stored in `localStorage` (`freestyle_guide_dismissed`). This means:
+- Same user on a different browser/device sees the guide again
+- Different user on the same browser never sees the guide
+- Clearing browser data resets it
 
-## Changes
+It should be tied to the authenticated user, shown once per account.
 
-### `src/pages/Auth.tsx`
+## Solution
 
-1. **Add state**: `const [termsAccepted, setTermsAccepted] = useState(false);`
+Store the dismissal flag in the user's `profiles.settings` JSONB column (which already exists and is used for other per-user settings like `emailOnFailed`, `inAppFailed`).
 
-2. **Add a required checkbox** above the marketing opt-in (only in signup mode):
-   ```tsx
-   <div className="flex items-start space-x-2">
-     <Checkbox
-       id="termsAccept"
-       checked={termsAccepted}
-       onCheckedChange={(v) => setTermsAccepted(!!v)}
-       className="mt-0.5"
-     />
-     <label htmlFor="termsAccept" className="text-sm text-muted-foreground leading-snug cursor-pointer">
-       I agree to the <Link to="/terms-of-service" target="_blank" className="underline text-foreground">Terms of Service</Link> and <Link to="/privacy-policy" target="_blank" className="underline text-foreground">Privacy Policy</Link>
-     </label>
-   </div>
-   ```
+### `src/pages/Freestyle.tsx`
 
-3. **Block submission** if `!termsAccepted` in signup mode — show validation error: "You must accept the Terms of Service and Privacy Policy."
+1. **On mount**: Read `profiles.settings.freestyleGuideDismissed` from the database instead of `localStorage`. Show the guide only if `settings.freestyleGuideDismissed !== true`.
 
-4. **Reset state** when switching between login/signup modes.
+2. **On dismiss/complete**: Update `profiles.settings` in the database, merging `{ freestyleGuideDismissed: true }` into the existing JSONB. Also set `localStorage` as a fast cache to avoid flicker on subsequent visits.
 
-One file, ~15 lines added.
+3. **Initialization logic**:
+   - Check `localStorage` first for instant render (no flicker)
+   - Then verify against the database profile
+   - If database says dismissed but localStorage doesn't have it, sync localStorage
+   - If database says not dismissed, show the guide
+
+### No database migration needed
+The `profiles.settings` JSONB column already exists and accepts arbitrary keys. We just add `freestyleGuideDismissed: true` to it.
+
+### Changes
+
+**`src/pages/Freestyle.tsx`** (~15 lines changed):
+- Import `useAuth` and `supabase`
+- Replace `localStorage`-only init with a `useEffect` that checks `profiles.settings`
+- On dismiss, write to both `profiles.settings` (via Supabase update) and `localStorage`
 
