@@ -1,34 +1,42 @@
 
 
-# Clean Up Metric Cards: Modern Minimal, No Avatars
+# Fix Steal This Look Preview Modal to Match Discover Page
+
+## Problem
+The Dashboard's "Steal This Look" section uses `DiscoverDetailModal` but passes `relatedItems={[]}` and omits key props (`isSaved`, `onToggleSave`, `viewCount`), making the modal feel incomplete compared to the Discover page.
 
 ## Changes
 
-### 1. `src/components/app/MetricCard.tsx`
+### `src/components/app/DashboardDiscoverSection.tsx`
 
-Remove the `avatarUrl` prop and all avatar rendering logic. Simplify to a clean, modern minimal card:
+1. **Add related items logic**: Compute `relatedItems` from `allItems` based on the selected item (same scene first, then category similarity) — matching the Discover page's `scoreSimilarity` approach but simplified:
 
-- Remove `avatarUrl` from props and destructuring
-- Remove the avatar `<img>` branch (lines 39-40)
-- Keep only the small icon inline with the title (left side) — no icon box on the right either
-- Remove the duplicate icon rendering (currently icon appears both in title row AND in the colored box)
-- Final layout: icon + title on one line, big number below, optional suffix, optional trend, optional progress bar
-
-```text
-┌──────────────────────────┐
-│  📦 Products             │
-│  12  in library          │
-│  ━━━━━━━━░░░░            │
-└──────────────────────────┘
+```tsx
+const relatedItems = useMemo(() => {
+  if (!selectedItem) return [];
+  if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
+    const sameScene = allItems.filter(i =>
+      i.type === 'preset' &&
+      i.data.scene_name === selectedItem.data.scene_name &&
+      i.data.id !== selectedItem.data.id
+    );
+    if (sameScene.length >= 3) return sameScene.slice(0, 9);
+  }
+  return allItems
+    .filter(i => !(i.type === selectedItem.type && /* same id check */))
+    .filter(i => i.data.category === selectedItem.data.category)
+    .slice(0, 9);
+}, [allItems, selectedItem]);
 ```
 
-Clean, no visual clutter — just the data.
+2. **Add saved items support**: Import `useSavedItems` hook and pass `isSaved` / `onToggleSave` to the modal.
 
-### 2. `src/pages/Dashboard.tsx` (lines 458-492)
-
-Remove all `avatarUrl` props from the 4 MetricCard instances. Remove the `getLandingAssetUrl` avatar imports if no longer used elsewhere in this file.
+3. **Pass all missing props** to `DiscoverDetailModal`:
+   - `isSaved` — from `useSavedItems`
+   - `onToggleSave` — toggle save handler
+   - `relatedItems` — computed above
+   - `onSelectRelated` — update `selectedItem`
 
 ### Files
-- `src/components/app/MetricCard.tsx` — remove avatarUrl, simplify to minimal layout
-- `src/pages/Dashboard.tsx` — remove avatarUrl props from metric cards
+- `src/components/app/DashboardDiscoverSection.tsx` — add relatedItems computation, saved items support, pass full props to modal
 
