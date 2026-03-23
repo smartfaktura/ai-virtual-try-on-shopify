@@ -497,7 +497,6 @@ export default function Dashboard() {
           value={`€${(generatedCount * 30).toLocaleString()}`}
           suffix="vs traditional photoshoots"
           icon={Euro}
-          loading={generatedLoading}
           tooltip={{ text: "Based on €30 average cost per professional product photo", memberName: "Omar", avatar: getLandingAssetUrl('team/avatar-omar.jpg') }}
         />
         <MetricCard
@@ -505,7 +504,6 @@ export default function Dashboard() {
           value={`${Math.round(generatedCount * 20 / 60)}h`}
           suffix="no shooting or editing needed"
           icon={Clock}
-          loading={generatedLoading}
           tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getLandingAssetUrl('team/avatar-max.jpg') }}
         />
         <MetricCard
