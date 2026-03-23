@@ -18,25 +18,25 @@ import type { Workflow } from '@/types/workflow';
 
 const WORKFLOW_OPTIONS = [
   {
-    name: 'Virtual Try-On',
-    slug: 'virtual-try-on-set',
-    subtitle: 'Show your product on real models',
-    sampleId: 'sample_tryon_crop_top',
-    sampleName: 'Ribbed Crop Top',
-    sampleImage: '/images/samples/sample-crop-top.png',
-  },
-  {
     name: 'Product Editorial',
     slug: 'product-listing-set',
-    subtitle: 'High-end lifestyle & studio shots',
+    subtitle: 'Turn your product into a campaign',
     sampleId: 'sample_listing_ring',
     sampleName: 'Diamond Engagement Ring',
     sampleImage: '/images/samples/sample-ring.png',
   },
   {
-    name: 'Selfie / UGC Set',
+    name: 'Virtual Try-On',
+    slug: 'virtual-try-on-set',
+    subtitle: 'See your product on real people',
+    sampleId: 'sample_tryon_crop_top',
+    sampleName: 'Ribbed Crop Top',
+    sampleImage: '/images/samples/sample-crop-top.png',
+  },
+  {
+    name: 'UGC / Selfie',
     slug: 'selfie-ugc-set',
-    subtitle: 'High-quality content like UGC creators',
+    subtitle: 'Create content that feels real & social',
     sampleId: 'sample_ugc_ice_roller',
     sampleName: 'Ice Roller',
     sampleImage: '/images/samples/sample-ice-roller.png',
