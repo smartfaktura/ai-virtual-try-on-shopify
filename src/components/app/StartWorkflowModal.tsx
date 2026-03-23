@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
 import type { Workflow } from '@/types/workflow';
 
@@ -55,6 +56,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   const isMobile = useIsMobile();
   const [step, setStep] = useState<Step>('workflow');
   const [selectedWorkflow, setSelectedWorkflow] = useState<typeof WORKFLOW_OPTIONS[0] | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   // Upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -82,6 +84,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   const reset = () => {
     setStep('workflow');
     setSelectedWorkflow(null);
+    setSelectedProductId(null);
     setUploadFile(null);
     setUploadPreview(null);
     setUploadTitle('');
@@ -94,13 +97,14 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
 
   const handleSelectWorkflow = (wf: typeof WORKFLOW_OPTIONS[0]) => {
     setSelectedWorkflow(wf);
+    setSelectedProductId(null);
     setStep('product');
   };
 
-  const handleSelectProduct = (productId: string) => {
-    if (!selectedWorkflow) return;
+  const handleConfirmProduct = () => {
+    if (!selectedWorkflow || !selectedProductId) return;
     onOpenChange(false);
-    navigate(`/app/generate/${selectedWorkflow.slug}?product=${productId}`);
+    navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedProductId}`);
     reset();
   };
 
@@ -116,7 +120,6 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     if (!file) return;
     setUploadFile(file);
     setUploadPreview(URL.createObjectURL(file));
-    // Auto-fill title from filename
     const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
     setUploadTitle(name.charAt(0).toUpperCase() + name.slice(1));
   };
@@ -200,28 +203,27 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   // --- Step 2: Product selection ---
   const productStep = (
     <div className="space-y-4">
-      <button
-        onClick={() => setStep('workflow')}
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-3 h-3" /> Back
-      </button>
-
       {hasProducts ? (
-        <div className="space-y-3">
+        <>
           <p className="text-sm text-muted-foreground">Select a product for your {selectedWorkflow?.name}:</p>
-          <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-3 gap-2.5 max-h-[280px] overflow-y-auto pr-1">
             {userProducts.map((p) => (
               <button
                 key={p.id}
-                onClick={() => handleSelectProduct(p.id)}
-                className="group flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/50 transition-all"
+                onClick={() => setSelectedProductId(p.id)}
+                className={cn(
+                  "group flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-all cursor-pointer",
+                  selectedProductId === p.id
+                    ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                    : "border-border hover:border-primary/40 hover:bg-muted/50"
+                )}
               >
                 <div className="w-full aspect-square rounded-md overflow-hidden bg-muted">
-                  <img
+                  <ShimmerImage
                     src={getOptimizedUrl(p.image_url, { width: 200, quality: 70 })}
                     alt={p.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
+                    aspectRatio="1/1"
                   />
                 </div>
                 <p className="text-[11px] text-foreground font-medium text-center line-clamp-2 leading-tight">{p.title}</p>
@@ -247,12 +249,25 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
               </button>
             )}
           </div>
-        </div>
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
+            <Button variant="ghost" size="sm" onClick={() => { setSelectedProductId(null); setStep('workflow'); }} className="gap-1.5">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back
+            </Button>
+            <Button
+              onClick={handleConfirmProduct}
+              disabled={!selectedProductId}
+              size="sm"
+              className="gap-1.5"
+            >
+              Continue <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </>
       ) : (
-        <div className="space-y-3">
+        <>
           <p className="text-sm text-muted-foreground">Add your product to get started:</p>
 
-          {/* Upload option */}
           <button
             onClick={() => setStep('upload')}
             className="w-full flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all duration-200 text-left group"
@@ -267,7 +282,6 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
             <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
           </button>
 
-          {/* Sample option */}
           {selectedWorkflow && (
             <button
               onClick={handleUseSample}
@@ -285,7 +299,14 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
               <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
             </button>
           )}
-        </div>
+
+          {/* Footer */}
+          <div className="pt-3 border-t border-border/50">
+            <Button variant="ghost" size="sm" onClick={() => setStep('workflow')} className="gap-1.5">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
@@ -293,13 +314,6 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   // --- Step 2b: Upload form ---
   const uploadStep = (
     <div className="space-y-4">
-      <button
-        onClick={() => setStep('product')}
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-3 h-3" /> Back
-      </button>
-
       {!uploadPreview ? (
         <label className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 cursor-pointer transition-colors">
           <ImagePlus className="w-8 h-8 text-muted-foreground/60" />
@@ -318,10 +332,20 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
             placeholder="Product name"
             className="rounded-lg"
           />
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <Button variant="ghost" size="sm" onClick={() => setStep('product')} className="gap-1.5">
+          <ArrowLeft className="w-3.5 h-3.5" /> Back
+        </Button>
+        {uploadPreview && (
           <Button
             onClick={handleUploadAndGo}
             disabled={isUploading || !uploadTitle.trim()}
-            className="w-full rounded-full font-semibold gap-2"
+            size="sm"
+            className="gap-1.5"
           >
             {isUploading ? (
               <>
@@ -330,13 +354,12 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
               </>
             ) : (
               <>
-                <Check className="w-4 h-4" />
-                Add Product & Continue
+                Add & Continue <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 
