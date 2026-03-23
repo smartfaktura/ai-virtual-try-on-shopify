@@ -71,16 +71,41 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   };
 
   const handleDelete = async () => {
-    if (item.source !== 'freestyle') return;
     setDeleting(true);
-    const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
-    if (error) {
-      toast.error('Failed to delete');
-    } else {
+    try {
+      if (item.source === 'freestyle') {
+        const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
+        if (error) throw error;
+      } else {
+        const dashIndex = item.id.lastIndexOf('-');
+        const jobId = item.id.substring(0, dashIndex);
+        const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
+
+        const { data: job } = await supabase
+          .from('generation_jobs')
+          .select('results')
+          .eq('id', jobId)
+          .maybeSingle();
+
+        if (job) {
+          const results = job.results as any[];
+          if (results.length <= 1) {
+            const { error } = await supabase.from('generation_jobs').delete().eq('id', jobId);
+            if (error) throw error;
+          } else {
+            const updated = results.filter((_: any, i: number) => i !== imageIndex);
+            const { error } = await supabase.from('generation_jobs').update({ results: updated }).eq('id', jobId);
+            if (error) throw error;
+          }
+        }
+      }
       toast.success('Deleted');
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+      queryClient.invalidateQueries({ queryKey: ['generation_jobs'] });
       onClose();
+    } catch {
+      toast.error('Failed to delete');
     }
     setDeleting(false);
   };
@@ -263,20 +288,16 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
                 </Button>
 
-                {item.source === 'freestyle' && (
-                  <>
-                    <Separator className="my-1" />
-                    <Button
-                      variant="ghost"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                      {deleting ? 'Deleting…' : 'Delete'}
-                    </Button>
-                  </>
-                )}
+                <Separator className="my-1" />
+                <Button
+                  variant="ghost"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </Button>
               </div>
 
               {/* Share to Discover */}
