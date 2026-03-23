@@ -46,13 +46,24 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
       className="group relative rounded-lg overflow-hidden cursor-pointer break-inside-avoid mb-1 bg-muted"
       onClick={onClick}
     >
-      <ShimmerImage
-        src={getOptimizedUrl(imageUrl, { quality: 60 })}
-        alt={isScene ? item.data.name : item.data.title}
-        className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
-        loading="lazy"
-        aspectRatio={aspectRatioOverride ?? "3/4"}
-      />
+      {aspectRatioOverride ? (
+        <div className="w-full overflow-hidden" style={{ aspectRatio: aspectRatioOverride }}>
+          <ShimmerImage
+            src={getOptimizedUrl(imageUrl, { quality: 60 })}
+            alt={isScene ? item.data.name : item.data.title}
+            className="w-full h-full object-cover block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        <ShimmerImage
+          src={getOptimizedUrl(imageUrl, { quality: 60 })}
+          alt={isScene ? item.data.name : item.data.title}
+          className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
+          loading="lazy"
+          aspectRatio="3/4"
+        />
+      )}
 
 
       {/* Admin featured toggle */}
