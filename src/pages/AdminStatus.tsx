@@ -12,6 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface WorkflowBreakdown {
+  name: string;
+  total: number;
+  completed: number;
+}
+
 interface PlatformStats {
   total_users: number;
   active_generators: number;
@@ -23,6 +29,7 @@ interface PlatformStats {
   total_brand_profiles: number;
   total_drops: number;
   jobs_by_type: Record<string, number>;
+  workflows_breakdown: WorkflowBreakdown[];
 }
 type TimeRange = 'today' | 'yesterday' | 24 | 168 | 720;
 
