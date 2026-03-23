@@ -653,6 +653,7 @@ export default function Dashboard() {
 
 
       <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
+      <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
     </div>
   );
 }
