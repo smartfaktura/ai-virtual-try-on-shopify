@@ -288,7 +288,7 @@ function CarouselThumbnail({ scene, isActive, mobileCompact }: { scene: Workflow
       {isActive && elementsReady && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
-            <FloatingEl key={i} element={el} mobileCompact={mobileCompact} />
+            <FloatingEl key={i} element={el} mobileCompact={mobileCompact} modalCompact={modalCompact} />
           ))}
         </div>
       )}
