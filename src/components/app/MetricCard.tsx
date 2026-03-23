@@ -94,9 +94,10 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     </div>
   );
 
+  const hasAction = !!action;
   const className = `rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 ${
-    onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/30' : ''
-  }`;
+    hasAction ? 'border-l-2 border-l-primary/30' : ''
+  } ${onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/30' : ''}`;
 
   if (onClick) {
     return <div className={className} onClick={onClick}>{content}</div>;
