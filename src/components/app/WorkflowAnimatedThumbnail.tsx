@@ -769,7 +769,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
             }}
           >
             {scene.elements.map((el, i) => (
-              <FloatingEl key={i} element={el} compact={compact} mobileCompact={mobileCompact} />
+              <FloatingEl key={i} element={el} compact={compact} mobileCompact={mobileCompact} modalCompact={modalCompact} />
             ))}
           </div>
 
