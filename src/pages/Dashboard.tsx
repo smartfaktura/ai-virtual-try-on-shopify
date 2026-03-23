@@ -387,6 +387,9 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Your AI Studio Team */}
+        <DashboardTeamCarousel />
+
         {/* Feedback Banner */}
         <FeedbackBanner />
 
