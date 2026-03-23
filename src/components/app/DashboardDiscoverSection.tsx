@@ -8,6 +8,7 @@ import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { useFeaturedItems } from '@/hooks/useFeaturedItems';
+import { useSavedItems } from '@/hooks/useSavedItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
