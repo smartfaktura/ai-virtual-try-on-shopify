@@ -12,6 +12,7 @@ interface DiscoverCategoryBarProps {
   selectedCategory: string;
   onSelectCategory: (id: string) => void;
   savedCount?: number;
+  hideArrows?: boolean;
 }
 
 function useScrollArrows(ref: React.RefObject<HTMLDivElement>) {
@@ -44,23 +45,25 @@ function useScrollArrows(ref: React.RefObject<HTMLDivElement>) {
   return { canScrollLeft, canScrollRight, scrollLeft: () => scrollBy(-1), scrollRight: () => scrollBy(1) };
 }
 
-export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCategory, savedCount }: DiscoverCategoryBarProps) {
+export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCategory, savedCount, hideArrows }: DiscoverCategoryBarProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
 
   return (
     <div className="flex items-center">
       {/* Left arrow — desktop only, collapses when hidden */}
-      <button
-        onClick={scrollLeft}
-        className={cn(
-          'hidden sm:flex shrink-0 p-1 transition-all duration-200',
-          canScrollLeft ? 'opacity-100 w-6' : 'opacity-0 w-0 overflow-hidden pointer-events-none'
-        )}
-        aria-label="Scroll left"
-      >
-        <ChevronLeft className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
-      </button>
+      {!hideArrows && (
+        <button
+          onClick={scrollLeft}
+          className={cn(
+            'hidden sm:flex shrink-0 p-1 transition-all duration-200',
+            canScrollLeft ? 'opacity-100 w-6' : 'opacity-0 w-0 overflow-hidden pointer-events-none'
+          )}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
+        </button>
+      )}
 
       {/* Scrollable categories */}
       <div
@@ -97,16 +100,18 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
       </div>
 
       {/* Right arrow — desktop only */}
-      <button
-        onClick={scrollRight}
-        className={cn(
-          'hidden sm:flex shrink-0 p-1 ml-1.5 transition-opacity duration-200',
-          canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        )}
-        aria-label="Scroll right"
-      >
-        <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
-      </button>
+      {!hideArrows && (
+        <button
+          onClick={scrollRight}
+          className={cn(
+            'hidden sm:flex shrink-0 p-1 ml-1.5 transition-opacity duration-200',
+            canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          )}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
+        </button>
+      )}
     </div>
   );
 }

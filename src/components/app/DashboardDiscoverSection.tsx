@@ -7,6 +7,7 @@ import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
+import { useFeaturedItems } from '@/hooks/useFeaturedItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,6 +74,7 @@ export function DashboardDiscoverSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
+  const { featuredMap } = useFeaturedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [visibleCount, setVisibleCount] = useState(16);
@@ -120,10 +122,24 @@ export function DashboardDiscoverSection() {
   );
 
   const filtered = useMemo(() => {
-    return activeCategory === 'all'
+    const items = activeCategory === 'all'
       ? allItems
       : allItems.filter((item) => itemMatchesProductCategory(item, activeCategory));
-  }, [allItems, activeCategory]);
+    
+    // Sort: featured first, then by created_at desc — matching Discover page
+    return [...items].sort((a, b) => {
+      const aKey = `${a.type}:${a.type === 'preset' ? a.data.id : a.data.poseId}`;
+      const bKey = `${b.type}:${b.type === 'preset' ? b.data.id : b.data.poseId}`;
+      const aFeat = featuredMap.get(aKey);
+      const bFeat = featuredMap.get(bKey);
+      if (aFeat && !bFeat) return -1;
+      if (!aFeat && bFeat) return 1;
+      if (aFeat && bFeat) return new Date(bFeat.created_at).getTime() - new Date(aFeat.created_at).getTime();
+      const aDate = a.data.created_at ? new Date(a.data.created_at).getTime() : 0;
+      const bDate = b.data.created_at ? new Date(b.data.created_at).getTime() : 0;
+      return bDate - aDate;
+    });
+  }, [allItems, activeCategory, featuredMap]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
@@ -193,6 +209,7 @@ export function DashboardDiscoverSection() {
         categories={orderedCategories}
         selectedCategory={activeCategory}
         onSelectCategory={setSelectedCategory}
+        hideArrows
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
