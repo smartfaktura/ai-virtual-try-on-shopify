@@ -33,7 +33,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-border/40 bg-card p-4 sm:p-5 space-y-3">
+      <div className="rounded-xl border border-border/40 bg-card p-4 sm:p-5 min-h-[120px] space-y-3">
         <div className="h-2.5 w-14 bg-muted rounded-full animate-pulse" />
         <div className="h-5 w-16 bg-muted rounded-full animate-pulse" />
         <div className="h-2 w-20 bg-muted rounded-full animate-pulse" />
@@ -46,16 +46,16 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
   const handleMouseEnter = () => {
     if (!tooltip) return;
     clearTimeout(hoverTimeout.current);
-    hoverTimeout.current = setTimeout(() => setHoverOpen(true), 300);
+    hoverTimeout.current = setTimeout(() => setHoverOpen(true), 200);
   };
 
   const handleMouseLeave = () => {
     clearTimeout(hoverTimeout.current);
-    hoverTimeout.current = setTimeout(() => setHoverOpen(false), 200);
+    hoverTimeout.current = setTimeout(() => setHoverOpen(false), 250);
   };
 
   const cardContent = (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 flex-1">
       {/* Title */}
       <div className="flex items-center gap-1.5">
         {Icon && <Icon className="w-3 h-3 text-muted-foreground/60" />}
@@ -108,7 +108,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     </div>
   );
 
-  const cardClass = `rounded-xl border border-border/40 bg-card p-4 sm:p-5 transition-all duration-200 hover:border-border/80 hover:shadow-sm ${
+  const cardClass = `rounded-xl border border-border/40 bg-card p-4 sm:p-5 min-h-[120px] flex flex-col transition-all duration-200 hover:border-border/80 hover:shadow-sm ${
     onClick ? 'cursor-pointer' : ''
   }`;
 
@@ -136,9 +136,9 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
-        align="start"
-        sideOffset={6}
-        className="w-auto max-w-[260px] p-3 rounded-lg shadow-lg border border-border/60 bg-popover"
+        align="center"
+        sideOffset={4}
+        className="w-auto max-w-[260px] p-3 rounded-xl shadow-md border border-border/40 bg-popover/95 backdrop-blur-sm"
         onMouseEnter={() => { clearTimeout(hoverTimeout.current); setHoverOpen(true); }}
         onMouseLeave={handleMouseLeave}
         onOpenAutoFocus={(e) => e.preventDefault()}
