@@ -14,6 +14,7 @@ import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
 import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
 
 import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
+import { DashboardDiscoverSection } from '@/components/app/DashboardDiscoverSection';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { DashboardTipCard } from '@/components/app/DashboardTipCard';
 import { ActivityFeed } from '@/components/app/ActivityFeed';
