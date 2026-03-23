@@ -59,7 +59,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
           {suffix && <span className="text-[10px] text-muted-foreground pb-0.5">{suffix}</span>}
         </div>
       ) : description ? (
-        <p className="text-sm text-muted-foreground leading-snug line-clamp-2">{description}</p>
+        <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">{description}</p>
       ) : null}
 
       {trend && (
