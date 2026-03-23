@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Check, ArrowRight } from 'lucide-react';
+import { ChevronDown, Check, ArrowRight, Sparkles } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MobilePickerSheet } from '@/components/app/freestyle/MobilePickerSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -14,9 +14,9 @@ import {
 } from '@/lib/categoryConstants';
 
 /** Hero section: dynamic headline + CTA */
-export function DashboardPersonalizationHero({ selected = 'any' }: { selected?: string }) {
+export function DashboardPersonalizationHero({ selected = 'any', hasGenerations = false }: { selected?: string; hasGenerations?: boolean }) {
   const navigate = useNavigate();
-  const headline = getCategoryHeadline([selected]);
+  const headline = getCategoryHeadline([selected], hasGenerations);
 
   return (
     <div className="space-y-4 mt-2.5">
@@ -27,9 +27,10 @@ export function DashboardPersonalizationHero({ selected = 'any' }: { selected?: 
       <div className="space-y-3">
         <button
           onClick={() => navigate('/app/workflows')}
-          className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 transition-all duration-200"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all duration-200 shadow-sm"
         >
-          Start a Campaign
+          <Sparkles className="w-3.5 h-3.5 text-primary" />
+          Start with a Workflow
           <ArrowRight className="w-4 h-4" />
         </button>
         <div className="flex items-center gap-2">
