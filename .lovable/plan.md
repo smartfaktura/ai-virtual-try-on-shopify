@@ -1,36 +1,33 @@
 
 
-# Fix: Loading Spinner Not Visible During Sort Change
+# Fix: Freestyle Items Show "Freestyle" Instead of Dynamic Names in Library
 
 ## Problem
-The spinner is inside an `absolute inset-0` container that spans the entire grid height. If the grid is tall (many images), the spinner centers itself in the middle of the grid — way below the visible viewport. The user never sees it.
+When opening a freestyle image from the Library page, the heading shows just "Freestyle" instead of resolved names like "Freya · Relaxed Seated". This works correctly on the Freestyle page because it builds a dynamic label inline, but the Library's data hook (`useLibraryItems.ts`) just sets `label: 'Freestyle'` as fallback.
+
+The model/scene names ARE already resolved (lines 156-157, stored as `modelName`/`sceneName`), but they're never used to build the `label`.
 
 ## Fix
 
-### `src/pages/Jobs.tsx` (lines 362-367)
+### `src/hooks/useLibraryItems.ts` (lines 151-166)
 
-Change the spinner overlay from `absolute` to `sticky` positioning so it stays visible in the viewport:
-
-```tsx
-<div className="relative">
-  {isFetching && !isLoading && (
-    <div className="absolute inset-0 z-10 flex items-start justify-center pt-32">
-      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground sticky top-1/2" />
-    </div>
-  )}
-```
-
-Actually, simpler approach — use `sticky top-1/2` on the spinner wrapper so it sticks to the middle of the viewport as the user scrolls:
+Replace the simple `'Freestyle'` fallback with dynamic label building using the already-resolved `modelInfo` and `sceneInfo`, plus product name:
 
 ```tsx
-{isFetching && !isLoading && (
-  <div className="absolute inset-0 z-10 flex items-center justify-center">
-    <div className="sticky top-[40vh]">
-      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-    </div>
-  </div>
-)}
+// Before
+const displayLabel = wfLabel || 'Freestyle';
+
+// After  
+const modelInfo = resolveModel((f as any).model_id);
+const sceneInfo = resolveScene((f as any).scene_id);
+const nameParts = [modelInfo.name, sceneInfo.name].filter(Boolean);
+const freestyleLabel = nameParts.length > 0
+  ? nameParts.join(' · ')
+  : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
+const displayLabel = wfLabel || freestyleLabel;
 ```
 
-This keeps the spinner visible regardless of scroll position. One line wrapped, no new imports.
+This reuses the same logic already working on the Freestyle page. The `modelInfo`/`sceneInfo` resolution calls need to move above this line (they're currently below it — just reorder).
+
+One file, ~5 lines changed.
 
