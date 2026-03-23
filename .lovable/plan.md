@@ -1,55 +1,39 @@
 
 
-# Dashboard Layout Adjustment
+# Fix Dashboard Hero: Sync Headline with Pill + Premium CTA
 
-## What You Want
+## Problems
+1. **Headline doesn't update** when the "Personalized for" pill changes - the two components independently fetch `product_categories` from the database and don't share state.
+2. **"Start a Campaign" button** looks like a standard form button - not premium.
+3. **Helper text** (`Virtual Try-On · Product Editorial · Catalog Generation`) is plain unstyled text.
 
-```text
-Welcome back, Tomas 👋
-{dynamic headline}
-[ ✨ Start a Campaign ]
-Virtual Try-On · Product Editorial · Catalog Generation
+## Solution
 
---- separate section below ---
+### 1. Shared state between Hero and Pill (`src/pages/Dashboard.tsx`)
+Lift the `selected` category state into Dashboard. Pass it down as props to both `DashboardPersonalizationHero` and `PersonalizedForPill`. When the pill changes, the headline updates instantly.
 
-Personalized for [Fashion & Apparel ▾]   |   [Upload Product] [Generate Images] [Browse Workflows] [Brand Profiles]
+### 2. Premium CTA styling (`src/components/app/DashboardPersonalizationHero.tsx`)
+Replace the standard `<Button>` with a more refined styled button:
+- Slightly larger padding, subtle gradient or refined shadow
+- Arrow icon instead of sparkles for a cleaner editorial feel
+- Smooth hover transition
+
+### 3. Helper text as styled badges
+Replace the plain `<p>` with three small inline badges/chips with subtle borders and muted styling, giving them visual weight and structure:
+```
+[ Virtual Try-On ]  [ Product Editorial ]  [ Catalog Generation ]
 ```
 
-## Changes
+### Files Changed
 
-### 1. `src/lib/categoryConstants.ts` - Update headlines with `-` not `—`
+**`src/pages/Dashboard.tsx`** (~15 lines):
+- Add `useState<string>('any')` + `useEffect` to fetch category once
+- Pass `selected` to `DashboardPersonalizationHero` and `onSelect`/`selected` to `PersonalizedForPill`
+- Remove duplicate fetching from both child components
 
-All headlines become: "Create/Launch your first [category] campaign in seconds - no photoshoot needed."
-
-### 2. `src/components/app/DashboardPersonalizationHero.tsx` - Slim down to just headline + CTA
-
-Remove the "Personalized for" pill from this component. Keep only:
-- Dynamic headline text
-- "Start a Campaign" button (navigates to `/app/workflows`)
-- Helper text: `Virtual Try-On · Product Editorial · Catalog Generation`
-
-### 3. `src/pages/Dashboard.tsx` - Restructure layout
-
-Move quick actions and "Personalized for" pill into their own row below the header section:
-
-```tsx
-{/* Header section */}
-<div>
-  <h1>Welcome back, {firstName} 👋</h1>
-  <DashboardPersonalizationHero />  {/* headline + CTA only */}
-</div>
-
-{/* Separate row: Personalized pill + Quick Actions */}
-<div className="flex flex-wrap items-center gap-4">
-  <PersonalizedForPill />  {/* extracted pill selector */}
-  <DashboardQuickActions />
-</div>
-```
-
-The "Personalized for" pill selector will be extracted into a small inline component (or kept in `DashboardPersonalizationHero` and exported separately). It will sit on the same line as the quick action buttons, visually separated.
-
-### Files
-- `src/lib/categoryConstants.ts` - update headline strings
-- `src/components/app/DashboardPersonalizationHero.tsx` - remove pill, add CTA, export pill separately
-- `src/pages/Dashboard.tsx` - restructure: header block, then pill + quick actions row below
+**`src/components/app/DashboardPersonalizationHero.tsx`** (~20 lines):
+- Accept `selected` as prop instead of fetching internally
+- Restyle the CTA button: refined look with `rounded-full`, subtle shadow, arrow icon
+- Replace helper text with three small styled chips/badges
+- `PersonalizedForPill` accepts `selected` + `onSelect` props instead of managing its own state
 
