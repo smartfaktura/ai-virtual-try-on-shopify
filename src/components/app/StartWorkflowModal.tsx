@@ -105,16 +105,22 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
 
   const handleConfirmProduct = () => {
     if (!selectedWorkflow || !selectedProductId) return;
-    onOpenChange(false);
-    navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedProductId}`);
-    reset();
+    setIsNavigating(true);
+    setTimeout(() => {
+      onOpenChange(false);
+      navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedProductId}`);
+      reset();
+    }, 50);
   };
 
   const handleUseSample = () => {
     if (!selectedWorkflow) return;
-    onOpenChange(false);
-    navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedWorkflow.sampleId}`);
-    reset();
+    setIsNavigating(true);
+    setTimeout(() => {
+      onOpenChange(false);
+      navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedWorkflow.sampleId}`);
+      reset();
+    }, 50);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
