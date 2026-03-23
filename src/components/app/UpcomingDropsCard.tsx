@@ -57,14 +57,15 @@ export function UpcomingDropsCard() {
   const hasContent = nextSchedule || latestDrop;
 
   return (
-    <Card>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Upcoming Drops</h2>
+        <Button variant="link" size="sm" onClick={() => navigate('/app/creative-drops')}>
+          View all
+        </Button>
+      </div>
+      <Card className="rounded-2xl">
       <CardContent className="p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Upcoming Drops</h2>
-          <Button variant="link" size="sm" onClick={() => navigate('/app/creative-drops')}>
-            View all
-          </Button>
-        </div>
 
         {/* Latest drop status */}
         {latestDrop && (
@@ -173,5 +174,6 @@ export function UpcomingDropsCard() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

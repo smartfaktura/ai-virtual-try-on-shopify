@@ -491,7 +491,7 @@ export default function Dashboard() {
 
       {/* Create */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground tracking-tight">Create</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Create</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -531,14 +531,15 @@ export default function Dashboard() {
       <DashboardTeamCarousel />
 
       {/* Recent Jobs */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Jobs</h2>
+          <Button variant="link" className="text-sm font-medium" onClick={() => navigate('/app/library')}>
+            View all
+          </Button>
+        </div>
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
         <div className="p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Recent Jobs</h2>
-            <Button variant="link" className="text-sm font-medium" onClick={() => navigate('/app/library')}>
-              View all
-            </Button>
-          </div>
 
           {recentJobs.length > 0 ? (
             <div className="overflow-x-auto">
@@ -629,6 +630,7 @@ export default function Dashboard() {
             />
           )}
         </div>
+      </div>
       </div>
 
       {/* Activity Feed */}

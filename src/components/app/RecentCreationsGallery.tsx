@@ -187,7 +187,7 @@ export function RecentCreationsGallery() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground tracking-tight">Recent Creations</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Creations</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Your latest generated visuals.</p>
         </div>
         <Button variant="link" className="text-sm font-medium gap-1" onClick={() => navigate('/app/library')}>

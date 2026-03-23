@@ -109,7 +109,7 @@ export function DashboardDiscoverSection() {
     const preferred = CATEGORIES.find(c => c.id === defaultCategory);
     if (!preferred) return CATEGORIES;
     const rest = CATEGORIES.filter(c => c.id !== 'all' && c.id !== defaultCategory);
-    return [CATEGORIES[0], preferred, ...rest];
+    return [preferred, CATEGORIES[0], ...rest];
   }, [defaultCategory]);
 
   const allItems = useMemo<DiscoverItem[]>(
@@ -187,7 +187,7 @@ export function DashboardDiscoverSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recreate What Works</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Steal This Look</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Click any visual to recreate it with your product.</p>
         </div>
       </div>
