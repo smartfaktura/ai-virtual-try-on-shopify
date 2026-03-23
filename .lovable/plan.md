@@ -1,22 +1,29 @@
 
 
-# Move Progress Counter to Bottom + Reduce Top Spacing
+# Move Tips Below Form on Mobile
 
 ## Changes
 
-### `src/components/app/OnboardingChecklist.tsx`
+### `src/pages/AddProduct.tsx`
 
-**1. Remove top progress text** (line 78-80): Delete the `{completedCount} of {steps.length} complete` paragraph from the top.
+On mobile, hide `ProductUploadTips` from its current position (above tabs) and show it after the tabs content instead. On desktop, keep it where it is.
 
-**2. Reduce top padding** (line 77): Change `p-6` to `px-6 pt-3 pb-5` — less whitespace at top.
-
-**3. Add progress counter at the bottom** after the steps list (after line 155):
+**Line 69**: Wrap in `hidden sm:block`:
 ```tsx
-<p className="text-xs text-muted-foreground pt-4 border-t border-border mt-1">
-  {completedCount} of {steps.length} complete
-</p>
+<div className="hidden sm:block">
+  <ProductUploadTips />
+</div>
 ```
 
+**After line 141** (after the closing `</div>` of tabs content, before `</Tabs>`): Add mobile-only tips:
+```tsx
+<div className="sm:hidden mt-6">
+  <ProductUploadTips />
+</div>
+```
+
+This places tips after the form/upload area + Add Product button on mobile, while keeping them at the top on desktop.
+
 ### File
-- `src/components/app/OnboardingChecklist.tsx` — move counter to bottom, tighten top padding
+- `src/pages/AddProduct.tsx` — lines 69 and after 141
 
