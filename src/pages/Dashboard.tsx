@@ -4,7 +4,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift } from 'lucide-react';
+import { Image, Wallet, ArrowRight, Sparkles, Layers, RefreshCw, Compass, Gift, Euro, Clock, Play, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
@@ -243,6 +243,47 @@ export default function Dashboard() {
     placeholderData: (prev: number | undefined) => prev,
   });
 
+  // Fetch last completed job's workflow
+  const { data: lastJob } = useQuery({
+    queryKey: ['dashboard-last-job', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('generation_jobs')
+        .select('workflow_slug, workflow_id, workflows(name, slug)')
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch most-used workflow
+  const { data: topWorkflow } = useQuery({
+    queryKey: ['dashboard-top-workflow', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('generation_jobs')
+        .select('workflow_slug, workflow_id, workflows(name, slug)')
+        .eq('status', 'completed');
+      const counts: Record<string, { count: number; name: string; slug: string }> = {};
+      (data || []).forEach(j => {
+        const wf = j.workflows as any;
+        if (wf?.name) {
+          const key = wf.name;
+          if (!counts[key]) counts[key] = { count: 0, name: wf.name, slug: wf.slug };
+          counts[key].count++;
+        }
+      });
+      const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
+      return sorted[0] || null;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+
   // Fetch workflows (for first-run grid)
   const { data: workflows = [] } = useQuery({
     queryKey: ['dashboard-workflows'],
@@ -423,10 +464,6 @@ export default function Dashboard() {
         </p>
 
         <div className="flex flex-col gap-3 mt-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span><strong className="text-foreground">{balance}</strong> credits available</span>
-          </div>
           <div className="relative">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
@@ -453,15 +490,23 @@ export default function Dashboard() {
       {/* Low credits banner */}
       <LowCreditsBanner />
 
-      {/* Metrics Row — 2x2 on mobile, 4 on desktop */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      {/* Metrics Row — 5 value-driven cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <MetricCard
-          title="Images Generated"
-          value={generatedCount}
-          suffix="last 30 days"
-          icon={Image}
+          title="Cost Saved"
+          value={`€${(generatedCount * 30).toLocaleString()}`}
+          suffix="vs photoshoots"
+          icon={Euro}
           loading={generatedLoading}
-          progress={Math.min(100, Math.round((generatedCount / 300) * 100))}
+          tooltip="Based on €30 average cost per professional product photo"
+        />
+        <MetricCard
+          title="Time Saved"
+          value={`${Math.round(generatedCount * 20 / 60)}h`}
+          suffix="no shooting needed"
+          icon={Clock}
+          loading={generatedLoading}
+          tooltip="Estimated 20 min saved per image vs traditional workflow"
         />
         <MetricCard
           title="Credits Remaining"
@@ -471,20 +516,27 @@ export default function Dashboard() {
           onClick={openBuyModal}
           progress={Math.max(0, Math.round((balance / 300) * 100))}
           progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
+          tooltip="Credits refresh monthly based on your plan"
         />
         <MetricCard
-          title="Products"
-          value={productCount}
-          suffix="in library"
-          icon={Package}
-          loading={productsLoading}
+          title="Continue Last"
+          icon={Play}
+          description={(lastJob?.workflows as any)?.name || 'No recent workflow'}
+          action={lastJob ? {
+            label: 'Continue',
+            onClick: () => navigate(`/app/generate/${(lastJob.workflows as any)?.slug || 'product-on-model'}`),
+          } : undefined}
+          tooltip="Pick up where you left off"
         />
         <MetricCard
-          title="Active Schedules"
-          value={scheduleCount}
-          suffix="creative drops"
-          icon={CalendarClock}
-          loading={schedulesLoading}
+          title="Top Style"
+          icon={Palette}
+          description={topWorkflow?.name || 'Generate to discover'}
+          action={topWorkflow ? {
+            label: 'Recreate',
+            onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
+          } : undefined}
+          tooltip="Your most-used workflow based on completed jobs"
         />
       </div>
 
