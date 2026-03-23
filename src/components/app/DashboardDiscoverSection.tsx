@@ -77,8 +77,6 @@ export function DashboardDiscoverSection() {
   const { featuredMap } = useFeaturedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
-  const [visibleCount, setVisibleCount] = useState(16);
-
   const { data: profileCats } = useQuery({
     queryKey: ['dashboard-profile-cats', user?.id],
     queryFn: async () => {
