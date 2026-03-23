@@ -188,7 +188,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               })()}
 
               {/* Actions */}
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 pt-2">
                 <Button
                   onClick={handleDownload}
                   className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
