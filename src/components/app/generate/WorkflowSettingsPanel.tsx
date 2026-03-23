@@ -308,26 +308,59 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             : variationStrategy.variations;
           const cats = Array.from(new Set(scopeFilteredVars.map(v => v.category).filter(Boolean))) as string[];
           if (cats.length <= 1) return null;
-          return (
-            <div className="flex gap-1.5 flex-nowrap overflow-x-auto scrollbar-hide sm:flex-wrap sm:overflow-visible">
+
+          const filterButtons = (onSelect?: () => void) => (
+            <>
               <button
-                onClick={() => setSceneFilterCategory('all')}
+                onClick={() => { setSceneFilterCategory('all'); onSelect?.(); }}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                  'px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap',
                   sceneFilterCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >All</button>
               {cats.map(cat => (
                 <button
                   key={cat}
-                  onClick={() => setSceneFilterCategory(cat)}
+                  onClick={() => { setSceneFilterCategory(cat); onSelect?.(); }}
                   className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                    'px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap',
                     sceneFilterCategory === cat ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
                 >{cat}</button>
               ))}
-            </div>
+            </>
+          );
+
+          return (
+            <>
+              {/* Mobile: filter popover */}
+              <div className="sm:hidden">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5">
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                      Filter
+                      {sceneFilterCategory !== 'all' && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">{sceneFilterCategory}</Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-52 p-2" align="start">
+                    <div className="flex flex-col gap-1">
+                      {filterButtons(() => {
+                        // Close popover by blurring trigger
+                        (document.activeElement as HTMLElement)?.blur();
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Desktop: inline pills */}
+              <div className="hidden sm:flex gap-1.5 flex-wrap">
+                {filterButtons()}
+              </div>
+            </>
           );
         })()}
 
