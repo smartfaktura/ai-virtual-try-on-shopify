@@ -185,13 +185,13 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
 
   // --- Step 1: Workflow selection ---
   const workflowStep = (
-    <div className="grid grid-cols-3 gap-3">
+    <div className={cn("grid grid-cols-3", isMobile ? "gap-2" : "gap-3")}>
       {WORKFLOW_CARDS.map((wf, i) => (
         <WorkflowCardCompact
           key={wf.slug}
           workflow={wf}
           onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
-          mobileCompact={isMobile}
+          modalCompact
         />
       ))}
     </div>

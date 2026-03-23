@@ -17,9 +17,11 @@ interface Props {
   id?: string;
   /** True when rendered inside the mobile 2-col grid */
   mobileCompact?: boolean;
+  /** True when rendered inside a modal - uses shorter aspect ratio */
+  modalCompact?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -44,7 +46,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: P
       {/* Thumbnail — taller on mobile 2-col for breathing room */}
       <div className={cn(
         "relative w-full overflow-hidden",
-        mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
+        modalCompact ? "aspect-square" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
       )}>
         {scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
@@ -58,11 +60,11 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: P
       </div>
 
       {/* Content */}
-      <div className={cn("flex flex-col gap-2 flex-1", mobileCompact ? "p-2.5" : "p-4")}>
+      <div className={cn("flex flex-col gap-2 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className={cn(
             "font-bold tracking-tight leading-tight",
-            mobileCompact ? "text-xs" : "text-sm"
+            (modalCompact || mobileCompact) ? "text-xs" : "text-sm"
           )}>
             {workflow.name}
           </h3>
@@ -74,7 +76,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: P
           )}
         </div>
 
-        {!mobileCompact && (
+        {!mobileCompact && !modalCompact && (
           <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
             {workflow.description}
           </p>
@@ -85,7 +87,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: P
             size="sm"
             className={cn(
               "rounded-full font-semibold gap-1.5 w-full",
-              mobileCompact ? "h-7 px-3 text-xs" : "h-8 px-5"
+              (modalCompact || mobileCompact) ? "h-7 px-3 text-xs" : "h-8 px-5"
             )}
             onClick={onSelect}
           >
