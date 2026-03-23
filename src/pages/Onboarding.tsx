@@ -115,6 +115,7 @@ export default function Onboarding() {
         },
       }).catch(() => {});
       toast.success('Welcome to VOVV.AI!');
+      localStorage.setItem(`dashboard_mode_hint_${user.id}`, 'new');
       navigate('/app', { replace: true });
     }
 

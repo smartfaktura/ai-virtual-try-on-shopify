@@ -322,9 +322,34 @@ export default function Dashboard() {
     );
   }
 
-  // Total job count determines first-run vs returning
+  // Lightweight activity check — determines new vs returning without waiting for heavy queries
+  const modeHintKey = user ? `dashboard_mode_hint_${user.id}` : '';
+  const modeHint = modeHintKey ? localStorage.getItem(modeHintKey) : null;
+
+  const { data: hasActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ['dashboard-has-activity', user?.id],
+    queryFn: async () => {
+      const [jobRes, freestyleRes] = await Promise.all([
+        supabase.from('generation_jobs').select('id', { count: 'exact', head: true }),
+        supabase.from('freestyle_generations').select('id', { count: 'exact', head: true }),
+      ]);
+      const total = (jobRes.count ?? 0) + (freestyleRes.count ?? 0);
+      if (total > 0 && modeHintKey) {
+        localStorage.removeItem(modeHintKey);
+      }
+      return total > 0;
+    },
+    enabled: !!user && modeHint !== 'new',
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Derive dashboard mode
+  const dashboardMode: 'new' | 'returning' | 'resolving' =
+    modeHint === 'new' ? 'new' :
+    activityLoading ? 'resolving' :
+    hasActivity ? 'returning' : 'new';
+
   const totalJobCount = recentJobs.length;
-  const isNewUser = totalJobCount === 0 && !jobsLoading;
 
   const firstName = profile?.first_name || profile?.display_name || 'there';
 
