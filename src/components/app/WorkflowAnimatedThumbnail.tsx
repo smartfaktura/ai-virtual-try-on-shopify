@@ -237,8 +237,9 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
     () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
     [rawBackgrounds],
   );
-  const INTERVAL = 1000;
+  const INTERVAL = 2500;
   const [current, setCurrent] = useState(0);
+  const [progressKey, setProgressKey] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const currentRef = useRef(0);
 
