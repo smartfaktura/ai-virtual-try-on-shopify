@@ -8,6 +8,7 @@ import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { useFeaturedItems } from '@/hooks/useFeaturedItems';
+import { useSavedItems } from '@/hooks/useSavedItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,6 +76,7 @@ export function DashboardDiscoverSection() {
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { featuredMap } = useFeaturedItems();
+  const { isSaved, toggleSave } = useSavedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const { data: profileCats } = useQuery({
@@ -139,6 +141,27 @@ export function DashboardDiscoverSection() {
 
   const visible = filtered.slice(0, 16);
 
+  const relatedItems = useMemo(() => {
+    if (!selectedItem) return [];
+    const selectedId = selectedItem.type === 'preset' ? selectedItem.data.id : selectedItem.data.poseId;
+    // Try same scene first
+    if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
+      const sameScene = allItems.filter(i =>
+        i.type === 'preset' &&
+        i.data.scene_name === selectedItem.data.scene_name &&
+        i.data.id !== selectedId
+      );
+      if (sameScene.length >= 3) return sameScene.slice(0, 9);
+    }
+    // Fallback to same category
+    return allItems
+      .filter(i => {
+        const iId = i.type === 'preset' ? i.data.id : i.data.poseId;
+        return iId !== selectedId && i.data.category === selectedItem.data.category;
+      })
+      .slice(0, 9);
+  }, [allItems, selectedItem]);
+
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
       navigate(`/app/freestyle?scene=${item.data.poseId}`);
@@ -164,6 +187,10 @@ export function DashboardDiscoverSection() {
       }
     }
   };
+
+  const selectedItemSaved = selectedItem
+    ? isSaved(selectedItem.type, selectedItem.type === 'preset' ? selectedItem.data.id : selectedItem.data.poseId)
+    : false;
 
   if (isLoading) {
     return (
@@ -214,7 +241,6 @@ export function DashboardDiscoverSection() {
         ))}
       </div>
 
-
       <DiscoverDetailModal
         item={selectedItem}
         open={!!selectedItem}
@@ -224,8 +250,16 @@ export function DashboardDiscoverSection() {
           setSelectedItem(null);
           navigate('/app/discover');
         }}
-        relatedItems={[]}
+        relatedItems={relatedItems}
         onSelectRelated={(item) => setSelectedItem(item)}
+        isSaved={selectedItemSaved}
+        onToggleSave={() => {
+          if (!selectedItem) return;
+          toggleSave.mutate({
+            itemType: selectedItem.type,
+            itemId: selectedItem.type === 'preset' ? selectedItem.data.id : selectedItem.data.poseId,
+          });
+        }}
       />
     </div>
   );
