@@ -1,28 +1,24 @@
 
 
-# Remove "What You Can Create" — Keep Only Recent Creations
+# Add Loading State After Product Selection in Start Workflow Modal
 
-## Context
-The `RecentCreationsGallery` component already handles both states:
-- **No generations yet**: Shows curated scenes as "What You Can Create" with a placeholder title
-- **Has generations**: Shows "Recent Creations" with real user images
-
-The user wants to remove the placeholder/curated scenes state entirely, so the gallery only renders when the user has actual creations.
+## Problem
+When clicking a product or sample in the modal, navigation to the generate page takes a moment, but there's no visual feedback — it feels laggy.
 
 ## Changes
 
-### `src/components/app/RecentCreationsGallery.tsx`
+### `src/components/app/StartWorkflowModal.tsx`
 
-1. **Return `null` when no creations exist** — after loading completes and `creations.length === 0`, return `null` instead of showing the curated scenes fallback.
+1. **Add `isNavigating` state** (`useState(false)`)
 
-2. **Remove curated scenes logic**:
-   - Remove the `CURATED_SCENE_IDS` array (lines 18-26)
-   - Remove the `curatedScenes` query (lines 47-60)
-   - Remove the `isPlaceholder` variable and `displayItems` conditional (lines 214-225)
-   - Always use `creations` directly
-   - Remove placeholder-specific text ("What You Can Create", "Explore scenes and styles", "Use Scene", "View More" button with Compass icon)
-   - Clean up unused imports (`Compass`)
+2. **In `handleConfirmProduct` and `handleUseSample`**: Set `isNavigating(true)` before navigating. Use a short `setTimeout` (50ms) to let the loading state render before the navigation kicks in.
 
-### Files
-- `src/components/app/RecentCreationsGallery.tsx` — remove curated scenes fallback, return null when empty
+3. **On the "Continue" button** (product step with existing products): Show `<Loader2 className="animate-spin" />` + "Loading..." when `isNavigating` is true, disable the button.
+
+4. **On the sample product button**: Show a small spinner overlay or disable with loading state when `isNavigating` is true.
+
+5. **Reset `isNavigating` in the `reset()` function**.
+
+### File
+- `src/components/app/StartWorkflowModal.tsx` — add `isNavigating` state, show spinner on buttons after click
 
