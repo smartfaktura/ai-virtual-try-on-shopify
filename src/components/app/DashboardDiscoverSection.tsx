@@ -161,9 +161,9 @@ export function DashboardDiscoverSection() {
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-5 w-16" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[4/3] rounded-lg" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
           ))}
         </div>
       </div>
