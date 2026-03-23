@@ -1,43 +1,34 @@
 
 
-# Add "Copy to Editor" Button in Freestyle Detail Modal
+# Fix: Copy to Editor in Detail Modal Missing Model/Scene/Product
 
-## Current State
-- **Delete** button exists but is buried below Generate Video
-- **Copy to Editor** button (that restores prompt + model + scene + product to the freestyle editor) only exists on the gallery thumbnail cards, not in the detail modal
+## Problem
+The `libraryItem` object built for the `LibraryDetailModal` (line 964-974 in Freestyle.tsx) does not include `modelId`, `sceneId`, or `productId`. So when the modal's "Copy to Editor" button fires `onCopySettings`, it only has the prompt — the other settings are `undefined`.
 
-## Plan
+The gallery hover copy works correctly because it reads directly from the `FreestyleImage` object which has all fields.
 
-### `src/components/app/LibraryDetailModal.tsx`
+## Fix
 
-1. **Add a "Copy to Editor" button** for freestyle items, placed right after the Download button (top of actions). This reuses the same `onCopySettings` pattern from FreestyleGallery.
+### `src/pages/Freestyle.tsx` (line 964-974)
 
-2. **Add `onCopySettings` prop** to `LibraryDetailModalProps`:
-   ```ts
-   onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
-   ```
+Add the three missing fields to the `libraryItem` construction:
 
-3. **Add the button** after Download, before Enhance — only when `item.source === 'freestyle'`:
-   ```tsx
-   <Button variant="outline" onClick={() => { onCopySettings?.({...}); onClose(); }}>
-     <Copy /> Copy to Editor
-   </Button>
-   ```
+```tsx
+const libraryItem: LibraryItem = {
+  id: img.id,
+  imageUrl: img.url,
+  source: 'freestyle',
+  label: dynamicLabel,
+  prompt: img.userPrompt || undefined,
+  date: '',
+  createdAt: '',
+  aspectRatio: img.aspectRatio || '1:1',
+  quality: 'standard',
+  modelId: img.modelId,      // add
+  sceneId: img.sceneId,      // add
+  productId: img.productId,  // add
+};
+```
 
-4. **Move Delete** into a subtle row at the very bottom of all actions (after Generate Video), keeping it as a small ghost button — same as now but separated with a thin divider.
-
-### `src/pages/Freestyle.tsx`
-
-5. **Pass `onCopySettings`** to `LibraryDetailModal` using the existing `handleCopySettings` handler already built for the gallery.
-
-### Layout order (freestyle items):
-1. Download Image (primary)
-2. **Copy to Editor** (new, outline)
-3. Enhance to 2K / 4K
-4. Generate Perspectives
-5. Generate Video (coming soon)
-6. ── thin separator ──
-7. Delete (ghost, destructive)
-
-Two files, ~15 lines added.
+One file, 3 lines added.
 
