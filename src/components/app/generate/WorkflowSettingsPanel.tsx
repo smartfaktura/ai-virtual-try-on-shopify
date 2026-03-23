@@ -233,7 +233,21 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
       {/* Variation Strategy Preview — hidden in mirror selfie final phase */}
       {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
       <Card><CardContent className="p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        {/* Scene count pill on its own line */}
+        {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && (
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="text-[10px]">
+              {activeWorkflow?.name === 'Mirror Selfie Set'
+                ? `${variationStrategy.variations.length} Environments`
+                : `${variationStrategy.variations.length} Scenes`}
+            </Badge>
+            {activeWorkflow?.name === 'Mirror Selfie Set' && (
+              <Badge variant="secondary" className="text-[10px]"><Smartphone className="w-3 h-3 mr-1" />Mirror Selfie</Badge>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-start justify-between gap-2">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base font-semibold">
@@ -249,15 +263,6 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                 <>
                   <Badge variant="secondary" className="text-[10px]">{interiorType === 'interior' ? 'Interior' : 'Exterior'}</Badge>
                   <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Styles</Badge>
-                </>
-              )}
-              {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && activeWorkflow?.name !== 'Mirror Selfie Set' && (
-                <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
-              )}
-              {variationStrategy?.type === 'scene' && activeWorkflow?.name === 'Mirror Selfie Set' && (
-                <>
-                  <Badge variant="secondary" className="text-[10px]"><Smartphone className="w-3 h-3 mr-1" />Mirror Selfie</Badge>
-                  <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Environments</Badge>
                 </>
               )}
             </div>
@@ -280,23 +285,14 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
               </p>
             )}
           </div>
-          {!isInteriorDesign && (
+          {!isInteriorDesign && selectedVariationIndices.size > 0 && (
           <Button
             variant="ghost"
             size="sm"
-            className="self-end sm:self-auto shrink-0"
-            onClick={() => {
-              const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : (variationStrategy?.variations.length || 0);
-              const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : paidLimit;
-              const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
-              if (selectedVariationIndices.size > 0) {
-                setSelectedVariationIndices(new Set());
-              } else {
-                setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, currentMax).map((_, i) => i)));
-              }
-            }}
+            className="shrink-0 text-muted-foreground"
+            onClick={() => setSelectedVariationIndices(new Set())}
           >
-            {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
+            Deselect All
           </Button>
           )}
         </div>
@@ -332,7 +328,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           );
 
           return (
-            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar flex-wrap sm:flex-wrap">
+            <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar flex-wrap">
               {filterButtons()}
             </div>
           );
