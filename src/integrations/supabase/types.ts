@@ -1239,6 +1239,7 @@ export type Database = {
         Returns: number
       }
       admin_generation_stats: { Args: { p_hours: number }; Returns: Json }
+      admin_platform_stats: { Args: never; Returns: Json }
       change_user_plan: {
         Args: { p_new_credits: number; p_new_plan: string; p_user_id: string }
         Returns: Json
