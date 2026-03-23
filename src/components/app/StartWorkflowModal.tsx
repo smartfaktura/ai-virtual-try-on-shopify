@@ -255,13 +255,20 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
             {selectedWorkflow && (
               <button
                 onClick={handleUseSample}
-                className="flex items-center gap-3 w-full p-3 rounded-lg border border-dashed border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-left"
+                disabled={isNavigating}
+                className="flex items-center gap-3 w-full p-3 rounded-lg border border-dashed border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-left disabled:opacity-50"
               >
-                <img
-                  src={selectedWorkflow.sampleImage}
-                  alt={selectedWorkflow.sampleName}
-                  className="w-10 h-10 rounded-md object-cover bg-muted"
-                />
+                {isNavigating ? (
+                  <div className="w-10 h-10 rounded-md flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <img
+                    src={selectedWorkflow.sampleImage}
+                    alt={selectedWorkflow.sampleName}
+                    className="w-10 h-10 rounded-md object-cover bg-muted"
+                  />
+                )}
                 <div>
                   <p className="text-xs font-medium text-foreground">{selectedWorkflow.sampleName}</p>
                   <p className="text-[10px] text-muted-foreground">Sample product</p>
