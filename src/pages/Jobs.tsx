@@ -361,8 +361,10 @@ export default function Jobs() {
           <>
             <div className="relative">
               {isFetching && !isLoading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                <div className="absolute inset-0 z-10 flex items-start justify-center">
+                  <div className="sticky top-[40vh]">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
                 </div>
               )}
             <div className={cn("flex gap-1 transition-opacity", isFetching && !isLoading && "opacity-50 pointer-events-none")}>
