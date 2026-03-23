@@ -1,26 +1,17 @@
 
 
-# Align Popover to Card's Left Edge (Bottom-Start)
+# Fix Last Card Popover Alignment
 
 ## Problem
-The popover currently uses `align="center"` which positions it centered under the card. This looks inconsistent across cards. It should align to the card's left edge for a clean, predictable layout.
+The "Top Style" card (5th/last card) has its popover aligned to `start` (left edge), which causes it to float awkwardly off the card's right boundary since it's near the viewport edge.
 
-## Change
+## Solution
+Add a `popoverAlign` prop to `MetricCard` so individual cards can specify alignment. Default remains `start`, but the last card passes `end`.
 
-### `src/components/app/MetricCard.tsx` (line 127-129)
+### 1. `src/components/app/MetricCard.tsx`
+- Add optional `popoverAlign?: 'start' | 'center' | 'end'` prop
+- Use it in `PopoverContent align={popoverAlign || 'start'}`
 
-Change popover alignment from `center` to `start`:
-
-```tsx
-<PopoverContent
-  side="bottom"
-  align="start"
-  sideOffset={6}
-  className="w-[240px] p-3 rounded-xl shadow-lg border border-border/60"
-```
-
-This anchors the popover's left edge to the card's left edge on every card, giving a consistent, clean layout across the row.
-
-### Files
-- `src/components/app/MetricCard.tsx` — change `align="center"` to `align="start"`
+### 2. `src/pages/Dashboard.tsx` (~line 532)
+- Pass `popoverAlign="end"` to the "Top Style" MetricCard
 
