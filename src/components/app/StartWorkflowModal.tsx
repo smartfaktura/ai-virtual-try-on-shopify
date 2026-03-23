@@ -200,16 +200,21 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   // --- Step 1: Workflow selection ---
   const workflowStep = (
     <div className="space-y-3">
-      <div className={cn("grid grid-cols-3", isMobile ? "gap-2" : "gap-3")}>
+      <div className={cn(
+        isMobile
+          ? "flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1"
+          : "grid grid-cols-3 gap-3"
+      )}>
         {WORKFLOW_CARDS.map((wf, i) => (
-          <WorkflowCardCompact
-            key={wf.slug}
-            workflow={wf}
-            displayName={WORKFLOW_OPTIONS[i].displayName}
-            subtitle={WORKFLOW_OPTIONS[i].subtitle}
-            onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
-            modalCompact
-          />
+          <div key={wf.slug} className={cn(isMobile && "min-w-[200px] snap-center shrink-0")}>
+            <WorkflowCardCompact
+              workflow={wf}
+              displayName={WORKFLOW_OPTIONS[i].displayName}
+              subtitle={WORKFLOW_OPTIONS[i].subtitle}
+              onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
+              modalCompact
+            />
+          </div>
         ))}
       </div>
       <p className="text-xs text-muted-foreground/60 text-center pt-1">No setup. No photoshoot. Just results.</p>

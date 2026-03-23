@@ -237,8 +237,9 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
     () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
     [rawBackgrounds],
   );
-  const INTERVAL = 1000;
+  const INTERVAL = 2500;
   const [current, setCurrent] = useState(0);
+  const [progressKey, setProgressKey] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const currentRef = useRef(0);
 
@@ -257,12 +258,26 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
       const next = (currentRef.current + 1) % backgrounds.length;
       currentRef.current = next;
       setCurrent(next);
+      setProgressKey((k) => k + 1);
     }, INTERVAL);
     return () => clearInterval(t);
   }, [isActive, backgrounds.length]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
+      {/* Progress bar */}
+      {isActive && backgrounds.length > 1 && initialLoaded && (
+        <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-white/20">
+          <div
+            key={progressKey}
+            className="h-full bg-white/70"
+            style={{
+              animation: `wf-progress-fill ${INTERVAL}ms linear forwards`,
+            }}
+          />
+        </div>
+      )}
+
       {/* Shimmer placeholder */}
       {!initialLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
