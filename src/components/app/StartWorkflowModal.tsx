@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ArrowLeft, Upload, ImagePlus, Package, Loader2, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, ImagePlus, Loader2, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
+import type { Workflow } from '@/types/workflow';
 
 const WORKFLOW_OPTIONS = [
   {
