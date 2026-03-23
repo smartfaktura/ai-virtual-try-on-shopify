@@ -122,6 +122,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Mirror Selfie Set': {
     background: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png',
+    objectPosition: 'center 25%',
     elements: [
       {
         type: 'product', image: mirrorSelfieProduct, label: 'Sweater', sublabel: 'Product',

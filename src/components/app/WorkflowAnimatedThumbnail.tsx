@@ -277,15 +277,17 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
       />
 
       {/* Gradient overlay */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          background: 'linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.15))',
-        }}
-      />
+      {!modalCompact && (
+        <div
+          className="absolute inset-0 z-[1]"
+          style={{
+            background: 'linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.15))',
+          }}
+        />
+      )}
 
       {/* Persistent overlay elements — only when element images ready */}
-      {isActive && elementsReady && (
+      {isActive && elementsReady && !modalCompact && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
             <FloatingEl key={i} element={el} mobileCompact={mobileCompact} modalCompact={modalCompact} />
