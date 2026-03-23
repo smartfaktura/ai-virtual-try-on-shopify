@@ -195,7 +195,7 @@ export function DashboardDiscoverSection() {
         onSelectCategory={setSelectedCategory}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {visible.map((item) => (
           <DiscoverCard
             key={item.type === 'preset' ? item.data.id : item.data.poseId}
