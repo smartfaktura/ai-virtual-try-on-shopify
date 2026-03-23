@@ -49,46 +49,6 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
-      {/* Recipe strip ABOVE image for modal */}
-      {modalCompact && scene?.recipe && isVisible && (
-        <div
-          key={recipeKey}
-          className="flex items-center justify-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 bg-muted/30"
-        >
-          {recipeItems.map((item, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && (
-                <Plus
-                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground shrink-0 opacity-0 animate-fade-in"
-                  style={{ animationDelay: `${i * staggerDelay}s`, animationFillMode: 'forwards' }}
-                />
-              )}
-              <div
-                className="w-5 h-5 sm:w-7 sm:h-7 rounded-md overflow-hidden shrink-0 border border-border opacity-0 animate-fade-in"
-                style={{ animationDelay: `${i * staggerDelay}s`, animationFillMode: 'forwards' }}
-              >
-                <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
-              </div>
-            </React.Fragment>
-          ))}
-          <span
-            className="text-muted-foreground text-[8px] sm:text-[10px] font-bold mx-0.5 sm:mx-1 opacity-0 animate-fade-in"
-            style={{ animationDelay: `${totalItems * staggerDelay}s`, animationFillMode: 'forwards' }}
-          >
-            =
-          </span>
-          <div
-            className="w-5 h-5 sm:w-7 sm:h-7 rounded-md overflow-hidden shrink-0 border-2 border-primary/30 opacity-0 animate-fade-in"
-            style={{
-              animationDelay: `${(totalItems + 0.5) * staggerDelay}s`,
-              animationFillMode: 'forwards',
-              animation: `fade-in 0.3s ease-out ${(totalItems + 0.5) * staggerDelay}s forwards, pulse 2s cubic-bezier(0.4,0,0.6,1) ${(totalItems + 1) * staggerDelay}s infinite`,
-            }}
-          >
-            <img src={scene.recipeResult} alt="Result" className="w-full h-full object-cover" />
-          </div>
-        </div>
-      )}
 
       {/* Thumbnail */}
       <div className={cn(
