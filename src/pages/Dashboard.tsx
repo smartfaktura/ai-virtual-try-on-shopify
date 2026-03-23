@@ -509,7 +509,7 @@ export default function Dashboard() {
           tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getLandingAssetUrl('team/avatar-max.jpg') }}
         />
         <MetricCard
-          title="Credits Remaining"
+          title="Credits"
           value={balance}
           suffix="available"
           icon={Wallet}
