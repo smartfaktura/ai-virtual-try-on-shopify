@@ -323,6 +323,9 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Find & Recreate */}
+        <DashboardDiscoverSection />
+
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
 
