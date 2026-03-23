@@ -35,7 +35,7 @@ const steps = [
   {
     key: 'generate',
     title: 'Generate Your First Visual Set',
-    description: 'Product Photos or Virtual Try-On — your choice.',
+    description: 'Product Photos or Virtual Try-On - your choice.',
     icon: Sparkles,
     path: '/app/workflows',
     cta: 'Go to Workflows',
