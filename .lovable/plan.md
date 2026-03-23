@@ -1,57 +1,65 @@
 
 
-# Show Animated Cards in Modal with Optimized Sizing
+# Improve Start Workflow Modal UX + Fix Product Images
 
-## Problem
-Currently `modalCompact` disables animations entirely (shows static image). The user wants animated cards in the modal but with smaller/optimized overlays. Also, the modal needs to be wider on desktop, and no visible borders on the card images.
+## Problems
+1. **Product images broken** - using `object-contain` which makes images float/look bad. Products page uses `object-cover` with `ShimmerImage` - we should match that pattern.
+2. **No confirmation step** - clicking a product immediately navigates away. Better UX: select product (highlight it), then confirm with a button.
+3. **Back button is a tiny text link** - should be a proper button in a footer/header area.
 
 ## Changes
 
-### 1. `src/components/app/WorkflowCardCompact.tsx`
+### `src/components/app/StartWorkflowModal.tsx` (rewrite product step)
 
-**Enable animations for `modalCompact`** — instead of switching to a static image, pass the animated thumbnail with a new `modalCompact` flag so overlays render smaller:
-
-```tsx
-// Line 51: Change from blocking animation to enabling it with modalCompact
-{scene ? (
-  <WorkflowAnimatedThumbnail 
-    scene={scene} 
-    isActive={isVisible} 
-    compact 
-    mobileCompact={mobileCompact} 
-    modalCompact={modalCompact} 
-  />
-) : (
-  <img ... />
-)}
+**1. Add `selectedProductId` state** for two-step select-then-confirm:
+```ts
+const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 ```
 
-**Remove border from card when `modalCompact`** — use `border-0` or `border-none` to eliminate visible borders:
+**2. Product grid - use `ShimmerImage` with `object-cover`** (matching Products page pattern):
+```tsx
+import { ShimmerImage } from '@/components/ui/shimmer-image';
+
+// Each product card:
+<div className="w-full aspect-square rounded-md overflow-hidden bg-muted">
+  <ShimmerImage
+    src={getOptimizedUrl(p.image_url, { quality: 70 })}
+    alt={p.title}
+    className="w-full h-full object-cover"
+    aspectRatio="1/1"
+  />
+</div>
+```
+
+**3. Selected state on product cards** - ring/border highlight when selected:
 ```tsx
 className={cn(
-  "group overflow-hidden transition-shadow duration-300 flex flex-col",
-  modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
+  "... rounded-lg border-2 transition-all",
+  selectedProductId === p.id 
+    ? "border-primary ring-2 ring-primary/20" 
+    : "border-border hover:border-primary/40"
 )}
 ```
 
-### 2. `src/components/app/WorkflowAnimatedThumbnail.tsx`
-
-**Accept `modalCompact` prop** and treat it similarly to `mobileCompact` for element sizing — use the same genuinely-smaller elements (the `mobileCompact` branch in `FloatingEl`) but for the modal context:
-
-- Props: add `modalCompact?: boolean`
-- In `FloatingEl`: when `modalCompact`, use the same small element rendering as `mobileCompact` (smaller cards, smaller avatars, smaller text)
-- Pass `modalCompact` through to `FloatingEl` in the render loop
-- Background stays `object-cover` (no change)
-
-### 3. `src/components/app/StartWorkflowModal.tsx`
-
-**Widen desktop dialog** from `sm:max-w-[640px]` to `sm:max-w-[720px]`:
+**4. Footer with Back + Continue buttons** for the product step:
 ```tsx
-<DialogContent className="sm:max-w-[720px] rounded-2xl p-0 gap-0 overflow-hidden">
+<div className="flex items-center justify-between pt-4 border-t">
+  <Button variant="ghost" size="sm" onClick={() => setStep('workflow')}>
+    <ArrowLeft /> Back
+  </Button>
+  <Button 
+    onClick={() => handleSelectProduct(selectedProductId!)}
+    disabled={!selectedProductId}
+  >
+    Continue <ArrowRight />
+  </Button>
+</div>
 ```
 
+**5. Same footer pattern for upload step** - Back button at bottom instead of inline text link.
+
+**6. Reset `selectedProductId`** when going back or closing modal.
+
 ### Files
-- `src/components/app/WorkflowCardCompact.tsx` — enable animation for `modalCompact`, remove borders
-- `src/components/app/WorkflowAnimatedThumbnail.tsx` — accept `modalCompact` prop, use small overlay sizes
-- `src/components/app/StartWorkflowModal.tsx` — widen desktop dialog to 720px
+- `src/components/app/StartWorkflowModal.tsx` - add ShimmerImage import, selectedProductId state, confirmation button, proper back buttons, fix image display
 
