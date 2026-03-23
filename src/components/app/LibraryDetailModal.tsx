@@ -25,6 +25,7 @@ interface LibraryDetailModalProps {
   open: boolean;
   onClose: () => void;
   isUpscaling?: boolean;
+  onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
 }
 
 export function LibraryDetailModal({ item, open, onClose, isUpscaling }: LibraryDetailModalProps) {
