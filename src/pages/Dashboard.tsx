@@ -243,6 +243,47 @@ export default function Dashboard() {
     placeholderData: (prev: number | undefined) => prev,
   });
 
+  // Fetch last completed job's workflow
+  const { data: lastJob } = useQuery({
+    queryKey: ['dashboard-last-job', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('generation_jobs')
+        .select('workflow_slug, workflow_id, workflows(name, slug)')
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch most-used workflow
+  const { data: topWorkflow } = useQuery({
+    queryKey: ['dashboard-top-workflow', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('generation_jobs')
+        .select('workflow_slug, workflow_id, workflows(name, slug)')
+        .eq('status', 'completed');
+      const counts: Record<string, { count: number; name: string; slug: string }> = {};
+      (data || []).forEach(j => {
+        const wf = j.workflows as any;
+        if (wf?.name) {
+          const key = wf.name;
+          if (!counts[key]) counts[key] = { count: 0, name: wf.name, slug: wf.slug };
+          counts[key].count++;
+        }
+      });
+      const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
+      return sorted[0] || null;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+
   // Fetch workflows (for first-run grid)
   const { data: workflows = [] } = useQuery({
     queryKey: ['dashboard-workflows'],
