@@ -161,9 +161,9 @@ export function DashboardDiscoverSection() {
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-5 w-16" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[4/3] rounded-lg" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
           ))}
         </div>
       </div>
@@ -175,7 +175,10 @@ export function DashboardDiscoverSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Find & Recreate</h2>
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recreate What Works</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Click any visual to recreate it with your product.</p>
+        </div>
         <Button
           variant="link"
           size="sm"
@@ -192,12 +195,12 @@ export function DashboardDiscoverSection() {
         onSelectCategory={setSelectedCategory}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {visible.map((item) => (
           <DiscoverCard
             key={item.type === 'preset' ? item.data.id : item.data.poseId}
             item={item}
-            aspectRatioOverride="4/3"
+            aspectRatioOverride="3/4"
             onClick={() => setSelectedItem(item)}
             onRecreate={(e) => {
               e.stopPropagation();
@@ -209,7 +212,7 @@ export function DashboardDiscoverSection() {
 
       {hasMore && (
         <div className="flex justify-center pt-2">
-          <Button variant="outline" size="sm" onClick={() => setVisibleCount(c => c + 16)}>
+          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6" onClick={() => setVisibleCount(c => c + 16)}>
             Load more
           </Button>
         </div>
