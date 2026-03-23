@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Check, Sparkles } from 'lucide-react';
+import { ChevronDown, Check, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MobilePickerSheet } from '@/components/app/freestyle/MobilePickerSheet';
-import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,25 +14,8 @@ import {
 } from '@/lib/categoryConstants';
 
 /** Hero section: dynamic headline + CTA */
-export function DashboardPersonalizationHero() {
-  const { user } = useAuth();
+export function DashboardPersonalizationHero({ selected = 'any' }: { selected?: string }) {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<string>('any');
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('product_categories')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        const cats = (data?.product_categories as string[]) ?? [];
-        const primary = cats.includes('any') || cats.length === 0 ? 'any' : cats[0];
-        setSelected(primary);
-      });
-  }, [user]);
-
   const headline = getCategoryHeadline([selected]);
 
   return (
@@ -42,47 +24,53 @@ export function DashboardPersonalizationHero() {
         {headline}
       </p>
 
-      <div className="space-y-2">
-        <Button
+      <div className="space-y-3">
+        <button
           onClick={() => navigate('/app/workflows')}
-          size="lg"
-          className="gap-2"
+          className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 transition-all duration-200"
         >
-          <Sparkles className="w-4 h-4" />
           Start a Campaign
-        </Button>
-        <p className="text-xs text-muted-foreground/60">
-          Virtual Try-On · Product Editorial · Catalog Generation
-        </p>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-2">
+          {['Virtual Try-On', 'Product Editorial', 'Catalog Generation'].map((label) => (
+            <span
+              key={label}
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-border/50 bg-muted/40 text-[11px] text-muted-foreground font-medium"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
 /** Inline pill selector for "Personalized for [category]" */
-export function PersonalizedForPill() {
+export function PersonalizedForPill({
+  selected,
+  onSelect,
+}: {
+  selected?: string;
+  onSelect?: (id: string) => void;
+}) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [selected, setSelected] = useState<string>('any');
+  const [localSelected, setLocalSelected] = useState<string>(selected ?? 'any');
   const [open, setOpen] = useState(false);
 
+  // Sync from parent prop
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('product_categories')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        const cats = (data?.product_categories as string[]) ?? [];
-        const primary = cats.includes('any') || cats.length === 0 ? 'any' : cats[0];
-        setSelected(primary);
-      });
-  }, [user]);
+    if (selected !== undefined) setLocalSelected(selected);
+  }, [selected]);
+
+  const current = localSelected;
 
   const handleSelect = async (id: string) => {
-    setSelected(id);
+    setLocalSelected(id);
     setOpen(false);
+    onSelect?.(id);
     if (!user) return;
     const { error } = await supabase
       .from('profiles')
@@ -91,12 +79,12 @@ export function PersonalizedForPill() {
     if (error) toast.error('Failed to save preference');
   };
 
-  const currentLabel = PRODUCT_CATEGORIES.find((c) => c.id === selected)?.label ?? 'All products';
+  const currentLabel = PRODUCT_CATEGORIES.find((c) => c.id === current)?.label ?? 'All products';
 
   const categoryList = (
     <div className="py-1">
       {PRODUCT_CATEGORIES.map(({ id, label }) => {
-        const active = id === selected;
+        const active = id === current;
         return (
           <button
             key={id}

@@ -251,6 +251,23 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  // Lifted category state for syncing headline with pill
+  const [selectedCategory, setSelectedCategory] = useState('any');
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('product_categories')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        const cats = (data?.product_categories as string[]) ?? [];
+        const primary = cats.includes('any') || cats.length === 0 ? 'any' : cats[0];
+        setSelectedCategory(primary);
+      });
+  }, [user]);
+
   // Critical error state — show recovery UI instead of blank skeletons
   const hasCriticalError = profileError && jobsError;
 
@@ -404,12 +421,12 @@ export default function Dashboard() {
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        <DashboardPersonalizationHero />
+        <DashboardPersonalizationHero selected={selectedCategory} />
       </div>
 
       {/* Personalized pill + Quick Actions */}
       <div className="flex flex-wrap items-center gap-4">
-        <PersonalizedForPill />
+        <PersonalizedForPill selected={selectedCategory} onSelect={setSelectedCategory} />
         <div className="hidden sm:block w-px h-5 bg-border/60" />
         <DashboardQuickActions />
       </div>
