@@ -332,35 +332,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           );
 
           return (
-            <>
-              {/* Mobile: filter popover */}
-              <div className="sm:hidden">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5">
-                      <SlidersHorizontal className="w-3.5 h-3.5" />
-                      Filter
-                      {sceneFilterCategory !== 'all' && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">{sceneFilterCategory}</Badge>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-52 p-2" align="start">
-                    <div className="flex flex-col gap-1">
-                      {filterButtons(() => {
-                        // Close popover by blurring trigger
-                        (document.activeElement as HTMLElement)?.blur();
-                      })}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Desktop: inline pills */}
-              <div className="hidden sm:flex gap-1.5 flex-wrap">
-                {filterButtons()}
-              </div>
-            </>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar flex-wrap sm:flex-wrap">
+              {filterButtons()}
+            </div>
           );
         })()}
 
