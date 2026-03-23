@@ -78,25 +78,22 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Product Listing Set': {
-    background: listingResult,
+    mode: 'carousel',
+    background: showcase1,
     objectPosition: 'center',
+    backgrounds: [showcase1, showcase2, showcase3, showcase4, showcase5, showcase6, showcase7],
     recipe: [
       { image: listingProduct, label: 'Product' },
     ],
     recipeResult: listingResult,
     elements: [
       {
-        type: 'product', image: listingProduct, label: 'Serum', sublabel: 'Product',
-        icon: <Plus className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
-      },
-      {
         type: 'badge', label: '30+ Scenes', icon: <Sparkles className="w-3 h-3" />,
-        position: { top: '38%', right: '8%' }, enterDelay: 1.0, animation: 'slide-right',
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
         type: 'badge', label: '1 Click', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '24%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
