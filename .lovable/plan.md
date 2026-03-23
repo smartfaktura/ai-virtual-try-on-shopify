@@ -1,42 +1,49 @@
 
 
-# Fix Steal This Look Preview Modal to Match Discover Page
+# Fix "Similar" Button in Steal This Look to Pass Context to Discover
 
 ## Problem
-The Dashboard's "Steal This Look" section uses `DiscoverDetailModal` but passes `relatedItems={[]}` and omits key props (`isSaved`, `onToggleSave`, `viewCount`), making the modal feel incomplete compared to the Discover page.
+When clicking "Similar" in the Dashboard's Steal This Look modal, it navigates to `/app/discover` without passing the selected item's scene info. The Discover page uses `similarTo` state to filter, but since it's a fresh navigation, that state is empty.
+
+## Solution
+Pass the scene name as a URL query parameter when navigating, and have the Discover page read it on mount to initialize the `similarTo` filter.
 
 ## Changes
 
-### `src/components/app/DashboardDiscoverSection.tsx`
-
-1. **Add related items logic**: Compute `relatedItems` from `allItems` based on the selected item (same scene first, then category similarity) — matching the Discover page's `scoreSimilarity` approach but simplified:
-
+### 1. `src/components/app/DashboardDiscoverSection.tsx` (line 249-251)
+Update `onSearchSimilar` to pass scene context via URL:
 ```tsx
-const relatedItems = useMemo(() => {
-  if (!selectedItem) return [];
-  if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
-    const sameScene = allItems.filter(i =>
-      i.type === 'preset' &&
-      i.data.scene_name === selectedItem.data.scene_name &&
-      i.data.id !== selectedItem.data.id
-    );
-    if (sameScene.length >= 3) return sameScene.slice(0, 9);
-  }
-  return allItems
-    .filter(i => !(i.type === selectedItem.type && /* same id check */))
-    .filter(i => i.data.category === selectedItem.data.category)
-    .slice(0, 9);
-}, [allItems, selectedItem]);
+onSearchSimilar={() => {
+  if (!selectedItem) return;
+  const sceneName = selectedItem.type === 'preset' ? selectedItem.data.scene_name : selectedItem.data.name;
+  setSelectedItem(null);
+  navigate(`/app/discover${sceneName ? `?similar=${encodeURIComponent(sceneName)}` : ''}`);
+}}
 ```
 
-2. **Add saved items support**: Import `useSavedItems` hook and pass `isSaved` / `onToggleSave` to the modal.
+### 2. `src/pages/Discover.tsx`
+On mount, read `?similar=` from URL search params. If present, find the matching item from `allItems` and set it as `similarTo`:
 
-3. **Pass all missing props** to `DiscoverDetailModal`:
-   - `isSaved` — from `useSavedItems`
-   - `onToggleSave` — toggle save handler
-   - `relatedItems` — computed above
-   - `onSelectRelated` — update `selectedItem`
+```tsx
+// After allItems is populated, check URL for similar param
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const similarScene = params.get('similar');
+  if (similarScene && allItems.length > 0 && !similarTo) {
+    const match = allItems.find(i =>
+      (i.type === 'preset' ? i.data.scene_name : i.data.name) === similarScene
+    );
+    if (match) {
+      setSimilarTo(match);
+      // Clean up URL
+      params.delete('similar');
+      navigate({ search: params.toString() }, { replace: true });
+    }
+  }
+}, [allItems, location.search]);
+```
 
 ### Files
-- `src/components/app/DashboardDiscoverSection.tsx` — add relatedItems computation, saved items support, pass full props to modal
+- `src/components/app/DashboardDiscoverSection.tsx` — pass scene name in URL
+- `src/pages/Discover.tsx` — read `similar` param on mount, initialize filter
 
