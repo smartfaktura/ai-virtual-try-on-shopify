@@ -74,11 +74,7 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount,
         />
       </div>
 
-      <div className="p-6">
-        <p className="text-sm text-muted-foreground mb-6">
-          {completedCount} of {steps.length} complete
-        </p>
-
+      <div className="px-6 pt-3 pb-5">
         <div className="space-y-0">
           {steps.map((step, index) => {
             const done = completionMap[step.key];
