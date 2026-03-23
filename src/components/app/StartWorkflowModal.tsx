@@ -63,6 +63,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Fetch user products
   const { data: userProducts = [] } = useQuery({
@@ -88,6 +89,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     setUploadFile(null);
     setUploadPreview(null);
     setUploadTitle('');
+    setIsNavigating(false);
   };
 
   const handleOpenChange = (v: boolean) => {
@@ -103,16 +105,22 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
 
   const handleConfirmProduct = () => {
     if (!selectedWorkflow || !selectedProductId) return;
-    onOpenChange(false);
-    navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedProductId}`);
-    reset();
+    setIsNavigating(true);
+    setTimeout(() => {
+      onOpenChange(false);
+      navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedProductId}`);
+      reset();
+    }, 50);
   };
 
   const handleUseSample = () => {
     if (!selectedWorkflow) return;
-    onOpenChange(false);
-    navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedWorkflow.sampleId}`);
-    reset();
+    setIsNavigating(true);
+    setTimeout(() => {
+      onOpenChange(false);
+      navigate(`/app/generate/${selectedWorkflow.slug}?product=${selectedWorkflow.sampleId}`);
+      reset();
+    }, 50);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,13 +255,20 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
             {selectedWorkflow && (
               <button
                 onClick={handleUseSample}
-                className="flex items-center gap-3 w-full p-3 rounded-lg border border-dashed border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-left"
+                disabled={isNavigating}
+                className="flex items-center gap-3 w-full p-3 rounded-lg border border-dashed border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-left disabled:opacity-50"
               >
-                <img
-                  src={selectedWorkflow.sampleImage}
-                  alt={selectedWorkflow.sampleName}
-                  className="w-10 h-10 rounded-md object-cover bg-muted"
-                />
+                {isNavigating ? (
+                  <div className="w-10 h-10 rounded-md flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <img
+                    src={selectedWorkflow.sampleImage}
+                    alt={selectedWorkflow.sampleName}
+                    className="w-10 h-10 rounded-md object-cover bg-muted"
+                  />
+                )}
                 <div>
                   <p className="text-xs font-medium text-foreground">{selectedWorkflow.sampleName}</p>
                   <p className="text-[10px] text-muted-foreground">Sample product</p>
@@ -268,11 +283,15 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
             </Button>
             <Button
               onClick={handleConfirmProduct}
-              disabled={!selectedProductId}
+              disabled={!selectedProductId || isNavigating}
               size="sm"
               className="gap-1.5"
             >
-              Continue <ArrowRight className="w-3.5 h-3.5" />
+              {isNavigating ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...</>
+              ) : (
+                <>Continue <ArrowRight className="w-3.5 h-3.5" /></>
+              )}
             </Button>
           </div>
         </>
