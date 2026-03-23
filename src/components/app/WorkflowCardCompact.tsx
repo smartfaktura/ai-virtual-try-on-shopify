@@ -69,13 +69,17 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       </div>
 
       {/* Content */}
-      <div className={cn("flex flex-col gap-2 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>
+      <div className={cn("flex flex-col gap-1 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>
         <h3 className={cn(
           "font-bold tracking-tight leading-tight",
-          (modalCompact || mobileCompact) ? "text-xs" : "text-sm"
+          (modalCompact || mobileCompact) ? "text-[11px]" : "text-sm"
         )}>
-          {workflow.name}
+          {displayName || workflow.name}
         </h3>
+
+        {modalCompact && subtitle && (
+          <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">{subtitle}</p>
+        )}
 
         {!mobileCompact && !modalCompact && (
           <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
