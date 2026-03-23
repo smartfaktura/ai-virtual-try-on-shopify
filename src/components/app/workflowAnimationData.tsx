@@ -64,6 +64,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Product Listing Set': {
     background: listingResult,
+    objectPosition: 'center 40%',
     elements: [
       {
         type: 'product', image: listingProduct, label: 'Serum', sublabel: 'Product',
