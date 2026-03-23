@@ -520,6 +520,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Discover */}
+      <DashboardDiscoverSection />
+
       {/* Your AI Studio Team */}
       <DashboardTeamCarousel />
 
