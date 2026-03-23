@@ -423,14 +423,20 @@ export default function Dashboard() {
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        <DashboardPersonalizationHero selected={selectedCategory} hasGenerations={generatedCount > 0} />
-      </div>
+        <p className="text-lg text-muted-foreground mt-2 max-w-xl">
+          Your AI photography studio. Here's what's happening.
+        </p>
 
-      {/* Personalized pill + Quick Actions */}
-      <div className="flex flex-wrap items-center gap-4">
-        <PersonalizedForPill selected={selectedCategory} onSelect={setSelectedCategory} />
-        <div className="hidden sm:block w-px h-5 bg-border/60" />
-        <DashboardQuickActions />
+        <div className="flex items-center gap-4 mt-5 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span><strong className="text-foreground">{balance}</strong> credits available</span>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => setStartModalOpen(true)}>
+            Start with a Workflow
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Tip Card */}
