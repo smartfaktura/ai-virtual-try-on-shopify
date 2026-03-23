@@ -481,6 +481,9 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Find & Recreate */}
+      <DashboardDiscoverSection />
+
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
 
