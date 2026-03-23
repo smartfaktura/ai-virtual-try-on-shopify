@@ -174,5 +174,6 @@ export function UpcomingDropsCard() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
