@@ -276,11 +276,15 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
             </Button>
             <Button
               onClick={handleConfirmProduct}
-              disabled={!selectedProductId}
+              disabled={!selectedProductId || isNavigating}
               size="sm"
               className="gap-1.5"
             >
-              Continue <ArrowRight className="w-3.5 h-3.5" />
+              {isNavigating ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...</>
+              ) : (
+                <>Continue <ArrowRight className="w-3.5 h-3.5" /></>
+              )}
             </Button>
           </div>
         </>
