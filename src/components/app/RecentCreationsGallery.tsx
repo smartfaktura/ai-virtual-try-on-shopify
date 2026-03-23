@@ -160,11 +160,6 @@ export function RecentCreationsGallery() {
     }
   }, [isMobile, activeItemId, openItem]);
 
-  const handleContainerClick = useCallback(() => {
-    if (isMobile && activeItemId) {
-      setActiveItemId(null);
-    }
-  }, [isMobile, activeItemId]);
 
   if (isLoading) {
     return (
