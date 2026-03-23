@@ -207,6 +207,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           />
         ))}
       </div>
+      <p className="text-xs text-muted-foreground/60 text-center pt-1">No setup. No photoshoot. Just results.</p>
       <div className="flex justify-center">
         <Button
           variant="ghost"
