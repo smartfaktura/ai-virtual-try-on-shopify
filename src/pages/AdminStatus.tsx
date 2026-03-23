@@ -152,6 +152,51 @@ export default function AdminStatus() {
         </div>
       </div>
 
+      {/* Workflow Usage Breakdown */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="font-semibold text-foreground">Workflow Usage</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">All-time breakdown by workflow type</p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Workflow</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Completed</TableHead>
+              <TableHead className="text-right">Success Rate</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {platformLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 w-32 bg-muted rounded animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-12 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                  <TableCell><div className="h-4 w-12 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                  <TableCell><div className="h-4 w-16 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : platformStats?.workflows_breakdown?.length ? (
+              platformStats.workflows_breakdown.map((w) => (
+                <TableRow key={w.name}>
+                  <TableCell className="font-medium text-sm">{w.name}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{w.total}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{w.completed}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {w.total > 0 ? `${Math.round((w.completed / w.total) * 100)}%` : '—'}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No data</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
       {/* Time range toggle + refresh */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
