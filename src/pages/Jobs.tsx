@@ -92,7 +92,7 @@ export default function Jobs() {
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
+  const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
   const items = data?.pages.flatMap(p => p.items) ?? [];
   const { lastCompletedAt } = useGenerationQueue();
   const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
