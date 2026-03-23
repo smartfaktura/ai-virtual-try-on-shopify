@@ -956,7 +956,7 @@ export default function Freestyle() {
           ? (filterVisible(mockTryOnPoses).find(s => s.poseId === img.sceneId) || customScenePoses.find(s => s.poseId === img.sceneId))
           : null;
         const resolvedProduct = img.productId ? products.find(p => p.id === img.productId) : null;
-        const nameParts = [resolvedModel?.name, resolvedScene?.label].filter(Boolean);
+        const nameParts = [resolvedModel?.name, resolvedScene?.name].filter(Boolean);
         const dynamicLabel = nameParts.length > 0
           ? nameParts.join(' · ')
           : resolvedProduct?.title
