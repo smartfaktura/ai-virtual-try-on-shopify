@@ -19,6 +19,7 @@ import type { Workflow } from '@/types/workflow';
 const WORKFLOW_OPTIONS = [
   {
     name: 'Product Editorial',
+    displayName: 'Product Editorial Workflow',
     slug: 'product-listing-set',
     subtitle: 'Turn your product into a campaign',
     sampleId: 'sample_listing_ring',
@@ -27,6 +28,7 @@ const WORKFLOW_OPTIONS = [
   },
   {
     name: 'Virtual Try-On',
+    displayName: 'Virtual Try-On Workflow',
     slug: 'virtual-try-on-set',
     subtitle: 'See your product on real people',
     sampleId: 'sample_tryon_crop_top',
@@ -35,6 +37,7 @@ const WORKFLOW_OPTIONS = [
   },
   {
     name: 'UGC / Selfie',
+    displayName: 'UGC / Selfie Workflow',
     slug: 'selfie-ugc-set',
     subtitle: 'Create content that feels real & social',
     sampleId: 'sample_ugc_ice_roller',
@@ -202,6 +205,8 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           <WorkflowCardCompact
             key={wf.slug}
             workflow={wf}
+            displayName={WORKFLOW_OPTIONS[i].displayName}
+            subtitle={WORKFLOW_OPTIONS[i].subtitle}
             onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
             modalCompact
           />
