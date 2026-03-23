@@ -528,16 +528,18 @@ export default function Dashboard() {
           } : undefined}
           tooltip="Pick up where you left off"
         />
-        <MetricCard
-          title="Top Style"
-          icon={Palette}
-          description={topWorkflow?.name || 'Generate to discover'}
-          action={topWorkflow ? {
-            label: 'Recreate',
-            onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
-          } : undefined}
-          tooltip="Your most-used workflow based on completed jobs"
-        />
+        <div className="hidden md:block">
+          <MetricCard
+            title="Top Style"
+            icon={Palette}
+            description={topWorkflow?.name || 'Generate to discover'}
+            action={topWorkflow ? {
+              label: 'Recreate',
+              onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
+            } : undefined}
+            tooltip="Your most-used workflow based on completed jobs"
+          />
+        </div>
       </div>
 
       {/* Steal This Look */}
