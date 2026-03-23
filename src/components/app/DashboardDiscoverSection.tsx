@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -75,8 +75,8 @@ export function DashboardDiscoverSection() {
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+  const [visibleCount, setVisibleCount] = useState(16);
 
-  // Fetch user's product categories for personalized default
   const { data: profileCats } = useQuery({
     queryKey: ['dashboard-profile-cats', user?.id],
     queryFn: async () => {
@@ -102,17 +102,31 @@ export function DashboardDiscoverSection() {
 
   const activeCategory = selectedCategory ?? defaultCategory;
 
+  // Reset visible count when category changes
+  useEffect(() => setVisibleCount(16), [activeCategory]);
+
+  // Reorder categories: put user's preferred category right after "All"
+  const orderedCategories = useMemo(() => {
+    if (defaultCategory === 'all') return CATEGORIES;
+    const preferred = CATEGORIES.find(c => c.id === defaultCategory);
+    if (!preferred) return CATEGORIES;
+    const rest = CATEGORIES.filter(c => c.id !== 'all' && c.id !== defaultCategory);
+    return [CATEGORIES[0], preferred, ...rest];
+  }, [defaultCategory]);
+
   const allItems = useMemo<DiscoverItem[]>(
     () => presets.map((p) => ({ type: 'preset' as const, data: p })),
     [presets]
   );
 
   const filtered = useMemo(() => {
-    const items = activeCategory === 'all'
+    return activeCategory === 'all'
       ? allItems
       : allItems.filter((item) => itemMatchesProductCategory(item, activeCategory));
-    return items.slice(0, 16);
   }, [allItems, activeCategory]);
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visibleCount;
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
@@ -173,13 +187,13 @@ export function DashboardDiscoverSection() {
       </div>
 
       <DiscoverCategoryBar
-        categories={CATEGORIES}
+        categories={orderedCategories}
         selectedCategory={activeCategory}
         onSelectCategory={setSelectedCategory}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-        {filtered.map((item) => (
+        {visible.map((item) => (
           <DiscoverCard
             key={item.type === 'preset' ? item.data.id : item.data.poseId}
             item={item}
@@ -192,6 +206,14 @@ export function DashboardDiscoverSection() {
           />
         ))}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" size="sm" onClick={() => setVisibleCount(c => c + 16)}>
+            Load more
+          </Button>
+        </div>
+      )}
 
       <DiscoverDetailModal
         item={selectedItem}
