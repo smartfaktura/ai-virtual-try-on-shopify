@@ -1,31 +1,43 @@
 
 
-# Fix Metric Cards: Equal Height, Better Hover, Value Fitting, Mobile Tooltip
+# Fix Metric Cards: Compact Size, Brand Fonts, Hover as External Popover
 
 ## Problems
-1. Hover tooltip has cramped background that wraps awkwardly with small space
-2. Cards are different heights (action cards vs value cards)
-3. Large values like €42,930 don't fit well
-4. No hover on mobile — tooltip info is invisible
+1. Cards are too tall (`min-h-[160px] sm:min-h-[180px]`) — way too much vertical space
+2. Font styling doesn't match VOVV.AI brand (should use the project's default `font-sans` / tracking-tight, not oversized display text)
+3. Hover tooltip renders inside the card, making it bloated — should render as a floating popover box that appears beside/below the card on hover
+4. On mobile, the inline tooltip adds unwanted height
 
 ## Changes
 
-### `src/components/app/MetricCard.tsx`
+### 1. `src/components/app/MetricCard.tsx` — Full rework
 
-1. **Equal card heights**: Add `min-h-[160px] sm:min-h-[180px]` to the outer card container so all 5 cards match height regardless of content type.
+**Make cards compact**: Remove `min-h-[160px] sm:min-h-[180px]`. Use `p-4 sm:p-5` padding instead of `p-6 sm:p-7`. Cards should be tight and data-focused.
 
-2. **Fix hover tooltip layout**: Replace `absolute -bottom-1 -left-1 -right-1` with proper positioning inside the card. Use `absolute bottom-0 left-0 right-0 rounded-b-2xl px-5 py-3 bg-card/95 backdrop-blur-md border-t border-border/30` — more padding, card-colored background instead of secondary, no negative offsets.
+**Brand typography**: Value uses `text-lg sm:text-xl font-semibold tracking-tight` — elegant, not oversized. Title uses `text-[10px] sm:text-[11px] font-medium tracking-widest uppercase text-muted-foreground`. Suffix uses `text-[10px] text-muted-foreground/60 mt-0.5`.
 
-3. **Value auto-sizing**: For values, use responsive font sizing: `text-xl sm:text-2xl lg:text-3xl` so large numbers like €42,930 fit without breaking. Add `whitespace-nowrap` to prevent line breaks.
+**Hover as external popover**: Remove the inline tooltip div entirely. Wrap the card in a Popover (from Radix) with `openOnHover` behavior — on hover, a small floating box appears below the card showing the team avatar + explainer. On mobile, use click-to-open instead.
 
-4. **Mobile: show tooltip inline instead of hover**: On mobile (no hover), show the branded tooltip always-visible as a subtle inline row at the bottom of the card instead of hover-reveal. Use a media query approach: `opacity-100 sm:opacity-0 sm:group-hover:opacity-100` — always visible on mobile, hover-reveal on desktop. Make the mobile version more compact (smaller avatar, shorter text).
+Implementation: Use `onMouseEnter`/`onMouseLeave` to control a `useState` for open state, with the Popover positioned below the card. On mobile, the Popover opens on tap (click the info icon).
 
-5. **Add bottom padding** to card content to reserve space for the tooltip so it doesn't overlap the value/action content. Use `pb-8 sm:pb-2` (more padding on mobile since tooltip is always visible there).
+```text
+┌────────────────┐
+│ € COST SAVED   │
+│ €42,930        │
+│ vs photoshoots │
+└────────────────┘
+  ┌──────────────────────────┐
+  │ 🟡 Omar · Based on €30  │  ← floating popover on hover
+  │    avg per product photo │
+  └──────────────────────────┘
+```
 
-### `src/pages/Dashboard.tsx`
+**Remove all inline tooltip rendering** — no border-t, no mt-auto, no opacity transitions inside the card.
 
-No changes needed — just the MetricCard component fixes.
+### 2. `src/pages/Dashboard.tsx`
+
+No prop changes needed — just the MetricCard component handles the new popover behavior.
 
 ### Files
-- `src/components/app/MetricCard.tsx`
+- `src/components/app/MetricCard.tsx` — compact sizing, brand fonts, hover popover
 
