@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
