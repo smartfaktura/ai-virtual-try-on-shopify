@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
@@ -29,7 +29,7 @@ export default function Auth() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; terms?: string }>({});
   const [signupComplete, setSignupComplete] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
@@ -39,6 +39,7 @@ export default function Auth() {
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [marketingOptIn, setMarketingOptIn] = useState(true);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -62,7 +63,7 @@ export default function Auth() {
   if (isLoading || user) return null;
 
   const validate = () => {
-    const errs: { email?: string; password?: string; confirmPassword?: string } = {};
+    const errs: { email?: string; password?: string; confirmPassword?: string; terms?: string } = {};
     if (!email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
     if (!password) errs.password = 'Password is required';
@@ -70,6 +71,7 @@ export default function Auth() {
     if (mode === 'signup') {
       if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
       else if (confirmPassword !== password) errs.confirmPassword = 'Passwords do not match';
+      if (!termsAccepted) errs.terms = 'You must accept the Terms of Service and Privacy Policy';
     }
     return errs;
   };
@@ -494,6 +496,22 @@ export default function Auth() {
                 />
                 {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
               </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="termsAccept"
+                  checked={termsAccepted}
+                  onCheckedChange={(v) => { setTermsAccepted(!!v); setErrors(prev => ({ ...prev, terms: undefined })); }}
+                  className="mt-0.5"
+                />
+                <label htmlFor="termsAccept" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                  I agree to the{' '}
+                  <Link to="/terms-of-service" target="_blank" className="underline text-foreground hover:text-primary">Terms of Service</Link>
+                  {' '}and{' '}
+                  <Link to="/privacy-policy" target="_blank" className="underline text-foreground hover:text-primary">Privacy Policy</Link>
+                </label>
+              </div>
+              {errors.terms && <p className="text-sm text-destructive">{errors.terms}</p>}
 
               <div className="flex items-start space-x-2">
                 <Checkbox
