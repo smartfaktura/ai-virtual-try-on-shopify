@@ -258,6 +258,7 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
       const next = (currentRef.current + 1) % backgrounds.length;
       currentRef.current = next;
       setCurrent(next);
+      setProgressKey((k) => k + 1);
     }, INTERVAL);
     return () => clearInterval(t);
   }, [isActive, backgrounds.length]);
