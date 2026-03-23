@@ -19,6 +19,7 @@ import type { Workflow } from '@/types/workflow';
 const WORKFLOW_OPTIONS = [
   {
     name: 'Product Editorial',
+    displayName: 'Product Editorial Workflow',
     slug: 'product-listing-set',
     subtitle: 'Turn your product into a campaign',
     sampleId: 'sample_listing_ring',
