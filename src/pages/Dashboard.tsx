@@ -325,9 +325,6 @@ export default function Dashboard() {
         {/* What You Can Create — showcase gallery */}
         <RecentCreationsGallery />
 
-        {/* Your AI Studio Team */}
-        <DashboardTeamCarousel />
-
         {/* Two Ways to Create */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
@@ -389,6 +386,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Your AI Studio Team */}
+        <DashboardTeamCarousel />
 
         {/* Feedback Banner */}
         <FeedbackBanner />
@@ -479,9 +479,6 @@ export default function Dashboard() {
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
 
-      {/* Your AI Studio Team */}
-      <DashboardTeamCarousel />
-
       {/* Create */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-foreground tracking-tight">Create</h2>
@@ -518,6 +515,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Your AI Studio Team */}
+      <DashboardTeamCarousel />
 
       {/* Recent Jobs */}
       <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
