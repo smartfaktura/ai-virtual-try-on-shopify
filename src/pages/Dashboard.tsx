@@ -479,9 +479,6 @@ export default function Dashboard() {
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
 
-      {/* Your AI Studio Team */}
-      <DashboardTeamCarousel />
-
       {/* Create */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-foreground tracking-tight">Create</h2>
