@@ -60,11 +60,13 @@ interface Props {
   compact?: boolean;
   /** True when rendered inside the mobile 2-col grid — uses true compact sizes instead of CSS scale */
   mobileCompact?: boolean;
+  /** True when rendered inside a modal — uses same small sizes as mobileCompact */
+  modalCompact?: boolean;
 }
 
 /* ── Floating element renderer ── */
 
-const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact }: { element: SceneElement; compact?: boolean; mobileCompact?: boolean }) {
+const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, modalCompact }: { element: SceneElement; compact?: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
