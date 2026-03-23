@@ -45,7 +45,7 @@ function useScrollArrows(ref: React.RefObject<HTMLDivElement>) {
   return { canScrollLeft, canScrollRight, scrollLeft: () => scrollBy(-1), scrollRight: () => scrollBy(1) };
 }
 
-export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCategory, savedCount }: DiscoverCategoryBarProps) {
+export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCategory, savedCount, hideArrows }: DiscoverCategoryBarProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useScrollArrows(scrollRef);
 
