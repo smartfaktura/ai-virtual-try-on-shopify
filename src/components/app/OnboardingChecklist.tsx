@@ -26,7 +26,7 @@ const steps = [
   {
     key: 'brand',
     title: 'Create Your Brand Profile',
-    description: 'Set your visual style — tone, lighting, colors.',
+    description: 'Set your visual style - tone, lighting, colors.',
     icon: Palette,
     path: '/app/brand-profiles',
     cta: 'Go to Brand Profiles',
