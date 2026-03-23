@@ -126,24 +126,30 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
             <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
               {/* Source + label */}
               <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {isUpscaled ? 'Enhanced' : item.source === 'freestyle' ? 'Freestyle Generation' : 'Generation'}
-                </p>
-                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
-                  {isUpscaled ? 'Enhanced' : item.label}
-                  {upscaleLabel && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3" /> {upscaleLabel}
-                    </span>
-                  )}
-                </h2>
+                {(() => {
+                  const hasSeparator = item.label.includes(' — ');
+                  const smallLabel = isUpscaled ? 'Enhanced' : item.source === 'freestyle' ? 'Freestyle Generation' : hasSeparator ? item.label.split(' — ')[0] : 'Generation';
+                  const heading = isUpscaled ? 'Enhanced' : hasSeparator ? item.label.split(' — ')[1] : item.label;
+                  return (
+                    <>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+                        {smallLabel}
+                      </p>
+                      <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
+                        {heading}
+                        {upscaleLabel && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+                            <Sparkles className="w-3 h-3" /> {upscaleLabel}
+                          </span>
+                        )}
+                      </h2>
+                    </>
+                  );
+                })()}
                 <div className="flex items-center gap-2 pt-0.5">
                   <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
                     {item.date}
                   </span>
-                  {item.quality === 'high' && (
-                    <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
-                  )}
                 </div>
               </div>
 
