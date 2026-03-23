@@ -62,7 +62,7 @@ export default function AddProduct() {
       subtitle={
         isEditing
           ? 'Update your product details and images.'
-          : 'Upload images, import from a URL, or bulk-add via CSV. Each image = one product.'
+          : 'Add your product images to start generating visuals.'
       }
       backAction={{ content: 'Products', onAction: handleDone }}
     >

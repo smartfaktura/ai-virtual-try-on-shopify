@@ -862,6 +862,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               onChange={(e) => setDimensions(e.target.value)}
               maxLength={100}
             />
+            <p className="text-[11px] text-muted-foreground/70 sm:hidden mt-1">
+              Tip: Add real dimensions (e.g. 15×10cm) for realistic scaling in scenes.
+            </p>
           </div>
         </div>
       </div>
