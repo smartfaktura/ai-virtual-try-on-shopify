@@ -54,35 +54,16 @@ const flatResult = getLandingAssetUrl('workflows/workflow-flat-lay.jpg');
 export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Virtual Try-On Set': {
-    background: tryonResult,
-    objectPosition: 'center 20%',
+    mode: 'carousel',
+    background: tryonShowcase1,
+    objectPosition: 'center',
+    backgrounds: [tryonShowcase1, tryonShowcase2, tryonShowcase3, tryonShowcase4, tryonShowcase5, tryonShowcase6],
     recipe: [
       { image: tryonProduct, label: 'Product' },
       { image: tryonModel, label: 'Model' },
-      { image: tryonScene, label: 'Scene' },
     ],
     recipeResult: tryonResult,
-    elements: [
-      {
-        type: 'product', image: tryonProduct, label: 'Crop Top', sublabel: 'Product',
-        icon: <Plus className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
-      },
-      {
-        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
-        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
-      },
-      {
-        type: 'model', image: tryonModel, label: 'Charlotte',
-        icon: <User className="w-3 h-3" />,
-        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
-      },
-      {
-        type: 'scene', image: tryonScene, label: 'Editorial Minimal', sublabel: 'Scene',
-        icon: <MapPin className="w-3 h-3" />,
-        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
-      },
-    ],
+    elements: [],
   },
 
   'Product Listing Set': {

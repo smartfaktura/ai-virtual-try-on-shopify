@@ -265,6 +265,19 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
+      {/* Progress bar */}
+      {isActive && backgrounds.length > 1 && initialLoaded && (
+        <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-white/20">
+          <div
+            key={progressKey}
+            className="h-full bg-white/70"
+            style={{
+              animation: `wf-progress-fill ${INTERVAL}ms linear forwards`,
+            }}
+          />
+        </div>
+      )}
+
       {/* Shimmer placeholder */}
       {!initialLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
