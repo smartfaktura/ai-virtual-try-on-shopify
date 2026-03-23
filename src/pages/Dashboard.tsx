@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
