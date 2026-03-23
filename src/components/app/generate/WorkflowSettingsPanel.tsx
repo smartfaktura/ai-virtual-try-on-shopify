@@ -15,8 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Package, Clock, Palette, Loader2, SlidersHorizontal } from 'lucide-react';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Package, Clock, Palette, Loader2 } from 'lucide-react';
 import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -234,9 +233,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
       {/* Variation Strategy Preview — hidden in mirror selfie final phase */}
       {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
       <Card><CardContent className="p-5 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base font-semibold">
                 {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Style' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
               </h3>
@@ -285,6 +284,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           <Button
             variant="ghost"
             size="sm"
+            className="self-end sm:self-auto shrink-0"
             onClick={() => {
               const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : (variationStrategy?.variations.length || 0);
               const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : paidLimit;
@@ -332,35 +332,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           );
 
           return (
-            <>
-              {/* Mobile: filter popover */}
-              <div className="sm:hidden">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5">
-                      <SlidersHorizontal className="w-3.5 h-3.5" />
-                      Filter
-                      {sceneFilterCategory !== 'all' && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">{sceneFilterCategory}</Badge>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-52 p-2" align="start">
-                    <div className="flex flex-col gap-1">
-                      {filterButtons(() => {
-                        // Close popover by blurring trigger
-                        (document.activeElement as HTMLElement)?.blur();
-                      })}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Desktop: inline pills */}
-              <div className="hidden sm:flex gap-1.5 flex-wrap">
-                {filterButtons()}
-              </div>
-            </>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar flex-wrap sm:flex-wrap">
+              {filterButtons()}
+            </div>
           );
         })()}
 
