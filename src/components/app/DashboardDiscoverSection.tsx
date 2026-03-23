@@ -74,6 +74,7 @@ export function DashboardDiscoverSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
+  const { featuredMap } = useFeaturedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [visibleCount, setVisibleCount] = useState(16);
