@@ -376,26 +376,8 @@ export default function Workflows() {
   return (
     <PageHeader
       title="Workflows"
-      subtitle="Pick a workflow to start generating — or jump to one below."
+      subtitle="Choose a workflow and generate brand-ready visuals instantly."
     >
-      {/* ── Quick-nav pills ── */}
-      {!isLoading && workflows.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {workflows.map((wf) => (
-            <button
-              key={wf.id}
-              onClick={() =>
-                document
-                  .getElementById(`workflow-${wf.id}`)
-                  ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-              }
-              className="px-3 py-1.5 text-xs font-medium rounded-full border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors"
-            >
-              {wf.name}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* ── Activity section ── */}
       {hasActivity && (
