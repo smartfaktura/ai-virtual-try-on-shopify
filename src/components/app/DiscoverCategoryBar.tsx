@@ -52,16 +52,18 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
   return (
     <div className="flex items-center">
       {/* Left arrow — desktop only, collapses when hidden */}
-      <button
-        onClick={scrollLeft}
-        className={cn(
-          'hidden sm:flex shrink-0 p-1 transition-all duration-200',
-          canScrollLeft ? 'opacity-100 w-6' : 'opacity-0 w-0 overflow-hidden pointer-events-none'
-        )}
-        aria-label="Scroll left"
-      >
-        <ChevronLeft className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
-      </button>
+      {!hideArrows && (
+        <button
+          onClick={scrollLeft}
+          className={cn(
+            'hidden sm:flex shrink-0 p-1 transition-all duration-200',
+            canScrollLeft ? 'opacity-100 w-6' : 'opacity-0 w-0 overflow-hidden pointer-events-none'
+          )}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
+        </button>
+      )}
 
       {/* Scrollable categories */}
       <div
