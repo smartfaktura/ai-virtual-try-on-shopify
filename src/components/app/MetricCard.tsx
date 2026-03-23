@@ -27,18 +27,9 @@ export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, o
 
   const content = (
     <div className="p-6 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
-          <p className="text-sm text-muted-foreground font-medium">{title}</p>
-        </div>
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/20" />
-        ) : Icon ? (
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className="w-4 h-4 text-primary" />
-          </div>
-        ) : null}
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+        <p className="text-sm text-muted-foreground font-medium">{title}</p>
       </div>
       <div className="flex items-end gap-1.5">
         <p className="text-3xl font-extrabold text-foreground tracking-tight">{value}</p>
