@@ -1,49 +1,93 @@
 
 
-# Fix "Similar" Button in Steal This Look to Pass Context to Discover
-
-## Problem
-When clicking "Similar" in the Dashboard's Steal This Look modal, it navigates to `/app/discover` without passing the selected item's scene info. The Discover page uses `similarTo` state to filter, but since it's a fresh navigation, that state is empty.
-
-## Solution
-Pass the scene name as a URL query parameter when navigating, and have the Discover page read it on mount to initialize the `similarTo` filter.
+# Revamp Dashboard Metrics: Value-Driven 5-Column Cards with Tooltips
 
 ## Changes
 
-### 1. `src/components/app/DashboardDiscoverSection.tsx` (line 249-251)
-Update `onSearchSimilar` to pass scene context via URL:
+### 1. Remove "credits available" line from header (`src/pages/Dashboard.tsx`, lines 425-429)
+Delete the `<div className="flex items-center gap-2 text-sm">` block showing "882 credits available" under the subtitle.
+
+### 2. Replace MetricCard component (`src/components/app/MetricCard.tsx`)
+Redesign to support two card variants:
+- **Stat card**: compact card with icon, title, value, suffix, and an info tooltip
+- **Action card**: compact card with icon, title, description, and a CTA button
+
+New props:
 ```tsx
-onSearchSimilar={() => {
-  if (!selectedItem) return;
-  const sceneName = selectedItem.type === 'preset' ? selectedItem.data.scene_name : selectedItem.data.name;
-  setSelectedItem(null);
-  navigate(`/app/discover${sceneName ? `?similar=${encodeURIComponent(sceneName)}` : ''}`);
-}}
+interface MetricCardProps {
+  title: string;
+  value?: string | number;
+  suffix?: string;
+  icon?: LucideIcon;
+  tooltip?: string;        // info tooltip explainer
+  loading?: boolean;
+  onClick?: () => void;
+  progress?: number;
+  progressColor?: string;
+  action?: { label: string; onClick: () => void };  // CTA button
+  description?: string;    // for action cards (replaces value)
+}
 ```
 
-### 2. `src/pages/Discover.tsx`
-On mount, read `?similar=` from URL search params. If present, find the matching item from `allItems` and set it as `similarTo`:
+Design: smaller padding (`p-4 sm:p-5`), smaller value (`text-2xl`), tooltip icon (Info circle) next to title that shows explainer on hover via Radix Tooltip.
+
+### 3. Replace metrics grid in Dashboard (`src/pages/Dashboard.tsx`, lines 456-489)
+
+Change from 4-column to 5-column: `grid-cols-2 md:grid-cols-3 lg:grid-cols-5`
+
+**5 new cards:**
+
+1. **Cost Saved** — `€{generatedCount * 30}` / "vs traditional photoshoots" / tooltip: "Based on €30 average cost per professional product photo"
+2. **Time Saved** — `{Math.round(generatedCount * 20 / 60)}h` / "no shooting or editing needed" / tooltip: "Estimated 20 min saved per image vs traditional workflow"
+3. **Credits Remaining** — `{balance}` / "available" / onClick → openBuyModal / progress bar / tooltip: "Credits refresh monthly based on your plan"
+4. **Continue Last** — action card showing last workflow name / "Continue" button → navigate to last workflow
+5. **Top Style** — action card showing most-used workflow/category / "Recreate" button → navigate
+
+For cards 4 and 5, add a query to fetch the last completed job's workflow name and the most-used workflow:
 
 ```tsx
-// After allItems is populated, check URL for similar param
-useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const similarScene = params.get('similar');
-  if (similarScene && allItems.length > 0 && !similarTo) {
-    const match = allItems.find(i =>
-      (i.type === 'preset' ? i.data.scene_name : i.data.name) === similarScene
-    );
-    if (match) {
-      setSimilarTo(match);
-      // Clean up URL
-      params.delete('similar');
-      navigate({ search: params.toString() }, { replace: true });
-    }
-  }
-}, [allItems, location.search]);
+const { data: lastJob } = useQuery({
+  queryKey: ['dashboard-last-job', user?.id],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('generation_jobs')
+      .select('workflows(name, slug)')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data;
+  },
+  enabled: !!user,
+  staleTime: 5 * 60 * 1000,
+});
+
+const { data: topWorkflow } = useQuery({
+  queryKey: ['dashboard-top-workflow', user?.id],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('generation_jobs')
+      .select('workflow_id, workflows(name, slug)')
+      .eq('status', 'completed');
+    // Count occurrences client-side, return most frequent
+    const counts: Record<string, { count: number; name: string; slug: string }> = {};
+    (data || []).forEach(j => {
+      const wf = j.workflows as any;
+      if (wf?.name) {
+        const key = wf.name;
+        if (!counts[key]) counts[key] = { count: 0, name: wf.name, slug: wf.slug };
+        counts[key].count++;
+      }
+    });
+    const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
+    return sorted[0] || null;
+  },
+  enabled: !!user,
+  staleTime: 10 * 60 * 1000,
+});
 ```
 
 ### Files
-- `src/components/app/DashboardDiscoverSection.tsx` — pass scene name in URL
-- `src/pages/Discover.tsx` — read `similar` param on mount, initialize filter
+- `src/components/app/MetricCard.tsx` — redesign with tooltip support and action variant
+- `src/pages/Dashboard.tsx` — remove credits line, add 5 new metric cards with queries
 
