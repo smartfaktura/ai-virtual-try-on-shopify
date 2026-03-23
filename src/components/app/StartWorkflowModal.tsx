@@ -18,25 +18,25 @@ import type { Workflow } from '@/types/workflow';
 
 const WORKFLOW_OPTIONS = [
   {
-    name: 'Virtual Try-On',
-    slug: 'virtual-try-on-set',
-    subtitle: 'Show your product on real models',
-    sampleId: 'sample_tryon_crop_top',
-    sampleName: 'Ribbed Crop Top',
-    sampleImage: '/images/samples/sample-crop-top.png',
-  },
-  {
     name: 'Product Editorial',
     slug: 'product-listing-set',
-    subtitle: 'High-end lifestyle & studio shots',
+    subtitle: 'Turn your product into a campaign',
     sampleId: 'sample_listing_ring',
     sampleName: 'Diamond Engagement Ring',
     sampleImage: '/images/samples/sample-ring.png',
   },
   {
-    name: 'Selfie / UGC Set',
+    name: 'Virtual Try-On',
+    slug: 'virtual-try-on-set',
+    subtitle: 'See your product on real people',
+    sampleId: 'sample_tryon_crop_top',
+    sampleName: 'Ribbed Crop Top',
+    sampleImage: '/images/samples/sample-crop-top.png',
+  },
+  {
+    name: 'UGC / Selfie',
     slug: 'selfie-ugc-set',
-    subtitle: 'High-quality content like UGC creators',
+    subtitle: 'Create content that feels real & social',
     sampleId: 'sample_ugc_ice_roller',
     sampleName: 'Ice Roller',
     sampleImage: '/images/samples/sample-ice-roller.png',
@@ -177,8 +177,8 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   // Mock Workflow objects for the animated cards
   const WORKFLOW_CARDS: Workflow[] = WORKFLOW_OPTIONS.map((wf) => ({
     id: wf.slug,
-    name: wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
-      : wf.slug === 'product-listing-set' ? 'Product Listing Set'
+    name: wf.slug === 'product-listing-set' ? 'Product Listing Set'
+      : wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
       : 'Selfie / UGC Set',
     slug: wf.slug,
     description: wf.subtitle,
@@ -207,6 +207,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           />
         ))}
       </div>
+      <p className="text-xs text-muted-foreground/60 text-center pt-1">No setup. No photoshoot. Just results.</p>
       <div className="flex justify-center">
         <Button
           variant="ghost"
@@ -395,13 +396,13 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   );
 
   const stepTitle = step === 'workflow'
-    ? 'What do you want to create?'
+    ? "Let's create your first visuals"
     : step === 'upload'
       ? 'Upload your product'
       : 'Select a product';
 
   const stepDesc = step === 'workflow'
-    ? 'Choose a workflow to get started'
+    ? "Pick a style — we'll handle the rest"
     : step === 'upload'
       ? 'Add a product photo to begin'
       : hasProducts
