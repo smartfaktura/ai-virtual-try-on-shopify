@@ -86,7 +86,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, m
     : undefined;
 
   // Mobile compact: use genuinely smaller elements instead of CSS scale
-  if (mobileCompact) {
+  if (mobileCompact || modalCompact) {
     switch (element.type) {
       case 'product':
       case 'scene':

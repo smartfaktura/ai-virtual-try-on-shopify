@@ -41,20 +41,23 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
     <Card
       id={id}
       ref={ref}
-      className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300 flex flex-col"
+      className={cn(
+        "group overflow-hidden transition-shadow duration-300 flex flex-col",
+        modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
+      )}
     >
       {/* Thumbnail — taller on mobile 2-col for breathing room */}
       <div className={cn(
         "relative w-full overflow-hidden",
         modalCompact ? "aspect-square" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
       )}>
-        {scene && !modalCompact ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
+        {scene ? (
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} modalCompact={modalCompact} />
         ) : (
           <img
-            src={scene?.background || workflow.preview_image_url || imgFallback}
+            src={workflow.preview_image_url || imgFallback}
             alt={workflow.name}
-            className="w-full h-full object-contain bg-muted/50"
+            className="w-full h-full object-cover bg-muted/50"
           />
         )}
       </div>

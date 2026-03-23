@@ -374,7 +374,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[640px] rounded-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[720px] rounded-2xl p-0 gap-0 overflow-hidden">
         <div className="px-6 pt-6 pb-2">
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-lg font-semibold tracking-tight">{stepTitle}</DialogTitle>
