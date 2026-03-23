@@ -155,6 +155,57 @@ export default function Freestyle() {
   const isLoading = isEnqueuing || isProcessing || isUploading;
   const { user } = useAuth();
 
+  // Sync guide dismissal with user profile in DB
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('profiles')
+      .select('settings')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        const dismissed = (data?.settings as Record<string, unknown>)?.freestyleGuideDismissed === true;
+        if (dismissed) {
+          setShowGuide(false);
+          localStorage.setItem('freestyle_guide_dismissed', 'true');
+        } else if (!localStorage.getItem('freestyle_guide_dismissed')) {
+          setShowGuide(true);
+        }
+      });
+  }, [user?.id]);
+
+  const dismissGuide = useCallback(() => {
+    setShowGuide(false);
+    localStorage.setItem('freestyle_guide_dismissed', 'true');
+    if (user?.id) {
+      supabase
+        .from('profiles')
+        .select('settings')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          const existing = (data?.settings as Record<string, unknown>) || {};
+          supabase
+            .from('profiles')
+            .update({ settings: { ...existing, freestyleGuideDismissed: true } })
+            .eq('user_id', user.id)
+            .then(() => {});
+        });
+    }
+  }, [user?.id]);
+
+  const handleGuideNext = useCallback(() => {
+    if (guideStep >= GUIDE_STEPS.length - 1) {
+      dismissGuide();
+    } else {
+      setGuideStep(s => s + 1);
+    }
+  }, [guideStep, dismissGuide]);
+
+  const handleGuideDismiss = useCallback(() => {
+    dismissGuide();
+  }, [dismissGuide]);
+
   // Detect workflow job completion to show "View Library" banner
   useEffect(() => {
     const prev = prevActiveJobRef.current;
