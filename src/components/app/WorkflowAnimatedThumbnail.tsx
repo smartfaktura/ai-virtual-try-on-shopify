@@ -721,7 +721,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
   }, [isActive, totalDuration, isCarousel, isUpscale, isStaging]);
 
   // Delegate to specialized components
-  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} mobileCompact={mobileCompact} />;
+  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} mobileCompact={mobileCompact} modalCompact={modalCompact} />;
   if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
   if (isStaging) return <StagingThumbnail scene={scene} isActive={isActive} />;
 
