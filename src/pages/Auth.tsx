@@ -64,7 +64,7 @@ export default function Auth() {
   if (isLoading || user) return null;
 
   const validate = () => {
-    const errs: { email?: string; password?: string; confirmPassword?: string } = {};
+    const errs: { email?: string; password?: string; confirmPassword?: string; terms?: string } = {};
     if (!email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
     if (!password) errs.password = 'Password is required';
@@ -72,6 +72,7 @@ export default function Auth() {
     if (mode === 'signup') {
       if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
       else if (confirmPassword !== password) errs.confirmPassword = 'Passwords do not match';
+      if (!termsAccepted) errs.terms = 'You must accept the Terms of Service and Privacy Policy';
     }
     return errs;
   };
