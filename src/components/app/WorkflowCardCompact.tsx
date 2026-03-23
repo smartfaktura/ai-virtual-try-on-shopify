@@ -48,11 +48,11 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         "relative w-full overflow-hidden",
         modalCompact ? "aspect-square" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
       )}>
-        {scene ? (
+        {scene && !modalCompact ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
         ) : (
           <img
-            src={workflow.preview_image_url || imgFallback}
+            src={scene?.background || workflow.preview_image_url || imgFallback}
             alt={workflow.name}
             className="w-full h-full object-cover"
           />
