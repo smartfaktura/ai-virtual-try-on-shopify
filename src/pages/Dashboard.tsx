@@ -531,6 +531,7 @@ export default function Dashboard() {
         <div className="hidden md:block">
           <MetricCard
             title="Top Style"
+            popoverAlign="end"
             icon={Palette}
             description={topWorkflow?.name || 'Generate to discover'}
             action={topWorkflow ? {

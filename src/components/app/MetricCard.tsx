@@ -25,9 +25,10 @@ interface MetricCardProps {
   progressColor?: string;
   action?: { label: string; onClick: () => void };
   description?: string;
+  popoverAlign?: 'start' | 'center' | 'end';
 }
 
-export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description }: MetricCardProps) {
+export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description, popoverAlign }: MetricCardProps) {
   const [open, setOpen] = useState(false);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -124,7 +125,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
-        align="start"
+        align={popoverAlign || 'start'}
         sideOffset={6}
         className="w-[240px] p-3 rounded-xl shadow-lg border border-border/60"
         onMouseEnter={handleMouseEnter}
