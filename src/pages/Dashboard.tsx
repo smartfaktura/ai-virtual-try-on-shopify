@@ -3,7 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw } from 'lucide-react';
+import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers, RefreshCw, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
