@@ -1,59 +1,31 @@
 
 
-# Apple-Inspired Metric Cards Redesign
+# Fix Metric Cards: Equal Height, Better Hover, Value Fitting, Mobile Tooltip
 
-## Design Philosophy
-Generous whitespace, large readable numbers, suffix text below the value (not beside it), no visible info icon by default — tooltip appears on card hover. Team avatar appears only inside the hover popover. Clean vertical stacking.
+## Problems
+1. Hover tooltip has cramped background that wraps awkwardly with small space
+2. Cards are different heights (action cards vs value cards)
+3. Large values like €42,930 don't fit well
+4. No hover on mobile — tooltip info is invisible
 
 ## Changes
 
-### 1. `src/components/app/MetricCard.tsx` — Complete redesign
+### `src/components/app/MetricCard.tsx`
 
-**Layout**: Vertical stack with generous padding (`p-6 sm:p-7`). No cramped horizontal layouts.
+1. **Equal card heights**: Add `min-h-[160px] sm:min-h-[180px]` to the outer card container so all 5 cards match height regardless of content type.
 
-```text
-┌─────────────────────────────┐
-│                             │
-│  € Cost Saved               │
-│                             │
-│  €2,640                     │
-│  vs traditional photoshoots │
-│                             │
-│  ━━━━━━━━░░░ (if progress)  │
-│                             │
-│  [Continue →] (if action)   │
-│                             │
-└─────────────────────────────┘
-```
+2. **Fix hover tooltip layout**: Replace `absolute -bottom-1 -left-1 -right-1` with proper positioning inside the card. Use `absolute bottom-0 left-0 right-0 rounded-b-2xl px-5 py-3 bg-card/95 backdrop-blur-md border-t border-border/30` — more padding, card-colored background instead of secondary, no negative offsets.
 
-Key changes:
-- **Title row**: Icon + title only, no visible `(i)` icon. Remove the Info icon from default view entirely.
-- **Value**: `text-2xl sm:text-3xl font-bold tracking-tight` — large, never truncated. Remove `truncate` class.
-- **Suffix**: Rendered on its own line below the value as `text-xs text-muted-foreground mt-1` — not crammed inline. Full sentence visible ("vs traditional photoshoots", "no shooting or editing needed").
-- **Description** (action cards): `text-sm sm:text-base font-medium` on its own line.
-- **Action button**: Slightly larger `h-8 px-4 text-sm`.
-- **Hover interaction**: On card hover, show a subtle bottom bar/popover with the team avatar + explainer. Use CSS group-hover to reveal a small branded footer strip inside the card:
-  ```text
-  ┌─────────────────────────────┐
-  │  ...card content...         │
-  │                             │
-  │  [avatar] Omar · €30 avg   │  ← appears on hover
-  │         per product photo   │
-  └─────────────────────────────┘
-  ```
-  This replaces the popover entirely — the tooltip is now an inline reveal on hover using `opacity-0 group-hover:opacity-100 transition-opacity duration-300`.
-- **Card container**: `group rounded-2xl border border-border/60 bg-card hover:border-border hover:shadow-md transition-all duration-300` — subtle border that strengthens on hover.
-- **Loading state**: Match new padding.
+3. **Value auto-sizing**: For values, use responsive font sizing: `text-xl sm:text-2xl lg:text-3xl` so large numbers like €42,930 fit without breaking. Add `whitespace-nowrap` to prevent line breaks.
 
-### 2. `src/pages/Dashboard.tsx` (lines 494-543)
+4. **Mobile: show tooltip inline instead of hover**: On mobile (no hover), show the branded tooltip always-visible as a subtle inline row at the bottom of the card instead of hover-reveal. Use a media query approach: `opacity-100 sm:opacity-0 sm:group-hover:opacity-100` — always visible on mobile, hover-reveal on desktop. Make the mobile version more compact (smaller avatar, shorter text).
 
-- Keep all 5 cards and their data as-is
-- Change suffix text for clarity:
-  - "vs photoshoots" → "vs traditional photoshoots"  
-  - "no shooting needed" → "no shooting or editing needed"
-- Ensure `toLocaleString()` on cost value so large numbers display properly
+5. **Add bottom padding** to card content to reserve space for the tooltip so it doesn't overlap the value/action content. Use `pb-8 sm:pb-2` (more padding on mobile since tooltip is always visible there).
+
+### `src/pages/Dashboard.tsx`
+
+No changes needed — just the MetricCard component fixes.
 
 ### Files
-- `src/components/app/MetricCard.tsx` — full Apple-inspired redesign with hover-reveal branded footer
-- `src/pages/Dashboard.tsx` — update suffix text for readability
+- `src/components/app/MetricCard.tsx`
 
