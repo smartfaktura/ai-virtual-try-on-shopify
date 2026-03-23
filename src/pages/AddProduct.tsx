@@ -66,7 +66,9 @@ export default function AddProduct() {
       }
       backAction={{ content: 'Products', onAction: handleDone }}
     >
-      <ProductUploadTips />
+      <div className="hidden sm:block">
+        <ProductUploadTips />
+      </div>
 
       {isEditing ? (
         <div>
