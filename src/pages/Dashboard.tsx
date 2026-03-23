@@ -356,8 +356,21 @@ export default function Dashboard() {
   // Credit usage progress (out of 300 monthly quota)
   const creditUsageProgress = Math.round(((300 - balance) / 300) * 100);
 
+  // --- RESOLVING STATE — neutral placeholder while we determine mode ---
+  if (dashboardMode === 'resolving') {
+    return (
+      <div className="space-y-6 sm:space-y-10">
+        <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
+        <div>
+          <div className="h-10 w-64 bg-muted/40 rounded-lg animate-pulse" />
+          <div className="h-5 w-96 bg-muted/30 rounded-lg animate-pulse mt-3" />
+        </div>
+      </div>
+    );
+  }
+
   // --- FIRST-RUN DASHBOARD ---
-  if (isNewUser) {
+  if (dashboardMode === 'new') {
     return (
       <div className="space-y-6 sm:space-y-10">
         <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
