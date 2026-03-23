@@ -25,6 +25,7 @@ interface MetricCardProps {
   progressColor?: string;
   action?: { label: string; onClick: () => void };
   description?: string;
+  popoverAlign?: 'start' | 'center' | 'end';
 }
 
 export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description }: MetricCardProps) {
