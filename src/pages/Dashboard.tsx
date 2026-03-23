@@ -251,6 +251,23 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  // Lifted category state for syncing headline with pill
+  const [selectedCategory, setSelectedCategory] = useState('any');
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('product_categories')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        const cats = (data?.product_categories as string[]) ?? [];
+        const primary = cats.includes('any') || cats.length === 0 ? 'any' : cats[0];
+        setSelectedCategory(primary);
+      });
+  }, [user]);
+
   // Critical error state — show recovery UI instead of blank skeletons
   const hasCriticalError = profileError && jobsError;
 
