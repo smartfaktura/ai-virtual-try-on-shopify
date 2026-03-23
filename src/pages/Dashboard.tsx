@@ -391,8 +391,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Discover */}
-        <DashboardDiscoverSection />
 
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
