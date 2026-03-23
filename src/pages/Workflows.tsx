@@ -423,24 +423,6 @@ export default function Workflows() {
       )}
 
       {/* ── Layout switcher (when no activity section shown) ── */}
-      {!hasActivity && (
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex-1" />
-          <ToggleGroup type="single" value={effectiveLayout} onValueChange={handleLayoutChange} className="gap-0.5">
-            <ToggleGroupItem value="rows" aria-label="Row layout" className="h-7 w-7 p-0">
-              <LayoutList className="w-3.5 h-3.5" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-7 w-7 p-0">
-              <Grid2X2 className="w-3.5 h-3.5" />
-            </ToggleGroupItem>
-            {!isMobile && (
-              <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-7 w-7 p-0">
-                <Grid3X3 className="w-3.5 h-3.5" />
-              </ToggleGroupItem>
-            )}
-          </ToggleGroup>
-        </div>
-      )}
 
       {/* ── Workflow catalog ── */}
       {isLoading ? (
