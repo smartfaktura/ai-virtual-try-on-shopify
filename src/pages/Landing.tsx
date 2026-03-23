@@ -55,10 +55,10 @@ export default function Landing() {
       <main>
         <HeroSection />
         <Suspense fallback={null}>
+          <ProductCategoryShowcase />
           <StudioTeamSection />
           <HowItWorks />
           <FreestyleShowcaseSection />
-          <ProductCategoryShowcase />
           <ModelShowcaseSection />
           <EnvironmentShowcaseSection />
           <CreativeDropsSection />
