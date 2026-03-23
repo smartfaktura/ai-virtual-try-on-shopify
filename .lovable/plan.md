@@ -1,44 +1,35 @@
 
 
-# Move Workflow Animations Below Image in Modal Cards
-
-## Idea
-Instead of floating animated overlays on top of the background image (which clutters small modal cards), show the **image clean** and display the workflow "ingredients" as a **horizontal animated strip** between the image and the workflow name. Each ingredient (Product, Model, Scene) appears as a small pill/chip that slides in sequentially — making it immediately clear what inputs each workflow needs.
-
-```text
-┌──────────────────┐
-│                  │
-│   Clean image    │
-│   (no overlays)  │
-│                  │
-├──────────────────┤
-│ [🧥 Product] [👤 Model] [📍 Scene]  ← animated chips
-│                  │
-│ Virtual Try-On   │
-│ [Create Set →]   │
-└──────────────────┘
-```
+# Link Onboarding to Add Product + Move Tips + Optimize Subtitle
 
 ## Changes
 
-### 1. `src/components/app/WorkflowAnimatedThumbnail.tsx`
+### 1. `src/components/app/OnboardingChecklist.tsx` (line 22-23)
+Change the first onboarding step to link directly to the Add Product page:
+- `path: '/app/products'` → `path: '/app/products/new'`
+- `cta: 'Go to Products'` → `cta: 'Add Product'`
 
-When `modalCompact` is true, **skip rendering floating elements** — only render the background image. The animated ingredient strip will live in the card component instead.
+### 2. `src/components/app/ManualProductTab.tsx`
+Move the dimensions tip (Kenji · Better results) from `ProductUploadTips` (which shows above the form) to inline after the dimensions input on mobile. Show it as a subtle hint below the dimensions field:
 
-- In the main render (line ~752-774): wrap the floating elements container in `!modalCompact &&` so overlays don't appear on the image in modal mode.
+- After the dimensions `Input` (line 858-864), add a small inline tip visible only on mobile (`sm:hidden`):
+```tsx
+<p className="text-[11px] text-muted-foreground/70 sm:hidden mt-1">
+  Tip: Add real dimensions (e.g. 15×10cm) for realistic scaling in scenes.
+</p>
+```
 
-### 2. `src/components/app/WorkflowCardCompact.tsx`
+### 3. `src/components/app/ProductUploadTips.tsx`
+No change needed — it already rotates tips and the Kenji tip will still show on desktop. The inline hint on mobile is a supplement.
 
-When `modalCompact` is true and a `scene` exists with elements, render a **horizontal animated strip** between the thumbnail and the title:
-
-- Extract element data from `scene.elements` (product, model, scene, badge types)
-- Render small pills: icon + label, with staggered `animation-delay` for sequential slide-in
-- Use existing `animate-fade-in` or simple CSS keyframe with delay
-- Pills are `bg-muted rounded-full px-2 py-0.5 text-[10px]` — compact, no borders
-- Wrap in `flex gap-1.5 overflow-x-auto scrollbar-hide` for horizontal layout
-- Only show for `modalCompact` mode
+### 4. `src/pages/AddProduct.tsx` (line 65)
+Optimize subtitle from:
+`"Upload images, import from a URL, or bulk-add via CSV. Each image = one product."`
+To:
+`"Add your product images to start generating visuals."`
 
 ### Files
-- `src/components/app/WorkflowAnimatedThumbnail.tsx` — skip floating elements when `modalCompact`
-- `src/components/app/WorkflowCardCompact.tsx` — add animated ingredient strip between image and title for modal cards
+- `src/components/app/OnboardingChecklist.tsx` — lines 22-23
+- `src/components/app/ManualProductTab.tsx` — after line 864
+- `src/pages/AddProduct.tsx` — line 65
 
