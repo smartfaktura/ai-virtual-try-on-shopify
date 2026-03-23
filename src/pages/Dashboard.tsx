@@ -440,6 +440,10 @@ export default function Dashboard() {
                 <Image className="w-3.5 h-3.5" />
                 My Library
               </Button>
+              <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => setEarnCreditsOpen(true)}>
+                <Gift className="w-3.5 h-3.5" />
+                Earn Credits
+              </Button>
             </div>
           </div>
         </div>
