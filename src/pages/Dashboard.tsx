@@ -490,8 +490,11 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Find & Recreate */}
+      {/* Steal This Look */}
       <DashboardDiscoverSection />
+
+      {/* Feedback Banner */}
+      <FeedbackBanner />
 
       {/* Recent Creations Gallery */}
       <RecentCreationsGallery />
