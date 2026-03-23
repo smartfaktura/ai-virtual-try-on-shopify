@@ -408,6 +408,8 @@ export default function Dashboard() {
 
         {/* Feedback Banner */}
         <FeedbackBanner />
+
+        <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
       </div>
     );
   }
