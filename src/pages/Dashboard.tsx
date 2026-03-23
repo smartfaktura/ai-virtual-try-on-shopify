@@ -34,6 +34,7 @@ import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const el = ref.current;
@@ -55,7 +56,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
     >
       <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
         {scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} mobileCompact={isMobile} />
         ) : (
           <img
             src={workflow.preview_image_url || '/placeholder.svg'}
