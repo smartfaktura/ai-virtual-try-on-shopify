@@ -1,48 +1,55 @@
 
 
-# Add Per-Workflow Breakdown to Admin Status
+# Dashboard Layout Adjustment
 
-## What's Available
-The `generation_queue.payload` already stores `workflow_name` and `workflow_slug`. Current data shows clear usage patterns:
-- Freestyle (no workflow): 1,038 jobs
-- Picture Perspectives: 202
-- Virtual Try-On Set: 171
-- Selfie / UGC Set: 68
-- Product Listing Set: 31
-- Product Perspectives: 30
-- Mirror Selfie Set: 15
-- Flat Lay Set: 3
+## What You Want
+
+```text
+Welcome back, Tomas 👋
+{dynamic headline}
+[ ✨ Start a Campaign ]
+Virtual Try-On · Product Editorial · Catalog Generation
+
+--- separate section below ---
+
+Personalized for [Fashion & Apparel ▾]   |   [Upload Product] [Generate Images] [Browse Workflows] [Brand Profiles]
+```
 
 ## Changes
 
-### 1. Update `admin_platform_stats` function (migration)
+### 1. `src/lib/categoryConstants.ts` - Update headlines with `-` not `—`
 
-Add a `workflows_breakdown` key to the returned JSON:
+All headlines become: "Create/Launch your first [category] campaign in seconds - no photoshoot needed."
 
-```sql
-'workflows_breakdown', (
-  SELECT COALESCE(jsonb_agg(row_to_json(w) ORDER BY w.total DESC), '[]'::jsonb)
-  FROM (
-    SELECT
-      COALESCE(payload->>'workflow_name', 'Freestyle (direct)') as name,
-      count(*) as total,
-      count(*) FILTER (WHERE status = 'completed') as completed
-    FROM generation_queue
-    GROUP BY payload->>'workflow_name'
-    ORDER BY count(*) DESC
-  ) w
-)
+### 2. `src/components/app/DashboardPersonalizationHero.tsx` - Slim down to just headline + CTA
+
+Remove the "Personalized for" pill from this component. Keep only:
+- Dynamic headline text
+- "Start a Campaign" button (navigates to `/app/workflows`)
+- Helper text: `Virtual Try-On · Product Editorial · Catalog Generation`
+
+### 3. `src/pages/Dashboard.tsx` - Restructure layout
+
+Move quick actions and "Personalized for" pill into their own row below the header section:
+
+```tsx
+{/* Header section */}
+<div>
+  <h1>Welcome back, {firstName} 👋</h1>
+  <DashboardPersonalizationHero />  {/* headline + CTA only */}
+</div>
+
+{/* Separate row: Personalized pill + Quick Actions */}
+<div className="flex flex-wrap items-center gap-4">
+  <PersonalizedForPill />  {/* extracted pill selector */}
+  <DashboardQuickActions />
+</div>
 ```
 
-### 2. Update `src/pages/AdminStatus.tsx`
-
-Add a **"Workflow Usage"** table below the platform stats grid:
-- Columns: Workflow Name | Total Jobs | Completed | Success Rate
-- Sorted by total descending
-- Uses existing `Table` components
-- Loads from the same `platformStats` query (no extra API call)
+The "Personalized for" pill selector will be extracted into a small inline component (or kept in `DashboardPersonalizationHero` and exported separately). It will sit on the same line as the quick action buttons, visually separated.
 
 ### Files
-- **Migration**: Add `workflows_breakdown` to `admin_platform_stats`
-- **`src/pages/AdminStatus.tsx`**: Add workflow table (~30 lines), update `PlatformStats` interface
+- `src/lib/categoryConstants.ts` - update headline strings
+- `src/components/app/DashboardPersonalizationHero.tsx` - remove pill, add CTA, export pill separately
+- `src/pages/Dashboard.tsx` - restructure: header block, then pill + quick actions row below
 
