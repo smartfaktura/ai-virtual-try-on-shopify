@@ -1,53 +1,48 @@
 
 
-# Add Platform-Wide Analytics to Admin Status Page
+# Add Per-Workflow Breakdown to Admin Status
 
-## What We Have
-All the data is already in existing tables — no new tables or migrations needed. We can query:
-- **Total images**: 1,750+ (1,172 freestyle + 578 workflow results)
-- **Job breakdown by type**: freestyle (1,209), try-on (250), workflow (212), upscale (13)
-- **Credits consumed**: 12,418 total
-- **Users**: 10 registered, 5 have generated
-- **Products**: 22 uploaded
-- **Videos**: 14 created
+## What's Available
+The `generation_queue.payload` already stores `workflow_name` and `workflow_slug`. Current data shows clear usage patterns:
+- Freestyle (no workflow): 1,038 jobs
+- Picture Perspectives: 202
+- Virtual Try-On Set: 171
+- Selfie / UGC Set: 68
+- Product Listing Set: 31
+- Product Perspectives: 30
+- Mirror Selfie Set: 15
+- Flat Lay Set: 3
 
-## Plan
+## Changes
 
-### 1. Create a database function `admin_platform_stats` (migration)
+### 1. Update `admin_platform_stats` function (migration)
 
-A `SECURITY DEFINER` function that returns all-time platform metrics in one call:
+Add a `workflows_breakdown` key to the returned JSON:
 
 ```sql
-CREATE FUNCTION admin_platform_stats() RETURNS jsonb
+'workflows_breakdown', (
+  SELECT COALESCE(jsonb_agg(row_to_json(w) ORDER BY w.total DESC), '[]'::jsonb)
+  FROM (
+    SELECT
+      COALESCE(payload->>'workflow_name', 'Freestyle (direct)') as name,
+      count(*) as total,
+      count(*) FILTER (WHERE status = 'completed') as completed
+    FROM generation_queue
+    GROUP BY payload->>'workflow_name'
+    ORDER BY count(*) DESC
+  ) w
+)
 ```
-
-Returns:
-- `total_users`, `active_generators` (distinct users who completed a job)
-- `total_images` (freestyle_generations count + sum of generation_jobs results array lengths)
-- `total_videos`
-- `total_products`
-- `total_credits_spent`
-- `jobs_by_type` (freestyle, workflow, tryon, upscale counts)
-- `total_brand_profiles`, `total_drops`
-
-Guarded by `has_role(auth.uid(), 'admin')`.
 
 ### 2. Update `src/pages/AdminStatus.tsx`
 
-Add a new **"Platform Overview"** section above the existing time-range metrics:
+Add a **"Workflow Usage"** table below the platform stats grid:
+- Columns: Workflow Name | Total Jobs | Completed | Success Rate
+- Sorted by total descending
+- Uses existing `Table` components
+- Loads from the same `platformStats` query (no extra API call)
 
-- A section header: "All-Time Platform Stats"
-- A grid of MetricCards showing:
-  - Total Images Generated (with Image icon)
-  - Total Users / Active Generators
-  - Credits Consumed
-  - Freestyle / Workflow / Try-On / Upscale job counts
-  - Products Uploaded
-  - Videos Created
-
-This section loads independently from the time-range stats (separate `useQuery`), doesn't change with the time toggle, and sits at the top of the page as a permanent overview.
-
-### Files Changed
-- **New migration**: `admin_platform_stats` function
-- **`src/pages/AdminStatus.tsx`**: Add platform overview section (~40 lines)
+### Files
+- **Migration**: Add `workflows_breakdown` to `admin_platform_stats`
+- **`src/pages/AdminStatus.tsx`**: Add workflow table (~30 lines), update `PlatformStats` interface
 
