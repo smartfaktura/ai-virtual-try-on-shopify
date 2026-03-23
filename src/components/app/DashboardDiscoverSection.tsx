@@ -200,7 +200,7 @@ export function DashboardDiscoverSection() {
           <DiscoverCard
             key={item.type === 'preset' ? item.data.id : item.data.poseId}
             item={item}
-            aspectRatioOverride="4/3"
+            aspectRatioOverride="3/4"
             onClick={() => setSelectedItem(item)}
             onRecreate={(e) => {
               e.stopPropagation();
