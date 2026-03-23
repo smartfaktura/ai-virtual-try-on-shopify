@@ -1,25 +1,26 @@
 
 
-# Fix Product Images in Start Workflow Modal
+# Fix Zoomed-In Workflow Images in Modal
 
 ## Problem
-The previous fix changed product thumbnails from `object-cover` to `object-contain p-1`, which causes images to appear small/floating with excess whitespace inside the square container.
+The modal's static workflow preview images use `object-cover`, which crops/zooms the result images (especially Product Listing Set and Virtual Try-On Set). The images need to show the full composition.
 
 ## Fix
 
-### `src/components/app/StartWorkflowModal.tsx` (line 224)
+### `src/components/app/WorkflowCardCompact.tsx` (line 57)
 
-Change from `object-contain p-1` to `object-cover` but with rounded corners for a clean look. The original `object-cover` was actually correct for this grid - the "zoomed in" issue was likely due to images with lots of whitespace around the product.
-
-Better approach: use `object-contain` with slightly more padding and a subtle background to frame the product nicely:
+Change the static image (shown when `modalCompact` is true) from `object-cover` to `object-contain` with a matching background color so the full image is visible:
 
 ```tsx
-// Line 224: revert to object-cover which looks better in small grid thumbnails
-className="w-full h-full object-cover"
+<img
+  src={scene?.background || workflow.preview_image_url || imgFallback}
+  alt={workflow.name}
+  className="w-full h-full object-contain bg-muted/50"
+/>
 ```
 
-`object-cover` is the standard for small thumbnail grids - it fills the square and looks consistent. The previous "zoom" issue was just how `object-cover` crops non-square images, which is actually the expected behavior for a compact product picker.
+This ensures the workflow result images display fully within the square card without cropping, while the subtle `bg-muted/50` fills any letterbox space cleanly.
 
 ### File
-- `src/components/app/StartWorkflowModal.tsx` - line 224, revert to `object-cover`
+- `src/components/app/WorkflowCardCompact.tsx` - line 57, `object-cover` → `object-contain bg-muted/50`
 
