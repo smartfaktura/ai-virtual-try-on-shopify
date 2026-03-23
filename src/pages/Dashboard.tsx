@@ -531,14 +531,15 @@ export default function Dashboard() {
       <DashboardTeamCarousel />
 
       {/* Recent Jobs */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Jobs</h2>
+          <Button variant="link" className="text-sm font-medium" onClick={() => navigate('/app/library')}>
+            View all
+          </Button>
+        </div>
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
         <div className="p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Recent Jobs</h2>
-            <Button variant="link" className="text-sm font-medium" onClick={() => navigate('/app/library')}>
-              View all
-            </Button>
-          </div>
 
           {recentJobs.length > 0 ? (
             <div className="overflow-x-auto">
