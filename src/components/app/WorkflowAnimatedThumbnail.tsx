@@ -60,11 +60,13 @@ interface Props {
   compact?: boolean;
   /** True when rendered inside the mobile 2-col grid — uses true compact sizes instead of CSS scale */
   mobileCompact?: boolean;
+  /** True when rendered inside a modal — uses same small sizes as mobileCompact */
+  modalCompact?: boolean;
 }
 
 /* ── Floating element renderer ── */
 
-const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact }: { element: SceneElement; compact?: boolean; mobileCompact?: boolean }) {
+const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, modalCompact }: { element: SceneElement; compact?: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
@@ -84,7 +86,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact }:
     : undefined;
 
   // Mobile compact: use genuinely smaller elements instead of CSS scale
-  if (mobileCompact) {
+  if (mobileCompact || modalCompact) {
     switch (element.type) {
       case 'product':
       case 'scene':
@@ -227,7 +229,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact }:
 
 /* ── Carousel mode component ── */
 
-function CarouselThumbnail({ scene, isActive, mobileCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean }) {
+function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
     () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
@@ -286,7 +288,7 @@ function CarouselThumbnail({ scene, isActive, mobileCompact }: { scene: Workflow
       {isActive && elementsReady && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
-            <FloatingEl key={i} element={el} mobileCompact={mobileCompact} />
+            <FloatingEl key={i} element={el} mobileCompact={mobileCompact} modalCompact={modalCompact} />
           ))}
         </div>
       )}
@@ -686,7 +688,7 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
 
 /* ── Main component ── */
 
-export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false, mobileCompact = false }: Props) {
+export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = false, mobileCompact = false, modalCompact = false }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const isUpscale = scene.mode === 'upscale';
   const isStaging = scene.mode === 'staging';
@@ -719,7 +721,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
   }, [isActive, totalDuration, isCarousel, isUpscale, isStaging]);
 
   // Delegate to specialized components
-  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} mobileCompact={mobileCompact} />;
+  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} mobileCompact={mobileCompact} modalCompact={modalCompact} />;
   if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
   if (isStaging) return <StagingThumbnail scene={scene} isActive={isActive} />;
 
@@ -767,7 +769,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
             }}
           >
             {scene.elements.map((el, i) => (
-              <FloatingEl key={i} element={el} compact={compact} mobileCompact={mobileCompact} />
+              <FloatingEl key={i} element={el} compact={compact} mobileCompact={mobileCompact} modalCompact={modalCompact} />
             ))}
           </div>
 
