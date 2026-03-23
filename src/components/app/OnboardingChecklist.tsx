@@ -44,7 +44,7 @@ const steps = [
   {
     key: 'freestyle',
     title: 'Try Freestyle Studio',
-    description: 'Prompt, pick a product, model & scene - generate stunning visuals in one click.',
+    description: 'Pick a product, model & scene - generate in one click.',
     icon: Wand2,
     path: '/app/freestyle',
     cta: 'Try Freestyle',
