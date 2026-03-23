@@ -170,9 +170,9 @@ export function RecentCreationsGallery() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-7 w-48" />
-        <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="flex-shrink-0 w-[180px] aspect-[4/5] rounded-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
           ))}
         </div>
       </div>
