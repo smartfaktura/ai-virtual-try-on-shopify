@@ -1,33 +1,24 @@
 
 
-# Fix: Freestyle Items Show "Freestyle" Instead of Dynamic Names in Library
+# Optimize "More Like This" Thumbnails in Discover Detail Modals
 
 ## Problem
-When opening a freestyle image from the Library page, the heading shows just "Freestyle" instead of resolved names like "Freya · Relaxed Seated". This works correctly on the Freestyle page because it builds a dynamic label inline, but the Library's data hook (`useLibraryItems.ts`) just sets `label: 'Freestyle'` as fallback.
-
-The model/scene names ARE already resolved (lines 156-157, stored as `modelName`/`sceneName`), but they're never used to build the `label`.
+The "More like this" grid in both `DiscoverDetailModal` and `PublicDiscoverDetailModal` loads **full-size images** — no `getOptimizedUrl()` is applied. These thumbnails render at ~120px wide but download multi-megabyte originals.
 
 ## Fix
 
-### `src/hooks/useLibraryItems.ts` (lines 151-166)
+### `src/components/app/DiscoverDetailModal.tsx` (line 481)
+### `src/components/app/PublicDiscoverDetailModal.tsx` (line 206)
 
-Replace the simple `'Freestyle'` fallback with dynamic label building using the already-resolved `modelInfo` and `sceneInfo`, plus product name:
+Wrap `riImage` with `getOptimizedUrl()` — quality-only compression (no width to avoid aspect ratio issues, per project convention):
 
 ```tsx
 // Before
-const displayLabel = wfLabel || 'Freestyle';
+<ShimmerImage src={riImage} ...
 
-// After  
-const modelInfo = resolveModel((f as any).model_id);
-const sceneInfo = resolveScene((f as any).scene_id);
-const nameParts = [modelInfo.name, sceneInfo.name].filter(Boolean);
-const freestyleLabel = nameParts.length > 0
-  ? nameParts.join(' · ')
-  : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
-const displayLabel = wfLabel || freestyleLabel;
+// After
+<ShimmerImage src={getOptimizedUrl(riImage, { quality: 60 })} ...
 ```
 
-This reuses the same logic already working on the Freestyle page. The `modelInfo`/`sceneInfo` resolution calls need to move above this line (they're currently below it — just reorder).
-
-One file, ~5 lines changed.
+Both files already import `getOptimizedUrl`. Two files, 1 line each.
 
