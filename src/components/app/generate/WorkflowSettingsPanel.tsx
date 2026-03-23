@@ -328,7 +328,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           );
 
           return (
-            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar flex-wrap sm:flex-wrap">
+            <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar flex-wrap">
               {filterButtons()}
             </div>
           );
