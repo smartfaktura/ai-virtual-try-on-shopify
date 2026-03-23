@@ -175,7 +175,10 @@ export function DashboardDiscoverSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Find & Recreate</h2>
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recreate What Works</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Click any visual to recreate it with your product.</p>
+        </div>
         <Button
           variant="link"
           size="sm"
