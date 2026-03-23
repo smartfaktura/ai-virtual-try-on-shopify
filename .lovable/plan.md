@@ -1,66 +1,41 @@
 
 
-# Dashboard Branding Consistency Fixes
+# Dashboard Polish: Banner Placement, Earn Credits Button, Subtitle Sizing, Remove View All
 
-## Changes Overview
-1. Category bar: user's preferred category shows first (before "All")
-2. Rename "Recreate What Works" → "Steal This Look"
-3. Standardize all section headings to `text-xl sm:text-2xl font-bold tracking-tight` with optional subtitle in `text-sm text-muted-foreground`
-4. Wrap "Recent Jobs" table inside a section with matching heading outside the card
-5. Wrap "Recent Activity" and "Upcoming Drops" with matching heading style
-6. Standardize all card/table containers to `rounded-2xl`
-
-## File Changes
+## Changes
 
 ### 1. `src/components/app/DashboardDiscoverSection.tsx`
+- **Remove "View all" button** (lines 217-221): Delete the entire `<div className="flex justify-center pt-2">` block with the View all button
+- **Increase subtitle size**: Change `text-sm text-muted-foreground mt-0.5` → `text-base text-muted-foreground mt-1.5` on the subtitle "Click any visual to recreate it with your product."
 
-- Rename title: "Recreate What Works" → "Steal This Look"
-- **Fix category order**: Move preferred category to index 0 (before "All"), not after it:
-  ```tsx
-  return [preferred, CATEGORIES[0], ...rest]; // Beauty, All, Fashion, ...
-  ```
+### 2. `src/components/app/RecentCreationsGallery.tsx` (line 191)
+- **Increase subtitle size**: Change `text-sm text-muted-foreground mt-0.5` → `text-base text-muted-foreground mt-1.5`
 
-### 2. `src/components/app/RecentCreationsGallery.tsx` (lines 189-195)
+### 3. `src/components/app/DashboardTeamCarousel.tsx` (line 8)
+- **Increase subtitle size**: Change `text-sm text-muted-foreground mt-1` → `text-base text-muted-foreground mt-1.5`
 
-- Change heading from `text-xl` → `text-xl sm:text-2xl font-bold tracking-tight`
-- Already has subtitle — good
+### 4. `src/pages/Dashboard.tsx`
 
-### 3. `src/components/app/DashboardTeamCarousel.tsx` (line 7)
+**Move FeedbackBanner after Steal This Look (both views)**:
 
-- Change heading from `text-xl font-bold` → `text-xl sm:text-2xl font-bold tracking-tight`
+- **New user view** (line 400-401): Move `<FeedbackBanner />` from after DashboardTeamCarousel to right after `<DashboardDiscoverSection />` (after line 329)
+- **Returning user view** (line 642-643): Move `<FeedbackBanner />` from end of page to right after `<DashboardDiscoverSection />` (after line 487)
 
-### 4. `src/pages/Dashboard.tsx` — Returning user (lines 533-632)
-
-**Recent Jobs section**: Extract the heading outside the card container so it matches the pattern of other sections:
+**Add "Earn Credits" button to returning user's header buttons** (line 436-439): Add a 4th button after "My Library":
 ```tsx
-<div className="space-y-4">
-  <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Recent Jobs</h2>
-  <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-    <div className="p-5">
-      {/* table content, no inner heading */}
-    </div>
-  </div>
-</div>
+<Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => setEarnCreditsOpen(true)}>
+  <Gift className="w-3.5 h-3.5" />
+  Earn Credits
+</Button>
 ```
 
-Also update the "Create" section heading (line 494) from `text-xl` → `text-xl sm:text-2xl font-bold tracking-tight`.
+Also add `EarnCreditsModal` and `earnCreditsOpen` state + import `Gift` icon. Need to check if `EarnCreditsModal` is already imported/used.
 
-### 5. `src/components/app/ActivityFeed.tsx` (lines 142-168)
-
-- Change heading from `text-xl font-bold` → `text-xl sm:text-2xl font-bold tracking-tight`
-- The card already uses `rounded-2xl` — good
-
-### 6. `src/components/app/UpcomingDropsCard.tsx` (lines 59-175)
-
-- Extract heading outside the `<Card>` into a wrapper `div.space-y-4` with standardized heading
-- Change from `text-base font-semibold` → `text-xl sm:text-2xl font-bold tracking-tight`
-- Ensure `<Card>` uses `rounded-2xl` (check Card component default)
+**Add EarnCreditsModal state + component**: Add `const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);` and render `<EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />` at the bottom of both views.
 
 ### Files
-- `src/components/app/DashboardDiscoverSection.tsx` — rename + fix category order
-- `src/components/app/RecentCreationsGallery.tsx` — heading size
-- `src/components/app/DashboardTeamCarousel.tsx` — heading size
-- `src/pages/Dashboard.tsx` — Recent Jobs heading extraction, Create heading size
-- `src/components/app/ActivityFeed.tsx` — heading size
-- `src/components/app/UpcomingDropsCard.tsx` — heading extraction + size
+- `src/components/app/DashboardDiscoverSection.tsx` — remove View all, bigger subtitle
+- `src/components/app/RecentCreationsGallery.tsx` — bigger subtitle
+- `src/components/app/DashboardTeamCarousel.tsx` — bigger subtitle
+- `src/pages/Dashboard.tsx` — move FeedbackBanner, add Earn Credits button + modal
 
