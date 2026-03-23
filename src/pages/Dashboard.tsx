@@ -503,7 +503,7 @@ export default function Dashboard() {
         <MetricCard
           title="Time Saved"
           value={`${Math.round(generatedCount * 20 / 60)}h`}
-          suffix="no shooting needed"
+          suffix="no shooting or editing needed"
           icon={Clock}
           loading={generatedLoading}
           tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getLandingAssetUrl('team/avatar-max.jpg') }}
