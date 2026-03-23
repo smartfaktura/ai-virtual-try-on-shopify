@@ -1,43 +1,30 @@
 
 
-# Fix Metric Cards: Compact Size, Brand Fonts, Hover as External Popover
+# Improve MetricCard Hover UX & Equal Card Sizing
 
 ## Problems
-1. Cards are too tall (`min-h-[160px] sm:min-h-[180px]`) — way too much vertical space
-2. Font styling doesn't match VOVV.AI brand (should use the project's default `font-sans` / tracking-tight, not oversized display text)
-3. Hover tooltip renders inside the card, making it bloated — should render as a floating popover box that appears beside/below the card on hover
-4. On mobile, the inline tooltip adds unwanted height
+1. Popover appears abruptly with no smooth entrance — feels disconnected from the card
+2. The popover positioning (below-left) can feel jarring; it should feel like a natural extension of the card
+3. Cards have different heights — stat cards vs action cards aren't equal
+4. On the screenshot, the popover box looks like a separate disconnected element
 
 ## Changes
 
-### 1. `src/components/app/MetricCard.tsx` — Full rework
+### `src/components/app/MetricCard.tsx`
 
-**Make cards compact**: Remove `min-h-[160px] sm:min-h-[180px]`. Use `p-4 sm:p-5` padding instead of `p-6 sm:p-7`. Cards should be tight and data-focused.
+**Equal card sizing**: Add `min-h-[120px]` to card container and use `flex flex-col justify-between` so shorter cards distribute space evenly rather than collapsing.
 
-**Brand typography**: Value uses `text-lg sm:text-xl font-semibold tracking-tight` — elegant, not oversized. Title uses `text-[10px] sm:text-[11px] font-medium tracking-widest uppercase text-muted-foreground`. Suffix uses `text-[10px] text-muted-foreground/60 mt-0.5`.
+**Smoother popover appearance**:
+- Reduce hover delay from 300ms to 200ms for snappier response
+- Add `data-[state=open]:animate-in data-[state=closed]:animate-out` with a subtle fade + slide via Radix's built-in animation classes (already in our PopoverContent)
+- Style the popover with `rounded-xl` (matching card corners), remove the heavy `shadow-lg` and use `shadow-md` with a softer border
+- Position with `sideOffset={4}` (tighter to card) and `align="center"` so it feels connected to the card rather than floating away to the left
+- Add a subtle `backdrop-blur-sm` for a modern glass feel
 
-**Hover as external popover**: Remove the inline tooltip div entirely. Wrap the card in a Popover (from Radix) with `openOnHover` behavior — on hover, a small floating box appears below the card showing the team avatar + explainer. On mobile, use click-to-open instead.
+**PopoverContent onMouseEnter/Leave**: Already handled — keep the popover open when user hovers into it, close smoothly when they leave. Ensure the close delay is 250ms so it doesn't flicker.
 
-Implementation: Use `onMouseEnter`/`onMouseLeave` to control a `useState` for open state, with the Popover positioned below the card. On mobile, the Popover opens on tap (click the info icon).
-
-```text
-┌────────────────┐
-│ € COST SAVED   │
-│ €42,930        │
-│ vs photoshoots │
-└────────────────┘
-  ┌──────────────────────────┐
-  │ 🟡 Omar · Based on €30  │  ← floating popover on hover
-  │    avg per product photo │
-  └──────────────────────────┘
-```
-
-**Remove all inline tooltip rendering** — no border-t, no mt-auto, no opacity transitions inside the card.
-
-### 2. `src/pages/Dashboard.tsx`
-
-No prop changes needed — just the MetricCard component handles the new popover behavior.
+**Loading state**: Match the `min-h-[120px]` so loading skeletons are same size.
 
 ### Files
-- `src/components/app/MetricCard.tsx` — compact sizing, brand fonts, hover popover
+- `src/components/app/MetricCard.tsx` — equal min-height, smoother popover styling and timing
 
