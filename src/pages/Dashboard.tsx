@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { DashboardPersonalizationHero } from '@/components/app/DashboardPersonalizationHero';
+import { DashboardPersonalizationHero, PersonalizedForPill } from '@/components/app/DashboardPersonalizationHero';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
@@ -399,19 +399,19 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 sm:space-y-10">
       <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
-      {/* Welcome greeting + Quick Actions */}
+      {/* Welcome greeting + CTA */}
       <div>
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
-        
-
         <DashboardPersonalizationHero />
+      </div>
 
-        {/* Quick Actions */}
-        <div className="mt-5">
-          <DashboardQuickActions />
-        </div>
+      {/* Personalized pill + Quick Actions */}
+      <div className="flex flex-wrap items-center gap-4">
+        <PersonalizedForPill />
+        <div className="hidden sm:block w-px h-5 bg-border/60" />
+        <DashboardQuickActions />
       </div>
 
       {/* Tip Card */}
