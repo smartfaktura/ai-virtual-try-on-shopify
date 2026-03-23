@@ -322,17 +322,55 @@ export default function Dashboard() {
     );
   }
 
-  // Total job count determines first-run vs returning
+  // Lightweight activity check — determines new vs returning without waiting for heavy queries
+  const modeHintKey = user ? `dashboard_mode_hint_${user.id}` : '';
+  const modeHint = modeHintKey ? localStorage.getItem(modeHintKey) : null;
+
+  const { data: hasActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ['dashboard-has-activity', user?.id],
+    queryFn: async () => {
+      const [jobRes, freestyleRes] = await Promise.all([
+        supabase.from('generation_jobs').select('id', { count: 'exact', head: true }),
+        supabase.from('freestyle_generations').select('id', { count: 'exact', head: true }),
+      ]);
+      const total = (jobRes.count ?? 0) + (freestyleRes.count ?? 0);
+      if (total > 0 && modeHintKey) {
+        localStorage.removeItem(modeHintKey);
+      }
+      return total > 0;
+    },
+    enabled: !!user && modeHint !== 'new',
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Derive dashboard mode
+  const dashboardMode: 'new' | 'returning' | 'resolving' =
+    modeHint === 'new' ? 'new' :
+    activityLoading ? 'resolving' :
+    hasActivity ? 'returning' : 'new';
+
   const totalJobCount = recentJobs.length;
-  const isNewUser = totalJobCount === 0 && !jobsLoading;
 
   const firstName = profile?.first_name || profile?.display_name || 'there';
 
   // Credit usage progress (out of 300 monthly quota)
   const creditUsageProgress = Math.round(((300 - balance) / 300) * 100);
 
+  // --- RESOLVING STATE — neutral placeholder while we determine mode ---
+  if (dashboardMode === 'resolving') {
+    return (
+      <div className="space-y-6 sm:space-y-10">
+        <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
+        <div>
+          <div className="h-10 w-64 bg-muted/40 rounded-lg animate-pulse" />
+          <div className="h-5 w-96 bg-muted/30 rounded-lg animate-pulse mt-3" />
+        </div>
+      </div>
+    );
+  }
+
   // --- FIRST-RUN DASHBOARD ---
-  if (isNewUser) {
+  if (dashboardMode === 'new') {
     return (
       <div className="space-y-6 sm:space-y-10">
         <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
@@ -602,7 +640,19 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
         <div className="p-5 space-y-4">
 
-          {recentJobs.length > 0 ? (
+          {jobsLoading ? (
+            <div className="space-y-3 py-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-muted/40 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-32 bg-muted/40 rounded animate-pulse" />
+                    <div className="h-3 w-20 bg-muted/30 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentJobs.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
