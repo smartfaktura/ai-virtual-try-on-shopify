@@ -288,20 +288,16 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
                 </Button>
 
-                {item.source === 'freestyle' && (
-                  <>
-                    <Separator className="my-1" />
-                    <Button
-                      variant="ghost"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                      {deleting ? 'Deleting…' : 'Delete'}
-                    </Button>
-                  </>
-                )}
+                <Separator className="my-1" />
+                <Button
+                  variant="ghost"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </Button>
               </div>
 
               {/* Share to Discover */}
