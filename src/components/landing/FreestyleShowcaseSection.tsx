@@ -14,9 +14,9 @@ const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
 const MODEL_AVATARS = [
-  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { quality: 50, width: 40 }) },
-  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { quality: 50, width: 40 }) },
-  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { quality: 50, width: 40 }) },
+  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { quality: 50 }) },
+  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { quality: 50 }) },
+  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { quality: 50 }) },
 ];
 
 const CHIPS = [
@@ -25,7 +25,7 @@ const CHIPS = [
     icon: Package,
     label: 'Crop Top',
     mobileLabel: 'Crop Top',
-    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50, width: 40 }),
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50 }),
     delay: 1500,
   },
   {
@@ -41,7 +41,7 @@ const CHIPS = [
     icon: Camera,
     label: 'Select scenes',
     mobileLabel: 'Scenes',
-    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 50, width: 40 }),
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 50 }),
     delay: 2200,
   },
 ];
