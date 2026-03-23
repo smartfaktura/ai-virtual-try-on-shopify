@@ -234,9 +234,9 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
       {/* Variation Strategy Preview — hidden in mirror selfie final phase */}
       {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
       <Card><CardContent className="p-5 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base font-semibold">
                 {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Style' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
               </h3>
@@ -285,6 +285,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
           <Button
             variant="ghost"
             size="sm"
+            className="self-end sm:self-auto shrink-0"
             onClick={() => {
               const paidLimit = isFlatLay ? FLAT_LAY_SURFACE_LIMIT : (variationStrategy?.variations.length || 0);
               const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : paidLimit;
