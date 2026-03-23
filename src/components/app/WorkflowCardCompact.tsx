@@ -22,11 +22,10 @@ interface Props {
   subtitle?: string;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, displayName, subtitle }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
-
 
   useEffect(() => {
     const el = ref.current;
@@ -39,9 +38,48 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
     return () => observer.disconnect();
   }, []);
 
-  const recipeItems = scene?.recipe ?? [];
-  const totalItems = recipeItems.length;
-  const staggerDelay = 0.4;
+  if (mobileRow) {
+    return (
+      <Card
+        id={id}
+        ref={ref}
+        className="group overflow-hidden transition-shadow duration-300 flex flex-row border hover:shadow-lg"
+      >
+        {/* Thumbnail */}
+        <div className="relative w-28 shrink-0 overflow-hidden">
+          {scene ? (
+            <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact modalCompact />
+          ) : (
+            <img
+              src={workflow.preview_image_url || imgFallback}
+              alt={workflow.name}
+              className="w-full h-full object-cover bg-muted/50"
+            />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-col gap-1 flex-1 p-3 justify-center">
+          <h3 className="text-sm font-bold tracking-tight leading-tight">
+            {displayName || workflow.name}
+          </h3>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground leading-snug">{subtitle}</p>
+          )}
+          <div className="pt-1">
+            <Button
+              size="sm"
+              className="rounded-full font-semibold gap-1 h-8 px-4 text-xs"
+              onClick={onSelect}
+            >
+              Start Creating
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card
@@ -52,7 +90,6 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
-
       {/* Thumbnail */}
       <div className={cn(
         "relative w-full overflow-hidden",
