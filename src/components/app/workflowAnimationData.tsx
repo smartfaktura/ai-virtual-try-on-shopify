@@ -38,7 +38,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Virtual Try-On Set': {
     background: tryonResult,
-    objectPosition: 'center',
+    objectPosition: 'center 30%',
     elements: [
       {
         type: 'product', image: tryonProduct, label: 'Crop Top', sublabel: 'Product',
@@ -64,6 +64,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Product Listing Set': {
     background: listingResult,
+    objectPosition: 'center 40%',
     elements: [
       {
         type: 'product', image: listingProduct, label: 'Serum', sublabel: 'Product',
