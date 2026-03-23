@@ -80,11 +80,11 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       )}
 
       {action && (
-        <div className="pt-1">
+        <div className="pt-1.5">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-7 px-2.5 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-primary/5 -ml-1"
+            className="h-7 px-3 text-xs font-semibold rounded-full"
             onClick={(e) => { e.stopPropagation(); action.onClick(); }}
           >
             {action.label} →
