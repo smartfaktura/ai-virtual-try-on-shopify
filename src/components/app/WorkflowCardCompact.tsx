@@ -24,13 +24,6 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
 
-  // Looping animation key for recipe strip
-  const [recipeKey, setRecipeKey] = useState(0);
-  useEffect(() => {
-    if (!modalCompact || !scene?.recipe) return;
-    const interval = setInterval(() => setRecipeKey(k => k + 1), 6000);
-    return () => clearInterval(interval);
-  }, [modalCompact, scene?.recipe]);
 
   useEffect(() => {
     const el = ref.current;
