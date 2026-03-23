@@ -28,7 +28,7 @@ interface MetricCardProps {
   popoverAlign?: 'start' | 'center' | 'end';
 }
 
-export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description }: MetricCardProps) {
+export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description, popoverAlign }: MetricCardProps) {
   const [open, setOpen] = useState(false);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
 
