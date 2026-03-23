@@ -298,6 +298,23 @@ export default function Discover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
+  // Read ?similar= param from Dashboard's "Similar" button
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const similarScene = params.get('similar');
+    if (similarScene && allItems.length > 0 && !similarTo) {
+      const match = allItems.find(i =>
+        (i.type === 'preset' ? i.data.scene_name : i.data.name) === similarScene
+      );
+      if (match) {
+        setSimilarTo(match);
+        params.delete('similar');
+        navigate({ search: params.toString() }, { replace: true });
+      }
+    }
+  }, [allItems, location.search]);
+
   // Auto-open item from URL param — only set if different item
   useEffect(() => {
     if (!urlItemId || allItems.length === 0) return;
