@@ -14,9 +14,9 @@ const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
 const MODEL_AVATARS = [
-  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { quality: 50 }) },
-  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { quality: 50 }) },
-  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { quality: 50 }) },
+  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { quality: 50, width: 40 }) },
+  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { quality: 50, width: 40 }) },
+  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { quality: 50, width: 40 }) },
 ];
 
 const CHIPS = [
@@ -25,7 +25,7 @@ const CHIPS = [
     icon: Package,
     label: 'Crop Top',
     mobileLabel: 'Crop Top',
-    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50 }),
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50, width: 40 }),
     delay: 1500,
   },
   {
@@ -41,7 +41,7 @@ const CHIPS = [
     icon: Camera,
     label: 'Select scenes',
     mobileLabel: 'Scenes',
-    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 50 }),
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 50, width: 40 }),
     delay: 2200,
   },
 ];
@@ -71,6 +71,15 @@ export function FreestyleShowcaseSection() {
   const [visibleResults, setVisibleResults] = useState<number[]>([]);
 
   const promptText = isMobile ? PROMPT_TEXT_MOBILE : PROMPT_TEXT_FULL;
+
+  // Preload tiny chip/avatar images so they're cached before animation reveals them
+  useEffect(() => {
+    const urls = [
+      ...MODEL_AVATARS.map(m => m.src),
+      ...CHIPS.map(c => c.thumb).filter(Boolean),
+    ];
+    urls.forEach(url => { const img = new Image(); img.src = url; });
+  }, []);
 
   useEffect(() => {
     setTypedText('');
