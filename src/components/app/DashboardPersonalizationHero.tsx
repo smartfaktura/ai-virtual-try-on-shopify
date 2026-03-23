@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Check, ArrowRight, Sparkles } from 'lucide-react';
+import { ChevronDown, Check, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MobilePickerSheet } from '@/components/app/freestyle/MobilePickerSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,10 +12,11 @@ import {
   PRODUCT_CATEGORIES,
   getCategoryHeadline,
 } from '@/lib/categoryConstants';
+import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 
 /** Hero section: dynamic headline + CTA */
 export function DashboardPersonalizationHero({ selected = 'any', hasGenerations = false }: { selected?: string; hasGenerations?: boolean }) {
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
   const headline = getCategoryHeadline([selected], hasGenerations);
 
   return (
@@ -26,10 +27,9 @@ export function DashboardPersonalizationHero({ selected = 'any', hasGenerations 
 
       <div className="space-y-3">
         <button
-          onClick={() => navigate('/app/workflows')}
+          onClick={() => setModalOpen(true)}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all duration-200 shadow-sm"
         >
-          <Sparkles className="w-3.5 h-3.5 text-primary" />
           Start with a Workflow
           <ArrowRight className="w-4 h-4" />
         </button>
@@ -44,6 +44,8 @@ export function DashboardPersonalizationHero({ selected = 'any', hasGenerations 
           ))}
         </div>
       </div>
+
+      <StartWorkflowModal open={modalOpen} onOpenChange={setModalOpen} />
     </div>
   );
 }
