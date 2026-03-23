@@ -66,7 +66,9 @@ export default function AddProduct() {
       }
       backAction={{ content: 'Products', onAction: handleDone }}
     >
-      <ProductUploadTips />
+      <div className="hidden sm:block">
+        <ProductUploadTips />
+      </div>
 
       {isEditing ? (
         <div>
@@ -138,6 +140,9 @@ export default function AddProduct() {
             <TabsContent value="shopify" className="mt-0">
               <ShopifyImportTab onProductAdded={handleDone} onClose={handleDone} />
             </TabsContent>
+          </div>
+          <div className="sm:hidden mt-6">
+            <ProductUploadTips />
           </div>
         </Tabs>
       )}
