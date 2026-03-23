@@ -1,35 +1,45 @@
 
 
-# Link Onboarding to Add Product + Move Tips + Optimize Subtitle
+# Fix Modal Workflow Cards: Enable Animations Below Image + Zoom Out Backgrounds
+
+## Problems
+1. **No animations in modal** — recipe-mode cards (Try-On, Listing, Flat Lay, Mirror Selfie) have animations completely disabled by `!modalCompact` check. The ingredient strip below the image exists but feels static/lifeless.
+2. **UGC/Selfie has floating overlays ON the image** — carousel mode doesn't check `modalCompact`, so "PRODUCT Ice Roller" and "UGC Style" badges float on top of the image, inconsistent with the clean-image approach.
+3. **Images too zoomed in** — `objectPosition` values crop aggressively in the portrait containers.
 
 ## Changes
 
-### 1. `src/components/app/OnboardingChecklist.tsx` (line 22-23)
-Change the first onboarding step to link directly to the Add Product page:
-- `path: '/app/products'` → `path: '/app/products/new'`
-- `cta: 'Go to Products'` → `cta: 'Add Product'`
+### 1. `src/components/app/WorkflowAnimatedThumbnail.tsx`
 
-### 2. `src/components/app/ManualProductTab.tsx`
-Move the dimensions tip (Kenji · Better results) from `ProductUploadTips` (which shows above the form) to inline after the dimensions input on mobile. Show it as a subtle hint below the dimensions field:
-
-- After the dimensions `Input` (line 858-864), add a small inline tip visible only on mobile (`sm:hidden`):
+**Carousel mode (line 288)**: Add `!modalCompact` check to hide floating overlays on carousel cards too, matching recipe mode behavior:
 ```tsx
-<p className="text-[11px] text-muted-foreground/70 sm:hidden mt-1">
-  Tip: Add real dimensions (e.g. 15×10cm) for realistic scaling in scenes.
-</p>
+{isActive && elementsReady && !modalCompact && (
 ```
 
-### 3. `src/components/app/ProductUploadTips.tsx`
-No change needed — it already rotates tips and the Kenji tip will still show on desktop. The inline hint on mobile is a supplement.
+Also hide the gradient overlay (lines 279-285) when `modalCompact` — keep the image clean.
 
-### 4. `src/pages/AddProduct.tsx` (line 65)
-Optimize subtitle from:
-`"Upload images, import from a URL, or bulk-add via CSV. Each image = one product."`
-To:
-`"Add your product images to start generating visuals."`
+### 2. `src/components/app/WorkflowCardCompact.tsx`
+
+The ingredient strip (lines 66-81) already exists and animates with `animate-fade-in` + staggered delays. But it only filters for product/model/scene/badge and uses `isVisible` which may fire late.
+
+**No structural change needed** — the strip is already there. The issue is that `isVisible` depends on IntersectionObserver which may not trigger inside a modal (the card is inside a scrollable dialog). Fix: when `modalCompact`, default `isVisible` to `true` since the modal is always in view.
+
+Update line 27:
+```tsx
+const [isVisible, setIsVisible] = useState(!!modalCompact);
+```
+
+### 3. `src/components/app/workflowAnimationData.tsx`
+
+Zoom out backgrounds by adjusting `objectPosition`:
+
+- **Virtual Try-On Set**: `'center 30%'` → `'center 20%'` (shift up to show more body)
+- **Product Listing Set**: `'center 40%'` → `'center'` (center the composition)
+- **Selfie / UGC Set**: No `objectPosition` set — add `objectPosition: 'center'`
+- **Mirror Selfie Set**: No `objectPosition` — add `objectPosition: 'center 25%'`
 
 ### Files
-- `src/components/app/OnboardingChecklist.tsx` — lines 22-23
-- `src/components/app/ManualProductTab.tsx` — after line 864
-- `src/pages/AddProduct.tsx` — line 65
+- `src/components/app/WorkflowAnimatedThumbnail.tsx` — hide carousel overlays + gradient when `modalCompact`
+- `src/components/app/WorkflowCardCompact.tsx` — default `isVisible` to true for modal cards
+- `src/components/app/workflowAnimationData.tsx` — adjust objectPosition values to zoom out
 
