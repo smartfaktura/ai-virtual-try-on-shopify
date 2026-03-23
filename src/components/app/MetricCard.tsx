@@ -28,7 +28,7 @@ interface MetricCardProps {
 export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description }: MetricCardProps) {
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border/40 bg-card p-6 sm:p-7 space-y-4">
+      <div className="rounded-2xl border border-border/40 bg-card p-6 sm:p-7 min-h-[160px] sm:min-h-[180px] space-y-4">
         <div className="h-3 w-16 bg-muted rounded-full animate-pulse" />
         <div className="h-7 w-20 bg-muted rounded-full animate-pulse" />
         <div className="h-2.5 w-24 bg-muted rounded-full animate-pulse" />
@@ -51,7 +51,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       <div className="mt-3 flex-1">
         {value !== undefined ? (
           <div className="space-y-1">
-            <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-none">{value}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight leading-none whitespace-nowrap">{value}</p>
             {suffix && (
               <p className="text-[11px] sm:text-xs text-muted-foreground/70 leading-snug">{suffix}</p>
             )}
@@ -93,11 +93,11 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
         </div>
       )}
 
-      {/* Hover-reveal branded footer */}
+      {/* Tooltip: always visible on mobile, hover-reveal on desktop */}
       {tooltip && (
-        <div className="absolute -bottom-1 -left-1 -right-1 rounded-b-2xl px-4 py-2.5 bg-secondary/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+        <div className="mt-auto pt-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 sm:translate-y-1 sm:group-hover:translate-y-0">
           {isBrandedTooltip ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 border-t border-border/20 pt-2.5">
               <img
                 src={(tooltip as BrandedTooltip).avatar}
                 alt={(tooltip as BrandedTooltip).memberName}
@@ -110,14 +110,14 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
               </p>
             </div>
           ) : (
-            <p className="text-[10px] text-muted-foreground leading-snug">{tooltipText}</p>
+            <p className="text-[10px] text-muted-foreground leading-snug border-t border-border/20 pt-2.5">{tooltipText}</p>
           )}
         </div>
       )}
     </div>
   );
 
-  const className = `group rounded-2xl border border-border/40 bg-card p-6 sm:p-7 overflow-hidden transition-all duration-300 hover:border-border/80 hover:shadow-lg hover:shadow-primary/[0.03] ${
+  const className = `group rounded-2xl border border-border/40 bg-card p-6 sm:p-7 min-h-[160px] sm:min-h-[180px] overflow-hidden transition-all duration-300 hover:border-border/80 hover:shadow-lg hover:shadow-primary/[0.03] ${
     onClick ? 'cursor-pointer' : ''
   }`;
 
