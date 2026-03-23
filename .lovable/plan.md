@@ -1,43 +1,44 @@
 
 
-# Fix CTA Buttons Layout — "My Library" Getting Cut Off
+# Mobile Horizontal Scroll Navigation for Dashboard CTA Buttons
 
 ## Problem
-The three action buttons (Create Visuals, Discover Ideas, My Library) are inside a `flex items-center gap-2` container without `flex-wrap`. On the current viewport width, "My Library" text gets truncated/cut off at the edge.
+On mobile (390px), the credits + three buttons try to fit on one line but overflow. Need: credits on first line, buttons on second line as a horizontally scrollable row with fade edge — future-proof for more items.
 
-## Fix
+## Changes
 
-### `src/pages/Dashboard.tsx` (lines 414-433)
+### `src/pages/Dashboard.tsx` (lines 414-431)
 
-Restructure the layout so credits badge and buttons are on separate rows, and buttons wrap properly:
+Split into two rows: credits on top, buttons below in a scrollable container with right-edge fade:
 
 ```tsx
 <div className="flex flex-col gap-3 mt-5">
+  {/* Credits line */}
   <div className="flex items-center gap-2 text-sm text-muted-foreground">
     <Sparkles className="w-4 h-4 text-primary" />
     <span><strong className="text-foreground">{balance}</strong> credits available</span>
   </div>
-  <div className="flex flex-wrap items-center gap-2">
-    <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
-      <Layers className="w-3.5 h-3.5" />
-      Create Visuals
-    </Button>
-    <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/discover')}>
-      <Compass className="w-3.5 h-3.5" />
-      Discover Ideas
-    </Button>
-    <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/library')}>
-      <Image className="w-3.5 h-3.5" />
-      My Library
-    </Button>
+  
+  {/* Scrollable action buttons — fade on right edge */}
+  <div className="relative">
+    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:flex-wrap sm:overflow-visible"
+         style={{ WebkitMaskImage: undefined }}>
+      <Button ...>Create Visuals</Button>
+      <Button ...>Discover Ideas</Button>
+      <Button ...>My Library</Button>
+    </div>
   </div>
 </div>
 ```
 
-Key changes:
-- Outer container: `flex-col` instead of `flex-row` — credits on one line, buttons on next
-- Button container: add `flex-wrap` so buttons wrap on narrow screens instead of overflowing
+Key details:
+- On mobile: `overflow-x-auto scrollbar-hide` for invisible horizontal scroll
+- `fade-scroll` class already exists in `index.css` — applies right-edge gradient mask fade
+- On desktop (`sm:`): `flex-wrap overflow-visible` so buttons just wrap normally and fade mask is removed
+- Use `sm:[mask-image:none]` to disable fade on desktop
+- `scrollbar-hide` class already exists in `index.css`
+- Buttons get `shrink-0` to prevent text compression while scrolling
 
 ### File
-- `src/pages/Dashboard.tsx` — lines 414-433, restructure layout
+- `src/pages/Dashboard.tsx` — restructure lines 414-431
 
