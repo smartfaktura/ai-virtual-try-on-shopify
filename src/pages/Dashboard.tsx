@@ -412,23 +412,6 @@ export default function Dashboard() {
     );
   }
 
-  // Lifted category state for syncing headline with pill
-  const [selectedCategory, setSelectedCategory] = useState('any');
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('product_categories')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        const cats = (data?.product_categories as string[]) ?? [];
-        const primary = cats.includes('any') || cats.length === 0 ? 'any' : cats[0];
-        setSelectedCategory(primary);
-      });
-  }, [user]);
-
   // --- RETURNING USER DASHBOARD ---
   return (
     <div className="space-y-8 sm:space-y-10">
