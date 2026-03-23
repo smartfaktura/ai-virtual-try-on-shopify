@@ -1,31 +1,28 @@
 
 
-# Add Loading State When Switching Sort Order
+# Add Loading Spinner Over Grid During Sort/Search Refetch
 
 ## Problem
-When clicking "Oldest", `keepPreviousData` keeps showing the previous results with zero visual feedback. The user can't tell if anything happened — it looks broken.
+When switching to "Oldest", the grid goes to 50% opacity but there's no spinner — it looks frozen/broken.
 
 ## Fix
 
-### `src/pages/Jobs.tsx`
+### `src/pages/Jobs.tsx` (line 362)
 
-1. **Destructure `isFetching`** from `useLibraryItems` (already available from TanStack Query's `useInfiniteQuery`):
-   ```tsx
-   const { data, isLoading, isFetching, fetchNextPage, ... } = useLibraryItems(sortBy, searchQuery);
-   ```
+Wrap the grid in a `relative` container and add a centered spinner overlay when refetching:
 
-2. **Add a subtle opacity/spinner on the grid** while refetching (not initial load — that already has a full spinner). When `isFetching && !isLoading`, apply `opacity-50 pointer-events-none` to the masonry grid + show a small spinner overlay:
-   ```tsx
-   <div className={cn("flex gap-1", isFetching && !isLoading && "opacity-50 transition-opacity")}>
-     {columns.map(...)}
-   </div>
-   ```
+```tsx
+<div className="relative">
+  {isFetching && !isLoading && (
+    <div className="absolute inset-0 z-10 flex items-center justify-center">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  )}
+  <div className={cn("flex gap-1 transition-opacity", isFetching && !isLoading && "opacity-50 pointer-events-none")}>
+    {columns.map(...)}
+  </div>
+</div>
+```
 
-3. **Optionally add a small spinner** next to the active sort button label while fetching, so the user sees immediate feedback on click.
-
-### `src/hooks/useLibraryItems.ts`
-
-No changes needed — `isFetching` is already returned by `useInfiniteQuery`.
-
-One file, ~3 lines changed.
+`Loader2` is already imported. One file, ~5 lines added.
 
