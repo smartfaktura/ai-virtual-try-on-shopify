@@ -1,24 +1,30 @@
 
 
-# Optimize "More Like This" Thumbnails in Discover Detail Modals
+# Fix: Blank Grey Spacing Below Collapsed Prompt Bar on Mobile
 
 ## Problem
-The "More like this" grid in both `DiscoverDetailModal` and `PublicDiscoverDetailModal` loads **full-size images** — no `getOptimizedUrl()` is applied. These thumbnails render at ~120px wide but download multi-megabyte originals.
+When the prompt panel is collapsed on mobile, it shows just the drag handle but there's a visible grey gap between it and the bottom of the screen. This is caused by:
+1. The wrapper div has `pb-5` bottom padding that creates space below the collapsed bar
+2. The panel container isn't pinned to the very bottom of the viewport on mobile
 
 ## Fix
 
-### `src/components/app/DiscoverDetailModal.tsx` (line 481)
-### `src/components/app/PublicDiscoverDetailModal.tsx` (line 206)
+### `src/pages/Freestyle.tsx` (line 912-915)
 
-Wrap `riImage` with `getOptimizedUrl()` — quality-only compression (no width to avoid aspect ratio issues, per project convention):
+Make the bottom padding conditional — remove it when the prompt is collapsed on mobile:
 
 ```tsx
 // Before
-<ShimmerImage src={riImage} ...
+<div className="px-0 sm:px-8 pb-5 sm:pb-6 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20">
 
 // After
-<ShimmerImage src={getOptimizedUrl(riImage, { quality: 60 })} ...
+<div className={cn(
+  "px-0 sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20",
+  isPromptCollapsed ? "pb-0" : "pb-5 sm:pb-6"
+)}>
 ```
 
-Both files already import `getOptimizedUrl`. Two files, 1 line each.
+This eliminates the grey gap when the panel is collapsed, making the drag handle sit flush at the bottom of the screen.
+
+One file, 1 line changed.
 
