@@ -1,21 +1,37 @@
 
 
-# Add Delete Button for Workflow Items in Library Detail Modal
+# Debug: "Oldest" Sort Button Not Working in Library
 
-## Problem
-The delete button in `LibraryDetailModal` only appears for freestyle items (`item.source === 'freestyle'`). Workflow-generated images have no delete option in the modal.
+## Investigation
 
-## Changes
+I reviewed the full sorting pipeline:
 
-### `src/components/app/LibraryDetailModal.tsx`
+1. **`Jobs.tsx`**: `setSortBy('oldest')` is called on button click — correct
+2. **`useLibraryItems.ts`**: `ascending = sortBy === 'oldest'` — correct
+3. **Query key**: `['library', sortBy, ...]` — includes sortBy, so TanStack Query will refetch
+4. **SQL queries**: Both use `.order('created_at', { ascending })` — correct
+5. **Merge sort**: `rawItems.sort(...)` respects `ascending` — correct
+6. **`placeholderData: keepPreviousData`**: Shows previous data while new data loads — this is fine
 
-1. **Extend `handleDelete`** (lines 73-86) to handle workflow items too. For workflow items, the ID format is `{jobId}-{imageIndex}`. Need to:
-   - If freestyle: delete from `freestyle_generations` (existing logic)
-   - If generation: extract `jobId` and `imageIndex`, fetch the job, either delete the whole job (if 1 result) or remove that image from the results array (same logic as `Jobs.tsx` lines 198-222)
+## Likely Root Cause
 
-2. **Remove the `item.source === 'freestyle'` guard** on both the delete handler (line 74) and the delete button render (line 266). Show the delete button for all items.
+The code looks functionally correct. The most likely issue is that **the user has very few images**, so the "oldest" and "newest" results look nearly identical (same items, slightly different order), making it appear broken. 
 
-3. **Add `generation_jobs` invalidation** to query cache invalidation after delete.
+However, there's a subtle potential bug: the `initialPageParam` is `{} as Cursor` (empty object). When `sortBy` changes, TanStack Query creates a **new** query with the new key and starts fresh with `initialPageParam`. This should work correctly.
 
-One file, ~20 lines changed.
+## Recommended Fix: Verify with User
+
+Before making code changes, I'd like to verify what's happening by checking in the browser. But since I can't do that in plan mode, the safest fix is to **ensure the query fully resets** when sort changes:
+
+### `src/hooks/useLibraryItems.ts`
+
+No code change appears necessary — the logic is correct. The sort button should work. 
+
+## Alternative: Could be a visual perception issue
+
+If the user has many images from the same time period, switching between newest/oldest might show similar-looking results at the top. We could add a visual indicator (like showing the date more prominently) to confirm the sort is applied.
+
+## Recommendation
+
+Let me switch to default mode and test this in the browser to confirm whether it's actually broken or a perception issue. If there is a real bug, I'll fix it.
 
