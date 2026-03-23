@@ -359,7 +359,7 @@ export default function Jobs() {
           })()
         ) : (
           <>
-            <div className="flex gap-1">
+            <div className={cn("flex gap-1 transition-opacity", isFetching && !isLoading && "opacity-50 pointer-events-none")}>
               {columns.map((col, i) => (
                 <div key={i} className="flex-1 flex flex-col gap-1">
                   {col.map(item => (
