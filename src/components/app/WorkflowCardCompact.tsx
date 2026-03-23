@@ -17,6 +17,8 @@ interface Props {
   id?: string;
   /** True when rendered inside the mobile 2-col grid */
   mobileCompact?: boolean;
+  /** True when rendered inside a modal - uses shorter aspect ratio */
+  modalCompact?: boolean;
 }
 
 export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact }: Props) {
