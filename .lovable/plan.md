@@ -1,79 +1,78 @@
 
 
-# Dashboard Discover: 4:3 Cards, 3 Rows, Personalized Default, Repositioned
+# Fix Dashboard Discover Section: Uniform 4:3 Images, Category Ordering, Load More
 
-## Summary
-- Show discover images in 4:3 aspect ratio (landscape) on the grid; detail modal keeps original size
-- Show 3 rows of items: 15 on desktop (5x3), 16 on mobile (2x8 rows)
-- Personalize default category based on user's onboarding `product_categories` preference
-- Move Discover section right after "Get Started" (new user) / right after metrics (returning user)
-- Rename section to "Find & Recreate"
+## Problems
+1. **Images not uniform 4:3**: `ShimmerImage` drops `aspectRatio` from wrapper after image loads (line 47: `!loaded` condition), so images revert to natural size. The `<img>` itself has `h-auto` so it doesn't crop.
+2. **Different images than Discover page**: Dashboard uses same data source but both pages show `sort_order` ascending — should be consistent.
+3. **Personalized category not reordered in bar**: If user prefers "Accessories", it should appear first in the category list.
+4. **No "Load more" button**.
 
 ## Changes
 
-### 1. `src/components/app/DiscoverCard.tsx`
+### 1. `src/components/app/DiscoverCard.tsx` (line 49-55)
 
-Add optional `aspectRatioOverride` prop. When provided, use it instead of the hardcoded `"3/4"` on `ShimmerImage`:
+When `aspectRatioOverride` is set, wrap the image in a fixed-ratio container with `object-cover` instead of relying on ShimmerImage's broken aspect ratio behavior:
 
 ```tsx
-interface DiscoverCardProps {
-  // ...existing
-  aspectRatioOverride?: string;
-}
+{aspectRatioOverride ? (
+  <div className="w-full overflow-hidden" style={{ aspectRatio: aspectRatioOverride }}>
+    <ShimmerImage
+      src={getOptimizedUrl(imageUrl, { quality: 60 })}
+      alt={...}
+      className="w-full h-full object-cover block ..."
+      loading="lazy"
+    />
+  </div>
+) : (
+  <ShimmerImage ... aspectRatio="3/4" />
+)}
 ```
 
-Pass `aspectRatio={aspectRatioOverride ?? "3/4"}` to `ShimmerImage`. The dashboard will pass `"4/3"` while the full Discover page keeps the default portrait ratio.
+This forces a consistent 4:3 box and `object-cover` crops the image to fill it uniformly.
 
 ### 2. `src/components/app/DashboardDiscoverSection.tsx`
 
-**Rename title**: "Discover" → "Find & Recreate"
-
-**Item count**: Change `.slice(0, 10)` → `.slice(0, 16)` so we get 3 full rows on desktop (5x3=15, 16th hidden by grid) and 8 rows on mobile (2x8=16).
-
-**Grid**: Keep `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2`.
-
-**Pass `aspectRatioOverride="4/3"`** to each `DiscoverCard` so images render landscape in the dashboard grid.
-
-**Personalized default category**: Fetch user's `product_categories` from the profiles table and default `selectedCategory` to their first preference instead of `'all'`:
+**Reorder categories**: When `defaultCategory` is not `'all'`, move that category to position index 1 (right after "All") in the categories array:
 
 ```tsx
-const { user } = useAuth();
-const { data: profile } = useQuery({
-  queryKey: ['dashboard-profile-cats', user?.id],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('product_categories')
-      .eq('user_id', user!.id)
-      .maybeSingle();
-    return data;
-  },
-  enabled: !!user,
-  staleTime: 10 * 60 * 1000,
-});
-
-// Set initial category from user preference
-const defaultCategory = useMemo(() => {
-  const cats = profile?.product_categories as string[] | null;
-  if (cats?.length && cats[0] !== 'any') {
-    const match = CATEGORIES.find(c => c.id === cats[0]);
-    if (match) return match.id;
-  }
-  return 'all';
-}, [profile]);
-
-const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-const activeCategory = selectedCategory ?? defaultCategory;
+const orderedCategories = useMemo(() => {
+  if (defaultCategory === 'all') return CATEGORIES;
+  const base = CATEGORIES.filter(c => c.id !== defaultCategory);
+  const preferred = CATEGORIES.find(c => c.id === defaultCategory);
+  if (!preferred) return CATEGORIES;
+  return [base[0], preferred, ...base.slice(1)]; // "All" first, then preferred, then rest
+}, [defaultCategory]);
 ```
 
-### 3. `src/pages/Dashboard.tsx`
+**Add "Load more" button**: Track `visibleCount` state starting at 16. Show a "Load more" button below the grid that increments by 16. Change `.slice(0, 16)` to `.slice(0, visibleCount)`. Reset `visibleCount` to 16 when category changes.
 
-**New user view**: Move `<DashboardDiscoverSection />` from after "Explore Workflows" (line 392) to right after the "Get Started" `OnboardingChecklist` section (after line 324).
+```tsx
+const [visibleCount, setVisibleCount] = useState(16);
+// Reset on category change
+useEffect(() => setVisibleCount(16), [activeCategory]);
 
-**Returning user view**: Move `<DashboardDiscoverSection />` from after "Create" (line 524) to right after `<LowCreditsBanner />` and metrics row (after line 481), before `<RecentCreationsGallery />`.
+const filtered = useMemo(() => {
+  const items = activeCategory === 'all' ? allItems : allItems.filter(...);
+  return items;
+}, [allItems, activeCategory]);
+
+const visible = filtered.slice(0, visibleCount);
+const hasMore = filtered.length > visibleCount;
+```
+
+After the grid:
+```tsx
+{hasMore && (
+  <div className="flex justify-center pt-2">
+    <Button variant="outline" size="sm" onClick={() => setVisibleCount(c => c + 16)}>
+      Load more
+    </Button>
+  </div>
+)}
+```
 
 ### Files
-- `src/components/app/DiscoverCard.tsx` — add `aspectRatioOverride` prop
-- `src/components/app/DashboardDiscoverSection.tsx` — rename to "Find & Recreate", 16 items, pass 4:3 ratio, personalized default category
-- `src/pages/Dashboard.tsx` — reposition section in both views
+- `src/components/app/DiscoverCard.tsx` — force 4:3 container with `object-cover` when `aspectRatioOverride` is set
+- `src/components/app/DashboardDiscoverSection.tsx` — reorder categories by user preference, add load more button, reset count on category change
 
