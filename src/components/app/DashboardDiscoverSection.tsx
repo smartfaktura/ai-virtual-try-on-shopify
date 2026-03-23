@@ -139,8 +139,7 @@ export function DashboardDiscoverSection() {
     });
   }, [allItems, activeCategory, featuredMap]);
 
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = filtered.length > visibleCount;
+  const visible = filtered.slice(0, 16);
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
