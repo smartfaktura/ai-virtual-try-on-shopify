@@ -100,16 +100,18 @@ export function DiscoverCategoryBar({ categories, selectedCategory, onSelectCate
       </div>
 
       {/* Right arrow — desktop only */}
-      <button
-        onClick={scrollRight}
-        className={cn(
-          'hidden sm:flex shrink-0 p-1 ml-1.5 transition-opacity duration-200',
-          canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        )}
-        aria-label="Scroll right"
-      >
-        <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
-      </button>
+      {!hideArrows && (
+        <button
+          onClick={scrollRight}
+          className={cn(
+            'hidden sm:flex shrink-0 p-1 ml-1.5 transition-opacity duration-200',
+            canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          )}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4 text-muted-foreground/60 hover:text-foreground transition-colors" />
+        </button>
+      )}
     </div>
   );
 }
