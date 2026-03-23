@@ -85,6 +85,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Selfie / UGC Set': {
     mode: 'carousel',
     background: ugcResult1,
+    objectPosition: 'center',
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     elements: [
       {
