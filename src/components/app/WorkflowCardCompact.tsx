@@ -54,7 +54,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           <img
             src={scene?.background || workflow.preview_image_url || imgFallback}
             alt={workflow.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain bg-muted/50"
           />
         )}
       </div>
