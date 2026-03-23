@@ -46,7 +46,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       {/* Thumbnail — taller on mobile 2-col for breathing room */}
       <div className={cn(
         "relative w-full overflow-hidden",
-        mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
+        modalCompact ? "aspect-square" : mobileCompact ? "aspect-[2/3]" : "aspect-[3/4]"
       )}>
         {scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
