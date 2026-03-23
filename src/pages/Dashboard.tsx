@@ -401,10 +401,9 @@ export default function Dashboard() {
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
 
-        {/* Feedback Banner */}
-        <FeedbackBanner />
 
         <StartWorkflowModal open={startModalOpen} onOpenChange={setStartModalOpen} />
+        <EarnCreditsModal open={earnCreditsOpen} onOpenChange={setEarnCreditsOpen} />
       </div>
     );
   }
