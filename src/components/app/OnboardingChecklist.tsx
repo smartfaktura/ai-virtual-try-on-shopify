@@ -149,6 +149,10 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount,
             );
           })}
         </div>
+
+        <p className="text-xs text-muted-foreground pt-4 border-t border-border mt-1">
+          {completedCount} of {steps.length} complete
+        </p>
       </div>
     </div>
   );
