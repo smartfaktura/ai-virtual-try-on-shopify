@@ -28,7 +28,7 @@ interface LibraryDetailModalProps {
   onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
 }
 
-export function LibraryDetailModal({ item, open, onClose, isUpscaling }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings }: LibraryDetailModalProps) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
