@@ -128,7 +128,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
       )}
 
       {/* Model grid */}
-      <div className={cn("grid gap-2 max-h-64 overflow-y-auto pr-1", isMobile ? "grid-cols-2" : "grid-cols-3")}>
+      <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
         {filtered.map(model => (
           <button
             key={model.modelId}
