@@ -177,8 +177,8 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   // Mock Workflow objects for the animated cards
   const WORKFLOW_CARDS: Workflow[] = WORKFLOW_OPTIONS.map((wf) => ({
     id: wf.slug,
-    name: wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
-      : wf.slug === 'product-listing-set' ? 'Product Listing Set'
+    name: wf.slug === 'product-listing-set' ? 'Product Listing Set'
+      : wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
       : 'Selfie / UGC Set',
     slug: wf.slug,
     description: wf.subtitle,
