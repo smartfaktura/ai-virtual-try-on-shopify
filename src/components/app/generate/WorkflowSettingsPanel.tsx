@@ -15,7 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Package, Clock, Palette, Loader2 } from 'lucide-react';
+import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Package, Clock, Palette, Loader2, SlidersHorizontal } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
