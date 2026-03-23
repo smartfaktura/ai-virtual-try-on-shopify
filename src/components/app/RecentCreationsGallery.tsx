@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Eye, Compass } from 'lucide-react';
+import { ArrowRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -12,16 +12,6 @@ import { toSignedUrls } from '@/lib/signedUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
-
-const CURATED_SCENE_IDS = [
-  '5401494e-1aae-4953-8a10-bf90e525d980',
-  '038e7ba5-0f3e-4679-8a1f-8a63a54b3baf',
-  '83eda438-1afe-4bef-9250-1fc580a1affc',
-  'ead64b8c-31eb-4427-9e1c-974021e5b7d8',
-  'bf507e3a-ccd5-41b8-af12-f920e565cc60',
-  '5c6c138a-3097-47cb-beaf-36fef3e6fb2c',
-  'ff2ff0f9-535b-40a2-ba6f-75c846112123',
-];
 
 interface CreationItem {
   id: string;
@@ -42,23 +32,6 @@ export function RecentCreationsGallery() {
   const isMobile = useIsMobile();
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
-
-  const { data: curatedScenes = [] } = useQuery({
-    queryKey: ['curated-scenes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('custom_scenes')
-        .select('id, name, category, image_url, optimized_image_url')
-        .in('id', CURATED_SCENE_IDS)
-        .eq('is_active', true);
-      if (error) throw error;
-      const ordered = CURATED_SCENE_IDS
-        .map(id => (data as any[]).find(s => s.id === id))
-        .filter(Boolean);
-      return ordered;
-    },
-    staleTime: 10 * 60 * 1000,
-  });
 
   const { data: creations = [], isLoading } = useQuery({
     queryKey: ['recent-creations', user?.id],
@@ -146,7 +119,6 @@ export function RecentCreationsGallery() {
       items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
       const top = items.slice(0, 10);
 
-      // Batch-sign all URLs in 1-2 calls instead of sequential
       const rawUrls = top.map(i => i.imageUrl);
       const signedUrls = await toSignedUrls(rawUrls);
       for (let i = 0; i < top.length; i++) {
@@ -176,27 +148,18 @@ export function RecentCreationsGallery() {
     setActiveItemId(null);
   }, []);
 
-  const handleCardClick = useCallback((item: CreationItem, isPlaceholder: boolean) => {
-    if (isPlaceholder) {
-      navigate(`/app/freestyle?scene=custom-${item.id}`);
-      return;
-    }
-
+  const handleCardClick = useCallback((item: CreationItem) => {
     if (isMobile) {
       if (activeItemId === item.id) {
-        // Second tap — open the item
         openItem(item);
       } else {
-        // First tap — reveal overlay
         setActiveItemId(item.id);
       }
     } else {
-      // Desktop — single click opens
       openItem(item);
     }
-  }, [isMobile, activeItemId, navigate, openItem]);
+  }, [isMobile, activeItemId, openItem]);
 
-  // Dismiss active overlay when tapping outside
   const handleContainerClick = useCallback(() => {
     if (isMobile && activeItemId) {
       setActiveItemId(null);
@@ -216,42 +179,20 @@ export function RecentCreationsGallery() {
     );
   }
 
-  const isPlaceholder = creations.length === 0;
-
-  const displayItems: CreationItem[] = isPlaceholder
-    ? curatedScenes.map((s: any) => ({
-        id: s.id,
-        imageUrl: s.optimized_image_url || s.image_url,
-        label: s.name,
-        subtitle: s.category.charAt(0).toUpperCase() + s.category.slice(1),
-        date: '',
-        rawDate: '',
-        source: 'generation' as const,
-      }))
-    : creations;
+  if (creations.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground tracking-tight">
-            {isPlaceholder ? 'What You Can Create' : 'Recent Creations'}
-          </h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {isPlaceholder
-              ? 'Explore scenes and styles to get started.'
-              : 'Your latest generated visuals.'}
-          </p>
+          <h2 className="text-xl font-bold text-foreground tracking-tight">Recent Creations</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Your latest generated visuals.</p>
         </div>
-        {isPlaceholder ? (
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate('/app/discover')}>
-            <Compass className="w-3.5 h-3.5" /> View More
-          </Button>
-        ) : (
-          <Button variant="link" className="text-sm font-medium gap-1" onClick={() => navigate('/app/library')}>
-            View all <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
-        )}
+        <Button variant="link" className="text-sm font-medium gap-1" onClick={() => navigate('/app/library')}>
+          View all <ArrowRight className="w-3.5 h-3.5" />
+        </Button>
       </div>
 
       <div className="relative" onClick={handleContainerClick}>
@@ -262,9 +203,8 @@ export function RecentCreationsGallery() {
           className="flex gap-4 overflow-x-auto pb-2 px-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {displayItems.map((item) => {
+          {creations.map((item) => {
             const isActive = isMobile && activeItemId === item.id;
-            const showOverlay = isActive || !isMobile;
 
             return (
               <div
@@ -272,7 +212,7 @@ export function RecentCreationsGallery() {
                 className="flex-shrink-0 w-[180px] group cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleCardClick(item, isPlaceholder);
+                  handleCardClick(item);
                 }}
               >
                 <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
@@ -291,13 +231,11 @@ export function RecentCreationsGallery() {
                   </div>
                   <div
                     className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-200 ${
-                      isActive
-                        ? 'opacity-100'
-                        : 'opacity-0 group-hover:opacity-100'
+                      isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                     }`}
                   >
                     <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-                      <Eye className="w-3.5 h-3.5" /> {isPlaceholder ? 'Use Scene' : 'View'}
+                      <Eye className="w-3.5 h-3.5" /> View
                     </span>
                   </div>
                 </div>
