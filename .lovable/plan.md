@@ -1,31 +1,33 @@
 
 
-# Fix Modal Card Sizing for Better Fit
+# Fix: Product Pre-selection from StartWorkflowModal
 
 ## Problem
-The `WorkflowCardCompact` cards use `aspect-[3/4]` (desktop) or `aspect-[2/3]` (mobile) thumbnails designed for the full Workflows hub page. Inside a constrained modal/drawer, three of these cards are too tall and cramped - hard to see details, especially on mobile.
+The `StartWorkflowModal` navigates to `/app/generate/{slug}?product={id}`, but `Generate.tsx` never reads the `product` query parameter. The page always starts at step `'source'`, so the user lands on "How do you want to start?" instead of having their product pre-selected and being on the model/settings step.
 
 ## Solution
 
-Add a `modalCompact` prop to `WorkflowCardCompact` that uses a shorter thumbnail ratio and tighter content spacing, specifically for the modal context.
+### `src/pages/Generate.tsx` (~20 lines added)
 
-### `src/components/app/WorkflowCardCompact.tsx`
+**1. Read the `product` query param** (alongside existing `template`, `model`, `scene` params):
+```tsx
+const prefillProductId = searchParams.get('product');
+```
 
-- Add `modalCompact?: boolean` prop
-- When `modalCompact` is true:
-  - Thumbnail uses `aspect-square` instead of `aspect-[3/4]` or `aspect-[2/3]` - significantly shorter, fits 3-up in the modal
-  - Content area uses `p-2` with tighter spacing
-  - Title uses `text-xs`, description hidden
-  - Button uses compact `h-7` size
-- This keeps the animated thumbnails but in a size that fits the modal
+**2. Add a `useEffect` that auto-selects the product** once `userProducts` have loaded and the workflow is resolved:
 
-### `src/components/app/StartWorkflowModal.tsx`
+- If `prefillProductId` starts with `sample_` → match against `SAMPLE_TRYON_PRODUCT`, `SAMPLE_LISTING_PRODUCT`, `SAMPLE_UGC_PRODUCT`, `SAMPLE_MIRROR_PRODUCT`
+- Otherwise → find the matching `userProducts` entry and call `mapUserProductToProduct()`
+- Set `selectedProduct`, `selectedSourceImages`, `sourceType('products')`
+- Then advance the step using the same logic as `handleSelectProduct`:
+  - Skip brand profile (for modal-initiated flows)
+  - For try-on/UGC workflows → go to `'model'` step
+  - For workflows with config that skips template → go to `'settings'`
+  - Otherwise → go to `'template'` or `'mode'`
+- Use a ref to ensure this only fires once
 
-- Pass `modalCompact` to `WorkflowCardCompact` instead of `mobileCompact={isMobile}`
-- Reduce gap in the grid: `gap-2` on mobile, `gap-3` on desktop
-- On mobile drawer, use `grid-cols-3 gap-2` so cards sit side-by-side without overflow
+**3. Handle the `selectedProductIds` Set** for try-on workflows - pre-add the product ID so multi-select state is consistent.
 
 ### Files
-- `src/components/app/WorkflowCardCompact.tsx` - add `modalCompact` prop with shorter aspect ratio
-- `src/components/app/StartWorkflowModal.tsx` - pass `modalCompact` instead of `mobileCompact`
+- `src/pages/Generate.tsx` - read `product` param, add auto-select effect (~20 lines)
 
