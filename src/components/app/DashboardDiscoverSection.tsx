@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -69,9 +71,36 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
 
 export function DashboardDiscoverSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+
+  // Fetch user's product categories for personalized default
+  const { data: profileCats } = useQuery({
+    queryKey: ['dashboard-profile-cats', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('product_categories')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const defaultCategory = useMemo(() => {
+    const cats = profileCats?.product_categories as string[] | null;
+    if (cats?.length && cats[0] !== 'any') {
+      const match = CATEGORIES.find(c => c.id === cats[0]);
+      if (match) return match.id;
+    }
+    return 'all';
+  }, [profileCats]);
+
+  const activeCategory = selectedCategory ?? defaultCategory;
 
   const allItems = useMemo<DiscoverItem[]>(
     () => presets.map((p) => ({ type: 'preset' as const, data: p })),
@@ -79,11 +108,11 @@ export function DashboardDiscoverSection() {
   );
 
   const filtered = useMemo(() => {
-    const items = selectedCategory === 'all'
+    const items = activeCategory === 'all'
       ? allItems
-      : allItems.filter((item) => itemMatchesProductCategory(item, selectedCategory));
-    return items.slice(0, 10);
-  }, [allItems, selectedCategory]);
+      : allItems.filter((item) => itemMatchesProductCategory(item, activeCategory));
+    return items.slice(0, 16);
+  }, [allItems, activeCategory]);
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
@@ -115,12 +144,12 @@ export function DashboardDiscoverSection() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-7 w-32" />
+          <Skeleton className="h-7 w-40" />
           <Skeleton className="h-5 w-16" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
           {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
+            <Skeleton key={i} className="aspect-[4/3] rounded-lg" />
           ))}
         </div>
       </div>
@@ -132,7 +161,7 @@ export function DashboardDiscoverSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Discover</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Find & Recreate</h2>
         <Button
           variant="link"
           size="sm"
@@ -145,7 +174,7 @@ export function DashboardDiscoverSection() {
 
       <DiscoverCategoryBar
         categories={CATEGORIES}
-        selectedCategory={selectedCategory}
+        selectedCategory={activeCategory}
         onSelectCategory={setSelectedCategory}
       />
 
@@ -154,6 +183,7 @@ export function DashboardDiscoverSection() {
           <DiscoverCard
             key={item.type === 'preset' ? item.data.id : item.data.poseId}
             item={item}
+            aspectRatioOverride="4/3"
             onClick={() => setSelectedItem(item)}
             onRecreate={(e) => {
               e.stopPropagation();
