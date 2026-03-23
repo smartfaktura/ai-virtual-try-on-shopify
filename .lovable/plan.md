@@ -1,60 +1,42 @@
 
 
-# ProductCategoryShowcase Placement: Pros & Cons Analysis
+# Fix: Chip Thumbnails Not Loading Before Animation on Mobile
 
-## Current Order (after Hero)
-1. Hero
-2. StudioTeamSection (social proof — team avatars)
-3. HowItWorks (3-step explainer)
-4. FreestyleShowcaseSection (feature demo)
-5. **ProductCategoryShowcase** ← currently here
-6. ModelShowcaseSection
-7. EnvironmentShowcaseSection
-8. CreativeDropsSection
-9. Pricing → FAQ → CTA
+## Problem
+The chip thumbnails (product, scene) and model avatars are ~16-20px on screen but download at full resolution — only `quality: 50` is applied, no `width` constraint. On mobile networks, these images arrive **after** the animation reveals them (1.5-2.2s), showing broken/empty thumbnails.
 
----
+## Root Cause
+- `getOptimizedUrl()` is called with `{ quality: 50 }` but no `width` — Supabase still serves the full-width image
+- Images render at 16-20px but download could be 1000px+ wide
+- The animation cycle is only 8 seconds; chips appear at 1.5-2.2s — not enough time for unoptimized images on slow connections
 
-## Option A: Move Right After Hero (position #2)
+## Fix
 
-**Pros:**
-- Immediately answers "does this work for MY product type?" — the #1 question visitors have after seeing the hero
-- Auto-cycling category cards create visual motion that keeps attention after the static hero
-- Reduces bounce — visitors in fashion/food/skincare see themselves represented instantly
-- Strong "show don't tell" — real AI outputs before any text explanation
+### `src/components/landing/FreestyleShowcaseSection.tsx`
 
-**Cons:**
-- Pushes StudioTeamSection (social proof) down — visitors see product demos before knowing who's behind the tool
-- The "How It Works" 3-step flow gets delayed, so visitors see outputs without understanding the process yet
-- Two heavy image sections back-to-back (Hero + Categories) could feel repetitive on slow connections
-- The current flow builds a narrative: team → process → features → proof. Moving categories up breaks this storytelling arc
+**1. Add `width` to all tiny image optimizations** — these render at 20px max, so `width: 40` (2x for retina) is plenty:
 
----
+```tsx
+// MODEL_AVATARS — rendered at 16-20px
+{ quality: 50, width: 40 }
 
-## Option B: Keep Current Position (#5)
+// CHIPS thumbs — rendered at 16-20px  
+{ quality: 50, width: 40 }
+```
 
-**Pros:**
-- Maintains the logical narrative: credibility (team) → understanding (how it works) → capability (freestyle) → breadth (categories)
-- By the time visitors reach categories, they already understand what the tool does — the categories reinforce rather than confuse
-- Spacing between image-heavy sections prevents visual fatigue
+**2. Preload chip/avatar images on mount** so they're cached before the animation reveals them. Add an effect that creates `Image()` objects for all 5 tiny URLs at component mount (before the 1.5s delay):
 
-**Cons:**
-- Many visitors never scroll to position #5 — typical landing page drop-off is 40-60% by section 3
-- The most universally relatable content ("your product type works here") is buried
-- Visitors who don't identify with the Freestyle showcase may bounce before seeing their category
+```tsx
+useEffect(() => {
+  const urls = [
+    ...MODEL_AVATARS.map(m => m.src),
+    ...CHIPS.map(c => c.thumb).filter(Boolean),
+  ];
+  urls.forEach(url => { const img = new Image(); img.src = url; });
+}, []);
+```
 
----
+This ensures images are in browser cache before chips animate in. Combined with width optimization, each image drops from potentially hundreds of KB to ~1-2 KB.
 
-## Recommendation
-
-**Move it to position #2** (right after Hero). The category showcase directly answers the visitor's core question and is more universally engaging than the team section. The new order would be:
-
-1. Hero
-2. **ProductCategoryShowcase** — "yes, this works for your products"
-3. StudioTeamSection — credibility
-4. HowItWorks — process
-5. FreestyleShowcaseSection — deep feature demo
-6. ModelShowcaseSection → EnvironmentShowcaseSection → rest
-
-This is a 1-line reorder in `Landing.tsx`.
+One file, ~10 lines changed.
 
