@@ -17,6 +17,7 @@ interface Props {
   id?: string;
   mobileCompact?: boolean;
   modalCompact?: boolean;
+  mobileRow?: boolean;
   displayName?: string;
   subtitle?: string;
 }
