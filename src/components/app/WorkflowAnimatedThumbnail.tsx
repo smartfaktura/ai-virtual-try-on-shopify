@@ -749,7 +749,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true, compact = fa
         onLoad={() => setBgLoaded(true)}
       />
 
-      {isActive && elementsReady && (
+      {isActive && elementsReady && !modalCompact && (
         <div key={iteration}>
           {/* Light gradient overlay */}
           <div

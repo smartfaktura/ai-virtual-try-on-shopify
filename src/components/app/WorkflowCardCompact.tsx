@@ -62,6 +62,24 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         )}
       </div>
 
+      {/* Animated ingredient strip for modal */}
+      {modalCompact && scene && scene.elements.length > 0 && isVisible && (
+        <div className="flex gap-1.5 px-2 pt-2 overflow-x-auto scrollbar-hide">
+          {scene.elements
+            .filter(el => el.type === 'product' || el.type === 'model' || el.type === 'scene' || el.type === 'badge')
+            .map((el, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1 bg-muted rounded-full px-2 py-0.5 text-[10px] font-medium text-muted-foreground shrink-0 opacity-0 animate-fade-in"
+                style={{ animationDelay: `${i * 0.15}s`, animationFillMode: 'forwards' }}
+              >
+                {el.icon}
+                {el.label}
+              </span>
+            ))}
+        </div>
+      )}
+
       {/* Content */}
       <div className={cn("flex flex-col gap-2 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>
         <h3 className={cn(
