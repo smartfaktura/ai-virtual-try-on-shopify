@@ -971,9 +971,6 @@ export default function Freestyle() {
           createdAt: '',
           aspectRatio: img.aspectRatio || '1:1',
           quality: 'standard',
-          modelId: img.modelId,
-          sceneId: img.sceneId,
-          productId: img.productId,
         };
         return (
           <LibraryDetailModal
