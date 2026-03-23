@@ -1,26 +1,37 @@
 
 
-# Fix Zoomed-In Product Images in Start Workflow Modal
+# Fix Workflows Hub: Background Images Zoomed + Remove Try-On Badge
 
-## Problem
-Product images use `object-cover` inside `aspect-square` containers. When product photos have the subject filling the frame (like a crop top or jacket), `object-cover` zooms/crops aggressively to fill the square. The previous fix (`object-contain p-1`) went too far - images floated with whitespace.
+## Problems
+1. **Background images for Product Listing Set and Virtual Try-On Set appear zoomed/cropped** on `/app/workflows` - the `WorkflowAnimatedThumbnail` uses `object-cover` which aggressively crops the result images inside `aspect-[3/4]` containers.
+2. **Try-On badge** clutters the cards unnecessarily.
 
-## Solution
+## Changes
 
-Use `object-contain` (shows the full image without cropping) combined with a solid `bg-muted` background to fill the letterbox areas cleanly. No padding needed - the background color handles the empty space naturally.
+### 1. `src/components/app/WorkflowAnimatedThumbnail.tsx` (line 742)
 
-### `src/components/app/StartWorkflowModal.tsx` (line 224)
+Change the background image from `object-cover` to `object-contain` with a `bg-muted` fallback so the full workflow result composition is visible without cropping:
 
 ```tsx
 // From:
-className="w-full h-full object-cover"
+className={`absolute inset-0 w-full h-full object-cover ...`}
 
 // To:
-className="w-full h-full object-contain"
+className={`absolute inset-0 w-full h-full object-contain bg-muted ...`}
 ```
 
-The parent `div` already has `bg-muted`, so any letterbox space will blend with the card background rather than appearing as awkward whitespace. This is the middle ground: no aggressive cropping, no floating images with padding.
+This affects the default animated thumbnail renderer (the one used by Virtual Try-On Set and Product Listing Set). Carousel, Staging, and Upscale modes have their own renderers and won't be affected.
 
-### File
-- `src/components/app/StartWorkflowModal.tsx` - line 224 only
+### 2. `src/components/app/WorkflowCardCompact.tsx` (lines 71-76)
+
+Remove the Try-On badge block entirely.
+
+### 3. `src/components/app/WorkflowCard.tsx` (lines 120-125)
+
+Remove the Try-On badge block from the large card as well.
+
+### Files
+- `src/components/app/WorkflowAnimatedThumbnail.tsx` - line 742: `object-cover` → `object-contain bg-muted`
+- `src/components/app/WorkflowCardCompact.tsx` - remove Try-On badge (lines 71-76)
+- `src/components/app/WorkflowCard.tsx` - remove Try-On badge (lines 120-125)
 
