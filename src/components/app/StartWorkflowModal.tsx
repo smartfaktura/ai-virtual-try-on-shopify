@@ -63,6 +63,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Fetch user products
   const { data: userProducts = [] } = useQuery({
