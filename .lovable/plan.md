@@ -1,42 +1,44 @@
 
 
-# Fix Animation Overlaps in Modal + Product Image Zoom
+# Fix Product Listing Set Slow Loading
 
-## Problems
-1. **Workflow card animations overlap the background** - In the small `aspect-square` modal cards, the floating chips (Product, Model, Scene, badges) cover most of the background image, making it hard to see what the workflow actually produces.
-2. **Product images zoomed/cropped** - Step 2 product grid uses `object-cover` on `aspect-square`, which crops non-square product images (e.g. tall bottles get zoomed into the middle).
+## Root Cause
 
-## Solution
+Product Listing Set is the **only workflow** using local `import` from `src/assets/workflows/`:
 
-### 1. `src/components/app/WorkflowCardCompact.tsx` (~2 lines)
-
-When `modalCompact` is true, **don't show animated overlays** - just show the static background image. The cards are too small in the modal for the floating elements to be readable anyway.
-
-```tsx
-// Change the thumbnail rendering for modalCompact
-{scene && !modalCompact ? (
-  <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} />
-) : (
-  <img
-    src={scene?.background || workflow.preview_image_url || imgFallback}
-    alt={workflow.name}
-    className="w-full h-full object-cover"
-  />
-)}
+```ts
+import listingProduct from '@/assets/workflows/product-listing-product.png';
+import listingResult from '@/assets/workflows/product-listing-result.png';
 ```
 
-This shows the workflow result image (the background from animation data) as a clean static preview - no overlapping chips.
+Every other workflow uses `getLandingAssetUrl()` which produces Supabase Storage URLs. This matters because:
 
-### 2. `src/components/app/StartWorkflowModal.tsx` (~1 line)
+1. **No image optimization** - `getOptimizedUrl()` only transforms Supabase Storage URLs. Local imports bypass it entirely, so the full-resolution PNG loads every time (no quality compression, no width resize).
+2. **Bundled into JS** - Vite inlines or hashes these into the app bundle, increasing initial load and parse time for every page, not just workflows.
+3. **No CDN caching** - Supabase Storage URLs are served from a CDN with proper cache headers. Local assets go through Vite's dev server or bundled output.
 
-Change product image grid from `object-cover` to `object-contain` with a subtle background so products display fully without cropping:
+## Fix
 
-```tsx
-// Line 224: change object-cover to object-contain
-className="w-full h-full object-contain p-1"
+### `src/components/app/workflowAnimationData.tsx`
+
+Replace the two local imports with `getLandingAssetUrl()` calls, matching the pattern used by every other workflow:
+
+```ts
+// Remove:
+import listingProduct from '@/assets/workflows/product-listing-product.png';
+import listingResult from '@/assets/workflows/product-listing-result.png';
+
+// Replace with:
+const listingProduct = getLandingAssetUrl('workflows/product-listing-product.png');
+const listingResult = getLandingAssetUrl('workflows/product-listing-result.png');
 ```
+
+This requires uploading the two files to the `landing-assets` Supabase Storage bucket under `workflows/`. I'll upload them via the storage API.
+
+After this change, `getOptimizedUrl()` in `WorkflowAnimatedThumbnail` (line 727) will correctly apply `width=600&quality=60` to the background, reducing the transferred size significantly.
 
 ### Files
-- `src/components/app/WorkflowCardCompact.tsx` - static image for `modalCompact` instead of animated overlays
-- `src/components/app/StartWorkflowModal.tsx` - `object-contain` for product thumbnails
+- **`src/components/app/workflowAnimationData.tsx`** - replace 2 local imports with `getLandingAssetUrl()` calls
+- **Upload**: `src/assets/workflows/product-listing-product.png` and `product-listing-result.png` to Supabase Storage `landing-assets/workflows/`
+- Optionally delete the files from `src/assets/workflows/` after confirming they load from storage
 
