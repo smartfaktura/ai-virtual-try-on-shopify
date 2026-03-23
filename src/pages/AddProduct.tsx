@@ -141,6 +141,9 @@ export default function AddProduct() {
               <ShopifyImportTab onProductAdded={handleDone} onClose={handleDone} />
             </TabsContent>
           </div>
+          <div className="sm:hidden mt-6">
+            <ProductUploadTips />
+          </div>
         </Tabs>
       )}
     </PageHeader>
