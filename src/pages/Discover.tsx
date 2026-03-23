@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Compass, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -297,6 +297,23 @@ export default function Discover() {
     const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
+
+  // Read ?similar= param from Dashboard's "Similar" button
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const similarScene = params.get('similar');
+    if (similarScene && allItems.length > 0 && !similarTo) {
+      const match = allItems.find(i =>
+        (i.type === 'preset' ? i.data.scene_name : i.data.name) === similarScene
+      );
+      if (match) {
+        setSimilarTo(match);
+        params.delete('similar');
+        navigate({ search: params.toString() }, { replace: true });
+      }
+    }
+  }, [allItems, location.search]);
 
   // Auto-open item from URL param — only set if different item
   useEffect(() => {
