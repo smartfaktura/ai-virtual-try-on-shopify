@@ -200,7 +200,11 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   // --- Step 1: Workflow selection ---
   const workflowStep = (
     <div className="space-y-3">
-      <div className={cn("grid grid-cols-3", isMobile ? "gap-2" : "gap-3")}>
+      <div className={cn(
+        isMobile
+          ? "flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1"
+          : "grid grid-cols-3 gap-3"
+      )}>
         {WORKFLOW_CARDS.map((wf, i) => (
           <WorkflowCardCompact
             key={wf.slug}
