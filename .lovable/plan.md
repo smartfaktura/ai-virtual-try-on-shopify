@@ -1,61 +1,43 @@
 
 
-# Fix Freestyle Image Detail Modal: Better Header + Remove Aspect Ratio + Spacing
+# Add "Copy to Editor" Button in Freestyle Detail Modal
 
-## Problem
-1. Shows "Freestyle" as small label AND "Freestyle" as large heading — redundant and unclear
-2. Shows "· 4:5" aspect ratio text — not needed
-3. No spacing between prompt and action buttons
+## Current State
+- **Delete** button exists but is buried below Generate Video
+- **Copy to Editor** button (that restores prompt + model + scene + product to the freestyle editor) only exists on the gallery thumbnail cards, not in the detail modal
 
-## Changes
+## Plan
 
-### 1. `src/pages/Freestyle.tsx` (line 953-962) — Pass richer data to LibraryDetailModal
+### `src/components/app/LibraryDetailModal.tsx`
 
-Add model/scene/product names to the `libraryItem` so the detail modal can show them:
+1. **Add a "Copy to Editor" button** for freestyle items, placed right after the Download button (top of actions). This reuses the same `onCopySettings` pattern from FreestyleGallery.
 
-```tsx
-const libraryItem: LibraryItem = {
-  id: img.id,
-  imageUrl: img.url,
-  source: 'freestyle',
-  label: buildDynamicLabel(img),  // dynamic name
-  prompt: img.userPrompt || undefined,
-  date: new Date(img.createdAt).toLocaleDateString(),
-  createdAt: new Date(img.createdAt).toISOString(),
-  aspectRatio: img.aspectRatio || '1:1',
-  quality: 'standard',
-  modelId: img.modelId,
-  sceneId: img.sceneId,
-  productId: img.productId,
-};
-```
+2. **Add `onCopySettings` prop** to `LibraryDetailModalProps`:
+   ```ts
+   onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
+   ```
 
-Build a dynamic label from the image metadata — resolve model/scene/product names from the already-available `mockModels`, `customScenePoses`, and `products` arrays:
-- If model + scene: "Freya · Coastal Studio"
-- If model only: "Freya"
-- If scene only: "Coastal Studio"
-- If product only: "White Sneakers"
-- Fallback: first ~40 chars of the user prompt, or "Freestyle Creation"
+3. **Add the button** after Download, before Enhance — only when `item.source === 'freestyle'`:
+   ```tsx
+   <Button variant="outline" onClick={() => { onCopySettings?.({...}); onClose(); }}>
+     <Copy /> Copy to Editor
+   </Button>
+   ```
 
-### 2. `src/components/app/LibraryDetailModal.tsx` (lines 126-150) — Improve header section
+4. **Move Delete** into a subtle row at the very bottom of all actions (after Generate Video), keeping it as a small ghost button — same as now but separated with a thin divider.
 
-**Change the small label** from "Freestyle" to "Freestyle Generation":
-```tsx
-// Line 128
-item.source === 'freestyle' ? 'Freestyle Generation' : 'Generation'
-```
+### `src/pages/Freestyle.tsx`
 
-**Remove aspect ratio display** (lines 142-146): Delete the `{item.aspectRatio && ...}` block that shows "· 4:5".
+5. **Pass `onCopySettings`** to `LibraryDetailModal` using the existing `handleCopySettings` handler already built for the gallery.
 
-**Add spacing** before buttons: Add `pt-2` or increase gap in the parent `flex flex-col gap-6` to `gap-8` — or simply add a `<div className="pt-2" />` before the actions section.
+### Layout order (freestyle items):
+1. Download Image (primary)
+2. **Copy to Editor** (new, outline)
+3. Enhance to 2K / 4K
+4. Generate Perspectives
+5. Generate Video (coming soon)
+6. ── thin separator ──
+7. Delete (ghost, destructive)
 
-### Summary
-| Change | Detail |
-|--------|--------|
-| Dynamic label | Resolve model/scene/product names for heading |
-| Small label | "Freestyle" → "Freestyle Generation" |
-| Remove aspect ratio | Remove "· 4:5" text |
-| Spacing | Add gap before action buttons |
-
-Two files, ~20 lines changed.
+Two files, ~15 lines added.
 
