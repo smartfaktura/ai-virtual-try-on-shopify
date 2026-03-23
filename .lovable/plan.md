@@ -1,30 +1,38 @@
 
 
-# Improve MetricCard Hover UX & Equal Card Sizing
+# Equal-Size Metric Cards with Inline Hover Info Panel
 
-## Problems
-1. Popover appears abruptly with no smooth entrance — feels disconnected from the card
-2. The popover positioning (below-left) can feel jarring; it should feel like a natural extension of the card
-3. Cards have different heights — stat cards vs action cards aren't equal
-4. On the screenshot, the popover box looks like a separate disconnected element
+## Concept
+Instead of a floating popover that feels disconnected, on hover the card content is replaced in-place by the team avatar + explanation — same card size, smooth crossfade. All cards get a fixed height matching the tallest card (Continue Last).
 
 ## Changes
 
 ### `src/components/app/MetricCard.tsx`
 
-**Equal card sizing**: Add `min-h-[120px]` to card container and use `flex flex-col justify-between` so shorter cards distribute space evenly rather than collapsing.
+1. **Fixed equal height**: All cards use `h-[140px]` (matching the "Continue Last" card which has the most content). Remove `min-h-[120px]`.
 
-**Smoother popover appearance**:
-- Reduce hover delay from 300ms to 200ms for snappier response
-- Add `data-[state=open]:animate-in data-[state=closed]:animate-out` with a subtle fade + slide via Radix's built-in animation classes (already in our PopoverContent)
-- Style the popover with `rounded-xl` (matching card corners), remove the heavy `shadow-lg` and use `shadow-md` with a softer border
-- Position with `sideOffset={4}` (tighter to card) and `align="center"` so it feels connected to the card rather than floating away to the left
-- Add a subtle `backdrop-blur-sm` for a modern glass feel
+2. **Remove Popover entirely**: Delete the Radix Popover import and all popover-related code. No more floating external tooltip.
 
-**PopoverContent onMouseEnter/Leave**: Already handled — keep the popover open when user hovers into it, close smoothly when they leave. Ensure the close delay is 250ms so it doesn't flicker.
+3. **Hover = in-card content swap**: Use `useState(hovered)` with `onMouseEnter`/`onMouseLeave` on the card itself. When hovered and tooltip exists:
+   - Hide the normal card content (opacity-0, scale-95)
+   - Show the tooltip content in its place (opacity-100, scale-100)
+   - Same card dimensions — just the inner content crossfades
 
-**Loading state**: Match the `min-h-[120px]` so loading skeletons are same size.
+   ```text
+   Normal state:           Hovered state:
+   ┌────────────────┐      ┌────────────────┐
+   │ € COST SAVED   │      │ 🟡 Omar        │
+   │ €42,930        │  →   │ Based on €30   │
+   │ vs photoshoots │      │ avg per photo  │
+   └────────────────┘      └────────────────┘
+   ```
+
+4. **Animation**: Use `transition-all duration-300` with opacity + slight translateY for smooth crossfade. Both content layers are `absolute inset-0` inside a `relative` container.
+
+5. **Mobile**: On mobile (no hover), show a small tap indicator (subtle info dot in top-right corner). On tap, toggle the same content swap.
+
+6. **Loading skeleton**: Match `h-[140px]`.
 
 ### Files
-- `src/components/app/MetricCard.tsx` — equal min-height, smoother popover styling and timing
+- `src/components/app/MetricCard.tsx` — fixed height, remove popover, add in-card content swap on hover
 
