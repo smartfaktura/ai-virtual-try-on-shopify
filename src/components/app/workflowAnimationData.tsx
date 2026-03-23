@@ -39,6 +39,12 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Virtual Try-On Set': {
     background: tryonResult,
     objectPosition: 'center 20%',
+    recipe: [
+      { image: tryonProduct, label: 'Product' },
+      { image: tryonModel, label: 'Model' },
+      { image: tryonScene, label: 'Scene' },
+    ],
+    recipeResult: tryonResult,
     elements: [
       {
         type: 'product', image: tryonProduct, label: 'Crop Top', sublabel: 'Product',
@@ -65,6 +71,10 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Product Listing Set': {
     background: listingResult,
     objectPosition: 'center',
+    recipe: [
+      { image: listingProduct, label: 'Product' },
+    ],
+    recipeResult: listingResult,
     elements: [
       {
         type: 'product', image: listingProduct, label: 'Serum', sublabel: 'Product',
@@ -87,6 +97,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     background: ugcResult1,
     objectPosition: 'center',
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
+    recipe: [
+      { image: ugcProduct, label: 'Product' },
+      { image: ugcModel, label: 'Model' },
+    ],
+    recipeResult: ugcResult1,
     elements: [
       {
         type: 'product', image: ugcProduct, label: 'Ice Roller', sublabel: 'Product',
@@ -102,6 +117,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Flat Lay Set': {
     background: flatResult,
+    recipe: [
+      { image: flatProduct1, label: 'Product 1' },
+      { image: flatProduct2, label: 'Product 2' },
+    ],
+    recipeResult: flatResult,
     elements: [
       {
         type: 'product', image: flatProduct1, label: 'Powder', sublabel: 'Product 1',
@@ -123,6 +143,12 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Mirror Selfie Set': {
     background: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png',
     objectPosition: 'center 25%',
+    recipe: [
+      { image: mirrorSelfieProduct, label: 'Product' },
+      { image: mirrorSelfieModel, label: 'Model' },
+      { image: mirrorSelfieScene, label: 'Scene' },
+    ],
+    recipeResult: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png',
     elements: [
       {
         type: 'product', image: mirrorSelfieProduct, label: 'Sweater', sublabel: 'Product',

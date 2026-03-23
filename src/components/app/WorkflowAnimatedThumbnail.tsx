@@ -52,6 +52,8 @@ export interface WorkflowScene {
   mode?: 'recipe' | 'carousel' | 'upscale' | 'staging';
   slideLabels?: string[];
   objectPosition?: string;
+  recipe?: { image: string; label: string }[];
+  recipeResult?: string;
 }
 
 interface Props {

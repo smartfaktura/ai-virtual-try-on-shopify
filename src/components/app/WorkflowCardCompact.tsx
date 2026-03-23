@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { ArrowRight, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -62,21 +62,27 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
         )}
       </div>
 
-      {/* Animated ingredient strip for modal */}
-      {modalCompact && scene && scene.elements.length > 0 && isVisible && (
-        <div className="flex gap-1.5 px-2 pt-2 overflow-x-auto scrollbar-hide">
-          {scene.elements
-            .filter(el => el.type === 'product' || el.type === 'model' || el.type === 'scene' || el.type === 'badge')
-            .map((el, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1 bg-muted rounded-full px-2 py-0.5 text-[10px] font-medium text-muted-foreground shrink-0 opacity-0 animate-fade-in"
-                style={{ animationDelay: `${i * 0.15}s`, animationFillMode: 'forwards' }}
+      {/* Recipe strip for modal */}
+      {modalCompact && scene?.recipe && isVisible && (
+        <div className="flex items-center justify-center gap-1 px-2 py-2 bg-muted/30">
+          {scene.recipe.map((item, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <Plus className="w-3 h-3 text-muted-foreground shrink-0 opacity-0 animate-fade-in" style={{ animationDelay: `${i * 0.12}s`, animationFillMode: 'forwards' }} />}
+              <div
+                className="w-7 h-7 rounded-md overflow-hidden shrink-0 border border-border opacity-0 animate-fade-in"
+                style={{ animationDelay: `${i * 0.12}s`, animationFillMode: 'forwards' }}
               >
-                {el.icon}
-                {el.label}
-              </span>
-            ))}
+                <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
+              </div>
+            </React.Fragment>
+          ))}
+          <span className="text-muted-foreground text-[10px] font-bold mx-1 opacity-0 animate-fade-in" style={{ animationDelay: `${scene.recipe.length * 0.12}s`, animationFillMode: 'forwards' }}>=</span>
+          <div
+            className="w-7 h-7 rounded-md overflow-hidden shrink-0 border-2 border-primary/30 opacity-0 animate-fade-in"
+            style={{ animationDelay: `${(scene.recipe.length + 1) * 0.12}s`, animationFillMode: 'forwards' }}
+          >
+            <img src={scene.recipeResult} alt="Result" className="w-full h-full object-cover" />
+          </div>
         </div>
       )}
 
