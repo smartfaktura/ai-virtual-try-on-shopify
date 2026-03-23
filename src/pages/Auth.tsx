@@ -500,6 +500,22 @@ export default function Auth() {
 
               <div className="flex items-start space-x-2">
                 <Checkbox
+                  id="termsAccept"
+                  checked={termsAccepted}
+                  onCheckedChange={(v) => { setTermsAccepted(!!v); setErrors(prev => ({ ...prev, terms: undefined })); }}
+                  className="mt-0.5"
+                />
+                <label htmlFor="termsAccept" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                  I agree to the{' '}
+                  <Link to="/terms-of-service" target="_blank" className="underline text-foreground hover:text-primary">Terms of Service</Link>
+                  {' '}and{' '}
+                  <Link to="/privacy-policy" target="_blank" className="underline text-foreground hover:text-primary">Privacy Policy</Link>
+                </label>
+              </div>
+              {errors.terms && <p className="text-sm text-destructive">{errors.terms}</p>}
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
                   id="marketingOptIn"
                   checked={marketingOptIn}
                   onCheckedChange={(v) => setMarketingOptIn(!!v)}
