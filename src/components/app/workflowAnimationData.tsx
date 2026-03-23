@@ -38,7 +38,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Virtual Try-On Set': {
     background: tryonResult,
-    objectPosition: 'center 30%',
+    objectPosition: 'center 20%',
     elements: [
       {
         type: 'product', image: tryonProduct, label: 'Crop Top', sublabel: 'Product',
@@ -64,7 +64,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Product Listing Set': {
     background: listingResult,
-    objectPosition: 'center 40%',
+    objectPosition: 'center',
     elements: [
       {
         type: 'product', image: listingProduct, label: 'Serum', sublabel: 'Product',
@@ -85,6 +85,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   'Selfie / UGC Set': {
     mode: 'carousel',
     background: ugcResult1,
+    objectPosition: 'center',
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     elements: [
       {
@@ -121,6 +122,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Mirror Selfie Set': {
     background: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png',
+    objectPosition: 'center 25%',
     elements: [
       {
         type: 'product', image: mirrorSelfieProduct, label: 'Sweater', sublabel: 'Product',
