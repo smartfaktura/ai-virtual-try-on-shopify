@@ -1,34 +1,36 @@
 
 
-# Fix: Copy to Editor in Detail Modal Missing Model/Scene/Product
+# Remove Hover Label Badge from Library Image Cards
 
 ## Problem
-The `libraryItem` object built for the `LibraryDetailModal` (line 964-974 in Freestyle.tsx) does not include `modelId`, `sceneId`, or `productId`. So when the modal's "Copy to Editor" button fires `onCopySettings`, it only has the prompt — the other settings are `undefined`.
+On hover, Library cards show a top-left badge like "Picture Perspectives — Right Side" or "Freestyle". This is unnecessary visual noise.
 
-The gallery hover copy works correctly because it reads directly from the `FreestyleImage` object which has all fields.
+## Change
 
-## Fix
+### `src/components/app/LibraryImageCard.tsx` (lines 125-136)
 
-### `src/pages/Freestyle.tsx` (line 964-974)
+Remove the entire top badge section from the hover overlay. Keep only the bottom row (date, delete, download).
 
-Add the three missing fields to the `libraryItem` construction:
-
+Replace lines 125-136:
 ```tsx
-const libraryItem: LibraryItem = {
-  id: img.id,
-  imageUrl: img.url,
-  source: 'freestyle',
-  label: dynamicLabel,
-  prompt: img.userPrompt || undefined,
-  date: '',
-  createdAt: '',
-  aspectRatio: img.aspectRatio || '1:1',
-  quality: 'standard',
-  modelId: img.modelId,      // add
-  sceneId: img.sceneId,      // add
-  productId: img.productId,  // add
-};
+{/* Top: badge */}
+<div className="flex justify-between items-start">
+  <span className="text-[10px] px-2 py-0.5 rounded-md font-medium backdrop-blur-sm flex items-center gap-1 bg-black/40 text-white">
+    {item.quality?.startsWith('upscaled_') ? (
+      <><Sparkles className="w-3 h-3" /> Enhanced</>
+    ) : item.source === 'freestyle' ? (
+      <><Sparkles className="w-3 h-3" /> Freestyle</>
+    ) : (
+      <><Camera className="w-3 h-3" /> {item.label}</>
+    )}
+  </span>
+</div>
 ```
 
-One file, 3 lines added.
+With just an empty spacer div to keep the `justify-between` layout pushing the bottom row down:
+```tsx
+<div />
+```
+
+One file, ~10 lines removed.
 
