@@ -11,15 +11,11 @@ interface MetricCardProps {
   };
   loading?: boolean;
   onClick?: () => void;
-  /** Optional mini progress (0–100) shown as a thin bar */
   progress?: number;
-  /** Color token for the progress bar, defaults to primary */
   progressColor?: string;
-  /** Team member avatar URL for branded metrics */
-  avatarUrl?: string;
 }
 
-export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, onClick, progress, progressColor, avatarUrl }: MetricCardProps) {
+export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, onClick, progress, progressColor }: MetricCardProps) {
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
