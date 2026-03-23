@@ -10,6 +10,14 @@ const tryonModel = getLandingAssetUrl('models/model-female-average-european.jpg'
 const tryonScene = getLandingAssetUrl('poses/pose-editorial-minimal.jpg');
 const tryonResult = getLandingAssetUrl('workflows/workflow-tryon-result.png');
 
+// Virtual Try-On Showcase Carousel
+const tryonShowcase1 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-1.jpg');
+const tryonShowcase2 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-2.jpg');
+const tryonShowcase3 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-3.jpg');
+const tryonShowcase4 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-4.jpg');
+const tryonShowcase5 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-5.jpg');
+const tryonShowcase6 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-6.jpg');
+
 // Product Listing Set
 const listingProduct = getLandingAssetUrl('workflows/product-listing-product.png');
 const listingResult = getLandingAssetUrl('workflows/product-listing-result.png');
