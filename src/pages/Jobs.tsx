@@ -260,7 +260,7 @@ export default function Jobs() {
         )}
 
         {/* Search + Sort + Select */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div className="relative w-full sm:max-w-md sm:flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
