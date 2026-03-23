@@ -60,7 +60,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       </div>
 
       {/* Content */}
-      <div className={cn("flex flex-col gap-2 flex-1", mobileCompact ? "p-2.5" : "p-4")}>
+      <div className={cn("flex flex-col gap-2 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className={cn(
             "font-bold tracking-tight leading-tight",
