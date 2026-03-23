@@ -30,6 +30,7 @@ import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
+import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 
 /* ── Inline card with IntersectionObserver for animations ── */
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
