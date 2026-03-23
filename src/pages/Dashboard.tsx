@@ -94,6 +94,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { balance, openBuyModal } = useCredits();
   const [startModalOpen, setStartModalOpen] = useState(false);
+  const [earnCreditsOpen, setEarnCreditsOpen] = useState(false);
 
   // Fetch user profile (first_name)
   const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
