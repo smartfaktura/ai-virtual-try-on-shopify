@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -24,9 +25,10 @@ interface LibraryDetailModalProps {
   open: boolean;
   onClose: () => void;
   isUpscaling?: boolean;
+  onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
 }
 
-export function LibraryDetailModal({ item, open, onClose, isUpscaling }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings }: LibraryDetailModalProps) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
@@ -196,6 +198,26 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                   <Download className="w-4 h-4 mr-2" /> {isMobileDevice() ? 'Save to Photos' : 'Download Image'}
                 </Button>
 
+                {item.source === 'freestyle' && onCopySettings && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      onCopySettings({
+                        prompt: item.prompt || '',
+                        modelId: item.modelId,
+                        sceneId: item.sceneId,
+                        productId: item.productId,
+                        aspectRatio: item.aspectRatio,
+                      });
+                      onClose();
+                    }}
+                    className="w-full h-11 rounded-xl text-sm font-medium"
+                  >
+                    <ClipboardCopy className="w-4 h-4 mr-2" />
+                    Copy to Editor
+                  </Button>
+                )}
+
                 {isUpscaling ? (
                   <Button
                     variant="outline"
@@ -236,15 +258,18 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                 </Button>
 
                 {item.source === 'freestyle' && (
-                  <Button
-                    variant="ghost"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                    {deleting ? 'Deleting…' : 'Delete'}
-                  </Button>
+                  <>
+                    <Separator className="my-1" />
+                    <Button
+                      variant="ghost"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                      {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                  </>
                 )}
               </div>
 

@@ -978,6 +978,7 @@ export default function Freestyle() {
             onClose={() => setLightboxOpen(false)}
             item={libraryItem}
             isUpscaling={upscalingSourceIds.has(img.id)}
+            onCopySettings={handleCopySettings}
           />
         );
       })()}
