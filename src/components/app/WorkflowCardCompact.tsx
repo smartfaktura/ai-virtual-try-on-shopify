@@ -61,20 +61,12 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
 
       {/* Content */}
       <div className={cn("flex flex-col gap-2 flex-1", (modalCompact || mobileCompact) ? "p-2" : "p-4")}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <h3 className={cn(
-            "font-bold tracking-tight leading-tight",
-            (modalCompact || mobileCompact) ? "text-xs" : "text-sm"
-          )}>
-            {workflow.name}
-          </h3>
-          {workflow.uses_tryon && workflow.name !== 'Selfie / UGC Set' && (
-            <Badge variant="secondary" className="text-[10px] gap-1 px-2 py-0">
-              <Users className="w-2.5 h-2.5" />
-              Try-On
-            </Badge>
-          )}
-        </div>
+        <h3 className={cn(
+          "font-bold tracking-tight leading-tight",
+          (modalCompact || mobileCompact) ? "text-xs" : "text-sm"
+        )}>
+          {workflow.name}
+        </h3>
 
         {!mobileCompact && !modalCompact && (
           <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">

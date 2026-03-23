@@ -113,17 +113,9 @@ export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowPr
 
         {/* Content side */}
         <div className="flex flex-col justify-center gap-4 p-6 lg:p-10 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl lg:text-2xl font-bold tracking-tight">
-              {workflow.name}
-            </h2>
-            {workflow.uses_tryon && workflow.name !== 'Selfie / UGC Set' && (
-              <Badge variant="secondary" className="text-xs gap-1 px-2.5 py-0.5">
-                <Users className="w-3 h-3" />
-                Try-On
-              </Badge>
-            )}
-          </div>
+          <h2 className="text-xl lg:text-2xl font-bold tracking-tight">
+            {workflow.name}
+          </h2>
 
           <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
             {workflow.description}
