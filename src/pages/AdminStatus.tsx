@@ -99,6 +99,17 @@ export default function AdminStatus() {
     refetchInterval: 30_000,
   });
 
+  const { data: platformStats, isLoading: platformLoading } = useQuery({
+    queryKey: ['admin-platform-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_platform_stats');
+      if (error) throw error;
+      return data as unknown as PlatformStats;
+    },
+    enabled: isAdmin,
+    staleTime: 5 * 60_000,
+  });
+
   if (adminLoading) return null;
   if (!isAdmin) return <Navigate to="/app" replace />;
 
@@ -114,6 +125,25 @@ export default function AdminStatus() {
       >
         {null}
       </PageHeader>
+
+      {/* All-Time Platform Stats */}
+      <div>
+        <h3 className="font-semibold text-foreground mb-3">All-Time Platform Stats</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard title="Total Images" value={platformStats?.total_images ?? '—'} icon={Image} loading={platformLoading} />
+          <MetricCard title="Total Users" value={platformStats?.total_users ?? '—'} icon={Users} loading={platformLoading} />
+          <MetricCard title="Active Generators" value={platformStats?.active_generators ?? '—'} icon={Sparkles} loading={platformLoading} />
+          <MetricCard title="Credits Spent" value={platformStats?.total_credits_spent ?? '—'} icon={CreditCard} loading={platformLoading} />
+          <MetricCard title="Freestyle Jobs" value={platformStats?.jobs_by_type?.freestyle ?? '—'} icon={Palette} loading={platformLoading} />
+          <MetricCard title="Workflow Jobs" value={platformStats?.jobs_by_type?.workflow ?? '—'} icon={Layers} loading={platformLoading} />
+          <MetricCard title="Try-On Jobs" value={platformStats?.jobs_by_type?.tryon ?? '—'} icon={Users} loading={platformLoading} />
+          <MetricCard title="Upscale Jobs" value={platformStats?.jobs_by_type?.upscale ?? '—'} icon={Zap} loading={platformLoading} />
+          <MetricCard title="Products" value={platformStats?.total_products ?? '—'} icon={Package} loading={platformLoading} />
+          <MetricCard title="Videos" value={platformStats?.total_videos ?? '—'} icon={Video} loading={platformLoading} />
+          <MetricCard title="Brand Profiles" value={platformStats?.total_brand_profiles ?? '—'} icon={Palette} loading={platformLoading} />
+          <MetricCard title="Creative Drops" value={platformStats?.total_drops ?? '—'} icon={Sparkles} loading={platformLoading} />
+        </div>
+      </div>
 
       {/* Time range toggle + refresh */}
       <div className="flex items-center gap-3 flex-wrap">
