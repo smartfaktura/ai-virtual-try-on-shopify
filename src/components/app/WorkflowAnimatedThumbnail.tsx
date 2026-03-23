@@ -229,7 +229,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, m
 
 /* ── Carousel mode component ── */
 
-function CarouselThumbnail({ scene, isActive, mobileCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean }) {
+function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
     () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
