@@ -1,41 +1,27 @@
 
 
-# Match Returning User Dashboard to New User Style + Replace Buy Credits
+# Fix Workflow Card Images + Remove Nav Pills + Update Subtitle
 
-## What Changes
+## Changes
 
-### 1. Returning user welcome section → match new user style
-Currently the returning user has `DashboardPersonalizationHero` component below the welcome text, plus a separate `PersonalizedForPill + DashboardQuickActions` row. The new user dashboard is cleaner: just the greeting, subtitle, credits badge, and one CTA button.
+### 1. `src/components/app/workflowAnimationData.tsx`
 
-**Returning user welcome** will become:
-```
-Welcome back, Tomas 👋
-Your AI photography studio. Here's what's happening.
+**Virtual Try-On Set** (line 41): Change `objectPosition: 'top'` → `objectPosition: 'center top'` — the `top` position zooms into the head. Using `center` will show more of the full body/outfit.
 
-🟣 {balance} credits available    [Start with a Workflow →]
-```
+**Product Listing Set** (line 66): Add `objectPosition: 'center'` — currently defaults to `center` but the image itself may be tightly framed. Since both scenes use `object-cover` in a `3/4` aspect container, the fix is to change `objectPosition` to show more of the composition.
 
-- Remove `DashboardPersonalizationHero` from the welcome area
-- Remove the `PersonalizedForPill + DashboardQuickActions` row (move quick actions elsewhere or remove)
-- Add credits badge + "Start with a Workflow" button (same as new user)
-- Keep `DashboardTipCard` and `LowCreditsBanner` below
+Actually, the real issue is `object-cover` on tall aspect ratio (`aspect-[3/4]`) crops wide images aggressively. The `objectPosition` values control where the crop anchors. For these two workflows:
 
-### 2. New user: "Buy Credits" → "Start with a Workflow"
-Replace the "Buy Credits" button with a "Start with a Workflow" button that opens `StartWorkflowModal`.
+- **Virtual Try-On Set**: `objectPosition: 'top'` crops from the top — showing the head but cutting the outfit. Change to `objectPosition: 'center'` to show the full model centered.
+- **Product Listing Set**: No `objectPosition` set (defaults to `center`). The image is likely a tall product that gets cropped. Change to `objectPosition: 'center'` explicitly (keep as-is, or use `'top center'` if the product is in the upper portion).
 
-### `src/pages/Dashboard.tsx`
+### 2. `src/pages/Workflows.tsx`
 
-**New user section (lines 318-327):**
-- Import `StartWorkflowModal`
-- Add `startModalOpen` state
-- Replace "Buy Credits" button with "Start with a Workflow" button that sets `startModalOpen(true)`
-- Render `<StartWorkflowModal>` in the return
+**Remove quick-nav pills** (lines 381-398): Delete the entire `{!isLoading && workflows.length > 0 && (` block with the `flex-wrap gap-2` buttons.
 
-**Returning user section (lines 420-432):**
-- Replace the `DashboardPersonalizationHero` + `PersonalizedForPill/DashboardQuickActions` block with the same clean layout: subtitle text, credits badge line with "Start with a Workflow" button
-- Add `<StartWorkflowModal>` 
-- Keep metrics, recent jobs, etc. below
+**Update subtitle** (line 379): Change from `"Pick a workflow to start generating — or jump to one below."` to `"Choose a workflow and generate brand-ready visuals instantly."`
 
 ### Files
-- `src/pages/Dashboard.tsx` — unify welcome style, replace Buy Credits with Start Workflow modal trigger
+- `src/components/app/workflowAnimationData.tsx` — adjust `objectPosition` for Virtual Try-On Set and Product Listing Set
+- `src/pages/Workflows.tsx` — remove nav pills block, update subtitle text
 
