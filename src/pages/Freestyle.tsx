@@ -995,8 +995,12 @@ export default function Freestyle() {
             {presetHint && !selectedProduct && (
               <div className="mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-accent border border-border/60 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-foreground/80 text-xs">Your scene is ready</span>
+                  <img
+                    src={TEAM_MEMBERS.find(m => m.name === 'Sophia')!.avatar}
+                    alt="Sophia"
+                    className="w-5 h-5 rounded-full object-cover shrink-0 ring-1 ring-border"
+                  />
+                  <span className="text-foreground/80 text-xs">Your scene is set</span>
                   <span className="text-muted-foreground text-xs hidden sm:inline">—</span>
                   <button
                     onClick={() => setProductPopoverOpen(true)}
