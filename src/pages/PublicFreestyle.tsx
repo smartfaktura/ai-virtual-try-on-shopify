@@ -233,7 +233,7 @@ export default function PublicFreestyle() {
     }
     const selCat = selectedItem.data.category;
     return allItems
-      .filter((i) => i.data.id !== selectedItem.data.id && i.data.category === selCat)
+      .filter((i) => getItemId(i) !== getItemId(selectedItem) && i.data.category === selCat)
       .slice(0, 9);
   }, [allItems, selectedItem]);
 
