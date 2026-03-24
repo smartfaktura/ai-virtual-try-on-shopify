@@ -206,7 +206,7 @@ export default function PublicFreestyle() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setVisibleCount(INITIAL_RENDER_COUNT); }, [selectedCategory]);
+  
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
