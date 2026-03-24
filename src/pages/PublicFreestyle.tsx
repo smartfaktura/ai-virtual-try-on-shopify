@@ -455,7 +455,8 @@ export default function PublicFreestyle() {
               canGenerate={canGenerate}
               isLoading={false}
               progress={0}
-              creditCost={1}
+              creditCost={0}
+              hideCreditCost
               selectedModel={selectedModel}
               onModelSelect={setSelectedModel}
               modelPopoverOpen={modelPopoverOpen}
