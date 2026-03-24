@@ -186,7 +186,7 @@ export default function PublicFreestyle() {
 
   // Sort: featured first, then newest
   const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
+    return [...allItems].sort((a, b) => {
       const aKey = `preset:${getItemId(a)}`;
       const bKey = `preset:${getItemId(b)}`;
       const aFeat = featuredMap.get(aKey);
@@ -198,7 +198,7 @@ export default function PublicFreestyle() {
       const bDate = b.data.created_at ? new Date(b.data.created_at).getTime() : 0;
       return bDate - aDate;
     });
-  }, [filtered, featuredMap]);
+  }, [allItems, featuredMap]);
 
   // Progressive rendering
   const INITIAL_RENDER_COUNT = 30;
