@@ -121,7 +121,7 @@ export default function PublicFreestyle() {
   const columnCount = useColumnCount();
 
   // Scene data for prompt bar
-  const { customScenePoses } = useCustomScenes();
+  const { asPoses: customScenePoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
 
