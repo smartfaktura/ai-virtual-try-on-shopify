@@ -66,8 +66,8 @@ const INTERACTION_ICON_MAP: Record<InteractionType, React.ReactNode> = {
 };
 
 // ——— Option Card ———
-function OptionCard<T extends string>({ value, label, description, icon, selected, onClick }: {
-  value: T; label: string; description: string; icon: React.ReactNode; selected: boolean; onClick: (v: T) => void;
+function OptionCard({ value, label, description, icon, selected, onClick }: {
+  value: string; label: string; description: string; icon: React.ReactNode; selected: boolean; onClick: (v: any) => void;
 }) {
   return (
     <button
