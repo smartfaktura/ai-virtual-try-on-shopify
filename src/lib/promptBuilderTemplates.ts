@@ -84,7 +84,14 @@ export function getInteractionOptions(category: QuizCategory): { value: Interact
   return base;
 }
 
-export function getFramingOptions(category: QuizCategory): { value: FramingType; label: string; description: string }[] {
+export function getFramingOptions(category: QuizCategory, subject?: SubjectType): { value: FramingType; label: string; description: string }[] {
+  // Faceless subjects should only get close-up and hand-focus options
+  if (subject === 'faceless') {
+    return [
+      { value: 'close-up', label: 'Close-up Detail', description: 'Tight shot on the product' },
+      { value: 'hand-focus', label: 'Hand / Wrist Focus', description: 'Emphasis on hands and product' },
+    ];
+  }
   const options: { value: FramingType; label: string; description: string }[] = [
     { value: 'full-body', label: 'Full Body', description: 'Head to toe, complete look' },
     { value: 'upper-body', label: 'Upper Body', description: 'Waist up, focus on torso' },
