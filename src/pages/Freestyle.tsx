@@ -30,6 +30,7 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
