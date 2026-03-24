@@ -106,6 +106,8 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const isMobile = useIsMobile();
+  const hasAnimated = useRef(false);
 
   const scenes = useMemo(
     () => buildPersonalizedScenes(userCategories, allScenes, 8),
@@ -126,6 +128,24 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
     el.addEventListener('scroll', updateScrollState, { passive: true });
     return () => el.removeEventListener('scroll', updateScrollState);
   }, []);
+
+  // Mobile onboarding: micro-scroll hint (once per session)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !isMobile || hasAnimated.current) return;
+    if (sessionStorage.getItem('freestyle_scroll_hint')) return;
+    hasAnimated.current = true;
+
+    const timer = setTimeout(() => {
+      el.scrollTo({ left: 40, behavior: 'smooth' });
+      setTimeout(() => {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+        sessionStorage.setItem('freestyle_scroll_hint', '1');
+      }, 400);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isMobile, scenes]);
 
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -260 : 260, behavior: 'smooth' });
