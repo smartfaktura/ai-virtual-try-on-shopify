@@ -265,7 +265,7 @@ export default function PublicFreestyle() {
 
   const handleToggleFeatured = useCallback(() => {
     if (!selectedItem) return;
-    const itemId = selectedItem.data.id;
+    const itemId = getItemId(selectedItem);
     toggleFeatured.mutate({ itemType: selectedItem.type, itemId, currentlyFeatured: isFeatured(selectedItem.type, itemId) });
   }, [selectedItem, toggleFeatured, isFeatured]);
 
