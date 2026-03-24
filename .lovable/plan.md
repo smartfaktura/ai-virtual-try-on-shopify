@@ -1,36 +1,48 @@
 
 
-# Improve Prompt Builder: Position, Layout, Mobile UX, and Prompt Quality
+# Fix Prompt Helper & Reset Button Positioning
+
+## Problem
+1. Reset button and Prompt Helper are at bottom-right of textarea — overlapping with prompt text
+2. On mobile, Prompt Helper icon is too small and hard to tap
+3. User wants both buttons moved to **top-right corner** of the textarea area
 
 ## Changes
 
-### 1. Move Prompt Helper button inline with prompt textarea (`FreestylePromptPanel.tsx`)
-- Remove the standalone `promptHelperButton` from the settings chips section
-- Add a small "Prompt Helper" trigger button **inside the prompt textarea row**, positioned at the bottom-right of the textarea area (like a floating action pill)
-- Style: subtle pill with Wand2 icon, `text-xs`, positioned absolute bottom-right of the prompt input area
+### `src/components/app/freestyle/FreestylePromptPanel.tsx`
 
-### 2. Improve Quiz modal layout and mobile UX (`PromptBuilderQuiz.tsx`)
-- **Mobile**: Use `h-[100dvh]` full-screen sheet anchored from bottom with `rounded-t-2xl`, content area `flex-1 overflow-y-auto`, footer pinned to bottom
-- **Desktop**: Keep centered dialog but increase `max-w-xl` for more breathing room
-- **Option cards**: Increase padding, add more vertical gap between grid items
-- **Step content area**: Add more generous padding (`px-6 py-6`) for spacious feel
-- **Header**: Clean VOVV.AI branded bar — remove emoji from "Your prompt is ready" title
-- **Progress**: Replace dots with a thin progress bar under the header
-- **Footer**: Sticky bottom with generous padding, subtle top border
+Move the action buttons container from `absolute bottom-3 right-3` to `absolute top-3 right-3` (top-right corner of the textarea row). This prevents overlap with the prompt text which flows downward.
 
-### 3. Enhance prompt engineering templates (`promptBuilderTemplates.ts`)
-Add photography-grade technical language to the assembled prompts:
+**Before (~line 263):**
+```tsx
+<div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-5 flex items-center gap-1.5">
+```
 
-- **Camera/lens hints per mood**: e.g., luxury gets "shot with 85mm f/1.4 lens, shallow depth of field"; minimal gets "even diffused lighting, 50mm prime lens"
-- **Lighting directives per setting**: studio = "three-point lighting setup"; outdoor = "golden hour natural light"; indoor = "soft window light with fill bounce"
-- **Composition cues per framing**: full-body = "rule of thirds placement, negative space above"; close-up = "macro detail, bokeh background"
-- **Surface/texture hints per category**: food = "rustic wood or marble surface"; jewelry = "velvet or reflective surface"
-- **Color temperature hints per mood**: warm = "warm white balance 4500K"; minimal = "neutral daylight 5600K"
+**After:**
+```tsx
+<div className="absolute top-3 right-3 sm:top-4 sm:right-5 flex items-center gap-1.5">
+```
 
-These additions make prompts ~20-30% richer without being overly long, following Gemini best practices for specificity.
+Also make the Prompt Helper icon larger on mobile and always show the Wand2 icon at a tappable size:
+
+**Before (~line 273-280):**
+```tsx
+<button className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] ...">
+  <Wand2 className="w-3 h-3" />
+  <span className="hidden sm:inline">Prompt Helper</span>
+</button>
+```
+
+**After:**
+```tsx
+<button className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[11px] ...">
+  <Wand2 className="w-4 h-4 sm:w-3 sm:h-3" />
+  <span className="hidden sm:inline">Prompt Helper</span>
+</button>
+```
+
+Also increase the reset button tap target on mobile similarly (`w-4 h-4 sm:w-3.5 sm:h-3.5`).
 
 ### Files
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` — move button inline with prompt
-- `src/components/app/freestyle/PromptBuilderQuiz.tsx` — layout/spacing/mobile improvements
-- `src/lib/promptBuilderTemplates.ts` — richer prompt fragments with camera/lighting/composition details
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` — reposition buttons to top-right, enlarge mobile tap targets
 
