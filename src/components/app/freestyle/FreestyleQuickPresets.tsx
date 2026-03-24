@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+import { poseCategoryLabels } from '@/data/mockData';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { TryOnPose } from '@/types';
@@ -88,16 +88,17 @@ interface FreestyleQuickPresetsProps {
   onSelect: (scene: TryOnPose) => void;
   activeSceneId?: string | null;
   userCategories?: string[];
+  allScenes?: TryOnPose[];
 }
 
-export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories = [] }: FreestyleQuickPresetsProps) {
+export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories = [], allScenes = [] }: FreestyleQuickPresetsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   const scenes = useMemo(
-    () => buildPersonalizedScenes(userCategories, mockTryOnPoses, 8),
-    [userCategories],
+    () => buildPersonalizedScenes(userCategories, allScenes, 8),
+    [userCategories, allScenes],
   );
 
   const updateScrollState = () => {

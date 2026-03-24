@@ -957,6 +957,7 @@ export default function Freestyle() {
                   onSelect={handlePresetSelect}
                   activeSceneId={activeScenePresetId}
                   userCategories={userCategories}
+                  allScenes={[...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)]}
                 />
               </div>
             </div>
