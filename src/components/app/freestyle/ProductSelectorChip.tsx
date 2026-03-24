@@ -1,12 +1,34 @@
 import { useState } from 'react';
-import { Package, ChevronDown, X, Loader2 } from 'lucide-react';
+import { Package, ChevronDown, X, Loader2, Plus } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
 import type { Tables } from '@/integrations/supabase/types';
+
+const SAMPLE_PRODUCTS = [
+  {
+    id: 'sample_ring',
+    title: 'Diamond Ring',
+    product_type: 'Jewelry',
+    image_url: '/images/samples/sample-ring.png',
+  },
+  {
+    id: 'sample_crop_top',
+    title: 'Ribbed Crop Top',
+    product_type: 'Clothing',
+    image_url: '/images/samples/sample-crop-top.png',
+  },
+  {
+    id: 'sample_ice_roller',
+    title: 'Ice Roller',
+    product_type: 'Beauty',
+    image_url: '/images/samples/sample-ice-roller.png',
+  },
+] as const;
 
 type UserProduct = Tables<'user_products'>;
 
