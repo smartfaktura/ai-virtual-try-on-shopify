@@ -533,6 +533,7 @@ export default function PublicFreestyle() {
           onClose={handleClose}
           relatedItems={relatedItems}
           onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
+          onRecreate={handleRecreateItem}
         />
       )}
     </PageLayout>
