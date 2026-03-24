@@ -1,34 +1,39 @@
 
 
-# Add Share Button to Discover Detail Modals
+# Add Generation Cost Tracking to Admin Status
 
 ## Overview
-Add a share popover to both `PublicDiscoverDetailModal` and `DiscoverDetailModal` with Copy Link, WhatsApp, Twitter/X, and Facebook sharing options. Uses a `Popover` component matching existing UI patterns.
+Add a "Generation Costs" section to the admin dashboard that estimates real API costs based on job type and timeframe, using the existing time range selector (today/yesterday/24h/7d/30d).
 
-## Approach
+## Cost Model
+Since actual API costs vary by provider, we'll use approximate per-credit-cost estimates baked into the DB function. The function will sum `credits_reserved` for completed jobs within the timeframe, then multiply by a cost-per-credit constant. We can also break down by job type since different types use different APIs with different costs.
 
-### 1. Create shared `SharePopover` component
-**New file**: `src/components/app/SharePopover.tsx`
+Approximate cost mapping (configurable constants in the DB function):
+- **Freestyle** (Lovable AI gateway): ~$0.02 per credit
+- **Workflow** (Lovable AI gateway): ~$0.02 per credit  
+- **Try-On** (Lovable AI gateway): ~$0.02 per credit
+- **Upscale** (Lovable AI gateway): ~$0.01 per credit
 
-- A reusable `Popover` triggered by a share button (using `Share2` icon from lucide-react)
-- Content layout:
-  - **Copy link** button — copies current page URL to clipboard, shows sonner toast "Link copied"
-  - Separator line
-  - **Share via** label (uppercase micro text matching existing `text-[10px]` pattern)
-  - WhatsApp, Twitter/X, Facebook buttons — each opens `window.open()` with pre-filled share URL
-- Share URL: construct from `window.location.origin + /discover/{item-slug-or-id}` so the link is shareable
-- Styled to match vovv.ai branding: `bg-background` popover, muted text, clean icons, rounded buttons
+These are rough estimates — you can adjust the multipliers anytime.
 
-### 2. `src/components/app/PublicDiscoverDetailModal.tsx`
-- Import and render `SharePopover` between the CTA button and the subtitle text (after line 194)
-- Pass the item title and a constructed share URL
+## Changes
 
-### 3. `src/components/app/DiscoverDetailModal.tsx`
-- Add `SharePopover` in the secondary actions row (line 406-462) alongside Save, Similar, Feature buttons
-- Same styling as the existing action buttons (rounded-xl, muted bg, border)
+### 1. Database: Update `admin_generation_stats` function
+Add cost fields to the returned JSON:
+- `credits_spent` — total credits reserved for completed jobs in timeframe
+- `cost_breakdown` — array of `{ job_type, credits, jobs, est_cost }` per job type
+- `total_est_cost` — sum of estimated costs
+
+The function already receives `p_hours` and filters by timeframe, so we just add aggregation queries.
+
+### 2. `src/pages/AdminStatus.tsx`
+- Add `credits_spent`, `cost_breakdown`, and `total_est_cost` to the `StatsData` interface
+- Add a new "Generation Costs" card section between the time-range metrics and the failures table:
+  - **Total Credits Used** (in timeframe) — MetricCard with CreditCard icon
+  - **Est. API Cost** — MetricCard showing `$X.XX` with DollarSign icon
+  - A small breakdown table: job type | jobs | credits | est. cost
 
 ### Files
-- `src/components/app/SharePopover.tsx` — new shared component
-- `src/components/app/PublicDiscoverDetailModal.tsx` — integrate share button
-- `src/components/app/DiscoverDetailModal.tsx` — integrate share button
+- Database migration: update `admin_generation_stats` function
+- `src/pages/AdminStatus.tsx` — add cost section UI
 
