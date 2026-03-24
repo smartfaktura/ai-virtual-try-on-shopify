@@ -113,6 +113,12 @@ export default function PublicFreestyle() {
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+
+  // Redirect authenticated users to the app version
+  useEffect(() => {
+    if (user) navigate('/app/freestyle', { replace: true });
+  }, [user, navigate]);
+
   const { data: allPresets = [], isLoading } = useDiscoverPresets();
   const { featuredMap, isFeatured } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
