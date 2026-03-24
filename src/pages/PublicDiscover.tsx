@@ -18,6 +18,7 @@ import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar'
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
+import { getItemSlug } from '@/lib/slugUtils';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
