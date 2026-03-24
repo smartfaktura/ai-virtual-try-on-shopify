@@ -78,6 +78,29 @@ function ContentPreferencesSection() {
     else {
       setOriginal(cats);
       toast.success('Preferences saved');
+
+      // Sync updated categories to Resend audience
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('marketing_emails_opted_in, plan, credits_balance, first_name')
+        .eq('user_id', user.id)
+        .single();
+      if (profile) {
+        supabase.functions.invoke('sync-resend-contact', {
+          body: {
+            email: user.email,
+            first_name: profile.first_name,
+            opted_in: profile.marketing_emails_opted_in,
+            properties: {
+              plan: profile.plan,
+              credits_balance: profile.credits_balance,
+              product_categories: cats
+                .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
+                .join(', '),
+            },
+          },
+        }).catch(() => {});
+      }
     }
     setSaving(false);
   };
@@ -193,16 +216,25 @@ export default function Settings() {
       toast.error('Failed to save settings');
     } else {
       // Sync marketing preference + properties to Resend audience
+      // Fetch categories to include in Resend sync
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('product_categories, first_name')
+        .eq('user_id', user.id)
+        .single();
       supabase.functions.invoke('sync-resend-contact', {
         body: {
           email: user.email,
-          first_name: undefined,
+          first_name: profileData?.first_name,
           opted_in: marketingOptIn,
           properties: {
             plan,
             credits_balance: balance,
             has_generated: true,
             signup_date: user.created_at || new Date().toISOString(),
+            product_categories: ((profileData?.product_categories as string[]) ?? [])
+              .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
+              .join(', '),
           },
         },
       }).catch(() => {});

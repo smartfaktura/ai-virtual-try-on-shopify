@@ -111,6 +111,9 @@ export default function Onboarding() {
             credits_balance: 60,
             has_generated: false,
             signup_date: user.created_at || new Date().toISOString(),
+            product_categories: selectedCategories
+              .map((id) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.label ?? id)
+              .join(', '),
           },
         },
       }).catch(() => {});
