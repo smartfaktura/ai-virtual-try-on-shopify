@@ -29,7 +29,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl mx-3 sm:mx-0">
+      <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl mx-3 sm:mx-0 top-[50%] translate-y-[-50%]">
         {/* Hero */}
         <div className="relative px-5 sm:px-6 pt-8 pb-6 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-4">
