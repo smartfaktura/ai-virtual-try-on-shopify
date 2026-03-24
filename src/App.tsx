@@ -118,6 +118,8 @@ const App = () => {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/discover" element={<PublicDiscover />} />
             <Route path="/discover/:itemId" element={<PublicDiscover />} />
+            <Route path="/freestyle" element={<PublicFreestyle />} />
+            <Route path="/freestyle/:itemId" element={<PublicFreestyle />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
             <Route path="/tryshot" element={<TryShot />} />
             <Route path="/tryshot/:domain" element={<TryShot />} />
