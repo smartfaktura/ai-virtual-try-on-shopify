@@ -269,7 +269,6 @@ export default function PublicFreestyle() {
 
   const handleSearchSimilar = useCallback((item: DiscoverItem) => {
     setSelectedItem(null);
-    setSelectedCategory(item.data.category);
   }, []);
 
   const handleToggleSave = useCallback(() => {

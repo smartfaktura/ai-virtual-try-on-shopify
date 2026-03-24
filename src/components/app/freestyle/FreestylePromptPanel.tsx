@@ -61,7 +61,7 @@ interface FreestylePromptPanelProps {
   onImageRoleChange: (role: ImageRole) => void;
   editIntent: EditIntent[];
   onEditIntentChange: (intents: EditIntent[]) => void;
-  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
+  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean };
   hideCreditCost?: boolean;
   // Mobile collapse
   isCollapsed?: boolean;
