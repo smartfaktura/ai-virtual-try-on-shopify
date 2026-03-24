@@ -187,7 +187,7 @@ export function PublicDiscoverDetailModal({
               {onRecreate ? 'Recreate This' : (
                 <>
                   <span className="sm:hidden">Try this for free</span>
-                  <span className="hidden sm:inline">Create account to recreate this →</span>
+                  <span className="hidden sm:inline">Create account to recreate this</span>
                 </>
               )}
               <ArrowRight className="w-4 h-4 ml-2" />
