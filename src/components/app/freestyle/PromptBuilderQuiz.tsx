@@ -11,52 +11,67 @@ import {
   CATEGORY_LABELS, getSubjectOptions, getInteractionOptions, getFramingOptions, assemblePrompt,
 } from '@/lib/promptBuilderTemplates';
 
+// ——— Category short descriptions ———
+const CATEGORY_DESCRIPTIONS: Record<QuizCategory, string> = {
+  fashion: 'Clothing, shoes',
+  beauty: 'Skincare, makeup',
+  fragrances: 'Perfumes, scents',
+  jewelry: 'Rings, necklaces',
+  accessories: 'Bags, watches',
+  home: 'Furniture, decor',
+  food: 'Drinks, snacks',
+  electronics: 'Gadgets, tech',
+  sports: 'Activewear, gear',
+  health: 'Vitamins, wellness',
+  other: 'Everything else',
+};
+
 // ——— Icon mapping ———
 const CATEGORY_ICON_MAP: Record<QuizCategory, React.ReactNode> = {
-  fashion: <Shirt className="w-5 h-5" />,
-  beauty: <Sparkles className="w-5 h-5" />,
-  fragrances: <Wind className="w-5 h-5" />,
-  jewelry: <Gem className="w-5 h-5" />,
-  accessories: <Watch className="w-5 h-5" />,
-  home: <Lamp className="w-5 h-5" />,
-  food: <UtensilsCrossed className="w-5 h-5" />,
-  electronics: <Smartphone className="w-5 h-5" />,
-  sports: <Dumbbell className="w-5 h-5" />,
-  health: <Heart className="w-5 h-5" />,
-  other: <Package className="w-5 h-5" />,
+  fashion: <Shirt className="w-4 h-4 sm:w-5 sm:h-5" />,
+  beauty: <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />,
+  fragrances: <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
+  jewelry: <Gem className="w-4 h-4 sm:w-5 sm:h-5" />,
+  accessories: <Watch className="w-4 h-4 sm:w-5 sm:h-5" />,
+  home: <Lamp className="w-4 h-4 sm:w-5 sm:h-5" />,
+  food: <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5" />,
+  electronics: <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />,
+  sports: <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5" />,
+  health: <Heart className="w-4 h-4 sm:w-5 sm:h-5" />,
+  other: <Package className="w-4 h-4 sm:w-5 sm:h-5" />,
 };
 
 const SUBJECT_ICON_MAP: Record<SubjectType, React.ReactNode> = {
-  'single-model': <User className="w-5 h-5" />,
-  'multiple-models': <Users className="w-5 h-5" />,
-  faceless: <Hand className="w-5 h-5" />,
-  'on-surface': <GripHorizontal className="w-5 h-5" />,
-  floating: <Move3D className="w-5 h-5" />,
-  'flat-lay': <LayoutGrid className="w-5 h-5" />,
+  'single-model': <User className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'multiple-models': <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
+  faceless: <Hand className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'on-surface': <GripHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />,
+  floating: <Move3D className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'flat-lay': <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />,
 };
 
 const SETTING_ICON_MAP: Record<SettingType, React.ReactNode> = {
-  studio: <Camera className="w-5 h-5" />,
-  indoor: <Home className="w-5 h-5" />,
-  outdoor: <TreePine className="w-5 h-5" />,
-  editorial: <Palette className="w-5 h-5" />,
-  'ai-decide': <Sparkles className="w-5 h-5" />,
+  studio: <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
+  indoor: <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
+  outdoor: <TreePine className="w-4 h-4 sm:w-5 sm:h-5" />,
+  editorial: <Palette className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'ai-decide': <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />,
 };
 
 const MOOD_ICON_MAP: Record<MoodType, React.ReactNode> = {
-  luxury: <Crown className="w-5 h-5" />,
-  minimal: <Frame className="w-5 h-5" />,
-  bold: <Zap className="w-5 h-5" />,
-  warm: <Flame className="w-5 h-5" />,
-  organic: <Leaf className="w-5 h-5" />,
+  luxury: <Crown className="w-4 h-4 sm:w-5 sm:h-5" />,
+  minimal: <Frame className="w-4 h-4 sm:w-5 sm:h-5" />,
+  bold: <Zap className="w-4 h-4 sm:w-5 sm:h-5" />,
+  warm: <Flame className="w-4 h-4 sm:w-5 sm:h-5" />,
+  organic: <Leaf className="w-4 h-4 sm:w-5 sm:h-5" />,
 };
 
 const FRAMING_ICON_MAP: Record<FramingType, React.ReactNode> = {
-  'full-body': <User className="w-5 h-5" />,
-  'upper-body': <ScanFace className="w-5 h-5" />,
-  'close-up': <Focus className="w-5 h-5" />,
-  'side-profile': <Eye className="w-5 h-5" />,
-  'hand-focus': <Hand className="w-5 h-5" />,
+  'full-body': <User className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'upper-body': <ScanFace className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'close-up': <Focus className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'side-profile': <Eye className="w-4 h-4 sm:w-5 sm:h-5" />,
+  'hand-focus': <Hand className="w-4 h-4 sm:w-5 sm:h-5" />,
 };
 
 const INTERACTION_ICON_MAP: Record<InteractionType, React.ReactNode> = {
@@ -74,22 +89,31 @@ function OptionCard({ value, label, description, icon, selected, onClick }: {
     <button
       onClick={() => onClick(value)}
       className={cn(
-        'relative flex flex-col items-center gap-2 p-4 sm:p-5 rounded-xl border-2 transition-all text-center',
-        'hover:border-primary/40 hover:bg-primary/5',
+        'relative flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl border transition-all text-center',
+        'hover:shadow-sm hover:border-primary/40',
         selected
-          ? 'border-primary bg-primary/10 shadow-sm'
-          : 'border-border/60 bg-background'
+          ? 'border-primary bg-primary/8 shadow-sm ring-1 ring-primary/20'
+          : 'border-border/50 bg-card hover:bg-accent/30'
       )}
     >
       {selected && (
-        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-          <Check className="w-3 h-3" />
+        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+          <Check className="w-2.5 h-2.5" />
         </div>
       )}
-      <div className={cn('text-muted-foreground', selected && 'text-primary')}>{icon}</div>
-      <span className="text-sm font-medium leading-tight">{label}</span>
-      {description && <span className="text-[11px] text-muted-foreground leading-tight">{description}</span>}
+      <div className={cn('text-muted-foreground transition-colors', selected && 'text-primary')}>{icon}</div>
+      <span className="text-xs sm:text-sm font-medium leading-tight">{label}</span>
+      {description && <span className="text-[10px] sm:text-[11px] text-muted-foreground/70 leading-tight">{description}</span>}
     </button>
+  );
+}
+
+// ——— Section Label Pill ———
+function SectionPill({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-muted text-muted-foreground border border-border/40">
+      {children}
+    </span>
   );
 }
 
@@ -189,18 +213,18 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
 
   // ——— Step renderers ———
   const renderCategoryStep = () => (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">What are you creating content for?</h3>
-        <p className="text-sm text-muted-foreground mt-1">Pick the category that best matches your product</p>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">What are you creating content for?</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">Pick the category that best matches your product</p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
         {(Object.keys(CATEGORY_LABELS) as QuizCategory[]).map(cat => (
           <OptionCard
             key={cat}
             value={cat}
             label={CATEGORY_LABELS[cat]}
-            description=""
+            description={CATEGORY_DESCRIPTIONS[cat]}
             icon={CATEGORY_ICON_MAP[cat]}
             selected={category === cat}
             onClick={(v) => { setCategory(v); setSubject(null); setInteraction(null); }}
@@ -213,20 +237,20 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const renderSubjectStep = () => {
     const opts = getSubjectOptions(category!);
     return (
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Who or what is the main subject?</h3>
-          <p className="text-sm text-muted-foreground mt-1">Choose how your product should be presented</p>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Who or what is the main subject?</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">Choose how your product should be presented</p>
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">With Person</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+          <div className="mb-2.5"><SectionPill>With Person</SectionPill></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-4">
             {opts.withPerson.map(o => (
               <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} />
             ))}
           </div>
-          <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">Product Only</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="mb-2.5"><SectionPill>Product Only</SectionPill></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {opts.productOnly.map(o => (
               <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} />
             ))}
@@ -239,12 +263,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const renderInteractionStep = () => {
     const opts = getInteractionOptions(category!);
     return (
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">How should the product appear?</h3>
-          <p className="text-sm text-muted-foreground mt-1">Describe the product's relationship with the model</p>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">How should the product appear?</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">Describe the product's relationship with the model</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {opts.map(o => (
             <OptionCard key={o.value} {...o} icon={INTERACTION_ICON_MAP[o.value]} selected={interaction === o.value} onClick={setInteraction} />
           ))}
@@ -262,12 +286,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
       { value: 'ai-decide', label: 'Let AI Decide', description: 'Best match for your product' },
     ];
     return (
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Where should this take place?</h3>
-          <p className="text-sm text-muted-foreground mt-1">Pick the environment for your shot</p>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Where should this take place?</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">Pick the environment for your shot</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {settingOptions.map(o => (
             <OptionCard key={o.value} {...o} icon={SETTING_ICON_MAP[o.value]} selected={setting === o.value} onClick={setSetting} />
           ))}
@@ -285,12 +309,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
       { value: 'organic', label: 'Natural & Organic', description: 'Earthy and raw' },
     ];
     return (
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">What mood are you going for?</h3>
-          <p className="text-sm text-muted-foreground mt-1">This shapes the overall aesthetic</p>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">What mood are you going for?</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">This shapes the overall aesthetic</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {moodOptions.map(o => (
             <OptionCard key={o.value} {...o} icon={MOOD_ICON_MAP[o.value]} selected={mood === o.value} onClick={setMood} />
           ))}
@@ -300,14 +324,14 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   };
 
   const renderFramingStep = () => {
-    const opts = getFramingOptions(category!);
+    const opts = getFramingOptions(category!, subject ?? undefined);
     return (
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">How close should the camera be?</h3>
-          <p className="text-sm text-muted-foreground mt-1">Choose the framing for your shot</p>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">How close should the camera be?</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">Choose the framing for your shot</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {opts.map(o => (
             <OptionCard key={o.value} {...o} icon={FRAMING_ICON_MAP[o.value]} selected={framing === o.value} onClick={setFraming} />
           ))}
@@ -317,12 +341,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   };
 
   const renderReviewStep = () => (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">Your prompt is ready</h3>
-        <p className="text-sm text-muted-foreground mt-1">Review and tweak, then use it in Freestyle</p>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">Your prompt is ready</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5">Review and tweak, then use it in Freestyle</p>
       </div>
-      <div className="rounded-xl border border-border bg-muted/30 p-5">
+      <div className="rounded-xl border border-border/50 bg-muted/20 p-4 sm:p-5">
         {isEditing ? (
           <textarea
             value={editablePrompt}
@@ -370,28 +394,28 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
         <DialogTitle className="sr-only">Prompt Builder</DialogTitle>
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 bg-foreground/[0.02] shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Wand2 className="w-4.5 h-4.5 text-primary" />
+        <div className="flex items-center gap-3 px-5 sm:px-6 py-3.5 border-b border-border/30 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Wand2 className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground">Prompt Builder</p>
-            <p className="text-[11px] text-muted-foreground">Step {stepIndex + 1} of {totalSteps}</p>
+            <p className="text-[11px] text-muted-foreground/60">Step {stepIndex + 1} of {totalSteps}</p>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="px-6 pt-3 shrink-0">
-          <Progress value={progressPercent} className="h-1.5" />
+        <div className="px-5 sm:px-6 pt-2.5 shrink-0">
+          <Progress value={progressPercent} className="h-1" />
         </div>
 
         {/* Content */}
-        <div className={cn('px-6 py-6 overflow-y-auto', isMobile ? 'flex-1' : 'max-h-[60vh]')}>
+        <div className={cn('px-5 sm:px-6 py-5 overflow-y-auto', isMobile ? 'flex-1' : 'max-h-[60vh]')}>
           {stepContent}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border/40 bg-foreground/[0.02] shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-t border-border/30 shrink-0">
           <Button
             variant="ghost"
             size="sm"
