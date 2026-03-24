@@ -182,8 +182,8 @@ export default function PublicFreestyle() {
   // Sort: featured first, then newest
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const aKey = `preset:${a.data.id}`;
-      const bKey = `preset:${b.data.id}`;
+      const aKey = `preset:${getItemId(a)}`;
+      const bKey = `preset:${getItemId(b)}`;
       const aFeat = featuredMap.get(aKey);
       const bFeat = featuredMap.get(bKey);
       if (aFeat && !bFeat) return -1;
