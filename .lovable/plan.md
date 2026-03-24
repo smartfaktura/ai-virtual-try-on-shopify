@@ -1,54 +1,45 @@
 
 
-# Freestyle Empty State: Quick-Start Preset Chips
-
-## Problem
-When a user has no freestyle generations and lands on the empty state, they see a generic "Freestyle Studio" message with no guidance on what to actually do. They don't know what combinations work or how to start.
-
-## Solution
-Replace the empty state (lines 934-946) with a **Quick-Start Presets** section — a horizontally scrollable row of preset chips (both desktop and mobile) that, when tapped, auto-fill the prompt, model, and scene. After applying a preset, show a **hint banner** above the prompt panel telling the user to just add their product.
-
-## Preset Chips Design
-
-Each chip is a small card with:
-- A scene thumbnail image (rounded, ~48×48)
-- A short label like "Lifestyle Scene", "Editorial Studio", "Beach Vibes"
-- Muted subtitle like "Freya · Urban Walking"
-
-~5-6 presets using existing models and scenes from `mockData.ts`:
-
-| Label | Scene | Model | Prompt |
-|-------|-------|-------|--------|
-| Lifestyle Scene | Urban Walking (pose_003) | Freya | "Lifestyle street style photoshoot, golden hour, natural movement" |
-| Studio Clean | Studio Front (pose_001) | Zara | "Clean studio product photography, white backdrop, professional lighting" |
-| Editorial Moody | Editorial Moody (pose_019) | Sienna | "Moody editorial fashion shoot, dramatic lighting, dark atmosphere" |
-| Beach Vibes | Beach Sunset (pose_015) | Olivia | "Beach sunset lifestyle photoshoot, warm coastal light, relaxed vibe" |
-| Café Morning | Coffee Shop Casual (pose_014) | Hannah | "Morning café lifestyle shoot, natural window light, cozy atmosphere" |
-
-## Hint Banner
-After a preset is applied, a banner appears above the prompt bar:
-```
-✓ Your scene is ready — Add your product to generate visuals →
-```
-With a CTA that opens the product picker. Dismisses on click or after adding a product.
+# Branded Quick-Start Presets with Team Avatar
 
 ## Changes
 
-### 1. New component: `src/components/app/freestyle/FreestyleQuickPresets.tsx`
-- Define `QUICK_PRESETS` array with label, scene poseId, model modelId, prompt text, thumbnail (scene's previewUrl)
-- Render a horizontal scroll row of preset chips
-- `onSelect(preset)` callback that returns the preset data
-- Chips: rounded-xl cards with scene image thumbnail + label + model name subtitle
-- Horizontal scroll with `overflow-x-auto snap-x` on mobile, centered flex-wrap on desktop
+### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx` — Replace presets, add team avatar
 
-### 2. Update `src/pages/Freestyle.tsx`
-- Import `FreestyleQuickPresets`
-- Replace the desktop empty state (lines 934-946) with the presets component (show on both mobile and desktop when no generations)
-- On preset select: set `prompt`, `selectedModel` (find from mockModels), `selectedScene` (find from mockTryOnPoses), and show a hint state
-- Add `presetHint` state — when true, render a banner above the prompt panel saying "Your scene is ready → Add your product to generate visuals"
-- Clear hint when product is selected or user dismisses it
+**Remove**: Lifestyle Scene (`preset_lifestyle`), Beach Vibes (`preset_beach`)
+
+**Keep**: Studio Clean, Editorial Moody, Café Morning
+
+**Add 8 new presets** with creative branded names mapped to closest existing scenes:
+
+| Label | Scene (poseId) | Model | Prompt |
+|-------|---------------|-------|--------|
+| Canon G7X Dining | pose_014 (Coffee Shop Casual) | Hannah | "Canon G7X style dining scene, warm natural light, intimate atmosphere" |
+| Skatepark Golden Hour | pose_022 (Basketball Court) | Freya | "Skatepark golden hour photoshoot, warm sunset light, urban energy" |
+| Industrial Light Play | pose_023 (Industrial Underpass) | Sienna | "Industrial location, dramatic directional light, raw concrete textures" |
+| Earthy Woodland Product | pose_029 (Autumn Park) | Olivia | "Earthy woodland setting, warm natural tones, organic textures, soft light" |
+| Amber Glow Studio | pose_001 (Studio Front) | Zara | "Amber warm studio glow, golden-toned studio lighting, rich atmosphere" |
+| Pilates Studio Glow | pose_025 (Gym & Fitness) | Luna (model_040) | "Bright pilates studio, soft diffused light, clean minimal fitness space" |
+| Elevator Chic | pose_005 (Editorial Dramatic) | Sienna | "Luxury elevator editorial, reflective surfaces, dramatic overhead light" |
+| Natural Light Loft | pose_030 (Warehouse Loft) | Zara | "Spacious loft with floor-to-ceiling windows, natural light flooding in" |
+
+**Header with team avatar**: Replace plain text header with a team member avatar (Amara — Lifestyle Scene Photographer) + branded intro:
+```
+[Amara avatar] Amara picked these for you
+```
+Small `text-[10px]` subtitle: "Tap a scene to get started"
+
+### 2. `src/pages/Freestyle.tsx` — Branded hint banner with avatar
+
+Replace the current plain hint banner (lines 994-1011) with a branded version featuring a team avatar:
+
+```
+[Sophia avatar] Your scene is set — [Add your product →]
+```
+
+Use `brandedToast` style inline avatar (w-5 h-5 rounded-full) from the team data. Import Sophia's avatar from `TEAM_MEMBERS`.
 
 ### Files
-- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — new component
-- `src/pages/Freestyle.tsx` — integrate presets into empty state, add hint banner logic
+- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — new presets, team avatar header
+- `src/pages/Freestyle.tsx` — branded hint banner with Sophia avatar
 
