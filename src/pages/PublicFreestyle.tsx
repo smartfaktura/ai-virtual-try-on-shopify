@@ -260,7 +260,7 @@ export default function PublicFreestyle() {
 
   const handleToggleSave = useCallback(() => {
     if (!selectedItem) return;
-    toggleSave.mutate({ itemType: selectedItem.type, itemId: selectedItem.data.id });
+    toggleSave.mutate({ itemType: selectedItem.type, itemId: getItemId(selectedItem) });
   }, [selectedItem, toggleSave]);
 
   const handleToggleFeatured = useCallback(() => {
