@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface WorkflowBreakdown {
@@ -45,6 +45,13 @@ function getRangeHours(range: TimeRange): number {
   return range;
 }
 
+interface CostBreakdownItem {
+  job_type: string;
+  jobs: number;
+  credits: number;
+  est_cost: number;
+}
+
 interface StatsData {
   total: number;
   completed: number;
@@ -53,6 +60,9 @@ interface StatsData {
   stuck: number;
   avg_seconds: number;
   max_seconds: number;
+  credits_spent: number;
+  total_est_cost: number;
+  cost_breakdown: CostBreakdownItem[];
   recent_failures: {
     id: string;
     job_type: string;
@@ -285,6 +295,68 @@ export default function AdminStatus() {
           icon={AlertTriangle}
           loading={isLoading}
         />
+      </div>
+
+      {/* Generation Costs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <MetricCard
+          title="Credits Used"
+          value={data?.credits_spent ?? '—'}
+          icon={CreditCard}
+          loading={isLoading}
+        />
+        <MetricCard
+          title="Est. API Cost"
+          value={data ? `$${data.total_est_cost.toFixed(2)}` : '—'}
+          icon={DollarSign}
+          loading={isLoading}
+        />
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="font-semibold text-foreground">Cost Breakdown</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Estimated API costs by job type in selected timeframe</p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Job Type</TableHead>
+              <TableHead className="text-right">Jobs</TableHead>
+              <TableHead className="text-right">Credits</TableHead>
+              <TableHead className="text-right">Est. Cost</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 w-20 bg-muted rounded animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-12 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                  <TableCell><div className="h-4 w-12 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                  <TableCell><div className="h-4 w-16 bg-muted rounded animate-pulse ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : data?.cost_breakdown?.length ? (
+              data.cost_breakdown.map((b) => (
+                <TableRow key={b.job_type}>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono text-xs capitalize">
+                      {b.job_type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{b.jobs}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{b.credits}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-medium">${b.est_cost.toFixed(2)}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No completed jobs in this range</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Recent failures table */}
