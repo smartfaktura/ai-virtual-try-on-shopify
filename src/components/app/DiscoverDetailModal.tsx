@@ -423,6 +423,11 @@ export function DiscoverDetailModal({
               >
                 <Search className="w-3.5 h-3.5" /> Similar
               </button>
+              <SharePopover
+                url={`${window.location.origin}/discover`}
+                title={title}
+                variant="action"
+              />
               {isAdmin && onToggleFeatured && (
                 <button
                   onClick={onToggleFeatured}
