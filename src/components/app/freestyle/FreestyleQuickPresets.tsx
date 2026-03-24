@@ -173,7 +173,7 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
         {canScrollLeft && (
           <button
             onClick={() => scroll('left')}
-            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-background border border-border shadow-sm hover:bg-accent transition-colors"
+            className="absolute -left-10 top-1/2 -translate-y-1/2 z-20 hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-background border border-border shadow-sm hover:bg-accent transition-colors"
           >
             <ChevronLeft className="w-4 h-4 text-foreground" />
           </button>
