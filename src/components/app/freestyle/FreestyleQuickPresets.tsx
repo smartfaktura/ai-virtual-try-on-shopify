@@ -88,6 +88,7 @@ interface FreestyleQuickPresetsProps {
   onSelect: (scene: TryOnPose) => void;
   activeSceneId?: string | null;
   userCategories?: string[];
+  allScenes?: TryOnPose[];
 }
 
 export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories = [] }: FreestyleQuickPresetsProps) {
