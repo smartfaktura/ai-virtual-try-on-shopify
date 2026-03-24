@@ -1,30 +1,35 @@
 
 
-# Fix Preset Carousel Spacing & Alignment
-
-## Issues
-1. **Spacing**: The presets carousel doesn't have proper spacing — it's crammed against the prompt bar with no breathing room
-2. **Width mismatch**: The presets container uses `px-4` on mobile but the prompt bar uses `px-0` — they don't align. On desktop, both use `lg:max-w-2xl lg:mx-auto` but the outer padding differs (`sm:pr-16 lg:pr-20` on prompt bar vs just `sm:px-8` on presets)
-3. **Scene images**: The images ARE correct from `mockTryOnPoses` — they show the actual scene environments with models. The `previewUrl` is the same image shown in the scene picker library. No image source change needed.
+# Improve Presets Header & Equalize Hint Banner Spacing
 
 ## Changes
 
-### `src/pages/Freestyle.tsx` (lines 951-966)
+### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx` — Better header text & sizing
 
-Fix the presets wrapper to use **identical** padding/width classes as the prompt bar container (line 975):
+Replace the current small header with a more visible, branded layout:
 
-```
-// Before (presets wrapper)
-<div className={cn("sm:px-8 sm:pr-16 lg:pr-20 pb-3", "px-4")}>
+**Current:**
+- `text-xs font-semibold` for "Amara picked these for you"
+- `text-[10px]` for "Tap a scene to get started"
 
-// After — match prompt bar exactly
-<div className={cn("px-0 sm:px-8 sm:pr-16 lg:pr-20 pb-4")}>
-```
+**New:**
+- Avatar: `w-7 h-7` (slightly larger)
+- Main line: `text-sm font-semibold` — "Amara picked these for you"
+- Subtitle: `text-xs text-muted-foreground` — "You're in Freestyle — start with a scene or describe what you want to create"
+- Add `mb-4` (was `mb-3`) between header and carousel for breathing room
+- Center-aligned on all breakpoints
 
-Also increase bottom padding from `pb-3` to `pb-4` for breathing room between presets and prompt bar.
+### 2. `src/pages/Freestyle.tsx` (~line 990-1011) — Equalize spacing around hint banner
 
-Remove the `min-h-8` from the spacer — just use `flex-1` so it naturally fills available space without forcing a minimum that eats into the preset area.
+The hint banner ("Your scene is set — Add your product") currently uses `my-4` which creates unequal visual spacing relative to the scene cards above and the prompt bar below.
+
+Change the hint banner wrapper from `my-4` to `my-6` to create equal breathing room:
+- **Above** hint banner (from scene cards): `my-6` top = ~24px
+- **Below** hint banner (to prompt bar): `my-6` bottom = ~24px
+
+Also increase the empty state bottom padding from `pb-10 lg:pb-16` to `pb-14 lg:pb-20` so that when no hint banner is shown, the scene cards still have generous spacing from the prompt bar — matching the visual distance the hint banner creates when present.
 
 ### Files
-- `src/pages/Freestyle.tsx` — fix padding to match prompt bar, improve spacing
+- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — larger avatar, better text sizing, descriptive subtitle
+- `src/pages/Freestyle.tsx` — equalized spacing around hint banner, more bottom padding on empty state
 
