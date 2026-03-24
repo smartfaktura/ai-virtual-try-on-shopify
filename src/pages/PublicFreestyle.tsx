@@ -394,11 +394,9 @@ export default function PublicFreestyle() {
             <FreestylePromptPanel
               prompt={prompt}
               onPromptChange={setPrompt}
-              sourceImagePreview={null}
-              onUploadClick={() => {
-                if (!user) navigate('/auth?redirect=/app/freestyle');
-              }}
-              onRemoveImage={() => {}}
+              sourceImagePreview={sourceImagePreview}
+              onUploadClick={handleUploadClick}
+              onRemoveImage={handleRemoveImage}
               onGenerate={handleGenerate}
               canGenerate={canGenerate}
               isLoading={false}
