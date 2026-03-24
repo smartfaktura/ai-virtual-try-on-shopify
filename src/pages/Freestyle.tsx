@@ -168,12 +168,15 @@ export default function Freestyle() {
   const isLoading = isEnqueuing || isProcessing || isUploading;
   const { user } = useAuth();
 
-  // Sync guide dismissal with user profile in DB
+  // Fetch user product categories for personalized presets
+  const [userCategories, setUserCategories] = useState<string[]>([]);
+
+  // Sync guide dismissal + fetch categories from profile
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from('profiles')
-      .select('settings')
+      .select('settings, product_categories')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
@@ -184,6 +187,7 @@ export default function Freestyle() {
         } else if (!localStorage.getItem('freestyle_guide_dismissed')) {
           setShowGuide(true);
         }
+        setUserCategories((data?.product_categories as string[]) ?? []);
       });
   }, [user?.id]);
 
