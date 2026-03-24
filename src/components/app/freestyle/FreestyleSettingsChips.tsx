@@ -312,6 +312,7 @@ export function FreestyleSettingsChips({
           {aspectRatioChip}
           {cameraStyleChip}
           {qualityChip}
+          {promptHelperButton}
         </div>
       </TooltipProvider>
     );
