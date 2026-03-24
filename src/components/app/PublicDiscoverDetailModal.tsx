@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { SharePopover } from '@/components/app/SharePopover';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -192,6 +193,13 @@ export function PublicDiscoverDetailModal({
               )}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+
+            <div className="flex items-center justify-center">
+              <SharePopover
+                url={`${window.location.origin}/discover`}
+                title={title}
+              />
+            </div>
 
             <p className="text-xs text-center text-muted-foreground/60">
               Sign up to access prompts, scenes and generate AI fashion photography
