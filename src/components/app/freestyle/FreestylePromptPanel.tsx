@@ -298,31 +298,29 @@ export function FreestylePromptPanel({
           <div className="border-t border-border/40 mx-3 sm:mx-5" />
 
           {/* Row 2 — Settings Chips */}
-          <div className="px-3 sm:px-5 py-2 sm:py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <FreestyleSettingsChips
-                uploadButton={uploadButton}
-                selectedProduct={selectedProduct} onProductSelect={onProductSelect}
-                productPopoverOpen={productPopoverOpen} onProductPopoverChange={onProductPopoverChange}
-                products={products} isLoadingProducts={isLoadingProducts}
-                selectedModel={selectedModel} onModelSelect={onModelSelect}
-                modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={onModelPopoverChange}
-                selectedScene={selectedScene} onSceneSelect={onSceneSelect}
-                scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
-                aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-                selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
-                brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
-                brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
-                cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
-                quality={quality} onQualityChange={onQualityChange}
-                framing={framing} onFramingChange={onFramingChange}
-                framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
-                hasModelSelected={!!selectedModel}
-                highlightedChip={highlightedChip}
-                disabledChips={disabledChips}
-              />
-              {promptHelperButton}
-            </div>
+          <div className="px-3 sm:px-5 py-2 sm:py-3 space-y-2">
+            <FreestyleSettingsChips
+              uploadButton={uploadButton}
+              selectedProduct={selectedProduct} onProductSelect={onProductSelect}
+              productPopoverOpen={productPopoverOpen} onProductPopoverChange={onProductPopoverChange}
+              products={products} isLoadingProducts={isLoadingProducts}
+              selectedModel={selectedModel} onModelSelect={onModelSelect}
+              modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={onModelPopoverChange}
+              selectedScene={selectedScene} onSceneSelect={onSceneSelect}
+              scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
+              aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
+              selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
+              brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
+              brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
+              cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
+              quality={quality} onQualityChange={onQualityChange}
+              framing={framing} onFramingChange={onFramingChange}
+              framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
+              hasModelSelected={!!selectedModel}
+              highlightedChip={highlightedChip}
+              disabledChips={disabledChips}
+            />
+            {promptHelperButton}
           </div>
 
           {/* Divider */}
