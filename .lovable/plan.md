@@ -1,45 +1,40 @@
 
 
-# Branded Quick-Start Presets with Team Avatar
+# Fix Quick-Start Presets: Carousel, Thumbnails & Hint Banner
+
+## Issues
+
+1. **Wrong scene thumbnails** — presets use `mockTryOnPoses[poseId].previewUrl` which shows a generic model in the scene, not matching the named model. Some model IDs are wrong (e.g., `model_040` is "Ethan" not "Luna" — Luna doesn't exist)
+2. **Desktop shows all 11 presets in a wrapped grid** — cluttered, should be a scrollable carousel with arrows
+3. **Hint banner** is grey/muted — should be dark blue accent to stand out
 
 ## Changes
 
-### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx` — Replace presets, add team avatar
+### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx`
 
-**Remove**: Lifestyle Scene (`preset_lifestyle`), Beach Vibes (`preset_beach`)
+**Fix thumbnails**: Use the **model's** `previewUrl` (headshot/portrait) as the thumbnail instead of the pose preview. The scene name is already in the subtitle text — the thumbnail should show WHO the model is since that's more recognizable. Find the model from `mockModels` and use `model.previewUrl`.
 
-**Keep**: Studio Clean, Editorial Moody, Café Morning
+**Fix wrong model mappings**:
+- "Pilates Studio Glow" — change `model_040` (Ethan) to `model_054` (Natalie) or another female fitness-appropriate model. Update subtitle to match.
 
-**Add 8 new presets** with creative branded names mapped to closest existing scenes:
+**Convert to scrollable carousel on desktop**:
+- Remove `lg:flex-wrap lg:overflow-visible lg:justify-center` 
+- Keep horizontal scroll for all breakpoints
+- Add left/right arrow buttons on desktop (hidden on mobile) using ChevronLeft/ChevronRight icons, positioned at carousel edges
+- Use a `ref` + `scrollBy()` for smooth scrolling on arrow click
+- Add left fade gradient too (show only when scrolled past start)
+- Show ~4-5 chips at a time on desktop
 
-| Label | Scene (poseId) | Model | Prompt |
-|-------|---------------|-------|--------|
-| Canon G7X Dining | pose_014 (Coffee Shop Casual) | Hannah | "Canon G7X style dining scene, warm natural light, intimate atmosphere" |
-| Skatepark Golden Hour | pose_022 (Basketball Court) | Freya | "Skatepark golden hour photoshoot, warm sunset light, urban energy" |
-| Industrial Light Play | pose_023 (Industrial Underpass) | Sienna | "Industrial location, dramatic directional light, raw concrete textures" |
-| Earthy Woodland Product | pose_029 (Autumn Park) | Olivia | "Earthy woodland setting, warm natural tones, organic textures, soft light" |
-| Amber Glow Studio | pose_001 (Studio Front) | Zara | "Amber warm studio glow, golden-toned studio lighting, rich atmosphere" |
-| Pilates Studio Glow | pose_025 (Gym & Fitness) | Luna (model_040) | "Bright pilates studio, soft diffused light, clean minimal fitness space" |
-| Elevator Chic | pose_005 (Editorial Dramatic) | Sienna | "Luxury elevator editorial, reflective surfaces, dramatic overhead light" |
-| Natural Light Loft | pose_030 (Warehouse Loft) | Zara | "Spacious loft with floor-to-ceiling windows, natural light flooding in" |
+### 2. `src/pages/Freestyle.tsx` (~line 996-1016)
 
-**Header with team avatar**: Replace plain text header with a team member avatar (Amara — Lifestyle Scene Photographer) + branded intro:
-```
-[Amara avatar] Amara picked these for you
-```
-Small `text-[10px]` subtitle: "Tap a scene to get started"
-
-### 2. `src/pages/Freestyle.tsx` — Branded hint banner with avatar
-
-Replace the current plain hint banner (lines 994-1011) with a branded version featuring a team avatar:
-
-```
-[Sophia avatar] Your scene is set — [Add your product →]
-```
-
-Use `brandedToast` style inline avatar (w-5 h-5 rounded-full) from the team data. Import Sophia's avatar from `TEAM_MEMBERS`.
+**Change hint banner to dark accent**:
+- Background: `bg-primary text-primary-foreground` (dark blue) instead of `bg-accent border-border/60`
+- Sophia avatar ring: `ring-primary-foreground/30` 
+- "Add your product" button: `text-primary-foreground font-bold` with white text
+- Close button: `text-primary-foreground/60`
+- This makes the banner pop visually against the light page background
 
 ### Files
-- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — new presets, team avatar header
-- `src/pages/Freestyle.tsx` — branded hint banner with Sophia avatar
+- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — model thumbnails, fix Luna, scrollable carousel with arrows
+- `src/pages/Freestyle.tsx` — dark blue hint banner
 
