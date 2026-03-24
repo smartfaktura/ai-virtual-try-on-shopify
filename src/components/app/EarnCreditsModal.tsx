@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { Gift, ExternalLink, Send, Copy, Check } from 'lucide-react';
+import { Gift, ExternalLink, Send, Copy, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -126,7 +126,13 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[90vh] overflow-y-auto">
+      <DrawerContent className="max-h-[90vh] overflow-y-auto">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-muted transition-colors"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
           {content}
         </DrawerContent>
       </Drawer>
