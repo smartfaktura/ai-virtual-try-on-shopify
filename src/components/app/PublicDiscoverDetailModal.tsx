@@ -197,7 +197,7 @@ export function PublicDiscoverDetailModal({
 
             <div className="flex items-center justify-center">
               <SharePopover
-                url={`${window.location.origin}/discover`}
+                url={`${SITE_URL}/discover`}
                 title={title}
               />
             </div>
