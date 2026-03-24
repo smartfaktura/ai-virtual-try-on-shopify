@@ -1,32 +1,31 @@
 
 
-# Add More Visible Mobile "Recreate" Button on Dashboard Discover Cards
+# Add Badge Pills to Virtual Try-On Set Workflow Animation
 
 ## Problem
-The mobile "Recreate" button on Steal This Look cards exists in code but may be hard to see — it's small, semi-transparent white, and can blend with light images. The user wants it clearly visible in the corner.
+The "Virtual Try-On Set" workflow card has no overlay badge/pill elements, while "Product Listing Set" has "30+ Scenes" and "1 Click", and "Selfie / UGC Set" has product and "UGC Style" badges. This makes Virtual Try-On look inconsistent.
 
-## Changes
+## Change
 
-### 1. `src/components/app/DiscoverCard.tsx` — Make mobile recreate button more prominent
-- Change from `bg-white/90` pill at bottom-right to a more visible dark-themed button
-- Use `bg-black/80 text-white` with a subtle backdrop blur for contrast against any image
-- Make the button slightly larger and add an icon-only compact variant for mobile
-- Position: bottom-right corner with proper padding
+### `src/components/app/workflowAnimationData.tsx`
 
-**Before:**
+Add two badge elements to the `'Virtual Try-On Set'` scene's `elements` array, matching the style of other workflows:
+
+- **Top-left badge**: `"40+ Models"` with `Users` icon — highlights the diverse model library
+- **Bottom-left badge**: `"Auto Fit"` with `Shirt` icon (or `ScanFace`) — highlights the realistic fitting feature
+
 ```tsx
-<button className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-black text-xs font-semibold shadow-md">
-  Recreate <ArrowRight />
-</button>
+elements: [
+  {
+    type: 'badge', label: '40+ Models', icon: <Users className="w-3 h-3" />,
+    position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
+  },
+  {
+    type: 'badge', label: 'Auto Fit', icon: <Maximize2 className="w-3 h-3" />,
+    position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+  },
+],
 ```
 
-**After:**
-```tsx
-<button className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-sm text-white text-xs font-semibold shadow-lg border border-white/10">
-  Recreate <ArrowRight />
-</button>
-```
-
-### Files
-- `src/components/app/DiscoverCard.tsx`
+This mirrors the exact pattern used by Product Listing Set and keeps the visual rhythm consistent across all three top workflow cards.
 
