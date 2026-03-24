@@ -130,7 +130,7 @@ const SETTING_FRAGMENTS: Record<SettingType, string> = {
 const SUBJECT_FRAGMENTS: Record<SubjectType, string> = {
   'single-model': 'A single model',
   'multiple-models': 'Two models together',
-  faceless: 'Elegant hands',
+  faceless: 'A faceless composition featuring elegant hands and partial body',
   'on-surface': 'The product artfully arranged on a styled surface',
   floating: 'The product floating dramatically against the backdrop',
   'flat-lay': 'A carefully curated flat lay arrangement viewed from directly above',
