@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { poseCategoryLabels } from '@/data/mockData';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { TryOnPose } from '@/types';
 
 const amara = TEAM_MEMBERS.find(m => m.name === 'Amara')!;
@@ -105,6 +106,8 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const isMobile = useIsMobile();
+  const hasAnimated = useRef(false);
 
   const scenes = useMemo(
     () => buildPersonalizedScenes(userCategories, allScenes, 8),
@@ -126,12 +129,30 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
     return () => el.removeEventListener('scroll', updateScrollState);
   }, []);
 
+  // Mobile onboarding: micro-scroll hint (once per session)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !isMobile || hasAnimated.current) return;
+    if (sessionStorage.getItem('freestyle_scroll_hint')) return;
+    hasAnimated.current = true;
+
+    const timer = setTimeout(() => {
+      el.scrollTo({ left: 40, behavior: 'smooth' });
+      setTimeout(() => {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+        sessionStorage.setItem('freestyle_scroll_hint', '1');
+      }, 400);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isMobile, scenes]);
+
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -260 : 260, behavior: 'smooth' });
   };
 
   return (
-    <div className="w-full px-4 sm:px-0">
+    <div className="w-full sm:px-0">
       <div className="flex items-center justify-center gap-2 mb-1.5">
         <img
           src={amara.avatar}
@@ -173,7 +194,7 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
 
         <div
           ref={scrollRef}
-          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none"
+          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none pl-4 sm:pl-0"
         >
           {scenes.map(scene => {
             const isActive = activeSceneId === scene.poseId;
@@ -203,6 +224,8 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
               </button>
             );
           })}
+          {/* Trailing spacer for partial card cut on mobile */}
+          <div className="shrink-0 w-4 sm:hidden" />
         </div>
       </div>
     </div>
