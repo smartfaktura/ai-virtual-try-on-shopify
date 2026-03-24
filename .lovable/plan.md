@@ -1,40 +1,40 @@
 
 
-# Add Prompt Bar to Public Freestyle Page
-
-## Problem
-The public `/freestyle` page is just a gallery — it's missing the signature prompt bar that makes Freestyle feel like a creative tool. The user wants it to look and behave like the real Freestyle, with all settings working, but "Generate" redirects to auth instead of generating.
-
-## Approach
-Reuse the real `FreestylePromptPanel` component with empty/no-op handlers for auth-gated features (products, brand profiles). Scene and model selection work with mock + custom data. The generate button redirects to `/auth` with the selected settings as URL params.
+# Public Freestyle: Hide Credits, Redirect Auth Users, Product Tooltip, Recreate Flow
 
 ## Changes
 
-### 1. `src/pages/PublicFreestyle.tsx` — Add prompt bar + restructure layout
+### 1. `src/components/app/freestyle/FreestylePromptPanel.tsx` — Hide credit count conditionally
 
-**Layout change**: Switch from centered gallery page to Freestyle-style layout (full viewport height, gallery scrollable area, prompt bar pinned at bottom).
+Add an optional prop `hideCreditCost?: boolean`. When true:
+- Hide the `({creditCost})` span on the Generate button (line 360)
+- Hide credit-related tooltip text, show generic "Sign up to generate" instead
+- Hide the "Need X more credits" insufficient credits message
 
-**Add state for prompt bar**:
-- `prompt`, `selectedModel`, `selectedScene`, `aspectRatio`, `quality`, `cameraStyle`, `framing` — same state as real Freestyle
-- Popover open states for model/scene selectors
-- Products and brand profiles: empty arrays (user not authenticated or no data)
+### 2. `src/pages/PublicFreestyle.tsx` — Three fixes
 
-**Import and render `FreestylePromptPanel`** at the bottom with:
-- All selector chips functional (models from `mockModels`, scenes from `mockTryOnPoses` + custom scenes)
-- Product chip disabled or hidden (requires auth)
-- Brand profile chip disabled or hidden (requires auth)
-- `onGenerate` → navigates to `/auth?redirect=/app/freestyle?prompt=X&scene=Y&model=Z&ratio=R`
-- `canGenerate` = true when prompt has text OR scene/model selected
-- `creditCost` = 0 (just show "Generate" without credit count)
-- No image upload (requires auth storage)
+**a) Redirect authenticated users to /app/freestyle**
+- Add a `useEffect` at the top: if `user` exists, `navigate('/app/freestyle', { replace: true })` and return early
 
-**Gallery**: Moves into a scrollable container above the prompt bar, same masonry grid.
+**b) Pass `hideCreditCost` to FreestylePromptPanel**
+- Add `hideCreditCost` prop to the panel
 
-### 2. Data sourcing for scenes
-- Import `mockTryOnPoses`, `mockModels` from mock data
-- Use `useCustomScenes` + `useHiddenScenes` + `useSceneSortOrder` for the full scene list (same as real Freestyle)
-- These hooks work without auth (they query public/anon-accessible tables)
+**c) "Recreate This" fills the panel instead of redirecting**
+- Change `handleUseItem`: instead of navigating, close the modal and populate the prompt bar state (`setPrompt`, `setSelectedScene`, `setSelectedModel`, `setAspectRatio`) from the item data
+- Find the matching scene/model from `allScenes`/`mockModels` by name
+- Only on "Generate" click does the auth redirect happen (already implemented)
+
+### 3. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — Product chip tooltip
+
+Instead of `opacity-40 pointer-events-none` when `disabledChips.product` is true, wrap the product chip in a `Tooltip` showing "Create an account to upload your product". Remove `pointer-events-none` so the tooltip can show on hover, but keep the popover disabled.
+
+### 4. `src/components/app/PublicDiscoverDetailModal.tsx` — Update CTA for freestyle context
+
+When used from `/freestyle`, the "Recreate This" button should call a new optional `onRecreate` callback prop instead of navigating to auth. The parent (`PublicFreestyle.tsx`) passes this callback to fill the prompt bar.
 
 ### Files
-- `src/pages/PublicFreestyle.tsx` — restructure layout, add FreestylePromptPanel with auth-gated generate
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` — add `hideCreditCost` prop
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — product chip tooltip on disabled
+- `src/pages/PublicFreestyle.tsx` — auth redirect, recreate fills panel, pass hideCreditCost
+- `src/components/app/PublicDiscoverDetailModal.tsx` — add optional `onRecreate` callback
 
