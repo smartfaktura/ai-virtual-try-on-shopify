@@ -1,38 +1,59 @@
 
 
-# Move Prompt Helper to First Chips Row on Desktop
+# Improve Prompt Builder Design + Fix Logic for All Paths
 
-## Problem
-On desktop, the Prompt Helper pill sits alone on a third row below the settings chips. There's plenty of space on the first row (Upload Image, Product, Model, Scene) to fit it there.
+## Problems
+
+1. **Design**: Category cards look plain — thin borders, too much empty space, descriptions missing. The overall feel is generic.
+2. **Logic bug — Faceless framing**: `faceless` is treated as `isPerson = true`, so the framing step offers "Full Body" and "Side Profile" — makes no sense for hands/body-only shots. Should only show `close-up`, `hand-focus`.
+3. **Logic bug — Faceless interaction**: "Worn / Used Naturally" makes sense for fashion but not all categories when faceless. This is minor but should be reviewed.
 
 ## Changes
 
-### `src/components/app/freestyle/FreestylePromptPanel.tsx` (~lines 317-323)
+### 1. `src/components/app/freestyle/PromptBuilderQuiz.tsx` — Design Refresh
 
-Remove the standalone Prompt Helper button from after `FreestyleSettingsChips` and pass it as a prop or render it inside the chips component.
+**OptionCard redesign:**
+- Remove the heavy `border-2` — use `border` with subtle shadow on hover
+- Reduce padding on mobile (`p-3` instead of `p-4`)
+- Make selected state cleaner: light primary bg + primary border, smaller check badge
+- Icons slightly smaller on mobile (`w-4 h-4` mobile, `w-5 h-5` desktop)
 
-**Simpler approach**: Move the Prompt Helper button into `FreestyleSettingsChips` by passing it as a new prop (e.g. `promptHelperButton`), then render it at the end of the first row on desktop (line 326, after `{sceneChip}`) and in the mobile flow as before.
+**Category grid:**
+- Use `grid-cols-3 sm:grid-cols-4` (already done) but tighten gap to `gap-2 sm:gap-3`
+- Add compact descriptions back to category cards (e.g., "Clothing, shoes" for Fashion)
 
-1. **`FreestyleSettingsChips.tsx`**: Add `promptHelperButton?: React.ReactNode` prop. Render it after `{sceneChip}` in the desktop first row (line 326) and at the end of the mobile chip flow.
+**Section headers:**
+- Keep current style but make subtitle slightly more muted
+- "With Person" / "Product Only" labels: style as tiny pill badges instead of plain uppercase text
 
-2. **`FreestylePromptPanel.tsx`**: Instead of rendering the Prompt Helper button directly after `<FreestyleSettingsChips />`, pass it as the `promptHelperButton` prop:
-   ```tsx
-   <FreestyleSettingsChips
-     ...
-     promptHelperButton={
-       <button
-         onClick={() => setQuizOpen(true)}
-         className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
-       >
-         <Wand2 className="w-3.5 h-3.5" />
-         Prompt Helper
-       </button>
-     }
-   />
-   ```
-   Remove the standalone button that currently lives after `</FreestyleSettingsChips>`.
+**Progress bar:**
+- Make thinner: `h-1` instead of `h-1.5` for a more refined look
 
-### Files
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — accept and render `promptHelperButton` prop
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` — pass Prompt Helper as prop instead of rendering separately
+### 2. `src/lib/promptBuilderTemplates.ts` — Fix Framing Logic
+
+**`getFramingOptions`**: Add a check for `faceless` subject. New signature: `getFramingOptions(category, subject?)`.
+- If `subject === 'faceless'`: return only `close-up`, `hand-focus`
+- Otherwise: keep existing category-based filtering
+
+**`getInteractionOptions`**: No change needed — "worn" for faceless hands makes sense (e.g., wearing a ring, holding product).
+
+### 3. `src/components/app/freestyle/PromptBuilderQuiz.tsx` — Pass Subject to Framing
+
+In `renderFramingStep`, pass `subject` to `getFramingOptions`:
+```tsx
+const opts = getFramingOptions(category!, subject!);
+```
+
+### 4. `src/lib/promptBuilderTemplates.ts` — Faceless Prompt Fix
+
+Update `SUBJECT_FRAGMENTS` for faceless to be more descriptive:
+```ts
+faceless: 'A faceless composition featuring elegant hands and partial body',
+```
+
+Update `FRAMING_FRAGMENTS` for faceless-compatible options to work naturally.
+
+## Files
+- `src/components/app/freestyle/PromptBuilderQuiz.tsx` — design refresh + pass subject to framing
+- `src/lib/promptBuilderTemplates.ts` — fix `getFramingOptions` to accept subject param, filter for faceless
 
