@@ -989,6 +989,24 @@ export default function Freestyle() {
                 </div>
               </div>
             )}
+            {presetHint && !selectedProduct && (
+              <div className="mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-accent border border-border/60 text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-foreground/80 text-xs">Your scene is ready</span>
+                  <span className="text-muted-foreground text-xs hidden sm:inline">—</span>
+                  <button
+                    onClick={() => setProductPopoverOpen(true)}
+                    className="text-xs font-semibold text-primary hover:underline underline-offset-2 flex items-center gap-1 ml-auto sm:ml-0"
+                  >
+                    <Package className="w-3.5 h-3.5" />
+                    Add your product
+                  </button>
+                  <button onClick={() => setPresetHint(false)} className="ml-auto opacity-50 hover:opacity-100 shrink-0">
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
             {showGuide && (
               <div className="mb-3 flex justify-center lg:justify-start">
                 <FreestyleGuide
