@@ -316,6 +316,11 @@ export default function PublicFreestyle() {
     setSourceImagePreview(null);
   }, [sourceImagePreview]);
 
+  const handleFileDrop = useCallback((file: File) => {
+    if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+    setSourceImagePreview(URL.createObjectURL(file));
+  }, [sourceImagePreview]);
+
   return (
     <PageLayout>
       <SEOHead
@@ -389,13 +394,14 @@ export default function PublicFreestyle() {
 
         {/* Pinned prompt bar */}
         <div className="sticky bottom-0 z-30 w-full">
-          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-4 sm:pb-6">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-0 sm:pb-6">
             <FreestylePromptPanel
               prompt={prompt}
               onPromptChange={setPrompt}
               sourceImagePreview={sourceImagePreview}
               onUploadClick={handleUploadClick}
               onRemoveImage={handleRemoveImage}
+              onFileDrop={handleFileDrop}
               onGenerate={handleGenerate}
               canGenerate={canGenerate}
               isLoading={false}
