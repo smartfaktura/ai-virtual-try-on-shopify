@@ -26,7 +26,7 @@ const listingResult = getLandingAssetUrl('workflows/product-listing-result.png')
 const showcase1 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-1.jpg');
 const showcase2 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-2.jpg');
 const showcase3 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-3.jpg');
-const showcase4 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-4.jpg');
+
 const showcase5 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-5.jpg');
 const showcase6 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-6.jpg');
 const showcase7 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-7.jpg');
@@ -70,7 +70,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: showcase1,
     objectPosition: 'center',
-    backgrounds: [showcase1, showcase2, showcase3, showcase4, showcase5, showcase6, showcase7],
+    backgrounds: [showcase1, showcase2, showcase3, showcase5, showcase6, showcase7],
     recipe: [
       { image: listingProduct, label: 'Product' },
     ],
