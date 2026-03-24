@@ -74,6 +74,7 @@ interface FreestyleSettingsChipsProps {
   hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
   disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean };
+  promptHelperButton?: React.ReactNode;
 }
 
 export function FreestyleSettingsChips({
