@@ -1,28 +1,16 @@
 
 
-# Apply Sort Order and Category Overrides to Preset Scenes
+# Fix Mobile Scroll Hint Not Returning to Start
 
 ## Problem
-`Freestyle.tsx` passes the combined scene list to `FreestyleQuickPresets` without applying `sortScenes` or `applyCategoryOverrides` from `useSceneSortOrder`. This means:
-1. Custom scenes with admin-assigned category overrides keep their original category, so the category-based filtering in `buildPersonalizedScenes` may exclude or misplace them
-2. The admin-curated sort order (which puts the best scenes first per category) is ignored, so the presets pick scenes in arbitrary order instead of showing the top-ranked ones
+The micro-scroll animation scrolls right to 40px but doesn't reliably scroll back to 0, leaving the first card hidden off-screen on mobile.
 
-## Changes
+## Fix
 
-### `src/pages/Freestyle.tsx`
-- Import `useSceneSortOrder` hook
-- Call `sortScenes` and `applyCategoryOverrides` on the combined scene list before passing to `FreestyleQuickPresets`
-- Change line 960 from:
-  ```
-  allScenes={[...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)]}
-  ```
-  to:
-  ```
-  allScenes={sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)]))}
-  ```
+### `src/components/app/freestyle/FreestyleQuickPresets.tsx`
 
-This ensures presets use the same curated, correctly-categorized scene list as the scene picker, so the best admin-ranked scenes appear first in each category.
-
-### Files
-- `src/pages/Freestyle.tsx` — import `useSceneSortOrder`, apply sort + category overrides to allScenes prop
+Update the scroll hint effect to ensure it always returns to `left: 0`:
+- Increase the return delay from 400ms to 600ms to give the forward scroll time to complete
+- Add a safety `scrollTo({ left: 0 })` call after setting sessionStorage
+- This ensures the carousel always rests at the beginning showing the first card fully visible
 
