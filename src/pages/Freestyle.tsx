@@ -951,7 +951,8 @@ export default function Freestyle() {
               <div className="lg:max-w-2xl lg:mx-auto">
                 <FreestyleQuickPresets
                   onSelect={handlePresetSelect}
-                  activePresetId={activePresetId}
+                  activeSceneId={activeScenePresetId}
+                  userCategories={userCategories}
                 />
               </div>
             </div>
