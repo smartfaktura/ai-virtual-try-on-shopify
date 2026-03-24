@@ -140,7 +140,7 @@ export default function PublicFreestyle() {
         .from('discover_item_views')
         .select('*', { count: 'exact', head: true })
         .eq('item_type', 'preset')
-        .eq('item_id', selectedItem.data.id);
+        .eq('item_id', getItemId(selectedItem));
       return count ?? 0;
     },
     enabled: !!selectedItem && selectedItem.type === 'preset' && !!user,
