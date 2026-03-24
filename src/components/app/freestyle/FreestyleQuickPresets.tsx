@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { poseCategoryLabels } from '@/data/mockData';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { TryOnPose } from '@/types';
 
 const amara = TEAM_MEMBERS.find(m => m.name === 'Amara')!;
