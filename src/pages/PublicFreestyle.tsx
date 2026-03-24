@@ -316,6 +316,11 @@ export default function PublicFreestyle() {
     setSourceImagePreview(null);
   }, [sourceImagePreview]);
 
+  const handleFileDrop = useCallback((file: File) => {
+    if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+    setSourceImagePreview(URL.createObjectURL(file));
+  }, [sourceImagePreview]);
+
   return (
     <PageLayout>
       <SEOHead
