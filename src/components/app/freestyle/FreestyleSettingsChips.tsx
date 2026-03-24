@@ -73,7 +73,7 @@ interface FreestyleSettingsChipsProps {
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
-  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
+  disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean };
 }
 
 export function FreestyleSettingsChips({
@@ -281,14 +281,34 @@ export function FreestyleSettingsChips({
             onOpenChange={onFramingPopoverChange}
             modal={isMobile}
           />
-          <BrandProfileChip
-            selectedProfile={selectedBrandProfile}
-            open={brandProfilePopoverOpen}
-            onOpenChange={onBrandProfilePopoverChange}
-            onSelect={onBrandProfileSelect}
-            profiles={brandProfiles}
-            isLoading={isLoadingBrandProfiles}
-          />
+          {disabledChips?.brand ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-default opacity-40">
+                  <BrandProfileChip
+                    selectedProfile={null}
+                    open={false}
+                    onOpenChange={() => {}}
+                    onSelect={() => {}}
+                    profiles={[]}
+                    isLoading={false}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Register to create your brand profile
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <BrandProfileChip
+              selectedProfile={selectedBrandProfile}
+              open={brandProfilePopoverOpen}
+              onOpenChange={onBrandProfilePopoverChange}
+              onSelect={onBrandProfileSelect}
+              profiles={brandProfiles}
+              isLoading={isLoadingBrandProfiles}
+            />
+          )}
           {aspectRatioChip}
           {cameraStyleChip}
           {qualityChip}
@@ -315,14 +335,34 @@ export function FreestyleSettingsChips({
             onOpenChange={onFramingPopoverChange}
             modal={false}
           />
-          <BrandProfileChip
-            selectedProfile={selectedBrandProfile}
-            open={brandProfilePopoverOpen}
-            onOpenChange={onBrandProfilePopoverChange}
-            onSelect={onBrandProfileSelect}
-            profiles={brandProfiles}
-            isLoading={isLoadingBrandProfiles}
-          />
+          {disabledChips?.brand ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-default opacity-40">
+                  <BrandProfileChip
+                    selectedProfile={null}
+                    open={false}
+                    onOpenChange={() => {}}
+                    onSelect={() => {}}
+                    profiles={[]}
+                    isLoading={false}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Register to create your brand profile
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <BrandProfileChip
+              selectedProfile={selectedBrandProfile}
+              open={brandProfilePopoverOpen}
+              onOpenChange={onBrandProfilePopoverChange}
+              onSelect={onBrandProfileSelect}
+              profiles={brandProfiles}
+              isLoading={isLoadingBrandProfiles}
+            />
+          )}
           {aspectRatioChip}
           {cameraStyleChip}
           {qualityChip}

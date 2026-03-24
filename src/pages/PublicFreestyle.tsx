@@ -10,9 +10,9 @@ import { useSavedItems } from '@/hooks/useSavedItems';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
@@ -25,66 +25,8 @@ import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
 import type { ImageRole, EditIntent } from '@/components/app/freestyle/ImageRoleSelector';
 
-const CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'beauty', label: 'Beauty' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports' },
-  { id: 'supplements', label: 'Health' },
-] as const;
-
-const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
-  editorial: ['fashion', 'fragrances', 'jewelry'],
-  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  lifestyle: ['home', 'food', 'accessories', 'fashion'],
-  fashion: ['fashion', 'accessories'],
-  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
-  cinematic: ['fashion', 'fragrances', 'jewelry'],
-  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  styling: ['fashion', 'accessories', 'jewelry'],
-  ads: ['fashion', 'sports', 'beauty', 'electronics'],
-  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  streetwear: ['fashion', 'accessories'],
-  fitness: ['sports', 'supplements'],
-  athletic: ['sports', 'supplements'],
-  gym: ['sports', 'supplements'],
-  beauty: ['beauty', 'fragrances'],
-  desert: ['fashion', 'fragrances'],
-  outdoor: ['sports', 'home', 'fashion'],
-  beach: ['fashion', 'accessories'],
-  garden: ['home', 'beauty', 'fragrances'],
-  industrial: ['electronics', 'fashion'],
-  urban: ['fashion', 'accessories'],
-  rooftop: ['fashion', 'food'],
-  cafe: ['food', 'home'],
-  mirror: ['beauty', 'fashion'],
-  casual: ['fashion', 'accessories'],
-  cozy: ['home', 'fashion'],
-  professional: ['electronics', 'accessories'],
-};
-
 function getItemId(item: DiscoverItem): string {
   return item.type === 'preset' ? item.data.id : item.data.poseId;
-}
-
-function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
-  const itemCat = item.data.category;
-  if (itemCat === productCat) return true;
-  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
-  if (mapped.includes(productCat)) return true;
-  if (item.type === 'preset' && item.data.tags) {
-    return item.data.tags.some((t: string) => {
-      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
-      return tagMapped.includes(productCat);
-    });
-  }
-  return false;
 }
 
 function useColumnCount() {
@@ -151,7 +93,6 @@ export default function PublicFreestyle() {
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
 
   const canGenerate = !!(prompt.trim() || selectedModel || selectedScene);
@@ -243,15 +184,9 @@ export default function PublicFreestyle() {
     window.history.replaceState(null, '', '/freestyle');
   }, []);
 
-  // Filter by category
-  const filtered = useMemo(() => {
-    if (selectedCategory === 'all') return allItems;
-    return allItems.filter((item) => itemMatchesProductCategory(item, selectedCategory));
-  }, [allItems, selectedCategory]);
-
   // Sort: featured first, then newest
   const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
+    return [...allItems].sort((a, b) => {
       const aKey = `preset:${getItemId(a)}`;
       const bKey = `preset:${getItemId(b)}`;
       const aFeat = featuredMap.get(aKey);
@@ -263,7 +198,7 @@ export default function PublicFreestyle() {
       const bDate = b.data.created_at ? new Date(b.data.created_at).getTime() : 0;
       return bDate - aDate;
     });
-  }, [filtered, featuredMap]);
+  }, [allItems, featuredMap]);
 
   // Progressive rendering
   const INITIAL_RENDER_COUNT = 30;
@@ -271,7 +206,7 @@ export default function PublicFreestyle() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setVisibleCount(INITIAL_RENDER_COUNT); }, [selectedCategory]);
+  
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -334,7 +269,6 @@ export default function PublicFreestyle() {
 
   const handleSearchSimilar = useCallback((item: DiscoverItem) => {
     setSelectedItem(null);
-    setSelectedCategory(item.data.category);
   }, []);
 
   const handleToggleSave = useCallback(() => {
@@ -348,34 +282,53 @@ export default function PublicFreestyle() {
     toggleFeatured.mutate({ itemType: selectedItem.type, itemId, currentlyFeatured: isFeatured(selectedItem.type, itemId) });
   }, [selectedItem, toggleFeatured, isFeatured]);
 
+  const jsonLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'VOVV AI Freestyle Studio',
+    applicationCategory: 'DesignApplication',
+    operatingSystem: 'Web',
+    url: `${SITE_URL}/freestyle`,
+    description: 'AI-powered freestyle product photography tool. Generate professional e-commerce images with AI models, backgrounds, and custom scenes — no camera or studio required.',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Free to try' },
+    creator: { '@type': 'Organization', name: 'VOVV AI', url: SITE_URL },
+  }), []);
+
+  // Local image upload (no storage)
+  const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
+
+  const handleUploadClick = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+        setSourceImagePreview(URL.createObjectURL(file));
+      }
+    };
+    input.click();
+  }, [sourceImagePreview]);
+
+  const handleRemoveImage = useCallback(() => {
+    if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+    setSourceImagePreview(null);
+  }, [sourceImagePreview]);
+
   return (
     <PageLayout>
       <SEOHead
-        title="AI Freestyle Photography — VOVV AI"
-        description="Create stunning AI product photography with Freestyle. Choose models, scenes, and styles — generate professional images in seconds."
+        title="Free AI Product Photography Generator — Freestyle Studio | VOVV AI"
+        description="Create stunning AI product photos for free. Choose from 50+ AI models, 100+ scenes, and custom styles. No camera needed — generate e-commerce images in seconds with VOVV AI Freestyle."
         canonical={`${SITE_URL}/freestyle`}
+        ogType="website"
       />
+      <JsonLd data={jsonLd} />
       <div className="flex flex-col min-h-[calc(100vh-80px)]">
         {/* Scrollable gallery area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
-            {/* Header */}
-            <div className="space-y-3 text-center">
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
-                Freestyle Studio
-              </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                AI-powered product photography. Pick a style below or describe your vision.
-              </p>
-            </div>
-
-            {/* Category filter */}
-            <PublicDiscoverCategoryBar
-              categories={CATEGORIES}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
-
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4">
             {/* Grid */}
             {isLoading ? (
               <div className="flex items-center justify-center py-24">
@@ -383,16 +336,10 @@ export default function PublicFreestyle() {
                   <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 animate-shimmer bg-[length:200%_100%]" />
                 </div>
               </div>
-            ) : filtered.length === 0 ? (
+            ) : allItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium text-muted-foreground mb-1">No freestyle images found</p>
-                <p className="text-xs text-muted-foreground/70 max-w-xs">
-                  Try a different category or{' '}
-                  <button onClick={() => setSelectedCategory('all')} className="text-primary hover:underline">
-                    browse all
-                  </button>
-                </p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">No freestyle images yet</p>
               </div>
             ) : (
               (() => {
@@ -446,11 +393,9 @@ export default function PublicFreestyle() {
             <FreestylePromptPanel
               prompt={prompt}
               onPromptChange={setPrompt}
-              sourceImagePreview={null}
-              onUploadClick={() => {
-                if (!user) navigate('/auth?redirect=/app/freestyle');
-              }}
-              onRemoveImage={() => {}}
+              sourceImagePreview={sourceImagePreview}
+              onUploadClick={handleUploadClick}
+              onRemoveImage={handleRemoveImage}
               onGenerate={handleGenerate}
               canGenerate={canGenerate}
               isLoading={false}
@@ -499,7 +444,7 @@ export default function PublicFreestyle() {
               onImageRoleChange={setImageRole}
               editIntent={editIntent}
               onEditIntentChange={setEditIntent}
-              disabledChips={{ product: true }}
+              disabledChips={{ product: true, brand: true }}
               isCollapsed={isMobile ? isPromptCollapsed : undefined}
               onToggleCollapse={isMobile ? () => setIsPromptCollapsed(prev => !prev) : undefined}
               onReset={handleReset}
