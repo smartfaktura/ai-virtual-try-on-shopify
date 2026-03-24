@@ -307,21 +307,30 @@ export default function PublicFreestyle() {
       .slice(0, 9);
   }, [allItems, selectedItem]);
 
-  // Use item handler
-  const handleUseItem = useCallback((item: DiscoverItem) => {
+  // "Recreate This" fills the prompt bar instead of redirecting
+  const handleRecreateItem = useCallback((item: DiscoverItem) => {
     if (item.type !== 'preset') return;
     const d = item.data;
-    const params = new URLSearchParams({
-      prompt: d.prompt,
-      ratio: d.aspect_ratio,
-      quality: d.quality,
-    });
-    if (user) {
-      navigate(`/app/freestyle?${params.toString()}`);
-    } else {
-      navigate(`/auth?redirect=${encodeURIComponent(`/app/freestyle?${params.toString()}`)}`);
+    if (d.prompt) setPrompt(d.prompt);
+    if (d.aspect_ratio) setAspectRatio(d.aspect_ratio as FreestyleAspectRatio);
+    if (d.quality) setQuality(d.quality as 'standard' | 'high');
+    // Find matching scene/model by name
+    if (d.scene_name) {
+      const matchScene = allScenes.find(s => s.name === d.scene_name);
+      if (matchScene) setSelectedScene(matchScene);
     }
-  }, [navigate, user]);
+    if (d.model_name) {
+      const matchModel = mockModels.find(m => m.name === d.model_name);
+      if (matchModel) setSelectedModel(matchModel);
+    }
+    setSelectedItem(null);
+    window.history.replaceState(null, '', '/freestyle');
+  }, [allScenes]);
+
+  // Legacy handler for use-item (kept for DiscoverDetailModal)
+  const handleUseItem = useCallback((item: DiscoverItem) => {
+    handleRecreateItem(item);
+  }, [handleRecreateItem]);
 
   const handleSearchSimilar = useCallback((item: DiscoverItem) => {
     setSelectedItem(null);
