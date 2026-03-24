@@ -1,35 +1,68 @@
 
 
-# Improve Presets Header & Equalize Hint Banner Spacing
+# Personalized Scene Presets Based on User Categories
+
+## Overview
+Replace hardcoded `QUICK_PRESETS` with a dynamic system that loads scenes from `mockTryOnPoses` (same images as scene picker) and personalizes them based on the user's `product_categories` from their profile.
+
+## How It Works
+
+**Category-to-Scene Mapping:**
+Each user product category maps to relevant scene categories:
+- `fashion` → studio, lifestyle, editorial, streetwear (on-model scenes)
+- `beauty`, `fragrances` → clean-studio, surface, bathroom, botanical
+- `jewelry`, `accessories` → clean-studio, surface, flat-lay
+- `home` → living-space, clean-studio, botanical, outdoor
+- `food` → surface, kitchen (mapped from existing scenes), clean-studio
+- `electronics` → clean-studio, surface
+- `sports` → lifestyle, streetwear, outdoor
+- `supplements` → clean-studio, surface, botanical
+- `any` → mix of all
+
+**8 scenes total**, dynamically distributed:
+- Single category → 8 scenes from that category's mapped scene types
+- Two categories → 4 from each
+- Three+ → ~2-3 from each, filling to 8
+- Fallback: if user has no categories or `any`, show a curated mix across all types
 
 ## Changes
 
-### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx` — Better header text & sizing
+### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx` — Full rewrite of preset logic
 
-Replace the current small header with a more visible, branded layout:
+**Remove** the hardcoded `QUICK_PRESETS` array and `QuickPreset` interface.
 
-**Current:**
-- `text-xs font-semibold` for "Amara picked these for you"
-- `text-[10px]` for "Tap a scene to get started"
+**Add:**
+- Accept `userCategories: string[]` prop (fetched from profile)
+- New `CATEGORY_SCENE_MAP` mapping user product categories to scene categories
+- Function `buildPersonalizedScenes(categories, allScenes)` that:
+  1. Resolves which scene categories are relevant
+  2. Distributes 8 slots across categories (equal split)
+  3. Returns `TryOnPose[]` directly from `mockTryOnPoses`
+- Each card shows the scene's `previewUrl` (same image as scene picker), `name`, and scene category label
+- Clicking a card calls `onSelect(scene)` passing the `TryOnPose` directly
 
-**New:**
-- Avatar: `w-7 h-7` (slightly larger)
-- Main line: `text-sm font-semibold` — "Amara picked these for you"
-- Subtitle: `text-xs text-muted-foreground` — "You're in Freestyle — start with a scene or describe what you want to create"
-- Add `mb-4` (was `mb-3`) between header and carousel for breathing room
-- Center-aligned on all breakpoints
+**Update interface:**
+```typescript
+interface FreestyleQuickPresetsProps {
+  onSelect: (scene: TryOnPose) => void;
+  activeSceneId?: string | null;
+  userCategories?: string[];
+}
+```
 
-### 2. `src/pages/Freestyle.tsx` (~line 990-1011) — Equalize spacing around hint banner
+The carousel card renders:
+- Scene image from `pose.previewUrl` (same as scene picker)
+- Scene name
+- Scene category label as subtle subtitle
 
-The hint banner ("Your scene is set — Add your product") currently uses `my-4` which creates unequal visual spacing relative to the scene cards above and the prompt bar below.
+### 2. `src/pages/Freestyle.tsx` — Fetch user categories, pass to presets
 
-Change the hint banner wrapper from `my-4` to `my-6` to create equal breathing room:
-- **Above** hint banner (from scene cards): `my-6` top = ~24px
-- **Below** hint banner (to prompt bar): `my-6` bottom = ~24px
-
-Also increase the empty state bottom padding from `pb-10 lg:pb-16` to `pb-14 lg:pb-20` so that when no hint banner is shown, the scene cards still have generous spacing from the prompt bar — matching the visual distance the hint banner creates when present.
+- Fetch `product_categories` from the user's profile (query or inline fetch)
+- Pass `userCategories` to `FreestyleQuickPresets`
+- Update `handlePresetSelect` to accept a `TryOnPose` directly (set scene, no model)
+- Update `activePresetId` → `activeSceneId` tracking by `poseId`
 
 ### Files
-- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — larger avatar, better text sizing, descriptive subtitle
-- `src/pages/Freestyle.tsx` — equalized spacing around hint banner, more bottom padding on empty state
+- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — dynamic personalized scenes
+- `src/pages/Freestyle.tsx` — fetch user categories, updated preset handler
 
