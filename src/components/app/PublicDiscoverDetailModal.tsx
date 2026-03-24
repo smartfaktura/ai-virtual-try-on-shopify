@@ -6,6 +6,7 @@ import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SharePopover } from '@/components/app/SharePopover';
+import { SITE_URL } from '@/lib/constants';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -196,7 +197,7 @@ export function PublicDiscoverDetailModal({
 
             <div className="flex items-center justify-center">
               <SharePopover
-                url={`${window.location.origin}/discover`}
+                url={`${SITE_URL}/discover`}
                 title={title}
               />
             </div>

@@ -13,6 +13,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SharePopover } from '@/components/app/SharePopover';
+import { SITE_URL } from '@/lib/constants';
 import { mockModels, mockTryOnPoses } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
@@ -424,7 +425,7 @@ export function DiscoverDetailModal({
                 <Search className="w-3.5 h-3.5" /> Similar
               </button>
               <SharePopover
-                url={`${window.location.origin}/discover`}
+                url={`${SITE_URL}/discover`}
                 title={title}
                 variant="action"
               />
