@@ -181,7 +181,7 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
         {canScrollRight && (
           <button
             onClick={() => scroll('right')}
-            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-background border border-border shadow-sm hover:bg-accent transition-colors"
+            className="absolute -right-10 top-1/2 -translate-y-1/2 z-20 hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-background border border-border shadow-sm hover:bg-accent transition-colors"
           >
             <ChevronRight className="w-4 h-4 text-foreground" />
           </button>

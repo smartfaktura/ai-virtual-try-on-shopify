@@ -958,10 +958,12 @@ export default function Freestyle() {
             <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
               Pick a quick-start preset or describe what you want to create.
             </p>
-            <FreestyleQuickPresets
-              onSelect={handlePresetSelect}
-              activePresetId={activePresetId}
-            />
+            <div className="w-full lg:max-w-2xl lg:mx-auto">
+              <FreestyleQuickPresets
+                onSelect={handlePresetSelect}
+                activePresetId={activePresetId}
+              />
+            </div>
           </div>
         )}
       </div>
