@@ -283,34 +283,53 @@ export default function PublicFreestyle() {
     toggleFeatured.mutate({ itemType: selectedItem.type, itemId, currentlyFeatured: isFeatured(selectedItem.type, itemId) });
   }, [selectedItem, toggleFeatured, isFeatured]);
 
+  const jsonLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'VOVV AI Freestyle Studio',
+    applicationCategory: 'DesignApplication',
+    operatingSystem: 'Web',
+    url: `${SITE_URL}/freestyle`,
+    description: 'AI-powered freestyle product photography tool. Generate professional e-commerce images with AI models, backgrounds, and custom scenes — no camera or studio required.',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Free to try' },
+    creator: { '@type': 'Organization', name: 'VOVV AI', url: SITE_URL },
+  }), []);
+
+  // Local image upload (no storage)
+  const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
+
+  const handleUploadClick = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+        setSourceImagePreview(URL.createObjectURL(file));
+      }
+    };
+    input.click();
+  }, [sourceImagePreview]);
+
+  const handleRemoveImage = useCallback(() => {
+    if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+    setSourceImagePreview(null);
+  }, [sourceImagePreview]);
+
   return (
     <PageLayout>
       <SEOHead
-        title="AI Freestyle Photography — VOVV AI"
-        description="Create stunning AI product photography with Freestyle. Choose models, scenes, and styles — generate professional images in seconds."
+        title="Free AI Product Photography Generator — Freestyle Studio | VOVV AI"
+        description="Create stunning AI product photos for free. Choose from 50+ AI models, 100+ scenes, and custom styles. No camera needed — generate e-commerce images in seconds with VOVV AI Freestyle."
         canonical={`${SITE_URL}/freestyle`}
+        ogType="website"
       />
+      <JsonLd data={jsonLd} />
       <div className="flex flex-col min-h-[calc(100vh-80px)]">
         {/* Scrollable gallery area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
-            {/* Header */}
-            <div className="space-y-3 text-center">
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
-                Freestyle Studio
-              </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                AI-powered product photography. Pick a style below or describe your vision.
-              </p>
-            </div>
-
-            {/* Category filter */}
-            <PublicDiscoverCategoryBar
-              categories={CATEGORIES}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
-
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4">
             {/* Grid */}
             {isLoading ? (
               <div className="flex items-center justify-center py-24">
@@ -318,16 +337,10 @@ export default function PublicFreestyle() {
                   <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 animate-shimmer bg-[length:200%_100%]" />
                 </div>
               </div>
-            ) : filtered.length === 0 ? (
+            ) : allItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium text-muted-foreground mb-1">No freestyle images found</p>
-                <p className="text-xs text-muted-foreground/70 max-w-xs">
-                  Try a different category or{' '}
-                  <button onClick={() => setSelectedCategory('all')} className="text-primary hover:underline">
-                    browse all
-                  </button>
-                </p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">No freestyle images yet</p>
               </div>
             ) : (
               (() => {
