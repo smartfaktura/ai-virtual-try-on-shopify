@@ -15,6 +15,15 @@ import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
+import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
+import { mockTryOnPoses, mockModels } from '@/data/mockData';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
+import { useIsMobile } from '@/hooks/use-mobile';
+import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
+import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
+import type { ImageRole, EditIntent } from '@/components/app/freestyle/ImageRoleSelector';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -103,6 +112,7 @@ export default function PublicFreestyle() {
   const navigate = useNavigate();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { data: allPresets = [], isLoading } = useDiscoverPresets();
   const { featuredMap, isFeatured } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
@@ -110,8 +120,62 @@ export default function PublicFreestyle() {
   const { isAdmin } = useIsAdmin();
   const columnCount = useColumnCount();
 
+  // Scene data for prompt bar
+  const { customScenePoses } = useCustomScenes();
+  const { filterVisible } = useHiddenScenes();
+  const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
+
+  const allScenes = useMemo(
+    () => sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)])),
+    [mockTryOnPoses, customScenePoses, sortScenes, applyCategoryOverrides, filterVisible]
+  );
+
+  // Prompt bar state
+  const [prompt, setPrompt] = useState('');
+  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+  const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
+  const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
+  const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
+  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
+  const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
+  const [framing, setFraming] = useState<FramingOption | null>(null);
+  const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
+  const [imageRole, setImageRole] = useState<ImageRole>('edit');
+  const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
+  const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+
+  const canGenerate = !!(prompt.trim() || selectedModel || selectedScene);
+
+  const isDirty = !!(prompt || selectedModel || selectedScene || framing || aspectRatio !== '1:1');
+
+  const handleReset = useCallback(() => {
+    setPrompt('');
+    setSelectedModel(null);
+    setSelectedScene(null);
+    setAspectRatio('1:1');
+    setCameraStyle('pro');
+    setQuality('standard');
+    setFraming(null);
+  }, []);
+
+  // Generate → auth redirect
+  const handleGenerate = useCallback(() => {
+    const params = new URLSearchParams();
+    if (prompt) params.set('prompt', prompt);
+    if (selectedModel) params.set('modelId', selectedModel.modelId);
+    if (selectedScene) params.set('sceneId', selectedScene.poseId);
+    if (aspectRatio !== '1:1') params.set('ratio', aspectRatio);
+    const target = `/app/freestyle${params.toString() ? `?${params.toString()}` : ''}`;
+    if (user) {
+      navigate(target);
+    } else {
+      navigate(`/auth?redirect=${encodeURIComponent(target)}`);
+    }
+  }, [prompt, selectedModel, selectedScene, aspectRatio, user, navigate]);
 
   // Filter to freestyle-only presets (no workflow_slug)
   const freestylePresets = useMemo(
@@ -146,7 +210,7 @@ export default function PublicFreestyle() {
     enabled: !!selectedItem && selectedItem.type === 'preset' && !!user,
   });
 
-  // Build items list (presets only, no scenes)
+  // Build items list
   const allItems = useMemo<DiscoverItem[]>(
     () => freestylePresets.map((p) => ({ type: 'preset' as const, data: p })),
     [freestylePresets]
@@ -272,114 +336,189 @@ export default function PublicFreestyle() {
   return (
     <PageLayout>
       <SEOHead
-        title="AI Freestyle Photography Gallery — VOVV AI"
-        description="Explore AI-generated freestyle product photography. Every image was created with VOVV.AI — recreate any look with your own product in seconds."
+        title="AI Freestyle Photography — VOVV AI"
+        description="Create stunning AI product photography with Freestyle. Choose models, scenes, and styles — generate professional images in seconds."
         canonical={`${SITE_URL}/freestyle`}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-        {/* Header */}
-        <div className="space-y-3 text-center">
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
-            Freestyle Gallery
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            AI-generated product photography. Click any image to recreate it with your product.
-          </p>
+      <div className="flex flex-col min-h-[calc(100vh-80px)]">
+        {/* Scrollable gallery area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
+            {/* Header */}
+            <div className="space-y-3 text-center">
+              <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">
+                Freestyle Studio
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                AI-powered product photography. Pick a style below or describe your vision.
+              </p>
+            </div>
+
+            {/* Category filter */}
+            <PublicDiscoverCategoryBar
+              categories={CATEGORIES}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
+
+            {/* Grid */}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-24">
+                <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 animate-shimmer bg-[length:200%_100%]" />
+                </div>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                <p className="text-sm font-medium text-muted-foreground mb-1">No freestyle images found</p>
+                <p className="text-xs text-muted-foreground/70 max-w-xs">
+                  Try a different category or{' '}
+                  <button onClick={() => setSelectedCategory('all')} className="text-primary hover:underline">
+                    browse all
+                  </button>
+                </p>
+              </div>
+            ) : (
+              (() => {
+                const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
+                visibleItems.forEach((item, i) => {
+                  columns[i % columnCount].push(item);
+                });
+                return (
+                  <>
+                    <div className="flex gap-1">
+                      {columns.map((col, colIdx) => (
+                        <div key={colIdx} className="flex-1 flex flex-col gap-1">
+                          {col.map((item) => {
+                            const itemId = getItemId(item);
+                            return (
+                              <DiscoverCard
+                                key={`p-${itemId}`}
+                                item={item}
+                                onClick={() => handleCardClick(item)}
+                                onRecreate={() => handleUseItem(item)}
+                                hideLabels
+                                {...(user ? {
+                                  isSaved: isSaved(item.type, itemId),
+                                  onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
+                                  isFeatured: isFeatured(item.type, itemId),
+                                  isAdmin,
+                                  onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
+                                } : {})}
+                              />
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                    {visibleCount < sorted.length && (
+                      <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
+                    )}
+                  </>
+                );
+              })()
+            )}
+
+            {/* Bottom spacer for prompt bar */}
+            <div className="h-48 sm:h-40" />
+          </div>
         </div>
 
-        {/* Category filter */}
-        <PublicDiscoverCategoryBar
-          categories={CATEGORIES}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-
-        {/* Grid */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
-              <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 animate-shimmer bg-[length:200%_100%]" />
-            </div>
+        {/* Pinned prompt bar */}
+        <div className="sticky bottom-0 z-30 w-full">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-4 sm:pb-6">
+            <FreestylePromptPanel
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              sourceImagePreview={null}
+              onUploadClick={() => {
+                if (!user) navigate('/auth?redirect=/app/freestyle');
+              }}
+              onRemoveImage={() => {}}
+              onGenerate={handleGenerate}
+              canGenerate={canGenerate}
+              isLoading={false}
+              progress={0}
+              creditCost={1}
+              selectedModel={selectedModel}
+              onModelSelect={setSelectedModel}
+              modelPopoverOpen={modelPopoverOpen}
+              onModelPopoverChange={setModelPopoverOpen}
+              selectedScene={selectedScene}
+              onSceneSelect={setSelectedScene}
+              scenePopoverOpen={scenePopoverOpen}
+              onScenePopoverChange={setScenePopoverOpen}
+              selectedProduct={null}
+              onProductSelect={() => {
+                if (!user) navigate('/auth?redirect=/app/freestyle');
+              }}
+              productPopoverOpen={false}
+              onProductPopoverChange={() => {
+                if (!user) navigate('/auth?redirect=/app/freestyle');
+              }}
+              products={[]}
+              isLoadingProducts={false}
+              aspectRatio={aspectRatio}
+              onAspectRatioChange={setAspectRatio}
+              selectedBrandProfile={null}
+              onBrandProfileSelect={() => {
+                if (!user) navigate('/auth?redirect=/app/freestyle');
+              }}
+              brandProfilePopoverOpen={false}
+              onBrandProfilePopoverChange={() => {
+                if (!user) navigate('/auth?redirect=/app/freestyle');
+              }}
+              brandProfiles={[]}
+              isLoadingBrandProfiles={false}
+              cameraStyle={cameraStyle}
+              onCameraStyleChange={setCameraStyle}
+              quality={quality}
+              onQualityChange={setQuality}
+              framing={framing}
+              onFramingChange={setFraming}
+              framingPopoverOpen={framingPopoverOpen}
+              onFramingPopoverChange={setFramingPopoverOpen}
+              imageRole={imageRole}
+              onImageRoleChange={setImageRole}
+              editIntent={editIntent}
+              onEditIntentChange={setEditIntent}
+              disabledChips={{ product: true }}
+              isCollapsed={isMobile ? isPromptCollapsed : undefined}
+              onToggleCollapse={isMobile ? () => setIsPromptCollapsed(prev => !prev) : undefined}
+              onReset={handleReset}
+              isDirty={isDirty}
+            />
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground mb-1">No freestyle images found</p>
-            <p className="text-xs text-muted-foreground/70 max-w-xs">
-              Try a different category or{' '}
-              <button onClick={() => setSelectedCategory('all')} className="text-primary hover:underline">
-                browse all
-              </button>
-            </p>
-          </div>
-        ) : (
-          (() => {
-            const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
-            visibleItems.forEach((item, i) => {
-              columns[i % columnCount].push(item);
-            });
-            return (
-              <>
-                <div className="flex gap-1">
-                  {columns.map((col, colIdx) => (
-                    <div key={colIdx} className="flex-1 flex flex-col gap-1">
-                      {col.map((item) => {
-                        const itemId = getItemId(item);
-                        return (
-                          <DiscoverCard
-                            key={`p-${itemId}`}
-                            item={item}
-                            onClick={() => handleCardClick(item)}
-                            onRecreate={() => handleUseItem(item)}
-                            hideLabels
-                            {...(user ? {
-                              isSaved: isSaved(item.type, itemId),
-                              onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
-                              isFeatured: isFeatured(item.type, itemId),
-                              isAdmin,
-                              onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
-                            } : {})}
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-                {visibleCount < sorted.length && (
-                  <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
-                )}
-              </>
-            );
-          })()
-        )}
-
-        {/* Detail modal */}
-        {user ? (
-          <DiscoverDetailModal
-            item={selectedItem}
-            open={!!selectedItem}
-            onClose={handleClose}
-            onUseItem={handleUseItem}
-            onSearchSimilar={handleSearchSimilar}
-            relatedItems={relatedItems}
-            onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
-            isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
-            onToggleSave={handleToggleSave}
-            viewCount={viewCount ?? undefined}
-            isAdmin={isAdmin}
-            isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
-            onToggleFeatured={handleToggleFeatured}
-          />
-        ) : (
-          <PublicDiscoverDetailModal
-            item={selectedItem}
-            open={!!selectedItem}
-            onClose={handleClose}
-            relatedItems={relatedItems}
-            onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
-          />
-        )}
+        </div>
       </div>
+
+      {/* Detail modal */}
+      {user ? (
+        <DiscoverDetailModal
+          item={selectedItem}
+          open={!!selectedItem}
+          onClose={handleClose}
+          onUseItem={handleUseItem}
+          onSearchSimilar={handleSearchSimilar}
+          relatedItems={relatedItems}
+          onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
+          isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
+          onToggleSave={handleToggleSave}
+          viewCount={viewCount ?? undefined}
+          isAdmin={isAdmin}
+          isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
+          onToggleFeatured={handleToggleFeatured}
+        />
+      ) : (
+        <PublicDiscoverDetailModal
+          item={selectedItem}
+          open={!!selectedItem}
+          onClose={handleClose}
+          relatedItems={relatedItems}
+          onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
+        />
+      )}
     </PageLayout>
   );
 }
