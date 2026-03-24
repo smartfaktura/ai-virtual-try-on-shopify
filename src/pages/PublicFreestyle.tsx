@@ -389,7 +389,7 @@ export default function PublicFreestyle() {
 
         {/* Pinned prompt bar */}
         <div className="sticky bottom-0 z-30 w-full">
-          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-4 sm:pb-6">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-0 sm:pb-6">
             <FreestylePromptPanel
               prompt={prompt}
               onPromptChange={setPrompt}
