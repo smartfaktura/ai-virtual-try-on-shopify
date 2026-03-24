@@ -948,21 +948,21 @@ export default function Freestyle() {
             />
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
-            <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
-              <Sparkles className="w-8 h-8 text-muted-foreground/40" />
+          <div className="flex flex-col h-full">
+            <div className="px-4 sm:px-8 pt-2">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Freestyle Studio</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-lg">
+                Pick a quick-start preset or describe what you want to create.
+              </p>
             </div>
-            <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-2">
-              Freestyle Studio
-            </h2>
-            <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
-              Pick a quick-start preset or describe what you want to create.
-            </p>
-            <div className="w-full lg:max-w-2xl lg:mx-auto">
-              <FreestyleQuickPresets
-                onSelect={handlePresetSelect}
-                activePresetId={activePresetId}
-              />
+            <div className="flex-1" />
+            <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20 pb-2">
+              <div className="lg:max-w-2xl lg:mx-auto">
+                <FreestyleQuickPresets
+                  onSelect={handlePresetSelect}
+                  activePresetId={activePresetId}
+                />
+              </div>
             </div>
           </div>
         )}
