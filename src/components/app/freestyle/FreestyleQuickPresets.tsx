@@ -207,7 +207,7 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
                 )}
               >
                 <img
-                  src={model?.previewUrl || ''}
+                  src={mockTryOnPoses.find(p => p.poseId === preset.poseId)?.previewUrl || ''}
                   alt={preset.label}
                   className="w-11 h-11 rounded-lg object-cover shrink-0"
                 />
