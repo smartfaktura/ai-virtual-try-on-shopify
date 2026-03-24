@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SharePopover } from '@/components/app/SharePopover';
 import { SITE_URL } from '@/lib/constants';
+import { getItemSlug } from '@/lib/slugUtils';
 import { mockModels, mockTryOnPoses } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
