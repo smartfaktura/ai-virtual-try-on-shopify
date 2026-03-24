@@ -25,66 +25,8 @@ import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
 import type { ImageRole, EditIntent } from '@/components/app/freestyle/ImageRoleSelector';
 
-const CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'beauty', label: 'Beauty' },
-  { id: 'fragrances', label: 'Fragrances' },
-  { id: 'jewelry', label: 'Jewelry' },
-  { id: 'accessories', label: 'Accessories' },
-  { id: 'home', label: 'Home' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports' },
-  { id: 'supplements', label: 'Health' },
-] as const;
-
-const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
-  editorial: ['fashion', 'fragrances', 'jewelry'],
-  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  lifestyle: ['home', 'food', 'accessories', 'fashion'],
-  fashion: ['fashion', 'accessories'],
-  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
-  cinematic: ['fashion', 'fragrances', 'jewelry'],
-  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  styling: ['fashion', 'accessories', 'jewelry'],
-  ads: ['fashion', 'sports', 'beauty', 'electronics'],
-  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  streetwear: ['fashion', 'accessories'],
-  fitness: ['sports', 'supplements'],
-  athletic: ['sports', 'supplements'],
-  gym: ['sports', 'supplements'],
-  beauty: ['beauty', 'fragrances'],
-  desert: ['fashion', 'fragrances'],
-  outdoor: ['sports', 'home', 'fashion'],
-  beach: ['fashion', 'accessories'],
-  garden: ['home', 'beauty', 'fragrances'],
-  industrial: ['electronics', 'fashion'],
-  urban: ['fashion', 'accessories'],
-  rooftop: ['fashion', 'food'],
-  cafe: ['food', 'home'],
-  mirror: ['beauty', 'fashion'],
-  casual: ['fashion', 'accessories'],
-  cozy: ['home', 'fashion'],
-  professional: ['electronics', 'accessories'],
-};
-
 function getItemId(item: DiscoverItem): string {
   return item.type === 'preset' ? item.data.id : item.data.poseId;
-}
-
-function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
-  const itemCat = item.data.category;
-  if (itemCat === productCat) return true;
-  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
-  if (mapped.includes(productCat)) return true;
-  if (item.type === 'preset' && item.data.tags) {
-    return item.data.tags.some((t: string) => {
-      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
-      return tagMapped.includes(productCat);
-    });
-  }
-  return false;
 }
 
 function useColumnCount() {
