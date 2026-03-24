@@ -1,68 +1,25 @@
 
 
-# Personalized Scene Presets Based on User Categories
+# Fix Presets to Use the Same Scene Sources as the Scene Picker
 
-## Overview
-Replace hardcoded `QUICK_PRESETS` with a dynamic system that loads scenes from `mockTryOnPoses` (same images as scene picker) and personalizes them based on the user's `product_categories` from their profile.
+## Problem
+The preset carousel only pulls from `mockTryOnPoses` (hardcoded mock data), but the actual scene picker combines **mock scenes + custom database scenes** (`custom_scenes` table) filtered through `filterVisible` and sorted by `sortScenes`. Scenes like "Urban NYC Street", "Floating Studio", "Golden Radiance Product", "Rooftop Cityscape Glow" are custom scenes in the database — they don't exist in `mockTryOnPoses` at all, so the presets never show them.
 
-## How It Works
-
-**Category-to-Scene Mapping:**
-Each user product category maps to relevant scene categories:
-- `fashion` → studio, lifestyle, editorial, streetwear (on-model scenes)
-- `beauty`, `fragrances` → clean-studio, surface, bathroom, botanical
-- `jewelry`, `accessories` → clean-studio, surface, flat-lay
-- `home` → living-space, clean-studio, botanical, outdoor
-- `food` → surface, kitchen (mapped from existing scenes), clean-studio
-- `electronics` → clean-studio, surface
-- `sports` → lifestyle, streetwear, outdoor
-- `supplements` → clean-studio, surface, botanical
-- `any` → mix of all
-
-**8 scenes total**, dynamically distributed:
-- Single category → 8 scenes from that category's mapped scene types
-- Two categories → 4 from each
-- Three+ → ~2-3 from each, filling to 8
-- Fallback: if user has no categories or `any`, show a curated mix across all types
+## Solution
+Pass the **full combined scene list** (mock + custom, filtered + sorted) into `FreestyleQuickPresets` instead of having the component import `mockTryOnPoses` directly.
 
 ## Changes
 
-### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx` — Full rewrite of preset logic
+### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx`
+- Remove the `mockTryOnPoses` import — stop pulling scenes internally
+- Add a new required prop `allScenes: TryOnPose[]` that receives the full combined scene list from the parent
+- Update `buildPersonalizedScenes` to use `allScenes` instead of the hardcoded mock array
 
-**Remove** the hardcoded `QUICK_PRESETS` array and `QuickPreset` interface.
-
-**Add:**
-- Accept `userCategories: string[]` prop (fetched from profile)
-- New `CATEGORY_SCENE_MAP` mapping user product categories to scene categories
-- Function `buildPersonalizedScenes(categories, allScenes)` that:
-  1. Resolves which scene categories are relevant
-  2. Distributes 8 slots across categories (equal split)
-  3. Returns `TryOnPose[]` directly from `mockTryOnPoses`
-- Each card shows the scene's `previewUrl` (same image as scene picker), `name`, and scene category label
-- Clicking a card calls `onSelect(scene)` passing the `TryOnPose` directly
-
-**Update interface:**
-```typescript
-interface FreestyleQuickPresetsProps {
-  onSelect: (scene: TryOnPose) => void;
-  activeSceneId?: string | null;
-  userCategories?: string[];
-}
-```
-
-The carousel card renders:
-- Scene image from `pose.previewUrl` (same as scene picker)
-- Scene name
-- Scene category label as subtle subtitle
-
-### 2. `src/pages/Freestyle.tsx` — Fetch user categories, pass to presets
-
-- Fetch `product_categories` from the user's profile (query or inline fetch)
-- Pass `userCategories` to `FreestyleQuickPresets`
-- Update `handlePresetSelect` to accept a `TryOnPose` directly (set scene, no model)
-- Update `activePresetId` → `activeSceneId` tracking by `poseId`
+### 2. `src/pages/Freestyle.tsx`
+- Build the full scene list the same way the scene picker does: `[...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)]` with sort order applied
+- Pass this combined list as `allScenes` to `FreestyleQuickPresets`
 
 ### Files
-- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — dynamic personalized scenes
-- `src/pages/Freestyle.tsx` — fetch user categories, updated preset handler
+- `src/components/app/freestyle/FreestyleQuickPresets.tsx` — accept `allScenes` prop, remove direct mock import
+- `src/pages/Freestyle.tsx` — build and pass combined scene list
 
