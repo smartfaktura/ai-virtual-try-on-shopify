@@ -160,7 +160,7 @@ export default function PublicFreestyle() {
   }, [urlItemId, allItems]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
-    return `/freestyle/${item.data.id}`;
+    return `/freestyle/${getItemId(item)}`;
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
