@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { SharePopover } from '@/components/app/SharePopover';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
