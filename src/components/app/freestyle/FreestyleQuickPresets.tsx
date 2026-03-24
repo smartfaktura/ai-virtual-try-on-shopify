@@ -141,7 +141,9 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
       setTimeout(() => {
         el.scrollTo({ left: 0, behavior: 'smooth' });
         sessionStorage.setItem('freestyle_scroll_hint', '1');
-      }, 400);
+        // Safety reset
+        setTimeout(() => { el.scrollTo({ left: 0 }); }, 400);
+      }, 600);
     }, 500);
 
     return () => clearTimeout(timer);
