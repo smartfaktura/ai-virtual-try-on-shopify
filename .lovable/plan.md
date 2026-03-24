@@ -1,44 +1,40 @@
 
 
-# Public Freestyle Gallery Page
+# Add Prompt Bar to Public Freestyle Page
 
-## Overview
-Create a public `/freestyle` route (separate from the authenticated `/app/freestyle`) that showcases freestyle creations from `discover_presets` filtered to freestyle-only items (no workflow_slug). Unauthenticated users see a gallery; clicking "Use This" or "Generate" opens the auth page. Authenticated users get redirected to `/app/freestyle` with the settings pre-loaded.
+## Problem
+The public `/freestyle` page is just a gallery — it's missing the signature prompt bar that makes Freestyle feel like a creative tool. The user wants it to look and behave like the real Freestyle, with all settings working, but "Generate" redirects to auth instead of generating.
 
-## Architecture
-
-The page follows the same pattern as `PublicDiscover.tsx` — public route, `PageLayout` wrapper, `SEOHead`, masonry grid, detail modal with CTA.
-
-## Key Considerations (debug checklist)
-
-1. **Route conflict**: The existing `/app/freestyle` is a protected route. The new public page must be at `/freestyle` (no `/app` prefix) — same pattern as `/discover` vs `/app/discover`
-2. **SEO**: Unique title/description, canonical URL, no duplicate content with `/discover`
-3. **Data source**: Filter `discover_presets` where `workflow_slug IS NULL` or `workflow_name = 'Freestyle'` — these are the freestyle creations
-4. **Auth gate**: Use `useAuth()` to check user status. If not authenticated, CTA navigates to `/auth?redirect=/app/freestyle&prompt=...` passing context. If authenticated, navigate directly to `/app/freestyle?prompt=...&scene=...`
-5. **No RLS issues**: `discover_presets` already has anon SELECT policy
-6. **Reuse existing components**: `DiscoverCard`, `PublicDiscoverDetailModal` (or a variant), `PageLayout`, `PublicDiscoverCategoryBar`
-7. **Progressive rendering**: Same IntersectionObserver pattern as PublicDiscover for performance
-8. **URL params for deep links**: `/freestyle/:itemId` for shareable links to specific items
+## Approach
+Reuse the real `FreestylePromptPanel` component with empty/no-op handlers for auth-gated features (products, brand profiles). Scene and model selection work with mock + custom data. The generate button redirects to `/auth` with the selected settings as URL params.
 
 ## Changes
 
-### 1. `src/pages/PublicFreestyle.tsx` — New file
+### 1. `src/pages/PublicFreestyle.tsx` — Add prompt bar + restructure layout
 
-- Fetch `discover_presets` filtered to freestyle items (no `workflow_slug`)
-- Category bar for filtering by product category (reuse `PRODUCT_CATEGORY_MAP` from PublicDiscover)
-- Masonry grid with `DiscoverCard` components (3:4 portrait ratio)
-- Detail modal: reuse `PublicDiscoverDetailModal` — CTA button says "Recreate This"
-  - If authenticated → navigate to `/app/freestyle?prompt=X&scene=Y&ratio=Z`
-  - If not authenticated → navigate to `/auth?redirect=/app/freestyle`
-- Progressive rendering with IntersectionObserver
-- SEO head with unique meta for freestyle gallery
+**Layout change**: Switch from centered gallery page to Freestyle-style layout (full viewport height, gallery scrollable area, prompt bar pinned at bottom).
 
-### 2. `src/App.tsx` — Add routes
+**Add state for prompt bar**:
+- `prompt`, `selectedModel`, `selectedScene`, `aspectRatio`, `quality`, `cameraStyle`, `framing` — same state as real Freestyle
+- Popover open states for model/scene selectors
+- Products and brand profiles: empty arrays (user not authenticated or no data)
 
-- Add lazy import for `PublicFreestyle`
-- Add public routes: `/freestyle` and `/freestyle/:itemId`
+**Import and render `FreestylePromptPanel`** at the bottom with:
+- All selector chips functional (models from `mockModels`, scenes from `mockTryOnPoses` + custom scenes)
+- Product chip disabled or hidden (requires auth)
+- Brand profile chip disabled or hidden (requires auth)
+- `onGenerate` → navigates to `/auth?redirect=/app/freestyle?prompt=X&scene=Y&model=Z&ratio=R`
+- `canGenerate` = true when prompt has text OR scene/model selected
+- `creditCost` = 0 (just show "Generate" without credit count)
+- No image upload (requires auth storage)
+
+**Gallery**: Moves into a scrollable container above the prompt bar, same masonry grid.
+
+### 2. Data sourcing for scenes
+- Import `mockTryOnPoses`, `mockModels` from mock data
+- Use `useCustomScenes` + `useHiddenScenes` + `useSceneSortOrder` for the full scene list (same as real Freestyle)
+- These hooks work without auth (they query public/anon-accessible tables)
 
 ### Files
-- `src/pages/PublicFreestyle.tsx` — new public freestyle gallery page
-- `src/App.tsx` — add public `/freestyle` route
+- `src/pages/PublicFreestyle.tsx` — restructure layout, add FreestylePromptPanel with auth-gated generate
 
