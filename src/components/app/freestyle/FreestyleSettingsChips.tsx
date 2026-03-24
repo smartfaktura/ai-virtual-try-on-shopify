@@ -336,16 +336,14 @@ export function FreestyleSettingsChips({
           {disabledChips?.brand ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="cursor-default opacity-40">
-                  <BrandProfileChip
-                    selectedProfile={null}
-                    open={false}
-                    onOpenChange={() => {}}
-                    onSelect={() => {}}
-                    profiles={[]}
-                    isLoading={false}
-                  />
-                </div>
+                <button
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 opacity-40 cursor-default"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Palette className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Brand</span>
+                  <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
+                </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
                 Register to create your brand profile
