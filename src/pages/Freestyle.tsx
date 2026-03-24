@@ -19,6 +19,8 @@ import type { BlockedEntry, FailedEntry } from '@/components/app/freestyle/Frees
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
 import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
+import { FreestyleQuickPresets } from '@/components/app/freestyle/FreestyleQuickPresets';
+import type { QuickPreset } from '@/components/app/freestyle/FreestyleQuickPresets';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 
