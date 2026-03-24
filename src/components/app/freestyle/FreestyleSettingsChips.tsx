@@ -92,6 +92,7 @@ export function FreestyleSettingsChips({
   hasModelSelected = false,
   highlightedChip,
   disabledChips,
+  promptHelperButton,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
