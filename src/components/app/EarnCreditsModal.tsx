@@ -1,35 +1,19 @@
+import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Gift, ExternalLink, Sparkles, Share2, Send } from 'lucide-react';
+import { Gift, ExternalLink, Sparkles, Share2, Send, Copy, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface EarnCreditsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const steps = [
-  {
-    num: 1,
-    icon: Sparkles,
-    title: 'Create something stunning',
-    desc: 'Use any VOVV.AI tool to generate a product image you love.',
-  },
-  {
-    num: 2,
-    icon: Share2,
-    title: 'Share & tag us',
-    desc: 'Post it on Instagram or TikTok. Start your caption with "Made with @VOVV.AI".',
-  },
-  {
-    num: 3,
-    icon: Send,
-    title: 'Send us the link',
-    desc: 'We\'ll drop 200 credits into your account within 24 hours.',
-  },
-];
+const CAPTION = 'Made with @VOVV.AI';
 
 export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) {
   const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
   const userEmail = user?.email || '[your VOVV.AI email]';
 
   const mailtoSubject = encodeURIComponent('I posted something I made with VOVV.AI!');
@@ -38,11 +22,18 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
   );
   const mailtoHref = `mailto:hello@vovv.ai?subject=${mailtoSubject}&body=${mailtoBody}`;
 
+  const copyCaption = () => {
+    navigator.clipboard.writeText(CAPTION);
+    setCopied(true);
+    toast.success('Caption copied!');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl mx-3 sm:mx-0">
         {/* Hero */}
-        <div className="relative px-6 pt-8 pb-6 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
+        <div className="relative px-5 sm:px-6 pt-8 pb-6 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-4">
             <Gift className="w-7 h-7 text-primary" />
           </div>
@@ -55,25 +46,56 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
         </div>
 
         {/* Steps */}
-        <div className="px-6 py-5 space-y-3">
-          {steps.map((step) => (
-            <div
-              key={step.num}
-              className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
-                {step.num}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">{step.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{step.desc}</p>
+        <div className="px-5 sm:px-6 py-5 space-y-3">
+          {/* Step 1 */}
+          <div className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
+              1
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Create something stunning</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Use any VOVV.AI tool to generate a product image you love.</p>
+            </div>
+          </div>
+
+          {/* Step 2 — with copy caption */}
+          <div className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
+              2
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">Share & tag us</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Post it on Instagram or TikTok. Start your caption with:</p>
+              <div className="mt-2 flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-background border border-border/50">
+                <code className="text-xs font-medium text-foreground">{CAPTION}</code>
+                <button
+                  onClick={copyCaption}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors flex-shrink-0"
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-green-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </button>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
+              3
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Send us the link</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">We'll drop 200 credits into your account within 24 hours.</p>
+            </div>
+          </div>
         </div>
 
         {/* CTA */}
-        <div className="px-6 pb-4">
+        <div className="px-5 sm:px-6 pb-4">
           <a
             href={mailtoHref}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm transition-colors"
@@ -84,7 +106,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
         </div>
 
         {/* Instagram + fine print */}
-        <div className="px-6 pb-6 space-y-3">
+        <div className="px-5 sm:px-6 pb-6 space-y-3">
           <a
             href="https://instagram.com/vovv.ai"
             target="_blank"
