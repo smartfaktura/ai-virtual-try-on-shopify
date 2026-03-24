@@ -948,7 +948,7 @@ export default function Freestyle() {
             />
           </>
         ) : (
-          <div className="flex flex-col justify-end h-full pb-10 lg:pb-16">
+          <div className="flex flex-col justify-end h-full pb-14 lg:pb-20">
             <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20">
               <div className="lg:max-w-2xl lg:mx-auto">
                 <FreestyleQuickPresets
