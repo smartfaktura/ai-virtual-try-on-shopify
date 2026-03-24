@@ -1,40 +1,31 @@
 
 
-# Public Freestyle: Hide Credits, Redirect Auth Users, Product Tooltip, Recreate Flow
+# Public Freestyle: Clean Up UI, Add Brand Chip Disable, Local Image Upload, SEO
 
 ## Changes
 
-### 1. `src/components/app/freestyle/FreestylePromptPanel.tsx` — Hide credit count conditionally
+### 1. `src/pages/PublicFreestyle.tsx`
 
-Add an optional prop `hideCreditCost?: boolean`. When true:
-- Hide the `({creditCost})` span on the Generate button (line 360)
-- Hide credit-related tooltip text, show generic "Sign up to generate" instead
-- Hide the "Need X more credits" insufficient credits message
+**Remove header & categories**: Delete the title/subtitle block (lines 363-370) and the `PublicDiscoverCategoryBar` component (lines 372-377). Remove the `CATEGORIES`, `PRODUCT_CATEGORY_MAP`, `itemMatchesProductCategory` constants and `selectedCategory` state since they're no longer needed. Show all freestyle items unfiltered.
 
-### 2. `src/pages/PublicFreestyle.tsx` — Three fixes
+**Local image upload (no storage)**: Add `sourceImagePreview` state. When user uploads/pastes an image, create a local `URL.createObjectURL` preview — never upload to storage. Pass it to `FreestylePromptPanel` so the image appears in the panel. On remove, revoke the object URL.
 
-**a) Redirect authenticated users to /app/freestyle**
-- Add a `useEffect` at the top: if `user` exists, `navigate('/app/freestyle', { replace: true })` and return early
+**Disable brand chip**: Add `brand` to the `disabledChips` prop: `disabledChips={{ product: true, brand: true }}`.
 
-**b) Pass `hideCreditCost` to FreestylePromptPanel**
-- Add `hideCreditCost` prop to the panel
+**Improve SEO**: Expand the `SEOHead` with richer title, description, and add `JsonLd` structured data (SoftwareApplication schema) for the freestyle tool page.
 
-**c) "Recreate This" fills the panel instead of redirecting**
-- Change `handleUseItem`: instead of navigating, close the modal and populate the prompt bar state (`setPrompt`, `setSelectedScene`, `setSelectedModel`, `setAspectRatio`) from the item data
-- Find the matching scene/model from `allScenes`/`mockModels` by name
-- Only on "Generate" click does the auth redirect happen (already implemented)
+### 2. `src/components/app/freestyle/FreestyleSettingsChips.tsx`
 
-### 3. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — Product chip tooltip
+**Add `brand` to `disabledChips` type**: Extend `disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean }`.
 
-Instead of `opacity-40 pointer-events-none` when `disabledChips.product` is true, wrap the product chip in a `Tooltip` showing "Create an account to upload your product". Remove `pointer-events-none` so the tooltip can show on hover, but keep the popover disabled.
+**Wrap BrandProfileChip** with same disabled tooltip pattern as product chip: when `disabledChips.brand` is true, show tooltip "Register to create your brand profile", opacity-40, popover disabled.
 
-### 4. `src/components/app/PublicDiscoverDetailModal.tsx` — Update CTA for freestyle context
+### 3. `public/sitemap.xml`
 
-When used from `/freestyle`, the "Recreate This" button should call a new optional `onRecreate` callback prop instead of navigating to auth. The parent (`PublicFreestyle.tsx`) passes this callback to fill the prompt bar.
+Add `/freestyle` entry.
 
 ### Files
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` — add `hideCreditCost` prop
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — product chip tooltip on disabled
-- `src/pages/PublicFreestyle.tsx` — auth redirect, recreate fills panel, pass hideCreditCost
-- `src/components/app/PublicDiscoverDetailModal.tsx` — add optional `onRecreate` callback
+- `src/pages/PublicFreestyle.tsx` — remove header/categories, add local image preview, disable brand chip, improve SEO
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — add brand disabled chip support
+- `public/sitemap.xml` — add /freestyle
 
