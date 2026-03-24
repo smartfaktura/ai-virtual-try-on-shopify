@@ -955,8 +955,8 @@ export default function Freestyle() {
                 Pick a quick-start preset or describe what you want to create.
               </p>
             </div>
-            <div className="flex-1 min-h-8" />
-            <div className={cn("sm:px-8 sm:pr-16 lg:pr-20 pb-3", "px-4")}>
+            <div className="flex-1" />
+            <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20 pb-4">
               <div className="lg:max-w-2xl lg:mx-auto">
                 <FreestyleQuickPresets
                   onSelect={handlePresetSelect}
