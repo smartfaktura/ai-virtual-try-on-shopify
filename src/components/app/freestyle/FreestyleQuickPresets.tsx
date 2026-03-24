@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+import { poseCategoryLabels } from '@/data/mockData';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { TryOnPose } from '@/types';
