@@ -945,16 +945,20 @@ export default function Freestyle() {
             />
           </>
         ) : (
-          <div className="hidden md:flex flex-col items-center justify-center h-full px-4 sm:px-6">
+          <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
             <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
               <Sparkles className="w-8 h-8 text-muted-foreground/40" />
             </div>
             <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-2">
               Freestyle Studio
             </h2>
-            <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center">
-              Describe what you want to create, attach a reference, pick a model or scene.
+            <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
+              Pick a quick-start preset or describe what you want to create.
             </p>
+            <FreestyleQuickPresets
+              onSelect={handlePresetSelect}
+              activePresetId={activePresetId}
+            />
           </div>
         )}
       </div>
