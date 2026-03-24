@@ -63,7 +63,16 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       { image: tryonModel, label: 'Model' },
     ],
     recipeResult: tryonResult,
-    elements: [],
+    elements: [
+      {
+        type: 'badge', label: '40+ Models', icon: <Users className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Auto Fit', icon: <Maximize2 className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+    ],
   },
 
   'Product Listing Set': {
