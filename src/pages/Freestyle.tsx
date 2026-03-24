@@ -948,7 +948,7 @@ export default function Freestyle() {
             />
           </>
         ) : (
-          <div className="flex flex-col justify-end h-full pb-10 lg:pb-16">
+          <div className="flex flex-col justify-end h-full pb-14 lg:pb-20">
             <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20">
               <div className="lg:max-w-2xl lg:mx-auto">
                 <FreestyleQuickPresets
@@ -988,7 +988,7 @@ export default function Freestyle() {
               </div>
             )}
             {presetHint && !selectedProduct && (
-              <div className="my-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="my-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm">
                   <img
                     src={TEAM_MEMBERS.find(m => m.name === 'Sophia')!.avatar}
