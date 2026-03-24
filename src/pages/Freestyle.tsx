@@ -122,7 +122,7 @@ export default function Freestyle() {
     setImageRole('edit');
     setEditIntent([]);
     setPresetHint(false);
-    setActivePresetId(null);
+    setActiveScenePresetId(null);
   }, []);
 
   const handlePresetSelect = useCallback((preset: QuickPreset, model: import('@/types').ModelProfile, scene: import('@/types').TryOnPose) => {
