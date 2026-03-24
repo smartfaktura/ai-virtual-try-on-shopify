@@ -367,7 +367,7 @@ export default function PublicFreestyle() {
             onToggleSave={handleToggleSave}
             viewCount={viewCount ?? undefined}
             isAdmin={isAdmin}
-            isFeatured={selectedItem ? isFeatured(selectedItem.type, selectedItem.data.id) : false}
+            isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
             onToggleFeatured={handleToggleFeatured}
           />
         ) : (
