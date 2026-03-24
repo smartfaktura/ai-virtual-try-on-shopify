@@ -39,7 +39,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Freya · Urban energy',
     modelId: 'model_029',
     poseId: 'pose_022',
-    prompt: 'Skatepark golden hour photoshoot, warm sunset light, urban energy',
+    prompt: 'Skatepark at golden hour, warm sunset glow, urban energy, concrete textures',
   },
   {
     id: 'industrial_light',
@@ -47,7 +47,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Sienna · Raw textures',
     modelId: 'model_033',
     poseId: 'pose_023',
-    prompt: 'Industrial location, dramatic directional light, raw concrete textures',
+    prompt: 'Industrial underpass, strong directional light, raw concrete, deep shadows',
   },
   {
     id: 'preset_editorial',
@@ -55,7 +55,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Sienna · Dramatic Light',
     modelId: 'model_033',
     poseId: 'pose_019',
-    prompt: 'Moody editorial fashion shoot, dramatic lighting, dark atmosphere',
+    prompt: 'Moody editorial portrait, single dramatic side light, low-key atmosphere',
   },
   {
     id: 'earthy_woodland',
@@ -63,7 +63,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Olivia · Organic tones',
     modelId: 'model_035',
     poseId: 'pose_029',
-    prompt: 'Earthy woodland setting, warm natural tones, organic textures, soft light',
+    prompt: 'Autumn park path, warm golden tones, soft dappled light, organic feel',
   },
   {
     id: 'amber_studio',
@@ -71,7 +71,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Zara · Golden tones',
     modelId: 'model_031',
     poseId: 'pose_001',
-    prompt: 'Amber warm studio glow, golden-toned studio lighting, rich atmosphere',
+    prompt: 'Amber-toned studio, warm golden lighting, rich atmosphere, clean backdrop',
   },
   {
     id: 'preset_cafe',
@@ -79,7 +79,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Hannah · Coffee Shop',
     modelId: 'model_050',
     poseId: 'pose_014',
-    prompt: 'Morning café lifestyle shoot, natural window light, cozy atmosphere',
+    prompt: 'Cozy café morning, natural window light, warm tones, relaxed atmosphere',
   },
   {
     id: 'pilates_glow',
@@ -87,7 +87,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Natalie · Fitness space',
     modelId: 'model_054',
     poseId: 'pose_025',
-    prompt: 'Bright pilates studio, soft diffused light, clean minimal fitness space',
+    prompt: 'Bright fitness studio, soft diffused light, clean minimal space, active vibe',
   },
   {
     id: 'elevator_chic',
@@ -95,7 +95,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Sienna · Reflective surfaces',
     modelId: 'model_033',
     poseId: 'pose_005',
-    prompt: 'Luxury elevator editorial, reflective surfaces, dramatic overhead light',
+    prompt: 'Luxury elevator, reflective metallic surfaces, dramatic overhead light, editorial',
   },
   {
     id: 'natural_loft',
@@ -103,10 +103,9 @@ const QUICK_PRESETS: QuickPreset[] = [
     subtitle: 'Zara · Window light',
     modelId: 'model_031',
     poseId: 'pose_030',
-    prompt: 'Spacious loft with floor-to-ceiling windows, natural light flooding in',
+    prompt: 'Industrial loft, floor-to-ceiling windows, natural light flooding in, exposed brick',
   },
 ];
-
 interface FreestyleQuickPresetsProps {
   onSelect: (preset: QuickPreset, model: ModelProfile, scene: TryOnPose) => void;
   activePresetId?: string | null;

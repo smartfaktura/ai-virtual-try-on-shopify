@@ -949,14 +949,14 @@ export default function Freestyle() {
           </>
         ) : (
           <div className="flex flex-col h-full">
-            <div className="px-4 sm:px-8 pt-2">
+            <div className="px-4 sm:px-8 pt-4 sm:pt-6">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Freestyle Studio</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-lg">
+              <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-lg">
                 Pick a quick-start preset or describe what you want to create.
               </p>
             </div>
-            <div className="flex-1" />
-            <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20 pb-2">
+            <div className="flex-1 min-h-8" />
+            <div className={cn("sm:px-8 sm:pr-16 lg:pr-20 pb-3", "px-4")}>
               <div className="lg:max-w-2xl lg:mx-auto">
                 <FreestyleQuickPresets
                   onSelect={handlePresetSelect}
