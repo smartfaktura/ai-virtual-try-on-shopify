@@ -312,7 +312,7 @@ export function FreestylePromptPanel({
               highlightedChip={highlightedChip}
               disabledChips={disabledChips}
             />
-            {promptHelperButton}
+            
           </div>
 
           {/* Divider */}
