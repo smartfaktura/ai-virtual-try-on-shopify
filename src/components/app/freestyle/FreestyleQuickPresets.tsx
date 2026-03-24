@@ -194,7 +194,7 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
 
         <div
           ref={scrollRef}
-          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none"
+          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none pl-4 sm:pl-0"
         >
           {scenes.map(scene => {
             const isActive = activeSceneId === scene.poseId;
