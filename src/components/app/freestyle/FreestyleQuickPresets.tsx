@@ -144,8 +144,8 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
   };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-center gap-2 mb-1">
+    <div className="w-full px-4 sm:px-0">
+      <div className="flex items-center justify-center gap-2 mb-1.5">
         <img
           src={amara.avatar}
           alt={amara.name}
@@ -155,8 +155,8 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
           {amara.name} picked these for you
         </p>
       </div>
-      <p className="text-xs text-muted-foreground text-center mb-4">
-        You're in Freestyle — start with a scene or describe what you want to create
+      <p className="text-xs text-muted-foreground/70 text-center mb-5 px-4">
+        You're in Freestyle – start with a scene or describe what you want to create
       </p>
 
       <div className="relative group">
