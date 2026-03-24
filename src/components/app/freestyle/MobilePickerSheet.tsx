@@ -7,9 +7,10 @@ interface MobilePickerSheetProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   children: React.ReactNode;
+  minHeight?: 'half' | 'auto';
 }
 
-export function MobilePickerSheet({ open, onOpenChange, title, children }: MobilePickerSheetProps) {
+export function MobilePickerSheet({ open, onOpenChange, title, children, minHeight = 'auto' }: MobilePickerSheetProps) {
   if (!open) return null;
 
   return (
@@ -34,7 +35,7 @@ export function MobilePickerSheet({ open, onOpenChange, title, children }: Mobil
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+        <div className={cn("flex-1 overflow-y-auto overscroll-contain px-4 py-3", minHeight === 'half' && 'min-h-[50vh]')}>
           {children}
         </div>
       </div>

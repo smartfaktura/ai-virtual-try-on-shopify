@@ -1,12 +1,34 @@
 import { useState } from 'react';
-import { Package, ChevronDown, X, Loader2 } from 'lucide-react';
+import { Package, ChevronDown, X, Loader2, Plus } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
 import type { Tables } from '@/integrations/supabase/types';
+
+const SAMPLE_PRODUCTS = [
+  {
+    id: 'sample_ring',
+    title: 'Diamond Ring',
+    product_type: 'Jewelry',
+    image_url: '/images/samples/sample-ring.png',
+  },
+  {
+    id: 'sample_crop_top',
+    title: 'Ribbed Crop Top',
+    product_type: 'Clothing',
+    image_url: '/images/samples/sample-crop-top.png',
+  },
+  {
+    id: 'sample_ice_roller',
+    title: 'Ice Roller',
+    product_type: 'Beauty',
+    image_url: '/images/samples/sample-ice-roller.png',
+  },
+] as const;
 
 type UserProduct = Tables<'user_products'>;
 
@@ -68,15 +90,53 @@ export function ProductSelectorChip({
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/50" />
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-6 space-y-2">
-          <Package className="w-8 h-8 mx-auto text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">No products yet</p>
+        <div className="space-y-4">
+          <div className="text-center space-y-1">
+            <Package className="w-8 h-8 mx-auto text-muted-foreground/30" />
+            <p className="text-sm font-medium text-foreground">No products yet</p>
+            <p className="text-xs text-muted-foreground">Try with a sample or add your own</p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60 mb-2">Try with a sample</p>
+            <div className="grid grid-cols-3 gap-3">
+              {SAMPLE_PRODUCTS.map(sample => (
+                <button
+                  key={sample.id}
+                  onClick={() => {
+                    onSelect({
+                      id: sample.id,
+                      title: sample.title,
+                      product_type: sample.product_type,
+                      image_url: sample.image_url,
+                      description: '',
+                      dimensions: null,
+                      tags: null,
+                      user_id: '',
+                      created_at: '',
+                      updated_at: '',
+                    } as UserProduct);
+                    onOpenChange(false);
+                  }}
+                  className="flex flex-col items-center group"
+                >
+                  <div className="relative w-full aspect-square rounded-xl border-2 border-border overflow-hidden group-hover:border-primary transition-colors bg-muted">
+                    <Badge variant="secondary" className="absolute top-1 left-1 z-10 text-[9px] px-1.5 py-0 h-4 bg-muted-foreground/10 text-muted-foreground border-0">Draft</Badge>
+                    <img src={sample.image_url} alt={sample.title} className="w-full h-full object-cover" />
+                  </div>
+                  <p className="text-[10px] font-medium text-foreground mt-1.5 text-center line-clamp-1">{sample.title}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Link
             to="/app/products"
             onClick={() => onOpenChange(false)}
-            className="inline-block text-xs text-primary hover:underline font-medium"
+            className="flex items-center justify-center gap-1.5 w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
-            Add your first product →
+            <Plus className="w-4 h-4" />
+            Add Your Own Product
           </Link>
         </div>
       ) : (
@@ -152,7 +212,7 @@ export function ProductSelectorChip({
     return (
       <>
         {triggerButton}
-        <MobilePickerSheet open={open} onOpenChange={onOpenChange} title="Your Products">
+        <MobilePickerSheet open={open} onOpenChange={onOpenChange} title="Your Products" minHeight="half">
           {content}
         </MobilePickerSheet>
       </>
