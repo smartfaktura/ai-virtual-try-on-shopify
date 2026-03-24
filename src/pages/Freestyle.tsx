@@ -95,7 +95,7 @@ export default function Freestyle() {
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
     modelName?: string;
     sceneName?: string;
