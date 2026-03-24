@@ -123,12 +123,12 @@ export default function PublicFreestyle() {
   const viewedItemsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!selectedItem || !user || selectedItem.type !== 'preset') return;
-    const key = `preset:${selectedItem.data.id}`;
+    const key = `preset:${getItemId(selectedItem)}`;
     if (viewedItemsRef.current.has(key)) return;
     viewedItemsRef.current.add(key);
     supabase.from('discover_item_views').insert({
       item_type: 'preset',
-      item_id: selectedItem.data.id,
+      item_id: getItemId(selectedItem),
     }).then();
   }, [selectedItem, user]);
 
