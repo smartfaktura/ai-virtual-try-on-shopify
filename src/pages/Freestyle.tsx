@@ -418,6 +418,7 @@ export default function Freestyle() {
       return;
     }
     setSelectedProduct(product);
+    setPresetHint(false);
 
     const { detectDefaultFraming } = await import('@/lib/framingUtils');
     const detected = detectDefaultFraming(product.product_type, product.tags || []);
