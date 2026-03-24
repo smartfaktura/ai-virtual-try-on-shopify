@@ -81,7 +81,17 @@ function buildPersonalizedScenes(
     if (catIdx > cats.length * 10) break; // safety
   }
 
-  return result.slice(0, count);
+  let final = result.slice(0, count);
+
+  // Pin "Studio Profile" first for fashion users
+  if (filtered.includes('fashion')) {
+    const studioProfile = allScenes.find(s => s.poseId === 'pose_002');
+    if (studioProfile) {
+      final = [studioProfile, ...final.filter(s => s.poseId !== 'pose_002')].slice(0, count);
+    }
+  }
+
+  return final;
 }
 
 interface FreestyleQuickPresetsProps {
