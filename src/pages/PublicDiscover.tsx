@@ -200,21 +200,24 @@ export default function PublicDiscover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
-  // Auto-open item from URL param
+  // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
   useEffect(() => {
     if (!urlItemId || allItems.length === 0) return;
     const found = allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
       }
-      return item.type === 'preset' && item.data.id === urlItemId;
+      // Match by slug or by raw UUID
+      if (item.type === 'preset') {
+        return item.data.slug === urlItemId || item.data.id === urlItemId;
+      }
+      return false;
     });
     if (found) setSelectedItem(found);
   }, [urlItemId, allItems]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
-    const id = item.type === 'scene' ? `scene-${item.data.poseId}` : item.data.id;
-    return `/discover/${id}`;
+    return `/discover/${getItemSlug(item)}`;
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
