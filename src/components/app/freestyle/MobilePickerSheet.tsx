@@ -35,7 +35,7 @@ export function MobilePickerSheet({ open, onOpenChange, title, children, minHeig
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+        <div className={cn("flex-1 overflow-y-auto overscroll-contain px-4 py-3", minHeight === 'half' && 'min-h-[50vh]')}>
           {children}
         </div>
       </div>

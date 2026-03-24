@@ -212,7 +212,7 @@ export function ProductSelectorChip({
     return (
       <>
         {triggerButton}
-        <MobilePickerSheet open={open} onOpenChange={onOpenChange} title="Your Products">
+        <MobilePickerSheet open={open} onOpenChange={onOpenChange} title="Your Products" minHeight="half">
           {content}
         </MobilePickerSheet>
       </>
