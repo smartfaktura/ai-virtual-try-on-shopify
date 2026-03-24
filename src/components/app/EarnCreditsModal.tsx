@@ -24,7 +24,6 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
   const copyCaption = () => {
     navigator.clipboard.writeText(CAPTION);
     setCopied(true);
-    toast.success('Caption copied!');
     setTimeout(() => setCopied(false), 2000);
   };
 
