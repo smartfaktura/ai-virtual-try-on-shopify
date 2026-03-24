@@ -15,8 +15,6 @@ import Landing from '@/pages/Landing';
 
 const TryShot = lazy(() => import('@/pages/TryShot'));
 
-const isTryShotHost = window.location.hostname === 'try.vovv.ai';
-
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
