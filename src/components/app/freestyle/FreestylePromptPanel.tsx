@@ -397,6 +397,7 @@ export function FreestylePromptPanel({
           </div>
         </>
       )}
+      <PromptBuilderQuiz open={quizOpen} onOpenChange={setQuizOpen} onUsePrompt={onPromptChange} />
     </div>
   );
 }
