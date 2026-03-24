@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp, RotateCcw } from 'lucide-react';
+import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp, RotateCcw, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -8,6 +8,7 @@ import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSe
 import type { GuideStepKey } from './FreestyleGuide';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import { ImageRoleSelector, type ImageRole, type EditIntent } from './ImageRoleSelector';
+import { PromptBuilderQuiz } from './PromptBuilderQuiz';
 import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
@@ -104,6 +105,7 @@ export function FreestylePromptPanel({
 }: FreestylePromptPanelProps) {
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const dragCounterRef = useRef(0);
   const touchStartY = useRef<number | null>(null);
 
@@ -188,6 +190,16 @@ export function FreestylePromptPanel({
     >
       <Plus className="w-3.5 h-3.5 shrink-0" />
       <span className="truncate">Upload Image</span>
+    </button>
+  );
+
+  const promptHelperButton = (
+    <button
+      onClick={() => setQuizOpen(true)}
+      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+    >
+      <Wand2 className="w-3.5 h-3.5 shrink-0" />
+      <span className="truncate">Prompt Helper</span>
     </button>
   );
 
@@ -286,7 +298,7 @@ export function FreestylePromptPanel({
           <div className="border-t border-border/40 mx-3 sm:mx-5" />
 
           {/* Row 2 — Settings Chips */}
-          <div className="px-3 sm:px-5 py-2 sm:py-3">
+          <div className="px-3 sm:px-5 py-2 sm:py-3 space-y-2">
             <FreestyleSettingsChips
               uploadButton={uploadButton}
               selectedProduct={selectedProduct} onProductSelect={onProductSelect}
@@ -308,6 +320,7 @@ export function FreestylePromptPanel({
               highlightedChip={highlightedChip}
               disabledChips={disabledChips}
             />
+            {promptHelperButton}
           </div>
 
           {/* Divider */}
@@ -382,6 +395,7 @@ export function FreestylePromptPanel({
           </div>
         </>
       )}
+      <PromptBuilderQuiz open={quizOpen} onOpenChange={setQuizOpen} onUsePrompt={onPromptChange} />
     </div>
   );
 }
