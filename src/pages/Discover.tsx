@@ -21,6 +21,7 @@ import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getItemSlug } from '@/lib/slugUtils';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -315,14 +316,17 @@ export default function Discover() {
     }
   }, [allItems, location.search]);
 
-  // Auto-open item from URL param — only set if different item
+  // Auto-open item from URL param — supports slug, UUID, and scene- prefix
   useEffect(() => {
     if (!urlItemId || allItems.length === 0) return;
     const found = allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
       }
-      return item.type === 'preset' && item.data.id === urlItemId;
+      if (item.type === 'preset') {
+        return item.data.slug === urlItemId || item.data.id === urlItemId;
+      }
+      return false;
     });
     if (found) {
       setSelectedItem(prev => {
@@ -335,8 +339,7 @@ export default function Discover() {
   }, [urlItemId, allItems]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
-    const id = item.type === 'scene' ? `scene-${item.data.poseId}` : item.data.id;
-    return `/app/discover/${id}`;
+    return `/app/discover/${getItemSlug(item)}`;
   }, []);
 
   const filtered = useMemo(() => {

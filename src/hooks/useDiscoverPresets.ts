@@ -22,6 +22,7 @@ export interface DiscoverPreset {
   product_name: string | null;
   product_image_url: string | null;
   created_at: string;
+  slug: string;
 }
 
 export function useDiscoverPresets() {

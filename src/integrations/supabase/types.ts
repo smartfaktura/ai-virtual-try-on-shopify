@@ -379,6 +379,7 @@ export type Database = {
           quality: string
           scene_image_url: string | null
           scene_name: string | null
+          slug: string
           sort_order: number
           tags: string[] | null
           title: string
@@ -400,6 +401,7 @@ export type Database = {
           quality?: string
           scene_image_url?: string | null
           scene_name?: string | null
+          slug: string
           sort_order?: number
           tags?: string[] | null
           title: string
@@ -421,6 +423,7 @@ export type Database = {
           quality?: string
           scene_image_url?: string | null
           scene_name?: string | null
+          slug?: string
           sort_order?: number
           tags?: string[] | null
           title?: string
