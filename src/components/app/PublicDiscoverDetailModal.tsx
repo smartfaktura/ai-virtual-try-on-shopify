@@ -6,6 +6,7 @@ import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SharePopover } from '@/components/app/SharePopover';
+import { SITE_URL } from '@/lib/constants';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
