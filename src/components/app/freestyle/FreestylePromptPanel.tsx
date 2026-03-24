@@ -105,6 +105,7 @@ export function FreestylePromptPanel({
 }: FreestylePromptPanelProps) {
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const dragCounterRef = useRef(0);
   const touchStartY = useRef<number | null>(null);
 
