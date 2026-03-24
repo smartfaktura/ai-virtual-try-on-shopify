@@ -1,20 +1,17 @@
 
 
-# Shorten Mobile CTA in Public Discover Detail Modal
-
-## Problem
-The CTA button text "Create account for free to generate results like this" is too long for mobile screens, causing overflow or awkward wrapping.
+# Route "Try Freestyle Free" to Public Freestyle
 
 ## Change
 
-### `src/components/app/PublicDiscoverDetailModal.tsx`
+### `src/components/landing/FreestyleShowcaseSection.tsx`
 
-On the non-recreate branch (line 187), use shorter text on mobile via a responsive approach:
-- Show `"Try this for free"` on small screens (`sm:hidden` span)
-- Show the full `"Create account for free to generate results like this"` on larger screens (`hidden sm:inline`)
+Update the button's `onClick` handler (line 302):
+- If authenticated → `/app/freestyle`
+- If not authenticated → `/freestyle` (public freestyle page, not `/auth`)
 
-This keeps the button compact on mobile while preserving the descriptive text on desktop.
+Single line change: `navigate(user ? '/app/freestyle' : '/auth')` → `navigate(user ? '/app/freestyle' : '/freestyle')`
 
 ### Files
-- `src/components/app/PublicDiscoverDetailModal.tsx` — responsive CTA text
+- `src/components/landing/FreestyleShowcaseSection.tsx`
 
