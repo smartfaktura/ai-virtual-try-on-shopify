@@ -988,7 +988,7 @@ export default function Freestyle() {
               </div>
             )}
             {presetHint && !selectedProduct && (
-              <div className="my-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="mt-0 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm">
                   <img
                     src={TEAM_MEMBERS.find(m => m.name === 'Sophia')!.avatar}
