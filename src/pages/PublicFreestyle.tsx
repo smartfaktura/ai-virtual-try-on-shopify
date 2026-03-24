@@ -155,7 +155,7 @@ export default function PublicFreestyle() {
   // Auto-open from URL
   useEffect(() => {
     if (!urlItemId || allItems.length === 0) return;
-    const found = allItems.find((item) => item.data.id === urlItemId);
+    const found = allItems.find((item) => getItemId(item) === urlItemId);
     if (found) setSelectedItem(found);
   }, [urlItemId, allItems]);
 
