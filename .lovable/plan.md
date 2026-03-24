@@ -1,44 +1,30 @@
 
 
-# Unify Freestyle Empty State Header + Align Presets to Prompt Bar
+# Fix Preset Carousel Spacing & Alignment
 
-## Problem
-1. The empty state uses a centered icon + title style that doesn't match other app pages (which use `PageHeader` with left-aligned title/subtitle)
-2. The presets carousel width doesn't precisely match the prompt bar container
+## Issues
+1. **Spacing**: The presets carousel doesn't have proper spacing — it's crammed against the prompt bar with no breathing room
+2. **Width mismatch**: The presets container uses `px-4` on mobile but the prompt bar uses `px-0` — they don't align. On desktop, both use `lg:max-w-2xl lg:mx-auto` but the outer padding differs (`sm:pr-16 lg:pr-20` on prompt bar vs just `sm:px-8` on presets)
+3. **Scene images**: The images ARE correct from `mockTryOnPoses` — they show the actual scene environments with models. The `previewUrl` is the same image shown in the scene picker library. No image source change needed.
 
 ## Changes
 
-### 1. `src/pages/Freestyle.tsx` (lines 951-967)
+### `src/pages/Freestyle.tsx` (lines 951-966)
 
-**Replace centered empty state** with a consistent left-aligned title using the same typography as `PageHeader` (`text-2xl sm:text-3xl font-bold tracking-tight` for title, `text-sm sm:text-base text-muted-foreground` for subtitle). Remove the Sparkles icon box entirely.
+Fix the presets wrapper to use **identical** padding/width classes as the prompt bar container (line 975):
 
-Place the title/subtitle at the top of the content area (not centered vertically), then position the presets carousel **anchored just above the prompt bar** using flexbox spacing (`flex-1` pushes presets down toward the prompt).
-
-**Structure:**
 ```
-<div className="flex flex-col h-full">
-  {/* Top: page title */}
-  <div className="px-4 sm:px-8 pt-2">
-    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Freestyle Studio</h1>
-    <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-lg">
-      Pick a quick-start preset or describe what you want to create.
-    </p>
-  </div>
-  
-  {/* Spacer pushes presets to bottom */}
-  <div className="flex-1" />
-  
-  {/* Presets aligned with prompt bar width */}
-  <div className="px-0 sm:px-8 sm:pr-16 lg:pr-20 pb-2">
-    <div className="lg:max-w-2xl lg:mx-auto">
-      <FreestyleQuickPresets ... />
-    </div>
-  </div>
-</div>
+// Before (presets wrapper)
+<div className={cn("sm:px-8 sm:pr-16 lg:pr-20 pb-3", "px-4")}>
+
+// After — match prompt bar exactly
+<div className={cn("px-0 sm:px-8 sm:pr-16 lg:pr-20 pb-4")}>
 ```
 
-This uses the **same padding** (`px-0 sm:px-8 sm:pr-16 lg:pr-20`) and **same max-width** (`lg:max-w-2xl lg:mx-auto`) as the prompt bar wrapper on line 975-976, ensuring pixel-perfect alignment.
+Also increase bottom padding from `pb-3` to `pb-4` for breathing room between presets and prompt bar.
+
+Remove the `min-h-8` from the spacer — just use `flex-1` so it naturally fills available space without forcing a minimum that eats into the preset area.
 
 ### Files
-- `src/pages/Freestyle.tsx` — replace centered empty state with PageHeader-style title, anchor presets above prompt bar using matching container widths
+- `src/pages/Freestyle.tsx` — fix padding to match prompt bar, improve spacing
 
