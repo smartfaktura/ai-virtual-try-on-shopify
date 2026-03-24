@@ -4,6 +4,7 @@ import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2, Package } from 'lucide-react';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
