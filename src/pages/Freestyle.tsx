@@ -1007,6 +1007,7 @@ export default function Freestyle() {
                   </button>
                 </div>
               </div>
+            )}
             {showGuide && (
               <div className="mb-3 flex justify-center lg:justify-start">
                 <FreestyleGuide
