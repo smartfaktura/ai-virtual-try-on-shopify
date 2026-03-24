@@ -184,12 +184,6 @@ export default function PublicFreestyle() {
     window.history.replaceState(null, '', '/freestyle');
   }, []);
 
-  // Filter by category
-  const filtered = useMemo(() => {
-    if (selectedCategory === 'all') return allItems;
-    return allItems.filter((item) => itemMatchesProductCategory(item, selectedCategory));
-  }, [allItems, selectedCategory]);
-
   // Sort: featured first, then newest
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
