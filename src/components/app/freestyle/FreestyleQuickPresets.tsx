@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { mockModels, mockTryOnPoses } from '@/data/mockData';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ModelProfile, TryOnPose } from '@/types';
 
 export interface QuickPreset {
@@ -11,7 +12,6 @@ export interface QuickPreset {
   modelId: string;
   poseId: string;
   prompt: string;
-  thumbnail: string;
 }
 
 const amara = TEAM_MEMBERS.find(m => m.name === 'Amara')!;
@@ -24,7 +24,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_050',
     poseId: 'pose_014',
     prompt: 'Canon G7X style dining scene, warm natural light, intimate atmosphere',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_014')?.previewUrl || '',
   },
   {
     id: 'preset_studio',
@@ -33,7 +32,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_031',
     poseId: 'pose_001',
     prompt: 'Clean studio product photography, white backdrop, professional lighting',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_001')?.previewUrl || '',
   },
   {
     id: 'skatepark_golden',
@@ -42,7 +40,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_029',
     poseId: 'pose_022',
     prompt: 'Skatepark golden hour photoshoot, warm sunset light, urban energy',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_022')?.previewUrl || '',
   },
   {
     id: 'industrial_light',
@@ -51,7 +48,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_033',
     poseId: 'pose_023',
     prompt: 'Industrial location, dramatic directional light, raw concrete textures',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_023')?.previewUrl || '',
   },
   {
     id: 'preset_editorial',
@@ -60,7 +56,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_033',
     poseId: 'pose_019',
     prompt: 'Moody editorial fashion shoot, dramatic lighting, dark atmosphere',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_019')?.previewUrl || '',
   },
   {
     id: 'earthy_woodland',
@@ -69,7 +64,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_035',
     poseId: 'pose_029',
     prompt: 'Earthy woodland setting, warm natural tones, organic textures, soft light',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_029')?.previewUrl || '',
   },
   {
     id: 'amber_studio',
@@ -78,7 +72,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_031',
     poseId: 'pose_001',
     prompt: 'Amber warm studio glow, golden-toned studio lighting, rich atmosphere',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_001')?.previewUrl || '',
   },
   {
     id: 'preset_cafe',
@@ -87,16 +80,14 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_050',
     poseId: 'pose_014',
     prompt: 'Morning café lifestyle shoot, natural window light, cozy atmosphere',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_014')?.previewUrl || '',
   },
   {
     id: 'pilates_glow',
     label: 'Pilates Studio Glow',
-    subtitle: 'Luna · Fitness space',
-    modelId: 'model_040',
+    subtitle: 'Natalie · Fitness space',
+    modelId: 'model_054',
     poseId: 'pose_025',
     prompt: 'Bright pilates studio, soft diffused light, clean minimal fitness space',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_025')?.previewUrl || '',
   },
   {
     id: 'elevator_chic',
@@ -105,7 +96,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_033',
     poseId: 'pose_005',
     prompt: 'Luxury elevator editorial, reflective surfaces, dramatic overhead light',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_005')?.previewUrl || '',
   },
   {
     id: 'natural_loft',
@@ -114,7 +104,6 @@ const QUICK_PRESETS: QuickPreset[] = [
     modelId: 'model_031',
     poseId: 'pose_030',
     prompt: 'Spacious loft with floor-to-ceiling windows, natural light flooding in',
-    thumbnail: mockTryOnPoses.find(p => p.poseId === 'pose_030')?.previewUrl || '',
   },
 ];
 
@@ -124,6 +113,29 @@ interface FreestyleQuickPresetsProps {
 }
 
 export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQuickPresetsProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollState = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    return () => el.removeEventListener('scroll', updateScrollState);
+  }, []);
+
+  const scroll = (dir: 'left' | 'right') => {
+    scrollRef.current?.scrollBy({ left: dir === 'left' ? -260 : 260, behavior: 'smooth' });
+  };
+
   const handleSelect = (preset: QuickPreset) => {
     const model = mockModels.find(m => m.modelId === preset.modelId);
     const scene = mockTryOnPoses.find(p => p.poseId === preset.poseId);
@@ -148,13 +160,40 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
         Tap a scene to get started
       </p>
 
-      <div className="relative">
-        {/* Mobile scroll fade hints */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 lg:hidden" />
+      <div className="relative group">
+        {/* Fade hints */}
+        {canScrollLeft && (
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
+        )}
+        {canScrollRight && (
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
+        )}
 
-        <div className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none lg:flex-wrap lg:overflow-visible lg:justify-center">
+        {/* Desktop arrows */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-background border border-border shadow-sm hover:bg-accent transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 text-foreground" />
+          </button>
+        )}
+        {canScrollRight && (
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-background border border-border shadow-sm hover:bg-accent transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 text-foreground" />
+          </button>
+        )}
+
+        <div
+          ref={scrollRef}
+          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none"
+        >
           {QUICK_PRESETS.map(preset => {
             const isActive = activePresetId === preset.id;
+            const model = mockModels.find(m => m.modelId === preset.modelId);
             return (
               <button
                 key={preset.id}
@@ -168,7 +207,7 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
                 )}
               >
                 <img
-                  src={preset.thumbnail}
+                  src={model?.previewUrl || ''}
                   alt={preset.label}
                   className="w-11 h-11 rounded-lg object-cover shrink-0"
                 />
