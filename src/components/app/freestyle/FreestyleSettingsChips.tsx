@@ -2,7 +2,7 @@ import React from 'react';
 import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Smartphone, Camera, Lock, Gauge, Sparkles,
+  Smartphone, Camera, Lock, Gauge, Sparkles, Palette,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
