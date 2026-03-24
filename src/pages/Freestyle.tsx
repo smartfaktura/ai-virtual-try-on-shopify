@@ -21,7 +21,6 @@ import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePrompt
 import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
 import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
 import { FreestyleQuickPresets } from '@/components/app/freestyle/FreestyleQuickPresets';
-import type { QuickPreset } from '@/components/app/freestyle/FreestyleQuickPresets';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 
@@ -96,7 +95,7 @@ export default function Freestyle() {
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
     modelName?: string;
     sceneName?: string;
@@ -123,14 +122,13 @@ export default function Freestyle() {
     setImageRole('edit');
     setEditIntent([]);
     setPresetHint(false);
-    setActivePresetId(null);
+    setActiveScenePresetId(null);
   }, []);
 
-  const handlePresetSelect = useCallback((preset: QuickPreset, model: import('@/types').ModelProfile, scene: import('@/types').TryOnPose) => {
-    setPrompt(preset.prompt);
-    setSelectedModel(model);
+  const handlePresetSelect = useCallback((scene: TryOnPose) => {
+    setPrompt(scene.promptHint);
     setSelectedScene(scene);
-    setActivePresetId(preset.id);
+    setActiveScenePresetId(scene.poseId);
     setPresetHint(true);
   }, []);
 
@@ -170,12 +168,15 @@ export default function Freestyle() {
   const isLoading = isEnqueuing || isProcessing || isUploading;
   const { user } = useAuth();
 
-  // Sync guide dismissal with user profile in DB
+  // Fetch user product categories for personalized presets
+  const [userCategories, setUserCategories] = useState<string[]>([]);
+
+  // Sync guide dismissal + fetch categories from profile
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from('profiles')
-      .select('settings')
+      .select('settings, product_categories')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
@@ -186,6 +187,7 @@ export default function Freestyle() {
         } else if (!localStorage.getItem('freestyle_guide_dismissed')) {
           setShowGuide(true);
         }
+        setUserCategories((data?.product_categories as string[]) ?? []);
       });
   }, [user?.id]);
 
@@ -953,7 +955,8 @@ export default function Freestyle() {
               <div className="lg:max-w-2xl lg:mx-auto">
                 <FreestyleQuickPresets
                   onSelect={handlePresetSelect}
-                  activePresetId={activePresetId}
+                  activeSceneId={activeScenePresetId}
+                  userCategories={userCategories}
                 />
               </div>
             </div>
