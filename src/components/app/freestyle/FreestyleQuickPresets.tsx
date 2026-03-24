@@ -145,18 +145,18 @@ export function FreestyleQuickPresets({ onSelect, activePresetId }: FreestyleQui
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-center gap-2 mb-1.5">
+      <div className="flex items-center justify-center gap-2 mb-1">
         <img
           src={amara.avatar}
           alt={amara.name}
-          className="w-6 h-6 rounded-full object-cover ring-1 ring-border"
+          className="w-7 h-7 rounded-full object-cover ring-1 ring-border"
         />
-        <p className="text-xs font-semibold text-foreground">
+        <p className="text-sm font-semibold text-foreground">
           {amara.name} picked these for you
         </p>
       </div>
-      <p className="text-[10px] text-muted-foreground text-center mb-3">
-        Tap a scene to get started
+      <p className="text-xs text-muted-foreground text-center mb-4">
+        You're in Freestyle — start with a scene or describe what you want to create
       </p>
 
       <div className="relative group">
