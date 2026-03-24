@@ -125,11 +125,10 @@ export default function Freestyle() {
     setActiveScenePresetId(null);
   }, []);
 
-  const handlePresetSelect = useCallback((preset: QuickPreset, model: import('@/types').ModelProfile, scene: import('@/types').TryOnPose) => {
-    setPrompt(preset.prompt);
-    setSelectedModel(model);
+  const handlePresetSelect = useCallback((scene: TryOnPose) => {
+    setPrompt(scene.promptHint);
     setSelectedScene(scene);
-    setActivePresetId(preset.id);
+    setActiveScenePresetId(scene.poseId);
     setPresetHint(true);
   }, []);
 
