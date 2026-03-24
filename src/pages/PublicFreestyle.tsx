@@ -133,7 +133,7 @@ export default function PublicFreestyle() {
   }, [selectedItem, user]);
 
   const { data: viewCount } = useQuery({
-    queryKey: ['discover-view-count', 'preset', selectedItem?.type === 'preset' ? selectedItem.data.id : null],
+    queryKey: ['discover-view-count', 'preset', selectedItem?.type === 'preset' ? getItemId(selectedItem) : null],
     queryFn: async () => {
       if (!selectedItem || selectedItem.type !== 'preset') return 0;
       const { count } = await supabase
