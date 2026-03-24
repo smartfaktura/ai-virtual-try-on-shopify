@@ -78,6 +78,7 @@ export function FreestylePromptPanel({
   hasAssets,
   sourceImagePreview, onUploadClick, onRemoveImage,
   onGenerate, canGenerate, isLoading, progress, creditCost,
+  hideCreditCost,
   selectedModel, onModelSelect, modelPopoverOpen, onModelPopoverChange,
   selectedScene, onSceneSelect, scenePopoverOpen, onScenePopoverChange,
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
