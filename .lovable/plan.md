@@ -1,51 +1,32 @@
 
 
-# Slug-based Discover URLs
+# Add More Visible Mobile "Recreate" Button on Dashboard Discover Cards
 
 ## Problem
-Current URLs use raw UUIDs: `/discover/afca02b9-b5a1-4214-ace7-ca40511b0fa5`
-Want readable slugs: `/discover/editorial-fashion-sunset-abc12`
-
-## Approach
-Add a `slug` column to `discover_presets` table, auto-generated from title + short UUID suffix. Update all URL construction and lookup logic.
+The mobile "Recreate" button on Steal This Look cards exists in code but may be hard to see — it's small, semi-transparent white, and can blend with light images. The user wants it clearly visible in the corner.
 
 ## Changes
 
-### 1. Database migration — add `slug` column
-- Add `slug TEXT UNIQUE` to `discover_presets`
-- Create a trigger function that auto-generates slug on INSERT/UPDATE:
-  - Slugify the title (lowercase, replace spaces/special chars with hyphens)
-  - Append first 6 chars of the UUID for uniqueness
-  - E.g. `editorial-fashion-sunset-afca02`
-- Backfill existing rows
+### 1. `src/components/app/DiscoverCard.tsx` — Make mobile recreate button more prominent
+- Change from `bg-white/90` pill at bottom-right to a more visible dark-themed button
+- Use `bg-black/80 text-white` with a subtle backdrop blur for contrast against any image
+- Make the button slightly larger and add an icon-only compact variant for mobile
+- Position: bottom-right corner with proper padding
 
-### 2. `src/hooks/useDiscoverPresets.ts`
-- Add `slug` to the `DiscoverPreset` interface
+**Before:**
+```tsx
+<button className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-black text-xs font-semibold shadow-md">
+  Recreate <ArrowRight />
+</button>
+```
 
-### 3. Slug helper — `src/lib/slugUtils.ts` (new)
-- `getItemSlug(item: DiscoverItem)` — returns `item.data.slug` for presets, `scene-{poseId}` for scenes
-- `getItemUrlPath(item: DiscoverItem)` — returns `/discover/{slug}`
-
-### 4. `src/pages/PublicDiscover.tsx`
-- Update `getItemUrl` to use slug instead of raw ID
-- Update auto-open logic: match `urlItemId` against both `slug` and `id` (backward compat)
-
-### 5. `src/pages/Discover.tsx`
-- Same slug-based URL changes
-
-### 6. Share URLs in modals
-- `PublicDiscoverDetailModal.tsx` — use slug in `SharePopover` url
-- `DiscoverDetailModal.tsx` — use slug in `SharePopover` url
-
-### 7. Backward compatibility
-- URL lookup checks both slug and UUID so old shared links still work
+**After:**
+```tsx
+<button className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-sm text-white text-xs font-semibold shadow-lg border border-white/10">
+  Recreate <ArrowRight />
+</button>
+```
 
 ### Files
-- Database migration (new `slug` column + trigger + backfill)
-- `src/hooks/useDiscoverPresets.ts`
-- `src/lib/slugUtils.ts` (new)
-- `src/pages/PublicDiscover.tsx`
-- `src/pages/Discover.tsx`
-- `src/components/app/PublicDiscoverDetailModal.tsx`
-- `src/components/app/DiscoverDetailModal.tsx`
+- `src/components/app/DiscoverCard.tsx`
 
