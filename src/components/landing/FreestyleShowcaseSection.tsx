@@ -299,7 +299,7 @@ export function FreestyleShowcaseSection() {
           <Button
             size="lg"
             className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
-            onClick={() => navigate(user ? '/app/freestyle' : '/auth')}
+            onClick={() => navigate(user ? '/app/freestyle' : '/freestyle')}
           >
             Try Freestyle Free
             <Sparkles className="w-4 h-4" />
