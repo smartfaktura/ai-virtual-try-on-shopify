@@ -9,16 +9,16 @@ const amara = TEAM_MEMBERS.find(m => m.name === 'Amara')!;
 
 /** Maps user product categories to relevant scene categories */
 const CATEGORY_SCENE_MAP: Record<string, string[]> = {
-  fashion: ['studio', 'lifestyle', 'editorial', 'streetwear'],
-  beauty: ['clean-studio', 'surface', 'bathroom', 'botanical'],
-  fragrances: ['clean-studio', 'surface', 'bathroom', 'botanical'],
-  jewelry: ['clean-studio', 'surface', 'flat-lay'],
-  accessories: ['clean-studio', 'surface', 'flat-lay', 'editorial'],
-  home: ['living-space', 'clean-studio', 'botanical', 'outdoor'],
-  food: ['surface', 'kitchen', 'clean-studio'],
-  electronics: ['clean-studio', 'surface'],
-  sports: ['lifestyle', 'streetwear', 'outdoor'],
-  supplements: ['clean-studio', 'surface', 'botanical'],
+  fashion:     ['studio', 'lifestyle', 'editorial', 'streetwear'],
+  beauty:      ['clean-studio', 'botanical', 'bathroom', 'surface'],
+  fragrances:  ['clean-studio', 'botanical', 'bathroom'],
+  jewelry:     ['clean-studio', 'flat-lay'],
+  accessories: ['clean-studio', 'flat-lay', 'surface'],
+  home:        ['living-space', 'clean-studio', 'botanical', 'outdoor'],
+  food:        ['surface', 'kitchen', 'clean-studio'],
+  electronics: ['clean-studio'],
+  sports:      ['lifestyle', 'streetwear', 'outdoor', 'clean-studio'],
+  supplements: ['clean-studio', 'botanical', 'surface'],
 };
 
 const ALL_SCENE_CATEGORIES = Object.keys(poseCategoryLabels);
