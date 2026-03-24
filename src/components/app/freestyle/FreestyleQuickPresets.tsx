@@ -91,14 +91,14 @@ interface FreestyleQuickPresetsProps {
   allScenes?: TryOnPose[];
 }
 
-export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories = [] }: FreestyleQuickPresetsProps) {
+export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories = [], allScenes = [] }: FreestyleQuickPresetsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   const scenes = useMemo(
-    () => buildPersonalizedScenes(userCategories, mockTryOnPoses, 8),
-    [userCategories],
+    () => buildPersonalizedScenes(userCategories, allScenes, 8),
+    [userCategories, allScenes],
   );
 
   const updateScrollState = () => {
