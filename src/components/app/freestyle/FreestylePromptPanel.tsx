@@ -193,6 +193,16 @@ export function FreestylePromptPanel({
     </button>
   );
 
+  const promptHelperButton = (
+    <button
+      onClick={() => setQuizOpen(true)}
+      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+    >
+      <Wand2 className="w-3.5 h-3.5 shrink-0" />
+      <span className="truncate">Prompt Helper</span>
+    </button>
+  );
+
   return (
     <div
       className={cn(
