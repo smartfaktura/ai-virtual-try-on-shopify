@@ -93,7 +93,6 @@ export default function PublicFreestyle() {
   const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
 
   const canGenerate = !!(prompt.trim() || selectedModel || selectedScene);
