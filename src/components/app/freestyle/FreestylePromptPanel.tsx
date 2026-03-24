@@ -260,15 +260,25 @@ export function FreestylePromptPanel({
                 }
               }}
             />
-            {isDirty && onReset && (
+            <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-5 flex items-center gap-1.5">
+              {isDirty && onReset && (
+                <button
+                  onClick={onReset}
+                  className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/80 transition-colors"
+                  aria-label="Reset all settings"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
-                onClick={onReset}
-                className="absolute top-4 right-4 sm:top-5 sm:right-5 p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/80 transition-colors"
-                aria-label="Reset all settings"
+                onClick={() => setQuizOpen(true)}
+                className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium text-primary/70 hover:text-primary hover:bg-primary/5 transition-colors"
+                aria-label="Open Prompt Helper"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <Wand2 className="w-3 h-3" />
+                <span className="hidden sm:inline">Prompt Helper</span>
               </button>
-            )}
+            </div>
           </div>
 
           {/* Image Role Selector (only when image is uploaded) */}
