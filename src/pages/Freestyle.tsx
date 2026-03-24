@@ -123,6 +123,14 @@ export default function Freestyle() {
     setEditIntent([]);
   }, []);
 
+  const handlePresetSelect = useCallback((preset: QuickPreset, model: import('@/types').ModelProfile, scene: import('@/types').TryOnPose) => {
+    setPrompt(preset.prompt);
+    setSelectedModel(model);
+    setSelectedScene(scene);
+    setActivePresetId(preset.id);
+    setPresetHint(true);
+  }, []);
+
   const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null || imageRole !== 'edit' || editIntent.length > 0;
 
   const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
