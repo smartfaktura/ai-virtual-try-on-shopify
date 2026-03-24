@@ -184,7 +184,12 @@ export function PublicDiscoverDetailModal({
               }}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              {onRecreate ? 'Recreate This' : 'Create account for free to generate results like this'}
+              {onRecreate ? 'Recreate This' : (
+                <>
+                  <span className="sm:hidden">Try this for free</span>
+                  <span className="hidden sm:inline">Create account for free to generate results like this</span>
+                </>
+              )}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 
