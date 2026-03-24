@@ -121,6 +121,8 @@ export default function Freestyle() {
     setSelectedBrandProfile(null);
     setImageRole('edit');
     setEditIntent([]);
+    setPresetHint(false);
+    setActivePresetId(null);
   }, []);
 
   const handlePresetSelect = useCallback((preset: QuickPreset, model: import('@/types').ModelProfile, scene: import('@/types').TryOnPose) => {
