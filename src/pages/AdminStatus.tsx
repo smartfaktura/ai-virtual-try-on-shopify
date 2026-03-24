@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Ban, Clock, Zap, AlertTriangle, Timer, RefreshCw, Image, Users, CreditCard, Layers, Video, Package, Palette, Sparkles, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface WorkflowBreakdown {
