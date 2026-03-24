@@ -1,30 +1,51 @@
 
 
-# Fix Share Link to Include Unique Asset URL
+# Slug-based Discover URLs
 
 ## Problem
-Share links just copy `https://vovv.ai/discover` — not a unique URL for the specific item being viewed.
+Current URLs use raw UUIDs: `/discover/afca02b9-b5a1-4214-ace7-ca40511b0fa5`
+Want readable slugs: `/discover/editorial-fashion-sunset-abc12`
 
-## Solution
-Append a query parameter `?item={type}-{id}` to the share URL so each asset gets a unique shareable link. E.g. `https://vovv.ai/discover?item=preset-abc123`.
+## Approach
+Add a `slug` column to `discover_presets` table, auto-generated from title + short UUID suffix. Update all URL construction and lookup logic.
 
 ## Changes
 
-### 1. `src/components/app/PublicDiscoverDetailModal.tsx`
-Change share URL from `${SITE_URL}/discover` to `${SITE_URL}/discover?item=${item.type === 'preset' ? `preset-${item.data.id}` : `scene-${item.data.poseId}`}`
+### 1. Database migration — add `slug` column
+- Add `slug TEXT UNIQUE` to `discover_presets`
+- Create a trigger function that auto-generates slug on INSERT/UPDATE:
+  - Slugify the title (lowercase, replace spaces/special chars with hyphens)
+  - Append first 6 chars of the UUID for uniqueness
+  - E.g. `editorial-fashion-sunset-afca02`
+- Backfill existing rows
 
-### 2. `src/components/app/DiscoverDetailModal.tsx`
-Same change — construct unique URL with item type and ID.
+### 2. `src/hooks/useDiscoverPresets.ts`
+- Add `slug` to the `DiscoverPreset` interface
 
-### 3. `src/pages/PublicDiscover.tsx` — auto-open modal from URL
-On mount, read `?item=` query param. If present, parse the type/id, find the matching item in loaded data, and auto-open the detail modal for it.
+### 3. Slug helper — `src/lib/slugUtils.ts` (new)
+- `getItemSlug(item: DiscoverItem)` — returns `item.data.slug` for presets, `scene-{poseId}` for scenes
+- `getItemUrlPath(item: DiscoverItem)` — returns `/discover/{slug}`
 
-### 4. `src/pages/Discover.tsx` — auto-open modal from URL
-Same logic for the authenticated discover page.
+### 4. `src/pages/PublicDiscover.tsx`
+- Update `getItemUrl` to use slug instead of raw ID
+- Update auto-open logic: match `urlItemId` against both `slug` and `id` (backward compat)
+
+### 5. `src/pages/Discover.tsx`
+- Same slug-based URL changes
+
+### 6. Share URLs in modals
+- `PublicDiscoverDetailModal.tsx` — use slug in `SharePopover` url
+- `DiscoverDetailModal.tsx` — use slug in `SharePopover` url
+
+### 7. Backward compatibility
+- URL lookup checks both slug and UUID so old shared links still work
 
 ### Files
-- `src/components/app/PublicDiscoverDetailModal.tsx`
-- `src/components/app/DiscoverDetailModal.tsx`
+- Database migration (new `slug` column + trigger + backfill)
+- `src/hooks/useDiscoverPresets.ts`
+- `src/lib/slugUtils.ts` (new)
 - `src/pages/PublicDiscover.tsx`
 - `src/pages/Discover.tsx`
+- `src/components/app/PublicDiscoverDetailModal.tsx`
+- `src/components/app/DiscoverDetailModal.tsx`
 
