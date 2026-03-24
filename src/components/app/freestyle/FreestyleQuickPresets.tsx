@@ -224,6 +224,8 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
               </button>
             );
           })}
+          {/* Trailing spacer for partial card cut on mobile */}
+          <div className="shrink-0 w-4 sm:hidden" />
         </div>
       </div>
     </div>
