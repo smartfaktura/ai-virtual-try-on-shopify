@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Sparkles, Check, ArrowLeft, ArrowRight, Wand2, Pencil, Shirt, Wind, Gem, Watch, Lamp, Smartphone, Heart, Package, UtensilsCrossed, Dumbbell,
   User, Users, Hand, Eye, Frame, Camera, Sun, Home, TreePine, Palette, Zap, Flame, Leaf, Crown, LayoutGrid, GripHorizontal, Move3D, Focus, ScanFace } from 'lucide-react';
@@ -73,7 +74,7 @@ function OptionCard({ value, label, description, icon, selected, onClick }: {
     <button
       onClick={() => onClick(value)}
       className={cn(
-        'relative flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl border-2 transition-all text-center',
+        'relative flex flex-col items-center gap-2 p-4 sm:p-5 rounded-xl border-2 transition-all text-center',
         'hover:border-primary/40 hover:bg-primary/5',
         selected
           ? 'border-primary bg-primary/10 shadow-sm'
@@ -81,13 +82,13 @@ function OptionCard({ value, label, description, icon, selected, onClick }: {
       )}
     >
       {selected && (
-        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
           <Check className="w-3 h-3" />
         </div>
       )}
       <div className={cn('text-muted-foreground', selected && 'text-primary')}>{icon}</div>
       <span className="text-sm font-medium leading-tight">{label}</span>
-      <span className="text-[11px] text-muted-foreground leading-tight">{description}</span>
+      {description && <span className="text-[11px] text-muted-foreground leading-tight">{description}</span>}
     </button>
   );
 }
@@ -115,11 +116,8 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   // Build step list dynamically
   const steps = useMemo(() => {
     const s = ['category', 'subject', 'setting', 'review'];
-    // Insert interaction after subject if person
     if (isPerson) s.splice(2, 0, 'interaction');
-    // Insert framing before review if person
     if (isPerson) s.splice(s.indexOf('review'), 0, 'framing');
-    // Insert mood after setting
     s.splice(s.indexOf('setting') + 1, 0, 'mood');
     return s;
   }, [isPerson]);
@@ -127,6 +125,7 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const [stepIndex, setStepIndex] = useState(0);
   const currentStep = steps[stepIndex] || 'category';
   const totalSteps = steps.length;
+  const progressPercent = ((stepIndex + 1) / totalSteps) * 100;
 
   const canAdvance = (() => {
     switch (currentStep) {
@@ -143,7 +142,6 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
 
   const handleNext = useCallback(() => {
     if (currentStep === 'review') return;
-    // When moving to review, assemble prompt
     if (steps[stepIndex + 1] === 'review') {
       const answers: QuizAnswers = {
         category: category!,
@@ -165,7 +163,6 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const handleUse = useCallback(() => {
     onUsePrompt(editablePrompt);
     onOpenChange(false);
-    // Reset
     setStepIndex(0);
     setCategory(null);
     setSubject(null);
@@ -192,12 +189,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
 
   // ——— Step renderers ———
   const renderCategoryStep = () => (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold">What are you creating content for?</h3>
-        <p className="text-sm text-muted-foreground">Pick the category that best matches your product</p>
+        <h3 className="text-lg font-semibold text-foreground">What are you creating content for?</h3>
+        <p className="text-sm text-muted-foreground mt-1">Pick the category that best matches your product</p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {(Object.keys(CATEGORY_LABELS) as QuizCategory[]).map(cat => (
           <OptionCard
             key={cat}
@@ -216,20 +213,20 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const renderSubjectStep = () => {
     const opts = getSubjectOptions(category!);
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <h3 className="text-lg font-semibold">Who or what is the main subject?</h3>
-          <p className="text-sm text-muted-foreground">Choose how your product should be presented</p>
+          <h3 className="text-lg font-semibold text-foreground">Who or what is the main subject?</h3>
+          <p className="text-sm text-muted-foreground mt-1">Choose how your product should be presented</p>
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">With Person</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+          <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">With Person</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
             {opts.withPerson.map(o => (
               <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} />
             ))}
           </div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Product Only</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">Product Only</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {opts.productOnly.map(o => (
               <OptionCard key={o.value} {...o} icon={SUBJECT_ICON_MAP[o.value]} selected={subject === o.value} onClick={(v) => { setSubject(v); setInteraction(null); setFraming(null); }} />
             ))}
@@ -242,12 +239,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const renderInteractionStep = () => {
     const opts = getInteractionOptions(category!);
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <h3 className="text-lg font-semibold">How should the product appear?</h3>
-          <p className="text-sm text-muted-foreground">Describe the product's relationship with the model</p>
+          <h3 className="text-lg font-semibold text-foreground">How should the product appear?</h3>
+          <p className="text-sm text-muted-foreground mt-1">Describe the product's relationship with the model</p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {opts.map(o => (
             <OptionCard key={o.value} {...o} icon={INTERACTION_ICON_MAP[o.value]} selected={interaction === o.value} onClick={setInteraction} />
           ))}
@@ -259,18 +256,18 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const renderSettingStep = () => {
     const settingOptions: { value: SettingType; label: string; description: string }[] = [
       { value: 'studio', label: 'Studio', description: 'Clean professional background' },
-      { value: 'indoor', label: 'Indoor Lifestyle', description: 'Home, café, or office' },
+      { value: 'indoor', label: 'Indoor Lifestyle', description: 'Home, cafe, or office' },
       { value: 'outdoor', label: 'Outdoor', description: 'Street, nature, or urban' },
       { value: 'editorial', label: 'Editorial', description: 'Abstract or artistic' },
       { value: 'ai-decide', label: 'Let AI Decide', description: 'Best match for your product' },
     ];
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <h3 className="text-lg font-semibold">Where should this take place?</h3>
-          <p className="text-sm text-muted-foreground">Pick the environment for your shot</p>
+          <h3 className="text-lg font-semibold text-foreground">Where should this take place?</h3>
+          <p className="text-sm text-muted-foreground mt-1">Pick the environment for your shot</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {settingOptions.map(o => (
             <OptionCard key={o.value} {...o} icon={SETTING_ICON_MAP[o.value]} selected={setting === o.value} onClick={setSetting} />
           ))}
@@ -288,12 +285,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
       { value: 'organic', label: 'Natural & Organic', description: 'Earthy and raw' },
     ];
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <h3 className="text-lg font-semibold">What mood are you going for?</h3>
-          <p className="text-sm text-muted-foreground">This shapes the overall aesthetic</p>
+          <h3 className="text-lg font-semibold text-foreground">What mood are you going for?</h3>
+          <p className="text-sm text-muted-foreground mt-1">This shapes the overall aesthetic</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {moodOptions.map(o => (
             <OptionCard key={o.value} {...o} icon={MOOD_ICON_MAP[o.value]} selected={mood === o.value} onClick={setMood} />
           ))}
@@ -305,12 +302,12 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   const renderFramingStep = () => {
     const opts = getFramingOptions(category!);
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <h3 className="text-lg font-semibold">How close should the camera be?</h3>
-          <p className="text-sm text-muted-foreground">Choose the framing for your shot</p>
+          <h3 className="text-lg font-semibold text-foreground">How close should the camera be?</h3>
+          <p className="text-sm text-muted-foreground mt-1">Choose the framing for your shot</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {opts.map(o => (
             <OptionCard key={o.value} {...o} icon={FRAMING_ICON_MAP[o.value]} selected={framing === o.value} onClick={setFraming} />
           ))}
@@ -320,26 +317,26 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   };
 
   const renderReviewStep = () => (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold">Your prompt is ready ✨</h3>
-        <p className="text-sm text-muted-foreground">Review and tweak, then use it in Freestyle</p>
+        <h3 className="text-lg font-semibold text-foreground">Your prompt is ready</h3>
+        <p className="text-sm text-muted-foreground mt-1">Review and tweak, then use it in Freestyle</p>
       </div>
-      <div className="rounded-xl border border-border bg-muted/30 p-4">
+      <div className="rounded-xl border border-border bg-muted/30 p-5">
         {isEditing ? (
           <textarea
             value={editablePrompt}
             onChange={e => setEditablePrompt(e.target.value)}
-            className="w-full bg-transparent border-none text-sm leading-relaxed resize-none focus:outline-none min-h-[120px]"
+            className="w-full bg-transparent border-none text-sm leading-relaxed resize-none focus:outline-none min-h-[140px]"
             autoFocus
           />
         ) : (
           <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{editablePrompt}</p>
         )}
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end mt-3">
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <Pencil className="w-3 h-3" />
             {isEditing ? 'Done Editing' : 'Edit'}
@@ -365,40 +362,36 @@ export function PromptBuilderQuiz({ open, onOpenChange, onUsePrompt }: PromptBui
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={cn(
-        'p-0 gap-0 overflow-hidden',
-        isMobile ? 'max-w-full h-[90dvh] rounded-t-2xl' : 'max-w-lg'
+        'p-0 gap-0 overflow-hidden flex flex-col',
+        isMobile
+          ? 'max-w-full h-[100dvh] rounded-t-2xl border-0 !top-auto !bottom-0 !translate-y-0'
+          : 'max-w-xl'
       )}>
         <DialogTitle className="sr-only">Prompt Builder</DialogTitle>
+
         {/* Header */}
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-border/40 bg-foreground/[0.02]">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Wand2 className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 bg-foreground/[0.02] shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Wand2 className="w-4.5 h-4.5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold">Prompt Builder</p>
+            <p className="text-sm font-semibold text-foreground">Prompt Builder</p>
             <p className="text-[11px] text-muted-foreground">Step {stepIndex + 1} of {totalSteps}</p>
-          </div>
-          {/* Progress dots */}
-          <div className="flex items-center gap-1">
-            {steps.map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'w-2 h-2 rounded-full transition-colors',
-                  i < stepIndex ? 'bg-primary' : i === stepIndex ? 'bg-primary' : 'bg-border'
-                )}
-              />
-            ))}
           </div>
         </div>
 
+        {/* Progress bar */}
+        <div className="px-6 pt-3 shrink-0">
+          <Progress value={progressPercent} className="h-1.5" />
+        </div>
+
         {/* Content */}
-        <div className={cn('px-5 py-5 overflow-y-auto', isMobile ? 'flex-1' : 'max-h-[60vh]')}>
+        <div className={cn('px-6 py-6 overflow-y-auto', isMobile ? 'flex-1' : 'max-h-[60vh]')}>
           {stepContent}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border/40 bg-foreground/[0.02]">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border/40 bg-foreground/[0.02] shrink-0">
           <Button
             variant="ghost"
             size="sm"
