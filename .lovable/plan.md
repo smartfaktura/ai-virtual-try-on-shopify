@@ -1,32 +1,23 @@
 
 
-# Fix Earn Credits Modal: Mobile Spacing + Copy Caption Button
+# Fix Earn Credits Modal: Mobile Positioning + Remove Toast
 
 ## Problem
-1. On mobile, the modal content is too tight on the sides — needs more horizontal padding
-2. User has to manually type the caption "Made with @VOVV.AI" — should have a one-tap copy button
+1. On mobile (390px), the dialog sits at `top: 5%` which pushes it too high — should be vertically centered
+2. The `toast.success('Caption copied!')` is unnecessary for a simple copy action — the check icon swap is sufficient feedback
 
 ## Changes
 
 ### `src/components/app/EarnCreditsModal.tsx`
 
-**Mobile spacing**: Increase side padding from `px-6` to `px-5 sm:px-6` across all sections, and add `mx-3 sm:mx-0` margin on the DialogContent so the modal doesn't touch screen edges on mobile.
+1. **Remove toast on copy** — delete the `toast.success('Caption copied!')` line and remove the `toast`/`sonner` import
+2. **Fix mobile centering** — override the dialog's default `top-[5%]` positioning by adding classes to vertically center on mobile: `top-[50%] translate-y-[-50%] sm:top-[50%] sm:translate-y-[-50%]`
 
-**Copy caption button**: Add a styled caption preview card inside Step 2 with a "Copy" button:
+The DialogContent className becomes:
+```tsx
+className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl mx-3 sm:mx-0 top-[50%] translate-y-[-50%]"
 ```
-"Made with @VOVV.AI"  [Copy]
-```
-- Uses `navigator.clipboard.writeText()` with a toast confirmation
-- Small inline card with monospace-style text, border, and a copy icon button
-- Shows "Copied" feedback briefly via local state
-
-**Implementation details:**
-- Add `useState` for `copied` state + `Copy, Check` icons from lucide
-- Import `toast` from sonner
-- Caption string: `Made with @VOVV.AI`
-- The copy card sits below Step 2's description text, inside the same step card
-- Button: small pill with `Copy` / `Check` icon swap on click
 
 ### Files
-- `src/components/app/EarnCreditsModal.tsx` — add copy caption, fix mobile padding
+- `src/components/app/EarnCreditsModal.tsx` — 2 small edits
 
