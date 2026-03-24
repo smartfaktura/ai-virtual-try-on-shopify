@@ -74,6 +74,7 @@ interface FreestyleSettingsChipsProps {
   hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
   disabledChips?: { product?: boolean; model?: boolean; scene?: boolean; brand?: boolean };
+  promptHelperButton?: React.ReactNode;
 }
 
 export function FreestyleSettingsChips({
@@ -91,6 +92,7 @@ export function FreestyleSettingsChips({
   hasModelSelected = false,
   highlightedChip,
   disabledChips,
+  promptHelperButton,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
@@ -310,6 +312,7 @@ export function FreestyleSettingsChips({
           {aspectRatioChip}
           {cameraStyleChip}
           {qualityChip}
+          {promptHelperButton}
         </div>
       </TooltipProvider>
     );
@@ -324,6 +327,7 @@ export function FreestyleSettingsChips({
           {productChip}
           {modelChip}
           {sceneChip}
+          {promptHelperButton}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <FramingSelectorChip
