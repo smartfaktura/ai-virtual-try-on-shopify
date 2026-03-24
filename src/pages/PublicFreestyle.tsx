@@ -445,7 +445,7 @@ export default function PublicFreestyle() {
               onImageRoleChange={setImageRole}
               editIntent={editIntent}
               onEditIntentChange={setEditIntent}
-              disabledChips={{ product: true }}
+              disabledChips={{ product: true, brand: true }}
               isCollapsed={isMobile ? isPromptCollapsed : undefined}
               onToggleCollapse={isMobile ? () => setIsPromptCollapsed(prev => !prev) : undefined}
               onReset={handleReset}
