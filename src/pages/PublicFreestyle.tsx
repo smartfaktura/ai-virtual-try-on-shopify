@@ -60,6 +60,10 @@ const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
   professional: ['electronics', 'accessories'],
 };
 
+function getItemId(item: DiscoverItem): string {
+  return item.type === 'preset' ? item.data.id : item.data.poseId;
+}
+
 function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
   const itemCat = item.data.category;
   if (itemCat === productCat) return true;
