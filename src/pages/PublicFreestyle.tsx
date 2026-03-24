@@ -363,7 +363,7 @@ export default function PublicFreestyle() {
             onSearchSimilar={handleSearchSimilar}
             relatedItems={relatedItems}
             onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
-            isSaved={selectedItem ? isSaved(selectedItem.type, selectedItem.data.id) : false}
+            isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
             onToggleSave={handleToggleSave}
             viewCount={viewCount ?? undefined}
             isAdmin={isAdmin}
