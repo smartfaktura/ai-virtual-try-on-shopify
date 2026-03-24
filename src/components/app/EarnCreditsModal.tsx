@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { Gift, ExternalLink, Send, Copy, Check } from 'lucide-react';
+import { Gift, ExternalLink, Send, Copy, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
