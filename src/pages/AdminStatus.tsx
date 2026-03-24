@@ -45,6 +45,13 @@ function getRangeHours(range: TimeRange): number {
   return range;
 }
 
+interface CostBreakdownItem {
+  job_type: string;
+  jobs: number;
+  credits: number;
+  est_cost: number;
+}
+
 interface StatsData {
   total: number;
   completed: number;
@@ -53,6 +60,9 @@ interface StatsData {
   stuck: number;
   avg_seconds: number;
   max_seconds: number;
+  credits_spent: number;
+  total_est_cost: number;
+  cost_breakdown: CostBreakdownItem[];
   recent_failures: {
     id: string;
     job_type: string;
