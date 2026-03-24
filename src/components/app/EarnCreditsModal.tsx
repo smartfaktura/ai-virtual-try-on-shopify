@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { Gift, ExternalLink, Send, Copy, Check, X } from 'lucide-react';
+import { Gift, Send, Copy, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -31,71 +31,52 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
   };
 
   const content = (
-    <>
-      {/* Hero */}
-      <div className="relative px-5 sm:px-6 pt-8 pb-6 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-4">
-          <Gift className="w-7 h-7 text-primary" />
+    <div className="relative">
+      {/* Close button */}
+      <button
+        onClick={() => onOpenChange(false)}
+        className="absolute top-4 right-4 z-10 p-1.5 rounded-full hover:bg-muted/60 transition-colors"
+      >
+        <X className="w-4 h-4 text-muted-foreground" />
+      </button>
+
+      {/* Header */}
+      <div className="px-6 pt-7 pb-5 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-3">
+          <Gift className="w-6 h-6 text-primary" />
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-foreground">
-          Unlock 200 Free Credits
+        <h2 className="text-lg font-bold tracking-tight text-foreground">
+          Earn 200 Free Credits
         </h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Share your best creation and get rewarded
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Share a creation on social media & tag us
         </p>
       </div>
 
-      {/* Steps */}
-      <div className="px-5 sm:px-6 py-5 space-y-3">
-        {/* Step 1 */}
-        <div className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
-            1
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Create something stunning</p>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Use any VOVV.AI tool to generate a product image you love.</p>
-          </div>
+      {/* Steps — clean numbered list */}
+      <div className="px-6 space-y-4">
+        <Step num="1" title="Create" desc="Generate an image with any VOVV.AI tool." />
+        
+        <div>
+          <Step num="2" title="Post & tag" desc="Share on Instagram or TikTok with:" />
+          <button
+            onClick={copyCaption}
+            className="mt-2 ml-9 flex items-center gap-2.5 px-3.5 py-2 rounded-lg bg-muted/50 border border-border/40 hover:bg-muted transition-colors group w-[calc(100%-2.25rem)]"
+          >
+            <code className="text-[13px] font-semibold text-foreground flex-1 text-left">{CAPTION}</code>
+            {copied ? (
+              <Check className="w-4 h-4 text-primary flex-shrink-0" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+            )}
+          </button>
         </div>
 
-        {/* Step 2 — with copy caption */}
-        <div className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
-            2
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">Share & tag us</p>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Post it on Instagram or TikTok. Start your caption with:</p>
-            <div className="mt-2 flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-background border border-border/50">
-              <code className="text-xs font-medium text-foreground">{CAPTION}</code>
-              <button
-                onClick={copyCaption}
-                className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors flex-shrink-0"
-              >
-                {copied ? (
-                  <Check className="w-3.5 h-3.5 text-green-500" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Step 3 */}
-        <div className="flex items-start gap-3.5 p-3 rounded-xl bg-muted/40 border border-border/30">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-xs font-bold flex-shrink-0 mt-0.5">
-            3
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Send us the link</p>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">We'll drop 200 credits into your account within 24 hours.</p>
-          </div>
-        </div>
+        <Step num="3" title="Email us the link" desc="We'll add 200 credits within 24h." />
       </div>
 
       {/* CTA */}
-      <div className="px-5 sm:px-6 pb-4">
+      <div className="px-6 pt-5 pb-4">
         <a
           href={mailtoHref}
           className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm transition-colors"
@@ -105,34 +86,17 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
         </a>
       </div>
 
-      {/* Instagram + fine print */}
-      <div className="px-5 sm:px-6 pb-6 space-y-3">
-        <a
-          href="https://instagram.com/vovv.ai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          @vovv.ai
-          <ExternalLink className="w-3 h-3" />
-        </a>
-        <p className="text-[10px] text-muted-foreground/60 text-center leading-relaxed">
-          One reward per account per month. Account must be 7+ days old. We review every submission personally.
-        </p>
-      </div>
-    </>
+      {/* Fine print */}
+      <p className="px-6 pb-5 text-[10px] text-muted-foreground/50 text-center leading-relaxed">
+        One reward per account per month · Account must be 7+ days old
+      </p>
+    </div>
   );
 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh] overflow-y-auto">
-          <button
-            onClick={() => onOpenChange(false)}
-            className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-muted transition-colors"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
+        <DrawerContent className="max-h-[85vh] overflow-y-auto pb-2">
           {content}
         </DrawerContent>
       </Drawer>
@@ -141,9 +105,24 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl top-[50%] translate-y-[-50%]">
+      <DialogContent className="sm:max-w-[400px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl top-[50%] translate-y-[-50%] [&>button]:hidden">
         {content}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* Tiny step row */
+function Step({ num, title, desc }: { num: string; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex-shrink-0 mt-0.5">
+        {num}
+      </span>
+      <p className="text-sm text-foreground leading-snug">
+        <span className="font-semibold">{title}</span>
+        <span className="text-muted-foreground"> — {desc}</span>
+      </p>
+    </div>
   );
 }
