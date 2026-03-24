@@ -401,6 +401,7 @@ export default function PublicFreestyle() {
               sourceImagePreview={sourceImagePreview}
               onUploadClick={handleUploadClick}
               onRemoveImage={handleRemoveImage}
+              onFileDrop={handleFileDrop}
               onGenerate={handleGenerate}
               canGenerate={canGenerate}
               isLoading={false}
