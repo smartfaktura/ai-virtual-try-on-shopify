@@ -131,7 +131,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
       {onRecreate && (
         <button
           onClick={(e) => { e.stopPropagation(); onRecreate(e); }}
-          className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-black text-xs font-semibold shadow-md"
+          className="absolute bottom-2 right-2 z-10 [@media(hover:hover)]:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-sm text-white text-xs font-semibold shadow-lg border border-white/10"
         >
           Recreate <ArrowRight className="w-3 h-3" />
         </button>
