@@ -12,6 +12,7 @@ interface PublicDiscoverDetailModalProps {
   onClose: () => void;
   relatedItems: DiscoverItem[];
   onSelectRelated: (item: DiscoverItem) => void;
+  onRecreate?: (item: DiscoverItem) => void;
 }
 
 export function PublicDiscoverDetailModal({
@@ -20,6 +21,7 @@ export function PublicDiscoverDetailModal({
   onClose,
   relatedItems,
   onSelectRelated,
+  onRecreate,
 }: PublicDiscoverDetailModalProps) {
   const navigate = useNavigate();
 
@@ -157,6 +159,10 @@ export function PublicDiscoverDetailModal({
             {/* Primary CTA — Sign Up */}
             <Button
               onClick={() => {
+                if (onRecreate && item) {
+                  onRecreate(item);
+                  return;
+                }
                 if (isPreset && item.data.workflow_slug) {
                   const params = new URLSearchParams();
                   if (item.data.model_name) params.set('model', item.data.model_name);
@@ -178,7 +184,7 @@ export function PublicDiscoverDetailModal({
               }}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              Create account for free to generate results like this
+              {onRecreate ? 'Recreate This' : 'Create account for free to generate results like this'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 

@@ -62,6 +62,7 @@ interface FreestylePromptPanelProps {
   editIntent: EditIntent[];
   onEditIntentChange: (intents: EditIntent[]) => void;
   disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
+  hideCreditCost?: boolean;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -77,6 +78,7 @@ export function FreestylePromptPanel({
   hasAssets,
   sourceImagePreview, onUploadClick, onRemoveImage,
   onGenerate, canGenerate, isLoading, progress, creditCost,
+  hideCreditCost,
   selectedModel, onModelSelect, modelPopoverOpen, onModelPopoverChange,
   selectedScene, onSceneSelect, scenePopoverOpen, onScenePopoverChange,
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
@@ -314,8 +316,8 @@ export function FreestylePromptPanel({
           {/* Row 3 — Action Bar */}
           <div className="px-3 sm:px-5 py-2 sm:py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             {(() => {
-              const hasEnoughCredits = creditBalance === undefined || creditBalance >= creditCost;
-              const showInsufficientCredits = canGenerate && !hasEnoughCredits;
+              const hasEnoughCredits = hideCreditCost || creditBalance === undefined || creditBalance >= creditCost;
+              const showInsufficientCredits = !hideCreditCost && canGenerate && !hasEnoughCredits;
 
               return (
                 <>
@@ -357,18 +359,20 @@ export function FreestylePromptPanel({
                           >
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                             Generate
-                            <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+                            {!hideCreditCost && <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>}
                           </Button>
                         )}
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-xs">
-                        {showInsufficientCredits
-                          ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
-                          : selectedModel && selectedScene
-                            ? `${creditCost} credits: Model + Scene`
-                            : selectedModel
-                              ? `${creditCost} credits: Model reference`
-                              : `${creditCost} credits per image`}
+                        {hideCreditCost
+                          ? 'Sign up to generate'
+                          : showInsufficientCredits
+                            ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
+                            : selectedModel && selectedScene
+                              ? `${creditCost} credits: Model + Scene`
+                              : selectedModel
+                                ? `${creditCost} credits: Model reference`
+                                : `${creditCost} credits per image`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
