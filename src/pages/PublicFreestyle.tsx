@@ -324,7 +324,7 @@ export default function PublicFreestyle() {
                   {columns.map((col, colIdx) => (
                     <div key={colIdx} className="flex-1 flex flex-col gap-1">
                       {col.map((item) => {
-                        const itemId = item.data.id;
+                        const itemId = getItemId(item);
                         return (
                           <DiscoverCard
                             key={`p-${itemId}`}
