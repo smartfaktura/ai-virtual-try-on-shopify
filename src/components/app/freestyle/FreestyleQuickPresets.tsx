@@ -152,7 +152,7 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
   };
 
   return (
-    <div className="w-full px-4 sm:px-0">
+    <div className="w-full sm:px-0">
       <div className="flex items-center justify-center gap-2 mb-1.5">
         <img
           src={amara.avatar}
