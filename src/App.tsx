@@ -57,6 +57,7 @@ const CookiePolicy = lazy(() => import('@/pages/CookiePolicy'));
 const Team = lazy(() => import('@/pages/Team'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const PublicDiscover = lazy(() => import('@/pages/PublicDiscover'));
+const PublicFreestyle = lazy(() => import('@/pages/PublicFreestyle'));
 const WorkflowsFeature = lazy(() => import('@/pages/features/WorkflowsFeature'));
 const VirtualTryOnFeature = lazy(() => import('@/pages/features/VirtualTryOnFeature'));
 const CreativeDropsFeature = lazy(() => import('@/pages/features/CreativeDropsFeature'));
