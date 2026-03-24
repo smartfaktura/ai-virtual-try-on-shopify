@@ -425,7 +425,7 @@ export function DiscoverDetailModal({
                 <Search className="w-3.5 h-3.5" /> Similar
               </button>
               <SharePopover
-                url={`${SITE_URL}/discover`}
+                url={`${SITE_URL}/discover/${item.type === 'preset' ? item.data.id : `scene-${item.data.poseId}`}`}
                 title={title}
                 variant="action"
               />
