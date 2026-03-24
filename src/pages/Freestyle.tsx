@@ -143,6 +143,7 @@ export default function Freestyle() {
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),
