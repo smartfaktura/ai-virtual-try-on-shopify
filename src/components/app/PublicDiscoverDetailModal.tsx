@@ -7,6 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SharePopover } from '@/components/app/SharePopover';
 import { SITE_URL } from '@/lib/constants';
+import { getItemSlug } from '@/lib/slugUtils';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
