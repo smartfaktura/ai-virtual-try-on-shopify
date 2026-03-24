@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Gift, ExternalLink, Sparkles, Share2, Send, Copy, Check } from 'lucide-react';
+import { Gift, ExternalLink, Send, Copy, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 
 interface EarnCreditsModalProps {
   open: boolean;
