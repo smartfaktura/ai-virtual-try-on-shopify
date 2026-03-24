@@ -7,9 +7,10 @@ interface MobilePickerSheetProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   children: React.ReactNode;
+  minHeight?: 'half' | 'auto';
 }
 
-export function MobilePickerSheet({ open, onOpenChange, title, children }: MobilePickerSheetProps) {
+export function MobilePickerSheet({ open, onOpenChange, title, children, minHeight = 'auto' }: MobilePickerSheetProps) {
   if (!open) return null;
 
   return (
