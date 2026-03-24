@@ -207,10 +207,10 @@ export function FreestyleSettingsChips({
   );
 
   // --- Chip wrappers for model/scene/product with disabled + highlight support ---
-  const productChip = (
+  const productChipInner = (
     <div className={cn(
       highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse',
-      disabledChips?.product && 'opacity-40 pointer-events-none'
+      disabledChips?.product && 'opacity-40'
     )}>
       <ProductSelectorChip
         selectedProduct={selectedProduct}
@@ -223,6 +223,17 @@ export function FreestyleSettingsChips({
       />
     </div>
   );
+
+  const productChip = disabledChips?.product ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="cursor-default">{productChipInner}</div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">
+        Create an account to upload your product
+      </TooltipContent>
+    </Tooltip>
+  ) : productChipInner;
 
   const modelChip = (
     <div className={cn(

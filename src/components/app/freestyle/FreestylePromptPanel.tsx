@@ -62,6 +62,7 @@ interface FreestylePromptPanelProps {
   editIntent: EditIntent[];
   onEditIntentChange: (intents: EditIntent[]) => void;
   disabledChips?: { product?: boolean; model?: boolean; scene?: boolean };
+  hideCreditCost?: boolean;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;

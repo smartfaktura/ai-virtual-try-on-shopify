@@ -12,6 +12,7 @@ interface PublicDiscoverDetailModalProps {
   onClose: () => void;
   relatedItems: DiscoverItem[];
   onSelectRelated: (item: DiscoverItem) => void;
+  onRecreate?: (item: DiscoverItem) => void;
 }
 
 export function PublicDiscoverDetailModal({
@@ -20,6 +21,7 @@ export function PublicDiscoverDetailModal({
   onClose,
   relatedItems,
   onSelectRelated,
+  onRecreate,
 }: PublicDiscoverDetailModalProps) {
   const navigate = useNavigate();
 
