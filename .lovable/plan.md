@@ -1,23 +1,24 @@
 
 
-# Fix Earn Credits Modal: Mobile Positioning + Remove Toast
+# Convert Earn Credits Modal to Bottom Drawer on Mobile
 
 ## Problem
-1. On mobile (390px), the dialog sits at `top: 5%` which pushes it too high — should be vertically centered
-2. The `toast.success('Caption copied!')` is unnecessary for a simple copy action — the check icon swap is sufficient feedback
+On mobile, the modal pops up as a centered card. User wants it to slide up from the bottom with drag-to-dismiss, like existing mobile patterns in the app.
+
+## Approach
+Use the existing `Drawer` component (vaul) for mobile and keep `Dialog` for desktop, using `useIsMobile()` hook — same responsive pattern used elsewhere in the app.
 
 ## Changes
 
 ### `src/components/app/EarnCreditsModal.tsx`
 
-1. **Remove toast on copy** — delete the `toast.success('Caption copied!')` line and remove the `toast`/`sonner` import
-2. **Fix mobile centering** — override the dialog's default `top-[5%]` positioning by adding classes to vertically center on mobile: `top-[50%] translate-y-[-50%] sm:top-[50%] sm:translate-y-[-50%]`
-
-The DialogContent className becomes:
-```tsx
-className="sm:max-w-[440px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl mx-3 sm:mx-0 top-[50%] translate-y-[-50%]"
-```
+- Import `Drawer, DrawerContent` from `@/components/ui/drawer` and `useIsMobile` from `@/hooks/use-mobile`
+- Extract the shared content (hero, steps, CTA, footer) into a `const content` variable
+- Conditionally render:
+  - **Mobile** (`isMobile`): `<Drawer>` with `<DrawerContent>` — slides from bottom, draggable handle built-in, `max-h-[90vh] overflow-y-auto`
+  - **Desktop**: Keep current `<Dialog>` with `<DialogContent>` unchanged
+- The content JSX stays identical in both cases — just the wrapper changes
 
 ### Files
-- `src/components/app/EarnCreditsModal.tsx` — 2 small edits
+- `src/components/app/EarnCreditsModal.tsx` — wrap with responsive Drawer/Dialog pattern
 
