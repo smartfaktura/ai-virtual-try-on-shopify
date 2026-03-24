@@ -30,6 +30,7 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
@@ -142,6 +143,7 @@ export default function Freestyle() {
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),
@@ -957,7 +959,7 @@ export default function Freestyle() {
                   onSelect={handlePresetSelect}
                   activeSceneId={activeScenePresetId}
                   userCategories={userCategories}
-                  allScenes={[...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)]}
+                  allScenes={sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...filterVisible(customScenePoses)]))}
                 />
               </div>
             </div>
