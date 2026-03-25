@@ -1,55 +1,41 @@
 
 
-# Add "Edit Image" Button in Library → Freestyle
+# Optimize Unoptimized Scene & Model Thumbnails
 
-## What It Does
-Adds an **Edit** button to the Library image detail modal. Clicking it navigates to Freestyle with the image pre-loaded in **edit mode**, with a contextual placeholder guiding the user.
+## Problem
+4 places load full-resolution images (1–5MB) for tiny thumbnails. The `getOptimizedUrl` utility exists and is already used in some places, but these were missed.
 
-## Why It's Safe
-- The backend (`generate-freestyle` edge
+## What needs to change
 
-<lov-plan>
+### 1. `SceneSelectorChip.tsx` — trigger button (line 217)
+**Current:** `<img src={selectedScene.previewUrl}` — 16px circle, full-res image  
+**Fix:** `<img src={getOptimizedUrl(selectedScene.previewUrl, { quality: 60 })}` — import already exists
 
-# Add "Edit Image" Button in Library → Freestyle
+### 2. `ModelSelectorChip.tsx` — trigger button (line 62) + grid (line 143)
+**Current:** No `getOptimizedUrl` import, both places use raw `model.previewUrl`  
+**Fix:**  
+- Add `import { getOptimizedUrl } from '@/lib/imageOptimization'`  
+- Line 62 (16px trigger): `src={getOptimizedUrl(selectedModel.previewUrl, { quality: 60 })}`  
+- Line 143 (grid thumbnail): `src={getOptimizedUrl(model.previewUrl, { quality: 60 })}`
 
-## What It Does
-Adds an **Edit** button to the Library image detail modal. Clicking it navigates to Freestyle with the image pre-loaded in **edit mode**, with a contextual placeholder guiding the user.
+### 3. `FreestyleQuickPresets.tsx` — preset thumbnail (line 216)
+**Current:** No import, raw `scene.previewUrl` for 44px thumbnail  
+**Fix:**  
+- Add `import { getOptimizedUrl } from '@/lib/imageOptimization'`  
+- Line 216: `src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}`
 
-## Why It's Safe
-- The backend (`generate-freestyle` edge function) already fully supports `imageRole: 'edit'` with edit intents (replace product, change background, change model, enhance)
-- The `ImageRoleSelector` component already exists in Freestyle for picking edit intents
-- The prompt builder already auto-generates edit instructions when no prompt is typed
-- We just need to wire the entry point and handle the incoming URL param
+### 4. `PoseSelectorCard.tsx` — Workflow/Generate scene grid (line 16)
+**Current:** No import, `const displayImage = pose.previewUrl`  
+**Fix:**  
+- Add `import { getOptimizedUrl } from '@/lib/imageOptimization'`  
+- Line 16: `const displayImage = getOptimizedUrl(pose.previewUrl, { quality: 60 })`
 
-## Changes
+## Why no quality loss
+These are all small UI elements (16px–44px). Quality 60 at these sizes is visually identical. Full-size views (lightbox, generation) always use the raw URL — no change there.
 
-### 1. `src/components/app/LibraryDetailModal.tsx`
-- Add `Pencil` icon import
-- Add **"Edit"** button in the action bar (after Download, before other tools)
-- On click: navigate to `/app/freestyle?editImage=<encodedUrl>&imageRole=edit`, close modal
-
-### 2. `src/pages/Freestyle.tsx`
-- In the existing `useEffect` that reads `searchParams` (line ~241), add handling for `editImage` param:
-  - Set `sourceImagePreview` to the URL (for immediate display)
-  - Convert to base64 via `convertImageToBase64` for generation submission
-  - Set `imageRole` to `'edit'`
-  - Expand prompt panel on mobile
-  - Clear params from URL
-
-### 3. `src/components/app/freestyle/FreestylePromptPanel.tsx`
-- Update textarea placeholder: when `sourceImagePreview` exists AND `imageRole === 'edit'`, show:
-  *"Describe what to change — remove a detail, swap background, adjust colors…"*
-- This replaces the generic "Optional — describe extra details" message
-
-## Edge Cases Handled
-- **URL length**: Supabase storage URLs are long but well within URL limits; `encodeURIComponent` handles special chars
-- **Params cleanup**: Clear `editImage` + `imageRole` from URL after reading (same pattern as existing Discover params)
-- **Base64 conversion**: `convertImageToBase64` already handles HTTPS URLs by returning them as-is — the edge function accepts both formats
-- **No extra credit cost**: Edit mode uses same credit cost as regular generation
-- **Image role auto-set**: Forces `imageRole='edit'` so the `ImageRoleSelector` shows correct state and edit intent chips appear
-
-### Files
-- `src/components/app/LibraryDetailModal.tsx`
-- `src/pages/Freestyle.tsx`
-- `src/components/app/freestyle/FreestylePromptPanel.tsx`
+## Files
+- `src/components/app/freestyle/SceneSelectorChip.tsx`
+- `src/components/app/freestyle/ModelSelectorChip.tsx`
+- `src/components/app/freestyle/FreestyleQuickPresets.tsx`
+- `src/components/app/PoseSelectorCard.tsx`
 
