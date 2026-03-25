@@ -1,35 +1,22 @@
 
 
-# Optimize Product Selector Image Loading
+# Fix Zoomed-In Product Images — Use `object-contain`
 
 ## Problem
-The product picker popover loads **full-resolution product images** (raw uploads, potentially 2-5MB each) for tiny ~80px thumbnails. With 20+ products, this means 40-100MB of unnecessary image data, causing slow load times.
+`object-cover` on the product thumbnails crops/zooms the image to fill the square, cutting off most of the product. Need `object-contain` to show the full image within the 1:1 space.
 
 ## Changes
 
 ### `src/components/app/freestyle/ProductSelectorChip.tsx`
 
-1. **Use `getOptimizedUrl`** to serve thumbnails at appropriate size (width: 200, quality: 60) — sufficient for the small grid cards
-2. **Use `ShimmerImage`** instead of raw `<img>` for shimmer placeholders while loading
-3. **Add `loading="lazy"`** — already default in ShimmerImage
+Change `object-cover` → `object-contain` on all product thumbnail `ShimmerImage` components (3 places):
 
-**Before:**
-```tsx
-<img src={product.image_url} alt={product.title} className="w-full aspect-square object-cover rounded-t-md" />
-```
+1. **Line 178** (product grid): `className="w-full aspect-square object-contain rounded-t-md bg-muted/30"`
+2. **Sample products** (~line 120): same change
+3. **Selected product trigger chip** (~line 75): keep `object-cover` here since it's a tiny 16px icon — cropping is fine at that size
 
-**After:**
-```tsx
-<ShimmerImage
-  src={getOptimizedUrl(product.image_url, { width: 200, quality: 60 })}
-  alt={product.title}
-  className="w-full aspect-square object-cover rounded-t-md"
-  aspectRatio="1/1"
-/>
-```
-
-4. Apply the same optimization to the **sample product images** and the **selected product thumbnail** in the trigger button.
+Add `bg-muted/30` so letterboxed areas have a subtle background instead of white gaps.
 
 ### Files
-- `src/components/app/freestyle/ProductSelectorChip.tsx` — import `getOptimizedUrl` + `ShimmerImage`, apply to all product images
+- `src/components/app/freestyle/ProductSelectorChip.tsx`
 
