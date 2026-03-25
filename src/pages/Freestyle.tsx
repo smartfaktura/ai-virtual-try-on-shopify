@@ -284,7 +284,19 @@ export default function Freestyle() {
         sceneImageUrl: sceneImageParam || undefined,
       });
     }
-    if (p || r || q || sceneParam || modelParam || fromDiscover) {
+    // Edit image from Library
+    const editImageParam = searchParams.get('editImage');
+    const imageRoleParam = searchParams.get('imageRole');
+    if (editImageParam) {
+      setSourceImagePreview(editImageParam);
+      convertImageToBase64(editImageParam).then(b64 => setSourceImage(b64)).catch(() => setSourceImage(editImageParam));
+      if (imageRoleParam === 'edit') {
+        setImageRole('edit');
+      }
+      setIsPromptCollapsed(false);
+    }
+
+    if (p || r || q || sceneParam || modelParam || fromDiscover || editImageParam) {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
