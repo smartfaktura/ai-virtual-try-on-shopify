@@ -274,16 +274,22 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
       const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(makePublic ? 'Public model added for all users!' : 'Model generated successfully!');
+
+      // Admin public: show variation picker
+      if (makePublic && data?.variations) {
+        setVariations(data.variations);
+        setPendingMeta({ metadata: data.metadata, name: data.name || finalName });
+        setSelectedVariation(0);
+        return; // stay on page, show picker
+      }
+
+      toast.success('Model generated successfully!');
       refreshBalance();
       setModelName('');
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
       setMakePublic(false);
-      if (makePublic) {
-        queryClient.invalidateQueries({ queryKey: ['custom-models'] });
-      }
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'Generation failed');
@@ -291,6 +297,105 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
       setGenerating(false);
     }
   };
+
+  const handlePublishVariation = async () => {
+    if (!pendingMeta || !variations[selectedVariation]) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-user-model', {
+        body: {
+          action: 'publish-public',
+          selectedUrl: variations[selectedVariation],
+          metadata: pendingMeta.metadata,
+          name: pendingMeta.name,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Public model published for all users!');
+      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
+      setVariations([]);
+      setPendingMeta(null);
+      setMakePublic(false);
+      setModelName('');
+      setPreviewUrl(null);
+      setUploadedUrl(null);
+      setTermsAccepted(false);
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to publish model');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleCancelVariations = () => {
+    setVariations([]);
+    setPendingMeta(null);
+    setGenerating(false);
+  };
+
+  // ── Variation picker screen ──
+  if (variations.length > 0) {
+    return (
+      <div className="space-y-5">
+        <div className="text-center space-y-1">
+          <h3 className="font-semibold text-base">Choose the Best Variation</h3>
+          <p className="text-xs text-muted-foreground">{variations.length} variations generated · Select your favorite and publish</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          {variations.map((url, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setSelectedVariation(i)}
+              className={cn(
+                "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
+                selectedVariation === i
+                  ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
+                  : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
+              )}
+            >
+              <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
+              {selectedVariation === i && (
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+              )}
+              <div className="absolute bottom-2 left-2">
+                <Badge className={cn(
+                  "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
+                  selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
+                )}>
+                  #{i + 1}
+                </Badge>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={handleCancelVariations}
+            disabled={publishing}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 gap-2"
+            onClick={handlePublishVariation}
+            disabled={publishing}
+          >
+            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+            Publish as Public Model
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (generating) {
     return <BrandedLoadingState />;
