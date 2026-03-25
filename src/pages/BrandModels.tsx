@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
