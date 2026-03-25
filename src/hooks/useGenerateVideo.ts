@@ -30,12 +30,13 @@ interface UseGenerateVideoResult {
     duration?: '5' | '10';
     modelName?: string;
     aspectRatio?: '1:1' | '16:9' | '9:16';
-    imageTailUrl?: string;
-    mode?: 'std' | 'pro';
-    negativePrompt?: string;
-    cfgScale?: number;
-    cameraControl?: { type: string; config: Record<string, number> };
-  }) => void;
+      imageTailUrl?: string;
+      mode?: 'std' | 'pro';
+      negativePrompt?: string;
+      cfgScale?: number;
+      cameraControl?: { type: string; config: Record<string, number> };
+      withAudio?: boolean;
+    }) => void;
   reset: () => void;
   history: GeneratedVideo[];
   isLoadingHistory: boolean;
@@ -238,6 +239,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       negativePrompt?: string;
       cfgScale?: number;
       cameraControl?: { type: string; config: Record<string, number> };
+      withAudio?: boolean;
     }) => {
       // Duplicate prevention: block if a video is already processing
       const hasProcessing = historyRef.current.some((v) => v.status === 'processing');
@@ -266,6 +268,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         if (params.negativePrompt) body.negative_prompt = params.negativePrompt;
         if (typeof params.cfgScale === 'number') body.cfg_scale = params.cfgScale;
         if (params.cameraControl) body.camera_control = params.cameraControl;
+        if (params.withAudio) body.with_audio = true;
 
         const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
           body,

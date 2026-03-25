@@ -152,6 +152,7 @@ export function useVideoProject() {
         mode: 'std',
         negativePrompt: builtPrompt.negative_prompt,
         cfgScale: builtPrompt.cfg_scale,
+        withAudio: params.audioMode === 'ambient',
       });
 
     } catch (err) {
