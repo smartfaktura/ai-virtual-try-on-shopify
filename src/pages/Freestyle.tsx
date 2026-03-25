@@ -93,12 +93,18 @@ function getProductModelInteraction(productType: string): string {
 
 export default function Freestyle() {
   const navigate = useNavigate();
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState(() => _persisted?.prompt ?? '');
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
-  const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
+  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(() => {
+    if (!_persisted?.modelId) return null;
+    return mockModels.find(m => m.id === _persisted.modelId) ?? null;
+  });
+  const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(() => {
+    if (!_persisted?.sceneId) return null;
+    return mockTryOnPoses.find(s => s.poseId === _persisted.sceneId) ?? null;
+  });
+  const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>(() => _persisted?.aspectRatio ?? '1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
 
   // Auto-select Pro quality when model or scene is selected
@@ -119,17 +125,15 @@ export default function Freestyle() {
   const [shareImageIndex] = useState<number | null>(null);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
-  // negatives removed — positive framing only
-  const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
-  // negativesPopoverOpen removed
+  const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>(() => _persisted?.cameraStyle ?? 'pro');
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
   const [failedEntries, setFailedEntries] = useState<FailedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
-  const [framing, setFraming] = useState<FramingOption | null>(null);
+  const [framing, setFraming] = useState<FramingOption | null>(() => (_persisted?.framing as FramingOption) ?? null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
-  const [imageRole, setImageRole] = useState<ImageRole>('edit');
-  const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
+  const [imageRole, setImageRole] = useState<ImageRole>(() => _persisted?.imageRole ?? 'edit');
+  const [editIntent, setEditIntent] = useState<EditIntent[]>(() => _persisted?.editIntent ?? []);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
@@ -140,6 +144,36 @@ export default function Freestyle() {
     sceneImageUrl?: string;
   } | null>(null);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
+
+  // Deferred restoration IDs for async-loaded entities (products, brand profiles, custom scenes)
+  const _pendingProductId = useRef(_persisted?.productId ?? null);
+  const _pendingBrandProfileId = useRef(_persisted?.brandProfileId ?? null);
+  const _pendingCustomSceneId = useRef(
+    _persisted?.sceneId && !mockTryOnPoses.find(s => s.poseId === _persisted.sceneId) ? _persisted.sceneId : null
+  );
+
+  // Persist all settings to localStorage (debounced 500ms)
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      const settings: FreestylePersistedSettings = {
+        ts: Date.now(),
+        prompt,
+        aspectRatio,
+        cameraStyle,
+        framing: framing as string | null,
+        imageRole,
+        editIntent,
+        modelId: selectedModel?.id ?? null,
+        sceneId: selectedScene?.poseId ?? null,
+        productId: selectedProduct?.id ?? null,
+        brandProfileId: selectedBrandProfile?.id ?? null,
+      };
+      localStorage.setItem(FREESTYLE_STORAGE_KEY, JSON.stringify(settings));
+    }, 500);
+    return () => { if (persistTimerRef.current) clearTimeout(persistTimerRef.current); };
+  }, [prompt, aspectRatio, cameraStyle, framing, imageRole, editIntent, selectedModel, selectedScene, selectedProduct, selectedBrandProfile]);
 
   // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
   const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
@@ -160,6 +194,7 @@ export default function Freestyle() {
     setEditIntent([]);
     setPresetHint(false);
     setActiveScenePresetId(null);
+    localStorage.removeItem(FREESTYLE_STORAGE_KEY);
   }, []);
 
   const handlePresetSelect = useCallback((scene: TryOnPose) => {
