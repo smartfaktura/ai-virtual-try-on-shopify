@@ -84,14 +84,14 @@ export default function AnimateVideo() {
 
   // When motion goal changes, apply its defaults
   useEffect(() => {
-    const goals = getMotionGoalsForCategory(category);
+    const goals = getMotionGoalsForCategory(category, sceneType);
     const goal = goals.find(g => g.id === motionGoalId);
     if (goal) {
       setCameraMotion(goal.defaultCameraMotion);
       setSubjectMotion(goal.subjectMotion);
       setMotionIntensity(goal.defaultIntensity);
     }
-  }, [motionGoalId, category]);
+  }, [motionGoalId, category, sceneType]);
 
   // Auto-analyze after upload
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,6 +303,7 @@ export default function AnimateVideo() {
               {/* Motion Goals */}
               <MotionGoalSelector
                 category={category}
+                sceneType={sceneType}
                 selectedGoalId={motionGoalId}
                 onChange={setMotionGoalId}
                 recommendedGoalIds={recommendedGoalIds}
