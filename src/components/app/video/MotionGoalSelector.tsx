@@ -5,13 +5,14 @@ import { Sparkles } from 'lucide-react';
 
 interface MotionGoalSelectorProps {
   category: string;
+  sceneType?: string;
   selectedGoalId: string;
   onChange: (goalId: string) => void;
   recommendedGoalIds?: string[];
 }
 
-export function MotionGoalSelector({ category, selectedGoalId, onChange, recommendedGoalIds = [] }: MotionGoalSelectorProps) {
-  const goals = getMotionGoalsForCategory(category);
+export function MotionGoalSelector({ category, sceneType, selectedGoalId, onChange, recommendedGoalIds = [] }: MotionGoalSelectorProps) {
+  const goals = getMotionGoalsForCategory(category, sceneType);
   const topRecommended = recommendedGoalIds[0];
 
   return (

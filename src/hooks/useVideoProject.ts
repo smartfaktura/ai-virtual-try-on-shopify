@@ -137,7 +137,7 @@ export function useVideoProject() {
         setAnalysisResult(analysis);
       }
 
-      // 4. Resolve strategy
+      // 4. Resolve strategy (now includes action resolver, scene normalization, realism/loop effects)
       setPipelineStage('building_prompt');
       const strategy = resolveVideoStrategy({
         analysis,
@@ -155,9 +155,10 @@ export function useVideoProject() {
         preserveIdentity: params.preserveIdentity,
         preserveOutfit: params.preserveOutfit,
         userAudioMode: params.audioMode,
+        userPrompt: params.userPrompt,
       });
 
-      // 5. Build prompt
+      // 5. Build prompt (now category-specific with action-aware language)
       const builtPrompt = buildVideoPrompt({
         analysis,
         strategy,
@@ -166,7 +167,7 @@ export function useVideoProject() {
         preserveScene: params.preserveScene,
       });
 
-      // 6. Create video_shot record
+      // 6. Create video_shot record with enriched strategy
       await supabase.from('video_shots').insert([{
         project_id: project.id,
         shot_index: 0,
@@ -183,10 +184,23 @@ export function useVideoProject() {
       // 7. Submit to Kling
       setPipelineStage('generating');
       console.log('[useVideoProject] Prompt:', builtPrompt.prompt);
-      console.log('[useVideoProject] Strategy:', strategy.workflow_strategy);
+      console.log('[useVideoProject] Strategy:', JSON.stringify({
+        workflow_strategy: strategy.workflow_strategy,
+        main_action: strategy.main_action,
+        action_verb: strategy.action_verb,
+        primary_moving_elements: strategy.primary_moving_elements,
+        scene_type_normalized: strategy.scene_type_normalized,
+        realism_level: strategy.realism_level,
+        loop_style: strategy.loop_style,
+        cyclic_motion: strategy.cyclic_motion,
+        user_note_conflict: strategy.user_note_conflict,
+        cfg_scale: builtPrompt.cfg_scale,
+        camera_control: strategy.camera_control_config ? 'structured' : 'prompt_only',
+      }));
       console.log('[useVideoProject] Result label:', builtPrompt.result_label);
 
-      generateVideo.startGeneration({
+      // Build generation params
+      const genParams: Parameters<typeof generateVideo.startGeneration>[0] = {
         imageUrl: params.imageUrl,
         prompt: builtPrompt.prompt,
         duration: params.duration,
@@ -195,7 +209,14 @@ export function useVideoProject() {
         negativePrompt: builtPrompt.negative_prompt,
         cfgScale: builtPrompt.cfg_scale,
         withAudio: params.audioMode === 'ambient',
-      });
+      };
+
+      // Pass structured camera control if available
+      if (strategy.camera_control_config) {
+        (genParams as Record<string, unknown>).cameraControl = strategy.camera_control_config;
+      }
+
+      generateVideo.startGeneration(genParams);
 
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Pipeline failed';
