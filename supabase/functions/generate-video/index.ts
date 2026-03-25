@@ -159,7 +159,7 @@ serve(async (req) => {
 
       if (!image_url) throw new Error("image_url is required");
 
-      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}, cfg=${cfg_scale}, camera=${camera_control?.type}`);
+      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}, cfg=${cfg_scale}, camera=${camera_control?.type}, audio=${body.with_audio ? 'on' : 'off'}`);
 
       const klingBody: Record<string, unknown> = {
         model_name,
