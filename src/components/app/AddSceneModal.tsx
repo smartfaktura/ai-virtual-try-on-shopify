@@ -123,6 +123,14 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
                     <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Description</label>
                     <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description" className="h-9 text-sm" />
                   </div>
+                  <div>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Prompt Hint <span className="text-muted-foreground/40">(AI-facing)</span></label>
+                    <Textarea value={promptHint} onChange={e => setPromptHint(e.target.value)} placeholder="Detailed AI instructions…" className="min-h-[60px] text-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={promptOnly} onCheckedChange={setPromptOnly} />
+                    <span className="text-[10px] text-muted-foreground">Prompt Only (no image reference)</span>
+                  </div>
                 </>
               )}
             </div>
