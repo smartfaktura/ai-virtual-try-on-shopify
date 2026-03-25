@@ -9,13 +9,27 @@ export type PipelineStage = 'idle' | 'creating_project' | 'analyzing' | 'buildin
 
 interface AnimateParams {
   imageUrl: string;
-  stylePreset: string;
-  motionRecipe: string;
+  // Product Context
+  category: string;
+  sceneType: string;
+  // Motion Goal
+  motionGoalId: string;
+  // Refinements
+  cameraMotion: string;
+  subjectMotion: string;
+  realismLevel: string;
+  loopStyle: string;
   motionIntensity: 'low' | 'medium' | 'high';
+  // Preservation
   preserveScene: boolean;
+  preserveProductDetails: boolean;
+  preserveIdentity: boolean;
+  preserveOutfit: boolean;
+  // Settings
   aspectRatio: '1:1' | '16:9' | '9:16';
   duration: '5' | '10';
-  audioMode: 'silent' | 'ambient' | 'voice';
+  audioMode: 'silent' | 'ambient';
+  // Optional
   userPrompt?: string;
 }
 
@@ -23,6 +37,7 @@ export function useVideoProject() {
   const [pipelineStage, setPipelineStage] = useState<PipelineStage>('idle');
   const [projectId, setProjectId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<VideoAnalysis | null>(null);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [pipelineError, setPipelineError] = useState<string | null>(null);
 
   const generateVideo = useGenerateVideo();
@@ -31,10 +46,36 @@ export function useVideoProject() {
     setPipelineStage('idle');
     setProjectId(null);
     setAnalysisResult(null);
+    setIsAnalyzingImage(false);
     setPipelineError(null);
     generateVideo.reset();
   }, [generateVideo]);
 
+  // Phase A: Analyze image and return suggestions
+  const analyzeImage = useCallback(async (imageUrl: string): Promise<VideoAnalysis | null> => {
+    setIsAnalyzingImage(true);
+    setPipelineError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-video-input', {
+        body: { image_urls: [imageUrl], workflow_type: 'animate' },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      const analysis: VideoAnalysis = data.analysis;
+      setAnalysisResult(analysis);
+      return analysis;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Analysis failed';
+      setPipelineError(msg);
+      toast.error(msg);
+      return null;
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  }, []);
+
+  // Phase B: Generate video from confirmed settings
   const runAnimatePipeline = useCallback(async (params: AnimateParams) => {
     setPipelineError(null);
 
@@ -48,16 +89,24 @@ export function useVideoProject() {
           workflow_type: 'animate',
           title: 'Animate Image',
           settings_json: {
-            stylePreset: params.stylePreset,
-            motionRecipe: params.motionRecipe,
+            category: params.category,
+            sceneType: params.sceneType,
+            motionGoalId: params.motionGoalId,
+            cameraMotion: params.cameraMotion,
+            subjectMotion: params.subjectMotion,
+            realismLevel: params.realismLevel,
+            loopStyle: params.loopStyle,
             motionIntensity: params.motionIntensity,
             preserveScene: params.preserveScene,
+            preserveProductDetails: params.preserveProductDetails,
+            preserveIdentity: params.preserveIdentity,
+            preserveOutfit: params.preserveOutfit,
             aspectRatio: params.aspectRatio,
             duration: params.duration,
             audioMode: params.audioMode,
           },
           status: 'processing',
-          analysis_status: 'pending',
+          analysis_status: analysisResult ? 'complete' : 'pending',
         })
         .select('id')
         .single();
@@ -66,48 +115,45 @@ export function useVideoProject() {
       setProjectId(project.id);
 
       // 2. Insert video_input
-      const { error: inputError } = await supabase
-        .from('video_inputs')
-        .insert({
-          project_id: project.id,
-          asset_url: params.imageUrl,
-          type: 'image',
-          input_role: 'main_reference',
-          sort_order: 0,
-        });
-
-      if (inputError) console.error('[useVideoProject] Input insert error:', inputError);
-
-      // 3. Run AI analysis
-      setPipelineStage('analyzing');
-      const { data: analysisData, error: analysisFnError } = await supabase.functions.invoke('analyze-video-input', {
-        body: { image_urls: [params.imageUrl], workflow_type: 'animate' },
+      await supabase.from('video_inputs').insert({
+        project_id: project.id,
+        asset_url: params.imageUrl,
+        type: 'image',
+        input_role: 'main_reference',
+        sort_order: 0,
+        analysis_json: analysisResult ? JSON.parse(JSON.stringify(analysisResult)) : null,
       });
 
-      if (analysisFnError) throw new Error(analysisFnError.message);
-      if (analysisData?.error) throw new Error(analysisData.error);
-
-      const analysis: VideoAnalysis = analysisData.analysis;
-      setAnalysisResult(analysis);
-
-      // Update analysis_status
-      await supabase
-        .from('video_projects')
-        .update({ analysis_status: 'complete' })
-        .eq('id', project.id);
-
-      // Store analysis in video_inputs
-      await supabase
-        .from('video_inputs')
-        .update({ analysis_json: JSON.parse(JSON.stringify(analysis)) })
-        .eq('project_id', project.id);
+      // 3. Use existing analysis or run fresh
+      let analysis = analysisResult;
+      if (!analysis) {
+        setPipelineStage('analyzing');
+        const { data: analysisData, error: analysisFnError } = await supabase.functions.invoke('analyze-video-input', {
+          body: { image_urls: [params.imageUrl], workflow_type: 'animate' },
+        });
+        if (analysisFnError) throw new Error(analysisFnError.message);
+        if (analysisData?.error) throw new Error(analysisData.error);
+        analysis = analysisData.analysis as VideoAnalysis;
+        setAnalysisResult(analysis);
+      }
 
       // 4. Resolve strategy
       setPipelineStage('building_prompt');
       const strategy = resolveVideoStrategy({
         analysis,
         workflowType: 'animate' as WorkflowType,
-        userStylePreset: params.stylePreset,
+        category: params.category,
+        sceneType: params.sceneType,
+        motionGoalId: params.motionGoalId,
+        cameraMotion: params.cameraMotion,
+        subjectMotion: params.subjectMotion,
+        realismLevel: params.realismLevel,
+        loopStyle: params.loopStyle,
+        motionIntensity: params.motionIntensity,
+        preserveScene: params.preserveScene,
+        preserveProductDetails: params.preserveProductDetails,
+        preserveIdentity: params.preserveIdentity,
+        preserveOutfit: params.preserveOutfit,
         userAudioMode: params.audioMode,
       });
 
@@ -116,33 +162,29 @@ export function useVideoProject() {
         analysis,
         strategy,
         userPrompt: params.userPrompt,
-        motionRecipe: params.motionRecipe,
         motionIntensity: params.motionIntensity,
         preserveScene: params.preserveScene,
       });
 
       // 6. Create video_shot record
-      const { error: shotError } = await supabase
-        .from('video_shots')
-        .insert([{
-          project_id: project.id,
-          shot_index: 0,
-          prompt_text: builtPrompt.prompt,
-          duration_sec: parseInt(params.duration),
-          status: 'pending',
-          audio_mode: params.audioMode,
-          model_route: strategy.recommended_model_route,
-          prompt_template_name: builtPrompt.prompt_template_name,
-          strategy_json: JSON.parse(JSON.stringify(strategy)),
-          analysis_json: JSON.parse(JSON.stringify(analysis)),
-        }]);
+      await supabase.from('video_shots').insert([{
+        project_id: project.id,
+        shot_index: 0,
+        prompt_text: builtPrompt.prompt,
+        duration_sec: parseInt(params.duration),
+        status: 'pending',
+        audio_mode: params.audioMode,
+        model_route: strategy.recommended_model_route,
+        prompt_template_name: builtPrompt.prompt_template_name,
+        strategy_json: JSON.parse(JSON.stringify(strategy)),
+        analysis_json: analysis ? JSON.parse(JSON.stringify(analysis)) : null,
+      }]);
 
-      if (shotError) console.error('[useVideoProject] Shot insert error:', shotError);
-
-      // 7. Submit to Kling via generate-video
+      // 7. Submit to Kling
       setPipelineStage('generating');
-      console.log('[useVideoProject] Pipeline built prompt:', builtPrompt.prompt);
+      console.log('[useVideoProject] Prompt:', builtPrompt.prompt);
       console.log('[useVideoProject] Strategy:', strategy.workflow_strategy);
+      console.log('[useVideoProject] Result label:', builtPrompt.result_label);
 
       generateVideo.startGeneration({
         imageUrl: params.imageUrl,
@@ -162,9 +204,9 @@ export function useVideoProject() {
       toast.error(message);
       console.error('[useVideoProject] Pipeline error:', err);
     }
-  }, [generateVideo]);
+  }, [generateVideo, analysisResult]);
 
-  // Derive combined status
+  // Derived states
   const isAnalyzing = pipelineStage === 'analyzing';
   const isBuildingPrompt = pipelineStage === 'building_prompt';
   const isGenerating = pipelineStage === 'generating' || generateVideo.status === 'creating' || generateVideo.status === 'processing';
@@ -175,6 +217,8 @@ export function useVideoProject() {
     projectId,
     analysisResult,
     pipelineError,
+    isAnalyzingImage,
+    analyzeImage,
     runAnimatePipeline,
     resetPipeline,
     // Pass through generate video state

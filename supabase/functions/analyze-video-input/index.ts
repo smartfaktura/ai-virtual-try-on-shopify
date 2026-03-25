@@ -25,7 +25,6 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: authError } = await supabase.auth.getUser(token);
     if (authError || !userData?.user) throw new Error("Unauthorized");
-    const userId = userData.user.id;
 
     const body = await req.json();
     const { image_urls, workflow_type = "animate" } = body;
@@ -37,99 +36,113 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Build analysis prompt based on single vs multiple images
     const isSingle = image_urls.length === 1;
-    
-    const systemPrompt = `You are a structured vision parser for a video generation system. You MUST return deterministic structured analysis of uploaded images. Do NOT generate creative concepts, prompt ideas, or cinematic descriptions. Only describe what you see and classify it.`;
+
+    const systemPrompt = `You are a structured vision parser for an ecommerce video generation system. Analyze uploaded images and classify them for commercial video production.
+
+You MUST identify:
+1. The ecommerce product category (fashion, beauty, fragrances, jewelry, accessories, home decor, food/beverage, electronics, sports/fitness, health/supplements)
+2. The scene type (studio product, on-model, lifestyle, hand-held, flat lay, macro close-up, interior room, action scene, food plated, device on desk, talking portrait)
+3. Whether a person is present and what interactive objects exist
+4. What realistic motion would work best for a commercial video
+5. What preservation risks exist (identity, product details, background stability)
+
+Return deterministic structured analysis. Do NOT generate creative concepts or cinematic descriptions. Only describe and classify what you see.`;
 
     const userContent: unknown[] = [];
 
-    // Add images
     for (const url of image_urls) {
-      userContent.push({
-        type: "image_url",
-        image_url: { url },
-      });
+      userContent.push({ type: "image_url", image_url: { url } });
     }
 
-    // Add analysis instruction
     if (isSingle) {
       userContent.push({
         type: "text",
-        text: `Analyze this image and return structured JSON. Extract: subject_category (product/person/scene/food/architecture/vehicle/abstract), scene_type (studio/outdoor/indoor/lifestyle/abstract), shot_type (close-up/medium/wide/detail/full-body), camera_angle (front/three-quarter/side/top-down/low-angle), lighting_style (soft diffused/hard directional/natural/studio/dramatic/flat), mood (minimal/luxury/energetic/warm/cool/dramatic/neutral), motion_recommendation (slow_push_in/camera_drift/product_orbit/gentle_pan/premium_handheld/minimal), identity_sensitive (boolean - true if there is a person whose face is prominent), scene_complexity (low/medium/high), risk_flags object with: busy_background (boolean), text_present (boolean), multiple_people (boolean), low_resolution (boolean - true if image appears pixelated), transparent_png (boolean - true if background appears transparent/checkered).`,
+        text: `Analyze this image for ecommerce video generation. Classify the product category, scene type, subject type, and recommend the best motion approach for a commercial product video. Identify any interactive objects (balls, cups, bottles, etc.) and assess preservation risks.`,
       });
     } else {
       userContent.push({
         type: "text",
-        text: `Analyze these ${image_urls.length} images as a sequence. For each image, extract subject_category, scene_type, shot_type, camera_angle, lighting_style, mood, motion_recommendation, identity_sensitive, scene_complexity, risk_flags. Then also assess: continuity_score (0-100, how well they work as a sequence), best_order (array of 0-indexed positions), shot_roles (array of role assignments: opening_hero/detail_reveal/transition/closing), mismatch_warnings (array of warning strings about inconsistencies).`,
+        text: `Analyze these ${image_urls.length} images as a sequence for ecommerce video. For each image, classify category, scene type, and motion recommendations. Assess continuity.`,
       });
     }
 
-    // Call Lovable AI with tool calling for structured output
+    const singleToolSchema = {
+      type: "object",
+      properties: {
+        // Legacy fields (backward compat)
+        subject_category: { type: "string", enum: ["product", "person", "scene", "food", "architecture", "vehicle", "abstract"] },
+        scene_type: { type: "string", enum: ["studio", "outdoor", "indoor", "lifestyle", "abstract"] },
+        shot_type: { type: "string", enum: ["close-up", "medium", "wide", "detail", "full-body"] },
+        camera_angle: { type: "string", enum: ["front", "three-quarter", "side", "top-down", "low-angle"] },
+        lighting_style: { type: "string", enum: ["soft diffused", "hard directional", "natural", "studio", "dramatic", "flat"] },
+        mood: { type: "string", enum: ["minimal", "luxury", "energetic", "warm", "cool", "dramatic", "neutral"] },
+        motion_recommendation: { type: "string", enum: ["slow_push_in", "camera_drift", "product_orbit", "gentle_pan", "premium_handheld", "minimal"] },
+        identity_sensitive: { type: "boolean" },
+        scene_complexity: { type: "string", enum: ["low", "medium", "high"] },
+        risk_flags: {
+          type: "object",
+          properties: {
+            busy_background: { type: "boolean" },
+            text_present: { type: "boolean" },
+            multiple_people: { type: "boolean" },
+            low_resolution: { type: "boolean" },
+            transparent_png: { type: "boolean" },
+            identity_sensitive: { type: "boolean" },
+            product_detail_sensitive: { type: "boolean" },
+            background_should_stay_static: { type: "boolean" },
+          },
+          required: ["busy_background", "text_present", "multiple_people", "low_resolution", "transparent_png", "identity_sensitive", "product_detail_sensitive", "background_should_stay_static"],
+        },
+        // New ecommerce fields
+        category: {
+          type: "string",
+          enum: ["fashion_apparel", "beauty_skincare", "fragrances", "jewelry", "accessories", "home_decor", "food_beverage", "electronics", "sports_fitness", "health_supplements"],
+          description: "Ecommerce product category"
+        },
+        ecommerce_scene_type: {
+          type: "string",
+          enum: ["studio_product", "on_model", "lifestyle_scene", "hand_held", "flat_lay", "macro_closeup", "interior_room", "action_scene", "food_plated", "device_on_desk", "talking_portrait"],
+          description: "Ecommerce scene classification"
+        },
+        subject_type: { type: "string", description: "e.g. athlete_with_object, skincare_bottle, fashion_model" },
+        has_person: { type: "boolean" },
+        interactive_object: { type: "string", description: "e.g. basketball, wine_glass, lipstick, null if none" },
+        recommended_motion_goals: {
+          type: "array",
+          items: { type: "string" },
+          description: "Up to 3 motion goal IDs from the registry that best fit this image"
+        },
+        recommended_camera_motion: { type: "string", enum: ["static", "slow_push_in", "gentle_pan", "camera_drift", "premium_handheld", "orbit"] },
+        recommended_subject_motion: { type: "string", enum: ["minimal", "natural_pose_shift", "action_motion", "hand_object_interaction", "hair_fabric", "auto"] },
+        recommended_realism: { type: "string", enum: ["ultra_realistic", "realistic", "slightly_stylized"] },
+        recommended_loop_style: { type: "string", enum: ["none", "short_repeatable", "seamless_loop", "one_natural"] },
+      },
+      required: [
+        "subject_category", "scene_type", "shot_type", "camera_angle", "lighting_style",
+        "mood", "motion_recommendation", "identity_sensitive", "scene_complexity", "risk_flags",
+        "category", "ecommerce_scene_type", "subject_type", "has_person",
+        "recommended_motion_goals", "recommended_camera_motion", "recommended_subject_motion",
+        "recommended_realism", "recommended_loop_style"
+      ],
+    };
+
     const analysisTools = [
       {
         type: "function",
         function: {
           name: isSingle ? "analyze_single_image" : "analyze_image_sequence",
           description: isSingle
-            ? "Return structured analysis of a single image for video generation"
+            ? "Return structured ecommerce-aware analysis of a single image for video generation"
             : "Return structured analysis of multiple images for video sequence generation",
           parameters: isSingle
-            ? {
-                type: "object",
-                properties: {
-                  subject_category: { type: "string", enum: ["product", "person", "scene", "food", "architecture", "vehicle", "abstract"] },
-                  scene_type: { type: "string", enum: ["studio", "outdoor", "indoor", "lifestyle", "abstract"] },
-                  shot_type: { type: "string", enum: ["close-up", "medium", "wide", "detail", "full-body"] },
-                  camera_angle: { type: "string", enum: ["front", "three-quarter", "side", "top-down", "low-angle"] },
-                  lighting_style: { type: "string", enum: ["soft diffused", "hard directional", "natural", "studio", "dramatic", "flat"] },
-                  mood: { type: "string", enum: ["minimal", "luxury", "energetic", "warm", "cool", "dramatic", "neutral"] },
-                  motion_recommendation: { type: "string", enum: ["slow_push_in", "camera_drift", "product_orbit", "gentle_pan", "premium_handheld", "minimal"] },
-                  identity_sensitive: { type: "boolean" },
-                  scene_complexity: { type: "string", enum: ["low", "medium", "high"] },
-                  risk_flags: {
-                    type: "object",
-                    properties: {
-                      busy_background: { type: "boolean" },
-                      text_present: { type: "boolean" },
-                      multiple_people: { type: "boolean" },
-                      low_resolution: { type: "boolean" },
-                      transparent_png: { type: "boolean" },
-                    },
-                    required: ["busy_background", "text_present", "multiple_people", "low_resolution", "transparent_png"],
-                  },
-                },
-                required: ["subject_category", "scene_type", "shot_type", "camera_angle", "lighting_style", "mood", "motion_recommendation", "identity_sensitive", "scene_complexity", "risk_flags"],
-              }
+            ? singleToolSchema
             : {
                 type: "object",
                 properties: {
                   frames: {
                     type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        subject_category: { type: "string" },
-                        scene_type: { type: "string" },
-                        shot_type: { type: "string" },
-                        camera_angle: { type: "string" },
-                        lighting_style: { type: "string" },
-                        mood: { type: "string" },
-                        motion_recommendation: { type: "string" },
-                        identity_sensitive: { type: "boolean" },
-                        scene_complexity: { type: "string" },
-                        risk_flags: {
-                          type: "object",
-                          properties: {
-                            busy_background: { type: "boolean" },
-                            text_present: { type: "boolean" },
-                            multiple_people: { type: "boolean" },
-                            low_resolution: { type: "boolean" },
-                            transparent_png: { type: "boolean" },
-                          },
-                        },
-                      },
-                    },
+                    items: singleToolSchema,
                   },
                   continuity_score: { type: "number" },
                   best_order: { type: "array", items: { type: "number" } },
