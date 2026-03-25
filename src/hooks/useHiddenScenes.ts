@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TryOnPose } from '@/types';
+import { mockTryOnPoses } from '@/data/mockData';
 
 export function useHiddenScenes() {
   const queryClient = useQueryClient();
@@ -18,6 +19,9 @@ export function useHiddenScenes() {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  // Get hidden built-in scenes with their names for the restore section
+  const hiddenBuiltInScenes = mockTryOnPoses.filter(p => hiddenIds.includes(p.poseId));
 
   const hideScene = useMutation({
     mutationFn: async (sceneId: string) => {
@@ -43,5 +47,5 @@ export function useHiddenScenes() {
   const filterVisible = <T extends TryOnPose>(poses: T[]): T[] =>
     poses.filter(p => !hiddenIds.includes(p.poseId));
 
-  return { hiddenIds, isLoading, hideScene, unhideScene, filterVisible };
+  return { hiddenIds, hiddenBuiltInScenes, isLoading, hideScene, unhideScene, filterVisible };
 }
