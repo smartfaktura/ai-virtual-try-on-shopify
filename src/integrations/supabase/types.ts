@@ -626,11 +626,13 @@ export type Database = {
           kling_task_id: string | null
           model_name: string
           negative_prompt: string | null
+          project_id: string | null
           prompt: string
           source_image_url: string
           status: string
           user_id: string
           video_url: string | null
+          workflow_type: string | null
         }
         Insert: {
           aspect_ratio?: string
@@ -644,11 +646,13 @@ export type Database = {
           kling_task_id?: string | null
           model_name?: string
           negative_prompt?: string | null
+          project_id?: string | null
           prompt?: string
           source_image_url: string
           status?: string
           user_id: string
           video_url?: string | null
+          workflow_type?: string | null
         }
         Update: {
           aspect_ratio?: string
@@ -662,13 +666,23 @@ export type Database = {
           kling_task_id?: string | null
           model_name?: string
           negative_prompt?: string | null
+          project_id?: string | null
           prompt?: string
           source_image_url?: string
           status?: string
           user_id?: string
           video_url?: string | null
+          workflow_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "generated_videos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       generation_jobs: {
         Row: {
@@ -1294,6 +1308,170 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      video_inputs: {
+        Row: {
+          analysis_json: Json | null
+          asset_url: string
+          created_at: string
+          id: string
+          input_role: string
+          project_id: string
+          sort_order: number
+          type: string
+          validation_json: Json | null
+        }
+        Insert: {
+          analysis_json?: Json | null
+          asset_url: string
+          created_at?: string
+          id?: string
+          input_role?: string
+          project_id: string
+          sort_order?: number
+          type?: string
+          validation_json?: Json | null
+        }
+        Update: {
+          analysis_json?: Json | null
+          asset_url?: string
+          created_at?: string
+          id?: string
+          input_role?: string
+          project_id?: string
+          sort_order?: number
+          type?: string
+          validation_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_inputs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_projects: {
+        Row: {
+          analysis_status: string
+          charged_credits: number
+          cover_image_url: string | null
+          created_at: string
+          estimated_credits: number
+          generation_mode: string
+          id: string
+          settings_json: Json
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          workflow_type: string
+        }
+        Insert: {
+          analysis_status?: string
+          charged_credits?: number
+          cover_image_url?: string | null
+          created_at?: string
+          estimated_credits?: number
+          generation_mode?: string
+          id?: string
+          settings_json?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          workflow_type?: string
+        }
+        Update: {
+          analysis_status?: string
+          charged_credits?: number
+          cover_image_url?: string | null
+          created_at?: string
+          estimated_credits?: number
+          generation_mode?: string
+          id?: string
+          settings_json?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          workflow_type?: string
+        }
+        Relationships: []
+      }
+      video_shots: {
+        Row: {
+          analysis_json: Json | null
+          audio_mode: string
+          created_at: string
+          duration_sec: number
+          id: string
+          model_route: string
+          project_id: string
+          prompt_template_name: string | null
+          prompt_text: string
+          result_url: string | null
+          shot_index: number
+          shot_role: string | null
+          source_input_id: string | null
+          status: string
+          strategy_json: Json | null
+          transition_type: string | null
+        }
+        Insert: {
+          analysis_json?: Json | null
+          audio_mode?: string
+          created_at?: string
+          duration_sec?: number
+          id?: string
+          model_route?: string
+          project_id: string
+          prompt_template_name?: string | null
+          prompt_text?: string
+          result_url?: string | null
+          shot_index?: number
+          shot_role?: string | null
+          source_input_id?: string | null
+          status?: string
+          strategy_json?: Json | null
+          transition_type?: string | null
+        }
+        Update: {
+          analysis_json?: Json | null
+          audio_mode?: string
+          created_at?: string
+          duration_sec?: number
+          id?: string
+          model_route?: string
+          project_id?: string
+          prompt_template_name?: string | null
+          prompt_text?: string
+          result_url?: string | null
+          shot_index?: number
+          shot_role?: string | null
+          source_input_id?: string | null
+          status?: string
+          strategy_json?: Json | null
+          transition_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_shots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_shots_source_input_id_fkey"
+            columns: ["source_input_id"]
+            isOneToOne: false
+            referencedRelation: "video_inputs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workflows: {
         Row: {
