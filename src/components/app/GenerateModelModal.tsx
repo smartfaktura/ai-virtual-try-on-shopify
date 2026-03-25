@@ -84,7 +84,7 @@ export function GenerateModelModal({ open, onOpenChange, userPlan }: GenerateMod
 
         {!isPaidPlan ? (
           <div className="text-center py-6 space-y-3">
-            <Crown className="w-10 h-10 mx-auto text-amber-500" />
+            <Crown className="w-10 h-10 mx-auto text-primary" />
             <p className="text-sm text-muted-foreground">
               Custom model generation is available on <strong>Growth</strong> and <strong>Pro</strong> plans.
             </p>
@@ -95,7 +95,7 @@ export function GenerateModelModal({ open, onOpenChange, userPlan }: GenerateMod
         ) : result ? (
           /* Success state */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+            <div className="flex items-center gap-2 text-sm text-primary font-medium">
               <Check className="w-4 h-4" />
               Model created successfully
             </div>
