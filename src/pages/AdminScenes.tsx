@@ -608,7 +608,7 @@ function SceneRow({
             </SelectTrigger>
             <SelectContent>
               {defaultCategoryOrder.map(c => (
-                <SelectItem key={c} value={c} className="text-xs">{poseCategoryLabels[c] || c}</SelectItem>
+                <SelectItem key={c} value={c} className="text-xs">{categoryLabels[c] || c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -646,7 +646,7 @@ function SceneRow({
               .filter(c => c !== pose.category)
               .map(c => (
                 <DropdownMenuItem key={c} onClick={() => duplicateToCategory(pose, c)} className="text-xs">
-                  {poseCategoryLabels[c] || c}
+                  {categoryLabels[c] || c}
                 </DropdownMenuItem>
               ))}
           </DropdownMenuContent>
