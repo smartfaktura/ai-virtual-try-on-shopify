@@ -543,6 +543,7 @@ interface SceneRowProps {
   duplicateToCategory: (pose: TryOnPose, cat: PoseCategory) => void;
   handleDelete: (pose: TryOnPose) => void;
   defaultCategoryOrder: PoseCategory[];
+  categoryLabels: Record<string, string>;
   showReorderButtons: boolean;
 }
 
