@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getExtensionFromContentType, downloadDropAsZip } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
@@ -604,7 +604,7 @@ export default function Generate() {
     const allScenes = [...filterVisible(mockTryOnPoses), ...customPoses];
 
     if (prefillModelName) {
-      const matchedModel = mockModels.find(m => m.name.toLowerCase() === prefillModelName.toLowerCase());
+      const matchedModel = allModels.find(m => m.name.toLowerCase() === prefillModelName.toLowerCase());
       if (matchedModel) {
         setSelectedModel(matchedModel);
         setSelectedModels(new Set([matchedModel.modelId]));
@@ -659,7 +659,7 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredModels = mockModels.filter(m => {
+  const filteredModels = allModels.filter(m => {
     if (modelGenderFilter !== 'all' && m.gender !== modelGenderFilter) return false;
     if (modelBodyTypeFilter !== 'all' && m.bodyType !== modelBodyTypeFilter) return false;
     if (modelAgeFilter !== 'all' && m.ageRange !== modelAgeFilter) return false;
@@ -676,7 +676,7 @@ export default function Generate() {
     return acc;
   }, {} as Record<PoseCategory, TryOnPose[]>);
 
-  const popularCombinations = createPopularCombinations(mockModels, allScenePoses);
+  const popularCombinations = createPopularCombinations(allModels, allScenePoses);
 
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
