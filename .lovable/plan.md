@@ -1,21 +1,35 @@
 
 
-# Move Generation Bar from Bottom-Right to Top-Right
+# Optimize Product Selector Image Loading
 
 ## Problem
-The loading/generation status bar at `bottom-20 right-4` overlaps action buttons (Cancel, Save, etc.) on pages like Add Product.
+The product picker popover loads **full-resolution product images** (raw uploads, potentially 2-5MB each) for tiny ~80px thumbnails. With 20+ products, this means 40-100MB of unnecessary image data, causing slow load times.
 
 ## Changes
 
-### `src/components/app/GlobalGenerationBar.tsx`
+### `src/components/app/freestyle/ProductSelectorChip.tsx`
 
-1. **Reposition container** (line 166): Change `fixed bottom-20 right-4 lg:right-6` → `fixed top-20 right-4 lg:right-6`
+1. **Use `getOptimizedUrl`** to serve thumbnails at appropriate size (width: 200, quality: 60) — sufficient for the small grid cards
+2. **Use `ShimmerImage`** instead of raw `<img>` for shimmer placeholders while loading
+3. **Add `loading="lazy"`** — already default in ShimmerImage
 
-2. **Swap expanded panel order**: Currently the detail list renders **above** the pill (using `mb-2`). At top-right, it should expand **below** the pill instead:
-   - Move the pill button **before** the expanded detail panel in JSX order
-   - Change `mb-2` → `mt-2` on the expanded panel
-   - Swap chevron icons: `ChevronUp` when minimized (expand downward) → `ChevronDown`, and vice versa
+**Before:**
+```tsx
+<img src={product.image_url} alt={product.title} className="w-full aspect-square object-cover rounded-t-md" />
+```
+
+**After:**
+```tsx
+<ShimmerImage
+  src={getOptimizedUrl(product.image_url, { width: 200, quality: 60 })}
+  alt={product.title}
+  className="w-full aspect-square object-cover rounded-t-md"
+  aspectRatio="1/1"
+/>
+```
+
+4. Apply the same optimization to the **sample product images** and the **selected product thumbnail** in the trigger button.
 
 ### Files
-- `src/components/app/GlobalGenerationBar.tsx` — reposition to top-right, flip expand direction
+- `src/components/app/freestyle/ProductSelectorChip.tsx` — import `getOptimizedUrl` + `ShimmerImage`, apply to all product images
 
