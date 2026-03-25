@@ -30,10 +30,14 @@ export default function AdminScenes() {
   const deleteSceneMutation = useDeleteCustomScene();
   const { allCategoryLabels, allCategorySlugs, customCategories } = useSceneCategories();
   const addCategoryMutation = useAddSceneCategory();
+  const updateCategoryMutation = useUpdateSceneCategory();
+  const upsertCategoryLabel = useUpsertCategoryLabel();
   const deleteCategoryMutation = useDeleteSceneCategory();
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddCategory, setShowAddCategory] = useState(false);
+  const [editingCatSlug, setEditingCatSlug] = useState<string | null>(null);
+  const [editingCatLabel, setEditingCatLabel] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showHidden, setShowHidden] = useState(false);
