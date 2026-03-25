@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X, Loader2, Sparkles, User, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ interface AddSceneModalProps {
 export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [promptHint, setPromptHint] = useState('');
+  const [promptOnly, setPromptOnly] = useState(false);
   const [sceneType, setSceneType] = useState<SceneType>('on-model');
   const [category, setCategory] = useState('studio');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -74,7 +78,7 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
   const handleSave = async () => {
     if (!name.trim()) { toast.error('Name is required'); return; }
     try {
-      await addScene.mutateAsync({ name, description, category, image_url: imageUrl });
+      await addScene.mutateAsync({ name, description, category, image_url: imageUrl, prompt_hint: promptHint, prompt_only: promptOnly });
       toast.success('Scene added for all users');
       onClose();
     } catch {
@@ -118,6 +122,14 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
                   <div>
                     <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Description</label>
                     <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description" className="h-9 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Prompt Hint <span className="text-muted-foreground/40">(AI-facing)</span></label>
+                    <Textarea value={promptHint} onChange={e => setPromptHint(e.target.value)} placeholder="Detailed AI instructions…" className="min-h-[60px] text-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={promptOnly} onCheckedChange={setPromptOnly} />
+                    <span className="text-[10px] text-muted-foreground">Prompt Only (no image reference)</span>
                   </div>
                 </>
               )}

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
-import { ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2 } from 'lucide-react';
+import { Navigate, Link } from 'react-router-dom';
+import { ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -204,6 +204,12 @@ export default function AdminScenes() {
           {saveSortOrder.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Order
         </Button>
+        <Link to="/app/admin/scene-upload">
+          <Button variant="outline" className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Scene
+          </Button>
+        </Link>
       </div>
 
       {/* ── CATEGORY ORDER SECTION ── */}

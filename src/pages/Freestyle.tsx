@@ -506,7 +506,7 @@ export default function Freestyle() {
     if (sourceImage && imageRole === 'scene') {
       // Skip scene chip — uploaded scene image is the sole scene reference
       sceneImageUrl = undefined;
-    } else if (selectedScene && selectedScene.poseId !== 'scene_038') {
+    } else if (selectedScene && selectedScene.poseId !== 'scene_038' && !selectedScene.promptOnly) {
       sceneImageUrl = selectedScene.previewUrl;
     }
 
@@ -601,6 +601,7 @@ export default function Freestyle() {
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
       sceneId: selectedScene?.poseId || undefined,
+      promptOnly: selectedScene?.promptOnly || undefined,
       modelId: selectedModel?.modelId || undefined,
       productId: selectedProduct?.id || undefined,
       imageRole: sourceImage ? imageRole : undefined,

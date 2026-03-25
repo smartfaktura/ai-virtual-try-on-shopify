@@ -163,6 +163,7 @@ export interface TryOnPose {
   previewUrlMale?: string;
   optimizedImageUrl?: string;
   created_at?: string;
+  promptOnly?: boolean;
 }
 
 // Dashboard metrics
