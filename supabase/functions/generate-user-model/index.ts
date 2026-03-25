@@ -83,16 +83,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (!["growth", "pro", "enterprise"].includes(profile.plan)) {
+    if (!makePublic && !["growth", "pro", "enterprise"].includes(profile.plan)) {
       return new Response(JSON.stringify({ error: "This feature requires a Growth or Pro plan", code: "PLAN_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (profile.credits_balance < 20) {
+    if (!makePublic && profile.credits_balance < 20) {
       return new Response(JSON.stringify({ error: "Insufficient credits. You need 20 credits to generate a model.", code: "INSUFFICIENT_CREDITS" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const body = await req.json();
+    const makePublic = body.makePublic === true;
     const mode = body.mode || "generator";
+
+    // If makePublic, verify admin role and skip plan/credit checks
+    if (makePublic) {
+      const { data: adminCheck } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (!adminCheck) {
+        return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -212,15 +221,19 @@ Return ONLY the JSON object, no markdown or explanation.`,
       throw new Error("No image was generated");
     }
 
-    // Deduct credits
-    const { data: newBalance, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
-      p_user_id: user.id,
-      p_amount: 20,
-    });
+    // Deduct credits (skip for admin public models)
+    let newBalance = profile.credits_balance;
+    if (!makePublic) {
+      const { data: bal, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
+        p_user_id: user.id,
+        p_amount: 20,
+      });
 
-    if (deductError) {
-      console.error("Credit deduction failed:", deductError);
-      throw new Error("Failed to deduct credits");
+      if (deductError) {
+        console.error("Credit deduction failed:", deductError);
+        throw new Error("Failed to deduct credits");
+      }
+      newBalance = bal;
     }
 
     // Upload generated image to storage
@@ -243,29 +256,57 @@ Return ONLY the JSON object, no markdown or explanation.`,
 
     const finalImageUrl = publicUrlData.publicUrl;
 
-    // Insert into user_models
-    const { data: newModel, error: insertError } = await supabaseAdmin
-      .from("user_models")
-      .insert({
-        user_id: user.id,
-        name: metadata.name || "My Model",
-        gender: metadata.gender || "female",
-        body_type: metadata.body_type || "average",
-        ethnicity: metadata.ethnicity || "",
-        age_range: metadata.age_range || "adult",
-        image_url: finalImageUrl,
-        source_image_url: sourceImageUrl,
-        credits_used: 20,
-      })
-      .select()
-      .single();
+    // Insert into appropriate table
+    const modelName = body.name || metadata.name || "My Model";
+    let newModel: any;
 
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      throw new Error("Failed to save model");
+    if (makePublic) {
+      // Insert into custom_models (public, visible to all)
+      const { data, error: insertError } = await supabaseAdmin
+        .from("custom_models")
+        .insert({
+          created_by: user.id,
+          name: modelName,
+          gender: metadata.gender || "female",
+          body_type: metadata.body_type || "average",
+          ethnicity: metadata.ethnicity || "",
+          age_range: metadata.age_range || "adult",
+          image_url: finalImageUrl,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        throw new Error("Failed to save public model");
+      }
+      newModel = data;
+    } else {
+      // Insert into user_models (private)
+      const { data, error: insertError } = await supabaseAdmin
+        .from("user_models")
+        .insert({
+          user_id: user.id,
+          name: modelName,
+          gender: metadata.gender || "female",
+          body_type: metadata.body_type || "average",
+          ethnicity: metadata.ethnicity || "",
+          age_range: metadata.age_range || "adult",
+          image_url: finalImageUrl,
+          source_image_url: sourceImageUrl,
+          credits_used: 20,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        throw new Error("Failed to save model");
+      }
+      newModel = data;
     }
 
-    return new Response(JSON.stringify({ model: newModel, new_balance: newBalance }), {
+    return new Response(JSON.stringify({ model: newModel, new_balance: newBalance, target: makePublic ? 'public' : 'private' }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
