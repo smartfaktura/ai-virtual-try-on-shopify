@@ -154,6 +154,7 @@ serve(async (req) => {
         image_url, image_tail, prompt, duration = "5",
         model_name = "kling-v3", mode = "std", aspect_ratio = "16:9",
         negative_prompt, cfg_scale, camera_control,
+        project_id, workflow_type,
       } = body;
 
       if (!image_url) throw new Error("image_url is required");
@@ -208,6 +209,8 @@ serve(async (req) => {
       if (negative_prompt) dbRow.negative_prompt = negative_prompt;
       if (typeof cfg_scale === "number") dbRow.cfg_scale = cfg_scale;
       if (camera_control?.type) dbRow.camera_type = camera_control.type;
+      if (project_id) dbRow.project_id = project_id;
+      if (workflow_type) dbRow.workflow_type = workflow_type;
 
       const { error: dbError } = await serviceClient.from("generated_videos").insert(dbRow);
 
