@@ -310,6 +310,8 @@ export default function Generate() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tryOnSearchQuery, setTryOnSearchQuery] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
+  const PRODUCTS_PER_PAGE = 22;
+  const [visibleProductCount, setVisibleProductCount] = useState(PRODUCTS_PER_PAGE);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
   const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
@@ -2885,7 +2887,7 @@ export default function Generate() {
                                 isDisabled && 'opacity-40 cursor-not-allowed'
                               )}
                             >
-                              <img src={up.image_url} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
+                              <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
                                 {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
@@ -2941,7 +2943,7 @@ export default function Generate() {
                                 {isSelected && <Check className="w-3 h-3" />}
                               </div>
                             )}
-                            <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
                             <div className="px-1.5 py-1.5 bg-card">
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
                               {up.product_type && (
@@ -3055,7 +3057,7 @@ export default function Generate() {
                                 isDisabled && 'opacity-40 cursor-not-allowed'
                               )}
                             >
-                              <img src={up.image_url} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
+                              <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
                                 {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
@@ -3103,7 +3105,7 @@ export default function Generate() {
                             )}>
                               {isSelected && <Check className="w-3 h-3" />}
                             </div>
-                            <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
                             <div className="px-1.5 py-1.5 bg-card">
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
                               {up.product_type && (
@@ -3962,7 +3964,7 @@ export default function Generate() {
                   <div className="flex -space-x-3 mb-2">
                     {flatLayProducts.map((p) => (
                       <div key={p.id} className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-primary/20 border-2 border-background animate-pulse-subtle">
-                        <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                        <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
@@ -4132,7 +4134,7 @@ export default function Generate() {
                     userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
                       <div key={up.id} className="flex-shrink-0 text-center">
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-                          <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
+                          <ShimmerImage src={getOptimizedUrl(up.image_url || '/placeholder.svg', { quality: 60 })} alt={up.title} className="w-full h-full object-cover" />
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
                         <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{up.title}</p>
