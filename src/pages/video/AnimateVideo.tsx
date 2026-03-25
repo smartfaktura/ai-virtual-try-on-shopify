@@ -1,58 +1,99 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, X, Loader2, Sparkles, Brain, Wand2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { StylePresetSelector } from '@/components/app/video/StylePresetSelector';
-import { MotionPresetSelector } from '@/components/app/video/MotionPresetSelector';
+import { ProductContextSelector } from '@/components/app/video/ProductContextSelector';
+import { MotionGoalSelector } from '@/components/app/video/MotionGoalSelector';
+import { MotionRefinementPanel } from '@/components/app/video/MotionRefinementPanel';
+import { PreservationRulesPanel } from '@/components/app/video/PreservationRulesPanel';
 import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { toast } from 'sonner';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
 type Duration = '5' | '10';
-type MotionIntensity = 'low' | 'medium' | 'high';
 type AudioMode = 'silent' | 'ambient';
 
 export default function AnimateVideo() {
   const {
-    pipelineStage,
-    videoUrl,
-    videoError,
-    elapsedSeconds,
-    videoStatus,
-    isAnalyzing,
-    isBuildingPrompt,
-    isGenerating,
-    isComplete,
-    runAnimatePipeline,
-    resetPipeline,
+    pipelineStage, videoUrl, videoError, elapsedSeconds, videoStatus,
+    isAnalyzing, isBuildingPrompt, isGenerating, isComplete,
+    analysisResult, isAnalyzingImage, analyzeImage,
+    runAnimatePipeline, resetPipeline,
   } = useVideoProject();
 
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
 
-  // Form state
+  // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [stylePreset, setStylePreset] = useState('product_motion');
-  const [motionRecipe, setMotionRecipe] = useState('slow_push_in');
+  const [warnings, setWarnings] = useState<ValidationWarning[]>([]);
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
+
+  // Product Context
+  const [category, setCategory] = useState('fashion_apparel');
+  const [sceneType, setSceneType] = useState('studio_product');
+  const [detectedCategory, setDetectedCategory] = useState<string | null>(null);
+  const [detectedSceneType, setDetectedSceneType] = useState<string | null>(null);
+
+  // Motion Goal
+  const [motionGoalId, setMotionGoalId] = useState('');
+  const [recommendedGoalIds, setRecommendedGoalIds] = useState<string[]>([]);
+
+  // Refinements
+  const [cameraMotion, setCameraMotion] = useState('slow_push_in');
+  const [subjectMotion, setSubjectMotion] = useState('minimal');
+  const [realismLevel, setRealismLevel] = useState('realistic');
+  const [loopStyle, setLoopStyle] = useState('none');
+  const [motionIntensity, setMotionIntensity] = useState<'low' | 'medium' | 'high'>('low');
+
+  // Preservation
+  const [preserveScene, setPreserveScene] = useState(true);
+  const [preserveProductDetails, setPreserveProductDetails] = useState(true);
+  const [preserveIdentity, setPreserveIdentity] = useState(false);
+  const [preserveOutfit, setPreserveOutfit] = useState(false);
+
+  // Settings
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [duration, setDuration] = useState<Duration>('5');
   const [audioMode, setAudioMode] = useState<AudioMode>('silent');
-  const [motionIntensity, setMotionIntensity] = useState<MotionIntensity>('low');
-  const [preserveScene, setPreserveScene] = useState(true);
   const [userPrompt, setUserPrompt] = useState('');
-  const [warnings, setWarnings] = useState<ValidationWarning[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // When category changes, update motion goals and preservation defaults
+  useEffect(() => {
+    const goals = getMotionGoalsForCategory(category);
+    if (goals.length > 0 && !goals.find(g => g.id === motionGoalId)) {
+      setMotionGoalId(goals[0].id);
+    }
+    const pres = getDefaultPreservation(category);
+    setPreserveScene(pres.preserveScene);
+    setPreserveProductDetails(pres.preserveProductDetails);
+    setPreserveIdentity(pres.preserveIdentity);
+    setPreserveOutfit(pres.preserveOutfit);
+  }, [category]);
+
+  // When motion goal changes, apply its defaults
+  useEffect(() => {
+    const goals = getMotionGoalsForCategory(category);
+    const goal = goals.find(g => g.id === motionGoalId);
+    if (goal) {
+      setCameraMotion(goal.defaultCameraMotion);
+      setSubjectMotion(goal.subjectMotion);
+      setMotionIntensity(goal.defaultIntensity);
+    }
+  }, [motionGoalId, category]);
+
+  // Auto-analyze after upload
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -63,8 +104,8 @@ export default function AnimateVideo() {
       setWarnings(newWarnings);
       return;
     }
-    if (file.type === 'image/png' && file.name.toLowerCase().endsWith('.png')) {
-      newWarnings.push({ type: 'info', message: 'Transparent PNGs may produce edge artifacts in video. Consider using JPG.' });
+    if (file.type === 'image/png') {
+      newWarnings.push({ type: 'info', message: 'Transparent PNGs may produce edge artifacts. Consider JPG.' });
     }
 
     const reader = new FileReader();
@@ -75,44 +116,65 @@ export default function AnimateVideo() {
     if (url) {
       setImageUrl(url);
       setWarnings(newWarnings);
+      setHasAnalyzed(false);
+      // Auto-analyze
+      const analysis = await analyzeImage(url);
+      if (analysis) {
+        setHasAnalyzed(true);
+        // Apply AI suggestions
+        if (analysis.category) {
+          setCategory(analysis.category);
+          setDetectedCategory(analysis.category);
+        }
+        if (analysis.ecommerce_scene_type) {
+          setSceneType(analysis.ecommerce_scene_type);
+          setDetectedSceneType(analysis.ecommerce_scene_type);
+        }
+        if (analysis.recommended_motion_goals?.length) {
+          setRecommendedGoalIds(analysis.recommended_motion_goals);
+          setMotionGoalId(analysis.recommended_motion_goals[0]);
+        }
+        if (analysis.recommended_camera_motion) setCameraMotion(analysis.recommended_camera_motion);
+        if (analysis.recommended_subject_motion) setSubjectMotion(analysis.recommended_subject_motion);
+        if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
+        if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
+        // Preservation from risk flags
+        if (analysis.risk_flags?.identity_sensitive || analysis.identity_sensitive) {
+          setPreserveIdentity(true);
+          setPreserveOutfit(true);
+        }
+      }
     }
-  }, [upload]);
+  }, [upload, analyzeImage]);
 
   const removeImage = () => {
     setImageUrl(null);
     setImagePreview(null);
     setWarnings([]);
+    setHasAnalyzed(false);
+    setDetectedCategory(null);
+    setDetectedSceneType(null);
+    setRecommendedGoalIds([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleGenerate = () => {
-    if (!imageUrl) {
-      toast.error('Please upload an image first');
-      return;
-    }
+    if (!imageUrl) { toast.error('Please upload an image first'); return; }
 
     runAnimatePipeline({
       imageUrl,
-      stylePreset,
-      motionRecipe,
-      motionIntensity,
-      preserveScene,
-      aspectRatio,
-      duration,
-      audioMode,
+      category, sceneType, motionGoalId,
+      cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
+      preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+      aspectRatio, duration, audioMode,
       userPrompt: userPrompt || undefined,
     });
   };
 
-  const handleReuse = () => {
-    resetPipeline();
-  };
-
+  const handleReuse = () => resetPipeline();
   const handleNewProject = () => {
     resetPipeline();
     removeImage();
-    setStylePreset('product_motion');
-    setMotionRecipe('slow_push_in');
     setUserPrompt('');
   };
 
@@ -124,23 +186,16 @@ export default function AnimateVideo() {
     { value: '16:9', label: '16:9' },
   ];
 
-  const INTENSITIES: { value: MotionIntensity; label: string }[] = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-  ];
-
-  // Pipeline stage messages
   const getStageMessage = () => {
-    if (isAnalyzing) return { icon: Brain, text: 'Analyzing your image...', sub: 'Understanding composition, lighting, and subject' };
-    if (isBuildingPrompt) return { icon: Wand2, text: 'Building optimized prompt...', sub: 'Applying style and motion settings' };
+    if (isAnalyzing) return { icon: Brain, text: 'Analyzing your image...', sub: 'Understanding composition and product context' };
+    if (isBuildingPrompt) return { icon: Wand2, text: 'Building motion plan...', sub: 'Applying category-aware motion strategy' };
     if (videoStatus === 'creating') return { icon: Sparkles, text: 'Starting generation...', sub: 'Sending to video engine' };
-    return { icon: Loader2, text: 'Generating your video...', sub: `This typically takes 1-3 minutes • ${elapsedSeconds}s elapsed` };
+    return { icon: Loader2, text: 'Generating your video...', sub: `Typically 1-3 minutes • ${elapsedSeconds}s elapsed` };
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <PageHeader title="Animate Image" subtitle="Turn one still image into a polished short video.">
+      <PageHeader title="Animate Image" subtitle="Turn a still product image into a polished commercial video.">
         <div />
       </PageHeader>
 
@@ -183,7 +238,7 @@ export default function AnimateVideo() {
 
       {/* Main form */}
       {!isPipelineActive && !isComplete && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Upload */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Upload Image</label>
@@ -221,77 +276,123 @@ export default function AnimateVideo() {
 
           <ValidationWarnings warnings={warnings} />
 
-          <StylePresetSelector value={stylePreset} onChange={setStylePreset} />
-          <MotionPresetSelector value={motionRecipe} onChange={setMotionRecipe} />
-
-          {/* Settings */}
-          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-            <h3 className="text-sm font-medium text-foreground">Settings</h3>
-
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Aspect Ratio</label>
-              <div className="flex gap-2">
-                {ASPECT_RATIOS.map((ar) => (
-                  <button key={ar.value} onClick={() => setAspectRatio(ar.value)}
-                    className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
-                      aspectRatio === ar.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
-                    )}>
-                    {ar.label}
-                  </button>
-                ))}
+          {/* Analyzing indicator */}
+          {isAnalyzingImage && (
+            <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+              <Brain className="h-5 w-5 animate-pulse text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Analyzing your image...</p>
+                <p className="text-xs text-muted-foreground">Detecting product category and scene type</p>
               </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Duration</label>
-              <div className="flex gap-2">
-                {(['5', '10'] as Duration[]).map((d) => (
-                  <button key={d} onClick={() => setDuration(d)}
-                    className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
-                      duration === d ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
-                    )}>
-                    {d} seconds
-                  </button>
-                ))}
+          {/* Show form sections after upload (even before analysis completes) */}
+          {imageUrl && !isAnalyzingImage && (
+            <>
+              {/* Product Context */}
+              <ProductContextSelector
+                category={category}
+                sceneType={sceneType}
+                onCategoryChange={setCategory}
+                onSceneTypeChange={setSceneType}
+                detectedCategory={detectedCategory}
+                detectedSceneType={detectedSceneType}
+              />
+
+              {/* Motion Goals */}
+              <MotionGoalSelector
+                category={category}
+                selectedGoalId={motionGoalId}
+                onChange={setMotionGoalId}
+                recommendedGoalIds={recommendedGoalIds}
+              />
+
+              {/* Motion Refinement (collapsed) */}
+              <MotionRefinementPanel
+                cameraMotion={cameraMotion}
+                subjectMotion={subjectMotion}
+                realismLevel={realismLevel}
+                loopStyle={loopStyle}
+                motionIntensity={motionIntensity}
+                onCameraMotionChange={setCameraMotion}
+                onSubjectMotionChange={setSubjectMotion}
+                onRealismLevelChange={setRealismLevel}
+                onLoopStyleChange={setLoopStyle}
+                onMotionIntensityChange={setMotionIntensity}
+              />
+
+              {/* Preservation */}
+              <PreservationRulesPanel
+                preserveScene={preserveScene}
+                preserveProductDetails={preserveProductDetails}
+                preserveIdentity={preserveIdentity}
+                preserveOutfit={preserveOutfit}
+                onPreserveSceneChange={setPreserveScene}
+                onPreserveProductDetailsChange={setPreserveProductDetails}
+                onPreserveIdentityChange={setPreserveIdentity}
+                onPreserveOutfitChange={setPreserveOutfit}
+              />
+
+              {/* Settings */}
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+                <h3 className="text-sm font-medium text-foreground">Settings</h3>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Aspect Ratio</label>
+                  <div className="flex gap-2">
+                    {ASPECT_RATIOS.map((ar) => (
+                      <button key={ar.value} onClick={() => setAspectRatio(ar.value)}
+                        className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
+                          aspectRatio === ar.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
+                        )}>
+                        {ar.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Duration</label>
+                  <div className="flex gap-2">
+                    {(['5', '10'] as Duration[]).map((d) => (
+                      <button key={d} onClick={() => setDuration(d)}
+                        className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
+                          duration === d ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
+                        )}>
+                        {d} seconds
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <AudioModeSelector value={audioMode} onChange={(v) => setAudioMode(v as AudioMode)} />
               </div>
-            </div>
 
-            <AudioModeSelector value={audioMode} onChange={(v) => setAudioMode(v as AudioMode)} />
-
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Motion Intensity</label>
-              <div className="flex gap-2">
-                {INTENSITIES.map((i) => (
-                  <button key={i.value} onClick={() => setMotionIntensity(i.value)}
-                    className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
-                      motionIntensity === i.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
-                    )}>
-                    {i.label}
-                  </button>
-                ))}
+              {/* Specific Motion Note */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Specific Motion Note <span className="text-muted-foreground font-normal">(optional)</span>
+                </label>
+                <Textarea
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  placeholder="Example: one realistic basketball dribble, controlled body movement, background stays static"
+                  className="min-h-[80px] resize-none"
+                  maxLength={500}
+                />
               </div>
-            </div>
 
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Preserve scene composition</label>
-              <Switch checked={preserveScene} onCheckedChange={setPreserveScene} />
-            </div>
-          </div>
-
-          {/* Prompt */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Additional Direction <span className="text-muted-foreground font-normal">(optional)</span></label>
-            <Textarea value={userPrompt} onChange={(e) => setUserPrompt(e.target.value)} placeholder="Add any specific direction for the video..." className="min-h-[80px] resize-none" maxLength={500} />
-          </div>
-
-          {/* Generate */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe }} />
-            <Button onClick={handleGenerate} disabled={!imageUrl || isUploading} className="gap-2" size="lg">
-              <Sparkles className="h-4 w-4" />
-              Generate Video
-            </Button>
-          </div>
+              {/* Generate */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
+                <Button onClick={handleGenerate} disabled={!imageUrl || isUploading} className="gap-2" size="lg">
+                  <Sparkles className="h-4 w-4" />
+                  Generate Video
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -1,8 +1,8 @@
 /**
- * Video Prompt Builder
+ * Video Prompt Builder — Category-Aware Ecommerce Prompt Composition
  * 
- * Template-driven prompt composition from analysis + strategy + user selections.
- * Never generates creative concepts — maps structured data to Kling-ready prompts.
+ * Builds action-rich prompts from category, motion goal, camera, subject motion,
+ * realism, loop style, and preservation rules. No more generic camera-only prompts.
  */
 
 import type { VideoAnalysis, VideoStrategy } from './videoStrategyResolver';
@@ -21,140 +21,155 @@ interface BuiltPrompt {
   negative_prompt: string;
   cfg_scale: number;
   prompt_template_name: string;
+  result_label: string;
 }
 
-const MOTION_RECIPE_PHRASES: Record<string, string> = {
+// ─── Phrase Maps ───
+
+const CAMERA_PHRASES: Record<string, string> = {
+  static: 'static camera, no camera movement',
   slow_push_in: 'slow smooth push-in camera movement',
-  camera_drift: 'gentle subtle camera drift with natural movement',
-  product_orbit: 'smooth orbiting camera movement around the subject',
   gentle_pan: 'gentle horizontal panning movement',
-  premium_handheld: 'premium cinematic handheld camera movement with slight natural shake',
-  minimal: 'very minimal subtle movement, almost still',
+  camera_drift: 'subtle natural camera drift',
+  premium_handheld: 'premium cinematic handheld with slight natural shake',
+  orbit: 'smooth orbiting camera movement around the subject',
 };
 
-const INTENSITY_MODIFIERS: Record<string, string> = {
-  low: 'with subtle restrained motion',
-  medium: 'with moderate natural motion',
-  high: 'with dynamic expressive motion',
+const SUBJECT_PHRASES: Record<string, string> = {
+  minimal: 'very minimal subtle movement',
+  natural_pose_shift: 'natural subtle body pose shift',
+  action_motion: 'controlled realistic action motion',
+  hand_object_interaction: 'natural hand and object interaction movement',
+  hair_fabric: 'soft realistic hair and fabric movement',
+  auto: 'natural movement appropriate to the scene',
 };
 
-const TEMPLATE_FAMILIES: Record<string, (input: PromptBuildInput) => BuiltPrompt> = {
-  product_hero: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'slow_push_in'] || MOTION_RECIPE_PHRASES.slow_push_in;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'low'];
-    const scene = input.analysis.scene_type === 'studio' ? 'clean studio environment' : input.analysis.scene_type;
-    const lighting = input.analysis.lighting_style || 'soft premium lighting';
-
-    let prompt = `${motion} ${intensity}. ${scene} with ${lighting}.`;
-    if (input.preserveScene !== false) {
-      prompt += ' Preserve the original scene composition and colors exactly.';
-    }
-    if (input.userPrompt) {
-      prompt = `${input.userPrompt}. ${prompt}`;
-    }
-
-    return {
-      prompt,
-      negative_prompt: 'blurry, distorted, morphing, flickering, sudden jumps, text artifacts, watermark',
-      cfg_scale: 0.6,
-      prompt_template_name: 'product_hero',
-    };
-  },
-
-  lifestyle_motion: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'camera_drift'] || MOTION_RECIPE_PHRASES.camera_drift;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'medium'];
-    const mood = input.analysis.mood || 'natural';
-
-    let prompt = `${motion} ${intensity}. ${mood} lifestyle atmosphere with natural motion.`;
-    if (input.userPrompt) prompt = `${input.userPrompt}. ${prompt}`;
-
-    return {
-      prompt,
-      negative_prompt: 'blurry, distorted, morphing, flickering, unnatural motion, text artifacts',
-      cfg_scale: 0.5,
-      prompt_template_name: 'lifestyle_motion',
-    };
-  },
-
-  editorial_motion: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'gentle_pan'] || MOTION_RECIPE_PHRASES.gentle_pan;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'low'];
-
-    let prompt = `${motion} ${intensity}. Editorial fashion photography style with precise controlled motion.`;
-    if (input.userPrompt) prompt = `${input.userPrompt}. ${prompt}`;
-
-    return {
-      prompt,
-      negative_prompt: 'blurry, distorted, morphing, flickering, casual feel, amateur quality',
-      cfg_scale: 0.65,
-      prompt_template_name: 'editorial_motion',
-    };
-  },
-
-  beauty_motion: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'slow_push_in'] || MOTION_RECIPE_PHRASES.slow_push_in;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'low'];
-
-    let prompt = `${motion} ${intensity}. Beauty close-up with soft flattering light, skin texture preserved.`;
-    if (input.userPrompt) prompt = `${input.userPrompt}. ${prompt}`;
-
-    return {
-      prompt,
-      negative_prompt: 'blurry, distorted, skin artifacts, morphing, flickering, harsh shadows',
-      cfg_scale: 0.7,
-      prompt_template_name: 'beauty_motion',
-    };
-  },
-
-  cinematic_motion: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'premium_handheld'] || MOTION_RECIPE_PHRASES.premium_handheld;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'medium'];
-
-    let prompt = `${motion} ${intensity}. Cinematic film quality, dramatic depth of field, rich color grading.`;
-    if (input.userPrompt) prompt = `${input.userPrompt}. ${prompt}`;
-
-    return {
-      prompt,
-      negative_prompt: 'blurry, distorted, morphing, flat lighting, amateur quality, text overlays',
-      cfg_scale: 0.5,
-      prompt_template_name: 'cinematic_motion',
-    };
-  },
-
-  ad_scene: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'slow_push_in'] || MOTION_RECIPE_PHRASES.slow_push_in;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'medium'];
-
-    let prompt = `${motion} ${intensity}. Professional advertising quality with polished production value.`;
-    if (input.userPrompt) prompt = `${input.userPrompt}. ${prompt}`;
-
-    return {
-      prompt,
-      negative_prompt: 'blurry, distorted, morphing, flickering, amateur, low quality',
-      cfg_scale: 0.55,
-      prompt_template_name: 'ad_scene',
-    };
-  },
-
-  consistent_model: (input) => {
-    const motion = MOTION_RECIPE_PHRASES[input.motionRecipe || 'gentle_pan'] || MOTION_RECIPE_PHRASES.gentle_pan;
-    const intensity = INTENSITY_MODIFIERS[input.motionIntensity || 'low'];
-
-    let prompt = `${motion} ${intensity}. Maintain consistent subject identity and appearance throughout.`;
-    if (input.userPrompt) prompt = `${input.userPrompt}. ${prompt}`;
-
-    return {
-      prompt,
-      negative_prompt: 'identity change, face morphing, blurry, distorted, flickering, different person',
-      cfg_scale: 0.7,
-      prompt_template_name: 'consistent_model',
-    };
-  },
+const REALISM_PHRASES: Record<string, string> = {
+  ultra_realistic: 'ultra photorealistic',
+  realistic: 'realistic',
+  slightly_stylized: 'slightly stylized cinematic',
 };
+
+const LOOP_PHRASES: Record<string, string> = {
+  none: '',
+  short_repeatable: 'suitable for a short repeatable loop',
+  seamless_loop: 'with seamless looping motion',
+  one_natural: 'as one natural continuous movement',
+};
+
+const INTENSITY_PHRASES: Record<string, string> = {
+  low: 'subtle restrained',
+  medium: 'moderate natural',
+  high: 'dynamic expressive',
+};
+
+// ─── Preservation Builder ───
+
+function buildPreservationClause(strategy: VideoStrategy): string {
+  const parts: string[] = [];
+  if (strategy.preserve_scene) parts.push('scene composition and background');
+  if (strategy.preserve_product_details) parts.push('product details and shape');
+  if (strategy.preserve_identity) parts.push('subject identity and face');
+  if (strategy.preserve_outfit) parts.push('outfit and styling');
+  if (parts.length === 0) return '';
+  return `Preserve: ${parts.join(', ')}.`;
+}
+
+// ─── Category-Specific Negative Prompts ───
+
+const CATEGORY_NEGATIVES: Record<string, string> = {
+  fashion_apparel_motion: 'blurry, distorted, morphing face, flickering, garment deformation, text artifacts, watermark, unnatural body proportions',
+  beauty_skincare_reveal: 'blurry, distorted, skin artifacts, morphing, flickering, harsh shadows, label warping, watermark',
+  fragrance_premium_reveal: 'blurry, distorted, morphing, flickering, bottle deformation, label warping, cap distortion, watermark',
+  jewelry_macro_motion: 'blurry, distorted, morphing, flickering, gem distortion, metal warping, loss of detail, watermark',
+  accessories_showcase: 'blurry, distorted, morphing, flickering, material warping, hardware distortion, watermark',
+  home_decor_ambient: 'blurry, distorted, morphing, flickering, furniture warping, object shifting, watermark',
+  food_beverage_motion: 'blurry, distorted, morphing, flickering, food deformation, plate warping, unappetizing, watermark',
+  electronics_clean_reveal: 'blurry, distorted, morphing, flickering, screen warping, button distortion, port deformation, watermark',
+  sports_fitness_action: 'blurry, distorted, morphing face, flickering, unnatural body motion, identity change, watermark',
+  health_supplements_reveal: 'blurry, distorted, morphing, flickering, label warping, package deformation, watermark',
+};
+
+// ─── Category-Specific Context Phrases ───
+
+const CATEGORY_CONTEXT: Record<string, string> = {
+  fashion_apparel_motion: 'fashion campaign video',
+  beauty_skincare_reveal: 'beauty product video',
+  fragrance_premium_reveal: 'luxury fragrance video',
+  jewelry_macro_motion: 'luxury jewelry video',
+  accessories_showcase: 'premium accessories video',
+  home_decor_ambient: 'home decor atmosphere video',
+  food_beverage_motion: 'food and beverage video',
+  electronics_clean_reveal: 'tech product video',
+  sports_fitness_action: 'sports and fitness video',
+  health_supplements_reveal: 'health and wellness product video',
+};
+
+// ─── CFG Scale by category ───
+
+const CATEGORY_CFG: Record<string, number> = {
+  fashion_apparel_motion: 0.6,
+  beauty_skincare_reveal: 0.65,
+  fragrance_premium_reveal: 0.65,
+  jewelry_macro_motion: 0.7,
+  accessories_showcase: 0.6,
+  home_decor_ambient: 0.5,
+  food_beverage_motion: 0.55,
+  electronics_clean_reveal: 0.65,
+  sports_fitness_action: 0.5,
+  health_supplements_reveal: 0.6,
+};
+
+// ─── Main Builder ───
 
 export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
-  const family = input.strategy.prompt_template_family;
-  const builder = TEMPLATE_FAMILIES[family] || TEMPLATE_FAMILIES.product_hero;
-  return builder(input);
+  const { analysis, strategy, userPrompt } = input;
+  const family = strategy.prompt_template_family;
+
+  const realism = REALISM_PHRASES[strategy.realism_level] || 'realistic';
+  const intensity = INTENSITY_PHRASES[strategy.motion_intensity_default] || 'moderate natural';
+  const camera = CAMERA_PHRASES[strategy.camera_motion] || CAMERA_PHRASES.slow_push_in;
+  const subject = SUBJECT_PHRASES[strategy.subject_motion] || SUBJECT_PHRASES.minimal;
+  const loop = LOOP_PHRASES[strategy.loop_style] || '';
+  const context = CATEGORY_CONTEXT[family] || 'commercial product video';
+  const preservation = buildPreservationClause(strategy);
+
+  // Build the structured prompt
+  const parts: string[] = [];
+
+  // User's specific note first
+  if (userPrompt) parts.push(userPrompt.trim());
+
+  // Core instruction
+  parts.push(`Create a ${realism} ${context}${loop ? ` ${loop}` : ''}.`);
+
+  // Subject motion
+  parts.push(`Subject: ${subject} with ${intensity} motion.`);
+
+  // Interactive object from analysis
+  if (analysis.interactive_object) {
+    parts.push(`Interactive element: realistic ${analysis.interactive_object} motion.`);
+  }
+
+  // Camera
+  parts.push(`Camera: ${camera}.`);
+
+  // Preservation
+  if (preservation) parts.push(preservation);
+
+  // Scene context from analysis
+  const lighting = analysis.lighting_style || 'natural lighting';
+  parts.push(`Maintain ${lighting} quality throughout.`);
+
+  const prompt = parts.join(' ');
+  const negative_prompt = CATEGORY_NEGATIVES[family] || 'blurry, distorted, morphing, flickering, watermark';
+  const cfg_scale = CATEGORY_CFG[family] || 0.6;
+
+  return {
+    prompt,
+    negative_prompt,
+    cfg_scale,
+    prompt_template_name: family,
+    result_label: strategy.result_label || family,
+  };
 }
