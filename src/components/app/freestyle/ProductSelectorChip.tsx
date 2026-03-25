@@ -124,7 +124,7 @@ export function ProductSelectorChip({
                 >
                   <div className="relative w-full aspect-square rounded-xl border-2 border-border overflow-hidden group-hover:border-primary transition-colors bg-muted">
                     <Badge variant="secondary" className="absolute top-1 left-1 z-10 text-[9px] px-1.5 py-0 h-4 bg-muted-foreground/10 text-muted-foreground border-0">Draft</Badge>
-                    <ShimmerImage src={sample.image_url} alt={sample.title} className="w-full h-full object-cover" />
+                    <ShimmerImage src={sample.image_url} alt={sample.title} className="w-full h-full object-contain bg-muted/30" />
                   </div>
                   <p className="text-[10px] font-medium text-foreground mt-1.5 text-center line-clamp-1">{sample.title}</p>
                 </button>
@@ -175,7 +175,7 @@ export function ProductSelectorChip({
                 <ShimmerImage
                   src={getOptimizedUrl(product.image_url, { width: 200, quality: 60 })}
                   alt={product.title}
-                  className="w-full aspect-square object-cover rounded-t-md"
+                  className="w-full aspect-square object-contain rounded-t-md bg-muted/30"
                 />
                 <div className="px-1.5 py-1.5 bg-background">
                   <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">
