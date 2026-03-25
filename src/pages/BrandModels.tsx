@@ -184,6 +184,12 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
   const [hairStyle, setHairStyle] = useState('');
   const [hairColor, setHairColor] = useState('');
   const [skinTone, setSkinTone] = useState('');
+
+  // Reset hair style when gender changes
+  useEffect(() => {
+    setHairStyle('');
+    setFacialHair('None');
+  }, [gender]);
   const [faceShape, setFaceShape] = useState('');
   const [expression, setExpression] = useState('Confident');
   const [facialHair, setFacialHair] = useState('None');
@@ -321,7 +327,10 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
             <Select value={hairStyle} onValueChange={setHairStyle}>
               <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
               <SelectContent>
-                {['Short straight', 'Short curly', 'Medium wavy', 'Long straight', 'Long curly', 'Buzz cut', 'Bald', 'Braids', 'Ponytail', 'Bob'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                {(gender === 'Male'
+                  ? ['Short straight', 'Short curly', 'Buzz cut', 'Crew cut', 'Fade', 'Slicked back', 'Medium wavy', 'Bald', 'Afro', 'Man bun']
+                  : ['Long straight', 'Long curly', 'Medium wavy', 'Short straight', 'Short curly', 'Bob', 'Braids', 'Ponytail', 'Bun', 'Pixie cut']
+                ).map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

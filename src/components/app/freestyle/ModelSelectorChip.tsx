@@ -204,12 +204,14 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
                 : 'border-transparent hover:border-border'
             )}
           >
-            <img src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full aspect-square object-cover rounded-t-md" />
+            <div className="relative">
+              <img src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full aspect-square object-cover rounded-t-md" />
+              {userModelIds.has(model.modelId) && (
+                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[7px] font-bold text-white uppercase tracking-wider">Brand</span>
+              )}
+            </div>
             <div className="px-1.5 py-1 bg-background text-center">
               <p className="text-[10px] font-medium text-foreground truncate">{model.name}</p>
-              {userModelIds.has(model.modelId) && (
-                <p className="text-[8px] font-semibold text-primary uppercase tracking-wider">Brand Model</p>
-              )}
             </div>
             {/* Delete button for user models */}
             {userModelIds.has(model.modelId) && (
