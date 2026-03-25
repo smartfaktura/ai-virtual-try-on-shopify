@@ -749,6 +749,12 @@ serve(async (req) => {
       console.log(`[FREESTYLE] White Studio (scene_038) — prompt-only mode, scene image cleared`);
     }
 
+    // Custom prompt-only scenes: clear scene image, rely on prompt hint only
+    if (body.promptOnly) {
+      body.sceneImage = undefined;
+      console.log(`[FREESTYLE] Prompt-only custom scene (${body.sceneId}) — scene image cleared`);
+    }
+
     if (body.stylePresets?.length) {
       if (body.cameraStyle === 'natural') {
         const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];

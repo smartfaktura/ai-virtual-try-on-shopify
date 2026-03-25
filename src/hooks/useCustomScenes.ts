@@ -14,6 +14,8 @@ export interface CustomScene {
   created_by: string;
   is_active: boolean;
   created_at: string;
+  prompt_hint: string;
+  prompt_only: boolean;
 }
 
 function buildOptimizedUrl(url: string): string | null {
@@ -35,6 +37,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     previewUrl: scene.image_url,
     optimizedImageUrl: scene.optimized_image_url || undefined,
     created_at: scene.created_at,
+    promptOnly: scene.prompt_only || false,
   };
 }
 
@@ -66,11 +69,11 @@ export function useAddCustomScene() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (scene: { name: string; description: string; category: string; image_url: string }) => {
+    mutationFn: async (scene: { name: string; description: string; category: string; image_url: string; prompt_hint?: string; prompt_only?: boolean }) => {
       const optimized = buildOptimizedUrl(scene.image_url);
       const { data, error } = await supabase
         .from('custom_scenes' as any)
-        .insert({ ...scene, created_by: user!.id, optimized_image_url: optimized })
+        .insert({ ...scene, created_by: user!.id, optimized_image_url: optimized, prompt_hint: scene.prompt_hint || '', prompt_only: scene.prompt_only || false })
         .select()
         .single();
       if (error) throw error;
