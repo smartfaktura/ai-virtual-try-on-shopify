@@ -1,82 +1,68 @@
 
 
-# User-Generated Models (Growth & Pro Only, 20 Credits)
+# Brand Models Page — `/app/models`
 
 ## Overview
-Allow paid users (Growth/Pro plans) to generate a custom AI model from a reference photo. The system uses AI image generation to create a polished model reference image, then saves it as a personal model visible only to that user. Cost: 20 credits per generation.
+A new dedicated "Models" page in the sidebar (after Library), serving as the brand's model management hub. It combines two creation flows — **reference-based** (upload a photo) and **generator-based** (a quiz/form to describe the model from scratch) — plus displays the user's existing generated models. Plan-gated: free/starter users see an upgrade prompt with benefits.
 
-## Architecture Decision
-Current `custom_models` table is admin-only (shared across all users). User-generated models need a **new `user_models` table** scoped to individual users via `user_id`, with standard RLS (users see only their own models).
+## Sidebar & Routing
+- Add `{ label: 'Models', icon: Users, path: '/app/models' }` to `navItems` in `AppShell.tsx` (after Library)
+- Add route `/models` in `App.tsx` pointing to new `BrandModels` page
+- Lazy-load the page
 
-## Database
+## Page Structure: `src/pages/BrandModels.tsx`
 
-### New table: `user_models`
-```sql
-CREATE TABLE public.user_models (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  gender text NOT NULL DEFAULT 'female',
-  body_type text NOT NULL DEFAULT 'average',
-  ethnicity text NOT NULL DEFAULT '',
-  age_range text NOT NULL DEFAULT 'adult',
-  image_url text NOT NULL,          -- final generated image
-  source_image_url text NOT NULL,   -- user's original reference
-  credits_used integer NOT NULL DEFAULT 20,
-  created_at timestamptz DEFAULT now(),
-  is_active boolean NOT NULL DEFAULT true
-);
-ALTER TABLE public.user_models ENABLE ROW LEVEL SECURITY;
--- Users CRUD their own models
-CREATE POLICY "Users can manage own models" ON public.user_models FOR ALL
-  TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-```
+### Plan Gate
+- Fetch user profile plan. If `free` or `starter`, show a hero section with benefits of brand models (consistency, any ethnicity/age/gender, kids models, custom looks) and an "Upgrade" CTA. No creation UI shown.
 
-## New Edge Function: `generate-user-model`
-1. Validates JWT, checks plan is `growth` or `pro`
-2. Deducts 20 credits via `deduct_credits` RPC
-3. Calls `create-model-from-image` logic (AI analysis) to extract metadata (name, gender, etc.)
-4. Calls AI image generation (Gemini image model) with a prompt like: *"Professional fashion model portrait based on this reference, clean studio background, high quality"*
-5. Uploads generated image to `scratch-uploads` bucket
-6. Inserts row into `user_models`
-7. Returns the new model data
+### For Growth/Pro Users — Two Creation Tabs
 
-## Frontend Changes
+**Tab 1: From Reference Image** (existing flow, refined)
+- Upload a reference photo
+- AI analyzes and generates a studio portrait matching our standard format (light grey background, sharp, realistic)
+- Uses existing `generate-user-model` edge function (will enhance the prompt)
+- Cost: 20 credits
 
-### New hook: `src/hooks/useUserModels.ts`
-- `useUserModels()` — fetch user's own models, convert to `ModelProfile[]`
-- `useGenerateUserModel()` — mutation calling the edge function
-- `useDeleteUserModel()` — delete own model
+**Tab 2: Model Generator** (new — inspired by the screenshot reference)
+- A structured form/quiz with collapsible sections:
+  - **Essentials**: Gender (Female/Male/Other chips), Age (slider 18-70), Ethnicity (Caucasian/Asian/African/Hispanic/Middle Eastern chips)
+  - **Details**: Morphology (slim/athletic/average/plus-size), Eye Color, Hair Style, Hair Color, Distinctive Trait (all via selects)
+  - **Visual Reference** (optional): Upload a mood/style reference
+- "Generate" button builds a detailed prompt from selections and calls the same edge function but with `mode: 'generator'` and a `description` payload instead of `imageUrl`
+- Cost: 20 credits
 
-### ModelSelectorChip.tsx
-- Import `useUserModels` alongside `useCustomModels`
-- Merge user models into the `allModels` list (after custom models)
-- User models get a subtle "My Model" badge to distinguish them
+### My Models Grid
+- Below creation area, show all user's models from `user_models` table
+- Card grid with model image, name, metadata badges (gender, ethnicity, age)
+- Actions: Delete (soft-delete via `is_active: false`)
+- Empty state for no models yet
 
-### New component: `GenerateModelModal.tsx`
-- Upload reference image
-- Show preview + "Generate Model (20 credits)" button
-- Plan gate: show upgrade prompt if user is on Free/Starter
-- Loading state while AI generates
-- On success: show result with editable metadata fields, then save
+## Edge Function Enhancement: `generate-user-model`
+Add a second mode (`generator`) that accepts structured description fields instead of a reference image:
+- Build a hyper-specific prompt from the form fields (gender, age, ethnicity, morphology, eye color, hair style, hair color, distinctive trait)
+- Use the same `gemini-3-pro-image-preview` model
+- Enforce strict prompt engineering: "Professional fashion model headshot, light grey seamless studio background, soft diffused lighting, sharp focus on face, natural skin texture, no retouching artifacts, editorial quality, 8K, waist-up portrait"
+- When reference image IS provided, pass it as a secondary reference but the prompt still controls the output
 
-### Entry point
-- Add a "Create Your Own Model" button/card in the model selector (ModelSelectorChip) — visible only to Growth/Pro users
-- Could also be accessible from a Models section in Settings or Freestyle page
-
-## Files changed
+## Files Changed
 
 | File | Change |
 |------|--------|
-| Migration | Create `user_models` table + RLS |
-| `supabase/functions/generate-user-model/index.ts` | New edge function |
-| `src/hooks/useUserModels.ts` | New hook |
-| `src/components/app/GenerateModelModal.tsx` | New modal component |
-| `src/components/app/freestyle/ModelSelectorChip.tsx` | Merge user models + add "Create" entry point |
-| `src/components/app/CreativeDropWizard.tsx` | Merge user models into workflow model picker |
+| `src/pages/BrandModels.tsx` | New page with plan gate, two creation tabs, model grid |
+| `src/App.tsx` | Add lazy import + route `/models` |
+| `src/components/app/AppShell.tsx` | Add Models nav item after Library |
+| `supabase/functions/generate-user-model/index.ts` | Add `generator` mode with structured description prompt |
+| `src/hooks/useUserModels.ts` | Add `useGenerateUserModelFromDescription` mutation |
 
-## Credit & Plan Gating
-- Credits deducted server-side via existing `deduct_credits` RPC (atomic, handles low-credit email notifications)
-- Plan check happens in the edge function: reject if plan is `free` or `starter`
-- Frontend shows the button only for Growth/Pro users, with a tooltip/upgrade nudge for lower tiers
+## Prompt Engineering (Generator Mode)
+The edge function will construct prompts like:
+```
+"Professional fashion model studio portrait. Female, age 25, Caucasian, slim build. 
+Blue eyes, long wavy blonde hair. Light grey seamless studio background, 
+soft diffused three-point lighting, sharp focus on facial features, natural skin 
+texture visible, no airbrushing, editorial fashion photography quality, 
+waist-up framing, looking directly at camera with neutral confident expression. 8K."
+```
+
+No database migration needed — reuses existing `user_models` table.
 
