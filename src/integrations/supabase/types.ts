@@ -1181,6 +1181,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_models: {
+        Row: {
+          age_range: string
+          body_type: string
+          created_at: string | null
+          credits_used: number
+          ethnicity: string
+          gender: string
+          id: string
+          image_url: string
+          is_active: boolean
+          name: string
+          source_image_url: string
+          user_id: string
+        }
+        Insert: {
+          age_range?: string
+          body_type?: string
+          created_at?: string | null
+          credits_used?: number
+          ethnicity?: string
+          gender?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          name: string
+          source_image_url: string
+          user_id: string
+        }
+        Update: {
+          age_range?: string
+          body_type?: string
+          created_at?: string | null
+          credits_used?: number
+          ethnicity?: string
+          gender?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          name?: string
+          source_image_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_products: {
         Row: {
           created_at: string
