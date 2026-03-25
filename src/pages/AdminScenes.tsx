@@ -63,7 +63,7 @@ export default function AdminScenes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hiddenKey, sortKey, categoryOverrideKey, customKey]);
 
-  const defaultCategoryOrder = Object.keys(poseCategoryLabels) as PoseCategory[];
+  const defaultCategoryOrder = allCategorySlugs as PoseCategory[];
 
   const [orderedPoses, setOrderedPoses] = useState<TryOnPose[]>([]);
   const [categoryOrder, setCategoryOrder] = useState<PoseCategory[]>(defaultCategoryOrder);
