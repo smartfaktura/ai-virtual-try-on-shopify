@@ -98,7 +98,7 @@ export default function Freestyle() {
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(() => {
     if (!_persisted?.modelId) return null;
-    return mockModels.find(m => m.id === _persisted.modelId) ?? null;
+    return mockModels.find(m => m.modelId === _persisted.modelId) ?? null;
   });
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(() => {
     if (!_persisted?.sceneId) return null;
