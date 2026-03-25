@@ -200,6 +200,15 @@ export default function Generate() {
   const { isAdmin } = useIsAdmin();
   const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
 
+  // Merge mock + custom + user models, sorted consistently
+  const allModels = useMemo(() => {
+    const deduped = new Map<string, typeof mockModels[0]>();
+    for (const m of mockModels) deduped.set(m.modelId, m);
+    for (const m of customModelProfiles) deduped.set(m.modelId, m);
+    for (const m of userModelProfiles) deduped.set(m.modelId, m);
+    return sortModels([...deduped.values()]);
+  }, [customModelProfiles, userModelProfiles, sortModels]);
+
   const handleGenerateScenePreviews = async () => {
     if (!workflowId) return;
     setIsGeneratingPreviews(true);
