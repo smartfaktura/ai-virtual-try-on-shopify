@@ -314,6 +314,8 @@ export type Database = {
           is_active: boolean
           name: string
           optimized_image_url: string | null
+          prompt_hint: string | null
+          prompt_only: boolean | null
         }
         Insert: {
           category?: string
@@ -325,6 +327,8 @@ export type Database = {
           is_active?: boolean
           name: string
           optimized_image_url?: string | null
+          prompt_hint?: string | null
+          prompt_only?: boolean | null
         }
         Update: {
           category?: string
@@ -336,6 +340,8 @@ export type Database = {
           is_active?: boolean
           name?: string
           optimized_image_url?: string | null
+          prompt_hint?: string | null
+          prompt_only?: boolean | null
         }
         Relationships: []
       }
