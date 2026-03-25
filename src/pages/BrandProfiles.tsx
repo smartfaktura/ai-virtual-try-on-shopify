@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Palette, Sparkles, ArrowRight } from 'lucide-react';
+import { Plus, Palette, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
@@ -73,18 +73,10 @@ function BrandModelsBanner() {
           className="shrink-0 gap-1.5"
           onClick={() => navigate('/app/models')}
         >
-          <Sparkles className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Create Brand Model</span>
           <span className="sm:hidden">Create</span>
           <ArrowRight className="h-3 w-3" />
         </Button>
-      </div>
-
-      {/* Decorative dots */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-20">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="w-1 h-1 rounded-full bg-primary" />
-        ))}
       </div>
     </div>
   );
@@ -134,9 +126,6 @@ export default function BrandProfiles() {
           </Button>
         </div>
 
-        {/* Brand Models CTA Banner */}
-        <BrandModelsBanner />
-
         {/* Content */}
         {isLoading ? (
           <div className="space-y-3">
@@ -163,6 +152,9 @@ export default function BrandProfiles() {
             ))}
           </div>
         )}
+
+        {/* Brand Models CTA Banner — after profiles */}
+        <BrandModelsBanner />
       </div>
     </PageHeader>
   );
