@@ -99,7 +99,7 @@ export function useVideoProject() {
       // Store analysis in video_inputs
       await supabase
         .from('video_inputs')
-        .update({ analysis_json: analysis as unknown as Record<string, unknown> })
+        .update({ analysis_json: analysis })
         .eq('project_id', project.id);
 
       // 4. Resolve strategy
@@ -124,7 +124,7 @@ export function useVideoProject() {
       // 6. Create video_shot record
       const { error: shotError } = await supabase
         .from('video_shots')
-        .insert({
+        .insert([{
           project_id: project.id,
           shot_index: 0,
           prompt_text: builtPrompt.prompt,
@@ -133,9 +133,9 @@ export function useVideoProject() {
           audio_mode: params.audioMode,
           model_route: strategy.recommended_model_route,
           prompt_template_name: builtPrompt.prompt_template_name,
-          strategy_json: strategy as unknown as Record<string, unknown>,
-          analysis_json: analysis as unknown as Record<string, unknown>,
-        });
+          strategy_json: strategy as unknown as Record<string, never>,
+          analysis_json: analysis as unknown as Record<string, never>,
+        }]);
 
       if (shotError) console.error('[useVideoProject] Shot insert error:', shotError);
 
