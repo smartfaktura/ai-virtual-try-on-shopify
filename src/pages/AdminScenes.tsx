@@ -15,7 +15,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder, useSaveSceneSortOrder } from '@/hooks/useSceneSortOrder';
-import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, slugify } from '@/hooks/useSceneCategories';
+import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, useUpdateSceneCategory, useUpsertCategoryLabel, slugify } from '@/hooks/useSceneCategories';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from 'sonner';
