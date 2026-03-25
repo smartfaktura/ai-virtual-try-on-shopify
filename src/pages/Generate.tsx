@@ -620,7 +620,7 @@ export default function Generate() {
         setSelectedPoseMap(new Map([[matchedScene.poseId, matchedScene]]));
       }
     }
-  }, [prefillModelName, prefillSceneName, customPoses]);
+  }, [prefillModelName, prefillSceneName, customPoses, allModels]);
 
   // Scroll to top when step changes
   useEffect(() => {
