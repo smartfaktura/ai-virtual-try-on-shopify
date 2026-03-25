@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { poseCategoryLabels } from '@/data/mockData';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { TryOnPose } from '@/types';
 
@@ -213,7 +214,7 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
                 )}
               >
                 <img
-                  src={scene.previewUrl}
+                  src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}
                   alt={scene.name}
                   className="w-11 h-11 rounded-lg object-cover shrink-0"
                 />
