@@ -165,7 +165,7 @@ export default function Freestyle() {
         framing: framing as string | null,
         imageRole,
         editIntent,
-        modelId: selectedModel?.id ?? null,
+        modelId: selectedModel?.modelId ?? null,
         sceneId: selectedScene?.poseId ?? null,
         productId: selectedProduct?.id ?? null,
         brandProfileId: selectedBrandProfile?.id ?? null,
