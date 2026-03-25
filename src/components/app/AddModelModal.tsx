@@ -15,22 +15,71 @@ const AGE_RANGES = ['young-adult', 'adult', 'mature'];
 interface AddModelModalProps {
   open: boolean;
   onClose: () => void;
-  imageUrl: string;
+  imageUrl?: string;
 }
 
-export function AddModelModal({ open, onClose, imageUrl }: AddModelModalProps) {
+export function AddModelModal({ open, onClose, imageUrl: externalImageUrl }: AddModelModalProps) {
   const [name, setName] = useState('');
   const [gender, setGender] = useState('female');
   const [bodyType, setBodyType] = useState('average');
   const [ethnicity, setEthnicity] = useState('');
   const [ageRange, setAgeRange] = useState('adult');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
   const addModel = useAddCustomModel();
+
+  const imageUrl = externalImageUrl || localImageUrl || '';
 
   useEffect(() => {
     if (open && imageUrl) analyzeImage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, imageUrl]);
+  }, [open, externalImageUrl]);
+
+  // Reset local state when closing
+  useEffect(() => {
+    if (!open) {
+      setLocalImageUrl(null);
+      setName('');
+      setGender('female');
+      setBodyType('average');
+      setEthnicity('');
+      setAgeRange('adult');
+    }
+  }, [open]);
+
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `models/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('scratch-uploads').upload(path, file);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('scratch-uploads').getPublicUrl(path);
+      setLocalImageUrl(urlData.publicUrl);
+      // Trigger analysis
+      setIsAnalyzing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('create-model-from-image', {
+          body: { imageUrl: urlData.publicUrl },
+        });
+        if (error) throw error;
+        setName(data.name || '');
+        if (GENDERS.includes(data.gender)) setGender(data.gender);
+        if (BODY_TYPES.includes(data.body_type)) setBodyType(data.body_type);
+        setEthnicity(data.ethnicity || '');
+        if (AGE_RANGES.includes(data.age_range)) setAgeRange(data.age_range);
+      } catch {
+        toast.error('AI analysis failed — fill in manually');
+      } finally {
+        setIsAnalyzing(false);
+      }
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const analyzeImage = async () => {
     setIsAnalyzing(true);
@@ -98,7 +147,17 @@ export function AddModelModal({ open, onClose, imageUrl }: AddModelModalProps) {
 
         <div className="p-5 space-y-4">
           <div className="flex gap-4">
-            <img src={imageUrl} alt="Model preview" className="w-28 h-36 rounded-xl object-cover border border-border/30" />
+            {imageUrl ? (
+              <img src={imageUrl} alt="Model preview" className="w-28 h-36 rounded-xl object-cover border border-border/30" />
+            ) : (
+              <label className="w-28 h-36 rounded-xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/30 transition-colors text-muted-foreground text-xs gap-1">
+                {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>
+                  <span className="text-lg">+</span>
+                  <span>Upload</span>
+                </>}
+                <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
+              </label>
+            )}
             <div className="flex-1 space-y-3">
               {isAnalyzing ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
