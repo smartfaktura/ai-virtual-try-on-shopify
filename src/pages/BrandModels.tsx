@@ -605,7 +605,36 @@ export default function BrandModels() {
       </PageHeader>
 
       {!isPaid ? (
-        <UpgradeHero />
+        <>
+          <UpgradeHero />
+          {/* Show locked models for downgraded users */}
+          {models.length > 0 && (
+            <div className="space-y-4 mt-6">
+              <div className="flex items-center gap-3">
+                <h3 className="font-semibold flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4 text-muted-foreground" /> Your Brand Models
+                </h3>
+                <Badge variant="secondary" className="text-[10px]">{models.length}</Badge>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {models.map((m) => (
+                  <Card key={m.id} className="overflow-hidden border-border/60 opacity-50 grayscale relative">
+                    <div className="aspect-[3/4] relative bg-muted">
+                      <img src={m.image_url} alt={m.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+                        <Crown className="h-6 w-6 text-primary" />
+                      </div>
+                    </div>
+                    <div className="p-3 space-y-1">
+                      <p className="font-semibold text-sm truncate">{m.name}</p>
+                      <p className="text-[10px] text-muted-foreground">Upgrade to unlock</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8 mt-2">
           {/* Creation panel */}

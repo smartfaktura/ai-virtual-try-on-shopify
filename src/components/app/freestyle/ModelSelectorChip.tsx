@@ -193,37 +193,54 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
 
       {/* Model grid — brand model card is last */}
       <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
-        {filtered.map(model => (
-          <button
-            key={model.modelId}
-            onClick={() => { onSelect(model); onOpenChange(false); }}
-            className={cn(
-              'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
-              selectedModel?.modelId === model.modelId
-                ? 'border-primary ring-2 ring-primary/30'
-                : 'border-transparent hover:border-border'
-            )}
-          >
-            <div className="relative">
-              <img src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full aspect-square object-cover rounded-t-md" />
-              {userModelIds.has(model.modelId) && (
-                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[7px] font-bold text-white uppercase tracking-wider">Brand</span>
+        {filtered.map(model => {
+          const isUserModel = userModelIds.has(model.modelId);
+          const isLocked = isUserModel && !isPaidPlan;
+
+          return (
+            <button
+              key={model.modelId}
+              onClick={() => {
+                if (isLocked) {
+                  toast.error('Upgrade to Growth or Pro to use your Brand Models');
+                  return;
+                }
+                onSelect(model);
+                onOpenChange(false);
+              }}
+              className={cn(
+                'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                isLocked && 'opacity-50 grayscale cursor-not-allowed',
+                selectedModel?.modelId === model.modelId
+                  ? 'border-primary ring-2 ring-primary/30'
+                  : 'border-transparent hover:border-border'
               )}
-            </div>
-            <div className="px-1.5 py-1 bg-background text-center">
-              <p className="text-[10px] font-medium text-foreground truncate">{model.name}</p>
-            </div>
-            {/* Delete button for user models */}
-            {userModelIds.has(model.modelId) && (
-              <button
-                onClick={(e) => handleDeleteUserModel(model.modelId, e)}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            )}
-          </button>
-        ))}
+            >
+              <div className="relative">
+                <img src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full aspect-square object-cover rounded-t-md" />
+                {isUserModel && (
+                  <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[7px] font-bold text-white uppercase tracking-wider">Brand</span>
+                )}
+                {isLocked && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+                    <Crown className="w-4 h-4 text-primary" />
+                  </div>
+                )}
+              </div>
+              <div className="px-1.5 py-1 bg-background text-center">
+                <p className="text-[10px] font-medium text-foreground truncate">{model.name}</p>
+              </div>
+              {isUserModel && !isLocked && (
+                <button
+                  onClick={(e) => handleDeleteUserModel(model.modelId, e)}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </button>
+          );
+        })}
 
         {/* Brand Models CTA — always last */}
         {brandModelCard}
