@@ -112,11 +112,7 @@ const ASPECT_RATIOS = [
 
 // Full scene list is built inside the component using hooks
 
-const mockModelItems = mockModels.map(m => ({
-  id: m.modelId,
-  name: m.name,
-  image_url: m.previewUrl,
-}));
+// Models are built inside the component using hooks + sort order
 
 interface UserProduct {
   id: string;
