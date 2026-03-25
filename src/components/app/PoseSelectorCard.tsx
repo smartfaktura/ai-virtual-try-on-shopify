@@ -2,6 +2,7 @@ import type { TryOnPose, ModelGender } from '@/types';
 import { poseCategoryLabels } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface PoseSelectorCardProps {
   pose: TryOnPose;
@@ -13,7 +14,7 @@ interface PoseSelectorCardProps {
 }
 
 export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender, selectionIndex }: PoseSelectorCardProps) {
-  const displayImage = pose.previewUrl;
+  const displayImage = getOptimizedUrl(pose.previewUrl, { quality: 60 });
 
   return (
     <div

@@ -214,7 +214,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     >
       {selectedScene ? (
         <>
-          <img src={selectedScene.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
+          <img src={getOptimizedUrl(selectedScene.previewUrl, { quality: 60 })} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
           <span className="truncate flex-1 min-w-0 text-left">{selectedScene.name}</span>
           <span
             role="button"

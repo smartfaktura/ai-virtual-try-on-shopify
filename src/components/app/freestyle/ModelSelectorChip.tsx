@@ -3,6 +3,7 @@ import { User, ChevronDown, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
 import type { ModelProfile } from '@/types';
@@ -59,7 +60,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
     >
       {selectedModel ? (
         <>
-          <img src={selectedModel.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
+          <img src={getOptimizedUrl(selectedModel.previewUrl, { quality: 60 })} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
           <span className="truncate flex-1 min-w-0 text-left">{selectedModel.name}</span>
           <button
             onClick={e => { e.stopPropagation(); onSelect(null); }}
@@ -140,7 +141,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
                 : 'border-transparent hover:border-border'
             )}
           >
-            <img src={model.previewUrl} alt={model.name} className="w-full aspect-square object-cover rounded-t-md" />
+            <img src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full aspect-square object-cover rounded-t-md" />
             <div className="px-1.5 py-1 bg-background text-center">
               <p className="text-[10px] font-medium text-foreground truncate">{model.name}</p>
             </div>
