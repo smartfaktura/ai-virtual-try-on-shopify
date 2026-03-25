@@ -307,6 +307,7 @@ export function AppShell({ children }: AppShellProps) {
                     >
                       <Eye className="w-4 h-4" />
                       Scenes
+                    </button>
                   </>
                 )}
                 <button
