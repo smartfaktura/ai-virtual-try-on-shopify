@@ -1,39 +1,42 @@
 
 
-# Brand Models — Hair Styles, Badge Fix & Improvements
+# Brand Models Plan Gate & Cross-App Audit
 
-## Changes
+## Current State
 
-### 1. Gender-Aware Hair Styles
-When gender changes, update the hair style options dynamically:
-- **Female**: Long straight, Long curly, Medium wavy, Short straight, Short curly, Bob, Braids, Ponytail, Bun, Pixie cut
-- **Male**: Short straight, Short curly, Buzz cut, Crew cut, Fade, Slicked back, Medium wavy, Bald, Afro, Man bun
-- Reset `hairStyle` to `''` when gender changes so stale selections don't persist
+Brand models (`user_models` table) are used in:
+1. **BrandModels page** (`src/pages/BrandModels.tsx`) — creation + management, gated behind `isPaid` check
+2. **ModelSelectorChip** (`src/components/app/freestyle/ModelSelectorChip.tsx`) — freestyle prompt bar model picker, shows user models with "Brand" badge
+3. **GenerateModelModal** (`src/components/app/GenerateModelModal.tsx`) — upload-based model creation (older flow)
 
-### 2. Freestyle ModelSelectorChip — Move "BRAND MODEL" badge inside image
-Currently the badge text sits below the image in a separate `<div>`, taking up vertical space. Move it to an **overlay badge inside the image** (bottom-left, small semi-transparent pill) and remove the extra text line below. This keeps model cards compact and consistent.
+**Gap identified**: When a user downgrades from Pro/Growth to Free, their brand models still appear fully clickable in the ModelSelectorChip (freestyle). The BrandModels page shows the upgrade hero, but the models remain selectable elsewhere.
 
-```
-Before:                    After:
-┌──────────┐              ┌──────────┐
-│  [image] │              │  [image] │
-├──────────┤              │ ⌜BRAND⌝  │ ← overlay badge
-│  Name    │              ├──────────┤
-│BRAND MOD │              │  Name    │
-└──────────┘              └──────────┘
-```
+## Plan
 
-### 3. Improvement Ideas (for future consideration)
-Not implementing now, but noting these for the user:
-- **Model variations**: Generate 3 options per creation and let user pick the best
-- **Model consistency test**: Preview the model in 2-3 poses before saving
-- **Model gallery sharing**: Share brand models across team members
-- **Favorite/pin models**: Pin frequently used models to the top of selectors
+### 1. Lock Brand Models in ModelSelectorChip When Not on Paid Plan
+
+In `ModelSelectorChip.tsx`:
+- When `isPaidPlan` is `false`, render user model cards with a greyed-out overlay (`opacity-50 grayscale`) and make them non-clickable
+- On click, show a toast: "Upgrade to Growth or Pro to use your Brand Models"
+- Keep the models visible so users see what they had (incentive to re-subscribe)
+
+### 2. Lock Brand Models in Workflow/TryOn Model Selectors
+
+Search for any other model selector usage (workflow settings panel, try-on settings) and apply the same lock pattern — grey out + upgrade message when not on a paid plan.
+
+### 3. BrandModels Page — Show Locked Model Grid for Downgraded Users
+
+Currently if `!isPaid`, the page shows only `UpgradeHero` and hides all models. Instead:
+- Always show the models grid below `UpgradeHero` when models exist
+- Render each model card greyed out with a lock overlay and "Upgrade to unlock" text
+- This reminds users what they built and motivates re-subscription
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/BrandModels.tsx` | Gender-aware hair style lists, reset hair on gender change |
-| `src/components/app/freestyle/ModelSelectorChip.tsx` | Move "BRAND MODEL" badge from below image to overlay inside image |
+| `src/components/app/freestyle/ModelSelectorChip.tsx` | Grey out + disable user model cards when `!isPaidPlan`, show upgrade toast on click |
+| `src/pages/BrandModels.tsx` | Show locked model grid below UpgradeHero for downgraded users who have existing models |
+
+No database or edge function changes needed.
 
