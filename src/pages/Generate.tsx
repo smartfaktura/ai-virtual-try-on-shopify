@@ -74,6 +74,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
+import { useCustomModels } from '@/hooks/useCustomModels';
+import { useUserModels } from '@/hooks/useUserModels';
+import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 
 const SAMPLE_LISTING_PRODUCT: Product = {
   id: 'sample_listing_ring',
