@@ -478,6 +478,17 @@ export default function Freestyle() {
     }
   }, [customScenePoses]);
 
+  // Deferred restoration: custom models (loaded async)
+  useEffect(() => {
+    if (_pendingCustomModelId.current && customModelProfiles.length > 0) {
+      const match = customModelProfiles.find(m => m.modelId === _pendingCustomModelId.current);
+      if (match) {
+        setSelectedModel(match);
+        _pendingCustomModelId.current = null;
+      }
+    }
+  }, [customModelProfiles]);
+
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({
     queryKey: ['upscaling-jobs', user?.id],
