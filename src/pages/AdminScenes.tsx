@@ -28,6 +28,12 @@ export default function AdminScenes() {
   const { sortMap, categoryMap } = useSceneSortOrder();
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
+  const { allCategoryLabels, allCategorySlugs, customCategories } = useSceneCategories();
+  const addCategoryMutation = useAddSceneCategory();
+  const deleteCategoryMutation = useDeleteSceneCategory();
+
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showHidden, setShowHidden] = useState(false);
