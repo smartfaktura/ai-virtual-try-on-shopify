@@ -16,6 +16,7 @@ export interface CustomModel {
   created_by: string;
   is_active: boolean;
   created_at: string;
+  sort_order: number;
 }
 
 function buildOptimizedUrl(url: string): string | null {
@@ -50,6 +51,7 @@ export function useCustomModels() {
         .from('custom_models' as any)
         .select('*')
         .eq('is_active', true)
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data as unknown as CustomModel[]) ?? [];
@@ -61,6 +63,27 @@ export function useCustomModels() {
   const asProfiles = useMemo(() => models.map(toModelProfile), [models]);
 
   return { ...query, models, asProfiles };
+}
+
+/** Fetch ALL models (including inactive) for admin management */
+export function useAllCustomModels() {
+  const { user } = useAuth();
+
+  const query = useQuery({
+    queryKey: ['custom-models-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('custom_models' as any)
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data as unknown as CustomModel[]) ?? [];
+    },
+    enabled: !!user,
+  });
+
+  return { ...query, models: query.data ?? [] };
 }
 
 export function useAddCustomModel() {
@@ -78,7 +101,48 @@ export function useAddCustomModel() {
       if (error) throw error;
       return data as unknown as CustomModel;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['custom-models'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['custom-models'] });
+      qc.invalidateQueries({ queryKey: ['custom-models-all'] });
+    },
+  });
+}
+
+export function useUpdateCustomModel() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...fields }: Partial<CustomModel> & { id: string }) => {
+      const { error } = await supabase
+        .from('custom_models' as any)
+        .update(fields as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['custom-models'] });
+      qc.invalidateQueries({ queryKey: ['custom-models-all'] });
+    },
+  });
+}
+
+export function useSaveModelSortOrder() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entries: { id: string; sort_order: number }[]) => {
+      for (const entry of entries) {
+        const { error } = await supabase
+          .from('custom_models' as any)
+          .update({ sort_order: entry.sort_order } as any)
+          .eq('id', entry.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['custom-models'] });
+      qc.invalidateQueries({ queryKey: ['custom-models-all'] });
+    },
   });
 }
 
@@ -89,6 +153,9 @@ export function useDeleteCustomModel() {
       const { error } = await supabase.from('custom_models' as any).delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['custom-models'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['custom-models'] });
+      qc.invalidateQueries({ queryKey: ['custom-models-all'] });
+    },
   });
 }
