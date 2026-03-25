@@ -99,7 +99,7 @@ export function useVideoProject() {
       // Store analysis in video_inputs
       await supabase
         .from('video_inputs')
-        .update({ analysis_json: analysis })
+        .update({ analysis_json: JSON.parse(JSON.stringify(analysis)) })
         .eq('project_id', project.id);
 
       // 4. Resolve strategy
