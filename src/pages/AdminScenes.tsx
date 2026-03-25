@@ -474,8 +474,9 @@ export default function AdminScenes() {
                       changePoseCategory={changePoseCategory}
                       duplicateToCategory={duplicateToCategory}
                       handleDelete={handleDelete}
-                      defaultCategoryOrder={defaultCategoryOrder}
-                      showReorderButtons={true}
+                       defaultCategoryOrder={defaultCategoryOrder}
+                       categoryLabels={allCategoryLabels}
+                       showReorderButtons={true}
                     />
                   ))}
                 </div>
