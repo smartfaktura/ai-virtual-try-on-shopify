@@ -15,7 +15,7 @@ import { ValidationWarnings, type ValidationWarning } from '@/components/app/vid
 import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { useCreditContext } from '@/contexts/CreditContext';
+import { useCredits } from '@/contexts/CreditContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,7 +28,7 @@ export default function AnimateVideo() {
   const navigate = useNavigate();
   const { status, videoUrl, error, elapsedSeconds, startGeneration, reset } = useGenerateVideo();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
-  const { balance } = useCreditContext();
+  const { balance } = useCredits();
 
   // Step state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
