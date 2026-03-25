@@ -165,6 +165,9 @@ export default function Generate() {
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customPoses } = useCustomScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
+  const { asProfiles: customModelProfiles } = useCustomModels();
+  const { asProfiles: userModelProfiles } = useUserModels();
+  const { sortModels } = useModelSortOrder();
   const { workflowSlug } = useParams<{ workflowSlug: string }>();
   const [searchParams] = useSearchParams();
   // Support both slug-based routes and legacy query param
