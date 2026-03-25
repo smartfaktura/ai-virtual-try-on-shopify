@@ -4,6 +4,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -169,7 +170,7 @@ function BrandedLoadingState() {
 }
 
 /* ── Unified Generator ── */
-function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
+function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdmin: boolean }) {
   // Model name
   const [modelName, setModelName] = useState('');
 
@@ -204,6 +205,7 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
   const { upload, isUploading } = useFileUpload();
 
   const [generating, setGenerating] = useState(false);
+  const [makePublic, setMakePublic] = useState(false);
   const { balance, refreshBalance } = useCredits();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,7 +218,7 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
     if (url) setUploadedUrl(url);
   };
 
-  const canGenerate = !generating && balance >= 20 && !isUploading &&
+  const canGenerate = !generating && (makePublic || balance >= 20) && !isUploading &&
     (!useReference || (uploadedUrl && termsAccepted));
 
   const handleGenerate = async () => {
@@ -237,11 +239,14 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
       if (useReference && uploadedUrl) {
         body.imageUrl = uploadedUrl;
       }
+      if (makePublic) {
+        body.makePublic = true;
+      }
 
       const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success('Model generated successfully!');
+      toast.success(makePublic ? 'Public model added for all users!' : 'Model generated successfully!');
       refreshBalance();
       setModelName('');
       setPreviewUrl(null);
@@ -460,21 +465,39 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
         )}
       </div>
 
+      {/* ── Admin: Make Public ── */}
+      {isAdmin && (
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <Checkbox
+            id="make-public"
+            checked={makePublic}
+            onCheckedChange={(checked) => setMakePublic(checked === true)}
+            className="mt-0.5"
+          />
+          <label htmlFor="make-public" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
+            <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
+            <strong>Add as public model</strong> — visible to all users, no credits charged
+          </label>
+        </div>
+      )}
+
       {/* ── Credit info & Generate ── */}
       <div className="space-y-3 pt-1">
-        <div className="flex items-center justify-between text-xs px-0.5">
-          <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
-          <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
-            Balance: {balance} credits
-          </span>
-        </div>
+        {!makePublic && (
+          <div className="flex items-center justify-between text-xs px-0.5">
+            <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
+            <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
+              Balance: {balance} credits
+            </span>
+          </div>
+        )}
 
         <Button className="w-full gap-2" disabled={!canGenerate} onClick={handleGenerate}>
           <Wand2 className="h-4 w-4" />
-          Generate Brand Model (20 credits)
+          {makePublic ? 'Generate Public Model (free)' : 'Generate Brand Model (20 credits)'}
         </Button>
 
-        {balance < 20 && (
+        {!makePublic && balance < 20 && (
           <p className="text-xs text-destructive text-center">Not enough credits. You need at least 20.</p>
         )}
 
