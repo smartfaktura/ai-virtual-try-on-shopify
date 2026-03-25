@@ -554,7 +554,7 @@ function SceneRow({
   editingNameId, editingNameValue, setEditingNameValue,
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
-  handleDelete, defaultCategoryOrder, showReorderButtons,
+  handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
