@@ -1,53 +1,39 @@
 
 
-# Add "Create Category" + Easy Scene Assignment
+# Add "Edit Category Name" for All Categories
 
-## What we're building
-An "+ Add Category" button in the Category Order section that lets you type a new category name, auto-generates a slug, saves it to the database, and immediately makes it available for assigning scenes. Plus a cleaner way to move scenes between categories.
+## What changes
+Allow admins to rename **both** custom and built-in categories from the Category Order section in `/app/admin/scenes`.
+
+## Why it's safe
+- Only the **display label** changes, never the slug
+- The slug (`studio`, `lifestyle`, etc.) is what scenes reference — it stays untouched
+- The `useSceneCategories` hook already merges custom labels over `poseCategoryLabels`, so a built-in override just works
+- `PoseCategorySection.categoryInfo` uses slugs as keys — unaffected by label changes
 
 ## How it works
 
-### 1. Database: `scene_categories` table
-Store custom categories so they persist across sessions.
+### For custom categories (already in DB)
+- Pencil icon next to label → inline input → save updates `label` in `scene_categories` table
 
-```sql
-CREATE TABLE scene_categories (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug text NOT NULL UNIQUE,
-  label text NOT NULL,
-  sort_order integer NOT NULL DEFAULT 0,
-  created_by uuid NOT NULL,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE scene_categories ENABLE ROW LEVEL SECURITY;
--- All authenticated can read, admins can manage
-```
+### For built-in categories (not yet in DB)
+- Same pencil icon → inline input → on save, **insert** a new row into `scene_categories` with the built-in slug and the new label
+- The merge logic in `useSceneCategories` already handles this: custom labels override `poseCategoryLabels`
 
-### 2. New hook: `src/hooks/useSceneCategories.ts`
-- Fetches all custom categories from `scene_categories`
-- Mutation to add a new category (name → auto-slug: "Pet & Animal" → `pet-animal`)
-- Mutation to delete unused custom categories
-- Merges with hardcoded `poseCategoryLabels` to produce a full category list
+### Files changed
 
-### 3. UI changes in `src/pages/AdminScenes.tsx`
+**`src/hooks/useSceneCategories.ts`**
+- Add `useUpdateSceneCategory` mutation — updates `label` by ID
+- Add `useUpsertCategoryLabel` mutation — for built-in categories, upserts a row with the existing slug + new label
 
-**"+ Add Category" button** at the bottom of the Category Order section:
-- Click → inline input appears with label field
-- Slug auto-previews below (e.g., typing "Pet & Animal" shows `pet-animal`)
-- Confirm → saves to DB, appears in category order list + all scene category dropdowns immediately
-- Cancel with Escape or X button
+**`src/pages/AdminScenes.tsx`**
+- Add `editingCategorySlug` + `editingCategoryLabel` state
+- Show Pencil icon next to every category in the Category Order list
+- Click → inline Input with Check/X buttons
+- Enter saves, Escape cancels
+- For custom categories: calls update mutation
+- For built-in categories: calls upsert mutation (creates override row in `scene_categories`)
 
-**Scene category dropdowns** now include all custom categories merged with built-in ones.
-
-**Optional: delete empty custom categories** — small trash icon next to custom categories that have 0 scenes assigned.
-
-### 4. Files changed
-- **New migration** — `scene_categories` table + RLS policies
-- **`src/hooks/useSceneCategories.ts`** (new) — fetch/add/delete custom categories
-- **`src/pages/AdminScenes.tsx`** — add category button UI, merge custom categories into dropdowns and category order list
-- **`src/types/index.ts`** — no changes needed (PoseCategory already accepts `string & {}`)
-
-## Technical details
-
-The `PoseCategory` type already includes `(string & {})` so custom slug strings are valid without type changes. Custom categories from DB get merged into the `poseCategoryLabels`-equivalent map at runtime. The category order section and per-scene Select dropdowns both use this merged map.
+### No database changes needed
+The existing `scene_categories` table and RLS policies already support this. Built-in slugs inserted as overrides will be filtered correctly by the merge logic.
 
