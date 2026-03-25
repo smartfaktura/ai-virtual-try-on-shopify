@@ -252,7 +252,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           image_url: params.imageUrl,
           prompt: params.prompt || '',
           duration: params.duration || '5',
-          model_name: params.modelName || 'kling-v2-1',
+          model_name: params.modelName || 'kling-v3',
           aspect_ratio: params.aspectRatio || '16:9',
         };
         if (params.imageTailUrl) body.image_tail = params.imageTailUrl;
