@@ -4252,7 +4252,7 @@ export default function Generate() {
               </div>
 
             </CardContent></Card>
-
+                   const visibleProducts = filteredProducts.slice(0, visibleProductCount);
 
             {/* Crafted by team */}
             <div className="flex items-center justify-center gap-3 pt-2">
