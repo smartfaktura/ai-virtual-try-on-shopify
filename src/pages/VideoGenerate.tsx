@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info, Sparkles } from 'lucide-react';
+import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info, Sparkles, Ban, Camera, ChevronDown, Zap } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useGenerateVideo, VideoGenStatus, GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
