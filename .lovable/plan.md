@@ -1,21 +1,32 @@
 
 
-# Fix Zoomed-In Product Images — Use `object-contain`
+# Fix Product Thumbnails — Quality-Only Optimization + object-cover
 
-## Problem
-`object-cover` on the product thumbnails crops/zooms the image to fill the square, cutting off most of the product. Need `object-contain` to show the full image within the 1:1 space.
+## Root Cause
+
+The problem has two parts working against each other:
+
+1. **`width=200` resize** — Supabase resizes the image to 200px wide, which for tall clothing photos (e.g., 800x3000 originals) produces a tiny 200x750 image. This caused the "zoomed in" appearance with `object-cover`.
+
+2. **`object-contain`** — Shows the full image but for tall narrow product photos, it renders as a thin vertical strip inside the square container. This is what you're seeing now.
+
+## Solution
+
+Remove the `width` constraint entirely — use **quality-only** compression (`quality: 60`). This reduces file size by ~70% without changing dimensions, so the image looks identical to the original. Then use **`object-cover`** to fill the square nicely (same as it looked before optimization).
+
+This follows the existing pattern across the app: "quality-only compression (60-75%) and omits width constraints to prevent aspect ratio distortion."
 
 ## Changes
 
 ### `src/components/app/freestyle/ProductSelectorChip.tsx`
 
-Change `object-cover` → `object-contain` on all product thumbnail `ShimmerImage` components (3 places):
+3 places to update:
 
-1. **Line 178** (product grid): `className="w-full aspect-square object-contain rounded-t-md bg-muted/30"`
-2. **Sample products** (~line 120): same change
-3. **Selected product trigger chip** (~line 75): keep `object-cover` here since it's a tiny 16px icon — cropping is fine at that size
+1. **Trigger chip** (line 69): Already uses `width: 200` — change to quality-only: `getOptimizedUrl(selectedProduct.image_url, { quality: 60 })`
 
-Add `bg-muted/30` so letterboxed areas have a subtle background instead of white gaps.
+2. **Sample products** (line 127): Change `object-contain bg-muted/30` back to `object-contain bg-muted/30` (samples are local files, not affected by Supabase resize — these are fine as-is)
+
+3. **Product grid** (line 176): Change `{ width: 200, quality: 60 }` to `{ quality: 60 }` and change `object-contain` back to `object-cover`
 
 ### Files
 - `src/components/app/freestyle/ProductSelectorChip.tsx`
