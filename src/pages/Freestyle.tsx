@@ -426,10 +426,6 @@ export default function Freestyle() {
     }
     setSelectedProduct(product);
     setPresetHint(false);
-
-    const { detectDefaultFraming } = await import('@/lib/framingUtils');
-    const detected = detectDefaultFraming(product.product_type, product.tags || []);
-    if (detected) setFraming(detected);
   }, []);
 
   // Helper: upload a base64 image to generation-inputs bucket, return storage path URL
