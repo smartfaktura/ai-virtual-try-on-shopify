@@ -133,8 +133,8 @@ export function useVideoProject() {
           audio_mode: params.audioMode,
           model_route: strategy.recommended_model_route,
           prompt_template_name: builtPrompt.prompt_template_name,
-          strategy_json: strategy as unknown as Record<string, never>,
-          analysis_json: analysis as unknown as Record<string, never>,
+          strategy_json: JSON.parse(JSON.stringify(strategy)),
+          analysis_json: JSON.parse(JSON.stringify(analysis)),
         }]);
 
       if (shotError) console.error('[useVideoProject] Shot insert error:', shotError);
