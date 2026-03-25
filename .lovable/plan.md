@@ -1,68 +1,40 @@
 
 
-# Brand Models Page — Unified Generator & Improved UX
-
-## Current State
-- Uses `google/gemini-3-pro-image-preview` for image generation (good quality model)
-- Uses `google/gemini-2.5-flash` for reference analysis
-- Two separate tabs: "From Reference" and "Generator" — user asked to merge into one unified flow
-- No loading animation/branding while generating
-- Generator has limited controls (details hidden in collapsible)
+# Brand Models Page — Name, Badge, Loading & UX Improvements
 
 ## Changes
 
-### 1. Unified Single Generator (merge tabs)
-Replace the two-tab layout with a single creation flow:
-- **Step 1**: Essentials always visible (Gender, Age, Ethnicity, Morphology — all promoted to top level)
-- **Step 2**: Details section (Eye Color, Hair Style, Hair Color, Skin Tone, Facial Hair, Distinctive Trait) — open by default, not collapsed
-- **Optional reference toggle**: A checkbox/switch "Use reference image" that reveals an upload area. When enabled, the reference image is sent alongside the structured description to guide the generation. T&C checkbox appears only when reference is uploaded.
-- This eliminates confusion between "reference" vs "generator" modes
+### 1. Add Model Name Input
+- Add a text input field at the top of the generator form: "Model Name" (e.g., "Sarah", "Alex")
+- Pass the name to the edge function so it's stored in `user_models.name` instead of the auto-generated "Female Model" / "Male Model"
+- On model cards, show an edit (pencil) icon on hover to rename inline
 
-### 2. More Generator Controls
-Add these new fields to the form:
-- **Skin Tone** (Fair, Light, Medium, Olive, Tan, Brown, Dark)
-- **Face Shape** (Oval, Round, Square, Heart, Diamond)
-- **Expression** (Neutral, Smile, Serious, Confident, Soft)
-- **Facial Hair** (only when Male — None, Stubble, Short beard, Full beard, Goatee, Mustache)
+### 2. Change "MY MODEL" → "BRAND MODEL"
+- Update the badge text in `ModelCard` on the Brand Models page
+- Update the badge in `ModelSelectorChip.tsx` where user models are displayed
+- Position the badge **inside the image area**, overlaying near the bottom-left (already done, just change text)
 
-### 3. Branded Loading Animation While Generating
-Replace the simple spinner with a branded loading state:
-- Show 3-4 rotating VOVV.AI branded placeholder model silhouettes/avatars
-- Subtle pulse animation with text like "Creating your brand model..." and rotating tips
-- Example tips: "Your model will have a clean studio background", "AI is crafting realistic skin texture", "Almost there — finalizing details"
+### 3. Improved Loading State with VOVV.AI Team Avatars
+- Replace the generic pulsing silhouettes with actual VOVV.AI team member avatars from `TEAM_MEMBERS` (Sophia, Luna, Sienna, Kenji, etc.)
+- Show them rotating in a carousel/grid with subtle fade transitions, matching the branded loading pattern used elsewhere in the app
+- Keep the rotating tips text below
 
-### 4. Improved Prompt Engineering (Edge Function)
-Enhance both modes with a more detailed, photorealistic prompt:
+### 4. Window Close Behavior — Inform User
+- The edge function runs server-side, so closing the window **will NOT cancel** the generation — the model will still be created and appear when the user returns
+- Add a small info note below the generate button: "Generation happens server-side. You can safely navigate away — your model will appear here when ready."
+- This is purely informational; no code change needed on the backend
 
-**Generator mode prompt upgrade:**
-```
-"Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens. 
-{Gender}, {age} years old, {ethnicity} ethnicity, {morphology} build, {skin_tone} skin tone, {face_shape} face shape.
-{eye_color} eyes. {hair_description}. {facial_hair}. {expression} expression. {distinctive}.
-Light grey (#E8E8E8) seamless paper studio background.
-Soft diffused three-point Profoto lighting setup, subtle catch light in eyes, 
-sharp focus on facial features at f/2.8, natural skin texture with visible pores, 
-no retouching, no airbrushing, no AI artifacts, no uncanny valley.
-Editorial fashion photography, waist-up framing, subject centered,
-looking directly at camera. Color-accurate, neutral white balance. 8K resolution."
-```
-
-**Reference mode prompt upgrade** — same quality directives but also include:
-```
-"Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance."
-```
-
-Keep using `google/gemini-3-pro-image-preview` — it's the best available image generation model.
-
-### 5. Edge Function: Accept Combined Mode
-Update `generate-user-model` to accept a new `mode: "combined"` where both `description` AND optional `imageUrl` can be provided. The description fields build the prompt; if a reference image is also provided, it's passed as an additional reference to the image generation call.
+### 5. Improve "Distinctive Trait" Field
+- Rename label from "Distinctive Trait (optional)" → **"Signature Feature"**
+- Add a helper subtitle: "Add a unique characteristic to make your model stand out"
+- Keep the same options (Freckles, Dimples, Sharp jawline, etc.)
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/BrandModels.tsx` | Replace two tabs with unified generator, add new fields, add branded loading state |
-| `supabase/functions/generate-user-model/index.ts` | Enhanced prompts, new combined mode, additional description fields (skinTone, faceShape, expression, facialHair) |
+| `src/pages/BrandModels.tsx` | Add name input, rename badge to "BRAND MODEL", team avatar loading state, rename Distinctive Trait, add server-side info note, inline rename on model cards |
+| `src/components/app/freestyle/ModelSelectorChip.tsx` | Change "MY MODEL" badge text to "BRAND MODEL" |
 
-No database or hook changes needed.
+No database or edge function changes needed.
 
