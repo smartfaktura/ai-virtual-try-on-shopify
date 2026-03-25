@@ -32,6 +32,9 @@ interface UseGenerateVideoResult {
     aspectRatio?: '1:1' | '16:9' | '9:16';
     imageTailUrl?: string;
     mode?: 'std' | 'pro';
+    negativePrompt?: string;
+    cfgScale?: number;
+    cameraControl?: { type: string; config: Record<string, number> };
   }) => void;
   reset: () => void;
   history: GeneratedVideo[];
@@ -232,6 +235,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       aspectRatio?: '1:1' | '16:9' | '9:16';
       imageTailUrl?: string;
       mode?: 'std' | 'pro';
+      negativePrompt?: string;
+      cfgScale?: number;
+      cameraControl?: { type: string; config: Record<string, number> };
     }) => {
       // Duplicate prevention: block if a video is already processing
       const hasProcessing = historyRef.current.some((v) => v.status === 'processing');
@@ -257,6 +263,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         };
         if (params.imageTailUrl) body.image_tail = params.imageTailUrl;
         if (params.mode) body.mode = params.mode;
+        if (params.negativePrompt) body.negative_prompt = params.negativePrompt;
+        if (typeof params.cfgScale === 'number') body.cfg_scale = params.cfgScale;
+        if (params.cameraControl) body.camera_control = params.cameraControl;
 
         const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
           body,

@@ -150,11 +150,15 @@ serve(async (req) => {
 
     // ---- CREATE task ----
     if (action === "create") {
-      const { image_url, image_tail, prompt, duration = "5", model_name = "kling-v3", mode = "std", aspect_ratio = "16:9" } = body;
+      const {
+        image_url, image_tail, prompt, duration = "5",
+        model_name = "kling-v3", mode = "std", aspect_ratio = "16:9",
+        negative_prompt, cfg_scale, camera_control,
+      } = body;
 
       if (!image_url) throw new Error("image_url is required");
 
-      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}`);
+      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}, cfg=${cfg_scale}, camera=${camera_control?.type}`);
 
       const klingBody: Record<string, unknown> = {
         model_name,
@@ -164,8 +168,16 @@ serve(async (req) => {
       };
 
       if (prompt) klingBody.prompt = prompt;
+      if (negative_prompt) klingBody.negative_prompt = negative_prompt;
       if (aspect_ratio) klingBody.aspect_ratio = aspect_ratio;
       if (image_tail) klingBody.image_tail = image_tail;
+      if (typeof cfg_scale === "number") klingBody.cfg_scale = cfg_scale;
+      if (camera_control?.type) {
+        klingBody.camera_control = {
+          type: "simple",
+          config: { horizontal: 0, vertical: 0, pan: 0, tilt: 0, roll: 0, zoom: 0, ...camera_control.config },
+        };
+      }
 
       const res = await fetch(`${KLING_API_BASE}/videos/image2video`, {
         method: "POST",
@@ -183,7 +195,7 @@ serve(async (req) => {
       const taskId = result.data.task_id;
 
       const serviceClient = getServiceClient();
-      const { error: dbError } = await serviceClient.from("generated_videos").insert({
+      const dbRow: Record<string, unknown> = {
         user_id: userId,
         source_image_url: image_url,
         prompt: prompt || "",
@@ -192,7 +204,12 @@ serve(async (req) => {
         duration,
         aspect_ratio,
         status: "processing",
-      });
+      };
+      if (negative_prompt) dbRow.negative_prompt = negative_prompt;
+      if (typeof cfg_scale === "number") dbRow.cfg_scale = cfg_scale;
+      if (camera_control?.type) dbRow.camera_type = camera_control.type;
+
+      const { error: dbError } = await serviceClient.from("generated_videos").insert(dbRow);
 
       if (dbError) {
         console.error("[generate-video] DB insert error:", dbError);
