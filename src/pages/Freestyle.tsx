@@ -445,6 +445,34 @@ export default function Freestyle() {
     enabled: !!user?.id,
   });
 
+  // Deferred restoration: products & brand profiles (loaded async via React Query)
+  useEffect(() => {
+    if (_pendingProductId.current && products.length > 0) {
+      const match = products.find(p => p.id === _pendingProductId.current);
+      if (match) setSelectedProduct(match);
+      _pendingProductId.current = null;
+    }
+  }, [products]);
+
+  useEffect(() => {
+    if (_pendingBrandProfileId.current && brandProfiles.length > 0) {
+      const match = brandProfiles.find(bp => bp.id === _pendingBrandProfileId.current);
+      if (match) setSelectedBrandProfile(match);
+      _pendingBrandProfileId.current = null;
+    }
+  }, [brandProfiles]);
+
+  // Deferred restoration: custom scenes (loaded async)
+  useEffect(() => {
+    if (_pendingCustomSceneId.current && customScenePoses.length > 0) {
+      const match = customScenePoses.find(s => s.poseId === _pendingCustomSceneId.current);
+      if (match) {
+        setSelectedScene(match);
+        _pendingCustomSceneId.current = null;
+      }
+    }
+  }, [customScenePoses]);
+
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({
     queryKey: ['upscaling-jobs', user?.id],
