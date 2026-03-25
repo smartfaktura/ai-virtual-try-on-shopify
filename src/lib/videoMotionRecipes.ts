@@ -3,6 +3,9 @@
  * 
  * Central registry of product categories, scene types, motion goals,
  * and default preservation rules for the Animate Image workflow.
+ * 
+ * Now includes a CATEGORY_SCENE_MOTION_MATRIX for scene-type-aware
+ * goal filtering and recommendation ranking.
  */
 
 // ─── Product Categories ───
@@ -151,6 +154,94 @@ const MOTION_GOALS_BY_CATEGORY: Record<string, MotionGoal[]> = {
   health_supplements: HEALTH_SUPPLEMENTS_GOALS,
 };
 
+// ─── Scene-Aware Motion Goal Matrix ───
+// Maps (category, sceneType) → ordered list of valid goal IDs
+// First ID in each list is the top recommendation for that combo.
+
+const CATEGORY_SCENE_MOTION_MATRIX: Record<string, Record<string, string[]>> = {
+  fashion_apparel: {
+    on_model: ['subtle_fashion_pose', 'fabric_movement', 'editorial_walk_start', 'hand_adjustment'],
+    studio_product: ['premium_campaign_reveal', 'fabric_movement'],
+    flat_lay: ['premium_campaign_reveal', 'fabric_movement'],
+    lifestyle_scene: ['subtle_fashion_pose', 'fabric_movement', 'editorial_walk_start'],
+    action_scene: ['editorial_walk_start', 'fabric_movement', 'subtle_fashion_pose'],
+    hand_held: ['hand_adjustment', 'premium_campaign_reveal'],
+    macro_closeup: ['fabric_movement', 'premium_campaign_reveal'],
+    talking_portrait: ['subtle_fashion_pose', 'hand_adjustment'],
+  },
+  beauty_skincare: {
+    studio_product: ['luxury_product_reveal', 'soft_skincare_glow', 'texture_focus'],
+    hand_held: ['hand_held_beauty', 'texture_focus', 'luxury_product_reveal'],
+    on_model: ['vanity_ad_motion', 'soft_skincare_glow', 'hand_held_beauty'],
+    flat_lay: ['luxury_product_reveal', 'texture_focus'],
+    macro_closeup: ['texture_focus', 'soft_skincare_glow'],
+    lifestyle_scene: ['vanity_ad_motion', 'soft_skincare_glow', 'luxury_product_reveal'],
+  },
+  fragrances: {
+    studio_product: ['luxury_fragrance_reveal', 'reflective_shimmer', 'premium_bottle_showcase'],
+    hand_held: ['hand_held_bottle_rotation', 'luxury_fragrance_reveal'],
+    on_model: ['editorial_perfume_ad', 'hand_held_bottle_rotation'],
+    macro_closeup: ['reflective_shimmer', 'premium_bottle_showcase'],
+    lifestyle_scene: ['editorial_perfume_ad', 'luxury_fragrance_reveal'],
+    flat_lay: ['luxury_fragrance_reveal', 'reflective_shimmer'],
+  },
+  jewelry: {
+    macro_closeup: ['sparkle_detail', 'macro_shine', 'luxury_jewelry_reveal'],
+    on_model: ['worn_jewelry_pose', 'hand_movement_showcase', 'sparkle_detail'],
+    studio_product: ['luxury_jewelry_reveal', 'sparkle_detail', 'macro_shine'],
+    hand_held: ['hand_movement_showcase', 'sparkle_detail'],
+    flat_lay: ['luxury_jewelry_reveal', 'sparkle_detail'],
+    lifestyle_scene: ['worn_jewelry_pose', 'luxury_jewelry_reveal'],
+  },
+  accessories: {
+    hand_held: ['hold_and_reveal', 'wrist_detail', 'luxury_accessory'],
+    on_model: ['on_body_lifestyle', 'hold_and_reveal', 'wrist_detail'],
+    studio_product: ['luxury_accessory', 'premium_product_showcase'],
+    macro_closeup: ['wrist_detail', 'luxury_accessory'],
+    lifestyle_scene: ['on_body_lifestyle', 'hold_and_reveal'],
+    flat_lay: ['luxury_accessory', 'premium_product_showcase'],
+  },
+  home_decor: {
+    interior_room: ['calm_interior', 'ambient_lifestyle', 'warm_light_motion'],
+    studio_product: ['decor_detail_showcase', 'soft_atmosphere_reveal'],
+    lifestyle_scene: ['ambient_lifestyle', 'calm_interior', 'warm_light_motion'],
+    macro_closeup: ['decor_detail_showcase', 'warm_light_motion'],
+    flat_lay: ['decor_detail_showcase', 'soft_atmosphere_reveal'],
+  },
+  food_beverage: {
+    food_plated: ['fresh_serve', 'steam_atmosphere', 'food_closeup'],
+    studio_product: ['fresh_serve', 'beverage_shimmer'],
+    hand_held: ['pour_and_reveal', 'beverage_shimmer'],
+    macro_closeup: ['food_closeup', 'steam_atmosphere', 'beverage_shimmer'],
+    lifestyle_scene: ['fresh_serve', 'steam_atmosphere', 'pour_and_reveal'],
+    action_scene: ['pour_and_reveal', 'fresh_serve'],
+  },
+  electronics: {
+    device_on_desk: ['screen_glow_detail', 'tech_product_reveal'],
+    studio_product: ['tech_product_reveal', 'clean_rotation', 'premium_electronics_ad'],
+    hand_held: ['device_in_hand', 'tech_product_reveal'],
+    macro_closeup: ['screen_glow_detail', 'tech_product_reveal'],
+    lifestyle_scene: ['premium_electronics_ad', 'device_in_hand'],
+    flat_lay: ['tech_product_reveal', 'clean_rotation'],
+    on_model: ['device_in_hand', 'premium_electronics_ad'],
+  },
+  sports_fitness: {
+    action_scene: ['realistic_sports_action', 'dynamic_training', 'object_interaction'],
+    on_model: ['controlled_athlete', 'object_interaction', 'realistic_sports_action'],
+    studio_product: ['product_in_action', 'controlled_athlete', 'premium_campaign_reveal'],
+    hand_held: ['object_interaction', 'product_in_action'],
+    lifestyle_scene: ['controlled_athlete', 'product_in_action', 'dynamic_training'],
+  },
+  health_supplements: {
+    studio_product: ['clean_supplement_reveal', 'wellness_product', 'clinical_premium_ad'],
+    hand_held: ['hand_held_bottle', 'clean_supplement_reveal'],
+    on_model: ['hand_held_bottle', 'wellness_product'],
+    lifestyle_scene: ['wellness_product', 'ingredient_atmosphere'],
+    flat_lay: ['clean_supplement_reveal', 'ingredient_atmosphere'],
+    macro_closeup: ['clean_supplement_reveal', 'wellness_product'],
+  },
+};
+
 // ─── Camera Motion Options ───
 
 export interface CameraMotionOption {
@@ -222,14 +313,48 @@ const PRESERVATION_BY_CATEGORY: Record<string, PreservationDefaults> = {
   health_supplements: { preserveScene: true, preserveProductDetails: true, preserveIdentity: false, preserveOutfit: false },
 };
 
+// Scene-type overrides for preservation
+const SCENE_PRESERVATION_OVERRIDES: Record<string, Partial<PreservationDefaults>> = {
+  on_model: { preserveIdentity: true, preserveOutfit: true },
+  talking_portrait: { preserveIdentity: true },
+  action_scene: { preserveIdentity: true },
+  hand_held: { preserveProductDetails: true },
+  macro_closeup: { preserveProductDetails: true },
+};
+
 // ─── Public API ───
 
-export function getMotionGoalsForCategory(category: string): MotionGoal[] {
-  return MOTION_GOALS_BY_CATEGORY[category] || MOTION_GOALS_BY_CATEGORY.fashion_apparel;
+export function getMotionGoalsForCategory(category: string, sceneType?: string): MotionGoal[] {
+  const allGoals = MOTION_GOALS_BY_CATEGORY[category] || MOTION_GOALS_BY_CATEGORY.fashion_apparel;
+
+  if (!sceneType) return allGoals;
+
+  const matrix = CATEGORY_SCENE_MOTION_MATRIX[category];
+  if (!matrix) return allGoals;
+
+  const validGoalIds = matrix[sceneType];
+  if (!validGoalIds || validGoalIds.length === 0) return allGoals;
+
+  // Return goals ordered by matrix priority, filtering to only valid ones
+  const orderedGoals: MotionGoal[] = [];
+  for (const goalId of validGoalIds) {
+    const goal = allGoals.find(g => g.id === goalId);
+    if (goal) orderedGoals.push(goal);
+  }
+
+  // If matrix had entries but none matched, fall back to all
+  return orderedGoals.length > 0 ? orderedGoals : allGoals;
 }
 
-export function getDefaultPreservation(category: string): PreservationDefaults {
-  return PRESERVATION_BY_CATEGORY[category] || PRESERVATION_BY_CATEGORY.fashion_apparel;
+export function getDefaultPreservation(category: string, sceneType?: string): PreservationDefaults {
+  const base = PRESERVATION_BY_CATEGORY[category] || PRESERVATION_BY_CATEGORY.fashion_apparel;
+
+  if (!sceneType) return { ...base };
+
+  const sceneOverride = SCENE_PRESERVATION_OVERRIDES[sceneType];
+  if (!sceneOverride) return { ...base };
+
+  return { ...base, ...sceneOverride };
 }
 
 export function getCategoryLabel(id: string): string {
@@ -238,4 +363,14 @@ export function getCategoryLabel(id: string): string {
 
 export function getSceneTypeLabel(id: string): string {
   return SCENE_TYPES.find(s => s.id === id)?.label || id;
+}
+
+/**
+ * Get the recommended goal IDs for a category + scene type combo.
+ * Returns the ordered list from the matrix, or empty if no matrix entry.
+ */
+export function getRecommendedGoalIds(category: string, sceneType: string): string[] {
+  const matrix = CATEGORY_SCENE_MOTION_MATRIX[category];
+  if (!matrix) return [];
+  return matrix[sceneType] || [];
 }
