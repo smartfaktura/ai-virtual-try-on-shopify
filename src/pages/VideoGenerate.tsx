@@ -464,6 +464,115 @@ function VideoGenerateInner() {
                 ))}
             </div>
 
+            {/* Quality Mode */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Quality Mode</label>
+              <div className="flex gap-2">
+                {([
+                  { value: 'std' as const, label: 'Standard', desc: 'Faster' },
+                  { value: 'pro' as const, label: 'Professional', desc: 'Higher quality' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setMode(opt.value)}
+                    disabled={isGenerating || loopMode}
+                    className={cn(
+                      'flex-1 px-3 py-2.5 rounded-lg text-sm transition-all border',
+                      mode === opt.value
+                        ? 'bg-primary/10 text-primary border-primary/30 font-medium'
+                        : 'bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50',
+                      loopMode && 'opacity-50 cursor-not-allowed'
+                    )}
+                  >
+                    <span className="block font-medium">{opt.label}</span>
+                    <span className="block text-[10px] opacity-70">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+              {loopMode && (
+                <p className="text-[10px] text-muted-foreground">Loop Mode forces Professional quality</p>
+              )}
+            </div>
+
+            {/* CFG Scale / Prompt Adherence */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Prompt Adherence</label>
+                <span className="text-xs font-mono text-muted-foreground">{cfgScale.toFixed(2)}</span>
+              </div>
+              <Slider
+                value={[cfgScale]}
+                onValueChange={([v]) => setCfgScale(v)}
+                min={0}
+                max={1}
+                step={0.05}
+                disabled={isGenerating}
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground/60">
+                <span>Creative</span>
+                <span>Faithful</span>
+              </div>
+            </div>
+
+            {/* Camera Control */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5" />
+                Camera Movement
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { value: 'none', label: 'None' },
+                  { value: 'zoom-in', label: 'Zoom In' },
+                  { value: 'zoom-out', label: 'Zoom Out' },
+                  { value: 'pan-left', label: 'Pan Left' },
+                  { value: 'pan-right', label: 'Pan Right' },
+                  { value: 'tilt-up', label: 'Tilt Up' },
+                  { value: 'tilt-down', label: 'Tilt Down' },
+                  { value: 'roll-cw', label: 'Roll CW' },
+                  { value: 'roll-ccw', label: 'Roll CCW' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setCameraPreset(opt.value)}
+                    disabled={isGenerating}
+                    className={cn(
+                      'px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                      cameraPreset === opt.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Negative Prompt */}
+            <Collapsible open={negativeOpen} onOpenChange={setNegativeOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full">
+                  <Ban className="w-3.5 h-3.5" />
+                  Negative Prompt
+                  <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', negativeOpen && 'rotate-180')} />
+                  {negativePrompt.trim() && (
+                    <span className="text-[10px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full ml-1">Active</span>
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <Textarea
+                  placeholder="e.g. blurry, distorted faces, text, watermarks..."
+                  value={negativePrompt}
+                  onChange={(e) => setNegativePrompt(e.target.value)}
+                  rows={2}
+                  disabled={isGenerating}
+                  className="resize-none text-sm"
+                />
+              </CollapsibleContent>
+            </Collapsible>
+
             {/* Loop Mode Toggle */}
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-3">
               <div className="flex items-center gap-2">
@@ -478,7 +587,10 @@ function VideoGenerateInner() {
               </div>
               <Switch
                 checked={loopMode}
-                onCheckedChange={setLoopMode}
+                onCheckedChange={(checked) => {
+                  setLoopMode(checked);
+                  if (checked) setMode('pro');
+                }}
                 disabled={isGenerating}
               />
             </div>
