@@ -66,7 +66,7 @@ export function ProductSelectorChip({
     >
       {selectedProduct ? (
         <>
-          <img src={getOptimizedUrl(selectedProduct.image_url, { width: 200, quality: 60 })} alt="" className="w-4 h-4 rounded object-cover shrink-0" />
+          <img src={getOptimizedUrl(selectedProduct.image_url, { quality: 60 })} alt="" className="w-4 h-4 rounded object-cover shrink-0" />
           <span className="truncate flex-1 min-w-0 text-left">{selectedProduct.title}</span>
           <button
             onClick={e => { e.stopPropagation(); onSelect(null); }}
@@ -173,9 +173,9 @@ export function ProductSelectorChip({
                 )}
               >
                 <ShimmerImage
-                  src={getOptimizedUrl(product.image_url, { width: 200, quality: 60 })}
+                  src={getOptimizedUrl(product.image_url, { quality: 60 })}
                   alt={product.title}
-                  className="w-full aspect-square object-contain rounded-t-md bg-muted/30"
+                  className="w-full aspect-square object-cover rounded-t-md bg-muted/30"
                 />
                 <div className="px-1.5 py-1.5 bg-background">
                   <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">
