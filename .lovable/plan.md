@@ -1,26 +1,16 @@
 
 
-# Fix Camera Pill Label — Show "Pro" When Pro Is Selected
+# Disable Auto-Framing on Product Selection
 
 ## Problem
-In `FreestyleSettingsChips.tsx`, the Camera pill displays "Camera" when `pro` is selected. It should display "Pro".
+When a user selects a product, `detectDefaultFraming` automatically sets the framing based on product keywords. The user wants to choose framing manually.
 
 ## Change
 
-### `src/components/app/freestyle/FreestyleSettingsChips.tsx` — Line 143
+### `src/pages/Freestyle.tsx`
 
-**Before:**
-```tsx
-{cameraStyle === 'natural' ? 'Natural' : 'Camera'}
-```
-
-**After:**
-```tsx
-{cameraStyle === 'natural' ? 'Natural' : 'Pro'}
-```
-
-One line change. The icon swap (Smartphone vs Camera) is already correct.
+In the `onSelectProduct` handler, remove the call to `detectDefaultFraming` and the subsequent `setFraming(...)` line. Keep framing at whatever the user has already set (or null/auto).
 
 ### Files
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+- `src/pages/Freestyle.tsx` — remove auto-framing logic from `onSelectProduct`
 
