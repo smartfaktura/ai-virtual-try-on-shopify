@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X, Loader2, Sparkles, User, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ interface AddSceneModalProps {
 export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [promptHint, setPromptHint] = useState('');
+  const [promptOnly, setPromptOnly] = useState(false);
   const [sceneType, setSceneType] = useState<SceneType>('on-model');
   const [category, setCategory] = useState('studio');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -74,7 +78,7 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
   const handleSave = async () => {
     if (!name.trim()) { toast.error('Name is required'); return; }
     try {
-      await addScene.mutateAsync({ name, description, category, image_url: imageUrl });
+      await addScene.mutateAsync({ name, description, category, image_url: imageUrl, prompt_hint: promptHint, prompt_only: promptOnly });
       toast.success('Scene added for all users');
       onClose();
     } catch {
