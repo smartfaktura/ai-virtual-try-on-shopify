@@ -317,10 +317,68 @@ export default function AdminScenes() {
                 return (
                   <div key={cat} className="flex items-center gap-3 px-3 py-2">
                     <span className="text-muted-foreground text-xs select-none">≡</span>
-                    <span className="text-sm font-medium flex-1">
-                      {allCategoryLabels[cat] || cat} <span className="text-muted-foreground font-normal">({count})</span>
-                      {isCustomCat && <Badge variant="secondary" className="ml-1.5 text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-0">Custom</Badge>}
-                    </span>
+                    {editingCatSlug === cat ? (
+                      <div className="flex items-center gap-1.5 flex-1">
+                        <Input
+                          value={editingCatLabel}
+                          onChange={e => setEditingCatLabel(e.target.value)}
+                          className="h-7 text-sm flex-1"
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === 'Escape') { setEditingCatSlug(null); setEditingCatLabel(''); }
+                            if (e.key === 'Enter' && editingCatLabel.trim()) {
+                              const customCat = customCategories.find(c => c.slug === cat);
+                              if (customCat) {
+                                updateCategoryMutation.mutate({ id: customCat.id, label: editingCatLabel.trim() }, {
+                                  onSuccess: () => { toast.success('Category renamed'); setEditingCatSlug(null); },
+                                  onError: () => toast.error('Failed to rename'),
+                                });
+                              } else {
+                                upsertCategoryLabel.mutate({ slug: cat, label: editingCatLabel.trim() }, {
+                                  onSuccess: () => { toast.success('Category renamed'); setEditingCatSlug(null); },
+                                  onError: () => toast.error('Failed to rename'),
+                                });
+                              }
+                            }
+                          }}
+                        />
+                        <Button
+                          variant="ghost" size="icon" className="h-6 w-6 text-primary"
+                          disabled={!editingCatLabel.trim()}
+                          onClick={() => {
+                            const customCat = customCategories.find(c => c.slug === cat);
+                            if (customCat) {
+                              updateCategoryMutation.mutate({ id: customCat.id, label: editingCatLabel.trim() }, {
+                                onSuccess: () => { toast.success('Category renamed'); setEditingCatSlug(null); },
+                                onError: () => toast.error('Failed to rename'),
+                              });
+                            } else {
+                              upsertCategoryLabel.mutate({ slug: cat, label: editingCatLabel.trim() }, {
+                                onSuccess: () => { toast.success('Category renamed'); setEditingCatSlug(null); },
+                                onError: () => toast.error('Failed to rename'),
+                              });
+                            }
+                          }}
+                        >
+                          <Check className="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingCatSlug(null); setEditingCatLabel(''); }}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-sm font-medium flex-1 flex items-center gap-1.5">
+                        {allCategoryLabels[cat] || cat} <span className="text-muted-foreground font-normal">({count})</span>
+                        {isCustomCat && <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-0">Custom</Badge>}
+                        <Button
+                          variant="ghost" size="icon" className="h-5 w-5 ml-0.5"
+                          onClick={() => { setEditingCatSlug(cat); setEditingCatLabel(allCategoryLabels[cat] || cat); }}
+                          title="Edit category name"
+                        >
+                          <Pencil className="w-2.5 h-2.5" />
+                        </Button>
+                      </span>
+                    )}
                     <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === 0} onClick={() => moveCategoryOrder(cat, 'up')}>
                       <ArrowUp className="w-3 h-3" />
                     </Button>
