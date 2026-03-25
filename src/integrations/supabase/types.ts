@@ -1019,6 +1019,33 @@ export type Database = {
         }
         Relationships: []
       }
+      scene_categories: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          label: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       scene_sort_order: {
         Row: {
           category_override: string | null

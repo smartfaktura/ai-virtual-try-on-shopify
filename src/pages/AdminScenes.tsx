@@ -15,6 +15,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder, useSaveSceneSortOrder } from '@/hooks/useSceneSortOrder';
+import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, slugify } from '@/hooks/useSceneCategories';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from 'sonner';
@@ -27,6 +28,12 @@ export default function AdminScenes() {
   const { sortMap, categoryMap } = useSceneSortOrder();
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
+  const { allCategoryLabels, allCategorySlugs, customCategories } = useSceneCategories();
+  const addCategoryMutation = useAddSceneCategory();
+  const deleteCategoryMutation = useDeleteSceneCategory();
+
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showHidden, setShowHidden] = useState(false);
@@ -56,7 +63,7 @@ export default function AdminScenes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hiddenKey, sortKey, categoryOverrideKey, customKey]);
 
-  const defaultCategoryOrder = Object.keys(poseCategoryLabels) as PoseCategory[];
+  const defaultCategoryOrder = allCategorySlugs as PoseCategory[];
 
   const [orderedPoses, setOrderedPoses] = useState<TryOnPose[]>([]);
   const [categoryOrder, setCategoryOrder] = useState<PoseCategory[]>(defaultCategoryOrder);
@@ -143,7 +150,7 @@ export default function AdminScenes() {
     const clone: TryOnPose = { ...pose, poseId: cloneId, category: targetCategory };
     setOrderedPoses(prev => [...prev, clone]);
     setDirty(true);
-    toast.success(`Duplicated "${pose.name}" → ${poseCategoryLabels[targetCategory] || targetCategory}`);
+    toast.success(`Duplicated "${pose.name}" → ${allCategoryLabels[targetCategory] || targetCategory}`);
   };
 
   const moveCategoryOrder = (cat: PoseCategory, direction: 'up' | 'down') => {
@@ -302,20 +309,107 @@ export default function AdminScenes() {
             <div className="border border-border rounded-lg divide-y divide-border bg-card">
               {activeCats.map((cat, catIdx) => {
                 const count = orderedPoses.filter(p => p.category === cat).length;
+                const isCustomCat = customCategories.some(c => c.slug === cat);
                 return (
                   <div key={cat} className="flex items-center gap-3 px-3 py-2">
                     <span className="text-muted-foreground text-xs select-none">≡</span>
-                    <span className="text-sm font-medium flex-1">{poseCategoryLabels[cat] || cat} <span className="text-muted-foreground font-normal">({count})</span></span>
+                    <span className="text-sm font-medium flex-1">
+                      {allCategoryLabels[cat] || cat} <span className="text-muted-foreground font-normal">({count})</span>
+                      {isCustomCat && <Badge variant="secondary" className="ml-1.5 text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-0">Custom</Badge>}
+                    </span>
                     <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === 0} onClick={() => moveCategoryOrder(cat, 'up')}>
                       <ArrowUp className="w-3 h-3" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === activeCats.length - 1} onClick={() => moveCategoryOrder(cat, 'down')}>
                       <ArrowDown className="w-3 h-3" />
                     </Button>
+                    {isCustomCat && count === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          const catRow = customCategories.find(c => c.slug === cat);
+                          if (catRow) {
+                            deleteCategoryMutation.mutate(catRow.id, {
+                              onSuccess: () => toast.success(`Deleted category "${catRow.label}"`),
+                              onError: () => toast.error('Failed to delete category'),
+                            });
+                          }
+                        }}
+                        title="Delete empty custom category"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
                   </div>
                 );
               })}
             </div>
+
+            {/* Add Category */}
+            {showAddCategory ? (
+              <div className="border border-border rounded-lg bg-card p-3 space-y-2">
+                <Input
+                  placeholder="Category name, e.g. Pet & Animal"
+                  value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  className="h-8 text-sm"
+                  autoFocus
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') { setShowAddCategory(false); setNewCategoryName(''); }
+                    if (e.key === 'Enter' && newCategoryName.trim()) {
+                      addCategoryMutation.mutate(newCategoryName.trim(), {
+                        onSuccess: () => {
+                          toast.success(`Category "${newCategoryName.trim()}" created`);
+                          setNewCategoryName('');
+                          setShowAddCategory(false);
+                        },
+                        onError: (err: any) => toast.error(err?.message || 'Failed to create category'),
+                      });
+                    }
+                  }}
+                />
+                {newCategoryName.trim() && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Slug: <code className="bg-muted px-1 py-0.5 rounded text-[10px]">{slugify(newCategoryName)}</code>
+                  </p>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    disabled={!newCategoryName.trim() || addCategoryMutation.isPending}
+                    onClick={() => {
+                      addCategoryMutation.mutate(newCategoryName.trim(), {
+                        onSuccess: () => {
+                          toast.success(`Category "${newCategoryName.trim()}" created`);
+                          setNewCategoryName('');
+                          setShowAddCategory(false);
+                        },
+                        onError: (err: any) => toast.error(err?.message || 'Failed to create category'),
+                      });
+                    }}
+                  >
+                    {addCategoryMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                    Create
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setShowAddCategory(false); setNewCategoryName(''); }}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowAddCategory(true)}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Category
+              </Button>
+            )}
           </div>
         )}
 
@@ -343,8 +437,9 @@ export default function AdminScenes() {
                   changePoseCategory={changePoseCategory}
                   duplicateToCategory={duplicateToCategory}
                   handleDelete={handleDelete}
-                  defaultCategoryOrder={defaultCategoryOrder}
-                  showReorderButtons={false}
+                   defaultCategoryOrder={defaultCategoryOrder}
+                   categoryLabels={allCategoryLabels}
+                   showReorderButtons={false}
                 />
               ))}
             </div>
@@ -357,7 +452,7 @@ export default function AdminScenes() {
             return (
               <div key={cat} className="space-y-2">
                 <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  {poseCategoryLabels[cat] || cat} <span className="font-normal">({poses.length})</span>
+                  {allCategoryLabels[cat] || cat} <span className="font-normal">({poses.length})</span>
                 </h3>
                 <div className="border border-border rounded-lg divide-y divide-border bg-card">
                   {poses.map((pose, idx) => (
@@ -379,8 +474,9 @@ export default function AdminScenes() {
                       changePoseCategory={changePoseCategory}
                       duplicateToCategory={duplicateToCategory}
                       handleDelete={handleDelete}
-                      defaultCategoryOrder={defaultCategoryOrder}
-                      showReorderButtons={true}
+                       defaultCategoryOrder={defaultCategoryOrder}
+                       categoryLabels={allCategoryLabels}
+                       showReorderButtons={true}
                     />
                   ))}
                 </div>
@@ -408,7 +504,7 @@ export default function AdminScenes() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate text-muted-foreground">{scene.name}</p>
-                      <p className="text-[10px] text-muted-foreground/60">{poseCategoryLabels[scene.category] || scene.category}</p>
+                      <p className="text-[10px] text-muted-foreground/60">{allCategoryLabels[scene.category] || scene.category}</p>
                     </div>
                     <Button
                       variant="outline"
@@ -449,6 +545,7 @@ interface SceneRowProps {
   duplicateToCategory: (pose: TryOnPose, cat: PoseCategory) => void;
   handleDelete: (pose: TryOnPose) => void;
   defaultCategoryOrder: PoseCategory[];
+  categoryLabels: Record<string, string>;
   showReorderButtons: boolean;
 }
 
@@ -457,7 +554,7 @@ function SceneRow({
   editingNameId, editingNameValue, setEditingNameValue,
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
-  handleDelete, defaultCategoryOrder, showReorderButtons,
+  handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
@@ -511,7 +608,7 @@ function SceneRow({
             </SelectTrigger>
             <SelectContent>
               {defaultCategoryOrder.map(c => (
-                <SelectItem key={c} value={c} className="text-xs">{poseCategoryLabels[c] || c}</SelectItem>
+                <SelectItem key={c} value={c} className="text-xs">{categoryLabels[c] || c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -549,7 +646,7 @@ function SceneRow({
               .filter(c => c !== pose.category)
               .map(c => (
                 <DropdownMenuItem key={c} onClick={() => duplicateToCategory(pose, c)} className="text-xs">
-                  {poseCategoryLabels[c] || c}
+                  {categoryLabels[c] || c}
                 </DropdownMenuItem>
               ))}
           </DropdownMenuContent>
