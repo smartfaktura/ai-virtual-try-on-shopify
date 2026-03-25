@@ -1,43 +1,28 @@
 
 
-# Fix: Optimize Workflow Product Images + Add Pagination
+# Remove Session Persistence + Fix Edit Image Loading
 
-## Problem
-1. Product images in workflow selection grids load at **full resolution** — unlike Freestyle which uses `getOptimizedUrl` with `quality: 60`
-2. No pagination — all products render at once, poor UX for 1000+ products
+## Problem 1: Session persistence on refresh is unwanted
+The Freestyle page saves all settings (prompt, model, scene, product, brand, aspect ratio, etc.) to `localStorage` and restores them on page load. The user wants this removed.
 
-## Changes — `src/pages/Generate.tsx`
+## Problem 2: "Edit Image" from Library doesn't load in prompt bar
+The edit image URL params (`?editImage=...&imageRole=edit`) are read in a `useEffect(() => {...}, [])` — an empty-dependency mount effect. If the Freestyle page is already mounted (user navigates from Library while Freestyle is in the React tree), **the effect never re-runs**, so the image doesn't load. Additionally, even on fresh mount, `searchParams` may have already been consumed.
 
-### 1. Replace raw `<img>` with `<ShimmerImage>` + `getOptimizedUrl`
+## File: `src/pages/Freestyle.tsx`
 
-There are **4 product grid/list sections** (two for try-on workflows, two for listing/UGC workflows) that use raw `<img src={up.image_url}>`. Each will be updated to:
+### Change 1: Remove session persistence
+- Delete `FreestylePersistedSettings` interface, `FREESTYLE_STORAGE_KEY`, `FREESTYLE_TTL`, `loadPersistedSettings()`, and `_persisted` variable
+- Remove the `useEffect` that saves settings to localStorage (lines 161-180)
+- Remove `localStorage.removeItem(FREESTYLE_STORAGE_KEY)` from `handleReset`
+- Remove all `_persisted?.xxx` fallbacks from `useState` initializers — use plain defaults (`''`, `null`, `'1:1'`, etc.)
+- Remove `_pendingCustomModelId`, `_pendingUserModelId`, `_pendingProductId`, `_pendingBrandProfileId` refs and their deferred-resolution effects
 
-```tsx
-<ShimmerImage
-  src={getOptimizedUrl(up.image_url, { quality: 60 })}
-  alt={up.title}
-  className="w-full aspect-square object-cover rounded-t-md"
-/>
-```
+### Change 2: Fix edit image loading
+- Add `searchParams` to the dependency array of the URL-params effect, OR better: use `useSearchParams` reactively by watching `searchParams.get('editImage')` specifically
+- Extract `editImage` and `imageRole` param handling into a **separate `useEffect`** that depends on `[searchParams]` so it fires on every navigation, not just mount
+- After consuming the params, clear only those specific params (not all) using `setSearchParams`
 
-Same for list-view thumbnails (`w-10 h-10`). Also update the small product chips in the generating/results steps (~lines 3963, 4135).
-
-Both `ShimmerImage` and `getOptimizedUrl` are already imported in this file.
-
-### 2. Add "Load More" pagination (max 22 per page)
-
-- Add state: `const [visibleCount, setVisibleCount] = useState(22);`
-- Slice `filteredProducts` to `filteredProducts.slice(0, visibleCount)` before mapping
-- Reset `visibleCount` to 22 when search query changes
-- Show a "Load more" button below the grid when `filteredProducts.length > visibleCount`:
-  ```tsx
-  {filteredProducts.length > visibleCount && (
-    <Button variant="outline" onClick={() => setVisibleCount(c => c + 22)} className="w-full mt-3">
-      Load more ({filteredProducts.length - visibleCount} remaining)
-    </Button>
-  )}
-  ```
-
-### Files
-- `src/pages/Generate.tsx` — only file changed
+### Summary
+- Remove ~60 lines of persistence logic
+- Fix 1 effect dependency to make edit-image reactive to navigation
 
