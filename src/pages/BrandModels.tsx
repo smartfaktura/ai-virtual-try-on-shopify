@@ -12,13 +12,17 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
+  Pencil, Info,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
@@ -84,7 +88,7 @@ function ChipSelect({ options, value, onChange, columns }: { options: string[]; 
   );
 }
 
-/* ── Branded loading state ── */
+/* ── Branded loading state with VOVV.AI team avatars ── */
 const LOADING_TIPS = [
   "Setting up studio lighting...",
   "AI is crafting realistic skin texture...",
@@ -94,35 +98,52 @@ const LOADING_TIPS = [
   "Almost there — finalizing your brand model...",
 ];
 
+const LOADING_AVATARS = TEAM_MEMBERS.slice(0, 6);
+
 function BrandedLoadingState() {
   const [tipIndex, setTipIndex] = useState(0);
+  const [activeAvatar, setActiveAvatar] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const tipTimer = setInterval(() => {
       setTipIndex((i) => (i + 1) % LOADING_TIPS.length);
     }, 3500);
-    return () => clearInterval(interval);
+    const avatarTimer = setInterval(() => {
+      setActiveAvatar((i) => (i + 1) % LOADING_AVATARS.length);
+    }, 2200);
+    return () => { clearInterval(tipTimer); clearInterval(avatarTimer); };
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-6">
-      {/* Rotating silhouettes */}
-      <div className="relative w-28 h-28">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 animate-pulse" />
-        <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-primary/30 to-transparent animate-pulse" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="grid grid-cols-2 gap-1.5">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="w-10 h-12 rounded-lg bg-muted/60 border border-border/40 flex items-center justify-center overflow-hidden animate-pulse"
-                style={{ animationDelay: `${i * 0.3}s` }}
-              >
-                <Users className="h-5 w-5 text-muted-foreground/30" />
-              </div>
-            ))}
+      {/* Team avatar carousel */}
+      <div className="relative w-32 h-32">
+        {LOADING_AVATARS.map((member, i) => (
+          <div
+            key={member.name}
+            className={cn(
+              "absolute inset-0 flex items-center justify-center transition-all duration-700",
+              i === activeAvatar ? "opacity-100 scale-100" : "opacity-0 scale-90"
+            )}
+          >
+            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
+              <img
+                src={getOptimizedUrl(member.avatar, { quality: 60 })}
+                alt={member.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
-        </div>
+        ))}
+        {/* Pulse ring */}
+        <div className="absolute inset-0 rounded-2xl border-2 border-primary/10 animate-pulse" />
+      </div>
+
+      {/* Active member name */}
+      <div className="text-center space-y-0.5">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
+          {LOADING_AVATARS[activeAvatar]?.name} · {LOADING_AVATARS[activeAvatar]?.expertiseTag}
+        </p>
       </div>
 
       <div className="text-center space-y-2">
@@ -135,12 +156,23 @@ function BrandedLoadingState() {
           <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors duration-300", i === tipIndex ? "bg-primary" : "bg-muted")} />
         ))}
       </div>
+
+      {/* Server-side info */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 border border-border/40 max-w-xs">
+        <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Generation happens server-side. You can safely navigate away — your model will appear here when ready.
+        </p>
+      </div>
     </div>
   );
 }
 
 /* ── Unified Generator ── */
 function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
+  // Model name
+  const [modelName, setModelName] = useState('');
+
   // Essentials
   const [gender, setGender] = useState('Female');
   const [age, setAge] = useState([28]);
@@ -185,8 +217,10 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
     if (!canGenerate) return;
     setGenerating(true);
     try {
+      const finalName = modelName.trim() || `${gender} Model`;
       const body: any = {
         mode: useReference && uploadedUrl ? 'combined' : 'generator',
+        name: finalName,
         description: {
           gender, age: age[0], ethnicity, morphology,
           eyeColor, hairStyle, hairColor, skinTone, faceShape,
@@ -203,6 +237,7 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
       if (data?.error) throw new Error(data.error);
       toast.success('Model generated successfully!');
       refreshBalance();
+      setModelName('');
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
@@ -220,6 +255,18 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="space-y-5 pt-1">
+      {/* ── Model Name ── */}
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
+        <Input
+          placeholder="e.g. Sarah, Alex, Brand Ambassador..."
+          value={modelName}
+          onChange={(e) => setModelName(e.target.value)}
+          maxLength={40}
+          className="h-9"
+        />
+      </div>
+
       {/* ── Essentials ── */}
       <div className="space-y-4">
         <div className="space-y-2">
@@ -316,7 +363,8 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
         )}
 
         <div className="space-y-1.5">
-          <Label className="text-xs">Distinctive Trait (optional)</Label>
+          <Label className="text-xs">Signature Feature</Label>
+          <p className="text-[10px] text-muted-foreground/60 -mt-0.5">Add a unique characteristic to make your model stand out</p>
           <Select value={distinctive} onValueChange={setDistinctive}>
             <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
             <SelectContent>
@@ -420,13 +468,39 @@ function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
         {balance < 20 && (
           <p className="text-xs text-destructive text-center">Not enough credits. You need at least 20.</p>
         )}
+
+        {/* Server-side generation note */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
+          <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Generation happens server-side. You can safely navigate away — your model will appear here when ready.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── Model card ── */
-function ModelCard({ model, onDelete }: { model: any; onDelete: (id: string) => void }) {
+/* ── Model card with inline rename ── */
+function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: string) => void; onRename: (id: string, name: string) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(model.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus();
+  }, [isEditing]);
+
+  const handleSave = () => {
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== model.name) {
+      onRename(model.id, trimmed);
+    } else {
+      setEditName(model.name);
+    }
+    setIsEditing(false);
+  };
+
   return (
     <Card className="overflow-hidden group border-border/60 hover:border-border transition-colors duration-150">
       <div className="aspect-[3/4] relative bg-muted">
@@ -438,10 +512,35 @@ function ModelCard({ model, onDelete }: { model: any; onDelete: (id: string) => 
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
-        <Badge className="absolute bottom-2 left-2 bg-background/80 backdrop-blur-sm text-[10px] font-semibold">My Model</Badge>
+        <Badge className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground backdrop-blur-sm text-[9px] font-bold uppercase tracking-wider">
+          Brand Model
+        </Badge>
       </div>
       <div className="p-3 space-y-1.5">
-        <p className="font-semibold text-sm truncate">{model.name}</p>
+        <div className="flex items-center gap-1.5 group/name">
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') { setEditName(model.name); setIsEditing(false); } }}
+              maxLength={40}
+              className="font-semibold text-sm w-full bg-transparent border-b border-primary outline-none"
+            />
+          ) : (
+            <>
+              <p className="font-semibold text-sm truncate flex-1">{model.name}</p>
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="opacity-0 group-hover/name:opacity-100 transition-opacity p-0.5 hover:text-primary"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            </>
+          )}
+        </div>
         <div className="flex flex-wrap gap-1">
           {model.gender && <Badge variant="outline" className="text-[10px] border-border/60">{model.gender}</Badge>}
           {model.ethnicity && <Badge variant="outline" className="text-[10px] border-border/60">{model.ethnicity}</Badge>}
@@ -476,6 +575,17 @@ export default function BrandModels() {
       toast.success('Model deleted');
     } catch {
       toast.error('Failed to delete model');
+    }
+  };
+
+  const handleRename = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase.from('user_models').update({ name }).eq('id', id);
+      if (error) throw error;
+      toast.success('Model renamed');
+      refetch();
+    } catch {
+      toast.error('Failed to rename model');
     }
   };
 
@@ -520,7 +630,7 @@ export default function BrandModels() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                 {models.map((m) => (
-                  <ModelCard key={m.id} model={m} onDelete={handleDelete} />
+                  <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
                 ))}
               </div>
             )}
