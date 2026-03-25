@@ -1,25 +1,24 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useUserModels, useGenerateUserModel, useDeleteUserModel } from '@/hooks/useUserModels';
+import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
-  Users, Upload, Sparkles, Crown, Loader2, Trash2, ChevronDown, Camera, Wand2,
-  Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck,
+  Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
+  Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
@@ -63,9 +62,9 @@ function UpgradeHero() {
 }
 
 /* ── Chip selector ── */
-function ChipSelect({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+function ChipSelect({ options, value, onChange, columns }: { options: string[]; value: string; onChange: (v: string) => void; columns?: number }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={cn("flex flex-wrap gap-2", columns && `grid grid-cols-${columns}`)}>
       {options.map((o) => (
         <button
           key={o}
@@ -85,14 +84,88 @@ function ChipSelect({ options, value, onChange }: { options: string[]; value: st
   );
 }
 
-/* ── Reference tab ── */
-function ReferenceTab({ onSuccess }: { onSuccess: () => void }) {
+/* ── Branded loading state ── */
+const LOADING_TIPS = [
+  "Setting up studio lighting...",
+  "AI is crafting realistic skin texture...",
+  "Composing the perfect studio portrait...",
+  "Adjusting three-point Profoto lighting...",
+  "Refining facial details and expression...",
+  "Almost there — finalizing your brand model...",
+];
+
+function BrandedLoadingState() {
+  const [tipIndex, setTipIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex((i) => (i + 1) % LOADING_TIPS.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center py-12 gap-6">
+      {/* Rotating silhouettes */}
+      <div className="relative w-28 h-28">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 animate-pulse" />
+        <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-primary/30 to-transparent animate-pulse" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="grid grid-cols-2 gap-1.5">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="w-10 h-12 rounded-lg bg-muted/60 border border-border/40 flex items-center justify-center overflow-hidden animate-pulse"
+                style={{ animationDelay: `${i * 0.3}s` }}
+              >
+                <Users className="h-5 w-5 text-muted-foreground/30" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center space-y-2">
+        <p className="text-sm font-semibold text-foreground">Creating your brand model...</p>
+        <p className="text-xs text-muted-foreground h-4 transition-all duration-300">{LOADING_TIPS[tipIndex]}</p>
+      </div>
+
+      <div className="flex gap-1.5">
+        {LOADING_TIPS.map((_, i) => (
+          <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors duration-300", i === tipIndex ? "bg-primary" : "bg-muted")} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Unified Generator ── */
+function UnifiedGenerator({ onSuccess }: { onSuccess: () => void }) {
+  // Essentials
+  const [gender, setGender] = useState('Female');
+  const [age, setAge] = useState([28]);
+  const [ethnicity, setEthnicity] = useState('Caucasian');
+  const [morphology, setMorphology] = useState('average');
+
+  // Details
+  const [eyeColor, setEyeColor] = useState('');
+  const [hairStyle, setHairStyle] = useState('');
+  const [hairColor, setHairColor] = useState('');
+  const [skinTone, setSkinTone] = useState('');
+  const [faceShape, setFaceShape] = useState('');
+  const [expression, setExpression] = useState('Confident');
+  const [facialHair, setFacialHair] = useState('None');
+  const [distinctive, setDistinctive] = useState('');
+
+  // Reference toggle
+  const [useReference, setUseReference] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
-  const generateMutation = useGenerateUserModel();
+
+  const [generating, setGenerating] = useState(false);
   const { balance, refreshBalance } = useCredits();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,10 +178,29 @@ function ReferenceTab({ onSuccess }: { onSuccess: () => void }) {
     if (url) setUploadedUrl(url);
   };
 
+  const canGenerate = !generating && balance >= 20 && !isUploading &&
+    (!useReference || (uploadedUrl && termsAccepted));
+
   const handleGenerate = async () => {
-    if (!uploadedUrl || !termsAccepted) return;
+    if (!canGenerate) return;
+    setGenerating(true);
     try {
-      await generateMutation.mutateAsync(uploadedUrl);
+      const body: any = {
+        mode: useReference && uploadedUrl ? 'combined' : 'generator',
+        description: {
+          gender, age: age[0], ethnicity, morphology,
+          eyeColor, hairStyle, hairColor, skinTone, faceShape,
+          expression, facialHair: gender === 'Male' ? facialHair : '',
+          distinctive,
+        },
+      };
+      if (useReference && uploadedUrl) {
+        body.imageUrl = uploadedUrl;
+      }
+
+      const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success('Model generated successfully!');
       refreshBalance();
       setPreviewUrl(null);
@@ -117,130 +209,18 @@ function ReferenceTab({ onSuccess }: { onSuccess: () => void }) {
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'Generation failed');
-    }
-  };
-
-  return (
-    <div className="space-y-5 pt-1">
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        Upload a clear, well-lit reference photo. Our AI generates a professional studio portrait matching the person's appearance.
-      </p>
-
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-
-      {!previewUrl ? (
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-border rounded-xl p-10 flex flex-col items-center gap-3 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
-        >
-          <div className="rounded-full bg-muted p-3">
-            <Camera className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <span className="text-sm text-muted-foreground">Click to upload reference photo</span>
-          <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
-        </button>
-      ) : (
-        <div className="relative w-36 h-48 rounded-xl overflow-hidden mx-auto border border-border shadow-sm">
-          <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-          <button
-            type="button"
-            className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-            onClick={() => { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-          {isUploading && (
-            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Terms & Conditions */}
-      {uploadedUrl && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border/60">
-          <Checkbox
-            id="terms"
-            checked={termsAccepted}
-            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-            className="mt-0.5"
-          />
-          <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
-            <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
-            I confirm I own the rights to this image or have permission to use it as a reference. I accept full responsibility for the content I upload and agree to the terms of service.
-          </label>
-        </div>
-      )}
-
-      {/* Credit info */}
-      <div className="flex items-center justify-between text-xs px-0.5">
-        <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
-        <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
-          Balance: {balance} credits
-        </span>
-      </div>
-
-      <Button
-        className="w-full gap-2"
-        disabled={!uploadedUrl || !termsAccepted || isUploading || generateMutation.isPending || balance < 20}
-        onClick={handleGenerate}
-      >
-        {generateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-        Generate Model (20 credits)
-      </Button>
-
-      {balance < 20 && uploadedUrl && (
-        <p className="text-xs text-destructive text-center">Not enough credits. You need at least 20.</p>
-      )}
-    </div>
-  );
-}
-
-/* ── Generator tab ── */
-function GeneratorTab({ onSuccess }: { onSuccess: () => void }) {
-  const [gender, setGender] = useState('Female');
-  const [age, setAge] = useState([28]);
-  const [ethnicity, setEthnicity] = useState('Caucasian');
-  const [morphology, setMorphology] = useState('average');
-  const [eyeColor, setEyeColor] = useState('');
-  const [hairStyle, setHairStyle] = useState('');
-  const [hairColor, setHairColor] = useState('');
-  const [distinctive, setDistinctive] = useState('');
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [generating, setGenerating] = useState(false);
-
-  const { balance, refreshBalance } = useCredits();
-
-  const handleGenerate = async () => {
-    setGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-user-model', {
-        body: {
-          mode: 'generator',
-          description: { gender, age: age[0], ethnicity, morphology, eyeColor, hairStyle, hairColor, distinctive },
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success('Model generated successfully!');
-      refreshBalance();
-      onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || 'Generation failed');
     } finally {
       setGenerating(false);
     }
   };
 
+  if (generating) {
+    return <BrandedLoadingState />;
+  }
+
   return (
     <div className="space-y-5 pt-1">
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        Describe the model you want to create. Our AI generates a professional studio portrait.
-      </p>
-
-      {/* Essentials */}
+      {/* ── Essentials ── */}
       <div className="space-y-4">
         <div className="space-y-2">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gender</Label>
@@ -257,83 +237,190 @@ function GeneratorTab({ onSuccess }: { onSuccess: () => void }) {
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Ethnicity</Label>
           <ChipSelect options={['Caucasian', 'Asian', 'African', 'Hispanic', 'Middle Eastern', 'South Asian', 'Mixed']} value={ethnicity} onChange={setEthnicity} />
         </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Morphology</Label>
+          <ChipSelect options={['slim', 'athletic', 'average', 'plus-size']} value={morphology} onChange={setMorphology} />
+        </div>
       </div>
 
-      {/* Details collapsible */}
-      <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <CollapsibleTrigger asChild>
-          <button type="button" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full">
-            <ChevronDown className={cn('h-4 w-4 transition-transform duration-150', detailsOpen && 'rotate-180')} />
-            Details (optional)
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 pt-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Morphology</Label>
-              <Select value={morphology} onValueChange={setMorphology}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['slim', 'athletic', 'average', 'plus-size'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Eye Color</Label>
-              <Select value={eyeColor} onValueChange={setEyeColor}>
-                <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-                <SelectContent>
-                  {['Brown', 'Blue', 'Green', 'Hazel', 'Gray', 'Amber'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Hair Style</Label>
-              <Select value={hairStyle} onValueChange={setHairStyle}>
-                <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-                <SelectContent>
-                  {['Short straight', 'Short curly', 'Medium wavy', 'Long straight', 'Long curly', 'Buzz cut', 'Bald', 'Braids', 'Ponytail', 'Bob'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Hair Color</Label>
-              <Select value={hairColor} onValueChange={setHairColor}>
-                <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-                <SelectContent>
-                  {['Black', 'Dark brown', 'Light brown', 'Blonde', 'Red', 'Auburn', 'Gray', 'White', 'Platinum'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {/* ── Separator ── */}
+      <div className="h-px bg-border/60" />
+
+      {/* ── Details (open by default) ── */}
+      <div className="space-y-4">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Appearance Details</p>
+
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Distinctive Trait (optional)</Label>
-            <Select value={distinctive} onValueChange={setDistinctive}>
-              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+            <Label className="text-xs">Eye Color</Label>
+            <Select value={eyeColor} onValueChange={setEyeColor}>
+              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
               <SelectContent>
-                {['Freckles', 'Dimples', 'Sharp jawline', 'High cheekbones', 'Full lips', 'Tattoos', 'Glasses', 'Beard', 'Mustache'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                {['Brown', 'Blue', 'Green', 'Hazel', 'Gray', 'Amber'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Skin Tone</Label>
+            <Select value={skinTone} onValueChange={setSkinTone}>
+              <SelectTrigger><SelectValue placeholder="Natural" /></SelectTrigger>
+              <SelectContent>
+                {['Fair', 'Light', 'Medium', 'Olive', 'Tan', 'Brown', 'Dark'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Hair Style</Label>
+            <Select value={hairStyle} onValueChange={setHairStyle}>
+              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+              <SelectContent>
+                {['Short straight', 'Short curly', 'Medium wavy', 'Long straight', 'Long curly', 'Buzz cut', 'Bald', 'Braids', 'Ponytail', 'Bob'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Hair Color</Label>
+            <Select value={hairColor} onValueChange={setHairColor}>
+              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+              <SelectContent>
+                {['Black', 'Dark brown', 'Light brown', 'Blonde', 'Red', 'Auburn', 'Gray', 'White', 'Platinum'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Face Shape</Label>
+            <Select value={faceShape} onValueChange={setFaceShape}>
+              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+              <SelectContent>
+                {['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Oblong'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Expression</Label>
+            <Select value={expression} onValueChange={setExpression}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {['Neutral', 'Smile', 'Serious', 'Confident', 'Soft'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-      {/* Credit info */}
-      <div className="flex items-center justify-between text-xs px-0.5">
-        <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
-        <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
-          Balance: {balance} credits
-        </span>
+        {/* Facial hair — male only */}
+        {gender === 'Male' && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Facial Hair</Label>
+            <ChipSelect options={['None', 'Stubble', 'Short beard', 'Full beard', 'Goatee', 'Mustache']} value={facialHair} onChange={setFacialHair} />
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Distinctive Trait (optional)</Label>
+          <Select value={distinctive} onValueChange={setDistinctive}>
+            <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+            <SelectContent>
+              {['Freckles', 'Dimples', 'Sharp jawline', 'High cheekbones', 'Full lips', 'Tattoos', 'Glasses', 'Beauty mark'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Button className="w-full gap-2" disabled={generating || balance < 20} onClick={handleGenerate}>
-        {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-        Generate Model (20 credits)
-      </Button>
+      {/* ── Separator ── */}
+      <div className="h-px bg-border/60" />
 
-      {balance < 20 && (
-        <p className="text-xs text-destructive text-center">Not enough credits. You need at least 20.</p>
-      )}
+      {/* ── Optional reference image ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ImagePlus className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="ref-toggle" className="text-xs font-medium cursor-pointer">Use reference image</Label>
+          </div>
+          <Switch
+            id="ref-toggle"
+            checked={useReference}
+            onCheckedChange={(v) => {
+              setUseReference(v);
+              if (!v) { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }
+            }}
+          />
+        </div>
+
+        {useReference && (
+          <div className="space-y-3 pl-1">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Upload a reference photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
+            </p>
+
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+            {!previewUrl ? (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
+              >
+                <div className="rounded-full bg-muted p-2.5">
+                  <Camera className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <span className="text-xs text-muted-foreground">Click to upload reference photo</span>
+                <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
+              </button>
+            ) : (
+              <div className="relative w-28 h-36 rounded-xl overflow-hidden mx-auto border border-border shadow-sm">
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  onClick={() => { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+                {isUploading && (
+                  <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Terms & Conditions */}
+            {uploadedUrl && (
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border/60">
+                <Checkbox
+                  id="terms"
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
+                  <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
+                  I confirm I own the rights to this image or have permission to use it as a reference. I accept full responsibility for the content I upload and agree to the terms of service.
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Credit info & Generate ── */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center justify-between text-xs px-0.5">
+          <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
+          <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
+            Balance: {balance} credits
+          </span>
+        </div>
+
+        <Button className="w-full gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+          <Wand2 className="h-4 w-4" />
+          Generate Brand Model (20 credits)
+        </Button>
+
+        {balance < 20 && (
+          <p className="text-xs text-destructive text-center">Not enough credits. You need at least 20.</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -401,30 +488,15 @@ export default function BrandModels() {
       {!isPaid ? (
         <UpgradeHero />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-8 mt-2">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8 mt-2">
           {/* Creation panel */}
           <Card className="p-6 h-fit border-border/60">
             <h3 className="font-semibold mb-1 flex items-center gap-2 text-base">
               <Sparkles className="h-4 w-4 text-primary" /> Create New Model
             </h3>
-            <p className="text-xs text-muted-foreground mb-5">20 credits per model generation</p>
+            <p className="text-xs text-muted-foreground mb-5">Describe your ideal model · 20 credits per generation</p>
 
-            <Tabs defaultValue="reference" className="w-full">
-              <TabsList className="w-full mb-1">
-                <TabsTrigger value="reference" className="flex-1 gap-1.5 text-xs">
-                  <Camera className="h-3.5 w-3.5" /> From Reference
-                </TabsTrigger>
-                <TabsTrigger value="generator" className="flex-1 gap-1.5 text-xs">
-                  <Wand2 className="h-3.5 w-3.5" /> Generator
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="reference">
-                <ReferenceTab onSuccess={() => refetch()} />
-              </TabsContent>
-              <TabsContent value="generator">
-                <GeneratorTab onSuccess={() => refetch()} />
-              </TabsContent>
-            </Tabs>
+            <UnifiedGenerator onSuccess={() => refetch()} />
           </Card>
 
           {/* Models grid */}

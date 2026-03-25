@@ -6,6 +6,53 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function buildPromptFromDescription(d: any): string {
+  const genderWord = d.gender || "Female";
+  const ageVal = d.age || 28;
+
+  const parts: string[] = [
+    `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens.`,
+    `${genderWord}, ${ageVal} years old, ${d.ethnicity || "Caucasian"} ethnicity, ${d.morphology || "average"} build.`,
+  ];
+
+  if (d.skinTone) parts.push(`${d.skinTone} skin tone.`);
+  if (d.faceShape) parts.push(`${d.faceShape} face shape.`);
+  if (d.eyeColor) parts.push(`${d.eyeColor} eyes.`);
+  if (d.hairStyle && d.hairColor) {
+    parts.push(`${d.hairColor} ${d.hairStyle.toLowerCase()} hair.`);
+  } else if (d.hairStyle) {
+    parts.push(`${d.hairStyle} hair.`);
+  } else if (d.hairColor) {
+    parts.push(`${d.hairColor} hair.`);
+  }
+  if (d.facialHair && d.facialHair !== "None") parts.push(`${d.facialHair} facial hair.`);
+  if (d.expression) parts.push(`${d.expression} expression.`);
+  if (d.distinctive) parts.push(`Distinctive feature: ${d.distinctive}.`);
+
+  parts.push(
+    "Light grey (#E8E8E8) seamless paper studio background.",
+    "Soft diffused three-point Profoto lighting setup, subtle catch light in eyes,",
+    "sharp focus on facial features at f/2.8, natural skin texture with visible pores,",
+    "no retouching, no airbrushing, no AI artifacts, no uncanny valley.",
+    "Editorial fashion photography, waist-up framing, subject centered,",
+    "looking directly at camera. Color-accurate, neutral white balance. 8K resolution."
+  );
+
+  return parts.join(" ");
+}
+
+function extractMetadata(d: any) {
+  const ageVal = d.age || 28;
+  const ageLabel = ageVal < 13 ? "child" : ageVal < 18 ? "teenager" : ageVal < 30 ? "young-adult" : ageVal < 50 ? "adult" : "mature";
+  return {
+    name: `${d.gender || "Female"} Model`,
+    gender: (d.gender || "female").toLowerCase(),
+    body_type: d.morphology || "average",
+    ethnicity: d.ethnicity || "",
+    age_range: ageLabel,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,7 +73,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Check plan
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("plan, credits_balance")
@@ -46,7 +92,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const mode = body.mode || "reference";
+    const mode = body.mode || "generator";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -55,51 +101,8 @@ serve(async (req) => {
     let sourceImageUrl: string;
     let referenceContent: any[] | undefined;
 
-    if (mode === "generator") {
-      // Generator mode: build prompt from structured description
-      const d = body.description;
-      if (!d) throw new Error("description is required for generator mode");
-
-      const genderWord = d.gender || "Female";
-      const ageVal = d.age || 28;
-      const ageLabel = ageVal < 13 ? "child" : ageVal < 18 ? "teenager" : ageVal < 30 ? "young adult" : ageVal < 50 ? "adult" : "mature adult";
-
-      metadata = {
-        name: `${genderWord} Model`,
-        gender: genderWord.toLowerCase(),
-        body_type: d.morphology || "average",
-        ethnicity: d.ethnicity || "",
-        age_range: ageLabel,
-      };
-
-      // Build detailed prompt
-      const parts: string[] = [
-        `Professional fashion model studio portrait photograph.`,
-        `${genderWord}, ${ageVal} years old, ${d.ethnicity || "Caucasian"} ethnicity, ${d.morphology || "average"} build.`,
-      ];
-
-      if (d.eyeColor) parts.push(`${d.eyeColor} eyes.`);
-      if (d.hairStyle && d.hairColor) {
-        parts.push(`${d.hairColor} ${d.hairStyle.toLowerCase()} hair.`);
-      } else if (d.hairStyle) {
-        parts.push(`${d.hairStyle} hair.`);
-      } else if (d.hairColor) {
-        parts.push(`${d.hairColor} hair.`);
-      }
-      if (d.distinctive) parts.push(`Distinctive feature: ${d.distinctive}.`);
-
-      parts.push(
-        "Light grey seamless studio background.",
-        "Soft diffused three-point lighting, sharp focus on facial features,",
-        "natural skin texture visible, no airbrushing, no AI artifacts,",
-        "editorial fashion photography quality, waist-up framing,",
-        "looking directly at camera with natural confident expression. 8K resolution."
-      );
-
-      generatePrompt = parts.join(" ");
-      sourceImageUrl = "generator";
-    } else {
-      // Reference mode: analyze image first
+    if (mode === "reference") {
+      // Legacy reference-only mode
       const imageUrl = body.imageUrl;
       if (!imageUrl) throw new Error("imageUrl is required");
 
@@ -142,12 +145,37 @@ Return ONLY the JSON object, no markdown or explanation.`,
       if (!jsonMatch) throw new Error("Could not parse AI analysis");
       metadata = JSON.parse(jsonMatch[0]);
 
-      console.log("Metadata extracted:", JSON.stringify(metadata));
-
       const genderWord = metadata.gender === "male" ? "male" : "female";
-      generatePrompt = `Professional fashion model studio portrait photograph of a ${genderWord} model. ${metadata.appearance_description}. Light grey seamless studio background, soft diffused three-point lighting, sharp focus on facial features, natural skin texture visible, no airbrushing, no AI artifacts, editorial fashion photography quality, waist-up framing, looking at camera with a natural confident expression. 8K resolution.`;
+      generatePrompt = `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens. ${genderWord} model. ${metadata.appearance_description}. Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance. Light grey (#E8E8E8) seamless paper studio background, soft diffused three-point Profoto lighting setup, subtle catch light in eyes, sharp focus on facial features at f/2.8, natural skin texture with visible pores, no retouching, no airbrushing, no AI artifacts, no uncanny valley. Editorial fashion photography, waist-up framing, subject centered, looking at camera with a natural confident expression. Color-accurate, neutral white balance. 8K resolution.`;
       sourceImageUrl = imageUrl;
       referenceContent = [{ type: "image_url", image_url: { url: imageUrl } }];
+
+    } else if (mode === "combined") {
+      // Combined mode: description + optional reference image
+      const d = body.description;
+      if (!d) throw new Error("description is required for combined mode");
+
+      metadata = extractMetadata(d);
+      generatePrompt = buildPromptFromDescription(d);
+
+      // Append reference guidance if image provided
+      const imageUrl = body.imageUrl;
+      if (imageUrl) {
+        generatePrompt += " Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance while applying the described attributes.";
+        sourceImageUrl = imageUrl;
+        referenceContent = [{ type: "image_url", image_url: { url: imageUrl } }];
+      } else {
+        sourceImageUrl = "generator";
+      }
+
+    } else {
+      // Generator mode: build prompt from structured description
+      const d = body.description;
+      if (!d) throw new Error("description is required for generator mode");
+
+      metadata = extractMetadata(d);
+      generatePrompt = buildPromptFromDescription(d);
+      sourceImageUrl = "generator";
     }
 
     // Generate portrait
@@ -184,7 +212,7 @@ Return ONLY the JSON object, no markdown or explanation.`,
       throw new Error("No image was generated");
     }
 
-    // Deduct credits after successful generation
+    // Deduct credits
     const { data: newBalance, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
       p_user_id: user.id,
       p_amount: 20,
