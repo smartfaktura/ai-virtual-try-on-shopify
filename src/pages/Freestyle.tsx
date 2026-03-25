@@ -28,6 +28,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses, mockModels } from '@/data/mockData';
+import { useCustomModels } from '@/hooks/useCustomModels';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
@@ -145,11 +146,14 @@ export default function Freestyle() {
   } | null>(null);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
-  // Deferred restoration IDs for async-loaded entities (products, brand profiles, custom scenes)
+  // Deferred restoration IDs for async-loaded entities (products, brand profiles, custom scenes, custom models)
   const _pendingProductId = useRef(_persisted?.productId ?? null);
   const _pendingBrandProfileId = useRef(_persisted?.brandProfileId ?? null);
   const _pendingCustomSceneId = useRef(
     _persisted?.sceneId && !mockTryOnPoses.find(s => s.poseId === _persisted.sceneId) ? _persisted.sceneId : null
+  );
+  const _pendingCustomModelId = useRef(
+    _persisted?.modelId && _persisted.modelId.startsWith('custom-') ? _persisted.modelId : null
   );
 
   // Persist all settings to localStorage (debounced 500ms)
@@ -215,6 +219,7 @@ export default function Freestyle() {
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customScenePoses } = useCustomScenes();
   const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
+  const { asProfiles: customModelProfiles } = useCustomModels();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),
@@ -472,6 +477,17 @@ export default function Freestyle() {
       }
     }
   }, [customScenePoses]);
+
+  // Deferred restoration: custom models (loaded async)
+  useEffect(() => {
+    if (_pendingCustomModelId.current && customModelProfiles.length > 0) {
+      const match = customModelProfiles.find(m => m.modelId === _pendingCustomModelId.current);
+      if (match) {
+        setSelectedModel(match);
+        _pendingCustomModelId.current = null;
+      }
+    }
+  }, [customModelProfiles]);
 
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({

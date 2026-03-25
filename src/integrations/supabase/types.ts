@@ -274,6 +274,7 @@ export type Database = {
           is_active: boolean
           name: string
           optimized_image_url: string | null
+          sort_order: number
         }
         Insert: {
           age_range?: string
@@ -287,6 +288,7 @@ export type Database = {
           is_active?: boolean
           name: string
           optimized_image_url?: string | null
+          sort_order?: number
         }
         Update: {
           age_range?: string
@@ -300,6 +302,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           optimized_image_url?: string | null
+          sort_order?: number
         }
         Relationships: []
       }
