@@ -209,15 +209,38 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
   const { balance, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processFile = async (file: File) => {
     const reader = new FileReader();
     reader.onload = () => setPreviewUrl(reader.result as string);
     reader.readAsDataURL(file);
     const url = await upload(file);
     if (url) setUploadedUrl(url);
   };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  // Clipboard paste support for reference image
+  useEffect(() => {
+    if (!useReference || previewUrl) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) processFile(file);
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [useReference, previewUrl]);
 
   const canGenerate = !generating && (makePublic || balance >= 20) && !isUploading &&
     (!useReference || (uploadedUrl && termsAccepted));
@@ -430,7 +453,7 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
                 <div className="rounded-full bg-muted p-2.5">
                   <Camera className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <span className="text-xs text-muted-foreground">Click to upload reference photo</span>
+                <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
                 <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
               </button>
             ) : (
