@@ -42,12 +42,12 @@ export function RecentCreationsGallery() {
           .select('id, results, created_at, workflows(name), user_products(title, image_url)')
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(12),
         supabase
           .from('freestyle_generations')
           .select('id, image_url, prompt, quality, aspect_ratio, created_at')
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(12),
       ]);
 
       if (!jobsResult.error) {
@@ -115,7 +115,7 @@ export function RecentCreationsGallery() {
       }
 
       items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
-      const top = items.slice(0, 10);
+      const top = items.slice(0, 16);
 
       const rawUrls = top.map(i => i.imageUrl);
       const signedUrls = await toSignedUrls(rawUrls);
