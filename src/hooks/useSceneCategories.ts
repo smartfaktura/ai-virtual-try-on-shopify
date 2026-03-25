@@ -96,4 +96,37 @@ export function useDeleteSceneCategory() {
   });
 }
 
+export function useUpdateSceneCategory() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, label }: { id: string; label: string }) => {
+      const { error } = await supabase
+        .from('scene_categories' as any)
+        .update({ label: label.trim() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scene-categories'] }),
+  });
+}
+
+export function useUpsertCategoryLabel() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ slug, label }: { slug: string; label: string }) => {
+      const { error } = await supabase
+        .from('scene_categories' as any)
+        .upsert(
+          { slug, label: label.trim(), created_by: user!.id, sort_order: 999 },
+          { onConflict: 'slug' }
+        );
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scene-categories'] }),
+  });
+}
+
 export { slugify };
