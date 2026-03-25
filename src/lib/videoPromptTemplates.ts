@@ -1,8 +1,9 @@
 /**
- * Video Prompt Builder — Category-Aware Ecommerce Prompt Composition
+ * Video Prompt Builder — Category-Specific Ecommerce Prompt Composition
  * 
- * Builds action-rich prompts from category, motion goal, camera, subject motion,
- * realism, loop style, and preservation rules. No more generic camera-only prompts.
+ * Builds action-rich, category-aware prompts from the resolved strategy.
+ * Each category has a dedicated assembler that emphasizes what matters
+ * most for that product type. Shared primitives avoid duplication.
  */
 
 import type { VideoAnalysis, VideoStrategy } from './videoStrategyResolver';
@@ -24,7 +25,7 @@ interface BuiltPrompt {
   result_label: string;
 }
 
-// ─── Phrase Maps ───
+// ─── Shared Prompt Primitives ───
 
 const CAMERA_PHRASES: Record<string, string> = {
   static: 'static camera, no camera movement',
@@ -35,26 +36,10 @@ const CAMERA_PHRASES: Record<string, string> = {
   orbit: 'smooth orbiting camera movement around the subject',
 };
 
-const SUBJECT_PHRASES: Record<string, string> = {
-  minimal: 'very minimal subtle movement',
-  natural_pose_shift: 'natural subtle body pose shift',
-  action_motion: 'controlled realistic action motion',
-  hand_object_interaction: 'natural hand and object interaction movement',
-  hair_fabric: 'soft realistic hair and fabric movement',
-  auto: 'natural movement appropriate to the scene',
-};
-
 const REALISM_PHRASES: Record<string, string> = {
   ultra_realistic: 'ultra photorealistic',
   realistic: 'realistic',
   slightly_stylized: 'slightly stylized cinematic',
-};
-
-const LOOP_PHRASES: Record<string, string> = {
-  none: '',
-  short_repeatable: 'suitable for a short repeatable loop',
-  seamless_loop: 'with seamless looping motion',
-  one_natural: 'as one natural continuous movement',
 };
 
 const INTENSITY_PHRASES: Record<string, string> = {
@@ -63,7 +48,16 @@ const INTENSITY_PHRASES: Record<string, string> = {
   high: 'dynamic expressive',
 };
 
-// ─── Preservation Builder ───
+const LOOP_PHRASES: Record<string, string> = {
+  none: '',
+  short_repeatable: 'suitable for a short repeatable loop with one contained action',
+  seamless_loop: 'with seamless cyclic looping motion that returns to start',
+  one_natural: 'as one natural continuous movement',
+};
+
+function buildCameraClause(motion: string): string {
+  return `Camera: ${CAMERA_PHRASES[motion] || CAMERA_PHRASES.slow_push_in}.`;
+}
 
 function buildPreservationClause(strategy: VideoStrategy): string {
   const parts: string[] = [];
@@ -73,6 +67,34 @@ function buildPreservationClause(strategy: VideoStrategy): string {
   if (strategy.preserve_outfit) parts.push('outfit and styling');
   if (parts.length === 0) return '';
   return `Preserve: ${parts.join(', ')}.`;
+}
+
+function buildStabilityClause(movingElements: string[], strategy: VideoStrategy): string {
+  // What should stay stable = everything NOT in moving elements
+  const stableThings: string[] = [];
+  if (strategy.preserve_scene && !movingElements.includes('atmosphere') && !movingElements.includes('ambient_light')) {
+    stableThings.push('background');
+  }
+  if (strategy.preserve_product_details && !movingElements.includes('product')) {
+    stableThings.push('product proportions');
+  }
+  if (strategy.preserve_identity && !movingElements.includes('body')) {
+    stableThings.push('facial features');
+  }
+  if (stableThings.length === 0) return '';
+  return `Keep stable: ${stableThings.join(', ')}.`;
+}
+
+function buildMotionDescriptor(strategy: VideoStrategy): string {
+  const intensity = INTENSITY_PHRASES[strategy.motion_intensity_default] || 'moderate natural';
+  const verb = strategy.action_verb;
+  const style = strategy.action_style;
+  return `${style} ${intensity} ${verb}`;
+}
+
+function buildLoopClause(loopStyle: string): string {
+  const phrase = LOOP_PHRASES[loopStyle];
+  return phrase ? ` ${phrase}` : '';
 }
 
 // ─── Category-Specific Negative Prompts ───
@@ -90,34 +112,348 @@ const CATEGORY_NEGATIVES: Record<string, string> = {
   health_supplements_reveal: 'blurry, distorted, morphing, flickering, label warping, package deformation, watermark',
 };
 
-// ─── Category-Specific Context Phrases ───
-
-const CATEGORY_CONTEXT: Record<string, string> = {
-  fashion_apparel_motion: 'fashion campaign video',
-  beauty_skincare_reveal: 'beauty product video',
-  fragrance_premium_reveal: 'luxury fragrance video',
-  jewelry_macro_motion: 'luxury jewelry video',
-  accessories_showcase: 'premium accessories video',
-  home_decor_ambient: 'home decor atmosphere video',
-  food_beverage_motion: 'food and beverage video',
-  electronics_clean_reveal: 'tech product video',
-  sports_fitness_action: 'sports and fitness video',
-  health_supplements_reveal: 'health and wellness product video',
+const REALISM_NEGATIVE_EXTRAS: Record<string, string> = {
+  ultra_realistic: ', CGI look, artificial motion, animation feel, plastic skin, uncanny valley',
+  slightly_stylized: '', // Remove some strict terms — handled by not appending
 };
 
-// ─── CFG Scale by category ───
+// ─── Category-Specific Prompt Assemblers ───
 
-const CATEGORY_CFG: Record<string, number> = {
-  fashion_apparel_motion: 0.6,
-  beauty_skincare_reveal: 0.65,
-  fragrance_premium_reveal: 0.65,
-  jewelry_macro_motion: 0.7,
-  accessories_showcase: 0.6,
-  home_decor_ambient: 0.5,
-  food_beverage_motion: 0.55,
-  electronics_clean_reveal: 0.65,
-  sports_fitness_action: 0.5,
-  health_supplements_reveal: 0.6,
+interface AssemblerInput {
+  strategy: VideoStrategy;
+  analysis: VideoAnalysis;
+  userPrompt?: string;
+  realism: string;
+  intensity: string;
+}
+
+function assembleUserNote(userPrompt: string | undefined, conflict: boolean): { prefix: string; suffix: string } {
+  if (!userPrompt?.trim()) return { prefix: '', suffix: '' };
+  const note = userPrompt.trim();
+  if (conflict) {
+    return { prefix: '', suffix: `Additional note: ${note}.` };
+  }
+  return { prefix: `${note}. `, suffix: '' };
+}
+
+function buildSportsPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+  const object = analysis.interactive_object;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  // Core action with concrete verb
+  if (object) {
+    parts.push(`One ${strategy.action_style} realistic ${strategy.action_verb} of the ${object} while maintaining grounded athletic stance.`);
+  } else {
+    parts.push(`${input.realism} sports and fitness video with ${strategy.action_style} ${strategy.action_verb} motion${buildLoopClause(strategy.loop_style)}.`);
+  }
+
+  // Body realism emphasis
+  if (elements.includes('body') || elements.includes('limbs')) {
+    parts.push(`Athletic body motion must be physically grounded with natural weight distribution.`);
+  }
+
+  // Object physics
+  if (object) {
+    parts.push(`${object} motion follows realistic physics with proper momentum and gravity.`);
+  }
+
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+  parts.push(buildStabilityClause(elements, strategy));
+
+  const lighting = analysis.lighting_style || 'natural sports lighting';
+  parts.push(`Maintain ${lighting} quality throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildFashionPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} fashion campaign video${buildLoopClause(strategy.loop_style)}.`);
+
+  // Fabric emphasis
+  if (elements.includes('fabric') || elements.includes('hair')) {
+    parts.push(`Soft realistic ${strategy.action_verb} in garment fabric at the sleeve, hem, and collar while preserving the silhouette shape.`);
+    if (elements.includes('hair')) parts.push(`Natural hair movement following the body motion.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} motion.`);
+  }
+
+  // Identity protection
+  if (strategy.preserve_identity) {
+    parts.push(`Subject face and identity must remain exactly consistent throughout.`);
+  }
+
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+  parts.push(buildStabilityClause(elements, strategy));
+
+  const lighting = analysis.lighting_style || 'studio fashion lighting';
+  parts.push(`Maintain ${lighting} quality throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildJewelryPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} luxury jewelry video${buildLoopClause(strategy.loop_style)}.`);
+
+  // Micro-motion and reflection emphasis
+  if (elements.includes('light_reflection') || elements.includes('jewelry_surface')) {
+    parts.push(`Micro reflective ${strategy.action_verb} across the jewelry surface with stable metal geometry and gem proportions.`);
+  } else if (elements.includes('hands')) {
+    parts.push(`${strategy.action_style} hand ${strategy.action_verb} to showcase the piece with precise wrist control.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} motion with extreme detail preservation.`);
+  }
+
+  parts.push(`Every facet, setting, and metal finish must remain sharp and undistorted.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'premium jewelry lighting';
+  parts.push(`Maintain ${lighting} with controlled light reflections.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildFoodPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+  const object = analysis.interactive_object;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} food and beverage video${buildLoopClause(strategy.loop_style)}.`);
+
+  // Freshness cues
+  if (elements.includes('steam')) {
+    parts.push(`Gentle rising steam from the dish creating warm appetizing atmosphere while food composition stays perfectly fixed.`);
+  } else if (elements.includes('garnish')) {
+    parts.push(`Subtle motion in garnish and fresh elements while the plate arrangement stays stable.`);
+  } else if (object) {
+    parts.push(`${strategy.action_style} realistic ${strategy.action_verb} of ${object} with appetizing visual quality.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} food presentation motion.`);
+  }
+
+  parts.push(`Food must look fresh, appetizing, and never deformed.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'warm food photography lighting';
+  parts.push(`Maintain ${lighting} throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildElectronicsPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} tech product video${buildLoopClause(strategy.loop_style)}.`);
+
+  // Hard geometry preservation
+  if (elements.includes('screen_light')) {
+    parts.push(`${strategy.action_style} ${strategy.action_verb} effect on the screen with stable device geometry and sharp edges.`);
+  } else if (elements.includes('hands')) {
+    parts.push(`Natural hand ${strategy.action_verb} with the device maintaining exact proportions, ports, and button positions.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} product motion with hard geometry perfectly preserved.`);
+  }
+
+  parts.push(`Device proportions, screen aspect ratio, ports, and buttons must remain perfectly stable.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'clean tech product lighting';
+  parts.push(`Maintain ${lighting} throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildBeautyPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} beauty product video${buildLoopClause(strategy.loop_style)}.`);
+
+  // Hand control and luxury finish
+  if (elements.includes('hands') && elements.includes('product')) {
+    parts.push(`Subtle hand-led product ${strategy.action_verb} presenting the label and finish with controlled precision.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} motion with luxury polish and clean finish.`);
+  }
+
+  parts.push(`Product surface gloss, label, and packaging details must stay sharp.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'soft beauty product lighting';
+  parts.push(`Maintain ${lighting} with clean luxury feel throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildFragrancePrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} luxury fragrance video${buildLoopClause(strategy.loop_style)}.`);
+
+  if (elements.includes('light_reflection') || elements.includes('bottle')) {
+    parts.push(`${strategy.action_style} light play ${strategy.action_verb} across the glass bottle surface with preserved label and cap detail.`);
+  } else if (elements.includes('hands')) {
+    parts.push(`${strategy.action_style} hand ${strategy.action_verb} presenting the bottle with precise controlled rotation.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} motion with elegant premium presence.`);
+  }
+
+  parts.push(`Bottle shape, label typography, and cap must remain undistorted.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'premium fragrance lighting';
+  parts.push(`Maintain ${lighting} throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildHomeDecorPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} home decor atmosphere video${buildLoopClause(strategy.loop_style)}.`);
+
+  if (elements.includes('ambient_light') || elements.includes('atmosphere')) {
+    parts.push(`Gentle ambient ${strategy.action_verb} in the room atmosphere with stable furniture and object positions.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} motion in the interior scene.`);
+  }
+
+  parts.push(`Room layout, furniture positions, and decor arrangement must stay fixed.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'warm interior lighting';
+  parts.push(`Maintain ${lighting} throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildAccessoriesPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+  const elements = strategy.primary_moving_elements;
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} premium accessories video${buildLoopClause(strategy.loop_style)}.`);
+
+  if (elements.includes('hands')) {
+    parts.push(`${strategy.action_style} hand ${strategy.action_verb} presenting the accessory with natural wrist movement.`);
+  } else {
+    parts.push(`${buildMotionDescriptor(strategy)} motion showcasing the product.`);
+  }
+
+  parts.push(`Material texture, hardware details, and stitching must remain sharp.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'premium product lighting';
+  parts.push(`Maintain ${lighting} throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildHealthPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} health and wellness product video${buildLoopClause(strategy.loop_style)}.`);
+  parts.push(`${buildMotionDescriptor(strategy)} motion with clean, trustworthy clinical feel.`);
+  parts.push(`Product labels, packaging text, and proportions must remain perfectly clear.`);
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+
+  const lighting = analysis.lighting_style || 'clean clinical lighting';
+  parts.push(`Maintain ${lighting} throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
+}
+
+// ─── Assembler Dispatch ───
+
+const CATEGORY_ASSEMBLERS: Record<string, (input: AssemblerInput) => string> = {
+  sports_fitness_action: buildSportsPrompt,
+  fashion_apparel_motion: buildFashionPrompt,
+  jewelry_macro_motion: buildJewelryPrompt,
+  food_beverage_motion: buildFoodPrompt,
+  electronics_clean_reveal: buildElectronicsPrompt,
+  beauty_skincare_reveal: buildBeautyPrompt,
+  fragrance_premium_reveal: buildFragrancePrompt,
+  home_decor_ambient: buildHomeDecorPrompt,
+  accessories_showcase: buildAccessoriesPrompt,
+  health_supplements_reveal: buildHealthPrompt,
 };
 
 // ─── Main Builder ───
@@ -128,42 +464,33 @@ export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
 
   const realism = REALISM_PHRASES[strategy.realism_level] || 'realistic';
   const intensity = INTENSITY_PHRASES[strategy.motion_intensity_default] || 'moderate natural';
-  const camera = CAMERA_PHRASES[strategy.camera_motion] || CAMERA_PHRASES.slow_push_in;
-  const subject = SUBJECT_PHRASES[strategy.subject_motion] || SUBJECT_PHRASES.minimal;
-  const loop = LOOP_PHRASES[strategy.loop_style] || '';
-  const context = CATEGORY_CONTEXT[family] || 'commercial product video';
-  const preservation = buildPreservationClause(strategy);
 
-  // Build the structured prompt
-  const parts: string[] = [];
+  const assemblerInput: AssemblerInput = {
+    strategy,
+    analysis,
+    userPrompt,
+    realism,
+    intensity,
+  };
 
-  // User's specific note first
-  if (userPrompt) parts.push(userPrompt.trim());
+  // Dispatch to category-specific assembler or fallback
+  const assembler = CATEGORY_ASSEMBLERS[family];
+  let prompt: string;
 
-  // Core instruction
-  parts.push(`Create a ${realism} ${context}${loop ? ` ${loop}` : ''}.`);
-
-  // Subject motion
-  parts.push(`Subject: ${subject} with ${intensity} motion.`);
-
-  // Interactive object from analysis
-  if (analysis.interactive_object) {
-    parts.push(`Interactive element: realistic ${analysis.interactive_object} motion.`);
+  if (assembler) {
+    prompt = assembler(assemblerInput);
+  } else {
+    // Generic fallback
+    prompt = buildGenericPrompt(assemblerInput);
   }
 
-  // Camera
-  parts.push(`Camera: ${camera}.`);
+  // Negative prompt with realism extras
+  let negative_prompt = CATEGORY_NEGATIVES[family] || 'blurry, distorted, morphing, flickering, watermark';
+  const realismExtra = REALISM_NEGATIVE_EXTRAS[strategy.realism_level];
+  if (realismExtra) negative_prompt += realismExtra;
 
-  // Preservation
-  if (preservation) parts.push(preservation);
-
-  // Scene context from analysis
-  const lighting = analysis.lighting_style || 'natural lighting';
-  parts.push(`Maintain ${lighting} quality throughout.`);
-
-  const prompt = parts.join(' ');
-  const negative_prompt = CATEGORY_NEGATIVES[family] || 'blurry, distorted, morphing, flickering, watermark';
-  const cfg_scale = CATEGORY_CFG[family] || 0.6;
+  // CFG scale from strategy (already computed with realism adjustment)
+  const cfg_scale = strategy.cfg_scale_override ?? 0.6;
 
   return {
     prompt,
@@ -172,4 +499,32 @@ export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
     prompt_template_name: family,
     result_label: strategy.result_label || family,
   };
+}
+
+// ─── Generic Fallback Assembler ───
+
+function buildGenericPrompt(input: AssemblerInput): string {
+  const { strategy, analysis, userPrompt } = input;
+  const note = assembleUserNote(userPrompt, strategy.user_note_conflict);
+
+  const parts: string[] = [];
+  if (note.prefix) parts.push(note.prefix);
+
+  parts.push(`Create a ${input.realism} commercial product video${buildLoopClause(strategy.loop_style)}.`);
+  parts.push(`${buildMotionDescriptor(strategy)} motion.`);
+
+  if (analysis.interactive_object) {
+    parts.push(`Realistic ${analysis.interactive_object} interaction.`);
+  }
+
+  parts.push(buildCameraClause(strategy.camera_motion));
+  parts.push(buildPreservationClause(strategy));
+  parts.push(buildStabilityClause(strategy.primary_moving_elements, strategy));
+
+  const lighting = analysis.lighting_style || 'natural lighting';
+  parts.push(`Maintain ${lighting} quality throughout.`);
+
+  if (note.suffix) parts.push(note.suffix);
+
+  return parts.filter(Boolean).join(' ');
 }
