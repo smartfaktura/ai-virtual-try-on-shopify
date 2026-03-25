@@ -53,6 +53,59 @@ function extractMetadata(d: any) {
   };
 }
 
+async function generateSingleImage(
+  prompt: string,
+  referenceContent: any[] | undefined,
+  apiKey: string
+): Promise<string> {
+  const messageContent: any[] = [{ type: "text", text: prompt }];
+  if (referenceContent) messageContent.push(...referenceContent);
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-3-pro-image-preview",
+      messages: [{ role: "user", content: messageContent }],
+      modalities: ["image", "text"],
+    }),
+  });
+
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 429) throw new Error("RATE_LIMIT");
+    if (status === 402) throw new Error("AI_CREDITS_EXHAUSTED");
+    throw new Error("Failed to generate model image");
+  }
+
+  const data = await res.json();
+  const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+  if (!imageUrl) throw new Error("No image was generated");
+  return imageUrl;
+}
+
+async function uploadBase64Image(
+  supabaseAdmin: any,
+  userId: string,
+  base64Url: string
+): Promise<string> {
+  const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
+  const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+  const fileName = `${userId}/model-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.png`;
+
+  const { error } = await supabaseAdmin.storage
+    .from("scratch-uploads")
+    .upload(fileName, imageBytes, { contentType: "image/png", upsert: false });
+
+  if (error) throw new Error("Failed to upload generated image");
+
+  const { data: publicUrlData } = supabaseAdmin.storage
+    .from("scratch-uploads")
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -73,6 +126,40 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const body = await req.json();
+
+    // ─── Action: publish-public (admin selects a variation and publishes) ───
+    if (body.action === "publish-public") {
+      const { data: adminCheck } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (!adminCheck) {
+        return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const { selectedUrl, metadata, name } = body;
+      if (!selectedUrl || !metadata) throw new Error("selectedUrl and metadata are required");
+
+      const { data, error: insertError } = await supabaseAdmin
+        .from("custom_models")
+        .insert({
+          created_by: user.id,
+          name: name || metadata.name || "Public Model",
+          gender: metadata.gender || "female",
+          body_type: metadata.body_type || "average",
+          ethnicity: metadata.ethnicity || "",
+          age_range: metadata.age_range || "adult",
+          image_url: selectedUrl,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw new Error("Failed to save public model");
+
+      return new Response(JSON.stringify({ model: data, target: "public" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ─── Standard generation flow ───
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("plan, credits_balance")
@@ -83,7 +170,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const body = await req.json();
     const makePublic = body.makePublic === true;
 
     if (!makePublic && !["growth", "pro", "enterprise"].includes(profile.plan)) {
@@ -93,15 +179,16 @@ serve(async (req) => {
     if (!makePublic && profile.credits_balance < 20) {
       return new Response(JSON.stringify({ error: "Insufficient credits. You need 20 credits to generate a model.", code: "INSUFFICIENT_CREDITS" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
     const mode = body.mode || "generator";
 
-    // If makePublic, verify admin role and skip plan/credit checks
     if (makePublic) {
       const { data: adminCheck } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
       if (!adminCheck) {
         return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -111,7 +198,6 @@ serve(async (req) => {
     let referenceContent: any[] | undefined;
 
     if (mode === "reference") {
-      // Legacy reference-only mode
       const imageUrl = body.imageUrl;
       if (!imageUrl) throw new Error("imageUrl is required");
 
@@ -142,11 +228,7 @@ Return ONLY the JSON object, no markdown or explanation.`,
         }),
       });
 
-      if (!analyzeRes.ok) {
-        const errText = await analyzeRes.text();
-        console.error("AI analyze error:", analyzeRes.status, errText);
-        throw new Error("Failed to analyze reference image");
-      }
+      if (!analyzeRes.ok) throw new Error("Failed to analyze reference image");
 
       const analyzeData = await analyzeRes.json();
       const analyzeContent = analyzeData.choices?.[0]?.message?.content || "";
@@ -160,14 +242,10 @@ Return ONLY the JSON object, no markdown or explanation.`,
       referenceContent = [{ type: "image_url", image_url: { url: imageUrl } }];
 
     } else if (mode === "combined") {
-      // Combined mode: description + optional reference image
       const d = body.description;
       if (!d) throw new Error("description is required for combined mode");
-
       metadata = extractMetadata(d);
       generatePrompt = buildPromptFromDescription(d);
-
-      // Append reference guidance if image provided
       const imageUrl = body.imageUrl;
       if (imageUrl) {
         generatePrompt += " Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance while applying the described attributes.";
@@ -176,144 +254,87 @@ Return ONLY the JSON object, no markdown or explanation.`,
       } else {
         sourceImageUrl = "generator";
       }
-
     } else {
-      // Generator mode: build prompt from structured description
       const d = body.description;
       if (!d) throw new Error("description is required for generator mode");
-
       metadata = extractMetadata(d);
       generatePrompt = buildPromptFromDescription(d);
       sourceImageUrl = "generator";
     }
 
-    // Generate portrait
-    console.log("Generating model portrait...");
-    const messageContent: any[] = [{ type: "text", text: generatePrompt }];
-    if (referenceContent) messageContent.push(...referenceContent);
-
-    const generateRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
-        messages: [{ role: "user", content: messageContent }],
-        modalities: ["image", "text"],
-      }),
-    });
-
-    if (!generateRes.ok) {
-      const errText = await generateRes.text();
-      console.error("AI generate error:", generateRes.status, errText);
-      if (generateRes.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      if (generateRes.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      throw new Error("Failed to generate model image");
-    }
-
-    const generateData = await generateRes.json();
-    const generatedImageUrl = generateData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!generatedImageUrl) {
-      throw new Error("No image was generated");
-    }
-
-    // Deduct credits (skip for admin public models)
-    let newBalance = profile.credits_balance;
-    if (!makePublic) {
-      const { data: bal, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
-        p_user_id: user.id,
-        p_amount: 20,
-      });
-
-      if (deductError) {
-        console.error("Credit deduction failed:", deductError);
-        throw new Error("Failed to deduct credits");
-      }
-      newBalance = bal;
-    }
-
-    // Upload generated image to storage
-    const base64Data = generatedImageUrl.replace(/^data:image\/\w+;base64,/, "");
-    const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-    const fileName = `${user.id}/model-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.png`;
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("scratch-uploads")
-      .upload(fileName, imageBytes, { contentType: "image/png", upsert: false });
-
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
-      throw new Error("Failed to upload generated image");
-    }
-
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from("scratch-uploads")
-      .getPublicUrl(fileName);
-
-    const finalImageUrl = publicUrlData.publicUrl;
-
-    // Insert into appropriate table
-    const modelName = body.name || metadata.name || "My Model";
-    let newModel: any;
-
+    // ─── Admin public: generate 3 variations, return URLs without inserting ───
     if (makePublic) {
-      // Insert into custom_models (public, visible to all)
-      const { data, error: insertError } = await supabaseAdmin
-        .from("custom_models")
-        .insert({
-          created_by: user.id,
-          name: modelName,
-          gender: metadata.gender || "female",
-          body_type: metadata.body_type || "average",
-          ethnicity: metadata.ethnicity || "",
-          age_range: metadata.age_range || "adult",
-          image_url: finalImageUrl,
-        })
-        .select()
-        .single();
+      console.log("Generating 3 public model variations in parallel...");
+      const variationCount = 3;
+      const results = await Promise.allSettled(
+        Array.from({ length: variationCount }, () =>
+          generateSingleImage(generatePrompt, referenceContent, LOVABLE_API_KEY)
+            .then((base64Url) => uploadBase64Image(supabaseAdmin, user.id, base64Url))
+        )
+      );
 
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        throw new Error("Failed to save public model");
-      }
-      newModel = data;
-    } else {
-      // Insert into user_models (private)
-      const { data, error: insertError } = await supabaseAdmin
-        .from("user_models")
-        .insert({
-          user_id: user.id,
-          name: modelName,
-          gender: metadata.gender || "female",
-          body_type: metadata.body_type || "average",
-          ethnicity: metadata.ethnicity || "",
-          age_range: metadata.age_range || "adult",
-          image_url: finalImageUrl,
-          source_image_url: sourceImageUrl,
-          credits_used: 20,
-        })
-        .select()
-        .single();
+      const variations = results
+        .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+        .map((r) => r.value);
 
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        throw new Error("Failed to save model");
+      if (variations.length === 0) {
+        throw new Error("All 3 generation attempts failed. Please try again.");
       }
-      newModel = data;
+
+      return new Response(JSON.stringify({
+        variations,
+        metadata,
+        name: body.name || metadata.name,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({ model: newModel, new_balance: newBalance, target: makePublic ? 'public' : 'private' }), {
+    // ─── Regular user: generate 1, deduct credits, insert ───
+    console.log("Generating model portrait...");
+    const generatedImageUrl = await generateSingleImage(generatePrompt, referenceContent, LOVABLE_API_KEY);
+
+    const { data: bal, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
+      p_user_id: user.id,
+      p_amount: 20,
+    });
+    if (deductError) throw new Error("Failed to deduct credits");
+    const newBalance = bal;
+
+    const finalImageUrl = await uploadBase64Image(supabaseAdmin, user.id, generatedImageUrl);
+
+    const modelName = body.name || metadata.name || "My Model";
+    const { data, error: insertError } = await supabaseAdmin
+      .from("user_models")
+      .insert({
+        user_id: user.id,
+        name: modelName,
+        gender: metadata.gender || "female",
+        body_type: metadata.body_type || "average",
+        ethnicity: metadata.ethnicity || "",
+        age_range: metadata.age_range || "adult",
+        image_url: finalImageUrl,
+        source_image_url: sourceImageUrl,
+        credits_used: 20,
+      })
+      .select()
+      .single();
+
+    if (insertError) throw new Error("Failed to save model");
+
+    return new Response(JSON.stringify({ model: data, new_balance: newBalance, target: "private" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("generate-user-model error:", e);
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    const status = msg === "RATE_LIMIT" ? 429 : msg === "AI_CREDITS_EXHAUSTED" ? 402 : 500;
+    const userMsg = msg === "RATE_LIMIT" ? "Rate limit exceeded, please try again in a moment."
+      : msg === "AI_CREDITS_EXHAUSTED" ? "AI credits exhausted. Please try again later."
+      : msg;
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: userMsg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
