@@ -1,39 +1,54 @@
 
 
-# Add "Edit Category Name" for All Categories
+# Persist Freestyle Settings with Session TTL
 
-## What changes
-Allow admins to rename **both** custom and built-in categories from the Category Order section in `/app/admin/scenes`.
+## Approach
+Store all freestyle settings in `localStorage` with a timestamp. On page load, if the stored data is older than **30 minutes**, discard it and start fresh. This keeps settings alive during active work but gives a clean slate for new sessions — and uses zero database resources.
 
-## Why it's safe
-- Only the **display label** changes, never the slug
-- The slug (`studio`, `lifestyle`, etc.) is what scenes reference — it stays untouched
-- The `useSceneCategories` hook already merges custom labels over `poseCategoryLabels`, so a built-in override just works
-- `PoseCategorySection.categoryInfo` uses slugs as keys — unaffected by label changes
+## What gets persisted
+`prompt`, `aspectRatio`, `cameraStyle`, `framing`, `imageRole`, `editIntent`, plus IDs for `selectedModel`, `selectedScene`, `selectedProduct`, `selectedBrandProfile`.
 
-## How it works
+**Not persisted**: uploaded source image, popover states, prompt helper, guide state (already has its own persistence).
 
-### For custom categories (already in DB)
-- Pencil icon next to label → inline input → save updates `label` in `scene_categories` table
+## Storage format
+Single `localStorage` key `freestyle_settings`:
+```json
+{
+  "ts": 1711370400000,
+  "prompt": "...",
+  "aspectRatio": "1:1",
+  "cameraStyle": "pro",
+  "framing": null,
+  "imageRole": "edit",
+  "editIntent": [],
+  "modelId": "abc",
+  "sceneId": "xyz",
+  "productId": "123",
+  "brandProfileId": "456"
+}
+```
 
-### For built-in categories (not yet in DB)
-- Same pencil icon → inline input → on save, **insert** a new row into `scene_categories` with the built-in slug and the new label
-- The merge logic in `useSceneCategories` already handles this: custom labels override `poseCategoryLabels`
+## Implementation — single file: `src/pages/Freestyle.tsx`
 
-### Files changed
+### On mount (read)
+- Read & parse `freestyle_settings` from localStorage
+- If `Date.now() - ts > 30 * 60 * 1000` → ignore stored data, remove key
+- Otherwise, use stored values as initial state defaults
+- For model/scene: look up by ID from `mockModels`/`mockTryOnPoses` + custom scenes (sync)
+- For product/brand profile: store the ID, then restore in a `useEffect` once React Query data arrives
 
-**`src/hooks/useSceneCategories.ts`**
-- Add `useUpdateSceneCategory` mutation — updates `label` by ID
-- Add `useUpsertCategoryLabel` mutation — for built-in categories, upserts a row with the existing slug + new label
+### On change (write)
+- One `useEffect` watching all persisted values → debounce 500ms → write JSON with fresh `ts` to localStorage
 
-**`src/pages/AdminScenes.tsx`**
-- Add `editingCategorySlug` + `editingCategoryLabel` state
-- Show Pencil icon next to every category in the Category Order list
-- Click → inline Input with Check/X buttons
-- Enter saves, Escape cancels
-- For custom categories: calls update mutation
-- For built-in categories: calls upsert mutation (creates override row in `scene_categories`)
+### On reset
+- `handleReset` also calls `localStorage.removeItem('freestyle_settings')`
 
-### No database changes needed
-The existing `scene_categories` table and RLS policies already support this. Built-in slugs inserted as overrides will be filtered correctly by the merge logic.
+### URL params priority
+- Existing `searchParams` logic runs after mount and calls setters, naturally overriding localStorage defaults
+
+## Quality auto-select
+The existing `useEffect` that sets quality based on model/scene selection will still run after restoration, so quality doesn't need to be persisted separately.
+
+## No database changes needed
+Everything is client-side localStorage only.
 
