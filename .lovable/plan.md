@@ -1,41 +1,63 @@
 
 
-# Optimize Unoptimized Scene & Model Thumbnails
+# Admin Scene Upload Page
 
-## Problem
-4 places load full-resolution images (1–5MB) for tiny thumbnails. The `getOptimizedUrl` utility exists and is already used in some places, but these were missed.
+## Summary
+Create a dedicated admin page to upload new scenes with full control over how they behave during generation: image as reference vs prompt-only mode (like White Studio).
 
-## What needs to change
+## Database Migration
+Add two columns to `custom_scenes`:
+- `prompt_hint TEXT DEFAULT ''` — separate AI-facing text (falls back to `description` if empty)
+- `prompt_only BOOLEAN DEFAULT false` — when true, scene image is NOT sent to AI, only the prompt text (White Studio behavior)
 
-### 1. `SceneSelectorChip.tsx` — trigger button (line 217)
-**Current:** `<img src={selectedScene.previewUrl}` — 16px circle, full-res image  
-**Fix:** `<img src={getOptimizedUrl(selectedScene.previewUrl, { quality: 60 })}` — import already exists
+## New Page: `src/pages/AdminSceneUpload.tsx`
+Admin-protected page at `/app/admin/scene-upload`:
+- **Drag-and-drop image upload** → `product-uploads` bucket via `useFileUpload`
+- **AI auto-analysis** → calls `create-scene-from-image` edge function to prefill name, description, category
+- **Editable fields:**
+  - Name (short label)
+  - Description (user-facing, shown in UI)
+  - Prompt Hint (AI-facing textarea, sent alongside/instead of image)
+  - Scene Type toggle: On-Model / Product (filters category chips)
+  - Category chips
+  - **"Prompt Only" toggle** with explanation: "Don't send image to AI — use only the prompt text for generation (like White Studio). Use for solid color or abstract backgrounds."
+- Image preview
+- Save → `useAddCustomScene` (updated)
+- "Add Another" button after save
 
-### 2. `ModelSelectorChip.tsx` — trigger button (line 62) + grid (line 143)
-**Current:** No `getOptimizedUrl` import, both places use raw `model.previewUrl`  
-**Fix:**  
-- Add `import { getOptimizedUrl } from '@/lib/imageOptimization'`  
-- Line 62 (16px trigger): `src={getOptimizedUrl(selectedModel.previewUrl, { quality: 60 })}`  
-- Line 143 (grid thumbnail): `src={getOptimizedUrl(model.previewUrl, { quality: 60 })}`
+## Hook Updates: `useCustomScenes.ts`
+- Add `prompt_hint` and `prompt_only` to `CustomScene` interface
+- `useAddCustomScene`: accept and insert both new fields
+- `toTryOnPose()`: map `prompt_hint` → `promptHint` (fallback to `description`), pass through `prompt_only`
 
-### 3. `FreestyleQuickPresets.tsx` — preset thumbnail (line 216)
-**Current:** No import, raw `scene.previewUrl` for 44px thumbnail  
-**Fix:**  
-- Add `import { getOptimizedUrl } from '@/lib/imageOptimization'`  
-- Line 216: `src={getOptimizedUrl(scene.previewUrl, { quality: 60 })}`
+## Type Update: `TryOnPose`
+Add optional `promptOnly?: boolean` to the interface so the flag flows through to generation logic.
 
-### 4. `PoseSelectorCard.tsx` — Workflow/Generate scene grid (line 16)
-**Current:** No import, `const displayImage = pose.previewUrl`  
-**Fix:**  
-- Add `import { getOptimizedUrl } from '@/lib/imageOptimization'`  
-- Line 16: `const displayImage = getOptimizedUrl(pose.previewUrl, { quality: 60 })`
+## Generation Logic: `Freestyle.tsx` + `generate-freestyle/index.ts`
+**Freestyle.tsx (~line 509):** Currently hardcodes `scene_038` check. Change to also check `selectedScene.promptOnly`:
+```
+} else if (selectedScene && selectedScene.poseId !== 'scene_038' && !selectedScene.promptOnly) {
+  sceneImageUrl = selectedScene.previewUrl;
+}
+```
 
-## Why no quality loss
-These are all small UI elements (16px–44px). Quality 60 at these sizes is visually identical. Full-size views (lightbox, generation) always use the raw URL — no change there.
+**generate-freestyle/index.ts (~line 745):** Currently hardcodes `scene_038`. Add check for custom prompt-only scenes via a flag in the payload. When `promptOnly` is true, clear `sceneImage` same as White Studio.
 
-## Files
-- `src/components/app/freestyle/SceneSelectorChip.tsx`
-- `src/components/app/freestyle/ModelSelectorChip.tsx`
-- `src/components/app/freestyle/FreestyleQuickPresets.tsx`
-- `src/components/app/PoseSelectorCard.tsx`
+## Update `AddSceneModal.tsx`
+Add prompt hint textarea and prompt-only toggle to the existing modal (used when adding scenes from library images).
+
+## Route + Navigation
+- Add `/app/admin/scene-upload` route in `App.tsx`
+- Add "+ Add Scene" button in `AdminScenes.tsx` header linking to the upload page
+
+## Files Changed
+- `custom_scenes` table — migration (add `prompt_hint`, `prompt_only`)
+- `src/pages/AdminSceneUpload.tsx` (new)
+- `src/hooks/useCustomScenes.ts` (interface + mutation + mapping)
+- `src/types/index.ts` (add `promptOnly` to `TryOnPose`)
+- `src/pages/Freestyle.tsx` (extend prompt-only check)
+- `supabase/functions/generate-freestyle/index.ts` (extend prompt-only check)
+- `src/components/app/AddSceneModal.tsx` (add fields)
+- `src/App.tsx` (add route)
+- `src/pages/AdminScenes.tsx` (add button)
 
