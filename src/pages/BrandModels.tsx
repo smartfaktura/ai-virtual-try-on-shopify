@@ -586,6 +586,7 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
 /* ── Main page ── */
 export default function BrandModels() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { models, refetch } = useUserModels();
   const deleteMutation = useDeleteUserModel();
 
@@ -667,7 +668,7 @@ export default function BrandModels() {
             </h3>
             <p className="text-xs text-muted-foreground mb-5">Describe your ideal model · 20 credits per generation</p>
 
-            <UnifiedGenerator onSuccess={() => refetch()} />
+            <UnifiedGenerator onSuccess={() => refetch()} isAdmin={isAdmin} />
           </Card>
 
           {/* Models grid */}
