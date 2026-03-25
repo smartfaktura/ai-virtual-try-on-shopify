@@ -159,7 +159,7 @@ serve(async (req) => {
 
       if (!image_url) throw new Error("image_url is required");
 
-      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}, cfg=${cfg_scale}, camera=${camera_control?.type}`);
+      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}, cfg=${cfg_scale}, camera=${camera_control?.type}, audio=${body.with_audio ? 'on' : 'off'}`);
 
       const klingBody: Record<string, unknown> = {
         model_name,
@@ -179,7 +179,7 @@ serve(async (req) => {
           config: { horizontal: 0, vertical: 0, pan: 0, tilt: 0, roll: 0, zoom: 0, ...camera_control.config },
         };
       }
-      if (body.with_audio) klingBody.with_audio = true;
+      klingBody.sound = body.with_audio ? "on" : "off";
 
       const res = await fetch(`${KLING_API_BASE}/videos/image2video`, {
         method: "POST",
