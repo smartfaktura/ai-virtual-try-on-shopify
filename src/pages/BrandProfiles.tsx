@@ -40,41 +40,41 @@ function BrandModelsBanner() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-r from-primary/5 via-background to-primary/5">
-      <div className="flex items-center gap-5 p-5 sm:p-6">
-        {/* Avatar */}
-        <div className="shrink-0">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
-            <img
-              src={getOptimizedUrl(sophia.avatar, { quality: 70 })}
-              alt={sophia.name}
-              className="w-full h-full object-cover"
-            />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-6">
+        {/* Top row on mobile: avatar + CTA */}
+        <div className="flex items-center gap-4 sm:contents">
+          {/* Avatar */}
+          <div className="shrink-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+              <img
+                src={getOptimizedUrl(sophia.avatar, { quality: 70 })}
+                alt={sophia.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Copy */}
-        <div className="flex-1 min-w-0 space-y-1">
-          <div className="flex items-center gap-2">
+          {/* Copy — on mobile sits next to avatar */}
+          <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
               {sophia.name} · {sophia.expertiseTag}
             </p>
+            <p className="text-sm sm:text-base font-semibold text-foreground leading-snug">
+              Complete your brand identity with <span className="text-primary">Brand Models</span>
+            </p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+              Create custom AI models that represent your brand — consistent faces across every campaign.
+            </p>
           </div>
-          <p className="text-sm sm:text-base font-semibold text-foreground leading-snug">
-            Complete your brand identity with <span className="text-primary">Brand Models</span>
-          </p>
-          <p className="text-xs text-muted-foreground leading-relaxed max-w-lg">
-            Create custom AI models that represent your brand — consistent faces across every campaign, any gender, age & ethnicity.
-          </p>
         </div>
 
-        {/* CTA */}
+        {/* CTA — full width on mobile */}
         <Button
           size="sm"
-          className="shrink-0 gap-1.5"
+          className="shrink-0 gap-1.5 w-full sm:w-auto"
           onClick={() => navigate('/app/models')}
         >
-          <span className="hidden sm:inline">Create Brand Model</span>
-          <span className="sm:hidden">Create</span>
+          Create Brand Model
           <ArrowRight className="h-3 w-3" />
         </Button>
       </div>
