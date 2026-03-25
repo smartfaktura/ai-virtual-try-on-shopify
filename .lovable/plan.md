@@ -1,68 +1,31 @@
 
 
-# Brand Models Page — `/app/models`
+# My Brand Models — Redesign & Freestyle Integration Fix
 
-## Overview
-A new dedicated "Models" page in the sidebar (after Library), serving as the brand's model management hub. It combines two creation flows — **reference-based** (upload a photo) and **generator-based** (a quiz/form to describe the model from scratch) — plus displays the user's existing generated models. Plan-gated: free/starter users see an upgrade prompt with benefits.
+## Changes
 
-## Sidebar & Routing
-- Add `{ label: 'Models', icon: Users, path: '/app/models' }` to `navItems` in `AppShell.tsx` (after Library)
-- Add route `/models` in `App.tsx` pointing to new `BrandModels` page
-- Lazy-load the page
+### 1. Redesign `BrandModels.tsx` → "My Brand Models"
+- Rename page title to **"My Brand Models"**
+- Update subtitle to match VOVV.AI luxury aesthetic
+- Improve upgrade hero with better visual hierarchy and breathing whitespace
+- **Reference tab**: Add a T&C checkbox before generate button — "I confirm I own the rights to this image or have permission to use it as a reference. I accept full responsibility for the content I upload."
+- Checkbox must be checked to enable the Generate button
+- Better card design for model grid with refined spacing
 
-## Page Structure: `src/pages/BrandModels.tsx`
+### 2. Freestyle ModelSelectorChip — Move "Create Your Model" to last position
+- Move the "Create Your Model" button from **above** the model grid to **below** it (as the last card in the grid)
+- Render it as a card matching model card dimensions (not a standalone button)
+- If plan is lower than Growth: show card as **inactive/dimmed** with "Growth Plan" badge and a hook line like "Create your own brand model"
+- If paid: show active card linking to `/app/models`
 
-### Plan Gate
-- Fetch user profile plan. If `free` or `starter`, show a hero section with benefits of brand models (consistency, any ethnicity/age/gender, kids models, custom looks) and an "Upgrade" CTA. No creation UI shown.
+### 3. Sidebar label update
+- Change sidebar label from "Models" to **"Brand Models"** (or keep compact as "Models" if collapsed)
 
-### For Growth/Pro Users — Two Creation Tabs
-
-**Tab 1: From Reference Image** (existing flow, refined)
-- Upload a reference photo
-- AI analyzes and generates a studio portrait matching our standard format (light grey background, sharp, realistic)
-- Uses existing `generate-user-model` edge function (will enhance the prompt)
-- Cost: 20 credits
-
-**Tab 2: Model Generator** (new — inspired by the screenshot reference)
-- A structured form/quiz with collapsible sections:
-  - **Essentials**: Gender (Female/Male/Other chips), Age (slider 18-70), Ethnicity (Caucasian/Asian/African/Hispanic/Middle Eastern chips)
-  - **Details**: Morphology (slim/athletic/average/plus-size), Eye Color, Hair Style, Hair Color, Distinctive Trait (all via selects)
-  - **Visual Reference** (optional): Upload a mood/style reference
-- "Generate" button builds a detailed prompt from selections and calls the same edge function but with `mode: 'generator'` and a `description` payload instead of `imageUrl`
-- Cost: 20 credits
-
-### My Models Grid
-- Below creation area, show all user's models from `user_models` table
-- Card grid with model image, name, metadata badges (gender, ethnicity, age)
-- Actions: Delete (soft-delete via `is_active: false`)
-- Empty state for no models yet
-
-## Edge Function Enhancement: `generate-user-model`
-Add a second mode (`generator`) that accepts structured description fields instead of a reference image:
-- Build a hyper-specific prompt from the form fields (gender, age, ethnicity, morphology, eye color, hair style, hair color, distinctive trait)
-- Use the same `gemini-3-pro-image-preview` model
-- Enforce strict prompt engineering: "Professional fashion model headshot, light grey seamless studio background, soft diffused lighting, sharp focus on face, natural skin texture, no retouching artifacts, editorial quality, 8K, waist-up portrait"
-- When reference image IS provided, pass it as a secondary reference but the prompt still controls the output
-
-## Files Changed
+## Files changed
 
 | File | Change |
 |------|--------|
-| `src/pages/BrandModels.tsx` | New page with plan gate, two creation tabs, model grid |
-| `src/App.tsx` | Add lazy import + route `/models` |
-| `src/components/app/AppShell.tsx` | Add Models nav item after Library |
-| `supabase/functions/generate-user-model/index.ts` | Add `generator` mode with structured description prompt |
-| `src/hooks/useUserModels.ts` | Add `useGenerateUserModelFromDescription` mutation |
-
-## Prompt Engineering (Generator Mode)
-The edge function will construct prompts like:
-```
-"Professional fashion model studio portrait. Female, age 25, Caucasian, slim build. 
-Blue eyes, long wavy blonde hair. Light grey seamless studio background, 
-soft diffused three-point lighting, sharp focus on facial features, natural skin 
-texture visible, no airbrushing, editorial fashion photography quality, 
-waist-up framing, looking directly at camera with neutral confident expression. 8K."
-```
-
-No database migration needed — reuses existing `user_models` table.
+| `src/pages/BrandModels.tsx` | Rename to "My Brand Models", add T&C checkbox on reference tab, design polish |
+| `src/components/app/freestyle/ModelSelectorChip.tsx` | Move "Create Your Model" from top to last card in grid, inactive state for free users |
+| `src/components/app/AppShell.tsx` | Update nav label to "Brand Models" |
 
