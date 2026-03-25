@@ -2854,7 +2854,8 @@ export default function Generate() {
                     p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
                     p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
                   );
-                  const canMultiSelect = !isFreeUser;
+                   const visibleProducts = filteredProducts.slice(0, visibleProductCount);
+                   const canMultiSelect = !isFreeUser;
 
                   if (filteredProducts.length === 0 && tryOnSearchQuery) {
                     return <p className="text-center text-sm text-muted-foreground py-6">No products match "{tryOnSearchQuery}"</p>;
@@ -2863,7 +2864,7 @@ export default function Generate() {
                   if (productViewMode === 'list') {
                     return (
                       <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
-                        {filteredProducts.map(up => {
+                        {visibleProducts.map(up => {
                           const isSelected = selectedProductIds.has(up.id);
                           const isDisabled = !isSelected && canMultiSelect && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
                           return (
@@ -2909,7 +2910,7 @@ export default function Generate() {
 
                   return (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                      {filteredProducts.map(up => {
+                      {visibleProducts.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && canMultiSelect && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
                         return (
@@ -2963,6 +2964,12 @@ export default function Generate() {
                         <span className="text-[10px] font-medium">Add New</span>
                       </button>
                     </div>
+                    {filteredProducts.length > visibleProductCount && (
+                      <Button variant="outline" size="sm" onClick={() => setVisibleProductCount(c => c + PRODUCTS_PER_PAGE)} className="w-full mt-3">
+                        Load more ({filteredProducts.length - visibleProductCount} remaining)
+                      </Button>
+                    )}
+                  </>
                   );
                 })()}
               </div>
