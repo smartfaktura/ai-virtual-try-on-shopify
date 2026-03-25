@@ -83,6 +83,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const body = await req.json();
+    const makePublic = body.makePublic === true;
+
     if (!makePublic && !["growth", "pro", "enterprise"].includes(profile.plan)) {
       return new Response(JSON.stringify({ error: "This feature requires a Growth or Pro plan", code: "PLAN_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -90,9 +93,6 @@ serve(async (req) => {
     if (!makePublic && profile.credits_balance < 20) {
       return new Response(JSON.stringify({ error: "Insufficient credits. You need 20 credits to generate a model.", code: "INSUFFICIENT_CREDITS" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    const body = await req.json();
-    const makePublic = body.makePublic === true;
     const mode = body.mode || "generator";
 
     // If makePublic, verify admin role and skip plan/credit checks
