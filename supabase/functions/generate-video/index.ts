@@ -150,7 +150,7 @@ serve(async (req) => {
 
     // ---- CREATE task ----
     if (action === "create") {
-      const { image_url, image_tail, prompt, duration = "5", model_name = "kling-v2-1", mode = "std", aspect_ratio = "16:9" } = body;
+      const { image_url, image_tail, prompt, duration = "5", const { image_url, image_tail, prompt, duration = "5", model_name = "kling-v3", mode = "std", aspect_ratio = "16:9" } = body;, mode = "std", aspect_ratio = "16:9" } = body;
 
       if (!image_url) throw new Error("image_url is required");
 
