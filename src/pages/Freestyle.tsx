@@ -40,6 +40,42 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
+// --- Freestyle settings persistence with 30-minute TTL ---
+const FREESTYLE_STORAGE_KEY = 'freestyle_settings';
+const FREESTYLE_TTL = 30 * 60 * 1000; // 30 minutes
+
+interface FreestylePersistedSettings {
+  ts: number;
+  prompt: string;
+  aspectRatio: FreestyleAspectRatio;
+  cameraStyle: 'pro' | 'natural';
+  framing: string | null;
+  imageRole: ImageRole;
+  editIntent: EditIntent[];
+  modelId: string | null;
+  sceneId: string | null;
+  productId: string | null;
+  brandProfileId: string | null;
+}
+
+function loadPersistedSettings(): Partial<FreestylePersistedSettings> | null {
+  try {
+    const raw = localStorage.getItem(FREESTYLE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as FreestylePersistedSettings;
+    if (Date.now() - parsed.ts > FREESTYLE_TTL) {
+      localStorage.removeItem(FREESTYLE_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    localStorage.removeItem(FREESTYLE_STORAGE_KEY);
+    return null;
+  }
+}
+
+const _persisted = loadPersistedSettings();
+
 function getProductModelInteraction(productType: string): string {
   const type = productType.toLowerCase();
   if (['dress','shirt','jacket','pants','skirt','top','hoodie','sweater','coat','jeans','clothing','apparel'].some(t => type.includes(t)))
