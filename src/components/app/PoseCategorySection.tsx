@@ -10,7 +10,7 @@ interface PoseCategorySectionProps {
   selectedGender?: ModelGender;
 }
 
-const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
+const categoryInfo: Record<string, { title: string; recommendation: string }> = {
   studio: { title: 'Studio Shots', recommendation: 'Best for e-commerce & product pages' },
   lifestyle: { title: 'Lifestyle', recommendation: 'Best for social media & marketing' },
   editorial: { title: 'Editorial', recommendation: 'Best for campaigns & lookbooks' },
@@ -24,6 +24,12 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   bathroom: { title: 'Bathroom & Vanity', recommendation: 'Best for skincare & beauty' },
   botanical: { title: 'Botanical', recommendation: 'Best for wellness & natural products' },
   outdoor: { title: 'Outdoor', recommendation: 'Best for lifestyle & seasonal campaigns' },
+  workspace: { title: 'Workspace & Office', recommendation: 'Best for tech & business products' },
+  restaurant: { title: 'Restaurant & Café', recommendation: 'Best for food & hospitality' },
+  retail: { title: 'Retail & Display', recommendation: 'Best for retail merchandising' },
+  seasonal: { title: 'Seasonal & Holiday', recommendation: 'Best for seasonal campaigns' },
+  beauty: { title: 'Beauty & Spa', recommendation: 'Best for beauty & wellness brands' },
+  fitness: { title: 'Fitness & Sport', recommendation: 'Best for activewear & sports' },
 };
 
 export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender }: PoseCategorySectionProps) {
