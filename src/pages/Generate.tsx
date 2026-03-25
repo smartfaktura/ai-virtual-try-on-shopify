@@ -2975,7 +2975,7 @@ export default function Generate() {
                     <Input
                       placeholder="Search products..."
                       value={tryOnSearchQuery}
-                      onChange={e => setTryOnSearchQuery(e.target.value)}
+                      onChange={e => { setTryOnSearchQuery(e.target.value); setVisibleProductCount(PRODUCTS_PER_PAGE); }}
                       className="h-8 text-xs pl-8"
                     />
                   </div>
