@@ -3085,55 +3085,62 @@ export default function Generate() {
                   }
 
                   return (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                      {filteredProducts.map(up => {
-                        const isSelected = selectedProductIds.has(up.id);
-                        const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
-                        return (
-                          <button
-                            key={up.id}
-                            type="button"
-                            onClick={() => {
-                              const newSet = new Set(selectedProductIds);
-                              if (newSet.has(up.id)) { newSet.delete(up.id); }
-                              else if (newSet.size < MAX_PRODUCTS_PER_BATCH) { newSet.add(up.id); }
-                              setSelectedProductIds(newSet);
-                            }}
-                            disabled={isDisabled}
-                            className={cn(
-                              'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
-                              isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
-                              isDisabled && 'opacity-40 cursor-not-allowed'
-                            )}
-                          >
-                            <div className={cn(
-                              'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
-                              isSelected
-                                ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                                : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
-                            )}>
-                              {isSelected && <Check className="w-3 h-3" />}
-                            </div>
-                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
-                            <div className="px-1.5 py-1.5 bg-card">
-                              <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
-                              {up.product_type && (
-                                <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+                    <>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                        {visibleProducts.map(up => {
+                          const isSelected = selectedProductIds.has(up.id);
+                          const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
+                          return (
+                            <button
+                              key={up.id}
+                              type="button"
+                              onClick={() => {
+                                const newSet = new Set(selectedProductIds);
+                                if (newSet.has(up.id)) { newSet.delete(up.id); }
+                                else if (newSet.size < MAX_PRODUCTS_PER_BATCH) { newSet.add(up.id); }
+                                setSelectedProductIds(newSet);
+                              }}
+                              disabled={isDisabled}
+                              className={cn(
+                                'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                                isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
+                                isDisabled && 'opacity-40 cursor-not-allowed'
                               )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                      {/* Add New Product card */}
-                      <button
-                        type="button"
-                        onClick={() => setShowAddProduct(true)}
-                        className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
-                      >
-                        <Package className="w-6 h-6 mb-1 opacity-50" />
-                        <span className="text-[10px] font-medium">Add New</span>
-                      </button>
-                    </div>
+                            >
+                              <div className={cn(
+                                'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                                isSelected
+                                  ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                                  : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
+                              )}>
+                                {isSelected && <Check className="w-3 h-3" />}
+                              </div>
+                              <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                              <div className="px-1.5 py-1.5 bg-card">
+                                <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
+                                {up.product_type && (
+                                  <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {/* Add New Product card */}
+                        <button
+                          type="button"
+                          onClick={() => setShowAddProduct(true)}
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
+                        >
+                          <Package className="w-6 h-6 mb-1 opacity-50" />
+                          <span className="text-[10px] font-medium">Add New</span>
+                        </button>
+                      </div>
+                      {filteredProducts.length > visibleProductCount && (
+                        <Button variant="outline" size="sm" onClick={() => setVisibleProductCount(c => c + PRODUCTS_PER_PAGE)} className="w-full mt-3">
+                          Load more ({filteredProducts.length - visibleProductCount} remaining)
+                        </Button>
+                      )}
+                    </>
                   );
                 })()}
               </div>
