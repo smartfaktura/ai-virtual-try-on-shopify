@@ -1,8 +1,16 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus } from 'lucide-react';
+import {
+  ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus,
+  Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
@@ -14,13 +22,18 @@ import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const { hiddenIds, hideScene, unhideScene, filterVisible } = useHiddenScenes();
+  const { hiddenIds, hiddenBuiltInScenes, hideScene, unhideScene } = useHiddenScenes();
   const { asPoses: customPoses, scenes: customScenesRaw } = useCustomScenes();
   const { sortMap, categoryMap } = useSceneSortOrder();
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
 
-  // Stable deps: serialize hiddenIds and sortMap to avoid recreating allPoses on every render
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showHidden, setShowHidden] = useState(false);
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState('');
+
+  // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
   const sortKey = JSON.stringify([...sortMap.entries()]);
   const categoryOverrideKey = JSON.stringify([...categoryMap.entries()]);
@@ -45,11 +58,9 @@ export default function AdminScenes() {
 
   const defaultCategoryOrder = Object.keys(poseCategoryLabels) as PoseCategory[];
 
-  // Local mutable state
   const [orderedPoses, setOrderedPoses] = useState<TryOnPose[]>([]);
   const [categoryOrder, setCategoryOrder] = useState<PoseCategory[]>(defaultCategoryOrder);
   const [dirty, setDirty] = useState(false);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (allPoses.length > 0) {
@@ -70,26 +81,28 @@ export default function AdminScenes() {
         setCategoryOrder([...derived, ...remaining]);
       }
       setDirty(false);
-      setInitialized(true);
     }
   }, [allPoses]);
 
-  // Guard: redirect non-admins after all hooks
-  if (adminLoading) return null;
+  if (adminLoading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  );
   if (!isAdmin) return <Navigate to="/app" replace />;
+
+  const isCustomScene = (poseId: string) => poseId.startsWith('custom-');
+  const isPromptOnly = (pose: TryOnPose) => pose.promptOnly === true;
 
   const movePose = (poseId: string, direction: 'up' | 'down') => {
     setOrderedPoses(prev => {
       const pose = prev.find(p => p.poseId === poseId);
       if (!pose) return prev;
-      const cat = pose.category;
-      const catPoses = prev.filter(p => p.category === cat);
+      const catPoses = prev.filter(p => p.category === pose.category);
       const idx = catPoses.findIndex(p => p.poseId === poseId);
       const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
       if (swapIdx < 0 || swapIdx >= catPoses.length) return prev;
-
       const swapPose = catPoses[swapIdx];
-      // Swap in the full array
       const globalIdxA = prev.findIndex(p => p.poseId === poseId);
       const globalIdxB = prev.findIndex(p => p.poseId === swapPose.poseId);
       const result = [...prev];
@@ -120,6 +133,19 @@ export default function AdminScenes() {
     setDirty(true);
   };
 
+  const duplicateToCategory = (pose: TryOnPose, targetCategory: PoseCategory) => {
+    const cloneId = `${pose.poseId}__dup_${targetCategory}`;
+    // Check if already exists
+    if (orderedPoses.some(p => p.poseId === cloneId)) {
+      toast.error('Already duplicated to that category');
+      return;
+    }
+    const clone: TryOnPose = { ...pose, poseId: cloneId, category: targetCategory };
+    setOrderedPoses(prev => [...prev, clone]);
+    setDirty(true);
+    toast.success(`Duplicated "${pose.name}" → ${poseCategoryLabels[targetCategory] || targetCategory}`);
+  };
+
   const moveCategoryOrder = (cat: PoseCategory, direction: 'up' | 'down') => {
     setCategoryOrder(prev => {
       const idx = prev.indexOf(cat);
@@ -133,7 +159,14 @@ export default function AdminScenes() {
   };
 
   const handleDelete = async (pose: TryOnPose) => {
-    const isCustom = pose.poseId.startsWith('custom-');
+    // If it's a duplicate clone, just remove from local state
+    if (pose.poseId.includes('__dup_')) {
+      setOrderedPoses(prev => prev.filter(p => p.poseId !== pose.poseId));
+      setDirty(true);
+      toast.success(`Removed duplicate "${pose.name}"`);
+      return;
+    }
+    const isCustom = isCustomScene(pose.poseId);
     if (isCustom) {
       const realId = pose.poseId.replace('custom-', '');
       deleteSceneMutation.mutate(realId, {
@@ -148,13 +181,40 @@ export default function AdminScenes() {
     }
   };
 
+  const handleRestoreScene = (sceneId: string) => {
+    unhideScene.mutate(sceneId, {
+      onSuccess: () => toast.success('Scene restored'),
+      onError: () => toast.error('Failed to restore scene'),
+    });
+  };
+
+  const startEditName = (pose: TryOnPose) => {
+    setEditingNameId(pose.poseId);
+    setEditingNameValue(pose.name);
+  };
+
+  const commitEditName = () => {
+    if (editingNameId && editingNameValue.trim()) {
+      setOrderedPoses(prev =>
+        prev.map(p => p.poseId === editingNameId ? { ...p, name: editingNameValue.trim() } : p)
+      );
+      setDirty(true);
+    }
+    setEditingNameId(null);
+    setEditingNameValue('');
+  };
+
+  const cancelEditName = () => {
+    setEditingNameId(null);
+    setEditingNameValue('');
+  };
+
   const handleSave = () => {
     let globalOrder = 0;
     const entries: { scene_id: string; sort_order: number; category_override?: string | null }[] = [];
     for (const cat of categoryOrder) {
       const catPoses = orderedPoses.filter(p => p.category === cat);
       for (const pose of catPoses) {
-        // Determine if this pose's original category differs from current
         const originalPose = [...mockTryOnPoses, ...customPoses].find(p => p.poseId === pose.poseId);
         const originalCategory = originalPose?.category;
         const categoryOverride = originalCategory !== pose.category ? pose.category : null;
@@ -174,120 +234,344 @@ export default function AdminScenes() {
     });
   };
 
-  if (adminLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) return null;
-
-  // Only show categories that have poses
   const activeCats = categoryOrder.filter(cat =>
     orderedPoses.some(p => p.category === cat)
   );
 
+  // Filtered results
+  const isSearching = searchQuery.trim().length > 0;
+  const filteredPoses = isSearching
+    ? orderedPoses.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : orderedPoses;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">Scene Manager</h1>
-          <p className="text-xs text-muted-foreground">Reorder scenes, change categories, and manage visibility</p>
+    <TooltipProvider>
+      <div className="space-y-5">
+        {/* ── HEADER ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold">Scene Manager</h1>
+            <p className="text-xs text-muted-foreground">Reorder, categorize, duplicate, and manage scenes</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              onClick={handleSave}
+              disabled={!dirty || saveSortOrder.isPending}
+              size="sm"
+              className="gap-1.5"
+            >
+              {saveSortOrder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Save
+            </Button>
+            <Link to="/app/admin/scene-upload">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Plus className="w-3.5 h-3.5" />
+                Add Scene
+              </Button>
+            </Link>
+          </div>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={!dirty || saveSortOrder.isPending}
-          className="gap-2"
-        >
-          {saveSortOrder.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Save Order
-        </Button>
-        <Link to="/app/admin/scene-upload">
-          <Button variant="outline" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Scene
-          </Button>
-        </Link>
-      </div>
 
-      {/* ── CATEGORY ORDER SECTION ── */}
-      <div className="space-y-2">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Category Order</h2>
-        <div className="border border-border rounded-lg divide-y divide-border bg-card">
-          {activeCats.map((cat, catIdx) => {
-            const count = orderedPoses.filter(p => p.category === cat).length;
-            return (
-              <div key={cat} className="flex items-center gap-3 px-3 py-2">
-                <span className="text-muted-foreground text-xs">≡</span>
-                <span className="text-sm font-medium flex-1">{poseCategoryLabels[cat]} ({count})</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === 0} onClick={() => moveCategoryOrder(cat, 'up')}>
-                  <ArrowUp className="w-3 h-3" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === activeCats.length - 1} onClick={() => moveCategoryOrder(cat, 'down')}>
-                  <ArrowDown className="w-3 h-3" />
-                </Button>
-              </div>
-            );
-          })}
+        {/* ── SEARCH BAR ── */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search scenes by name…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
-      </div>
 
-      {/* ── SCENES BY CATEGORY ── */}
-      {activeCats.map((cat) => {
-        const poses = orderedPoses.filter(p => p.category === cat);
-        if (poses.length === 0) return null;
-        return (
-          <div key={cat} className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {poseCategoryLabels[cat]} ({poses.length})
-            </h3>
+        {isSearching && (
+          <p className="text-xs text-muted-foreground">{filteredPoses.length} result{filteredPoses.length !== 1 ? 's' : ''}</p>
+        )}
+
+        {/* ── CATEGORY ORDER (hidden during search) ── */}
+        {!isSearching && (
+          <div className="space-y-2">
+            <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Category Order</h2>
             <div className="border border-border rounded-lg divide-y divide-border bg-card">
-              {poses.map((pose, idx) => (
-                <div key={pose.poseId} className="flex items-center gap-3 px-3 py-2">
-                  <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                    <img
-                      src={pose.previewUrl}
-                      alt={pose.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
-                    <span className="absolute text-[10px] font-medium text-muted-foreground pointer-events-none">{pose.name.charAt(0)}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{pose.name}</p>
-                    <Select value={pose.category} onValueChange={(val) => changePoseCategory(pose.poseId, val as PoseCategory)}>
-                      <SelectTrigger className="h-6 w-auto min-w-[120px] text-[10px] border-0 bg-muted/50 px-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {defaultCategoryOrder.map(c => (
-                          <SelectItem key={c} value={c} className="text-xs">{poseCategoryLabels[c]}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePoseToTop(pose.poseId)} title="Move to top">
-                      <ChevronsUp className="w-3.5 h-3.5" />
+              {activeCats.map((cat, catIdx) => {
+                const count = orderedPoses.filter(p => p.category === cat).length;
+                return (
+                  <div key={cat} className="flex items-center gap-3 px-3 py-2">
+                    <span className="text-muted-foreground text-xs select-none">≡</span>
+                    <span className="text-sm font-medium flex-1">{poseCategoryLabels[cat] || cat} <span className="text-muted-foreground font-normal">({count})</span></span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === 0} onClick={() => moveCategoryOrder(cat, 'up')}>
+                      <ArrowUp className="w-3 h-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePose(pose.poseId, 'up')}>
-                      <ArrowUp className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === poses.length - 1} onClick={() => movePose(pose.poseId, 'down')}>
-                      <ArrowDown className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(pose)}>
-                      <Trash2 className="w-3.5 h-3.5" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={catIdx === activeCats.length - 1} onClick={() => moveCategoryOrder(cat, 'down')}>
+                      <ArrowDown className="w-3 h-3" />
                     </Button>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── SCENES ── */}
+        {isSearching ? (
+          /* Flat search results */
+          <div className="space-y-2">
+            <div className="border border-border rounded-lg divide-y divide-border bg-card">
+              {filteredPoses.map((pose) => (
+                <SceneRow
+                  key={pose.poseId}
+                  pose={pose}
+                  idx={0}
+                  totalInCategory={1}
+                  isCustomScene={isCustomScene}
+                  isPromptOnly={isPromptOnly}
+                  editingNameId={editingNameId}
+                  editingNameValue={editingNameValue}
+                  setEditingNameValue={setEditingNameValue}
+                  startEditName={startEditName}
+                  commitEditName={commitEditName}
+                  cancelEditName={cancelEditName}
+                  movePose={movePose}
+                  movePoseToTop={movePoseToTop}
+                  changePoseCategory={changePoseCategory}
+                  duplicateToCategory={duplicateToCategory}
+                  handleDelete={handleDelete}
+                  defaultCategoryOrder={defaultCategoryOrder}
+                  showReorderButtons={false}
+                />
               ))}
             </div>
           </div>
-        );
-      })}
+        ) : (
+          /* Category sections */
+          activeCats.map((cat) => {
+            const poses = orderedPoses.filter(p => p.category === cat);
+            if (poses.length === 0) return null;
+            return (
+              <div key={cat} className="space-y-2">
+                <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {poseCategoryLabels[cat] || cat} <span className="font-normal">({poses.length})</span>
+                </h3>
+                <div className="border border-border rounded-lg divide-y divide-border bg-card">
+                  {poses.map((pose, idx) => (
+                    <SceneRow
+                      key={pose.poseId}
+                      pose={pose}
+                      idx={idx}
+                      totalInCategory={poses.length}
+                      isCustomScene={isCustomScene}
+                      isPromptOnly={isPromptOnly}
+                      editingNameId={editingNameId}
+                      editingNameValue={editingNameValue}
+                      setEditingNameValue={setEditingNameValue}
+                      startEditName={startEditName}
+                      commitEditName={commitEditName}
+                      cancelEditName={cancelEditName}
+                      movePose={movePose}
+                      movePoseToTop={movePoseToTop}
+                      changePoseCategory={changePoseCategory}
+                      duplicateToCategory={duplicateToCategory}
+                      handleDelete={handleDelete}
+                      defaultCategoryOrder={defaultCategoryOrder}
+                      showReorderButtons={true}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        {/* ── RESTORE HIDDEN SCENES ── */}
+        {hiddenBuiltInScenes.length > 0 && (
+          <Collapsible open={showHidden} onOpenChange={setShowHidden}>
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-2">
+                {showHidden ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                <EyeOff className="w-3.5 h-3.5" />
+                Hidden Scenes ({hiddenBuiltInScenes.length})
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="border border-border rounded-lg divide-y divide-border bg-card mt-1">
+                {hiddenBuiltInScenes.map(scene => (
+                  <div key={scene.poseId} className="flex items-center gap-3 px-3 py-2">
+                    <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      <img src={scene.previewUrl} alt={scene.name} className="w-full h-full object-cover opacity-50" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate text-muted-foreground">{scene.name}</p>
+                      <p className="text-[10px] text-muted-foreground/60">{poseCategoryLabels[scene.category] || scene.category}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 h-7 text-xs"
+                      onClick={() => handleRestoreScene(scene.poseId)}
+                    >
+                      <Eye className="w-3 h-3" />
+                      Restore
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </div>
+    </TooltipProvider>
+  );
+}
+
+/* ── Scene Row Component ── */
+interface SceneRowProps {
+  pose: TryOnPose;
+  idx: number;
+  totalInCategory: number;
+  isCustomScene: (id: string) => boolean;
+  isPromptOnly: (pose: TryOnPose) => boolean;
+  editingNameId: string | null;
+  editingNameValue: string;
+  setEditingNameValue: (v: string) => void;
+  startEditName: (pose: TryOnPose) => void;
+  commitEditName: () => void;
+  cancelEditName: () => void;
+  movePose: (id: string, dir: 'up' | 'down') => void;
+  movePoseToTop: (id: string) => void;
+  changePoseCategory: (id: string, cat: PoseCategory) => void;
+  duplicateToCategory: (pose: TryOnPose, cat: PoseCategory) => void;
+  handleDelete: (pose: TryOnPose) => void;
+  defaultCategoryOrder: PoseCategory[];
+  showReorderButtons: boolean;
+}
+
+function SceneRow({
+  pose, idx, totalInCategory, isCustomScene, isPromptOnly,
+  editingNameId, editingNameValue, setEditingNameValue,
+  startEditName, commitEditName, cancelEditName,
+  movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
+  handleDelete, defaultCategoryOrder, showReorderButtons,
+}: SceneRowProps) {
+  const isEditing = editingNameId === pose.poseId;
+  const isDuplicate = pose.poseId.includes('__dup_');
+
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-2 group">
+      {/* Thumbnail */}
+      <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+        <img
+          src={pose.previewUrl}
+          alt={pose.name}
+          className="w-full h-full object-cover"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
+        <span className="absolute text-[10px] font-medium text-muted-foreground pointer-events-none">{pose.name.charAt(0)}</span>
+      </div>
+
+      {/* Name + metadata */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          {isEditing ? (
+            <div className="flex items-center gap-1">
+              <Input
+                value={editingNameValue}
+                onChange={e => setEditingNameValue(e.target.value)}
+                className="h-6 text-sm px-1.5 w-40"
+                autoFocus
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitEditName();
+                  if (e.key === 'Escape') cancelEditName();
+                }}
+              />
+              <button onClick={commitEditName} className="text-primary hover:text-primary/80"><Check className="w-3.5 h-3.5" /></button>
+              <button onClick={cancelEditName} className="text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-medium truncate cursor-pointer" onDoubleClick={() => startEditName(pose)} title="Double-click to edit">
+                {pose.name}
+              </p>
+              <button onClick={() => startEditName(pose)} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+                <Pencil className="w-3 h-3" />
+              </button>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+          <Select value={pose.category} onValueChange={(val) => changePoseCategory(pose.poseId, val as PoseCategory)}>
+            <SelectTrigger className="h-5 w-auto min-w-[100px] text-[10px] border-0 bg-muted/50 px-1.5">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {defaultCategoryOrder.map(c => (
+                <SelectItem key={c} value={c} className="text-xs">{poseCategoryLabels[c] || c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isCustomScene(pose.poseId) && (
+            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-0">Custom</Badge>
+          )}
+          {isPromptOnly(pose) && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-amber-500/10 text-amber-600 border-0 cursor-help">Prompt Only</Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[200px] text-xs">
+                Image is not sent to AI — only the prompt text is used for generation
+                {pose.promptHint && <p className="mt-1 text-muted-foreground italic truncate">{pose.promptHint}</p>}
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {isDuplicate && (
+            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-blue-500/10 text-blue-600 border-0">Duplicate</Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-0.5 flex-shrink-0">
+        {/* Duplicate to category */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Duplicate to category">
+              <Copy className="w-3.5 h-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="max-h-64 overflow-y-auto">
+            {defaultCategoryOrder
+              .filter(c => c !== pose.category)
+              .map(c => (
+                <DropdownMenuItem key={c} onClick={() => duplicateToCategory(pose, c)} className="text-xs">
+                  {poseCategoryLabels[c] || c}
+                </DropdownMenuItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {showReorderButtons && (
+          <>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePoseToTop(pose.poseId)} title="Move to top">
+              <ChevronsUp className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePose(pose.poseId, 'up')}>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === totalInCategory - 1} onClick={() => movePose(pose.poseId, 'down')}>
+              <ArrowDown className="w-3.5 h-3.5" />
+            </Button>
+          </>
+        )}
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(pose)}>
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }
