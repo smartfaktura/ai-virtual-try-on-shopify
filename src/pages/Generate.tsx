@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getExtensionFromContentType, downloadDropAsZip } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
@@ -74,6 +74,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
+import { useCustomModels } from '@/hooks/useCustomModels';
+import { useUserModels } from '@/hooks/useUserModels';
+import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 
 const SAMPLE_LISTING_PRODUCT: Product = {
   id: 'sample_listing_ring',
@@ -162,6 +165,9 @@ export default function Generate() {
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customPoses } = useCustomScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
+  const { asProfiles: customModelProfiles } = useCustomModels();
+  const { asProfiles: userModelProfiles } = useUserModels();
+  const { sortModels } = useModelSortOrder();
   const { workflowSlug } = useParams<{ workflowSlug: string }>();
   const [searchParams] = useSearchParams();
   // Support both slug-based routes and legacy query param
@@ -193,6 +199,15 @@ export default function Generate() {
   const isFreeUser = plan === 'free';
   const { isAdmin } = useIsAdmin();
   const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
+
+  // Merge mock + custom + user models, sorted consistently
+  const allModels = useMemo(() => {
+    const deduped = new Map<string, typeof mockModels[0]>();
+    for (const m of mockModels) deduped.set(m.modelId, m);
+    for (const m of customModelProfiles) deduped.set(m.modelId, m);
+    for (const m of userModelProfiles) deduped.set(m.modelId, m);
+    return sortModels([...deduped.values()]);
+  }, [customModelProfiles, userModelProfiles, sortModels]);
 
   const handleGenerateScenePreviews = async () => {
     if (!workflowId) return;
@@ -589,7 +604,7 @@ export default function Generate() {
     const allScenes = [...filterVisible(mockTryOnPoses), ...customPoses];
 
     if (prefillModelName) {
-      const matchedModel = mockModels.find(m => m.name.toLowerCase() === prefillModelName.toLowerCase());
+      const matchedModel = allModels.find(m => m.name.toLowerCase() === prefillModelName.toLowerCase());
       if (matchedModel) {
         setSelectedModel(matchedModel);
         setSelectedModels(new Set([matchedModel.modelId]));
@@ -605,7 +620,7 @@ export default function Generate() {
         setSelectedPoseMap(new Map([[matchedScene.poseId, matchedScene]]));
       }
     }
-  }, [prefillModelName, prefillSceneName, customPoses]);
+  }, [prefillModelName, prefillSceneName, customPoses, allModels]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -644,7 +659,7 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredModels = mockModels.filter(m => {
+  const filteredModels = allModels.filter(m => {
     if (modelGenderFilter !== 'all' && m.gender !== modelGenderFilter) return false;
     if (modelBodyTypeFilter !== 'all' && m.bodyType !== modelBodyTypeFilter) return false;
     if (modelAgeFilter !== 'all' && m.ageRange !== modelAgeFilter) return false;
@@ -661,7 +676,7 @@ export default function Generate() {
     return acc;
   }, {} as Record<PoseCategory, TryOnPose[]>);
 
-  const popularCombinations = createPopularCombinations(mockModels, allScenePoses);
+  const popularCombinations = createPopularCombinations(allModels, allScenePoses);
 
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
