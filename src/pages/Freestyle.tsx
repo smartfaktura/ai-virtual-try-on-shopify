@@ -146,11 +146,14 @@ export default function Freestyle() {
   } | null>(null);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
-  // Deferred restoration IDs for async-loaded entities (products, brand profiles, custom scenes)
+  // Deferred restoration IDs for async-loaded entities (products, brand profiles, custom scenes, custom models)
   const _pendingProductId = useRef(_persisted?.productId ?? null);
   const _pendingBrandProfileId = useRef(_persisted?.brandProfileId ?? null);
   const _pendingCustomSceneId = useRef(
     _persisted?.sceneId && !mockTryOnPoses.find(s => s.poseId === _persisted.sceneId) ? _persisted.sceneId : null
+  );
+  const _pendingCustomModelId = useRef(
+    _persisted?.modelId && _persisted.modelId.startsWith('custom-') ? _persisted.modelId : null
   );
 
   // Persist all settings to localStorage (debounced 500ms)
@@ -216,6 +219,7 @@ export default function Freestyle() {
   const { filterVisible } = useHiddenScenes();
   const { asPoses: customScenePoses } = useCustomScenes();
   const { sortScenes, applyCategoryOverrides } = useSceneSortOrder();
+  const { asProfiles: customModelProfiles } = useCustomModels();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),
