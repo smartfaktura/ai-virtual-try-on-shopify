@@ -208,7 +208,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
             <div className="px-1.5 py-1 bg-background text-center">
               <p className="text-[10px] font-medium text-foreground truncate">{model.name}</p>
               {userModelIds.has(model.modelId) && (
-                <p className="text-[8px] font-semibold text-primary uppercase tracking-wider">My Model</p>
+                <p className="text-[8px] font-semibold text-primary uppercase tracking-wider">Brand Model</p>
               )}
             </div>
             {/* Delete button for user models */}
