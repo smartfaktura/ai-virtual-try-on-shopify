@@ -616,6 +616,8 @@ export type Database = {
       generated_videos: {
         Row: {
           aspect_ratio: string
+          camera_type: string | null
+          cfg_scale: number | null
           completed_at: string | null
           created_at: string
           duration: string
@@ -623,6 +625,7 @@ export type Database = {
           id: string
           kling_task_id: string | null
           model_name: string
+          negative_prompt: string | null
           prompt: string
           source_image_url: string
           status: string
@@ -631,6 +634,8 @@ export type Database = {
         }
         Insert: {
           aspect_ratio?: string
+          camera_type?: string | null
+          cfg_scale?: number | null
           completed_at?: string | null
           created_at?: string
           duration?: string
@@ -638,6 +643,7 @@ export type Database = {
           id?: string
           kling_task_id?: string | null
           model_name?: string
+          negative_prompt?: string | null
           prompt?: string
           source_image_url: string
           status?: string
@@ -646,6 +652,8 @@ export type Database = {
         }
         Update: {
           aspect_ratio?: string
+          camera_type?: string | null
+          cfg_scale?: number | null
           completed_at?: string | null
           created_at?: string
           duration?: string
@@ -653,6 +661,7 @@ export type Database = {
           id?: string
           kling_task_id?: string | null
           model_name?: string
+          negative_prompt?: string | null
           prompt?: string
           source_image_url?: string
           status?: string
