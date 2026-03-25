@@ -34,6 +34,8 @@ const AddProduct = lazy(() => import('@/pages/AddProduct'));
 const CreativeDrops = lazy(() => import('@/pages/CreativeDrops'));
 const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
 const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
+const VideoHub = lazy(() => import('@/pages/VideoHub'));
+const AnimateVideo = lazy(() => import('@/pages/video/AnimateVideo'));
 const Freestyle = lazy(() => import('@/pages/Freestyle'));
 const AdminScenes = lazy(() => import('@/pages/AdminScenes'));
 const AdminSceneUpload = lazy(() => import('@/pages/AdminSceneUpload'));
@@ -169,7 +171,9 @@ const App = () => {
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/:id" element={<Jobs />} />
-                      <Route path="/video" element={<VideoGenerate />} />
+                      <Route path="/video" element={<VideoHub />} />
+                      <Route path="/video/animate" element={<AnimateVideo />} />
+                      <Route path="/video/legacy" element={<VideoGenerate />} />
                       <Route path="/freestyle" element={<Freestyle />} />
                       <Route path="/perspectives" element={<Perspectives />} />
                       <Route path="/models" element={<BrandModels />} />
