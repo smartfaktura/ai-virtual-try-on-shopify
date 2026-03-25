@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { User, ChevronDown, X, Sparkles, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, ChevronDown, X, Sparkles, Trash2, Crown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
@@ -12,7 +13,6 @@ import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 import { useCredits } from '@/contexts/CreditContext';
-import { GenerateModelModal } from '@/components/app/GenerateModelModal';
 import { toast } from 'sonner';
 
 interface ModelSelectorChipProps {
@@ -44,13 +44,13 @@ const BODY_FILTERS: { value: BodyFilter; label: string }[] = [
 export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect, modal, fullWidth }: ModelSelectorChipProps) {
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [bodyFilter, setBodyFilter] = useState<BodyFilter>('all');
-  const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const { asProfiles: customModels } = useCustomModels();
   const { asProfiles: userModelProfiles } = useUserModels();
   const deleteUserModel = useDeleteUserModel();
   const { sortModels } = useModelSortOrder();
   const { plan } = useCredits();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const isPaidPlan = ['growth', 'pro', 'enterprise'].includes(plan);
 
@@ -75,6 +75,13 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
       },
       onError: () => toast.error('Failed to remove model'),
     });
+  };
+
+  const handleBrandModelClick = () => {
+    onOpenChange(false);
+    if (isPaidPlan) {
+      navigate('/app/models');
+    }
   };
 
   const triggerButton = (
@@ -103,6 +110,35 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
         </>
       )}
       <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
+    </button>
+  );
+
+  const brandModelCard = (
+    <button
+      key="brand-model-cta"
+      onClick={handleBrandModelClick}
+      disabled={!isPaidPlan}
+      className={cn(
+        'relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+        isPaidPlan
+          ? 'border-dashed border-primary/30 hover:border-primary/50 cursor-pointer'
+          : 'border-dashed border-border opacity-50 grayscale cursor-not-allowed'
+      )}
+    >
+      <div className="w-full aspect-square bg-muted/60 flex flex-col items-center justify-center gap-1.5 p-2">
+        <Sparkles className={cn("w-5 h-5", isPaidPlan ? "text-primary" : "text-muted-foreground")} />
+        {!isPaidPlan && (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-[8px] font-semibold text-primary uppercase tracking-wider">
+            <Crown className="w-2.5 h-2.5" /> Growth
+          </span>
+        )}
+      </div>
+      <div className="px-1.5 py-1.5 bg-background text-center">
+        <p className="text-[10px] font-medium text-foreground truncate">Brand Models</p>
+        <p className="text-[8px] text-muted-foreground">
+          {isPaidPlan ? 'Create your own' : 'Upgrade to unlock'}
+        </p>
+      </div>
     </button>
   );
 
@@ -155,27 +191,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
         </button>
       )}
 
-      {/* Create Your Model button */}
-      <button
-        onClick={() => {
-          onOpenChange(false);
-          setGenerateModalOpen(true);
-        }}
-        className={cn(
-          "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors mb-2 border border-dashed",
-          isPaidPlan
-            ? "border-primary/30 text-primary hover:bg-primary/5"
-            : "border-border text-muted-foreground hover:bg-muted/40"
-        )}
-      >
-        <Sparkles className="w-3.5 h-3.5 shrink-0" />
-        <span>Create Your Model</span>
-        {!isPaidPlan && (
-          <span className="ml-auto text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/60">Pro</span>
-        )}
-      </button>
-
-      {/* Model grid */}
+      {/* Model grid — brand model card is last */}
       <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
         {filtered.map(model => (
           <button
@@ -206,6 +222,10 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
             )}
           </button>
         ))}
+
+        {/* Brand Models CTA — always last */}
+        {brandModelCard}
+
         {filtered.length === 0 && (
           <p className="col-span-3 text-center text-xs text-muted-foreground py-6">
             No models match these filters
@@ -226,25 +246,21 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
         <MobilePickerSheet open={open} onOpenChange={onOpenChange} title="Character Reference">
           {filtersAndGrid}
         </MobilePickerSheet>
-        <GenerateModelModal open={generateModalOpen} onOpenChange={setGenerateModalOpen} userPlan={plan} />
       </>
     );
   }
 
   return (
-    <>
-      <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
-        <PopoverTrigger asChild>
-          {triggerButton}
-        </PopoverTrigger>
-        <PopoverContent className="w-80 p-3" align="start">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60 mb-2">
-            Character Reference
-          </p>
-          {filtersAndGrid}
-        </PopoverContent>
-      </Popover>
-      <GenerateModelModal open={generateModalOpen} onOpenChange={setGenerateModalOpen} userPlan={plan} />
-    </>
+    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
+      <PopoverTrigger asChild>
+        {triggerButton}
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-3" align="start">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60 mb-2">
+          Character Reference
+        </p>
+        {filtersAndGrid}
+      </PopoverContent>
+    </Popover>
   );
 }
