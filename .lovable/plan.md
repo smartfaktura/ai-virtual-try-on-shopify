@@ -1,40 +1,39 @@
 
 
-# Brand Models Page — Name, Badge, Loading & UX Improvements
+# Brand Models — Hair Styles, Badge Fix & Improvements
 
 ## Changes
 
-### 1. Add Model Name Input
-- Add a text input field at the top of the generator form: "Model Name" (e.g., "Sarah", "Alex")
-- Pass the name to the edge function so it's stored in `user_models.name` instead of the auto-generated "Female Model" / "Male Model"
-- On model cards, show an edit (pencil) icon on hover to rename inline
+### 1. Gender-Aware Hair Styles
+When gender changes, update the hair style options dynamically:
+- **Female**: Long straight, Long curly, Medium wavy, Short straight, Short curly, Bob, Braids, Ponytail, Bun, Pixie cut
+- **Male**: Short straight, Short curly, Buzz cut, Crew cut, Fade, Slicked back, Medium wavy, Bald, Afro, Man bun
+- Reset `hairStyle` to `''` when gender changes so stale selections don't persist
 
-### 2. Change "MY MODEL" → "BRAND MODEL"
-- Update the badge text in `ModelCard` on the Brand Models page
-- Update the badge in `ModelSelectorChip.tsx` where user models are displayed
-- Position the badge **inside the image area**, overlaying near the bottom-left (already done, just change text)
+### 2. Freestyle ModelSelectorChip — Move "BRAND MODEL" badge inside image
+Currently the badge text sits below the image in a separate `<div>`, taking up vertical space. Move it to an **overlay badge inside the image** (bottom-left, small semi-transparent pill) and remove the extra text line below. This keeps model cards compact and consistent.
 
-### 3. Improved Loading State with VOVV.AI Team Avatars
-- Replace the generic pulsing silhouettes with actual VOVV.AI team member avatars from `TEAM_MEMBERS` (Sophia, Luna, Sienna, Kenji, etc.)
-- Show them rotating in a carousel/grid with subtle fade transitions, matching the branded loading pattern used elsewhere in the app
-- Keep the rotating tips text below
+```
+Before:                    After:
+┌──────────┐              ┌──────────┐
+│  [image] │              │  [image] │
+├──────────┤              │ ⌜BRAND⌝  │ ← overlay badge
+│  Name    │              ├──────────┤
+│BRAND MOD │              │  Name    │
+└──────────┘              └──────────┘
+```
 
-### 4. Window Close Behavior — Inform User
-- The edge function runs server-side, so closing the window **will NOT cancel** the generation — the model will still be created and appear when the user returns
-- Add a small info note below the generate button: "Generation happens server-side. You can safely navigate away — your model will appear here when ready."
-- This is purely informational; no code change needed on the backend
-
-### 5. Improve "Distinctive Trait" Field
-- Rename label from "Distinctive Trait (optional)" → **"Signature Feature"**
-- Add a helper subtitle: "Add a unique characteristic to make your model stand out"
-- Keep the same options (Freckles, Dimples, Sharp jawline, etc.)
+### 3. Improvement Ideas (for future consideration)
+Not implementing now, but noting these for the user:
+- **Model variations**: Generate 3 options per creation and let user pick the best
+- **Model consistency test**: Preview the model in 2-3 poses before saving
+- **Model gallery sharing**: Share brand models across team members
+- **Favorite/pin models**: Pin frequently used models to the top of selectors
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/BrandModels.tsx` | Add name input, rename badge to "BRAND MODEL", team avatar loading state, rename Distinctive Trait, add server-side info note, inline rename on model cards |
-| `src/components/app/freestyle/ModelSelectorChip.tsx` | Change "MY MODEL" badge text to "BRAND MODEL" |
-
-No database or edge function changes needed.
+| `src/pages/BrandModels.tsx` | Gender-aware hair style lists, reset hair on gender change |
+| `src/components/app/freestyle/ModelSelectorChip.tsx` | Move "BRAND MODEL" badge from below image to overlay inside image |
 
