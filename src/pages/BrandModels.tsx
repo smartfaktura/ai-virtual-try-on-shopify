@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -101,9 +102,20 @@ const LOADING_TIPS = [
 
 const LOADING_AVATARS = TEAM_MEMBERS.slice(0, 6);
 
-function BrandedLoadingState() {
+function BrandedLoadingState({ isPublicMode = false }: { isPublicMode?: boolean }) {
   const [tipIndex, setTipIndex] = useState(0);
   const [activeAvatar, setActiveAvatar] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+
+  const estimateSeconds = isPublicMode ? 90 : 40;
+  const estimateLabel = isPublicMode ? '~1-2 min' : '~30-50 sec';
+  const ratio = elapsed / estimateSeconds;
+  const progress = ratio <= 1 ? Math.min(ratio * 90, 90) : Math.min(90 + (ratio - 1) * 5, 95);
+
+  const overtimeMsg =
+    ratio >= 2 ? 'Almost there — high-quality results take extra time…' :
+    ratio >= 1.3 ? 'Taking a bit longer than usual — still working…' :
+    null;
 
   useEffect(() => {
     const tipTimer = setInterval(() => {
@@ -112,7 +124,8 @@ function BrandedLoadingState() {
     const avatarTimer = setInterval(() => {
       setActiveAvatar((i) => (i + 1) % LOADING_AVATARS.length);
     }, 2200);
-    return () => { clearInterval(tipTimer); clearInterval(avatarTimer); };
+    const elapsed = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => { clearInterval(tipTimer); clearInterval(avatarTimer); clearInterval(elapsed); };
   }, []);
 
   return (
@@ -148,8 +161,19 @@ function BrandedLoadingState() {
       </div>
 
       <div className="text-center space-y-2">
-        <p className="text-sm font-semibold text-foreground">Creating your brand model...</p>
-        <p className="text-xs text-muted-foreground h-4 transition-all duration-300">{LOADING_TIPS[tipIndex]}</p>
+        <p className="text-sm font-semibold text-foreground">
+          {isPublicMode ? 'Generating 3 model variations…' : 'Creating your brand model...'}
+        </p>
+        <p className="text-xs text-muted-foreground h-4 transition-all duration-300">{overtimeMsg || LOADING_TIPS[tipIndex]}</p>
+      </div>
+
+      {/* Progress bar + time info */}
+      <div className="w-full max-w-xs space-y-2">
+        <Progress value={progress} className="h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear" />
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+          <span>Est. {estimateLabel}</span>
+          <span className="font-mono">{elapsed}s elapsed</span>
+        </div>
       </div>
 
       <div className="flex gap-1.5">
@@ -398,7 +422,7 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
   }
 
   if (generating) {
-    return <BrandedLoadingState />;
+    return <BrandedLoadingState isPublicMode={makePublic} />;
   }
 
   return (
