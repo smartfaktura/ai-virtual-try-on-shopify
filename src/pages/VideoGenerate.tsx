@@ -192,12 +192,28 @@ function VideoGenerateInner() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const CAMERA_PRESETS: Record<string, { config: Record<string, number> }> = {
+    'zoom-in': { config: { zoom: 5 } },
+    'zoom-out': { config: { zoom: -5 } },
+    'pan-left': { config: { horizontal: -5 } },
+    'pan-right': { config: { horizontal: 5 } },
+    'tilt-up': { config: { tilt: -5 } },
+    'tilt-down': { config: { tilt: 5 } },
+    'roll-cw': { config: { roll: 5 } },
+    'roll-ccw': { config: { roll: -5 } },
+  };
+
   const handleGenerate = () => {
     const url = imageSource === 'url' ? imageUrl.trim() : imageUrl;
     if (!url) {
       toast.error('Please provide an image first');
       return;
     }
+    const resolvedMode = loopMode ? 'pro' : mode;
+    const cameraControl = cameraPreset !== 'none' && CAMERA_PRESETS[cameraPreset]
+      ? { type: cameraPreset, config: CAMERA_PRESETS[cameraPreset].config }
+      : undefined;
+
     startGeneration({
       imageUrl: url,
       prompt,
@@ -205,7 +221,10 @@ function VideoGenerateInner() {
       modelName,
       aspectRatio,
       imageTailUrl: loopMode ? url : undefined,
-      mode: loopMode ? 'pro' : undefined,
+      mode: resolvedMode,
+      negativePrompt: negativePrompt.trim() || undefined,
+      cfgScale,
+      cameraControl,
     });
   };
 
