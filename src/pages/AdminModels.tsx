@@ -2,8 +2,9 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
   ArrowUp, ArrowDown, Trash2, Save, Loader2, Plus,
-  Search, Pencil, Check, X, Eye, EyeOff,
+  Search, Pencil, Check, X, Eye, EyeOff, BarChart3,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import { AddModelModal } from '@/components/app/AddModelModal';
 import type { CustomModel } from '@/hooks/useCustomModels';
 import { mockModels } from '@/data/mockData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const GENDER_OPTIONS = ['female', 'male', 'non-binary'];
@@ -23,7 +25,7 @@ const BODY_TYPE_OPTIONS = ['slim', 'average', 'athletic', 'curvy', 'plus-size'];
 const AGE_RANGE_OPTIONS = ['young-adult', 'adult', 'mature'];
 
 interface UnifiedModel {
-  id: string;           // modelId for mock, uuid for custom
+  id: string;
   name: string;
   gender: string;
   bodyType: string;
@@ -74,6 +76,18 @@ function buildUnifiedList(customModels: CustomModel[], sortMap: Map<string, numb
   return all;
 }
 
+function useModelUsageStats() {
+  return useQuery({
+    queryKey: ['admin-model-usage-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_model_usage_stats' as any);
+      if (error) throw error;
+      return (data as Record<string, number>) ?? {};
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export default function AdminModels() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { models: customModels, isLoading: modelsLoading } = useAllCustomModels();
@@ -81,6 +95,7 @@ export default function AdminModels() {
   const saveSortOrder = useSaveModelSortOrder();
   const updateModel = useUpdateCustomModel();
   const deleteModel = useDeleteCustomModel();
+  const { data: usageStats } = useModelUsageStats();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,13 +103,14 @@ export default function AdminModels() {
   const [localOrder, setLocalOrder] = useState<UnifiedModel[] | null>(null);
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [jumpInputId, setJumpInputId] = useState<string | null>(null);
+  const [jumpValue, setJumpValue] = useState('');
 
   const unifiedModels = useMemo(
     () => buildUnifiedList(customModels, sortMap),
     [customModels, sortMap]
   );
 
-  // Reset local order when source data changes
   useEffect(() => {
     setLocalOrder(null);
   }, [unifiedModels]);
@@ -119,6 +135,19 @@ export default function AdminModels() {
     if (newIndex < 0 || newIndex >= list.length) return;
     [list[index], list[newIndex]] = [list[newIndex], list[index]];
     setLocalOrder(list);
+  }, [localOrder, unifiedModels]);
+
+  const jumpToPosition = useCallback((modelId: string, targetPos: number) => {
+    const list = [...(localOrder ?? unifiedModels)];
+    const currentIndex = list.findIndex(m => m.id === modelId);
+    if (currentIndex === -1) return;
+    const clampedTarget = Math.max(1, Math.min(list.length, targetPos)) - 1;
+    if (clampedTarget === currentIndex) return;
+    const [item] = list.splice(currentIndex, 1);
+    list.splice(clampedTarget, 0, item);
+    setLocalOrder(list);
+    setJumpInputId(null);
+    setJumpValue('');
   }, [localOrder, unifiedModels]);
 
   const handleSaveOrder = useCallback(async () => {
@@ -186,6 +215,15 @@ export default function AdminModels() {
     }
   };
 
+  const getUsageCount = (model: UnifiedModel): number => {
+    if (!usageStats) return 0;
+    // Match by model id (freestyle) and model name (workflow jobs)
+    const byId = (usageStats[model.id] as number) ?? 0;
+    const byName = (usageStats[model.name] as number) ?? 0;
+    // Avoid double-counting if id === name
+    return model.id === model.name ? byId : byId + byName;
+  };
+
   if (adminLoading || modelsLoading || sortLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -237,37 +275,74 @@ export default function AdminModels() {
 
         {/* Model grid */}
         <div className="grid gap-3">
-          {filteredModels.map((model, _) => {
+          {filteredModels.map((model) => {
             const isEditing = editingId === model.id;
-            const globalIndex = (localOrder ?? unifiedModels).indexOf(model);
+            const globalIndex = orderedModels.indexOf(model);
+            const position = globalIndex + 1;
+            const usage = getUsageCount(model);
+            const isJumping = jumpInputId === model.id;
 
             return (
               <div
                 key={model.id}
-                className={`flex items-center gap-4 rounded-xl border p-3 transition-colors ${
+                className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
                   model.isActive ? 'bg-card border-border' : 'bg-muted/30 border-border/50 opacity-60'
                 }`}
               >
-                {/* Reorder buttons */}
-                <div className="flex flex-col gap-0.5">
-                  <button
-                    onClick={() => moveModel(globalIndex, 'up')}
-                    disabled={globalIndex === 0}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-20 transition-colors"
-                  >
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => moveModel(globalIndex, 'down')}
-                    disabled={globalIndex === (localOrder ?? unifiedModels).length - 1}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-20 transition-colors"
-                  >
-                    <ArrowDown className="w-3.5 h-3.5" />
-                  </button>
+                {/* Position + reorder */}
+                <div className="flex items-center gap-1 flex-shrink-0 w-20">
+                  {isJumping ? (
+                    <Input
+                      autoFocus
+                      type="number"
+                      min={1}
+                      max={orderedModels.length}
+                      value={jumpValue}
+                      onChange={(e) => setJumpValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const v = parseInt(jumpValue, 10);
+                          if (!isNaN(v)) jumpToPosition(model.id, v);
+                        }
+                        if (e.key === 'Escape') { setJumpInputId(null); setJumpValue(''); }
+                      }}
+                      onBlur={() => { setJumpInputId(null); setJumpValue(''); }}
+                      className="h-7 w-14 text-xs text-center px-1"
+                      placeholder={String(position)}
+                    />
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => { setJumpInputId(model.id); setJumpValue(String(position)); }}
+                          className="text-xs font-mono font-semibold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded px-1.5 py-0.5 min-w-[28px] text-center transition-colors"
+                        >
+                          #{position}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Click to jump to position</TooltipContent>
+                    </Tooltip>
+                  )}
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      onClick={() => moveModel(globalIndex, 'up')}
+                      disabled={globalIndex === 0}
+                      className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => moveModel(globalIndex, 'down')}
+                      disabled={globalIndex === orderedModels.length - 1}
+                      className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Preview image */}
-                <div className="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+                <div className="w-14 h-18 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                   <img
                     src={getOptimizedUrl(model.imageUrl, { quality: 60 })}
                     alt={model.name}
@@ -334,6 +409,17 @@ export default function AdminModels() {
                     </>
                   )}
                 </div>
+
+                {/* Usage stats */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0 min-w-[60px]">
+                      <BarChart3 className="w-3.5 h-3.5" />
+                      <span>{usage}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>{usage} generation{usage !== 1 ? 's' : ''} using this model</TooltipContent>
+                </Tooltip>
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 flex-shrink-0">
