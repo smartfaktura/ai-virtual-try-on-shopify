@@ -43,6 +43,7 @@ import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData'
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
+import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 
 const opt = (url: string) => getOptimizedUrl(url, { width: 200, quality: 60 });
 
@@ -111,11 +112,7 @@ const ASPECT_RATIOS = [
 
 // Full scene list is built inside the component using hooks
 
-const mockModelItems = mockModels.map(m => ({
-  id: m.modelId,
-  name: m.name,
-  image_url: m.previewUrl,
-}));
+// Models are built inside the component using hooks + sort order
 
 interface UserProduct {
   id: string;
@@ -280,9 +277,15 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
   const { asPoses: customScenePoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
   const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
+  const { sortModels: sortModelsByOrder } = useModelSortOrder();
 
+  const allModelsSorted = sortModelsByOrder(mockModels);
   const allModels = [
-    ...mockModelItems,
+    ...allModelsSorted.map(m => ({
+      id: m.modelId,
+      name: m.name,
+      image_url: m.previewUrl,
+    })),
     ...(customModels || []).map((m: any) => ({
       id: m.id,
       name: m.name,

@@ -8,6 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
 import type { ModelProfile } from '@/types';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface ModelSelectorChipProps {
@@ -40,9 +41,10 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [bodyFilter, setBodyFilter] = useState<BodyFilter>('all');
   const { asProfiles: customModels } = useCustomModels();
+  const { sortModels } = useModelSortOrder();
   const isMobile = useIsMobile();
 
-  const allModels = [...mockModels, ...customModels];
+  const allModels = sortModels([...mockModels, ...customModels]);
 
   const filtered = allModels.filter(m => {
     if (genderFilter !== 'all' && m.gender !== genderFilter) return false;

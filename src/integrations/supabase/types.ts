@@ -876,6 +876,30 @@ export type Database = {
         }
         Relationships: []
       }
+      model_sort_order: {
+        Row: {
+          created_at: string
+          id: string
+          model_id: string
+          sort_order: number
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model_id: string
+          sort_order?: number
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model_id?: string
+          sort_order?: number
+          updated_by?: string
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           created_at: string
