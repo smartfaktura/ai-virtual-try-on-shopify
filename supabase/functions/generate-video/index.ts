@@ -179,7 +179,7 @@ serve(async (req) => {
           config: { horizontal: 0, vertical: 0, pan: 0, tilt: 0, roll: 0, zoom: 0, ...camera_control.config },
         };
       }
-      if (body.with_audio) klingBody.with_audio = true;
+      klingBody.sound = body.with_audio ? "on" : "off";
 
       const res = await fetch(`${KLING_API_BASE}/videos/image2video`, {
         method: "POST",
