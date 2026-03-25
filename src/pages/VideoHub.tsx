@@ -49,8 +49,9 @@ export default function VideoHub() {
     <div className="space-y-8 max-w-5xl mx-auto">
       <PageHeader
         title="Create Videos"
-        description="Turn product shots, campaign visuals, and reference frames into polished short videos."
-      />
+        subtitle="Turn product shots, campaign visuals, and reference frames into polished short videos."
+      >
+        <div /></PageHeader>
 
       {/* Workflow Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

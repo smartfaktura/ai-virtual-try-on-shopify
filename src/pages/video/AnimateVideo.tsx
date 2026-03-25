@@ -15,7 +15,7 @@ import { ValidationWarnings, type ValidationWarning } from '@/components/app/vid
 import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { useCredits } from '@/contexts/CreditContext';
+import { useCreditContext } from '@/contexts/CreditContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,7 +28,7 @@ export default function AnimateVideo() {
   const navigate = useNavigate();
   const { status, videoUrl, error, elapsedSeconds, startGeneration, reset } = useGenerateVideo();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
-  const { credits } = useCredits();
+  const { balance } = useCreditContext();
 
   // Step state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -127,9 +127,9 @@ export default function AnimateVideo() {
     <div className="max-w-3xl mx-auto space-y-6">
       <PageHeader
         title="Animate Image"
-        description="Turn one still image into a polished short video."
-        backTo="/app/video"
-      />
+        subtitle="Turn one still image into a polished short video."
+      >
+        <div /></PageHeader>
 
       {/* Results View */}
       {isComplete && (
