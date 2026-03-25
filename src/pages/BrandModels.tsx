@@ -206,6 +206,10 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
+  const [variations, setVariations] = useState<string[]>([]);
+  const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string } | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<number>(0);
+  const [publishing, setPublishing] = useState(false);
   const { balance, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
 
