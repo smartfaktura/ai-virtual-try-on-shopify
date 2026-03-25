@@ -41,41 +41,6 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
-// --- Freestyle settings persistence with 30-minute TTL ---
-const FREESTYLE_STORAGE_KEY = 'freestyle_settings';
-const FREESTYLE_TTL = 30 * 60 * 1000; // 30 minutes
-
-interface FreestylePersistedSettings {
-  ts: number;
-  prompt: string;
-  aspectRatio: FreestyleAspectRatio;
-  cameraStyle: 'pro' | 'natural';
-  framing: string | null;
-  imageRole: ImageRole;
-  editIntent: EditIntent[];
-  modelId: string | null;
-  sceneId: string | null;
-  productId: string | null;
-  brandProfileId: string | null;
-}
-
-function loadPersistedSettings(): Partial<FreestylePersistedSettings> | null {
-  try {
-    const raw = localStorage.getItem(FREESTYLE_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as FreestylePersistedSettings;
-    if (Date.now() - parsed.ts > FREESTYLE_TTL) {
-      localStorage.removeItem(FREESTYLE_STORAGE_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    localStorage.removeItem(FREESTYLE_STORAGE_KEY);
-    return null;
-  }
-}
-
-const _persisted = loadPersistedSettings();
 
 function getProductModelInteraction(productType: string): string {
   const type = productType.toLowerCase();
@@ -94,18 +59,12 @@ function getProductModelInteraction(productType: string): string {
 
 export default function Freestyle() {
   const navigate = useNavigate();
-  const [prompt, setPrompt] = useState(() => _persisted?.prompt ?? '');
+  const [prompt, setPrompt] = useState('');
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(() => {
-    if (!_persisted?.modelId) return null;
-    return mockModels.find(m => m.modelId === _persisted.modelId) ?? null;
-  });
-  const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(() => {
-    if (!_persisted?.sceneId) return null;
-    return mockTryOnPoses.find(s => s.poseId === _persisted.sceneId) ?? null;
-  });
-  const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>(() => _persisted?.aspectRatio ?? '1:1');
+  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+  const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
 
   // Auto-select Pro quality when model or scene is selected
@@ -126,15 +85,15 @@ export default function Freestyle() {
   const [shareImageIndex] = useState<number | null>(null);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
-  const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>(() => _persisted?.cameraStyle ?? 'pro');
+  const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
   const [failedEntries, setFailedEntries] = useState<FailedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
-  const [framing, setFraming] = useState<FramingOption | null>(() => (_persisted?.framing as FramingOption) ?? null);
+  const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
-  const [imageRole, setImageRole] = useState<ImageRole>(() => _persisted?.imageRole ?? 'edit');
-  const [editIntent, setEditIntent] = useState<EditIntent[]>(() => _persisted?.editIntent ?? []);
+  const [imageRole, setImageRole] = useState<ImageRole>('edit');
+  const [editIntent, setEditIntent] = useState<EditIntent[]>([]);
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
@@ -146,38 +105,6 @@ export default function Freestyle() {
   } | null>(null);
   const prevActiveJobRef = useRef<typeof activeJob>(null);
 
-  // Deferred restoration IDs for async-loaded entities (products, brand profiles, custom scenes, custom models)
-  const _pendingProductId = useRef(_persisted?.productId ?? null);
-  const _pendingBrandProfileId = useRef(_persisted?.brandProfileId ?? null);
-  const _pendingCustomSceneId = useRef(
-    _persisted?.sceneId && !mockTryOnPoses.find(s => s.poseId === _persisted.sceneId) ? _persisted.sceneId : null
-  );
-  const _pendingCustomModelId = useRef(
-    _persisted?.modelId && _persisted.modelId.startsWith('custom-') ? _persisted.modelId : null
-  );
-
-  // Persist all settings to localStorage (debounced 500ms)
-  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
-    persistTimerRef.current = setTimeout(() => {
-      const settings: FreestylePersistedSettings = {
-        ts: Date.now(),
-        prompt,
-        aspectRatio,
-        cameraStyle,
-        framing: framing as string | null,
-        imageRole,
-        editIntent,
-        modelId: selectedModel?.modelId ?? null,
-        sceneId: selectedScene?.poseId ?? null,
-        productId: selectedProduct?.id ?? null,
-        brandProfileId: selectedBrandProfile?.id ?? null,
-      };
-      localStorage.setItem(FREESTYLE_STORAGE_KEY, JSON.stringify(settings));
-    }, 500);
-    return () => { if (persistTimerRef.current) clearTimeout(persistTimerRef.current); };
-  }, [prompt, aspectRatio, cameraStyle, framing, imageRole, editIntent, selectedModel, selectedScene, selectedProduct, selectedBrandProfile]);
 
   // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
   const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
@@ -198,7 +125,6 @@ export default function Freestyle() {
     setEditIntent([]);
     setPresetHint(false);
     setActiveScenePresetId(null);
-    localStorage.removeItem(FREESTYLE_STORAGE_KEY);
   }, []);
 
   const handlePresetSelect = useCallback((scene: TryOnPose) => {
@@ -360,22 +286,28 @@ export default function Freestyle() {
         sceneImageUrl: sceneImageParam || undefined,
       });
     }
-    // Edit image from Library
-    const editImageParam = searchParams.get('editImage');
-    const imageRoleParam = searchParams.get('imageRole');
-    if (editImageParam) {
-      setSourceImagePreview(editImageParam);
-      convertImageToBase64(editImageParam).then(b64 => setSourceImage(b64)).catch(() => setSourceImage(editImageParam));
-      if (imageRoleParam === 'edit') {
-        setImageRole('edit');
-      }
-      setIsPromptCollapsed(false);
-    }
-
-    if (p || r || q || sceneParam || modelParam || fromDiscover || editImageParam) {
+    if (p || r || q || sceneParam || modelParam || fromDiscover) {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Edit image from Library — reactive to searchParams so it works on navigation
+  useEffect(() => {
+    const editImageParam = searchParams.get('editImage');
+    const imageRoleParam = searchParams.get('imageRole');
+    if (!editImageParam) return;
+    setSourceImagePreview(editImageParam);
+    convertImageToBase64(editImageParam).then(b64 => setSourceImage(b64)).catch(() => setSourceImage(editImageParam));
+    if (imageRoleParam === 'edit') {
+      setImageRole('edit');
+    }
+    setIsPromptCollapsed(false);
+    // Clear only the edit params
+    const next = new URLSearchParams(searchParams);
+    next.delete('editImage');
+    next.delete('imageRole');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Deferred custom scene matching (custom scenes load async)
   useEffect(() => {
@@ -450,44 +382,6 @@ export default function Freestyle() {
     enabled: !!user?.id,
   });
 
-  // Deferred restoration: products & brand profiles (loaded async via React Query)
-  useEffect(() => {
-    if (_pendingProductId.current && products.length > 0) {
-      const match = products.find(p => p.id === _pendingProductId.current);
-      if (match) setSelectedProduct(match);
-      _pendingProductId.current = null;
-    }
-  }, [products]);
-
-  useEffect(() => {
-    if (_pendingBrandProfileId.current && brandProfiles.length > 0) {
-      const match = brandProfiles.find(bp => bp.id === _pendingBrandProfileId.current);
-      if (match) setSelectedBrandProfile(match);
-      _pendingBrandProfileId.current = null;
-    }
-  }, [brandProfiles]);
-
-  // Deferred restoration: custom scenes (loaded async)
-  useEffect(() => {
-    if (_pendingCustomSceneId.current && customScenePoses.length > 0) {
-      const match = customScenePoses.find(s => s.poseId === _pendingCustomSceneId.current);
-      if (match) {
-        setSelectedScene(match);
-        _pendingCustomSceneId.current = null;
-      }
-    }
-  }, [customScenePoses]);
-
-  // Deferred restoration: custom models (loaded async)
-  useEffect(() => {
-    if (_pendingCustomModelId.current && customModelProfiles.length > 0) {
-      const match = customModelProfiles.find(m => m.modelId === _pendingCustomModelId.current);
-      if (match) {
-        setSelectedModel(match);
-        _pendingCustomModelId.current = null;
-      }
-    }
-  }, [customModelProfiles]);
 
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({
