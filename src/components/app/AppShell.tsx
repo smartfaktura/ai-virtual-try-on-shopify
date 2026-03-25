@@ -294,6 +294,19 @@ export function AppShell({ children }: AppShellProps) {
                       <MessageSquare className="w-4 h-4" />
                       Feedback
                     </button>
+                    <button
+                      onClick={() => { navigate('/app/admin/models'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Models
+                    </button>
+                    <button
+                      onClick={() => { navigate('/app/admin/scenes'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Scenes
                   </>
                 )}
                 <button
