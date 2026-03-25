@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -252,6 +252,10 @@ function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdm
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
+      setMakePublic(false);
+      if (makePublic) {
+        queryClient.invalidateQueries({ queryKey: ['custom-models'] });
+      }
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'Generation failed');
