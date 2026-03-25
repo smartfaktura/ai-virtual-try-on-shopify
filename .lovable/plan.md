@@ -1,23 +1,17 @@
 
 
-# Add Clipboard Paste (Cmd+V) for Reference Image Upload
+# Fix: Recent Creations Not Showing Latest Images
 
-## What
-Allow users to paste an image from their clipboard (Cmd+V / Ctrl+V) into the reference image upload area on the Brand Models page, in addition to the existing click-to-upload.
+## Problem
+The query fetches only 5 `generation_jobs` and 5 `freestyle_generations`. Since each job can expand into multiple images (via the `results` JSONB array), a single job with 4 result images consumes 4 of the 8 display slots. This crowds out newer images from other sources that weren't fetched due to the low limits.
 
-## Changes
+## Solution
+Increase fetch limits from 5 to **12** for both tables. After expanding job results and merging both sources, the combined pool is large enough that the final `sort + slice(0, 8)` reliably picks the 8 most recent individual images.
 
-### `src/pages/BrandModels.tsx`
+## File Changed
 
-1. **Add a `processFile` helper** — extract the shared logic from `handleFile` (preview via FileReader + upload) into a reusable function that accepts a `File`.
-
-2. **Add a `handlePaste` function** — reads `clipboardData.items`, finds the first image item, converts to File, calls `processFile`.
-
-3. **Attach a `onPaste` event listener** to the upload area container (the `div` wrapping the reference image section) so paste works when that area is focused/visible. Also add a global `useEffect` paste listener when `useReference` is true and no image is uploaded yet, so Cmd+V works anywhere on the page.
-
-4. **Update the upload button text** — change "Click to upload reference photo" to "Click or paste (⌘V) reference photo" to hint at the feature.
-
-5. **Refactor `handleFile`** to call `processFile(file)` internally.
-
-### No other files changed.
+### `src/components/app/RecentCreationsGallery.tsx`
+- Change `.limit(5)` to `.limit(12)` on the `generation_jobs` query (line 45)
+- Change `.limit(5)` to `.limit(12)` on the `freestyle_generations` query (line 50)
+- Increase the `items.slice(0, 10)` cap to `items.slice(0, 16)` (line 117) so more items enter the signed-URL batch, then the final render still takes `.slice(0, 8)` (line 176)
 
