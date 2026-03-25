@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Palette } from 'lucide-react';
+import { Plus, Palette, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
@@ -8,6 +8,8 @@ import { BrandProfileCard } from '@/components/app/BrandProfileCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 export interface BrandProfile {
   id: string;
@@ -30,6 +32,63 @@ export interface BrandProfile {
 }
 
 export type BrandProfileInsert = Omit<BrandProfile, 'id' | 'created_at' | 'updated_at'>;
+
+/* ── Brand Models CTA Banner ── */
+function BrandModelsBanner() {
+  const navigate = useNavigate();
+  const sophia = TEAM_MEMBERS[0];
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-r from-primary/5 via-background to-primary/5">
+      <div className="flex items-center gap-5 p-5 sm:p-6">
+        {/* Avatar */}
+        <div className="shrink-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+            <img
+              src={getOptimizedUrl(sophia.avatar, { quality: 70 })}
+              alt={sophia.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        {/* Copy */}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
+              {sophia.name} · {sophia.expertiseTag}
+            </p>
+          </div>
+          <p className="text-sm sm:text-base font-semibold text-foreground leading-snug">
+            Complete your brand identity with <span className="text-primary">Brand Models</span>
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-lg">
+            Create custom AI models that represent your brand — consistent faces across every campaign, any gender, age & ethnicity.
+          </p>
+        </div>
+
+        {/* CTA */}
+        <Button
+          size="sm"
+          className="shrink-0 gap-1.5"
+          onClick={() => navigate('/app/models')}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Create Brand Model</span>
+          <span className="sm:hidden">Create</span>
+          <ArrowRight className="h-3 w-3" />
+        </Button>
+      </div>
+
+      {/* Decorative dots */}
+      <div className="absolute top-2 right-2 flex gap-1 opacity-20">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="w-1 h-1 rounded-full bg-primary" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function BrandProfiles() {
   const { user } = useAuth();
@@ -74,6 +133,9 @@ export default function BrandProfiles() {
             Create Profile
           </Button>
         </div>
+
+        {/* Brand Models CTA Banner */}
+        <BrandModelsBanner />
 
         {/* Content */}
         {isLoading ? (
