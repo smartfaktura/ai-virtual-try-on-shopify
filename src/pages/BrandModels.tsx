@@ -336,7 +336,9 @@ export default function BrandModels() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Brand Models" subtitle="Create and manage your custom AI models" />
+      <PageHeader title="Brand Models" subtitle="Create and manage your custom AI models">
+        <div />
+      </PageHeader>
 
       {!isPaid ? (
         <UpgradeHero />
