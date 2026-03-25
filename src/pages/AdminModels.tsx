@@ -319,7 +319,7 @@ export default function AdminModels() {
           )}
         </div>
 
-        <AddModelModal open={addModelOpen} onOpenChange={setAddModelOpen} />
+        <AddModelModal open={addModelOpen} onClose={() => setAddModelOpen(false)} />
       </div>
     </TooltipProvider>
   );
