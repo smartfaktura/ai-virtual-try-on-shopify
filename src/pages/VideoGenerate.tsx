@@ -143,6 +143,11 @@ function VideoGenerateInner() {
   const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('16:9');
   const [loopMode, setLoopMode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [mode, setMode] = useState<'std' | 'pro'>('std');
+  const [cfgScale, setCfgScale] = useState(0.5);
+  const [negativePrompt, setNegativePrompt] = useState('');
+  const [negativeOpen, setNegativeOpen] = useState(false);
+  const [cameraPreset, setCameraPreset] = useState('none');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
