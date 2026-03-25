@@ -69,29 +69,29 @@ export default function AnimateVideo() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // When category changes, update motion goals and preservation defaults
+  // When category or sceneType changes, update motion goals and preservation defaults
   useEffect(() => {
-    const goals = getMotionGoalsForCategory(category);
+    const goals = getMotionGoalsForCategory(category, sceneType);
     if (goals.length > 0 && !goals.find(g => g.id === motionGoalId)) {
       setMotionGoalId(goals[0].id);
     }
-    const pres = getDefaultPreservation(category);
+    const pres = getDefaultPreservation(category, sceneType);
     setPreserveScene(pres.preserveScene);
     setPreserveProductDetails(pres.preserveProductDetails);
     setPreserveIdentity(pres.preserveIdentity);
     setPreserveOutfit(pres.preserveOutfit);
-  }, [category]);
+  }, [category, sceneType]);
 
   // When motion goal changes, apply its defaults
   useEffect(() => {
-    const goals = getMotionGoalsForCategory(category);
+    const goals = getMotionGoalsForCategory(category, sceneType);
     const goal = goals.find(g => g.id === motionGoalId);
     if (goal) {
       setCameraMotion(goal.defaultCameraMotion);
       setSubjectMotion(goal.subjectMotion);
       setMotionIntensity(goal.defaultIntensity);
     }
-  }, [motionGoalId, category]);
+  }, [motionGoalId, category, sceneType]);
 
   // Auto-analyze after upload
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,6 +303,7 @@ export default function AnimateVideo() {
               {/* Motion Goals */}
               <MotionGoalSelector
                 category={category}
+                sceneType={sceneType}
                 selectedGoalId={motionGoalId}
                 onChange={setMotionGoalId}
                 recommendedGoalIds={recommendedGoalIds}
