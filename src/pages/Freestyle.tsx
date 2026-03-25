@@ -601,6 +601,7 @@ export default function Freestyle() {
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
       sceneId: selectedScene?.poseId || undefined,
+      promptOnly: selectedScene?.promptOnly || undefined,
       modelId: selectedModel?.modelId || undefined,
       productId: selectedProduct?.id || undefined,
       imageRole: sourceImage ? imageRole : undefined,
