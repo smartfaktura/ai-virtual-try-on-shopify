@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift,
+  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -31,6 +31,7 @@ const navItems = [
   { label: 'Video', icon: Film, path: '/app/video', comingSoon: true },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
+  { label: 'Models', icon: Users, path: '/app/models' },
   { label: 'Earn Credits', icon: Gift, path: '#earn-credits' },
 ];
 

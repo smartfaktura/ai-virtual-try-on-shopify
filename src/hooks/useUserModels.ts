@@ -72,6 +72,24 @@ export function useGenerateUserModel() {
   });
 }
 
+export function useGenerateUserModelFromDescription() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (description: Record<string, any>) => {
+      const { data, error } = await supabase.functions.invoke('generate-user-model', {
+        body: { mode: 'generator', description },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { model: UserModel; new_balance: number };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['user-models'] });
+    },
+  });
+}
+
 export function useDeleteUserModel() {
   const qc = useQueryClient();
 

@@ -42,6 +42,7 @@ const AdminChatSessions = lazy(() => import('@/pages/AdminChatSessions'));
 const AdminFeedback = lazy(() => import('@/pages/AdminFeedback'));
 const AdminStatus = lazy(() => import('@/pages/AdminStatus'));
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
+const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
 const BlogPost = lazy(() => import('@/pages/BlogPost'));
@@ -171,6 +172,7 @@ const App = () => {
                       <Route path="/video" element={<VideoGenerate />} />
                       <Route path="/freestyle" element={<Freestyle />} />
                       <Route path="/perspectives" element={<Perspectives />} />
+                      <Route path="/models" element={<BrandModels />} />
                       <Route path="/admin/models" element={<AdminModels />} />
                       <Route path="/admin/scenes" element={<AdminScenes />} />
                       <Route path="/admin/scene-upload" element={<AdminSceneUpload />} />
