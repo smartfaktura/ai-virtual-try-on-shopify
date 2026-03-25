@@ -3036,7 +3036,8 @@ export default function Generate() {
                   const filteredProducts = userProducts.filter(p =>
                     p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
                     p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
-                  );
+                   );
+                   const visibleProducts = filteredProducts.slice(0, visibleProductCount);
 
                   if (filteredProducts.length === 0 && tryOnSearchQuery) {
                     return <p className="text-center text-sm text-muted-foreground py-6">No products match "{tryOnSearchQuery}"</p>;
