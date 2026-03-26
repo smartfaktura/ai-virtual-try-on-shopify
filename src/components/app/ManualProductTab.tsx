@@ -9,8 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/lib/brandedToast';
-import { toastSophia } from '@/lib/brandedToast';
+import { toast, toastSophia } from '@/lib/brandedToast';
 
 interface UserProduct {
   id: string;
