@@ -342,6 +342,7 @@ async function generateImageSeedream(
   console.log(`[seedream] Using size=${size} for aspectRatio=${aspectRatio}`);
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const attemptStart = performance.now();
     try {
       const seedreamRatio = seedreamAspectRatio(aspectRatio);
       console.log(`[seedream] aspect_ratio=${seedreamRatio} (app=${aspectRatio})`);
@@ -370,9 +371,11 @@ async function generateImageSeedream(
         signal: AbortSignal.timeout(150_000),
       });
 
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
+
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn(`[seedream] 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
+          console.warn(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=429 hasImage=false reason=rate_limit`);
           if (attempt < maxRetries) {
             await new Promise((r) => setTimeout(r, 2000));
             continue;
@@ -380,7 +383,7 @@ async function generateImageSeedream(
           throw { status: 429, message: "Rate limit exceeded on Seedream." };
         }
         const errorText = await response.text();
-        console.error(`[seedream] Error (attempt ${attempt + 1}):`, response.status, errorText);
+        console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=${response.status} hasImage=false error=${errorText.slice(0, 200)}`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
@@ -391,18 +394,20 @@ async function generateImageSeedream(
       const data = await response.json();
       const imageUrl = data?.data?.[0]?.url;
       if (!imageUrl) {
-        console.error("[seedream] No image URL in response:", JSON.stringify(data).slice(0, 500));
+        console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=false reason=no_url_in_response`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
         }
         return null;
       }
-      return imageUrl; // Returns a hosted URL (not base64)
+      console.log(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=true`);
+      return imageUrl;
     } catch (error: unknown) {
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
       if (typeof error === "object" && error !== null && "status" in error) throw error;
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
-      console.error(`[seedream] Attempt ${attempt + 1} failed${isTimeout ? " (timeout)" : ""}:`, error);
+      console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=error hasImage=false reason=${isTimeout ? "timeout" : "exception"}`);
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 1000));
         continue;
@@ -648,6 +653,7 @@ async function generateImage(
   const timeoutMs = isProModel ? 150_000 : 90_000;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const attemptStart = performance.now();
     try {
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -671,9 +677,11 @@ async function generateImage(
         }
       );
 
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
+
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn(`AI Gateway 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
+          console.warn(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=429 hasImage=false reason=rate_limit`);
           if (attempt < maxRetries) {
             await new Promise((r) => setTimeout(r, 1500));
             continue;
@@ -681,10 +689,11 @@ async function generateImage(
           throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
         }
         if (response.status === 402) {
+          console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=402 hasImage=false reason=credits_exhausted`);
           throw { status: 402, message: "Credits exhausted. Please add more credits." };
         }
         const errorText = await response.text();
-        console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
+        console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=${response.status} hasImage=false error=${errorText.slice(0, 200)}`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
@@ -698,11 +707,12 @@ async function generateImage(
       if (!imageUrl) {
         if (isContentBlocked(data)) {
           const reason = extractBlockReason(data);
-          console.warn("Content blocked by safety filter:", reason);
+          const durationSec2 = ((performance.now() - attemptStart) / 1000).toFixed(1);
+          console.warn(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec2}s status=200 hasImage=false reason=content_blocked blockReason="${reason.slice(0, 100)}"`);
           return { blocked: true, reason };
         }
 
-        console.error("No image in response:", JSON.stringify(data).slice(0, 500));
+        console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=false reason=no_image_in_response`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
@@ -710,8 +720,10 @@ async function generateImage(
         return null;
       }
 
+      console.log(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=true`);
       return imageUrl;
     } catch (error: unknown) {
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
       if (typeof error === "object" && error !== null && "status" in error) {
         const statusErr = error as { status: number };
         // For 429, don't re-throw — let the per-image loop handle it as a soft error
@@ -723,7 +735,7 @@ async function generateImage(
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
       // For timeouts, only retry once — a slow model won't get faster on retry
       const effectiveMaxRetries = isTimeout ? Math.min(maxRetries, 1) : maxRetries;
-      console.error(`Generation attempt ${attempt + 1} failed${isTimeout ? " (timeout)" : ""}:`, error);
+      console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=error hasImage=false reason=${isTimeout ? "timeout" : "exception"}`);
       if (attempt < effectiveMaxRetries) {
         await new Promise((r) => setTimeout(r, isTimeout ? 1000 : 500));
         continue;
@@ -828,6 +840,8 @@ async function completeQueueJob(
   payload: Record<string, unknown>,
   contentBlocked: boolean = false,
   blockReason: string | null = null,
+  providerUsed?: string,
+  durationMs?: number,
 ) {
 
   // Guard: if user already cancelled, skip completion to preserve refund
@@ -897,7 +911,7 @@ async function completeQueueJob(
     return;
   }
 
-  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
+  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined, providerUsed: providerUsed || undefined, durationMs: durationMs || undefined };
 
   const { error: completeErr } = await supabase.from("generation_queue").update({
     status: "completed",
@@ -949,6 +963,8 @@ serve(async (req) => {
   const authHeader = req.headers.get("authorization");
   const isQueueInternal = req.headers.get("x-queue-internal") === "true"
     && authHeader === `Bearer ${serviceRoleKey}`;
+
+  const requestStartTime = performance.now();
 
   try {
     // SECURITY: Only allow internal queue calls — reject direct access
@@ -1146,6 +1162,7 @@ serve(async (req) => {
     const errors: string[] = [];
     let contentBlocked = false;
     let blockReason = "";
+    let lastActualProvider = useSeedream ? "seedream-4.5" : aiModel;
 
     const batchConsistency = effectiveImageCount > 1
       ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
@@ -1188,7 +1205,7 @@ serve(async (req) => {
           result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY!, body.aspectRatio, maxRetries);
           // Cross-provider fallback: Seedream failed → try Nano Banana
           if (result === null) {
-            console.warn(`[generate-freestyle] Seedream returned null — falling back to Nano Banana (${aiModel})`);
+            console.log(`[FALLBACK] primary=seedream-4.5 result=null → trying ${aiModel}`);
             result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, 0, body.quality || 'standard');
             if (result !== null) actualProvider = aiModel;
           }
@@ -1197,18 +1214,19 @@ serve(async (req) => {
           result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
           // Inner fallback: Pro → Flash
           if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
-            console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
+            console.log(`[FALLBACK] primary=${aiModel} result=null → trying google/gemini-3.1-flash-image-preview`);
             result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
             if (result !== null) actualProvider = "google/gemini-3.1-flash-image-preview";
           }
           // Cross-provider fallback: Nano Banana failed → try Seedream (if key available)
           if (result === null && ARK_API_KEY && providerOverride !== "nanobanana") {
-            console.warn(`[generate-freestyle] Nano Banana returned null — falling back to Seedream`);
+            console.log(`[FALLBACK] primary=nanobanana(${aiModel}) result=null → trying seedream-4.5`);
             const seedreamInput = convertContentToSeedreamInput(contentArray);
             result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
             if (result !== null) actualProvider = "seedream-4.5";
           }
         }
+        lastActualProvider = actualProvider;
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
@@ -1267,7 +1285,9 @@ serve(async (req) => {
               // Early finalize: in queue mode (1 image), complete immediately after first success
               if (body.job_id && images.length > 0) {
                 console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
-                await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                const elapsedMs = Math.round(performance.now() - requestStartTime);
+                console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${actualProvider}`);
+                await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, actualProvider, elapsedMs);
                 return new Response(
                   JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
                   { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1335,7 +1355,9 @@ serve(async (req) => {
                   // Early finalize in queue mode after fallback success
                   if (isQueueInternal && body.job_id && images.length > 0) {
                     console.log(`[generate-freestyle] Early finalize (fallback): completing queue job ${body.job_id}`);
-                    await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                    const elapsedMs = Math.round(performance.now() - requestStartTime);
+                    console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=fallback`);
+                    await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, "fallback", elapsedMs);
                     return new Response(
                       JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
                       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1355,7 +1377,8 @@ serve(async (req) => {
           }
 
           if (isQueueInternal && body.job_id) {
-            await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
+            const elapsedMs = Math.round(performance.now() - requestStartTime);
+            await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>, false, null, lastActualProvider, elapsedMs);
           }
           return new Response(
             JSON.stringify({ error: statusError.message }),
@@ -1372,7 +1395,9 @@ serve(async (req) => {
 
     // Queue self-completion
     if (isQueueInternal && body.job_id) {
-      await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, contentBlocked, blockReason);
+      const elapsedMs = Math.round(performance.now() - requestStartTime);
+      console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${lastActualProvider}`);
+      await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, contentBlocked, blockReason, lastActualProvider, elapsedMs);
     }
 
     if (contentBlocked && images.length === 0) {
