@@ -187,14 +187,14 @@ function polishUserPrompt(
 
   if (context.hasProduct) {
     const dimNote = productDimensions ? ` Dimensions: ${productDimensions} — render at realistic scale.` : "";
-    refs.push(`${refNum}. PRODUCT: Match the exact product from [PRODUCT REFERENCE] — shape, material, color, texture, and all visible construction details.${context.hasModel ? " Ignore any person/mannequin in this image." : ""}${dimNote}`);
+    refs.push(`${refNum}. PRODUCT: Match the exact product from [PRODUCT REFERENCE] — shape, color, and overall appearance.${context.hasModel ? " Ignore any person/mannequin in this image." : ""}${dimNote}`);
     refNum++;
     if (context.hasSource && !['product', 'model', 'scene'].includes(imageRole || '')) {
       refs.push(`${refNum}. REFERENCE: Use [REFERENCE IMAGE] for setting/mood inspiration. The product from [PRODUCT REFERENCE] is the hero subject.`);
       refNum++;
     }
   } else if (context.hasSource && imageRole !== 'model' && imageRole !== 'scene') {
-    refs.push(`${refNum}. PRODUCT: Match the exact item from [${imageRole === 'product' ? 'PRODUCT IMAGE' : 'REFERENCE IMAGE'}] — shape, material, color, texture, and all visible construction details.${context.hasModel ? " Ignore any person/mannequin." : ""}`);
+    refs.push(`${refNum}. PRODUCT: Match the exact item from [${imageRole === 'product' ? 'PRODUCT IMAGE' : 'REFERENCE IMAGE'}] — shape, color, and overall appearance.${context.hasModel ? " Ignore any person/mannequin." : ""}`);
     refNum++;
   }
 
@@ -237,8 +237,8 @@ function polishUserPrompt(
   parts.push("");
   const qualityLines: string[] = [
     "Photorealistic. Natural skin with visible pores and fine lines.",
-    "Sharp micro-detail on textures, stitching, and fabric weave.",
-    "Visible material grain. Single cohesive photograph, edge-to-edge.",
+    "Sharp detail on textures and surfaces.",
+    "Single cohesive photograph, edge-to-edge.",
   ];
 
   if (!isSelfie) {
@@ -484,7 +484,7 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
         lines.push(`- Image ${idx} is the MODEL: preserve exact face, hair color, skin tone, body type, and all physical features from this person.`);
         break;
       case "product":
-        lines.push(`- Image ${idx} is the PRODUCT: CRITICAL — replicate this item EXACTLY as shown. Match precise shape, silhouette, color, material texture, collar/neckline style, zipper/button placement, pockets, and all visible construction details. This is a specific real product that must be instantly recognizable.`);
+        lines.push(`- Image ${idx} is the PRODUCT: CRITICAL — replicate this item EXACTLY as shown. Match precise shape, silhouette, color, and overall appearance. This is a specific real product that must be instantly recognizable.`);
         break;
       case "scene":
         lines.push(`- Image ${idx} is the BACKGROUND/SCENE: use for environment, lighting, and atmosphere only. Do not take person or product features from this image.`);
