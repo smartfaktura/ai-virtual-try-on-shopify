@@ -103,14 +103,20 @@ export function MultiProductProgressBanner({
         </div>
       </div>
 
-      {/* Progress bar */}
-      <Progress value={generatingProgress} className="h-2" />
-
-      {/* Time estimate */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Est. ~{estLow === estHigh ? estLow : `${estLow}-${estHigh}`} {estUnit} for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
-        <span>{generatingProgress}%</span>
-      </div>
+      {/* Progress bar — apply time-based floor so it never shows 0% */}
+      {(() => {
+        const timeFloor = Math.min((elapsed / Math.max(totalEstSeconds, 1)) * 15, 15);
+        const displayProgress = Math.max(generatingProgress, Math.round(Math.max(timeFloor, 2)));
+        return (
+          <>
+            <Progress value={displayProgress} className="h-2" />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Est. ~{estLow === estHigh ? estLow : `${estLow}-${estHigh}`} {estUnit} for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
+              <span>{displayProgress}%</span>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Overtime message */}
       {overtimeMsg && (
