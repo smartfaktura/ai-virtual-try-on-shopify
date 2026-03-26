@@ -5,31 +5,25 @@ import { buildVideoPrompt } from '@/lib/videoPromptTemplates';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import { toast } from 'sonner';
 
-export type PipelineStage = 'idle' | 'creating_project' | 'analyzing' | 'building_prompt' | 'generating' | 'complete' | 'error';
+export type PipelineStage = 'idle' | 'creating_project' | 'analyzing' | 'building_prompt' | 'generating' | 'queued' | 'complete' | 'error';
 
 interface AnimateParams {
   imageUrl: string;
-  // Product Context
   category: string;
   sceneType: string;
-  // Motion Goal
   motionGoalId: string;
-  // Refinements
   cameraMotion: string;
   subjectMotion: string;
   realismLevel: string;
   loopStyle: string;
   motionIntensity: 'low' | 'medium' | 'high';
-  // Preservation
   preserveScene: boolean;
   preserveProductDetails: boolean;
   preserveIdentity: boolean;
   preserveOutfit: boolean;
-  // Settings
   aspectRatio: '1:1' | '16:9' | '9:16';
   duration: '5' | '10';
   audioMode: 'silent' | 'ambient';
-  // Optional
   userPrompt?: string;
 }
 
@@ -75,7 +69,7 @@ export function useVideoProject() {
     }
   }, []);
 
-  // Phase B: Generate video from confirmed settings
+  // Phase B: Generate video from confirmed settings (now queue-based)
   const runAnimatePipeline = useCallback(async (params: AnimateParams) => {
     setPipelineError(null);
 
@@ -137,7 +131,7 @@ export function useVideoProject() {
         setAnalysisResult(analysis);
       }
 
-      // 4. Resolve strategy (now includes action resolver, scene normalization, realism/loop effects)
+      // 4. Resolve strategy
       setPipelineStage('building_prompt');
       const strategy = resolveVideoStrategy({
         analysis,
@@ -158,7 +152,7 @@ export function useVideoProject() {
         userPrompt: params.userPrompt,
       });
 
-      // 5. Build prompt (now category-specific with action-aware language)
+      // 5. Build prompt
       const builtPrompt = buildVideoPrompt({
         analysis,
         strategy,
@@ -167,7 +161,7 @@ export function useVideoProject() {
         preserveScene: params.preserveScene,
       });
 
-      // 6. Create video_shot record with enriched strategy
+      // 6. Create video_shot record
       await supabase.from('video_shots').insert([{
         project_id: project.id,
         shot_index: 0,
@@ -181,25 +175,10 @@ export function useVideoProject() {
         analysis_json: analysis ? JSON.parse(JSON.stringify(analysis)) : null,
       }]);
 
-      // 7. Submit to Kling
+      // 7. Submit to queue (replaces direct Kling call)
       setPipelineStage('generating');
       console.log('[useVideoProject] Prompt:', builtPrompt.prompt);
-      console.log('[useVideoProject] Strategy:', JSON.stringify({
-        workflow_strategy: strategy.workflow_strategy,
-        main_action: strategy.main_action,
-        action_verb: strategy.action_verb,
-        primary_moving_elements: strategy.primary_moving_elements,
-        scene_type_normalized: strategy.scene_type_normalized,
-        realism_level: strategy.realism_level,
-        loop_style: strategy.loop_style,
-        cyclic_motion: strategy.cyclic_motion,
-        user_note_conflict: strategy.user_note_conflict,
-        cfg_scale: builtPrompt.cfg_scale,
-        camera_control: strategy.camera_control_config ? 'structured' : 'prompt_only',
-      }));
-      console.log('[useVideoProject] Result label:', builtPrompt.result_label);
 
-      // Build generation params — camera motion is prompt-only (Kling v3 image2video does not support camera_control)
       generateVideo.startGeneration({
         imageUrl: params.imageUrl,
         prompt: builtPrompt.prompt,
@@ -209,6 +188,9 @@ export function useVideoProject() {
         negativePrompt: builtPrompt.negative_prompt,
         cfgScale: builtPrompt.cfg_scale,
         withAudio: params.audioMode === 'ambient',
+        projectId: project.id,
+        workflowType: 'animate',
+        cameraMotion: params.cameraMotion,
       });
 
     } catch (err) {
@@ -225,6 +207,9 @@ export function useVideoProject() {
     if (generateVideo.status === 'complete' && pipelineStage !== 'complete' && pipelineStage !== 'idle') {
       setPipelineStage('complete');
     }
+    if (generateVideo.status === 'queued' && pipelineStage === 'generating') {
+      setPipelineStage('queued');
+    }
     if (generateVideo.status === 'error' && pipelineStage !== 'error' && pipelineStage !== 'idle') {
       setPipelineStage('error');
       setPipelineError(generateVideo.error || 'Video generation failed');
@@ -234,7 +219,8 @@ export function useVideoProject() {
   // Derived states
   const isAnalyzing = pipelineStage === 'analyzing';
   const isBuildingPrompt = pipelineStage === 'building_prompt';
-  const isGenerating = pipelineStage === 'generating' || generateVideo.status === 'creating' || generateVideo.status === 'processing';
+  const isGenerating = pipelineStage === 'generating' || pipelineStage === 'queued' ||
+    generateVideo.status === 'creating' || generateVideo.status === 'processing' || generateVideo.status === 'queued';
   const isComplete = generateVideo.status === 'complete' && generateVideo.videoUrl !== null;
 
   return {
@@ -251,6 +237,7 @@ export function useVideoProject() {
     videoError: generateVideo.error,
     elapsedSeconds: generateVideo.elapsedSeconds,
     videoStatus: generateVideo.status,
+    activeJob: generateVideo.activeJob,
     history: generateVideo.history,
     isLoadingHistory: generateVideo.isLoadingHistory,
     refreshHistory: generateVideo.refreshHistory,
