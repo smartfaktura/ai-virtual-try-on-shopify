@@ -1088,7 +1088,7 @@ serve(async (req) => {
     const forceProModel = !!(body as Record<string, unknown>).forceProModel;
     const hasModelImage = !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model');
     const providerOverride = ((body as Record<string, unknown>).providerOverride as string) || null;
-    const aiModel = (forceProModel || isPerspective || (hasModelImage && providerOverride !== "nanobanana"))
+    const aiModel = (forceProModel || isPerspective || hasModelImage)
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-3.1-flash-image-preview";
     const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
