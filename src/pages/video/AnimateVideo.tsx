@@ -768,9 +768,6 @@ export default function AnimateVideo() {
           )}
         </div>
       )}
-    </div>
-      )}
-
       {/* ──── PIPELINE ACTIVE: Generation in progress ──── */}
       {isPipelineActive && (
         <div className="space-y-6">
