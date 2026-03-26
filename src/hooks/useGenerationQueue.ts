@@ -28,7 +28,7 @@ export interface QueueJob {
 }
 
 interface EnqueueParams {
-  jobType: 'tryon' | 'freestyle' | 'workflow' | 'upscale';
+  jobType: 'tryon' | 'freestyle' | 'workflow' | 'upscale' | 'video';
   payload: Record<string, unknown>;
   imageCount: number;
   quality: string;
@@ -47,7 +47,7 @@ export type FailedErrorType = 'timeout' | 'rate_limit' | 'generic';
 
 interface UseGenerationQueueOptions {
   /** When set, restoreActiveJob only picks up jobs matching these types */
-  jobTypes?: Array<'tryon' | 'freestyle' | 'workflow' | 'upscale'>;
+  jobTypes?: Array<'tryon' | 'freestyle' | 'workflow' | 'upscale' | 'video'>;
   onContentBlocked?: (jobId: string, reason: string) => void;
   onGenerationFailed?: (jobId: string, message: string, errorType: FailedErrorType) => void;
   onCreditRefresh?: () => Promise<void> | void;

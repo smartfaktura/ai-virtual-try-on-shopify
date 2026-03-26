@@ -1,9 +1,12 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { toSignedUrl } from '@/lib/signedUrl';
+import { useGenerationQueue, type QueueJob } from '@/hooks/useGenerationQueue';
+import { useCredits } from '@/contexts/CreditContext';
+import { estimateCredits } from '@/config/videoCreditPricing';
 
-export type VideoGenStatus = 'idle' | 'creating' | 'processing' | 'complete' | 'error';
+export type VideoGenStatus = 'idle' | 'queued' | 'creating' | 'processing' | 'complete' | 'error';
 
 export interface GeneratedVideo {
   id: string;
@@ -24,55 +27,81 @@ interface UseGenerateVideoResult {
   videoUrl: string | null;
   error: string | null;
   elapsedSeconds: number;
+  activeJob: QueueJob | null;
   startGeneration: (params: {
     imageUrl: string;
     prompt?: string;
     duration?: '5' | '10';
     modelName?: string;
     aspectRatio?: '1:1' | '16:9' | '9:16';
-      imageTailUrl?: string;
-      mode?: 'std' | 'pro';
-      negativePrompt?: string;
-      cfgScale?: number;
-      cameraControl?: { type: string; config: Record<string, number> };
-      withAudio?: boolean;
-    }) => void;
+    imageTailUrl?: string;
+    mode?: 'std' | 'pro';
+    negativePrompt?: string;
+    cfgScale?: number;
+    cameraControl?: { type: string; config: Record<string, number> };
+    withAudio?: boolean;
+    projectId?: string;
+    workflowType?: string;
+    cameraMotion?: string;
+  }) => void;
   reset: () => void;
   history: GeneratedVideo[];
   isLoadingHistory: boolean;
   refreshHistory: () => void;
 }
 
-const POLL_INTERVAL = 8000;
-const MAX_POLLS = 75; // 8s x 75 = 10 minutes
-
 export function useGenerateVideo(): UseGenerateVideoResult {
   const [status, setStatus] = useState<VideoGenStatus>('idle');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [history, setHistory] = useState<GeneratedVideo[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollCountRef = useRef(0);
-  const historyRef = useRef<GeneratedVideo[]>([]);
+  const { refreshBalance } = useCredits();
 
-  // Keep historyRef in sync
+  // Use the shared generation queue for video jobs
+  const queue = useGenerationQueue({
+    jobTypes: ['video'],
+    onGenerationFailed: (_jobId, message) => {
+      setStatus('error');
+      setError(message);
+      toast.error(message);
+      fetchHistory();
+      refreshBalance();
+    },
+    onCreditRefresh: refreshBalance,
+  });
+
+  // Derive elapsed seconds from activeJob
+  const elapsedSeconds = (() => {
+    const job = queue.activeJob;
+    if (!job || (job.status !== 'processing' && job.status !== 'queued')) return 0;
+    const start = job.started_at || job.created_at;
+    return Math.floor((Date.now() - new Date(start).getTime()) / 1000);
+  })();
+
+  // Sync status from queue job state
   useEffect(() => {
-    historyRef.current = history;
-  }, [history]);
+    const job = queue.activeJob;
+    if (!job) return;
 
-  const cleanup = useCallback(() => {
-    if (pollRef.current) clearInterval(pollRef.current);
-    if (timerRef.current) clearInterval(timerRef.current);
-    pollRef.current = null;
-    timerRef.current = null;
-    pollCountRef.current = 0;
-  }, []);
-
-  useEffect(() => cleanup, [cleanup]);
+    if (job.status === 'queued') {
+      setStatus('queued');
+    } else if (job.status === 'processing') {
+      setStatus('processing');
+    } else if (job.status === 'completed') {
+      setStatus('complete');
+      // Extract video_url from job result
+      const result = job.result as Record<string, unknown> | null;
+      if (result?.video_url) {
+        toSignedUrl(result.video_url as string).then(signed => setVideoUrl(signed));
+      }
+      toast.success('Video generated successfully!');
+      fetchHistory();
+      refreshBalance();
+    }
+    // failed is handled by onGenerationFailed callback
+  }, [queue.activeJob?.status, queue.activeJob?.id]);
 
   const fetchHistory = useCallback(async () => {
     try {
@@ -106,126 +135,28 @@ export function useGenerateVideo(): UseGenerateVideoResult {
   // Auto-recover stuck "processing" videos on mount
   const recoverStuckVideos = useCallback(async () => {
     try {
-      console.log('[useGenerateVideo] Running auto-recovery for stuck videos...');
       const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
         body: { action: 'recover' },
       });
-
-      if (fnError) {
-        console.error('[useGenerateVideo] Recovery error:', fnError);
-        return;
-      }
-
+      if (fnError) return;
       if (data?.recovered > 0) {
-        console.log(`[useGenerateVideo] Recovered ${data.recovered} stuck video(s)`);
         toast.info(`${data.recovered} video(s) updated from processing`);
         fetchHistory();
       }
-    } catch (err) {
-      console.error('[useGenerateVideo] Recovery error:', err);
-    }
+    } catch (_) { /* silent */ }
   }, [fetchHistory]);
 
   // Load history on mount, then auto-recover
   useEffect(() => {
-    fetchHistory().then(() => {
-      recoverStuckVideos();
-    });
+    fetchHistory().then(() => recoverStuckVideos());
   }, [fetchHistory, recoverStuckVideos]);
 
   const reset = useCallback(() => {
-    cleanup();
+    queue.reset();
     setStatus('idle');
     setVideoUrl(null);
     setError(null);
-    setElapsedSeconds(0);
-  }, [cleanup]);
-
-  // Graceful final status check when polling times out
-  const handlePollTimeout = useCallback(async (taskId: string) => {
-    console.log('[useGenerateVideo] Poll limit reached, doing final status check...');
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
-        body: { action: 'status', task_id: taskId },
-      });
-
-      if (fnError) throw new Error(fnError.message);
-
-      if (data.status === 'succeed' && data.video_url) {
-        cleanup();
-        setStatus('complete');
-        const signedVideoUrl = await toSignedUrl(data.video_url);
-        setVideoUrl(signedVideoUrl);
-        toast.success('Video generated successfully!');
-        fetchHistory();
-      } else if (data.status === 'failed') {
-        cleanup();
-        setStatus('error');
-        setError(data.error || 'Video generation failed');
-        toast.error(data.error || 'Video generation failed');
-        fetchHistory();
-      } else {
-        // Still processing — show gentle message instead of error
-        cleanup();
-        setStatus('idle');
-        toast.info('Still processing on our end. We\'ll update your history when it\'s ready.');
-        fetchHistory();
-      }
-    } catch (err) {
-      console.error('[useGenerateVideo] Final status check error:', err);
-      cleanup();
-      setStatus('idle');
-      toast.info('Video is still processing. Check back shortly.');
-      fetchHistory();
-    }
-  }, [cleanup, fetchHistory]);
-
-  const startPolling = useCallback((taskId: string) => {
-    setStatus('processing');
-    pollCountRef.current = 0;
-
-    timerRef.current = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
-
-    pollRef.current = setInterval(async () => {
-      pollCountRef.current += 1;
-
-      if (pollCountRef.current > MAX_POLLS) {
-        clearInterval(pollRef.current!);
-        clearInterval(timerRef.current!);
-        pollRef.current = null;
-        timerRef.current = null;
-        handlePollTimeout(taskId);
-        return;
-      }
-
-      try {
-        const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
-          body: { action: 'status', task_id: taskId },
-        });
-
-        if (fnError) throw new Error(fnError.message);
-
-        if (data.status === 'succeed' && data.video_url) {
-          cleanup();
-          setStatus('complete');
-          const signedVideoUrl = await toSignedUrl(data.video_url);
-          setVideoUrl(signedVideoUrl);
-          toast.success('Video generated successfully!');
-          fetchHistory();
-        } else if (data.status === 'failed') {
-          cleanup();
-          setStatus('error');
-          setError(data.error || 'Video generation failed');
-          toast.error(data.error || 'Video generation failed');
-          fetchHistory();
-        }
-      } catch (err) {
-        console.error('[useGenerateVideo] Poll error:', err);
-      }
-    }, POLL_INTERVAL);
-  }, [cleanup, fetchHistory, handlePollTimeout]);
+  }, [queue]);
 
   const startGeneration = useCallback(
     async (params: {
@@ -240,48 +171,53 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       cfgScale?: number;
       cameraControl?: { type: string; config: Record<string, number> };
       withAudio?: boolean;
+      projectId?: string;
+      workflowType?: string;
+      cameraMotion?: string;
     }) => {
-      // Duplicate prevention: block if a video is already processing
-      const hasProcessing = historyRef.current.some((v) => v.status === 'processing');
-      if (hasProcessing) {
-        toast.warning('You already have a video processing. Please wait for it to finish.');
-        return;
-      }
-
-      cleanup();
       setStatus('creating');
       setVideoUrl(null);
       setError(null);
-      setElapsedSeconds(0);
 
       try {
-        const body: Record<string, unknown> = {
-          action: 'create',
+        // Calculate credit cost
+        const creditCost = estimateCredits({
+          workflowType: 'animate',
+          duration: params.duration || '5',
+          audioMode: params.withAudio ? 'ambient' : 'silent',
+          motionRecipe: params.cameraMotion,
+        });
+
+        const payload: Record<string, unknown> = {
           image_url: params.imageUrl,
           prompt: params.prompt || '',
           duration: params.duration || '5',
           model_name: params.modelName || 'kling-v3',
           aspect_ratio: params.aspectRatio || '16:9',
+          mode: params.mode || 'std',
+          with_audio: params.withAudio || false,
+          cameraMotion: params.cameraMotion || '',
+          audioMode: params.withAudio ? 'ambient' : 'silent',
         };
-        if (params.imageTailUrl) body.image_tail = params.imageTailUrl;
-        if (params.mode) body.mode = params.mode;
-        if (params.negativePrompt) body.negative_prompt = params.negativePrompt;
-        if (typeof params.cfgScale === 'number') body.cfg_scale = params.cfgScale;
-        if (params.cameraControl) body.camera_control = params.cameraControl;
-        if (params.withAudio) body.with_audio = true;
+        if (params.negativePrompt) payload.negative_prompt = params.negativePrompt;
+        if (typeof params.cfgScale === 'number') payload.cfg_scale = params.cfgScale;
+        if (params.projectId) payload.project_id = params.projectId;
+        if (params.workflowType) payload.workflow_type = params.workflowType;
 
-        const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
-          body,
+        const result = await queue.enqueue({
+          jobType: 'video' as any,
+          payload,
+          imageCount: 1,
+          quality: 'standard',
         });
 
-        if (fnError) throw new Error(fnError.message);
-        if (data.error) throw new Error(data.error);
+        if (!result) {
+          setStatus('idle');
+          return;
+        }
 
-        const taskId = data.task_id;
-        if (!taskId) throw new Error('No task ID returned');
-
-        // Toast removed — pipeline progress UI provides feedback
-        startPolling(taskId);
+        setStatus('queued');
+        toast.success('Video queued — it will start automatically');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to start video generation';
         setStatus('error');
@@ -289,7 +225,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         toast.error(message);
       }
     },
-    [cleanup, startPolling]
+    [queue]
   );
 
   return {
@@ -297,6 +233,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     videoUrl,
     error,
     elapsedSeconds,
+    activeJob: queue.activeJob,
     startGeneration,
     reset,
     history,
