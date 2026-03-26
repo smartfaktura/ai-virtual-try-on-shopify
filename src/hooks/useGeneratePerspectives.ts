@@ -311,7 +311,7 @@ export function useGeneratePerspectives() {
     const token = session?.session?.access_token;
 
     if (!token) {
-      toast.error('Authentication required');
+      toast.error('Please sign in first');
       setIsGenerating(false);
       return null;
     }

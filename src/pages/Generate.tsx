@@ -999,7 +999,7 @@ export default function Generate() {
 
   const handleGenerateClick = () => {
     if (!selectedProduct && !(sourceType === 'scratch' && scratchUpload)) {
-      toast.error('Please select a product first');
+      toast.error('Pick a product first');
       return;
     }
     if (balance < creditCost) { openBuyModal(); return; }

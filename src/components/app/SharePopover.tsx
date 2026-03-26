@@ -45,7 +45,7 @@ export function SharePopover({ url, title, variant = 'inline' }: SharePopoverPro
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast.success('Link copied');
+      toast.success('Link copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Failed to copy link');

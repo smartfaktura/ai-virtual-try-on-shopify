@@ -60,7 +60,7 @@ export function useUpscaleImages() {
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       if (!token) {
-        toast.error('Authentication required');
+        toast.error('Please sign in first');
         return [];
       }
 

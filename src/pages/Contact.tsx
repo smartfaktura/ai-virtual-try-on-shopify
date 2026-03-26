@@ -21,7 +21,7 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !subject || !message.trim()) {
-      toast.error('Please fill in all fields');
+      toast.error('Fill in all fields to continue');
       return;
     }
     setSubmitting(true);

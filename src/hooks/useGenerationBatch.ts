@@ -160,7 +160,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
 
   const startBatch = useCallback(async (params: BatchParams): Promise<boolean> => {
     if (!user) {
-      toast.error('Please sign in to generate images');
+      toast.error('Sign in to start generating');
       return false;
     }
 
@@ -190,7 +190,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
     const token = session?.session?.access_token;
 
     if (!token) {
-      toast.error('Authentication required');
+      toast.error('Please sign in first');
       setIsBatching(false);
       setBatchState(null);
       return false;
