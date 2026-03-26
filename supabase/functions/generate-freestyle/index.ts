@@ -1,4 +1,4 @@
-// Force redeploy: v4 — 120s failover, cross-model fallback, wall-clock budget (2026-03-26)
+// Force redeploy: v5 — fix Seedream 4:5 stretch by storing actual generated ratio (2026-03-26)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -335,6 +335,7 @@ type ProviderResult = {
   model: string;
   durationMs: number;
   rawError?: string;
+  actualAspectRatio?: string;
 };
 
 // ── Provider registry — change model IDs here for version upgrades ───────
@@ -450,7 +451,10 @@ async function generateImageSeedream(
       return { ok: false, failureType: "no_image_returned", retryable: true, statusCode: 200, provider: "seedream", model, durationMs, rawError: "No URL in response" };
     }
 
-    return { ok: true, imageUrl, provider: "seedream", model, durationMs };
+    // Track actual aspect ratio if Seedream mapped to a different one
+    const seedreamRatioActual = seedreamAspectRatio(aspectRatio);
+    const ratioWasMapped = seedreamRatioActual !== aspectRatio;
+    return { ok: true, imageUrl, provider: "seedream", model, durationMs, ...(ratioWasMapped ? { actualAspectRatio: seedreamRatioActual } : {}) };
   } catch (error: unknown) {
     const durationMs = Math.round(performance.now() - attemptStart);
     const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
@@ -1376,6 +1380,11 @@ serve(async (req) => {
           }
           try {
             (body as any).providerUsed = actualProvider;
+            // If Seedream mapped to a different ratio (e.g. 4:5→3:4), store the actual ratio
+            // so the frontend displays the image at its true proportions with object-cover
+            if (result.actualAspectRatio) {
+              body.aspectRatio = result.actualAspectRatio;
+            }
             await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
 
             // Early finalize: in queue mode (1 image), complete immediately after first success
