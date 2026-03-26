@@ -3,6 +3,7 @@ import { CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import { InfoTooltip } from './InfoTooltip';
 
 interface MotionRefinementPanelProps {
   cameraMotion: string;
@@ -17,10 +18,13 @@ interface MotionRefinementPanelProps {
   onMotionIntensityChange: (v: 'low' | 'medium' | 'high') => void;
 }
 
-function ChipRow({ label, items, value, onChange }: { label: string; items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
+function ChipRow({ label, tooltip, items, value, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs text-muted-foreground">{label}</label>
+      <div className="flex items-center gap-1">
+        <label className="text-xs text-muted-foreground">{label}</label>
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {items.map((item) => (
           <button
@@ -48,7 +52,7 @@ const INTENSITIES = [
 ];
 
 export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -61,11 +65,11 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
-            <ChipRow label="Camera Motion" items={CAMERA_MOTIONS} value={props.cameraMotion} onChange={props.onCameraMotionChange} />
-            <ChipRow label="Subject Motion" items={SUBJECT_MOTIONS} value={props.subjectMotion} onChange={props.onSubjectMotionChange} />
-            <ChipRow label="Realism Level" items={REALISM_LEVELS} value={props.realismLevel} onChange={props.onRealismLevelChange} />
-            <ChipRow label="Loop Style" items={LOOP_STYLES} value={props.loopStyle} onChange={props.onLoopStyleChange} />
-            <ChipRow label="Motion Intensity" items={INTENSITIES} value={props.motionIntensity} onChange={(v) => props.onMotionIntensityChange(v as 'low' | 'medium' | 'high')} />
+            <ChipRow label="Camera Motion" tooltip="Controls how the virtual camera moves during the video. Affects framing but not the subject." items={CAMERA_MOTIONS} value={props.cameraMotion} onChange={props.onCameraMotionChange} />
+            <ChipRow label="Subject Motion" tooltip="Defines how the main subject moves. 'Auto' uses AI analysis to pick the best motion type." items={SUBJECT_MOTIONS} value={props.subjectMotion} onChange={props.onSubjectMotionChange} />
+            <ChipRow label="Realism Level" tooltip="Higher realism enforces stricter motion limits and preservation. Stylized allows more creative freedom." items={REALISM_LEVELS} value={props.realismLevel} onChange={props.onRealismLevelChange} />
+            <ChipRow label="Loop Style" tooltip="Controls whether the video loops seamlessly. Seamless Loop constrains motion to cyclic patterns." items={LOOP_STYLES} value={props.loopStyle} onChange={props.onLoopStyleChange} />
+            <ChipRow label="Motion Intensity" tooltip="How much overall movement appears. Higher intensity means more dramatic motion but may reduce stability." items={INTENSITIES} value={props.motionIntensity} onChange={(v) => props.onMotionIntensityChange(v as 'low' | 'medium' | 'high')} />
           </div>
         </CollapsibleContent>
       </div>

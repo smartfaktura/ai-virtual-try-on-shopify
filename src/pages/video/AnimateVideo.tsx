@@ -13,6 +13,7 @@ import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
+import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
@@ -267,7 +268,7 @@ export default function AnimateVideo() {
                   <>
                     <Upload className="h-6 w-6 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Click to upload image</span>
-                    <span className="text-xs text-muted-foreground/60">JPG, PNG, WebP • Max 20MB</span>
+                    <span className="text-xs text-muted-foreground/60">JPG, PNG, WebP - Max 20MB</span>
                   </>
                 )}
               </button>
@@ -309,7 +310,7 @@ export default function AnimateVideo() {
                 recommendedGoalIds={recommendedGoalIds}
               />
 
-              {/* Motion Refinement (collapsed) */}
+              {/* Motion Refinement */}
               <MotionRefinementPanel
                 cameraMotion={cameraMotion}
                 subjectMotion={subjectMotion}
@@ -340,7 +341,10 @@ export default function AnimateVideo() {
                 <h3 className="text-sm font-medium text-foreground">Settings</h3>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground">Aspect Ratio</label>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-muted-foreground">Aspect Ratio</label>
+                    <InfoTooltip text="Match your output channel. 9:16 for Reels/TikTok, 1:1 for feed posts, 16:9 for ads and web." />
+                  </div>
                   <div className="flex gap-2">
                     {ASPECT_RATIOS.map((ar) => (
                       <button key={ar.value} onClick={() => setAspectRatio(ar.value)}
@@ -354,7 +358,10 @@ export default function AnimateVideo() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground">Duration</label>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-muted-foreground">Duration</label>
+                    <InfoTooltip text="Longer videos use more credits but allow more complex motion sequences." />
+                  </div>
                   <div className="flex gap-2">
                     {(['5', '10'] as Duration[]).map((d) => (
                       <button key={d} onClick={() => setDuration(d)}
@@ -372,9 +379,12 @@ export default function AnimateVideo() {
 
               {/* Specific Motion Note */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Specific Motion Note <span className="text-muted-foreground font-normal">(optional)</span>
-                </label>
+                <div className="flex items-center gap-1">
+                  <label className="text-sm font-medium text-foreground">
+                    Specific Motion Note <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <InfoTooltip text="Add precise instructions like 'one basketball dribble' or 'gentle fabric sway at the hem'. Overrides may be softened if they conflict with preservation settings." />
+                </div>
                 <Textarea
                   value={userPrompt}
                   onChange={(e) => setUserPrompt(e.target.value)}
