@@ -437,8 +437,8 @@ export default function AnimateVideo() {
             </div>
           )}
 
-          {/* Show form sections after upload */}
-          {imageUrl && !isAnalyzingImage && (
+          {/* Show form sections after analysis */}
+          {!isAnalyzingImage && (
             <>
               <ProductContextSelector
                 category={category}
