@@ -28,6 +28,7 @@ import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { useCredits } from '@/contexts/CreditContext';
 import { toast } from 'sonner';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
