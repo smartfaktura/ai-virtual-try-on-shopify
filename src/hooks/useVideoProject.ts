@@ -159,6 +159,8 @@ export function useVideoProject() {
         userPrompt: params.userPrompt,
         motionIntensity: params.motionIntensity,
         preserveScene: params.preserveScene,
+        audioMode: params.audioMode,
+        sceneType: params.sceneType,
       });
 
       // 6. Create video_shot record

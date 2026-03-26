@@ -15,6 +15,8 @@ interface PromptBuildInput {
   motionRecipe?: string;
   motionIntensity?: 'low' | 'medium' | 'high';
   preserveScene?: boolean;
+  audioMode?: string;
+  sceneType?: string;
 }
 
 interface BuiltPrompt {
@@ -483,10 +485,143 @@ const CATEGORY_ASSEMBLERS: Record<string, (input: AssemblerInput) => string> = {
   health_supplements_reveal: buildHealthPrompt,
 };
 
+// ─── Audio Hint System — Category × Scene × Motion ───
+
+const AUDIO_SCENE_HINTS: Record<string, Record<string, string>> = {
+  fashion_apparel_motion: {
+    on_model: 'subtle sound of heels on polished floor, soft fabric rustle with each movement',
+    studio_product: 'quiet studio hum, crisp sound of fabric being arranged on set',
+    flat_lay: 'soft paper texture, gentle placing of garments on a styled surface',
+    editorial: 'confident heel-to-floor strike, crisp garment fabric catching air',
+    runway: 'rhythmic heel clicks on a hard runway, audience murmur at a distance',
+    outdoor: 'natural breeze through lightweight fabric, distant city or nature ambience',
+    lifestyle: 'soft footsteps on wood floor, clothing fabric shifting with casual movement',
+  },
+  beauty_skincare_reveal: {
+    hand_held: 'smooth glass sliding against fingertips, soft cap twist',
+    macro_closeup: 'intimate close sound of cream texture spreading, quiet glass surface tap',
+    studio_product: 'clean glass bottle placed on marble, pump click, product dispensing',
+    on_model: 'gentle application sounds, fingertips patting skin, soft exhale',
+    flat_lay: 'products arranged on ceramic, soft clink of glass against glass',
+    dropper: 'precise dropper squeeze, single drop impact on skin surface',
+  },
+  fragrance_premium_reveal: {
+    studio_product: 'glass bottle placed on marble, a single elegant spritz dispersing',
+    hand_held: 'gentle rotation of heavy glass in hand, quiet atomizer click and mist',
+    macro_closeup: 'crystalline bottle detail, faint glass resonance, atomizer mechanism',
+    on_model: 'confident spritz onto wrist, glass cap being placed back',
+    lifestyle: 'bottle set on vanity, soft spritz, fabric absorbing the mist',
+  },
+  jewelry_macro_motion: {
+    macro_closeup: 'delicate metallic shimmer, gem catching light with a crystalline ring',
+    on_model: 'subtle chain movement against skin, quiet clasp engaging',
+    hand_held: 'ring sliding onto finger, bracelet links shifting, metal on velvet',
+    studio_product: 'piece placed on polished surface, quiet metallic contact, velvet texture',
+    flat_lay: 'jewelry arranged on textured fabric, tiny metal-on-fabric sounds',
+    display_case: 'glass case opening, piece lifted from cushion, precise placement',
+  },
+  accessories_showcase: {
+    hand_held: 'leather creak, metal buckle click, stitched material handling',
+    on_model: 'watch clasp closing, subtle bag zip, material brushing against clothing',
+    studio_product: 'bag placed on surface, zipper pull, hardware snap',
+    flat_lay: 'belt coiled on marble, sunglasses folded shut, wallet snap',
+    lifestyle: 'bag set on table, keys inside shifting, leather patina sound',
+  },
+  home_decor_ambient: {
+    interior_room: 'distant wind through open window, clock ticking, curtain fabric shifting',
+    studio_product: 'ceramic placed on wood shelf, soft thud, room tone',
+    lifestyle: 'morning room ambience, coffee cup set down, distant birdsong',
+    macro_closeup: 'texture detail — woven fabric, glazed ceramic, grain of wood',
+    outdoor_patio: 'evening crickets, wind chime, candle flicker crackle',
+    candlelit: 'soft wax drip, flame flicker, warm crackling glow',
+  },
+  food_beverage_motion: {
+    food_plated: 'sizzling pan, steam rising, ceramic plate set on stone surface',
+    hand_held: 'liquid pouring into glass, ice clinking, condensation drip',
+    macro_closeup: 'butter melting, sauce bubbling, caramelization sizzle at close range',
+    studio_product: 'bottle uncapped, liquid poured, glass set on bar top',
+    action_cooking: 'knife on cutting board, oil crackling in pan, ingredients sizzling',
+    pouring: 'steady liquid stream, glass filling, foam settling, last drop',
+    steaming: 'quiet hissing steam, broth simmering, lid lifted from pot',
+  },
+  electronics_clean_reveal: {
+    device_on_desk: 'soft keyboard tap, notification chime, quiet fan hum',
+    hand_held: 'smooth device pickup from desk, screen tap, haptic click feedback',
+    macro_closeup: 'precise button press, port connection click, lens mechanism whirr',
+    studio_product: 'device placed on surface, power-on chime, subtle electronic hum',
+    unboxing: 'cardboard lid lift, plastic peel, device sliding from packaging',
+    lifestyle: 'typing rhythm, trackpad tap, ambient office hum',
+  },
+  sports_fitness_action: {
+    action_scene: 'sneaker squeak on court, ball impact, controlled breathing, crowd murmur',
+    on_model: 'athletic fabric stretch, rhythmic breathing, mat compression under weight',
+    studio_product: 'shoe placed on surface, lace pull, sole flex, material compression',
+    outdoor: 'trail footsteps on gravel, wind passing ears, steady breathing rhythm',
+    gym: 'weight plate clank, cable machine tension, exertion breath, rubber mat thud',
+    hand_held: 'grip tightening on handle, wrist strap velcro, equipment rotation',
+  },
+  health_supplements_reveal: {
+    studio_product: 'clean bottle set down, capsule rattle, sealed cap opening',
+    hand_held: 'pill bottle shake, precise cap twist, tablet dropping into palm',
+    macro_closeup: 'single capsule placed on surface, powder texture, seal breaking',
+    lifestyle: 'morning routine sounds, glass of water poured, supplement taken',
+    flat_lay: 'products arranged on clean surface, label facing forward, quiet placement',
+  },
+};
+
+const AUDIO_CATEGORY_FALLBACKS: Record<string, string> = {
+  fashion_apparel_motion: 'soft fabric movement and subtle material texture sounds',
+  beauty_skincare_reveal: 'smooth glass and liquid product sounds with clean finish',
+  fragrance_premium_reveal: 'elegant glass bottle handling with refined spritz',
+  jewelry_macro_motion: 'delicate metallic sounds and gem-like crystalline tones',
+  accessories_showcase: 'premium material handling, leather and hardware sounds',
+  home_decor_ambient: 'warm room ambience with gentle natural tones',
+  food_beverage_motion: 'appetizing kitchen sounds, liquid and surface textures',
+  electronics_clean_reveal: 'clean tech interaction sounds, precise clicks and taps',
+  sports_fitness_action: 'athletic movement sounds, controlled breathing and impact',
+  health_supplements_reveal: 'clean clinical sounds, bottle and packaging handling',
+};
+
+const AUDIO_MOTION_MODIFIERS: Record<string, string> = {
+  pour_and_reveal: ', with the sound of liquid flowing and settling',
+  steam_atmosphere: ', with gentle hissing steam rising',
+  editorial_walk_start: ', with a confident footstep strike on hard floor',
+  warm_light_motion: ', with quiet candle crackle and warm ambience',
+  dynamic_training: ', with athletic exertion sounds and equipment impact',
+  gentle_fizz: ', with carbonation bubbles rising and glass condensation',
+  unwrap_reveal: ', with packaging being carefully opened and product revealed',
+  spritz_application: ', with a precise atomizer spritz and mist dispersal',
+  clasp_close: ', with a satisfying metal clasp click',
+  fabric_drape: ', with fabric cascading and settling into folds',
+};
+
+function buildAudioClause(family: string, sceneType?: string, motionGoalId?: string, audioMode?: string): string {
+  if (audioMode !== 'ambient') return '';
+
+  // Tier 1: exact category × scene match
+  let hint = '';
+  const sceneMap = AUDIO_SCENE_HINTS[family];
+  if (sceneMap && sceneType && sceneMap[sceneType]) {
+    hint = sceneMap[sceneType];
+  }
+
+  // Tier 2: category fallback
+  if (!hint) {
+    hint = AUDIO_CATEGORY_FALLBACKS[family] || 'natural ambient sounds matching the scene';
+  }
+
+  // Tier 3: motion modifier append
+  if (motionGoalId && AUDIO_MOTION_MODIFIERS[motionGoalId]) {
+    hint += AUDIO_MOTION_MODIFIERS[motionGoalId];
+  }
+
+  return `Ambient sound: ${hint}.`;
+}
+
 // ─── Main Builder ───
 
 export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
-  const { analysis, strategy, userPrompt } = input;
+  const { analysis, strategy, userPrompt, audioMode, sceneType } = input;
   const family = strategy.prompt_template_family;
 
   const realism = REALISM_PHRASES[strategy.realism_level] || 'realistic';
@@ -513,6 +648,12 @@ export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
 
   // Single-shot guardrail — prevent AI from improvising cuts or multi-scene edits
   prompt += ' One continuous uninterrupted shot — no cuts, no split-screen, no scene transitions.';
+
+  // Audio hint injection (after guardrail, before grounding)
+  const audioClause = buildAudioClause(family, sceneType, strategy.motion_goal_id, audioMode);
+  if (audioClause) {
+    prompt += ' ' + audioClause;
+  }
 
   // Object grounding clause
   const groundingClause = buildObjectGroundingClause(strategy.object_grounding);
