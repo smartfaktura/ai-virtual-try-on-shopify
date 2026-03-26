@@ -220,9 +220,9 @@ function polishUserPrompt(
 
   if (context.hasScene) {
     if (context.hasModel) {
-      refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
+      refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Match the scene's camera angle, viewpoint, lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
     } else {
-      refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.`);
+      refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, camera angle, viewpoint, lighting, atmosphere. Replicate the exact perspective and viewing angle of the scene. Ignore any products in the scene image.`);
     }
     refNum++;
   }
@@ -261,8 +261,8 @@ function polishUserPrompt(
   } else if (context.hasModel && !isSelfie) {
     // Default framing for model shots without explicit selection
     parts.push("FRAMING: Full head, hair, and upper body visible. Natural headroom. Face in upper third of composition.");
-  } else if (context.hasProduct && !context.hasModel && !isSelfie) {
-    // Product-only: creative angle
+  } else if (context.hasProduct && !context.hasModel && !context.hasScene && !isSelfie) {
+    // Product-only without scene: creative angle
     parts.push("FRAMING: Creative product photography angle — overhead, 45-degree, or dramatic perspective. Professional composition with intentional negative space.");
   }
 

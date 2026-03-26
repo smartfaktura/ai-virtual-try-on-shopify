@@ -752,6 +752,7 @@ export default function Freestyle() {
     modelId: img.modelId,
     sceneId: img.sceneId,
     productId: img.productId,
+    providerUsed: img.providerUsed,
   }));
 
   const handleCopySettings = useCallback((settings: import('@/components/app/freestyle/FreestyleGallery').CopySettings) => {

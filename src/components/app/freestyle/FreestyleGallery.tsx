@@ -63,6 +63,7 @@ interface GalleryImage {
   modelId?: string | null;
   sceneId?: string | null;
   productId?: string | null;
+  providerUsed?: string | null;
 }
 
 export interface CopySettings {
