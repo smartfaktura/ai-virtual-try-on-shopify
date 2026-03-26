@@ -6,7 +6,7 @@
  * most for that product type. Shared primitives avoid duplication.
  */
 
-import type { VideoAnalysis, VideoStrategy } from './videoStrategyResolver';
+import type { VideoAnalysis, VideoStrategy, ObjectGrounding } from './videoStrategyResolver';
 
 interface PromptBuildInput {
   analysis: VideoAnalysis;
@@ -96,6 +96,33 @@ function buildLoopClause(loopStyle: string): string {
   const phrase = LOOP_PHRASES[loopStyle];
   return phrase ? ` ${phrase}` : '';
 }
+
+// ─── Object Grounding Clause ───
+
+function buildObjectGroundingClause(grounding: ObjectGrounding): string {
+  const parts: string[] = [];
+
+  if (grounding.preserve_visible_objects_only) {
+    parts.push('Only animate objects visible in the source image.');
+  }
+
+  if (!grounding.allow_new_objects && !grounding.allow_new_products) {
+    parts.push('Do not introduce new products, props, bottles, accessories, or handheld items that are not already in frame.');
+  }
+
+  if (grounding.visible_product_detected && grounding.visible_object_list.length > 0) {
+    const objectNames = grounding.visible_object_list.join(', ');
+    parts.push(`Preserve the identity and appearance of the visible ${objectNames}. Do not replace or swap them.`);
+  }
+
+  if (!grounding.visible_product_detected && grounding.product_context_source === 'none') {
+    parts.push('No product or prop is present in the source — do not invent or add one.');
+  }
+
+  return parts.join(' ');
+}
+
+const GROUNDING_NEGATIVE_TERMS = 'invented objects, added props, swapped products, hallucinated packaging, unexplained handheld items, new bottles, random accessories';
 
 // ─── Category-Specific Negative Prompts ───
 
@@ -487,10 +514,18 @@ export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
   // Single-shot guardrail — prevent AI from improvising cuts or multi-scene edits
   prompt += ' One continuous uninterrupted shot — no cuts, no split-screen, no scene transitions.';
 
-  // Negative prompt with realism extras
+  // Object grounding clause
+  const groundingClause = buildObjectGroundingClause(strategy.object_grounding);
+  if (groundingClause) {
+    prompt += ' ' + groundingClause;
+  }
+
+  // Negative prompt with realism extras + grounding negatives
   let negative_prompt = CATEGORY_NEGATIVES[family] || 'blurry, distorted, morphing, flickering, watermark';
   const realismExtra = REALISM_NEGATIVE_EXTRAS[strategy.realism_level];
   if (realismExtra) negative_prompt += realismExtra;
+  // Always add grounding negatives
+  negative_prompt += ', ' + GROUNDING_NEGATIVE_TERMS;
 
   // CFG scale from strategy (already computed with realism adjustment)
   const cfg_scale = strategy.cfg_scale_override ?? 0.6;
