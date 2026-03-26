@@ -470,6 +470,7 @@ function ImageCard({
           </div>
         )}
         {isUpscaling && <UpscalingOverlay />}
+        {actionButtons}
       </div>
     );
   }
@@ -505,6 +506,7 @@ function ImageCard({
       )}
       {isUpscaling && <UpscalingOverlay />}
       {actionButtons}
+    </div>
   );
 }
 
