@@ -840,6 +840,8 @@ async function completeQueueJob(
   payload: Record<string, unknown>,
   contentBlocked: boolean = false,
   blockReason: string | null = null,
+  providerUsed?: string,
+  durationMs?: number,
 ) {
 
   // Guard: if user already cancelled, skip completion to preserve refund
