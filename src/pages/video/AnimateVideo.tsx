@@ -13,7 +13,9 @@ import { PreservationRulesPanel } from '@/components/app/video/PreservationRules
 import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
-import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
+import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/video/VideoResultsPanel';
+import { PRODUCT_CATEGORIES, SCENE_TYPES, getMotionGoalsForCategory as getGoals } from '@/lib/videoMotionRecipes';
+import { estimateCredits } from '@/config/videoCreditPricing';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
