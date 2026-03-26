@@ -14,12 +14,11 @@ import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/video/VideoResultsPanel';
-import { PRODUCT_CATEGORIES, SCENE_TYPES, getMotionGoalsForCategory as getGoals } from '@/lib/videoMotionRecipes';
+import { PRODUCT_CATEGORIES, SCENE_TYPES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { estimateCredits } from '@/config/videoCreditPricing';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { toast } from 'sonner';
 
