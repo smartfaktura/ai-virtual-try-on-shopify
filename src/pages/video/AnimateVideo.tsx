@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+  Shirt, Sparkles, Flower2, Gem, Watch, Lamp,
+  UtensilsCrossed, Smartphone, Dumbbell, Pill,
+};
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
