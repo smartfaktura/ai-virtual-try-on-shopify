@@ -1,36 +1,39 @@
 
 
-# Fix: Selfie/UGC Workflow Credit Calculation
+# Fix: Prompt Helper Chip — Layout & Styling
 
-## Problem
-The Selfie/UGC workflow sets `generationMode = 'virtual-try-on'` (because `uses_tryon` is true), so the credit calculation at line 1995 takes the virtual-try-on branch:
+## Problems
+1. **Layout**: Prompt Helper is stuck at the end of the second row. On wider screens it could fit in the first row (after Scene), on narrower screens it wraps alone. It should flow naturally with all other chips in a single wrapping container.
+2. **Styling**: The button always looks "active/clicked" (purple tinted with `border-primary/30 bg-primary/5 text-primary`) even when idle. It should match the neutral chip style used by Framing, Aspect Ratio, etc.
+
+## Changes
+
+### 1. Merge into single flex-wrap row (desktop)
+**File**: `src/components/app/freestyle/FreestyleSettingsChips.tsx` (lines 322-370)
+
+Remove the two-row `space-y-2` layout. Use a single `flex items-center gap-2 flex-wrap` container with all chips in natural order:
 
 ```
-parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
+Upload → Product → Model → Scene → Framing → Brand → Aspect → Camera → Quality → Prompt Helper
 ```
 
-But `tryOnSceneCount = Math.max(1, selectedPoses.size)` — Selfie/UGC doesn't use `selectedPoses` (the try-on scene picker). It uses `selectedVariationIndices` from the workflow variation system. So `selectedPoses.size` is likely 0 or stale, making the scene count wrong.
+This lets the browser wrap chips wherever they naturally fit based on available width — Prompt Helper will sit next to Scene on wide screens or flow to the next line with other chips on narrower ones.
 
-The correct branch for Selfie/UGC is the `hasWorkflowConfig` one: `workflowImageCount * workflowCostPerImage`, which properly accounts for `selectedVariationIndices × models × ratios × framings`.
+### 2. Neutral idle styling for Prompt Helper button
+**File**: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 319)
 
-## Fix
-
-**File**: `src/pages/Generate.tsx`, line 1995
-
-Add `&& !isSelfieUgc && !isMirrorSelfie` to the virtual-try-on condition so these workflows fall through to the `hasWorkflowConfig` branch:
-
-```typescript
-const singleProductCreditCost = isUpscale ? 0 : (
-  generationMode === 'virtual-try-on' && !isSelfieUgc && !isMirrorSelfie
-    ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
-    : (hasWorkflowConfig
-      ? workflowImageCount * workflowCostPerImage
-      : parseInt(imageCount) * 6 * tryOnSceneCount)
-);
+Change from the always-active purple style:
+```
+border-primary/30 bg-primary/5 text-primary hover:bg-primary/10
+```
+To the standard neutral chip style matching other unselected chips:
+```
+border-border bg-muted/50 text-foreground/70 hover:bg-muted
 ```
 
-This ensures Selfie/UGC uses `workflowImageCount` (which already includes `selectedVariationIndices.size × workflowModelCount × aspectRatioCount × framingCount`) multiplied by 6 credits, matching the actual generation matrix.
+This makes it visually consistent — it looks like a regular chip, not a permanently pressed button.
 
 ## Files Modified
-- `src/pages/Generate.tsx` — 1 line edit
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — merge desktop into single wrapping row
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` — neutral chip styling
 
