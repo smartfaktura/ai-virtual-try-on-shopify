@@ -1,117 +1,82 @@
 
 
-# Premium Video Result Workspace
+# Animate Image — Premium First Screen Redesign
 
-Redesign `VideoResultsPanel.tsx` from a basic player + flat buttons into a two-column result workspace that feels like a premium creative output panel.
+## Current State
+The pre-upload screen shows: PageHeader → tips banner → plain upload box with "Click to upload image" label. Too much empty space, no workflow guidance, no category awareness, no sense of intelligence.
 
----
-
-## Architecture
-
-The current `VideoResultsPanel` receives minimal props (videoUrl, sourceImageUrl, 3 callbacks). The redesign requires passing generation context from `AnimateVideo.tsx` so the result panel can display a full summary.
-
----
-
-## New Props for VideoResultsPanel
-
-```typescript
-interface GenerationContext {
-  categoryLabel: string;        // "Beauty & Skincare"
-  sceneTypeLabel: string;       // "Studio Product Shot"
-  motionGoalTitle: string;      // "Luxury Product Reveal"
-  cameraMotion: string;         // "Slow Push-in"
-  subjectMotion: string;        // "Minimal"
-  duration: string;             // "5s"
-  audioMode: string;            // "Silent" | "Ambient"
-  creditsUsed: number;          // from pricing engine
-  realismLevel: string;         // "Realistic"
-  loopStyle: string;            // "None"
-}
-```
-
-Pass this from `AnimateVideo.tsx` by resolving labels from `PRODUCT_CATEGORIES`, `SCENE_TYPES`, and `getMotionGoalsForCategory` at render time.
-
----
-
-## Layout (Two-Column on Desktop, Stacked on Mobile)
+## Redesigned Layout (pre-upload only)
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  Success Header                                 │
-│  "Your video is ready"                          │
-│  "Preview, create variations, or download."     │
-├──────────────────────┬──────────────────────────┤
-│                      │  Generation Details      │
-│                      │  ── Category             │
-│   Video Player       │  ── Scene Type           │
-│   (dark bg,          │  ── Motion Goal          │
-│    premium frame)    │  ── Camera / Subject     │
-│                      │  ── Duration / Audio     │
-│                      │  ── Credits used         │
-│                      ├──────────────────────────┤
-│                      │  Quick Variations        │
-│                      │  [More subtle] [Premium] │
-│                      │  [More motion] [Cleaner] │
-├──────────────────────┴──────────────────────────┤
-│  Actions                                        │
-│  [Generate Variation]  [Adjust Motion]          │
-│  [Download Video]  Start New Video              │
-├─────────────────────────────────────────────────┤
-│  ▸ Used Settings (collapsible accordion)        │
-│  ▸ Before / After (toggle original vs video)    │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  ← Video   Animate Image                               │
+│  Turn a still product image into a polished commercial  │
+│  video.                                                 │
+├─────────────────────────────────────────────────────────┤
+│  Category Chips Row (scrollable)                        │
+│  [Fashion] [Beauty] [Jewelry] [Food] [Electronics] ... │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌──────────────────────┐  ┌─────────────────────────┐  │
+│  │  UPLOAD CARD          │  │  How it works           │  │
+│  │  (Premium focal       │  │                         │  │
+│  │   point)              │  │  1. Upload your image   │  │
+│  │                       │  │  2. VOVV detects context│  │
+│  │  Upload your product  │  │  3. Choose motion       │  │
+│  │  image                │  │  4. Generate video      │  │
+│  │                       │  │                         │  │
+│  │  We'll detect         │  │  ─────────────────────  │  │
+│  │  category, scene &    │  │  Best results tips      │  │
+│  │  motion automatically │  │  • Clean, sharp images  │  │
+│  │                       │  │  • One primary subject  │  │
+│  │  [Upload zone]        │  │  • Well-lit photos      │  │
+│  │                       │  │                         │  │
+│  └──────────────────────┘  └─────────────────────────┘  │
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  Smart Assistant Tip (VOVV.AI Studio + avatars)   │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
 ```
 
----
+## Changes to `src/pages/video/AnimateVideo.tsx`
 
-## Detailed Changes
+### 1. Category Chips Row
+Add a decorative row of category chips (from `PRODUCT_CATEGORIES`) below the header. Non-interactive, purely communicates ecommerce awareness. Small outline chips with Lucide icons matching the existing `ICON_MAP` pattern from `ProductContextSelector`.
 
-### 1. Rewrite `VideoResultsPanel.tsx`
+### 2. Redesigned Upload Card
+Replace the plain upload box with a premium card (`rounded-2xl border bg-card shadow-sm`):
+- Headline: "Upload your product image" (text-base font-medium)
+- Subline: "We'll detect category, scene type, and recommended motion automatically." (text-sm muted)
+- Upload zone inside with larger icon, refined dashed border (`border-primary/20`), and subtle hover state
+- The card is the left column in a two-column grid (`lg:grid-cols-[1fr_320px]`)
 
-**Success header** — Small check icon + "Your video is ready" heading + subtitle.
+### 3. Right-Side "How It Works" + Best Results Panel
+Right column contains two stacked sections:
 
-**Video player** — Wrap in a `bg-black/95 rounded-xl` container with subtle shadow for premium feel. Keep native controls but the outer frame feels designed.
+**How It Works** — 4 vertical steps with numbered circles and short labels:
+1. Upload image → `Upload` icon
+2. VOVV detects context → `Brain` icon
+3. Choose realistic motion → `Wand2` icon
+4. Generate video → `Sparkles` icon
 
-**Generation Details card** — Right column on desktop (`lg:grid-cols-[1fr_320px]`). Shows key-value pairs with muted labels and foreground values. Include: Category, Scene Type, Motion Goal, Camera Motion, Subject Motion, Duration, Audio, Credits Used.
+**Best Results** — Short tips list:
+- Use clean, sharp product or campaign images
+- Keep the main subject clearly visible
+- Works best with one primary focus
+- Ideal for fashion, beauty, jewelry, food, electronics
 
-**Quick Variation chips** — Row of small outline buttons below details: "More subtle", "More premium", "More motion", "Better loop", "Cleaner camera". Each modifies a parameter and re-triggers generation via a new `onQuickVariation(preset)` callback.
+### 4. Move Tips Banner Below
+Keep the VOVV.AI Studio tips banner but move it below the two-column area as a subtle footer hint rather than the first thing users see.
 
-**Action buttons** — Clear hierarchy:
-- Primary: "Generate Variation" (default button style, prominent)
-- Secondary: "Adjust Motion" (outline) — calls onReuse (scrolls back to form with settings intact)
-- Tertiary: "Download Video" (outline)
-- Ghost: "Start New Video" (ghost, lower priority)
+### 5. Widen Container
+Already `max-w-4xl` from previous change — sufficient for two-column layout.
 
-**Before/After toggle** — Optional section. A toggle button that swaps the video with the source image for visual comparison.
-
-**Used Settings accordion** — Collapsible section showing all settings including preservation rules, realism, loop style. Uses shadcn `Collapsible`.
-
-### 2. Update `AnimateVideo.tsx`
-
-- Build `generationContext` object from current state values, resolving IDs to labels
-- Pass to `VideoResultsPanel`
-- Add `onQuickVariation` handler that modifies specific params and re-runs pipeline
-- Add `onAdjustMotion` handler (same as reuse but keeps form visible)
-
-### 3. Quick Variation Presets
-
-Define in `VideoResultsPanel` or a shared constant:
-```typescript
-const QUICK_VARIATIONS = [
-  { id: 'more_subtle', label: 'More subtle', changes: { motionIntensity: 'low', cameraMotion: 'camera_drift' } },
-  { id: 'more_premium', label: 'More premium', changes: { realismLevel: 'ultra_realistic', cameraMotion: 'premium_handheld' } },
-  { id: 'more_motion', label: 'More motion', changes: { motionIntensity: 'high' } },
-  { id: 'better_loop', label: 'Better loop', changes: { loopStyle: 'seamless_loop' } },
-  { id: 'cleaner_camera', label: 'Cleaner camera', changes: { cameraMotion: 'static', motionIntensity: 'low' } },
-];
-```
-
----
+### Post-upload behavior
+No changes to the post-upload form. Once an image is uploaded, the current flow (ProductContextSelector → MotionGoals → Settings → Generate) remains exactly as-is.
 
 ## Files to Modify
-- `src/components/app/video/VideoResultsPanel.tsx` — Full rewrite with two-column layout, details card, quick variations, action hierarchy, before/after, accordion
-- `src/pages/video/AnimateVideo.tsx` — Pass generation context, wire quick variation + adjust motion handlers
+- `src/pages/video/AnimateVideo.tsx` — Restructure the pre-upload section (lines 369-403) into the new two-column premium layout with category chips, redesigned upload card, how-it-works panel, and best-results tips.
 
-## No New Files Needed
-All changes fit within the existing two files.
+No new files needed. All changes are contained within the existing AnimateVideo component's pre-upload branch.
 
