@@ -60,6 +60,15 @@ export default function AnimateVideo() {
   const [warnings, setWarnings] = useState<ValidationWarning[]>([]);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
+  // Simulated analysis step progress (0-3)
+  const [analysisStep, setAnalysisStep] = useState(0);
+  useEffect(() => {
+    if (!isAnalyzingImage) { setAnalysisStep(0); return; }
+    setAnalysisStep(0);
+    const iv = setInterval(() => setAnalysisStep(s => Math.min(s + 1, 3)), 1200);
+    return () => clearInterval(iv);
+  }, [isAnalyzingImage]);
+
   // Product Context
   const [category, setCategory] = useState('fashion_apparel');
   const [sceneType, setSceneType] = useState('studio_product');
@@ -427,13 +436,117 @@ export default function AnimateVideo() {
 
           <ValidationWarnings warnings={warnings} />
 
-          {/* Analyzing indicator */}
+          {/* Rich analysis loading state */}
           {isAnalyzingImage && (
-            <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
-              <Brain className="h-5 w-5 animate-pulse text-primary" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Analyzing your image...</p>
-                <p className="text-xs text-muted-foreground">Detecting product category and scene type</p>
+            <div className="space-y-5">
+              {/* Image preview + step progress */}
+              <div className="grid sm:grid-cols-[200px_1fr] gap-4 rounded-2xl border border-border bg-card shadow-sm p-5">
+                {/* Left: uploaded image with inline badge */}
+                <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30">
+                  {imagePreview && <img src={imagePreview} alt="Uploaded" className="w-full aspect-square object-contain" />}
+                  <div className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-medium">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Image uploaded
+                  </div>
+                </div>
+
+                {/* Right: step-based progress */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Understanding your image</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Detecting category, scene type, and realistic motion opportunities.</p>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {[
+                      { icon: CheckCircle2, label: 'Image uploaded' },
+                      { icon: ScanSearch, label: 'Detecting category' },
+                      { icon: Eye, label: 'Detecting scene type' },
+                      { icon: Zap, label: 'Preparing motion recommendations' },
+                    ].map((step, i) => {
+                      const done = analysisStep > i;
+                      const active = analysisStep === i;
+                      return (
+                        <div key={i} className="flex items-center gap-2.5">
+                          {done ? (
+                            <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                          ) : active ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                          ) : (
+                            <div className="h-4 w-4 rounded-full border border-border shrink-0" />
+                          )}
+                          <span className={cn('text-sm', done ? 'text-foreground' : active ? 'text-foreground font-medium' : 'text-muted-foreground/60')}>
+                            {step.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Detection preview fields */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Detection Preview</p>
+                    {[
+                      { label: 'Category', ready: analysisStep > 1 },
+                      { label: 'Scene type', ready: analysisStep > 2 },
+                      { label: 'Motion goals', ready: analysisStep > 3 },
+                    ].map((field) => (
+                      <div key={field.label} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{field.label}</span>
+                        {field.ready ? (
+                          <span className="text-foreground font-medium">detected</span>
+                        ) : (
+                          <span className="text-muted-foreground/50 italic">detecting…</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground">Usually takes a few seconds</p>
+                </div>
+              </div>
+
+              {/* Dynamic assistant card */}
+              <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4">
+                <div className="flex -space-x-2 shrink-0">
+                  {TIPS_TEAM.map((m) => (
+                    <img key={m.name} src={m.avatar} alt={m.name} className="w-7 h-7 rounded-full border-2 border-background object-cover" />
+                  ))}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
+                  <p className="text-sm text-muted-foreground">We're detecting category, scene type, and the most realistic motion options for this image.</p>
+                </div>
+              </div>
+
+              {/* Skeleton placeholders for upcoming sections */}
+              <div className="space-y-4">
+                {/* Product Context skeleton */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <Skeleton className="h-4 w-28" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-24 rounded-full" />
+                    <Skeleton className="h-8 w-28 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded-full" />
+                  </div>
+                </div>
+                {/* Recommended Motion skeleton */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <Skeleton className="h-4 w-36" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-14 w-full rounded-lg" />
+                    <Skeleton className="h-14 w-full rounded-lg" />
+                  </div>
+                </div>
+                {/* Settings skeleton */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <Skeleton className="h-4 w-20" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-16 rounded-md" />
+                    <Skeleton className="h-8 w-16 rounded-md" />
+                    <Skeleton className="h-8 w-16 rounded-md" />
+                  </div>
+                </div>
               </div>
             </div>
           )}
