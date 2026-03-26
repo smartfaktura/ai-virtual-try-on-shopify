@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -22,11 +24,13 @@ interface CreationItem {
   prompt?: string;
   aspectRatio?: string;
   quality?: string;
+  providerUsed?: string | null;
 }
 
 export function RecentCreationsGallery() {
   
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
@@ -45,7 +49,7 @@ export function RecentCreationsGallery() {
           .limit(12),
         supabase
           .from('freestyle_generations')
-          .select('id, image_url, prompt, quality, aspect_ratio, created_at')
+          .select('id, image_url, prompt, quality, aspect_ratio, created_at, provider_used')
           .order('created_at', { ascending: false })
           .limit(12),
       ]);
@@ -110,6 +114,7 @@ export function RecentCreationsGallery() {
             prompt: f.prompt,
             aspectRatio: f.aspect_ratio,
             quality: f.quality,
+            providerUsed: (f as any).provider_used || null,
           });
         }
       }
