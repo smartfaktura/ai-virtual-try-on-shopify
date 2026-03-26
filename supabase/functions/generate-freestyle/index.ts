@@ -1162,6 +1162,7 @@ serve(async (req) => {
     const errors: string[] = [];
     let contentBlocked = false;
     let blockReason = "";
+    let lastActualProvider = useSeedream ? "seedream-4.5" : aiModel;
 
     const batchConsistency = effectiveImageCount > 1
       ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
