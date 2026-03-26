@@ -136,6 +136,7 @@ export default function AnimateVideo() {
   const [userPrompt, setUserPrompt] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [libraryPickerOpen, setLibraryPickerOpen] = useState(false);
 
   // Cycling tip index
   const [tipIndex, setTipIndex] = useState(0);
@@ -176,11 +177,8 @@ export default function AnimateVideo() {
     }
   }, [motionGoalId, category, sceneType]);
 
-  // Auto-analyze after upload
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Core file processing function (used by file input, paste, and library)
+  const processFile = useCallback(async (file: File) => {
     const newWarnings: ValidationWarning[] = [];
     if (file.size > 20 * 1024 * 1024) {
       newWarnings.push({ type: 'error', message: 'Image must be under 20MB.' });
@@ -205,11 +203,54 @@ export default function AnimateVideo() {
       setUploadCompleteTime(Date.now());
       const analysis = await analyzeImage(url);
       if (analysis) {
-        // Buffer the result — the useEffect gating logic will reveal after 5s minimum
         setAnalysisCompleteData(analysis);
       }
     }
   }, [upload, analyzeImage]);
+
+  // File input handler
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  }, [processFile]);
+
+  // Library image selection handler
+  const handleLibrarySelect = useCallback(async (libraryImageUrl: string) => {
+    setImagePreview(libraryImageUrl);
+    setImageUrl(libraryImageUrl);
+    setWarnings([]);
+    setHasAnalyzed(false);
+    setUiRevealReady(false);
+    setAnalysisCompleteData(null);
+    setUploadCompleteTime(Date.now());
+    const analysis = await analyzeImage(libraryImageUrl);
+    if (analysis) {
+      setAnalysisCompleteData(analysis);
+    }
+  }, [analyzeImage]);
+
+  // Paste image support (CMD+V / Ctrl+V)
+  useEffect(() => {
+    if (imageUrl) return; // Only listen when no image is loaded
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            toast.success('Image pasted — uploading...');
+            processFile(file);
+          }
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [imageUrl, processFile]);
 
   const removeImage = () => {
     setImageUrl(null);
