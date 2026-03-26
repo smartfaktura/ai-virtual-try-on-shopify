@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { resolveVideoStrategy, type VideoAnalysis, type WorkflowType } from '@/lib/videoStrategyResolver';
 import { buildVideoPrompt } from '@/lib/videoPromptTemplates';
@@ -219,6 +219,17 @@ export function useVideoProject() {
       console.error('[useVideoProject] Pipeline error:', err);
     }
   }, [generateVideo, analysisResult]);
+
+  // Sync pipelineStage with generateVideo terminal states
+  useEffect(() => {
+    if (generateVideo.status === 'complete' && pipelineStage !== 'complete' && pipelineStage !== 'idle') {
+      setPipelineStage('complete');
+    }
+    if (generateVideo.status === 'error' && pipelineStage !== 'error' && pipelineStage !== 'idle') {
+      setPipelineStage('error');
+      setPipelineError(generateVideo.error || 'Video generation failed');
+    }
+  }, [generateVideo.status, generateVideo.error, pipelineStage]);
 
   // Derived states
   const isAnalyzing = pipelineStage === 'analyzing';

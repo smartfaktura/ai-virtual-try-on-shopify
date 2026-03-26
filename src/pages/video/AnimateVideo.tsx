@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LucideIcon } from 'lucide-react';
 
@@ -767,6 +767,102 @@ export default function AnimateVideo() {
             </>
           )}
         </div>
+      )}
+      {/* ──── PIPELINE ACTIVE: Generation in progress ──── */}
+      {isPipelineActive && (
+        <div className="space-y-6">
+          {/* Branded takeover card */}
+          <div className="rounded-2xl border border-border bg-card shadow-sm p-8 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <img
+                  src={currentProgressMember.avatar}
+                  alt={currentProgressMember.name}
+                  className="w-12 h-12 rounded-full border-2 border-primary/20 object-cover transition-all duration-700"
+                />
+                <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">VOVV.AI Studio</p>
+                <h2 className="text-lg font-semibold text-foreground">{getStageMessage().text}</h2>
+                <p className="text-sm text-muted-foreground">{getStageMessage().sub}</p>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <Progress
+                value={
+                  isAnalyzing ? 20 :
+                  isBuildingPrompt ? 40 :
+                  videoStatus === 'creating' ? 55 :
+                  Math.min(70 + (elapsedSeconds / 180) * 25, 95)
+                }
+                className="h-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                  {isAnalyzing ? 'Analyzing…' :
+                   isBuildingPrompt ? 'Building prompt…' :
+                   videoStatus === 'creating' ? 'Starting…' :
+                   'Processing…'}
+                </span>
+                {elapsedSeconds > 0 && <span>{elapsedSeconds}s elapsed</span>}
+              </div>
+            </div>
+
+            {/* Source image preview */}
+            {imagePreview && (
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg overflow-hidden border border-border w-20 h-20 shrink-0">
+                  <img src={imagePreview} alt="Source" className="w-full h-full object-cover" />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>Your image is being animated with <span className="text-foreground font-medium">{cameraMotion.replace(/_/g, ' ')}</span> camera motion.</p>
+                  <p className="text-xs mt-1">Typically takes 1–3 minutes.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ──── ERROR STATE ──── */}
+      {(pipelineStage === 'error' || videoStatus === 'error') && !isPipelineActive && !isComplete && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <X className="h-5 w-5 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Generation failed</h2>
+              <p className="text-sm text-muted-foreground mt-1">{videoError || 'Something went wrong. Please try again.'}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleGenerate} className="gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Retry
+            </Button>
+            <Button variant="outline" onClick={handleNewProject}>
+              Start New Video
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ──── COMPLETE: Results panel ──── */}
+      {isComplete && videoUrl && (
+        <VideoResultsPanel
+          videoUrl={videoUrl}
+          sourceImageUrl={imagePreview || imageUrl || undefined}
+          generationContext={buildGenerationContext()}
+          onReuse={handleReuse}
+          onNewProject={handleNewProject}
+          onQuickVariation={handleQuickVariation}
+        />
       )}
     </div>
   );
