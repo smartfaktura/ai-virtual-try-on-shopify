@@ -133,6 +133,13 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     if (typeof cfgScale === "number") klingBody.cfg_scale = cfgScale;
     klingBody.sound = withAudio ? "on" : "off";
 
+    // Structured camera control (orbit, zoom, pan etc.)
+    const cameraControl = body.camera_control as Record<string, unknown> | undefined;
+    if (cameraControl) {
+      klingBody.camera_control = cameraControl;
+      console.log(`[generate-video:worker] Using camera_control:`, JSON.stringify(cameraControl));
+    }
+
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
       method: "POST",
       headers,
