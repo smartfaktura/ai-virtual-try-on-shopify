@@ -54,6 +54,7 @@ export default function AnimateVideo() {
     runAnimatePipeline, resetPipeline,
   } = useVideoProject();
 
+  const { balance: creditsBalance } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
 
   // Upload state
