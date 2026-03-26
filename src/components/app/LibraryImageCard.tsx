@@ -39,6 +39,7 @@ export interface LibraryItem {
   modelId?: string | null;
   sceneId?: string | null;
   productId?: string | null;
+  providerUsed?: string | null;
 }
 
 interface LibraryImageCardProps {
@@ -48,6 +49,7 @@ interface LibraryImageCardProps {
   selectMode?: boolean;
   selected?: boolean;
   isUpscaling?: boolean;
+  isAdmin?: boolean;
 }
 
 async function downloadImage(url: string, filename: string) {
@@ -64,7 +66,14 @@ async function downloadImage(url: string, filename: string) {
   URL.revokeObjectURL(blobUrl);
 }
 
-export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected, isUpscaling }: LibraryImageCardProps) {
+function getProviderLabel(provider: string): string {
+  if (provider.includes('seedream')) return 'SDR';
+  if (provider.includes('pro')) return 'PRO';
+  if (provider.includes('flash')) return 'FLASH';
+  return provider.slice(0, 5).toUpperCase();
+}
+
+export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected, isUpscaling, isAdmin }: LibraryImageCardProps) {
   return (
     <div
       className={cn(
@@ -73,6 +82,15 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       )}
       onClick={onClick}
     >
+      {/* Admin provider badge */}
+      {isAdmin && item.providerUsed && !selectMode && (
+        <div className="absolute top-3 left-3 z-10">
+          <Badge variant="secondary" className="bg-black/60 text-white text-[9px] px-1.5 py-0 font-bold shadow-md border-0">
+            {getProviderLabel(item.providerUsed)}
+          </Badge>
+        </div>
+      )}
+
       {/* Resolution badge */}
       {item.quality?.startsWith('upscaled_') && !selectMode && (
         <div className="absolute top-3 right-3 z-10">
