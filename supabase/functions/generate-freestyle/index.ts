@@ -342,6 +342,7 @@ async function generateImageSeedream(
   console.log(`[seedream] Using size=${size} for aspectRatio=${aspectRatio}`);
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const attemptStart = performance.now();
     try {
       const seedreamRatio = seedreamAspectRatio(aspectRatio);
       console.log(`[seedream] aspect_ratio=${seedreamRatio} (app=${aspectRatio})`);
@@ -370,9 +371,11 @@ async function generateImageSeedream(
         signal: AbortSignal.timeout(150_000),
       });
 
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
+
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn(`[seedream] 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
+          console.warn(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=429 hasImage=false reason=rate_limit`);
           if (attempt < maxRetries) {
             await new Promise((r) => setTimeout(r, 2000));
             continue;
@@ -380,7 +383,7 @@ async function generateImageSeedream(
           throw { status: 429, message: "Rate limit exceeded on Seedream." };
         }
         const errorText = await response.text();
-        console.error(`[seedream] Error (attempt ${attempt + 1}):`, response.status, errorText);
+        console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=${response.status} hasImage=false error=${errorText.slice(0, 200)}`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
@@ -391,18 +394,20 @@ async function generateImageSeedream(
       const data = await response.json();
       const imageUrl = data?.data?.[0]?.url;
       if (!imageUrl) {
-        console.error("[seedream] No image URL in response:", JSON.stringify(data).slice(0, 500));
+        console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=false reason=no_url_in_response`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
         }
         return null;
       }
-      return imageUrl; // Returns a hosted URL (not base64)
+      console.log(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=true`);
+      return imageUrl;
     } catch (error: unknown) {
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
       if (typeof error === "object" && error !== null && "status" in error) throw error;
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
-      console.error(`[seedream] Attempt ${attempt + 1} failed${isTimeout ? " (timeout)" : ""}:`, error);
+      console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=error hasImage=false reason=${isTimeout ? "timeout" : "exception"}`);
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 1000));
         continue;
@@ -648,6 +653,7 @@ async function generateImage(
   const timeoutMs = isProModel ? 150_000 : 90_000;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const attemptStart = performance.now();
     try {
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -671,9 +677,11 @@ async function generateImage(
         }
       );
 
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
+
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn(`AI Gateway 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
+          console.warn(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=429 hasImage=false reason=rate_limit`);
           if (attempt < maxRetries) {
             await new Promise((r) => setTimeout(r, 1500));
             continue;
@@ -681,10 +689,11 @@ async function generateImage(
           throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
         }
         if (response.status === 402) {
+          console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=402 hasImage=false reason=credits_exhausted`);
           throw { status: 402, message: "Credits exhausted. Please add more credits." };
         }
         const errorText = await response.text();
-        console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
+        console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=${response.status} hasImage=false error=${errorText.slice(0, 200)}`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
@@ -698,11 +707,12 @@ async function generateImage(
       if (!imageUrl) {
         if (isContentBlocked(data)) {
           const reason = extractBlockReason(data);
-          console.warn("Content blocked by safety filter:", reason);
+          const durationSec2 = ((performance.now() - attemptStart) / 1000).toFixed(1);
+          console.warn(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec2}s status=200 hasImage=false reason=content_blocked blockReason="${reason.slice(0, 100)}"`);
           return { blocked: true, reason };
         }
 
-        console.error("No image in response:", JSON.stringify(data).slice(0, 500));
+        console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=false reason=no_image_in_response`);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500));
           continue;
@@ -710,8 +720,10 @@ async function generateImage(
         return null;
       }
 
+      console.log(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=true`);
       return imageUrl;
     } catch (error: unknown) {
+      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
       if (typeof error === "object" && error !== null && "status" in error) {
         const statusErr = error as { status: number };
         // For 429, don't re-throw — let the per-image loop handle it as a soft error
@@ -723,7 +735,7 @@ async function generateImage(
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
       // For timeouts, only retry once — a slow model won't get faster on retry
       const effectiveMaxRetries = isTimeout ? Math.min(maxRetries, 1) : maxRetries;
-      console.error(`Generation attempt ${attempt + 1} failed${isTimeout ? " (timeout)" : ""}:`, error);
+      console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=error hasImage=false reason=${isTimeout ? "timeout" : "exception"}`);
       if (attempt < effectiveMaxRetries) {
         await new Promise((r) => setTimeout(r, isTimeout ? 1000 : 500));
         continue;
