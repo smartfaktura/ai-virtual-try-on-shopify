@@ -21,14 +21,21 @@ export function VideoWorkflowCard({ icon: Icon, title, description, bestFor, to,
       onClick={() => !disabled && navigate(to)}
       disabled={disabled}
       className={cn(
-        'group relative flex flex-col items-start gap-4 rounded-xl border border-border bg-card p-6 text-left transition-all',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/30 hover:shadow-md cursor-pointer'
+        'group relative flex flex-col items-start gap-4 rounded-xl border p-6 text-left transition-all',
+        comingSoon
+          ? 'opacity-75 cursor-default border-dashed border-border/60 bg-card/80'
+          : disabled
+            ? 'opacity-50 cursor-not-allowed border-border bg-card'
+            : 'border-border bg-card hover:border-primary/30 hover:shadow-md cursor-pointer'
       )}
     >
       {comingSoon && (
-        <Badge variant="secondary" className="absolute top-4 right-4 text-xs">Coming Soon</Badge>
+        <Badge variant="outline" className="absolute top-4 right-4 text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
       )}
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <div className={cn(
+        "flex h-11 w-11 items-center justify-center rounded-lg",
+        comingSoon ? "bg-muted/60 text-muted-foreground" : "bg-primary/10 text-primary"
+      )}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="space-y-1.5">
