@@ -191,6 +191,7 @@ export function useVideoProject() {
         projectId: project.id,
         workflowType: 'animate',
         cameraMotion: params.cameraMotion,
+        cameraControlConfig: strategy.camera_control_config,
       });
 
     } catch (err) {

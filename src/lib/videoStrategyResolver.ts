@@ -221,11 +221,13 @@ function detectUserNoteConflict(
 function resolveCameraControlConfig(cameraMotion: string): { type: string; config: Record<string, number> } | undefined {
   switch (cameraMotion) {
     case 'orbit':
-      return { type: 'simple', config: { horizontal: 10, vertical: 0, zoom: 0, tilt: 0, pan: 0, roll: 0 } };
+      return { type: 'simple', config: { horizontal: 30, vertical: 5, zoom: 0, tilt: 0, pan: 0, roll: 0 } };
     case 'slow_push_in':
-      return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 3, tilt: 0, pan: 0, roll: 0 } };
+      return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 5, tilt: 0, pan: 0, roll: 0 } };
+    case 'gentle_pan':
+      return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 0, tilt: 0, pan: 20, roll: 0 } };
     default:
-      return undefined; // Prompt-only for static, gentle_pan, camera_drift, premium_handheld
+      return undefined; // Prompt-only for static, camera_drift, premium_handheld
   }
 }
 

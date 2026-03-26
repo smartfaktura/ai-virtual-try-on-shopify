@@ -43,6 +43,7 @@ interface UseGenerateVideoResult {
     projectId?: string;
     workflowType?: string;
     cameraMotion?: string;
+    cameraControlConfig?: { type: string; config: Record<string, number> };
   }) => void;
   reset: () => void;
   history: GeneratedVideo[];
@@ -174,6 +175,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       projectId?: string;
       workflowType?: string;
       cameraMotion?: string;
+      cameraControlConfig?: { type: string; config: Record<string, number> };
     }) => {
       setStatus('creating');
       setVideoUrl(null);
@@ -198,6 +200,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           with_audio: params.withAudio || false,
           cameraMotion: params.cameraMotion || '',
           audioMode: params.withAudio ? 'ambient' : 'silent',
+          camera_control: params.cameraControlConfig || undefined,
         };
         if (params.negativePrompt) payload.negative_prompt = params.negativePrompt;
         if (typeof params.cfgScale === 'number') payload.cfg_scale = params.cfgScale;
