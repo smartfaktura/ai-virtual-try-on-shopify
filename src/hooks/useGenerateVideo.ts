@@ -67,9 +67,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setError(message);
       toast.error(message);
       fetchHistory();
-      refreshCredits();
+      refreshBalance();
     },
-    onCreditRefresh: refreshCredits,
+    onCreditRefresh: refreshBalance,
   });
 
   // Derive elapsed seconds from activeJob
@@ -98,7 +98,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       }
       toast.success('Video generated successfully!');
       fetchHistory();
-      refreshCredits();
+      refreshBalance();
     }
     // failed is handled by onGenerationFailed callback
   }, [queue.activeJob?.status, queue.activeJob?.id]);
