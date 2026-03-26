@@ -312,6 +312,23 @@ function seedreamSizeForRatio(_aspectRatio: string): string {
   return "2K";
 }
 
+// Map app aspect ratios to Seedream-supported values
+function seedreamAspectRatio(appRatio: string): string {
+  const map: Record<string, string> = {
+    "1:1": "1:1",
+    "16:9": "16:9",
+    "9:16": "9:16",
+    "4:3": "4:3",
+    "3:4": "3:4",
+    "4:5": "3:4",   // nearest supported
+    "5:4": "4:3",   // nearest supported
+    "3:2": "3:2",
+    "2:3": "2:3",
+    "21:9": "21:9",
+  };
+  return map[appRatio] || "1:1";
+}
+
 async function generateImageSeedream(
   prompt: string,
   imageUrls: string[],
@@ -326,10 +343,13 @@ async function generateImageSeedream(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      const seedreamRatio = seedreamAspectRatio(aspectRatio);
+      console.log(`[seedream] aspect_ratio=${seedreamRatio} (app=${aspectRatio})`);
       const body: Record<string, unknown> = {
         model,
         prompt,
         size,
+        aspect_ratio: seedreamRatio,
         response_format: "url",
         watermark: false,
         sequential_image_generation: "disabled",
@@ -422,17 +442,41 @@ function cleanPromptForSeedream(prompt: string): string {
 }
 
 // ── Convert content array to Seedream flat inputs ────────────────────────
+// Reorders images so MODEL reference comes first (Seedream weights earlier images more)
 function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string; imageUrls: string[] } {
   const textParts: string[] = [];
   const imageUrls: string[] = [];
+  // Track which images are model references vs others
+  const modelImages: string[] = [];
+  const otherImages: string[] = [];
+  let lastTextBeforeImage = "";
+
   for (const item of content) {
-    if (item.type === "text") textParts.push(item.text);
-    else if (item.type === "image_url") imageUrls.push(item.image_url.url);
+    if (item.type === "text") {
+      textParts.push(item.text);
+      lastTextBeforeImage = item.text;
+    } else if (item.type === "image_url") {
+      const url = item.image_url.url;
+      // Detect model reference by checking if the preceding text mentions model/person
+      const isModelRef = /model|person|face|portrait/i.test(lastTextBeforeImage);
+      if (isModelRef) {
+        modelImages.push(url);
+      } else {
+        otherImages.push(url);
+      }
+    }
   }
+
+  // Model images first for better subject consistency
+  const orderedImages = [...modelImages, ...otherImages];
+  if (modelImages.length > 0) {
+    console.log(`[seedream] Reordered images: ${modelImages.length} model ref(s) first, ${otherImages.length} other(s)`);
+  }
+
   const rawPrompt = textParts.join("\n");
   const cleanedPrompt = cleanPromptForSeedream(rawPrompt);
   console.log(`[generate-freestyle] Seedream prompt cleaned: ${rawPrompt.length} → ${cleanedPrompt.length} chars`);
-  return { prompt: cleanedPrompt, imageUrls };
+  return { prompt: cleanedPrompt, imageUrls: orderedImages };
 }
 
 // ── Download a hosted URL and upload to Supabase Storage ─────────────────
