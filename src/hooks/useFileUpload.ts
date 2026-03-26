@@ -60,7 +60,7 @@ export function useFileUpload(): UseFileUploadResult {
 
       setProgress(100);
       
-      toast.success('Image uploaded successfully');
+      // Success feedback is handled inline by the consuming component
       return signedUrlData.signedUrl;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to upload image';
