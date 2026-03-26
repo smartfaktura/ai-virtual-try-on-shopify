@@ -306,9 +306,11 @@ export default function AnimateVideo() {
         <VideoResultsPanel
           videoUrl={videoUrl}
           sourceImageUrl={imagePreview || undefined}
+          generationContext={buildGenerationContext()}
           onReuse={handleReuse}
           onVariation={handleGenerate}
           onNewProject={handleNewProject}
+          onQuickVariation={handleQuickVariation}
         />
       )}
 
