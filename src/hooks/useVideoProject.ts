@@ -220,6 +220,17 @@ export function useVideoProject() {
     }
   }, [generateVideo, analysisResult]);
 
+  // Sync pipelineStage with generateVideo terminal states
+  useEffect(() => {
+    if (generateVideo.status === 'complete' && pipelineStage !== 'complete' && pipelineStage !== 'idle') {
+      setPipelineStage('complete');
+    }
+    if (generateVideo.status === 'error' && pipelineStage !== 'error' && pipelineStage !== 'idle') {
+      setPipelineStage('error');
+      setPipelineError(generateVideo.error || 'Video generation failed');
+    }
+  }, [generateVideo.status, generateVideo.error, pipelineStage]);
+
   // Derived states
   const isAnalyzing = pipelineStage === 'analyzing';
   const isBuildingPrompt = pipelineStage === 'building_prompt';
