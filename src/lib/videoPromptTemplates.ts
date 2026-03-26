@@ -29,11 +29,11 @@ interface BuiltPrompt {
 
 const CAMERA_PHRASES: Record<string, string> = {
   static: 'static camera, no camera movement',
-  slow_push_in: 'slow smooth push-in camera movement',
-  gentle_pan: 'gentle horizontal panning movement',
-  camera_drift: 'subtle natural camera drift',
+  slow_push_in: 'the camera slowly and smoothly pushes forward toward the subject. The subject stays completely still — only the camera moves closer',
+  gentle_pan: 'the camera gently pans horizontally across the scene. The subject remains fixed in place — only the camera glides sideways',
+  camera_drift: 'subtle natural camera drift with slight floating movement. The subject stays still — the camera drifts naturally',
   premium_handheld: 'premium cinematic handheld with slight natural shake',
-  orbit: 'smooth orbiting camera movement around the subject',
+  orbit: 'the camera physically orbits around the subject in a smooth arc. The subject stays completely still and fixed in place — only the camera moves. The viewing angle changes progressively as the camera circles around. The subject does NOT rotate or spin',
 };
 
 const REALISM_PHRASES: Record<string, string> = {
@@ -55,14 +55,7 @@ const LOOP_PHRASES: Record<string, string> = {
   one_natural: 'as one natural continuous movement',
 };
 
-// Camera motions that use structured camera_control — soften prompt to avoid conflicts
-const STRUCTURED_CAMERA_MOTIONS = new Set(['slow_push_in', 'gentle_pan', 'camera_drift', 'orbit']);
-
 function buildCameraClause(motion: string): string {
-  if (STRUCTURED_CAMERA_MOTIONS.has(motion)) {
-    // Structured camera_control handles this; keep prompt minimal to avoid conflicts
-    return '';
-  }
   return `Camera: ${CAMERA_PHRASES[motion] || CAMERA_PHRASES.slow_push_in}.`;
 }
 
