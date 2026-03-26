@@ -13,6 +13,7 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   freestyle: "generate-freestyle",
   workflow: "generate-workflow",
   upscale: "upscale-worker",
+  video: "generate-video",
 };
 
 /**

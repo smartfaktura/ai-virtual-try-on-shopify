@@ -25,7 +25,19 @@ function calculateCreditCost(
   hasScene: boolean = false,
   _additionalProductCount: number = 0,
   resolution?: string,
+  payload?: Record<string, unknown>,
 ): number {
+  // Video jobs use dedicated pricing
+  if (jobType === "video") {
+    const dur = String(payload?.duration || "5");
+    const audio = String(payload?.audioMode || "silent");
+    const motion = String(payload?.cameraMotion || "");
+    let cost = dur === "10" ? 18 : 10;
+    if (audio === "ambient") cost += 4;
+    if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
+    return cost;
+  }
+
   let perImage: number;
 
   if (jobType === "upscale") {
@@ -97,7 +109,7 @@ serve(async (req) => {
       );
     }
 
-    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale"];
+    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video"];
     if (!validJobTypes.includes(jobType)) {
       return new Response(
         JSON.stringify({ error: `Invalid job type: ${jobType}` }),
@@ -106,7 +118,7 @@ serve(async (req) => {
     }
 
     // Calculate credit cost
-    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount, resolution);
+    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount, resolution, payload);
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
