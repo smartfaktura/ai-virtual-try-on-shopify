@@ -196,29 +196,13 @@ export default function AnimateVideo() {
       setImageUrl(url);
       setWarnings(newWarnings);
       setHasAnalyzed(false);
+      setUiRevealReady(false);
+      setAnalysisCompleteData(null);
+      setUploadCompleteTime(Date.now());
       const analysis = await analyzeImage(url);
       if (analysis) {
-        setHasAnalyzed(true);
-        if (analysis.category) {
-          setCategory(analysis.category);
-          setDetectedCategory(analysis.category);
-        }
-        if (analysis.ecommerce_scene_type) {
-          setSceneType(analysis.ecommerce_scene_type);
-          setDetectedSceneType(analysis.ecommerce_scene_type);
-        }
-        if (analysis.recommended_motion_goals?.length) {
-          setRecommendedGoalIds(analysis.recommended_motion_goals);
-          setMotionGoalId(analysis.recommended_motion_goals[0]);
-        }
-        if (analysis.recommended_camera_motion) setCameraMotion(analysis.recommended_camera_motion);
-        if (analysis.recommended_subject_motion) setSubjectMotion(analysis.recommended_subject_motion);
-        if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
-        if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
-        if (analysis.risk_flags?.identity_sensitive || analysis.identity_sensitive) {
-          setPreserveIdentity(true);
-          setPreserveOutfit(true);
-        }
+        // Buffer the result — the useEffect gating logic will reveal after 5s minimum
+        setAnalysisCompleteData(analysis);
       }
     }
   }, [upload, analyzeImage]);
@@ -231,6 +215,9 @@ export default function AnimateVideo() {
     setDetectedCategory(null);
     setDetectedSceneType(null);
     setRecommendedGoalIds([]);
+    setAnalysisCompleteData(null);
+    setUploadCompleteTime(null);
+    setUiRevealReady(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
