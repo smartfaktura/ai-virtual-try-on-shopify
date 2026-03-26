@@ -1,66 +1,56 @@
 
 
-# Upgrade All Toasts to VOVV.AI Branded Toasts
+# Fix: Orbit Camera Motion Not Working in Video Generation
 
-## Approach
-Instead of editing 58+ files individually, create a **drop-in branded toast wrapper** that intercepts all `toast.success()`, `toast.error()`, `toast.info()` calls and automatically adds VOVV.AI team avatars + improved messaging. Then swap the import source in `App.tsx`.
+## Root Cause
 
-## Changes
+Two issues combine to make "orbit" produce only slight movement:
 
-### 1. Upgrade `src/lib/brandedToast.tsx` — Create a full branded toast proxy
+1. **`camera_control` is never sent to Kling API**: The strategy resolver builds a `camera_control_config` object for orbit, but the `generate-video` edge function ignores it entirely — it never adds `camera_control` to the Kling API request body.
 
-Replace the current file with a comprehensive branded toast system:
+2. **Prompt-only orbit doesn't work**: The prompt says "smooth orbiting camera movement around the subject," but video generation models interpret prompts as continuous single-shot action. They cannot execute a true orbit path from text alone. The Kling API has a structured `camera_control` parameter specifically for this.
 
-- Create a `vovvToast` proxy object that mirrors the sonner `toast` API (`success`, `error`, `info`, `warning`, plus default call signature)
-- Each toast type gets a **context-appropriate team member avatar** automatically:
-  - `success` → Sophia (photographer, positive confirmations)
-  - `error` → Luna (troubleshooter, fixing issues)
-  - `info` → Kenji (art director, informational guidance)
-  - `warning` → Sienna (brand guardian, caution)
-- Avatar rendered as a `w-6 h-6 rounded-full` icon prepended to every toast
-- Pass through all sonner options (duration, description, action, etc.)
-- Keep existing named helpers (`toastSophia`, etc.) for backward compatibility
-- Export the proxy as both `vovvToast` and as default `toast` for easy migration
+## Solution
 
-### 2. Update `src/App.tsx` — Restyle the Sonner Toaster
+### 1. Pass `camera_control` to the Kling API (`supabase/functions/generate-video/index.ts`)
 
-Update the `<Toaster>` component with VOVV.AI branded styling:
-- Custom `toastOptions.classNames` with warm stone background, premium shadow, no harsh borders
-- Slightly larger padding for the avatar + text layout
-- Use brand CSS variables for colors
+In the worker mode, read `camera_control` from the payload and add it to the Kling API request body:
 
-### 3. Bulk-replace toast imports across all 58 source files
+```typescript
+// After existing klingBody construction
+const cameraControl = body.camera_control as Record<string, unknown> | undefined;
+if (cameraControl) {
+  klingBody.camera_control = cameraControl;
+}
+```
 
-Replace `import { toast } from 'sonner'` with `import { toast } from '@/lib/brandedToast'` in every file under `src/`. This makes every existing `toast.success(...)` / `toast.error(...)` call automatically branded without changing any call sites.
+### 2. Pass `camera_control` through the queue payload (`src/hooks/useGenerateVideo.ts`)
 
-Files affected (all under `src/`): ~58 files that currently import from `'sonner'`.
+When calling `enqueue-generation`, include the camera control config from the strategy:
 
-### 4. Improve key toast messages
+- Add `camera_control` to the payload sent to the queue
+- Source it from the strategy's `camera_control_config`
 
-While swapping imports, update the most user-facing toast messages to be shorter and more engaging:
+### 3. Wire camera control from pipeline to hook (`src/hooks/useVideoProject.ts`)
 
-| Current | New |
-|---------|-----|
-| `'Please sign in to generate images'` | `'Sign in to start generating'` |
-| `'Authentication required'` | `'Please sign in first'` |
-| `'Generation cancelled. Credits refunded.'` | `'Cancelled — credits returned ✨'` |
-| `'Settings copied to editor'` | `'Settings loaded!'` |
-| `'Link copied'` | `'Link copied!'` |
-| `'Insufficient credits. Need X, have Y.'` | `'Not enough credits for this one'` |
-| `'Failed to send feedback'` | `'Couldn't send — try again?'` |
-| `'Password updated successfully!'` | `'Password updated!'` |
-| `'Please fill in all fields'` | `'Fill in all fields to continue'` |
-| `'Message sent!'` | `'Message sent!'` (keep) |
-| `'Please select a product first'` | `'Pick a product first'` |
-| `'Please upload an image first'` | `'Upload an image to get started'` |
+Pass the resolved `camera_control_config` from the strategy through to `generateVideo.startGeneration()`.
 
-Only update the ~20 most common user-facing messages. Leave admin/debug toasts as-is.
+### 4. Increase orbit strength (`src/lib/videoStrategyResolver.ts`)
 
-## Technical Details
+The current orbit config uses `horizontal: 10` which is the minimum. Increase to a meaningful value:
 
-- **Core change**: `brandedToast.tsx` becomes the single toast API for the entire app
-- **No new dependencies** — uses existing sonner, teamData
-- **Backward compatible** — same `toast.success()` / `toast.error()` API
-- **Files created**: None
-- **Files modified**: `src/lib/brandedToast.tsx`, `src/App.tsx`, ~58 files (import swap only), ~20 files (message text updates)
+```typescript
+case 'orbit':
+  return { type: 'simple', config: { horizontal: 30, vertical: 0, zoom: 0, tilt: 0, pan: 0, roll: 0 } };
+```
+
+Also add camera control configs for other motion types that benefit from structured params:
+- `slow_push_in`: `zoom: 5`  
+- `gentle_pan`: `pan: 20`
+
+### Files Modified
+- `supabase/functions/generate-video/index.ts` — pass `camera_control` to Kling API
+- `src/hooks/useGenerateVideo.ts` — include `camera_control` in queue payload
+- `src/hooks/useVideoProject.ts` — wire strategy's camera control config through
+- `src/lib/videoStrategyResolver.ts` — increase orbit strength, add more structured configs
 
