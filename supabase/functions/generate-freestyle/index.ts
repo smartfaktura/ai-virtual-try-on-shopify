@@ -496,7 +496,7 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
 }
 
 // ── Convert content array to Seedream flat inputs ────────────────────────
-// Categorizes images by role, orders deterministically (model → product → scene → other),
+// Categorizes images by role, orders deterministically (product → model → scene → other),
 // and appends a numbered role directive to the prompt.
 function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string; imageUrls: string[] } {
   const textParts: string[] = [];
