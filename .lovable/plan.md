@@ -1,47 +1,31 @@
+# Fix Product Fidelity on Seedream + Investigate Nano Banana Slowness
 
+## Problem 1: Seedream generates wrong clothing
 
-# Seedream Image Role Handling Audit
+**Root cause**: Seedream is a diffusion model — it uses reference images for "inspiration" but doesn't replicate products pixel-perfectly. The current IMAGE ROLES directive says "match exact shape, color, material" but Seedream fundamentally cannot do this. It will always approximate.
 
-## Current State Analysis
+**Reality check**: No amount of prompt engineering will make Seedream replicate a product 100%. This is a model limitation, not a code bug. Seedream treats images as style/composition references, not as exact templates.
 
-I traced how each `imageRole` flows through the Seedream path:
+**What we CAN do to maximize product fidelity:**
 
-### Working correctly for Seedream:
-- **`product`** → source image labeled `[PRODUCT IMAGE]` → `convertContentToSeedreamInput` detects as `role: "product"` → correct IMAGE ROLES directive
-- **`model`** → source image labeled `[MODEL REFERENCE]` → detected as `role: "model"` → correct directive ("preserve exact face...")
-- **`scene`** → source image labeled `[SCENE REFERENCE]` → detected as `role: "scene"` → correct directive ("use for environment only")
+1. **Strengthen the product directive** in `buildSeedreamRoleDirective()` — add explicit instructions about brand logos, zipper placement, collar shape, pocket details etc.
+2. **Add product description to the Seedream prompt** — currently `productDimensions` is passed but only used in Gemini's polish. We should inject the product title and type (e.g. "Beige Collared Bomber Blouse") directly into the Seedream prompt so the text generation reinforces the visual reference.
+3. **Increase product image weight** — reorder images to put product FIRST (before model) since Seedream weights earlier images more. Currently model comes first.
 
-### Broken: `edit` mode
-- Source image labeled `[REFERENCE IMAGE]` → detected as `role: "other"` → gets generic "use for style/mood inspiration" directive
-- The `polishUserPrompt` generates edit-specific text like "Edit the provided image. Replace the product while preserving everything else." — this is reasonable prompt text
-- **Core problem**: Seedream is a generative model, not an editor. It cannot surgically edit an image (change background, swap product, enhance). It will use the image as loose reference and generate something new. Gemini (Nano Banana) actually supports true image editing via its multimodal capabilities.
+### Changes in `supabase/functions/generate-freestyle/index.ts`:
 
-## Plan
+**A. Reorder images: product → model → scene → other** (line ~526)
+Currently model is first. For product fidelity, product should be first since Seedream weights earlier images more heavily.
 
-### Force Nano Banana for edit mode (regardless of provider override)
+**B. Strengthen product role directive** (line ~485)
 
-**File: `supabase/functions/generate-freestyle/index.ts`**
-
-In the provider selection block (~line 1095), add a condition: when `imageRole === 'edit'`, override `useSeedream` to `false` and force Gemini's image editing path. This ensures:
-
-1. Edit operations always use a model that can actually edit images
-2. Product/model/scene roles continue working on Seedream as before
-3. No UI changes needed — the user still sees all 4 role options
-
-**Change (~line 1095):**
-```typescript
-const useSeedream = providerOverride === "seedream-4.5" && !!ARK_API_KEY && body.imageRole !== 'edit';
+```
+- Image {idx} is the PRODUCT: CRITICAL — replicate this item EXACTLY as shown.
+  Match precise shape, silhouette, color, material texture, collar/neckline style,
+  zipper/button placement, pockets, logos, tags, and all visible details.
+  This is a specific real product that must be recognizable.
 ```
 
-Add a log line so we can verify:
-```typescript
-if (body.imageRole === 'edit' && providerOverride === "seedream-4.5") {
-  console.log("[generate-freestyle] Edit mode: forcing Nano Banana (Seedream cannot edit images)");
-}
-```
+**C. Inject product metadata into Seedream prompt** — in `convertContentToSeedreamInput`, scan the prompt for product context and ensure product name/type from the polished prompt carries through after `cleanPromptForSeedream` strips directives.
 
-This is a single-line change. Edit mode gets routed to Gemini which supports true image manipulation. All other roles (product, model, scene, none) continue using whichever provider was selected.
-
-## Files Modified
-- `supabase/functions/generate-freestyle/index.ts` — force Nano Banana when `imageRole === 'edit'`
-
+---
