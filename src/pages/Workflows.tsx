@@ -112,7 +112,7 @@ export default function Workflows() {
       const sixtySecsAgo = new Date(Date.now() - 60_000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type, credits_reserved, result')
         .eq('status', 'completed')
         .gte('completed_at', sixtySecsAgo)
         .order('completed_at', { ascending: false });
@@ -125,6 +125,7 @@ export default function Workflows() {
         })
         .map((j): ActiveJob => {
           const p = j.payload as Record<string, unknown> | null;
+          const r = j.result as Record<string, unknown> | null;
           return {
             id: j.id,
             status: j.status,
@@ -135,9 +136,12 @@ export default function Workflows() {
             workflow_name: (p?.workflow_name as string) ?? null,
             workflow_slug: (p?.workflow_slug as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+            credits_reserved: j.credits_reserved ?? 0,
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
             batch_id: (p?.batch_id as string) ?? null,
+            imageCount: ((p?.image_count as number) || (p?.imageCount as number)) ?? undefined,
+            generatedCount: (r?.generatedCount as number) ?? undefined,
           };
         });
     },
@@ -152,7 +156,7 @@ export default function Workflows() {
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type, credits_reserved, result')
         .eq('status', 'failed')
         .gte('created_at', fourHoursAgo)
         .order('created_at', { ascending: false })
@@ -166,6 +170,7 @@ export default function Workflows() {
         })
         .map((j): ActiveJob => {
           const p = j.payload as Record<string, unknown> | null;
+          const r = j.result as Record<string, unknown> | null;
           return {
             id: j.id,
             status: j.status,
@@ -176,9 +181,12 @@ export default function Workflows() {
             workflow_name: (p?.workflow_name as string) ?? null,
             workflow_slug: (p?.workflow_slug as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+            credits_reserved: j.credits_reserved ?? 0,
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
             batch_id: (p?.batch_id as string) ?? null,
+            imageCount: ((p?.image_count as number) || (p?.imageCount as number)) ?? undefined,
+            generatedCount: (r?.generatedCount as number) ?? undefined,
           };
         });
     },
@@ -351,12 +359,31 @@ export default function Workflows() {
     });
   }, []);
 
-  // ── Batch grouping ──
-  const activeBatchGroups = groupJobsIntoBatches(activeJobs);
-  const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs).filter((g) => !dismissedKeys.has(g.key));
+  // ── Batch grouping: merge all jobs first, then categorize ──
+  const allMergedGroups = useMemo(() => {
+    // Deduplicate by id — active jobs take priority over completed/failed
+    const seen = new Set<string>();
+    const deduped: ActiveJob[] = [];
+    for (const job of [...activeJobs, ...recentlyCompletedJobs, ...recentlyFailedJobs]) {
+      if (!seen.has(job.id)) {
+        seen.add(job.id);
+        deduped.push(job);
+      }
+    }
+    return groupJobsIntoBatches(deduped);
+  }, [activeJobs, recentlyCompletedJobs, recentlyFailedJobs]);
+
+  const activeBatchGroups = allMergedGroups.filter(
+    (g) => g.processingCount > 0 || g.queuedCount > 0,
+  );
+  const completedBatchGroups = allMergedGroups.filter(
+    (g) => g.processingCount === 0 && g.queuedCount === 0 && g.completedCount > 0 && !dismissedKeys.has(g.key),
+  );
   const twoHoursAgoMs = Date.now() - 2 * 60 * 60 * 1000;
-  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs)
-    .filter((g) => !dismissedKeys.has(g.key) && new Date(g.created_at).getTime() > twoHoursAgoMs);
+  const failedBatchGroups = allMergedGroups.filter(
+    (g) => g.processingCount === 0 && g.queuedCount === 0 && g.completedCount === 0 && g.failedCount > 0
+      && !dismissedKeys.has(g.key) && new Date(g.created_at).getTime() > twoHoursAgoMs,
+  );
 
   const hasActivity =
     activeBatchGroups.length > 0 ||
