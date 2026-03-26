@@ -232,7 +232,7 @@ function polishUserPrompt(
   }
 
   if (context.hasProduct && context.hasModel) {
-    refs.push("OUTFIT COMPLETION: The product is the hero piece. Dress the model in a complete outfit — add complementary bottoms, shoes, and accessories. The model must NEVER appear without pants/skirt/shorts.");
+    refs.push("OUTFIT COMPLETION: The product is the hero piece. The model must wear a COMPLETE outfit — never appear partially dressed or missing clothing. Choose complementary garments (bottoms, shoes, accessories) that match the scene context and style: e.g. tailored trousers for studio/urban, shorts or athletic wear for sport/outdoor/active scenes, swimwear for beach/pool settings. The outfit must look intentional and styled — never accidentally incomplete.");
   }
 
   if (refs.length > 0) {
@@ -528,7 +528,7 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
 
   if (hasModel && hasProduct) {
     lines.push("");
-    lines.push("OUTFIT COMPLETION (MANDATORY): The product shown is a single garment — it is the HERO piece. Dress the model in a complete, natural outfit: add complementary bottoms, shoes, and accessories that match the style. The model must NEVER appear without pants/skirt/shorts. Other clothing should complement the hero product naturally without competing for attention.");
+    lines.push("OUTFIT COMPLETION (MANDATORY): The product is the hero piece. The model must wear a COMPLETE outfit — never appear partially dressed or missing clothing. Choose complementary garments (bottoms, shoes, accessories) that match the scene context and style: e.g. tailored trousers for studio/urban, shorts or athletic wear for sport/outdoor/active scenes, swimwear for beach/pool settings. The outfit must look intentional and styled — never accidentally incomplete.");
   }
 
   return lines.join("\n");
