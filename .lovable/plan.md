@@ -1,59 +1,44 @@
 
-# Fix plan: 120s failover from Nano Banana + guaranteed cross-model fallback
 
-## What I found (from code + logs)
-- The failed job (`1f447...`) ran **attempt=1/1** and timed out at **150s** on Nano Banana Pro.
-- That happened because `canUseSeedream` is currently forced to `false` when `providerOverride === "nanobanana"`, so the fallback chain collapses to one attempt.
-- Nano Banana Pro timeout is set to `150_000ms`, which is too close to runtime limits and leaves poor room for recovery.
+# Fix: On-Model Scenes Should Generate People Even Without Explicit Model Selection
 
-## Implementation approach
+## Problem
 
-### 1) Make provider override “primary preference”, not “no-fallback lock”
-**File:** `supabase/functions/generate-freestyle/index.ts`
-- Change fallback eligibility logic:
-  - Keep Seedream disabled for edit mode.
-  - Keep Seedream disabled if ARK key missing.
-  - **Remove** the `providerOverride !== "nanobanana"` restriction from `canUseSeedream`.
-- Result:
-  - If user picks Nano Banana and it times out, attempt 2 can still try Seedream.
-  - If user picks Seedream and it fails, attempt 2 can still try Nano Banana.
+When a user selects a **product** + an **"On-Model" scene** (like Natural Light Loft) but does NOT select a specific model, the system generates a floating product shot instead of a person wearing the product in that scene.
 
-### 2) Enforce 120s failover on first attempt
-**File:** `supabase/functions/generate-freestyle/index.ts`
-- Add explicit timeout policy constants (centralized near provider code), e.g.:
-  - `PRIMARY_ATTEMPT_TIMEOUT_MS = 120_000`
-  - provider defaults for later attempts (NB Flash 90s, NB Pro 120s, Seedream ~90–120s configurable)
-- Update `generateImage(...)` and `generateImageSeedream(...)` to accept optional timeout override.
-- In `runFreestyleWithFallback(...)`, set attempt-specific timeout:
-  - Attempt 1 uses max 120s.
-  - Later attempts use shorter capped timeout so fallback can complete quickly.
+This happens because:
+1. The backend has no idea whether the selected scene is an "on-model" or "product" scene -- that category info stays in the frontend
+2. Without a model selected, `hasModel = false`, so no person-placement or outfit-completion directives fire
+3. The auto-generated prompt just says "product photography" with no mention of a person
 
-### 3) Add wall-clock budget guard inside fallback executor
-**File:** `supabase/functions/generate-freestyle/index.ts`
-- Track executor start time.
-- Before each fallback attempt, compute remaining budget and skip starting an attempt if too little time remains.
-- Derive per-attempt timeout from remaining budget (`min(modelTimeout, remainingBudget - safetyBuffer)`).
-- This prevents “doomed” late attempts and improves deterministic behavior under runtime constraints.
+## Solution
 
-### 4) Improve observability for debugging
-**File:** `supabase/functions/generate-freestyle/index.ts`
-- Extend attempt logs to include:
-  - timeout used for that attempt
-  - elapsed total time
-  - fallback reason (timeout/network/server)
-- Keep final summary log chain so we can confirm real-world failover behavior.
+### 1. Pass scene category from frontend to backend
 
-## Validation checklist
-1. Force Nano Banana primary, induce slow generation:
-   - verify timeout near 120s
-   - verify second attempt starts on Seedream.
-2. Force Seedream primary:
-   - verify timeout/failure triggers Nano Banana fallback.
-3. Edit mode:
-   - verify Seedream is still not used.
-4. Confirm queue job ends cleanly (completed/failed) with no stuck processing rows and correct credit refund behavior.
+**File: `src/pages/Freestyle.tsx`**
+- When building the generation payload, include a new field `sceneCategory` from `selectedScene.category` (e.g. `"studio"`, `"lifestyle"`, `"editorial"`, `"streetwear"` for on-model; `"clean-studio"`, `"surface"`, `"flat-lay"` for product)
 
-## Scope
-- No UI flow rewrite.
-- No database migration.
-- No queue architecture overhaul (queue already exists and is correct); this is fallback/timeout orchestration hardening in `generate-freestyle`.
+### 2. Accept and use scene category in the edge function
+
+**File: `supabase/functions/generate-freestyle/index.ts`**
+- Add `sceneCategory?: string` to `FreestyleRequest`
+- Define which categories are "on-model": `studio`, `lifestyle`, `editorial`, `streetwear`
+- When `hasProduct && hasScene && !hasModel` and the scene category is on-model:
+  - Upgrade the SCENE directive to include person placement: "Place a model naturally INTO the environment. The model should wear the product as the hero piece with a complete, styled outfit."
+  - Add outfit completion directive (same as the existing one for hasModel)
+- When auto-building prompt (empty prompt case), detect on-model scene category and include "worn by a model" language
+
+### 3. Auto-prompt improvement for product + on-model scene (no model selected)
+
+**File: `src/pages/Freestyle.tsx`**
+- In the auto-prompt builder (~line 546), when `selectedProduct` exists and `selectedScene` has an on-model category but no model is selected, change the prompt from "product photography" to "product photography worn by a professional model"
+
+## What This Does NOT Do
+- No database changes
+- No UI changes (scene picker stays the same)
+- No changes when a model IS explicitly selected (existing logic is correct)
+
+## Files Modified
+- `src/pages/Freestyle.tsx` — pass `sceneCategory`, improve auto-prompt
+- `supabase/functions/generate-freestyle/index.ts` — accept `sceneCategory`, add person-placement directive for on-model scenes without explicit model
+
