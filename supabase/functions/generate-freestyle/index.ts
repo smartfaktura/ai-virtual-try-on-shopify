@@ -1171,11 +1171,15 @@ serve(async (req) => {
       }
     }
 
+    const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear', 'fitness', 'beauty'];
+    const isOnModelScene = !!body.sceneCategory && ON_MODEL_CATEGORIES.includes(body.sceneCategory);
+
     const polishContext = {
       hasSource: !!body.sourceImage,
       hasProduct: !!body.productImage || (!!body.sourceImage && body.imageRole === 'product'),
       hasModel: !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model'),
       hasScene: !!body.sceneImage || (!!body.sourceImage && body.imageRole === 'scene'),
+      isOnModelScene,
     };
 
     let finalPrompt: string;
