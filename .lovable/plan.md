@@ -1,107 +1,47 @@
 
 
-# Animate Image: Premium Results + Safer Object Grounding
+# Fix: Workflow Activity Showing Wrong Progress
 
-## Overview
-Two major improvements: (1) redesign the video results panel for a premium feel with better correction flows, and (2) add structured object grounding logic to prevent the AI from inventing products/props that aren't in the source image.
+## Problem
+Jobs from the same batch are grouped **independently** across three separate queries (active, completed, failed). When job #3 of 5 completes, it leaves the "active" group — the remaining 2 active jobs show "0/5 images" because their completed siblings aren't counted. Similarly, the completed query doesn't include `imageCount` or `generatedCount` fields, so completed groups show wrong counts too.
 
----
+## Root Cause (confirmed in code)
+- **Line 355**: `activeBatchGroups = groupJobsIntoBatches(activeJobs)` — only queued/processing
+- **Line 356**: `completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs)` — only completed, and missing `imageCount`/`generatedCount` fields
+- **Line 358**: `failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs)` — only failed, also missing those fields
+- No realtime subscription needed — existing polling (5s active, 10s completed) handles updates without page refresh
 
-## 1. Premium Results Panel Redesign
+## Solution: Merge before grouping, then categorize
 
-**File: `src/components/app/video/VideoResultsPanel.tsx`**
+### File: `src/pages/Workflows.tsx`
 
-- Replace the harsh `bg-black/95` player background with a softer `bg-muted/30` or subtle gradient that adapts to aspect ratio
-- Make the video/image fill the container better using `object-cover` with aspect-ratio-aware sizing instead of forcing `aspect-video` on all ratios
-- Move the Video/Original toggle from inside the black bar to above the player as a clean pill toggle in the card header area
-- Add new correction-focused quick variation presets:
-  - `keep_closer` — "Keep closer to original" (high preservation, low intensity)
-  - `stronger_fidelity` — "Stronger subject fidelity" (preserve identity + outfit + product)
-  - `no_added_objects` — "No added objects" (adds negative prompt for invented objects)
-  - `cleaner_motion_v2` — "Cleaner motion" (static camera, low intensity)
-  - `more_realistic_v2` — "More realistic" (ultra_realistic realism level)
-  - `remove_objects` — "Remove added objects" (rebuilds with strict preserve-visible-only)
-  - `strict_preservation` — "Rebuild with stricter preservation" (all preservation flags on, low intensity)
-- Strengthen action button hierarchy: primary = "Download Video", secondary = "Adjust Motion", ghost = "Start New Video"
+1. Add `result` to the completed + failed job queries (lines 116, 155) so `imageCount`/`generatedCount` are available
+2. Add `credits_reserved` to completed + failed queries
+3. Replace the three independent `groupJobsIntoBatches` calls (lines 355-359) with:
+   - Merge all three arrays, deduplicate by `id`
+   - Call `groupJobsIntoBatches` once on the merged set
+   - Split resulting groups into active/completed/failed based on job statuses within each group:
+     - **active**: any job is `queued` or `processing`
+     - **completed**: all jobs terminal AND at least 1 completed
+     - **failed**: all jobs terminal AND 0 completed (all failed)
 
-**File: `src/pages/video/AnimateVideo.tsx`**
+### File: `src/components/app/WorkflowActivityCard.tsx`
 
-- Update `handleQuickVariation` to handle new preset change keys (negative prompt additions, preservation overrides)
-- Pass aspect ratio to VideoResultsPanel so it can size the player correctly
+4. Update `ActiveGroupCard` progress display — it already reads `group.generatedImageCount` / `group.totalImageCount`, which will now be correct because completed siblings are in the same group
+5. Update failed group card to show partial success when `group.completedCount > 0` alongside failures (e.g. "2 failed · 3 images saved")
 
----
+### File: `src/lib/batchGrouping.ts`
 
-## 2. Structured Object Grounding
+6. No changes needed — `groupJobsIntoBatches` already handles mixed statuses correctly via `batch_id` and time-window grouping
 
-### 2a. Extend analysis schema to detect visible objects
+## Performance
+- No additional network requests — same 3 queries, just merged client-side
+- No new polling intervals — keeps existing 5s/10s cadence
+- No realtime subscriptions needed — polling already handles live updates
+- Deduplication is O(n) with a Set, no performance impact
 
-**File: `supabase/functions/analyze-video-input/index.ts`**
-
-Add new fields to the tool schema:
-- `visible_product_detected` (boolean) — is a product/object clearly visible in the image?
-- `visible_object_list` (string array) — list of objects actually visible (e.g. ["perfume bottle", "car steering wheel"])
-- `product_interaction_visible` (boolean) — is someone interacting with a product?
-
-Update the system prompt to instruct the AI to distinguish between "what is visible" vs "what the category implies."
-
-### 2b. Add grounding logic to strategy resolver
-
-**File: `src/lib/videoStrategyResolver.ts`**
-
-Add a new `ObjectGrounding` interface and compute it from analysis:
-```text
-visible_product_detected: boolean
-visible_object_list: string[]
-allow_new_objects: boolean (false by default)
-allow_new_products: boolean (false by default)
-preserve_visible_objects_only: boolean (true by default)
-product_context_source: 'image_detected' | 'user_added' | 'library_selected' | 'none'
-scene_expansion_mode: 'restricted' | 'guided' | 'flexible'
-```
-
-Rules:
-- If no product visible AND no user-provided product context → `allow_new_objects = false`, `allow_new_products = false`
-- If product visible → `preserve_visible_objects_only = true`
-- If user explicitly added product context → `allow_new_products = true` with that source only
-- Category alone never sets `allow_new_objects = true`
-
-Add `object_grounding` to `VideoStrategy` interface.
-
-### 2c. Update prompt builder with grounding clauses
-
-**File: `src/lib/videoPromptTemplates.ts`**
-
-- Add a `buildObjectGroundingClause()` function that generates grounding instructions based on the strategy's `object_grounding`:
-  - When `preserve_visible_objects_only`: "Only animate objects visible in the source image. Do not introduce new products, props, bottles, accessories, or handheld items."
-  - When product detected: "Preserve the identity and appearance of the visible [object_list]. Do not replace or swap it."
-  - When no product and none added: "No product or prop is present — do not invent or add one."
-- Inject this clause into all category assemblers after the core motion instruction
-- Strengthen negative prompts with: `"invented objects, added props, swapped products, hallucinated packaging, unexplained handheld items"`
-
-### 2d. UI grounding note before generation
-
-**File: `src/pages/video/AnimateVideo.tsx`**
-
-- After the "Specific Motion Note" textarea and before the Generate button, if the motion goal or category implies product interaction BUT `analysisResult` shows no visible product and no user-provided product context, show a neutral info banner:
-  > "No product was explicitly provided. VOVV will keep the video grounded to the visible subject and scene."
-- Use a subtle `bg-muted/30` banner with an info icon — not blocking, just informational
-
----
-
-## 3. Edge Function Deployment
-
-Redeploy `analyze-video-input` after schema changes.
-
----
-
-## Technical Details
-
-- **Files modified**: 
-  - `src/components/app/video/VideoResultsPanel.tsx` — redesigned player + new presets
-  - `src/pages/video/AnimateVideo.tsx` — grounding banner + new variation handling + aspect ratio pass-through
-  - `src/lib/videoStrategyResolver.ts` — `ObjectGrounding` interface + computation
-  - `src/lib/videoPromptTemplates.ts` — grounding clauses + stronger negatives
-  - `supabase/functions/analyze-video-input/index.ts` — new analysis fields
-- **No database migrations needed**
-- **Edge function redeployment**: `analyze-video-input`
+## Scope
+- 2 files modified: `Workflows.tsx`, `WorkflowActivityCard.tsx`
+- No backend/migration changes
+- No edge function changes
 
