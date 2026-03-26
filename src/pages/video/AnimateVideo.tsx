@@ -886,6 +886,8 @@ export default function AnimateVideo() {
           sourceImageUrl={imagePreview || imageUrl || undefined}
           aspectRatio={aspectRatio}
           generationContext={buildGenerationContext()}
+          creditCost={estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion })}
+          creditsRemaining={creditsBalance}
           onReuse={handleReuse}
           onNewProject={handleNewProject}
           onQuickVariation={handleQuickVariation}
