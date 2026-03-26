@@ -569,6 +569,7 @@ export type Database = {
           model_id: string | null
           product_id: string | null
           prompt: string
+          provider_used: string | null
           quality: string
           scene_id: string | null
           user_id: string
@@ -583,6 +584,7 @@ export type Database = {
           model_id?: string | null
           product_id?: string | null
           prompt: string
+          provider_used?: string | null
           quality?: string
           scene_id?: string | null
           user_id: string
@@ -597,6 +599,7 @@ export type Database = {
           model_id?: string | null
           product_id?: string | null
           prompt?: string
+          provider_used?: string | null
           quality?: string
           scene_id?: string | null
           user_id?: string

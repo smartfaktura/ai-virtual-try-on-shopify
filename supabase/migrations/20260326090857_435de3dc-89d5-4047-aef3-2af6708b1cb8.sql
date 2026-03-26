@@ -1,0 +1,1 @@
+ALTER TABLE public.freestyle_generations ADD COLUMN provider_used text;
