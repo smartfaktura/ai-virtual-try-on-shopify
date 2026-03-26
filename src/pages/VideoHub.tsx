@@ -57,24 +57,26 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
       onClick={onClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {/* Mount video only on hover */}
+        {/* Mount video only on hover — poster prevents black flash */}
         {hovering && isComplete && (
           <video
             ref={videoRef}
             src={video.video_url!}
+            poster={video.source_image_url}
             loop
             muted
             playsInline
             preload="auto"
             onCanPlay={() => setCanPlay(true)}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
+            className="absolute inset-0 w-full h-full object-cover bg-transparent"
+            style={{ visibility: isPlaying ? 'visible' : 'hidden' }}
           />
         )}
         <img
           src={video.source_image_url}
           alt=""
           loading="lazy"
-          className={`w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-cover ${isPlaying ? 'invisible' : 'visible'}`}
         />
 
         {showStatusBadge && (
@@ -85,7 +87,7 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
 
         {/* Loading spinner while buffering on hover */}
         {hovering && !canPlay && isComplete && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 z-10">
             <Loader2 className="h-6 w-6 text-background animate-spin" />
           </div>
         )}
