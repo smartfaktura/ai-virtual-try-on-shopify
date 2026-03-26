@@ -1,5 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2 } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+  Shirt, Sparkles, Flower2, Gem, Watch, Lamp,
+  UtensilsCrossed, Smartphone, Dumbbell, Pill,
+};
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -278,129 +284,144 @@ export default function AnimateVideo() {
         <div />
       </PageHeader>
 
-      {/* VOVV.AI Team Tips Banner */}
-      {!isPipelineActive && !isComplete && (
-        <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4">
-          <div className="flex -space-x-2 shrink-0">
-            {TIPS_TEAM.map((m) => (
-              <img
-                key={m.name}
-                src={m.avatar}
-                alt={m.name}
-                className="w-7 h-7 rounded-full border-2 border-background object-cover"
-              />
-            ))}
+      {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
+      {!isPipelineActive && !isComplete && !imageUrl && (
+        <>
+          {/* Category Chips Row */}
+          <div className="flex flex-wrap gap-1.5">
+            {PRODUCT_CATEGORIES.map((c) => {
+              const Icon = CATEGORY_ICON_MAP[c.icon];
+              return (
+                <span
+                  key={c.id}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border border-border bg-muted/30 text-muted-foreground"
+                >
+                  {Icon && <Icon className="h-3 w-3" />}
+                  {c.label}
+                </span>
+              );
+            })}
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
-            <p className="text-sm text-muted-foreground truncate" key={tipIndex}>
-              {TIPS[tipIndex]}
-            </p>
+
+          {/* Two-column layout: Upload Card + How It Works */}
+          <div className="grid lg:grid-cols-[1fr_320px] gap-5">
+            {/* Left: Premium Upload Card */}
+            <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Upload your product image</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  We'll detect category, scene type, and recommended motion automatically.
+                </p>
+              </div>
+
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-3 bg-muted/5 hover:bg-muted/10 group"
+              >
+                {isUploading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                ) : (
+                  <>
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                      <Upload className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-sm font-medium text-foreground">Click to upload</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, WebP — Max 20 MB</p>
+                    </div>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Right: How It Works + Best Results */}
+            <div className="space-y-4">
+              {/* How It Works */}
+              <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">How it works</h3>
+                <div className="space-y-3">
+                  {[
+                    { icon: Upload, label: 'Upload your image', sub: 'Any product or campaign photo' },
+                    { icon: Brain, label: 'VOVV detects context', sub: 'Category, scene type & motion' },
+                    { icon: Wand2, label: 'Choose realistic motion', sub: 'Camera, subject & intensity' },
+                    { icon: Clapperboard, label: 'Generate video', sub: 'Polished commercial animation' },
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <step.icon className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground leading-tight">{step.label}</p>
+                        <p className="text-xs text-muted-foreground">{step.sub}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Best Results Tips */}
+              <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">Best results</h3>
+                <ul className="space-y-2">
+                  {[
+                    'Use clean, sharp product or campaign images',
+                    'Keep the main subject clearly visible',
+                    'Works best with one primary focus',
+                    'Well-lit photos produce smoother motion',
+                  ].map((tip, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Results */}
-      {isComplete && videoUrl && (
-        <VideoResultsPanel
-          videoUrl={videoUrl}
-          sourceImageUrl={imagePreview || undefined}
-          generationContext={buildGenerationContext()}
-          onReuse={handleReuse}
-          onVariation={handleGenerate}
-          onNewProject={handleNewProject}
-          onQuickVariation={handleQuickVariation}
-        />
-      )}
-
-      {/* Pipeline progress — branded takeover */}
-      {isPipelineActive && (() => {
-        const stage = getStageMessage();
-        return (
-          <div className="rounded-xl border border-border bg-card p-8 text-center space-y-5">
-            {/* VOVV.AI Studio label */}
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-semibold">VOVV.AI Studio</p>
-
-            {/* Cycling team avatar */}
-            <div className="relative mx-auto w-14 h-14">
-              {PROGRESS_TEAM.map((m, i) => (
+          {/* Smart Assistant Tip (moved below) */}
+          <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4">
+            <div className="flex -space-x-2 shrink-0">
+              {TIPS_TEAM.map((m) => (
                 <img
                   key={m.name}
                   src={m.avatar}
                   alt={m.name}
-                  className={cn(
-                    'absolute inset-0 w-14 h-14 rounded-full border-2 border-primary/30 object-cover transition-opacity duration-700',
-                    i === progressAvatarIdx ? 'opacity-100' : 'opacity-0'
-                  )}
+                  className="w-7 h-7 rounded-full border-2 border-background object-cover"
                 />
               ))}
-              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
-                <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
-              </div>
             </div>
-
-            {/* Team member status message */}
-            <p className="text-xs text-muted-foreground/60 italic">
-              {currentProgressMember.name}: "{currentProgressMember.statusMessage}"
-            </p>
-
-            {/* Stage info */}
-            <div>
-              <p className="font-medium text-foreground">{stage.text}</p>
-              <p className="text-sm text-muted-foreground mt-1">{stage.sub}</p>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
+              <p className="text-sm text-muted-foreground truncate" key={tipIndex}>
+                {TIPS[tipIndex]}
+              </p>
             </div>
-
-            {isGenerating && (
-              <Progress value={Math.min((elapsedSeconds / 120) * 100, 95)} className="h-1.5 max-w-xs mx-auto" />
-            )}
           </div>
-        );
-      })()}
-
-      {/* Error */}
-      {(pipelineStage === 'error' || videoStatus === 'error') && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-          <p className="text-sm text-destructive">{videoError || 'Generation failed'}</p>
-          <Button variant="outline" size="sm" className="mt-2" onClick={resetPipeline}>Try Again</Button>
-        </div>
+        </>
       )}
 
-      {/* Main form */}
-      {!isPipelineActive && !isComplete && (
+      {/* ──── POST-UPLOAD: Form with image preview + settings ──── */}
+      {!isPipelineActive && !isComplete && imageUrl && (
         <div className="space-y-5">
-          {/* Upload */}
+          {/* Upload preview */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Upload Image</label>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-            {imagePreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-sm">
-                <img src={imagePreview} alt="Upload" className="w-full aspect-square object-contain" />
-                <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
-                  <X className="h-4 w-4" />
-                </button>
-                {isUploading && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <Progress value={uploadProgress} className="h-1" />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="w-full max-w-sm aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-2 bg-muted/10"
-              >
-                {isUploading ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                ) : (
-                  <>
-                    <Upload className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Click to upload image</span>
-                    <span className="text-xs text-muted-foreground/60">JPG, PNG, WebP - Max 20MB</span>
-                  </>
-                )}
+            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-sm">
+              <img src={imagePreview!} alt="Upload" className="w-full aspect-square object-contain" />
+              <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
+                <X className="h-4 w-4" />
               </button>
-            )}
+              {isUploading && (
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <Progress value={uploadProgress} className="h-1" />
+                </div>
+              )}
+            </div>
           </div>
 
           <ValidationWarnings warnings={warnings} />
@@ -416,8 +437,8 @@ export default function AnimateVideo() {
             </div>
           )}
 
-          {/* Show form sections after upload */}
-          {imageUrl && !isAnalyzingImage && (
+          {/* Show form sections after analysis */}
+          {!isAnalyzingImage && (
             <>
               <ProductContextSelector
                 category={category}
