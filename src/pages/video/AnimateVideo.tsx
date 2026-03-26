@@ -359,7 +359,7 @@ export default function AnimateVideo() {
     if (isAnalyzing) return { text: 'Analyzing your image...', sub: 'Understanding composition and product context' };
     if (isBuildingPrompt) return { text: 'Building motion plan...', sub: 'Applying category-aware motion strategy' };
     if (videoStatus === 'creating') return { text: 'Submitting to queue...', sub: 'Reserving credits and queueing your video' };
-    if (videoStatus === 'queued' || pipelineStage === 'queued') {
+    if (videoStatus === 'queued' && pipelineStage !== 'generating') {
       const position = activeJob?.position ?? 0;
       return { text: 'Queued', sub: position > 0 ? `Position #${position + 1} in queue — will start automatically` : 'Starting shortly…' };
     }
