@@ -21,6 +21,7 @@ import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/video/VideoResultsPanel';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PRODUCT_CATEGORIES, SCENE_TYPES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { estimateCredits } from '@/config/videoCreditPricing';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
@@ -248,9 +249,21 @@ export default function AnimateVideo() {
     if (changes.cameraMotion) setCameraMotion(changes.cameraMotion);
     if (changes.realismLevel) setRealismLevel(changes.realismLevel);
     if (changes.loopStyle) setLoopStyle(changes.loopStyle);
+    // Preservation overrides from correction presets
+    if (changes.preserveScene === 'true') setPreserveScene(true);
+    if (changes.preserveProductDetails === 'true') setPreserveProductDetails(true);
+    if (changes.preserveIdentity === 'true') setPreserveIdentity(true);
+    if (changes.preserveOutfit === 'true') setPreserveOutfit(true);
+
+    // Build the extra negative prompt if correction preset adds one
+    const extraNegative = changes.negativePromptAppend || '';
 
     resetPipeline();
     setTimeout(() => {
+      const effectiveUserPrompt = extraNegative
+        ? `${userPrompt || ''} [Negative: ${extraNegative}]`.trim()
+        : userPrompt || undefined;
+
       runAnimatePipeline({
         imageUrl,
         category, sceneType, motionGoalId,
@@ -259,9 +272,12 @@ export default function AnimateVideo() {
         realismLevel: changes.realismLevel || realismLevel,
         loopStyle: changes.loopStyle || loopStyle,
         motionIntensity: (changes.motionIntensity || motionIntensity) as 'low' | 'medium' | 'high',
-        preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+        preserveScene: changes.preserveScene === 'true' ? true : preserveScene,
+        preserveProductDetails: changes.preserveProductDetails === 'true' ? true : preserveProductDetails,
+        preserveIdentity: changes.preserveIdentity === 'true' ? true : preserveIdentity,
+        preserveOutfit: changes.preserveOutfit === 'true' ? true : preserveOutfit,
         aspectRatio, duration, audioMode,
-        userPrompt: userPrompt || undefined,
+        userPrompt: effectiveUserPrompt,
       });
     }, 50);
   };
@@ -756,6 +772,16 @@ export default function AnimateVideo() {
                 />
               </div>
 
+              {/* Object grounding note */}
+              {analysisResult && !analysisResult.visible_product_detected && (
+                <Alert className="bg-muted/30 border-border">
+                  <AlertDescription className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Eye className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    No product was explicitly provided. VOVV will keep the video grounded to the visible subject and scene.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Generate */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
@@ -858,6 +884,7 @@ export default function AnimateVideo() {
         <VideoResultsPanel
           videoUrl={videoUrl}
           sourceImageUrl={imagePreview || imageUrl || undefined}
+          aspectRatio={aspectRatio}
           generationContext={buildGenerationContext()}
           onReuse={handleReuse}
           onNewProject={handleNewProject}

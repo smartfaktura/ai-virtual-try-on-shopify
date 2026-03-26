@@ -41,6 +41,20 @@ export interface VideoAnalysis {
   recommended_subject_motion?: string;
   recommended_realism?: string;
   recommended_loop_style?: string;
+  // Object grounding fields
+  visible_product_detected?: boolean;
+  visible_object_list?: string[];
+  product_interaction_visible?: boolean;
+}
+
+export interface ObjectGrounding {
+  visible_product_detected: boolean;
+  visible_object_list: string[];
+  allow_new_objects: boolean;
+  allow_new_products: boolean;
+  preserve_visible_objects_only: boolean;
+  product_context_source: 'image_detected' | 'user_added' | 'library_selected' | 'none';
+  scene_expansion_mode: 'restricted' | 'guided' | 'flexible';
 }
 
 export interface VideoStrategy {
@@ -73,6 +87,8 @@ export interface VideoStrategy {
   camera_control_config?: { type: string; config: Record<string, number> };
   // CFG scale override (computed from category + realism)
   cfg_scale_override?: number;
+  // Object grounding
+  object_grounding: ObjectGrounding;
 }
 
 export type WorkflowType = 'animate' | 'ad_sequence' | 'consistent_model';
@@ -295,6 +311,39 @@ export function resolveVideoStrategy(input: ResolverInput): VideoStrategy {
   // ─── Camera Control ───
   const cameraControlConfig = resolveCameraControlConfig(cameraMotion);
 
+  // ─── Object Grounding ───
+  const visibleProductDetected = analysis.visible_product_detected ?? false;
+  const visibleObjectList = analysis.visible_object_list ?? [];
+  const productInteractionVisible = analysis.product_interaction_visible ?? false;
+
+  // Determine product context source
+  let productContextSource: ObjectGrounding['product_context_source'] = 'none';
+  if (visibleProductDetected) {
+    productContextSource = 'image_detected';
+  }
+  // Note: 'user_added' and 'library_selected' would be set by the caller if applicable
+
+  // Rules: category alone NEVER allows new objects
+  const allowNewObjects = false; // Default safe — only overridden by explicit user action
+  const allowNewProducts = false; // Only true when user explicitly provides product context
+  const preserveVisibleObjectsOnly = true; // Always default to preserving what's visible
+
+  // Scene expansion mode
+  let sceneExpansionMode: ObjectGrounding['scene_expansion_mode'] = 'restricted';
+  if (allowSceneExpansion && realismLevel === 'slightly_stylized') {
+    sceneExpansionMode = 'guided';
+  }
+
+  const objectGrounding: ObjectGrounding = {
+    visible_product_detected: visibleProductDetected,
+    visible_object_list: visibleObjectList,
+    allow_new_objects: allowNewObjects,
+    allow_new_products: allowNewProducts,
+    preserve_visible_objects_only: preserveVisibleObjectsOnly,
+    product_context_source: productContextSource,
+    scene_expansion_mode: sceneExpansionMode,
+  };
+
   const strategy: VideoStrategy = {
     workflow_strategy: `${category}_${motionGoalId}`,
     preserve_scene: preserveScene,
@@ -323,6 +372,7 @@ export function resolveVideoStrategy(input: ResolverInput): VideoStrategy {
     cyclic_motion: cyclicMotion,
     camera_control_config: cameraControlConfig,
     cfg_scale_override: cfgScale,
+    object_grounding: objectGrounding,
   };
 
   // --- Animate Image (ecommerce) ---
