@@ -310,6 +310,13 @@ function UpscalingOverlay() {
   );
 }
 
+function getProviderLabel(provider: string): string {
+  if (provider.includes('seedream')) return 'SDR';
+  if (provider.includes('pro')) return 'PRO';
+  if (provider.includes('flash')) return 'FLASH';
+  return provider.slice(0, 5).toUpperCase();
+}
+
 function ImageCard({
   img,
   idx,
@@ -455,8 +462,14 @@ function ImageCard({
           onLoad={() => setLoaded(true)}
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        {isAdmin && img.providerUsed && (
+          <div className="absolute top-3 left-3 z-10">
+            <Badge variant="secondary" className="bg-black/60 text-white text-[9px] px-1.5 py-0 font-bold shadow-md border-0">
+              {getProviderLabel(img.providerUsed)}
+            </Badge>
+          </div>
+        )}
         {isUpscaling && <UpscalingOverlay />}
-        {actionButtons}
       </div>
     );
   }
@@ -483,9 +496,15 @@ function ImageCard({
         onLoad={() => setLoaded(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      {isAdmin && img.providerUsed && (
+        <div className="absolute top-3 left-3 z-10">
+          <Badge variant="secondary" className="bg-black/60 text-white text-[9px] px-1.5 py-0 font-bold shadow-md border-0">
+            {getProviderLabel(img.providerUsed)}
+          </Badge>
+        </div>
+      )}
       {isUpscaling && <UpscalingOverlay />}
       {actionButtons}
-    </div>
   );
 }
 
