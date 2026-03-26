@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { useAddCustomModel } from '@/hooks/useCustomModels';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';

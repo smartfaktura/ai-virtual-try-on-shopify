@@ -10,7 +10,7 @@ import { Table, TableHeader, TableHead, TableRow, TableCell, TableBody } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, Trash2, ChevronLeft, ChevronRight, MessageCircle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 const PAGE_SIZE = 20;
 

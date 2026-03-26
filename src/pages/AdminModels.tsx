@@ -18,7 +18,7 @@ import type { CustomModel } from '@/hooks/useCustomModels';
 import { mockModels } from '@/data/mockData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 const GENDER_OPTIONS = ['female', 'male', 'non-binary'];
 const BODY_TYPE_OPTIONS = ['slim', 'average', 'athletic', 'curvy', 'plus-size'];

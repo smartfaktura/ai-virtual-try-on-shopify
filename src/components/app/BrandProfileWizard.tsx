@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
 import { buildBrandPrompt, COLOR_FEEL_DESCRIPTIONS } from '@/lib/brandPromptBuilder';
 import type { BrandProfileData } from '@/lib/brandPromptBuilder';

@@ -13,7 +13,7 @@ import { useUserModels, useDeleteUserModel } from '@/hooks/useUserModels';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 import { useCredits } from '@/contexts/CreditContext';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 interface ModelSelectorChipProps {
   selectedModel: ModelProfile | null;

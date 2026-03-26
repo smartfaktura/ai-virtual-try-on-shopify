@@ -19,7 +19,7 @@ import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
 import { getItemSlug } from '@/lib/slugUtils';
 

@@ -6,7 +6,7 @@ import { MobilePickerSheet } from '@/components/app/freestyle/MobilePickerSheet'
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
 import {
   PRODUCT_CATEGORIES,

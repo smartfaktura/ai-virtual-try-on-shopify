@@ -14,7 +14,7 @@ import {
   Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
   Clock,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { useGenerationQueue, type QueueJob } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';

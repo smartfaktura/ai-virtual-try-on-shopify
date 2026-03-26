@@ -29,7 +29,7 @@ import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { useCredits } from '@/contexts/CreditContext';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
 type Duration = '5' | '10';

@@ -10,7 +10,7 @@ import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
 
 interface WorkflowPreviewModalProps {

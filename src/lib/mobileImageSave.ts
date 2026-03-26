@@ -1,5 +1,5 @@
 import { getExtensionFromContentType } from '@/lib/dropDownload';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 /**
  * Detects if the current device is mobile (iOS/Android).
