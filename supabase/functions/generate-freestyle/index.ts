@@ -1,4 +1,4 @@
-// Force redeploy: cleanup v2 — single client, shared helpers, width-capped AI images (2026-03-19)
+// Force redeploy: v3 — normalized ProviderResult, centralized fallback executor (2026-03-26)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -69,6 +69,7 @@ interface FreestyleRequest {
   productDimensions?: string;
   imageRole?: "edit" | "product" | "model" | "scene";
   editIntent?: string[];
+  promptOnly?: boolean;
 }
 
 // ── Editing intent detection — skip heavy polish for simple edits ─────────
@@ -207,7 +208,6 @@ function polishUserPrompt(
       refs.push(`${refNum}. MODEL: The person must match [MODEL REFERENCE]${identityDetails} — same face, features, skin tone, hair, body. This is a specific individual.`);
     }
     refNum++;
-    // Gender enforcement
     if (modelContext) {
       const lowerCtx = modelContext.toLowerCase();
       if (lowerCtx.startsWith('male')) {
@@ -259,10 +259,8 @@ function polishUserPrompt(
       parts.push(instruction);
     }
   } else if (context.hasModel && !isSelfie) {
-    // Default framing for model shots without explicit selection
     parts.push("FRAMING: Full head, hair, and upper body visible. Natural headroom. Face in upper third of composition.");
   } else if (context.hasProduct && !context.hasModel && !context.hasScene && !isSelfie) {
-    // Product-only without scene: creative angle
     parts.push("FRAMING: Creative product photography angle — overhead, 45-degree, or dramatic perspective. Professional composition with intentional negative space.");
   }
 
@@ -296,23 +294,46 @@ function extractBlockReason(data: Record<string, unknown>): string {
 }
 
 type ContentItem = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
-type GenerateResult = string | { blocked: true; reason: string } | null;
+
+// ── Normalized provider result type ──────────────────────────────────────
+type FailureType =
+  | "rate_limit"
+  | "credits_exhausted"
+  | "server_error"
+  | "timeout"
+  | "network_error"
+  | "no_image_returned"
+  | "unsafe_block"
+  | "invalid_request"
+  | "auth_error"
+  | "unknown";
+
+type ProviderResult = {
+  ok: boolean;
+  imageUrl?: string;
+  blocked?: boolean;
+  blockReason?: string;
+  failureType?: FailureType;
+  retryable?: boolean;
+  statusCode?: number;
+  provider: "nanobanana" | "seedream";
+  model: string;
+  durationMs: number;
+  rawError?: string;
+};
 
 // ── Provider registry — change model IDs here for version upgrades ───────
 const PROVIDERS = {
   "nanobanana-flash": { gateway: "lovable" as const, model: "google/gemini-3.1-flash-image-preview" },
   "nanobanana-pro":   { gateway: "lovable" as const, model: "google/gemini-3-pro-image-preview" },
   "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-251128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
-  // Future: "seedream-5.0": { gateway: "ark", model: "seedream-5-0-260128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
 } as const;
 
 // ── Seedream ARK image generation ────────────────────────────────────────
-// Seedream API natively supports "2K" size for all aspect ratios
 function seedreamSizeForRatio(_aspectRatio: string): string {
   return "2K";
 }
 
-// Map app aspect ratios to Seedream-supported values
 function seedreamAspectRatio(appRatio: string): string {
   const map: Record<string, string> = {
     "1:1": "1:1",
@@ -320,8 +341,8 @@ function seedreamAspectRatio(appRatio: string): string {
     "9:16": "9:16",
     "4:3": "4:3",
     "3:4": "3:4",
-    "4:5": "3:4",   // nearest supported
-    "5:4": "4:3",   // nearest supported
+    "4:5": "3:4",
+    "5:4": "4:3",
     "3:2": "3:2",
     "2:3": "2:3",
     "21:9": "21:9",
@@ -329,93 +350,98 @@ function seedreamAspectRatio(appRatio: string): string {
   return map[appRatio] || "1:1";
 }
 
+// Seedream content moderation error codes
+const SEEDREAM_MODERATION_CODES = [1301, 1302, 1303, 1304, 1305, 1024];
+
+/** Single-attempt Seedream generation — returns normalized ProviderResult */
 async function generateImageSeedream(
   prompt: string,
   imageUrls: string[],
   model: string,
   apiKey: string,
   aspectRatio = "1:1",
-  maxRetries = 2,
-): Promise<GenerateResult> {
+): Promise<ProviderResult> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const size = seedreamSizeForRatio(aspectRatio);
-  console.log(`[seedream] Using size=${size} for aspectRatio=${aspectRatio}`);
+  const attemptStart = performance.now();
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const attemptStart = performance.now();
-    try {
-      const seedreamRatio = seedreamAspectRatio(aspectRatio);
-      console.log(`[seedream] aspect_ratio=${seedreamRatio} (app=${aspectRatio})`);
-      const body: Record<string, unknown> = {
-        model,
-        prompt,
-        size,
-        aspect_ratio: seedreamRatio,
-        response_format: "url",
-        watermark: false,
-        sequential_image_generation: "disabled",
-      };
-      if (imageUrls.length === 1) {
-        body.image = imageUrls[0];
-      } else if (imageUrls.length > 1) {
-        body.image = imageUrls;
-      }
-
-      const response = await fetch(ARK_BASE, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(150_000),
-      });
-
-      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          console.warn(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=429 hasImage=false reason=rate_limit`);
-          if (attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, 2000));
-            continue;
-          }
-          throw { status: 429, message: "Rate limit exceeded on Seedream." };
-        }
-        const errorText = await response.text();
-        console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=${response.status} hasImage=false error=${errorText.slice(0, 200)}`);
-        if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 500));
-          continue;
-        }
-        return null;
-      }
-
-      const data = await response.json();
-      const imageUrl = data?.data?.[0]?.url;
-      if (!imageUrl) {
-        console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=false reason=no_url_in_response`);
-        if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 500));
-          continue;
-        }
-        return null;
-      }
-      console.log(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=true`);
-      return imageUrl;
-    } catch (error: unknown) {
-      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
-      if (typeof error === "object" && error !== null && "status" in error) throw error;
-      const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
-      console.error(`[SDR] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=error hasImage=false reason=${isTimeout ? "timeout" : "exception"}`);
-      if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 1000));
-        continue;
-      }
-      return null;
+  try {
+    const seedreamRatio = seedreamAspectRatio(aspectRatio);
+    const body: Record<string, unknown> = {
+      model,
+      prompt,
+      size,
+      aspect_ratio: seedreamRatio,
+      response_format: "url",
+      watermark: false,
+      sequential_image_generation: "disabled",
+    };
+    if (imageUrls.length === 1) {
+      body.image = imageUrls[0];
+    } else if (imageUrls.length > 1) {
+      body.image = imageUrls;
     }
+
+    const response = await fetch(ARK_BASE, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(150_000),
+    });
+
+    const durationMs = Math.round(performance.now() - attemptStart);
+
+    if (!response.ok) {
+      // Try to parse error body for moderation codes
+      let errorText = "";
+      try { errorText = await response.text(); } catch (_) { /* ignore */ }
+
+      if (response.status === 429) {
+        return { ok: false, failureType: "rate_limit", retryable: true, statusCode: 429, provider: "seedream", model, durationMs, rawError: "Rate limit exceeded" };
+      }
+      if (response.status === 401 || response.status === 403) {
+        return { ok: false, failureType: "auth_error", retryable: false, statusCode: response.status, provider: "seedream", model, durationMs, rawError: errorText.slice(0, 200) };
+      }
+
+      // Check for moderation in error body
+      try {
+        const errJson = JSON.parse(errorText);
+        const errCode = errJson?.error?.code || errJson?.code;
+        if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
+          const reason = errJson?.error?.message || errJson?.message || "Content moderated by Seedream";
+          return { ok: false, failureType: "unsafe_block", blocked: true, blockReason: reason, retryable: false, statusCode: response.status, provider: "seedream", model, durationMs };
+        }
+      } catch (_) { /* not JSON */ }
+
+      return { ok: false, failureType: "server_error", retryable: true, statusCode: response.status, provider: "seedream", model, durationMs, rawError: errorText.slice(0, 200) };
+    }
+
+    const data = await response.json();
+
+    // Check for moderation in successful response body
+    const respCode = data?.error?.code || data?.code;
+    if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
+      const reason = data?.error?.message || data?.message || "Content moderated by Seedream";
+      return { ok: false, failureType: "unsafe_block", blocked: true, blockReason: reason, retryable: false, statusCode: 200, provider: "seedream", model, durationMs };
+    }
+
+    const imageUrl = data?.data?.[0]?.url;
+    if (!imageUrl) {
+      return { ok: false, failureType: "no_image_returned", retryable: true, statusCode: 200, provider: "seedream", model, durationMs, rawError: "No URL in response" };
+    }
+
+    return { ok: true, imageUrl, provider: "seedream", model, durationMs };
+  } catch (error: unknown) {
+    const durationMs = Math.round(performance.now() - attemptStart);
+    const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+    if (isTimeout) {
+      return { ok: false, failureType: "timeout", retryable: true, provider: "seedream", model, durationMs, rawError: "Request timed out (150s)" };
+    }
+    return { ok: false, failureType: "network_error", retryable: true, provider: "seedream", model, durationMs, rawError: error instanceof Error ? error.message : "Unknown error" };
   }
-  return null;
 }
 
 // ── Seedream image role tracking ─────────────────────────────────────────
@@ -425,9 +451,7 @@ interface SeedreamRoleImage {
 }
 
 // ── Clean prompt for Seedream (strip Gemini-specific directives) ─────────
-// roleImages is used to replace [TAG] labels with numbered "image N" refs
 function cleanPromptForSeedream(prompt: string, roleImages?: SeedreamRoleImage[]): string {
-  // 1. Strip everything AFTER the "Output aspect ratio:" line, but keep the ratio instruction
   const aspectIdx = prompt.indexOf("Output aspect ratio:");
   if (aspectIdx !== -1) {
     const lineEnd = prompt.indexOf("\n", aspectIdx);
@@ -435,15 +459,10 @@ function cleanPromptForSeedream(prompt: string, roleImages?: SeedreamRoleImage[]
     prompt = prompt.substring(0, aspectIdx).trimEnd() + "\n\n" + aspectLine.trim();
   }
 
-  // 2. Strip BATCH CONSISTENCY block
   prompt = prompt.replace(/BATCH CONSISTENCY:[\s\S]*/i, "").trimEnd();
-
-  // 3. Strip "Variation N:" suffixes
   prompt = prompt.replace(/Variation\s+\d+:.*/gi, "").trimEnd();
 
-  // 4. Replace image reference labels with numbered image refs (or fallback)
   if (roleImages && roleImages.length > 0) {
-    // Build index lookup: role → 1-based position in the array
     const roleIndex: Record<string, number> = {};
     roleImages.forEach((img, i) => {
       if (!roleIndex[img.role]) roleIndex[img.role] = i + 1;
@@ -461,7 +480,6 @@ function cleanPromptForSeedream(prompt: string, roleImages?: SeedreamRoleImage[]
       .replace(/\[SCENE REFERENCE\]/g, sceneIdx ? `the scene/background from image ${sceneIdx}` : "the scene from the reference")
       .replace(/\[REFERENCE IMAGE\]/g, otherIdx ? `image ${otherIdx}` : "the reference image");
   } else {
-    // Fallback: generic natural language (no role info available)
     prompt = prompt
       .replace(/\[MODEL REFERENCE\]/g, "the model from the reference")
       .replace(/\[PRODUCT REFERENCE\]/g, "the product from the reference")
@@ -470,14 +488,10 @@ function cleanPromptForSeedream(prompt: string, roleImages?: SeedreamRoleImage[]
       .replace(/\[REFERENCE IMAGE\]/g, "the reference image");
   }
 
-  // 5. Collapse excessive whitespace
   prompt = prompt.replace(/\n{3,}/g, "\n\n").trim();
-
   return prompt;
 }
 
-// ── Build Seedream role directive block ──────────────────────────────────
-// Appends a numbered IMAGE ROLES block that maps 1:1 to the image array order
 function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
   if (roleImages.length === 0) return "";
 
@@ -502,9 +516,6 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
   return lines.join("\n");
 }
 
-// ── Convert content array to Seedream flat inputs ────────────────────────
-// Categorizes images by role, orders deterministically (product → model → scene → other),
-// and appends a numbered role directive to the prompt.
 function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string; imageUrls: string[] } {
   const textParts: string[] = [];
   const roleImages: SeedreamRoleImage[] = [];
@@ -516,7 +527,6 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
       lastTextBeforeImage = item.text;
     } else if (item.type === "image_url") {
       const url = item.image_url.url;
-      // Detect role from the label text preceding the image
       let role: SeedreamRoleImage["role"] = "other";
       if (/\[MODEL REFERENCE\]|model|person|face|portrait/i.test(lastTextBeforeImage)) {
         role = "model";
@@ -529,7 +539,6 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
     }
   }
 
-  // Deterministic ordering: product FIRST (highest weight) → model → scene → other
   const orderedRoleImages = [
     ...roleImages.filter(i => i.role === "product"),
     ...roleImages.filter(i => i.role === "model"),
@@ -542,8 +551,6 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
 
   const rawPrompt = textParts.join("\n");
   const cleanedPrompt = cleanPromptForSeedream(rawPrompt, orderedRoleImages);
-
-  // Append role directive so Seedream knows exactly what each numbered image is
   const roleDirective = buildSeedreamRoleDirective(orderedRoleImages);
   const finalPrompt = roleDirective ? `${cleanedPrompt}\n${roleDirective}` : cleanedPrompt;
 
@@ -639,115 +646,78 @@ async function uploadBase64ToStorage(
   return urlData.publicUrl;
 }
 
-// ── AI image generation with structured content ───────────────────────────
+/** Single-attempt Nano Banana generation — returns normalized ProviderResult */
 async function generateImage(
   content: ContentItem[],
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  maxRetries = 2,
   quality: "standard" | "high" = "standard"
-): Promise<GenerateResult> {
-  // Pro models need longer timeouts — they regularly take 90-120s with multiple images
+): Promise<ProviderResult> {
   const isProModel = /gemini-3-pro|gemini-3\.1-pro/i.test(model);
   const timeoutMs = isProModel ? 150_000 : 90_000;
+  const attemptStart = performance.now();
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const attemptStart = performance.now();
-    try {
-      const response = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
+  try {
+    const response = await fetch(
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content }],
+          modalities: ["image", "text"],
+          max_tokens: 8192,
+          image_config: {
+            ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
+            image_size: quality === 'high' ? '2K' : '1K',
           },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: "user", content }],
-            modalities: ["image", "text"],
-            max_tokens: 8192,
-            image_config: {
-              ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
-              image_size: quality === 'high' ? '2K' : '1K',
-            },
-          }),
-          signal: AbortSignal.timeout(timeoutMs),
-        }
-      );
-
-      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          console.warn(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=429 hasImage=false reason=rate_limit`);
-          if (attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, 1500));
-            continue;
-          }
-          throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
-        }
-        if (response.status === 402) {
-          console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=402 hasImage=false reason=credits_exhausted`);
-          throw { status: 402, message: "Credits exhausted. Please add more credits." };
-        }
-        const errorText = await response.text();
-        console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=${response.status} hasImage=false error=${errorText.slice(0, 200)}`);
-        if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 500));
-          continue;
-        }
-        throw new Error(`AI Gateway error: ${response.status}`);
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
       }
+    );
 
-      const data = await response.json();
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const durationMs = Math.round(performance.now() - attemptStart);
 
-      if (!imageUrl) {
-        if (isContentBlocked(data)) {
-          const reason = extractBlockReason(data);
-          const durationSec2 = ((performance.now() - attemptStart) / 1000).toFixed(1);
-          console.warn(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec2}s status=200 hasImage=false reason=content_blocked blockReason="${reason.slice(0, 100)}"`);
-          return { blocked: true, reason };
-        }
-
-        console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=false reason=no_image_in_response`);
-        if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 500));
-          continue;
-        }
-        return null;
+    if (!response.ok) {
+      if (response.status === 429) {
+        return { ok: false, failureType: "rate_limit", retryable: true, statusCode: 429, provider: "nanobanana", model, durationMs, rawError: "Rate limit exceeded" };
       }
-
-      console.log(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=200 hasImage=true`);
-      return imageUrl;
-    } catch (error: unknown) {
-      const durationSec = ((performance.now() - attemptStart) / 1000).toFixed(1);
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const statusErr = error as { status: number };
-        // For 429, don't re-throw — let the per-image loop handle it as a soft error
-        if (statusErr.status === 429) {
-          throw error;
-        }
-        throw error;
+      if (response.status === 402) {
+        return { ok: false, failureType: "credits_exhausted", retryable: false, statusCode: 402, provider: "nanobanana", model, durationMs, rawError: "Credits exhausted" };
       }
-      const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
-      // For timeouts, only retry once — a slow model won't get faster on retry
-      const effectiveMaxRetries = isTimeout ? Math.min(maxRetries, 1) : maxRetries;
-      console.error(`[NB] attempt=${attempt + 1}/${maxRetries + 1} model=${model} duration=${durationSec}s status=error hasImage=false reason=${isTimeout ? "timeout" : "exception"}`);
-      if (attempt < effectiveMaxRetries) {
-        await new Promise((r) => setTimeout(r, isTimeout ? 1000 : 500));
-        continue;
+      if (response.status === 401 || response.status === 403) {
+        return { ok: false, failureType: "auth_error", retryable: false, statusCode: response.status, provider: "nanobanana", model, durationMs };
       }
-      if (isTimeout) {
-        throw new Error("Generation timed out — the AI model took longer than expected. This can happen with complex prompts or multiple reference images. Please try again.");
-      }
-      throw error;
+      let errorText = "";
+      try { errorText = await response.text(); } catch (_) { /* ignore */ }
+      return { ok: false, failureType: "server_error", retryable: true, statusCode: response.status, provider: "nanobanana", model, durationMs, rawError: errorText.slice(0, 200) };
     }
-  }
 
-  return null;
+    const data = await response.json();
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!imageUrl) {
+      if (isContentBlocked(data)) {
+        const reason = extractBlockReason(data);
+        return { ok: false, failureType: "unsafe_block", blocked: true, blockReason: reason, retryable: false, statusCode: 200, provider: "nanobanana", model, durationMs };
+      }
+      return { ok: false, failureType: "no_image_returned", retryable: true, statusCode: 200, provider: "nanobanana", model, durationMs, rawError: "No image in response" };
+    }
+
+    return { ok: true, imageUrl, provider: "nanobanana", model, durationMs };
+  } catch (error: unknown) {
+    const durationMs = Math.round(performance.now() - attemptStart);
+    const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+    if (isTimeout) {
+      return { ok: false, failureType: "timeout", retryable: true, provider: "nanobanana", model, durationMs, rawError: `Request timed out (${timeoutMs / 1000}s)` };
+    }
+    return { ok: false, failureType: "network_error", retryable: true, provider: "nanobanana", model, durationMs, rawError: error instanceof Error ? error.message : "Unknown error" };
+  }
 }
 
 // ── Build labeled content array with interleaved text + images ────────────
@@ -761,16 +731,13 @@ function buildContentArray(
 ): ContentItem[] {
   const content: ContentItem[] = [];
 
-  // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Product image (from selected product)
   if (productImage) {
     content.push({ type: "text", text: "[PRODUCT REFERENCE]" });
     content.push({ type: "image_url", image_url: { url: productImage } });
   }
 
-  // Source/reference image (user-uploaded) — label based on imageRole
   if (sourceImage) {
     const label = imageRole === 'product' ? '[PRODUCT IMAGE]'
       : imageRole === 'model' ? '[MODEL REFERENCE]'
@@ -791,6 +758,105 @@ function buildContentArray(
   }
 
   return content;
+}
+
+// ── Centralized Freestyle Fallback Executor ──────────────────────────────
+// 3-attempt chain: primary → other provider → final rescue on primary
+// No Pro→Flash auto-downgrade. Terminal failures stop immediately.
+
+interface FallbackOpts {
+  primaryProvider: "nanobanana" | "seedream";
+  primaryModel: string;
+  contentArray: ContentItem[];
+  aspectRatio: string;
+  quality: "standard" | "high";
+  lovableApiKey: string;
+  arkApiKey?: string;
+  canUseSeedream: boolean;  // false if edit mode or no ARK key
+  imageIndex: number;       // for logging
+  jobId?: string;           // for logging
+}
+
+async function runFreestyleWithFallback(opts: FallbackOpts): Promise<ProviderResult> {
+  const { primaryProvider, primaryModel, contentArray, aspectRatio, quality, lovableApiKey, arkApiKey, canUseSeedream, imageIndex, jobId } = opts;
+
+  const logPrefix = `[FREESTYLE] ${jobId ? `job=${jobId} ` : ""}img=${imageIndex + 1}`;
+
+  // Build the attempt chain: [primary, secondary, rescue]
+  type AttemptDef = { provider: "nanobanana" | "seedream"; model: string };
+  const chain: AttemptDef[] = [];
+
+  // Attempt 1: primary
+  chain.push({ provider: primaryProvider, model: primaryModel });
+
+  // Attempt 2: other provider
+  if (primaryProvider === "nanobanana" && canUseSeedream) {
+    chain.push({ provider: "seedream", model: PROVIDERS["seedream-4.5"].model });
+  } else if (primaryProvider === "seedream") {
+    // Fallback to the same NB model (Pro stays Pro, Flash stays Flash)
+    chain.push({ provider: "nanobanana", model: primaryModel.includes("seedream") ? PROVIDERS["nanobanana-pro"].model : primaryModel });
+  } else {
+    // No seedream available — rescue on same provider
+    chain.push({ provider: primaryProvider, model: primaryModel });
+  }
+
+  // Attempt 3: final rescue on original provider
+  chain.push({ provider: primaryProvider, model: primaryProvider === "seedream" ? PROVIDERS["seedream-4.5"].model : primaryModel });
+
+  // Deduplicate consecutive identical attempts
+  const dedupedChain: AttemptDef[] = [chain[0]];
+  for (let c = 1; c < chain.length; c++) {
+    const prev = dedupedChain[dedupedChain.length - 1];
+    if (chain[c].provider !== prev.provider || chain[c].model !== prev.model) {
+      dedupedChain.push(chain[c]);
+    }
+  }
+
+  const summaryParts: string[] = [];
+  let lastResult: ProviderResult | null = null;
+
+  for (let attempt = 0; attempt < dedupedChain.length; attempt++) {
+    const def = dedupedChain[attempt];
+    const maxAttempts = dedupedChain.length;
+
+    let result: ProviderResult;
+    if (def.provider === "seedream" && arkApiKey) {
+      const seedreamInput = convertContentToSeedreamInput(contentArray);
+      result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, def.model, arkApiKey, aspectRatio);
+    } else {
+      result = await generateImage(contentArray, lovableApiKey, def.model, aspectRatio, quality);
+    }
+
+    const durationSec = (result.durationMs / 1000).toFixed(1);
+    const outcome = result.ok ? "ok" : result.failureType || "unknown";
+    console.log(`${logPrefix} attempt=${attempt + 1}/${maxAttempts} provider=${def.provider} model=${def.model} duration=${durationSec}s result=${outcome}${result.retryable ? " retryable=true" : ""}${result.blocked ? " blocked=true" : ""}`);
+
+    summaryParts.push(`${def.provider}/${def.model}→${outcome}`);
+    lastResult = result;
+
+    // Success — return immediately
+    if (result.ok) {
+      console.log(`${logPrefix} summary: ${summaryParts.join(" | ")} (total=${durationSec}s)`);
+      return result;
+    }
+
+    // Terminal failure — stop the chain
+    if (!result.retryable) {
+      console.log(`${logPrefix} terminal failure: ${result.failureType} — stopping fallback chain`);
+      console.log(`${logPrefix} summary: ${summaryParts.join(" | ")}`);
+      return result;
+    }
+
+    // Retryable — log fallback and continue
+    if (attempt < dedupedChain.length - 1) {
+      const next = dedupedChain[attempt + 1];
+      console.log(`[FALLBACK] ${logPrefix} ${def.provider}/${def.model} → trying ${next.provider}/${next.model}`);
+    }
+  }
+
+  // All attempts exhausted
+  console.log(`${logPrefix} all attempts exhausted: ${summaryParts.join(" | ")}`);
+  return lastResult!;
 }
 
 /** Save a freestyle_generations record + optionally early-finalize queue job */
@@ -853,7 +919,6 @@ async function completeQueueJob(
 
   if (currentJob?.status === "cancelled") {
     console.log(`[generate-freestyle] Job ${jobId} was cancelled — skipping completion`);
-    // Clean up any freestyle_generations rows saved during this cancelled run
     if (images.length > 0) {
       await supabase
         .from("freestyle_generations")
@@ -868,7 +933,6 @@ async function completeQueueJob(
   const generatedCount = images.length;
 
   if (generatedCount === 0) {
-    // Content blocked: mark as completed with contentBlocked flag so UI shows the blocked card
     if (contentBlocked) {
       const result = { images: [], generatedCount: 0, requestedCount, contentBlocked: true, blockReason };
       const { error: cbErr } = await supabase.from("generation_queue").update({
@@ -894,7 +958,6 @@ async function completeQueueJob(
     await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
     console.log(`[generate-freestyle] Refunded ${creditsReserved} credits for ${contentBlocked ? "blocked" : "failed"} job ${jobId}`);
 
-    // Fire-and-forget: send generation failed email if user opted in
     if (!contentBlocked) {
       try {
         const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
@@ -924,10 +987,6 @@ async function completeQueueJob(
     if (retryErr) console.error(`[generate-freestyle] Queue update retry also failed for ${jobId}:`, retryErr.message);
   }
 
-  // Freestyle saves its own records in freestyle_generations (done inline),
-  // but we still need a generation_jobs record for credit tracking
-  // No generation_jobs insert for freestyle — it uses freestyle_generations table
-
   if (generatedCount < requestedCount) {
     const perImageCost = Math.floor(creditsReserved / requestedCount);
     const refundAmount = perImageCost * (requestedCount - generatedCount);
@@ -939,7 +998,6 @@ async function completeQueueJob(
 
   console.log(`[generate-freestyle] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
 
-  // Fire-and-forget: send generation complete email (only if user opted in)
   try {
     const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
     const settings = (profile?.settings as Record<string, unknown>) || {};
@@ -992,7 +1050,6 @@ serve(async (req) => {
       );
     }
 
-    // Single Supabase admin client for the entire request
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
     const body: FreestyleRequest & { job_id?: string; credits_reserved?: number } = await req.json();
@@ -1019,9 +1076,6 @@ serve(async (req) => {
       body.sceneImage = undefined;
     }
 
-
-    // Queue-mode optimizations: cap to 1 image, reduce retries
-    const maxRetries = isQueueInternal ? 1 : 2;
     const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
 
     // ── Perspective mode: skip all generic prompt logic ──────────────────
@@ -1070,7 +1124,6 @@ serve(async (req) => {
 
     let finalPrompt: string;
     if (isPerspective) {
-      // Perspective jobs: prompt is fully built by the hook — use as-is
       finalPrompt = enrichedPrompt;
     } else if (body.polishPrompt) {
       finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions, body.imageRole, body.editIntent);
@@ -1086,7 +1139,6 @@ serve(async (req) => {
         }
         if (parts.length > 0) unpolished += `\n\nBrand style: ${parts.join(", ")}`;
       }
-      // Brand do-not rules as positive reframing
       const doNotRules = body.brandProfile?.doNotRules || [];
       if (doNotRules.length > 0) {
         unpolished += `\n\nBrand constraints: ${doNotRules.join(", ")}`;
@@ -1094,7 +1146,6 @@ serve(async (req) => {
       if (body.cameraStyle === "natural") {
         unpolished += `\n\nCAMERA RENDERING STYLE — NATURAL (iPhone): Shot on a latest-generation iPhone. Ultra-sharp details across the entire frame with deep depth of field (everything in focus, minimal bokeh). True-to-life, unedited color reproduction — no color grading, no warm/cool push. Natural ambient lighting only. The image should feel authentic and unprocessed.`;
       }
-      // Framing instructions for unpolished path
       if (body.framing) {
         const instruction = buildFramingInstruction(body.framing, !!body.modelImage);
         if (instruction) {
@@ -1117,6 +1168,9 @@ serve(async (req) => {
     if (body.imageRole === 'edit' && providerOverride === "seedream-4.5") {
       console.log("[generate-freestyle] Edit mode: forcing Nano Banana (Seedream cannot edit images)");
     }
+
+    // Determine if Seedream can be used as fallback
+    const canUseSeedream = !!ARK_API_KEY && body.imageRole !== 'edit' && providerOverride !== "nanobanana";
 
     console.log("[generate-freestyle] ARK key present:", !!ARK_API_KEY);
     console.log("Freestyle generation:", {
@@ -1143,10 +1197,11 @@ serve(async (req) => {
       jobId: body.job_id || null,
       providerOverride,
       useSeedream,
+      canUseSeedream,
       hasArkKey: !!ARK_API_KEY,
     });
 
-    // Extend timeout_at for queue jobs — 5 min default is too tight for cold boot + 429 + fallback
+    // Extend timeout_at for queue jobs
     if (isQueueInternal && body.job_id) {
       try {
         await supabase.from('generation_queue')
@@ -1169,223 +1224,129 @@ serve(async (req) => {
       : "";
 
     for (let i = 0; i < effectiveImageCount; i++) {
-      try {
-        const variationSuffix =
-          i === 0
-            ? batchConsistency
-            : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
+      const variationSuffix =
+        i === 0
+          ? batchConsistency
+          : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
-        const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
+      const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
 
-        // For perspective jobs, inject referenceAngleImage as [REFERENCE IMAGE]
-        // with angle-aware semantics (the prompt already handles the labeling)
-        const effectiveSourceImage = isPerspective ? undefined : body.sourceImage;
-        const contentArray = buildContentArray(
-          promptWithVariation,
-          effectiveSourceImage,
-          body.productImage,
-          body.modelImage,
-          body.sceneImage,
-          body.imageRole,
-        );
+      const effectiveSourceImage = isPerspective ? undefined : body.sourceImage;
+      const contentArray = buildContentArray(
+        promptWithVariation,
+        effectiveSourceImage,
+        body.productImage,
+        body.modelImage,
+        body.sceneImage,
+        body.imageRole,
+      );
 
-        // Append referenceAngleImage as [REFERENCE IMAGE] for perspective jobs
-        if (isPerspective && referenceAngleImage) {
-          contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
-          contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
-        }
+      if (isPerspective && referenceAngleImage) {
+        contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
+        contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
+      }
 
-        let result: GenerateResult;
-        let actualProvider = useSeedream ? "seedream-4.5" : aiModel;
+      // Determine primary provider/model for this image
+      const primaryProvider: "nanobanana" | "seedream" = useSeedream ? "seedream" : "nanobanana";
+      const primaryModel = useSeedream ? PROVIDERS["seedream-4.5"].model : aiModel;
 
-        if (useSeedream) {
-          // Seedream path
-          const seedreamInput = convertContentToSeedreamInput(contentArray);
-          console.log(`[generate-freestyle] Using Seedream 4.5 (provider override)`);
-          result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY!, body.aspectRatio, maxRetries);
-          // Cross-provider fallback: Seedream failed → try Nano Banana
-          if (result === null) {
-            console.log(`[FALLBACK] primary=seedream-4.5 result=null → trying ${aiModel}`);
-            result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, 0, body.quality || 'standard');
-            if (result !== null) actualProvider = aiModel;
-          }
-        } else {
-          // Nano Banana (Gemini) path
-          result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
-          // Inner fallback: Pro → Flash
-          if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
-            console.log(`[FALLBACK] primary=${aiModel} result=null → trying google/gemini-3.1-flash-image-preview`);
-            result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
-            if (result !== null) actualProvider = "google/gemini-3.1-flash-image-preview";
-          }
-          // Cross-provider fallback: Nano Banana failed → try Seedream (if key available)
-          if (result === null && ARK_API_KEY && providerOverride !== "nanobanana") {
-            console.log(`[FALLBACK] primary=nanobanana(${aiModel}) result=null → trying seedream-4.5`);
-            const seedreamInput = convertContentToSeedreamInput(contentArray);
-            result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
-            if (result !== null) actualProvider = "seedream-4.5";
-          }
-        }
+      // Run centralized fallback executor
+      const result = await runFreestyleWithFallback({
+        primaryProvider,
+        primaryModel,
+        contentArray,
+        aspectRatio: body.aspectRatio,
+        quality: body.quality || "standard",
+        lovableApiKey: LOVABLE_API_KEY,
+        arkApiKey: ARK_API_KEY,
+        canUseSeedream,
+        imageIndex: i,
+        jobId: body.job_id,
+      });
+
+      const actualProvider = `${result.provider}/${result.model}`;
+
+      if (result.ok) {
+        // Upload to storage
+        const publicUrl = result.imageUrl!.startsWith("http")
+          ? await downloadAndUploadToStorage(result.imageUrl!, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+          : await uploadBase64ToStorage(result.imageUrl!, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        images.push(publicUrl);
         lastActualProvider = actualProvider;
+        console.log(`[generate-freestyle] Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
 
-        if (result && typeof result === "object" && "blocked" in result) {
-          contentBlocked = true;
-          blockReason = result.reason;
-          console.warn(`Image ${i + 1} blocked by content safety filter`);
-          break;
-        } else if (typeof result === "string") {
-          // Seedream returns hosted URLs; Gemini returns base64 data URLs
-          const publicUrl = result.startsWith("http")
-            ? await downloadAndUploadToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-            : await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-          images.push(publicUrl);
-          console.log(`[generate-freestyle] Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
-
-          // Heartbeat: update queue with partial progress so cleanup_stale_jobs can recover
-          if (isQueueInternal && body.job_id) {
-            try {
-              await supabase.from('generation_queue')
-                .update({ result: { images, generatedCount: images.length, requestedCount: effectiveImageCount } })
-                .eq('id', body.job_id);
-              console.log(`[generate-freestyle] Heartbeat: saved ${images.length} images to queue result`);
-            } catch (hbErr) {
-              console.warn(`[generate-freestyle] Heartbeat update failed:`, hbErr);
-            }
+        // Heartbeat: update queue with partial progress
+        if (isQueueInternal && body.job_id) {
+          try {
+            await supabase.from('generation_queue')
+              .update({ result: { images, generatedCount: images.length, requestedCount: effectiveImageCount } })
+              .eq('id', body.job_id);
+            console.log(`[generate-freestyle] Heartbeat: saved ${images.length} images to queue result`);
+          } catch (hbErr) {
+            console.warn(`[generate-freestyle] Heartbeat update failed:`, hbErr);
           }
-
-          // Save to freestyle_generations DB when called from queue
-          if (isQueueInternal) {
-            // Check if job was cancelled before saving
-            if (body.job_id) {
-              const { data: jobCheck } = await supabase
-                .from('generation_queue')
-                .select('status')
-                .eq('id', body.job_id)
-                .single();
-              if (jobCheck?.status === 'cancelled') {
-                console.log(`[generate-freestyle] Job ${body.job_id} cancelled — skipping save, breaking loop`);
-                // Remove the already-uploaded storage file
-                try {
-                  const urlObj = new URL(publicUrl);
-                  const pathParts = urlObj.pathname.split('/freestyle-images/');
-                  if (pathParts[1]) {
-                    const storagePath = decodeURIComponent(pathParts[1]);
-                    await supabase.storage.from('freestyle-images').remove([storagePath]);
-                  }
-                } catch (_e) {}
-                // Remove this URL from images array so completeQueueJob cleanup is accurate
-                images.pop();
-                break;
-              }
-            }
-            try {
-              (body as any).providerUsed = actualProvider;
-              await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
-
-              // Early finalize: in queue mode (1 image), complete immediately after first success
-              if (body.job_id && images.length > 0) {
-                console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
-                const elapsedMs = Math.round(performance.now() - requestStartTime);
-                console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${actualProvider}`);
-                await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, actualProvider, elapsedMs);
-                return new Response(
-                  JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
-                  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                );
-              }
-            } catch (dbErr) {
-              console.error(`[generate-freestyle] Failed to save freestyle_generations record:`, dbErr);
-            }
-          }
-        } else {
-          errors.push(`Image ${i + 1} failed to generate`);
         }
-      } catch (error: unknown) {
-        if (typeof error === "object" && error !== null && "status" in error) {
-          const statusError = error as { status: number; message: string };
 
-          // For 429, try cross-provider fallback before giving up
-          if (statusError.status === 429) {
-            console.warn(`429 on primary model — trying cross-provider fallback`);
-            try {
-              const fallbackPrompt = `${aspectPrompt}${batchConsistency}`;
-              const contentArray = buildContentArray(
-                fallbackPrompt,
-                isPerspective ? undefined : body.sourceImage,
-                body.productImage,
-                body.modelImage,
-                body.sceneImage,
-                body.imageRole,
-              );
-              if (isPerspective && referenceAngleImage) {
-                contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
-                contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
-              }
-
-              let fallbackResult: GenerateResult = null;
-              if (useSeedream) {
-                // Was using Seedream, fallback to Nano Banana
-                const fallbackModel = aiModel.includes("flash")
-                  ? "google/gemini-3-pro-image-preview"
-                  : "google/gemini-3.1-flash-image-preview";
-                fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
-              } else if (ARK_API_KEY) {
-                // Was using Nano Banana, fallback to Seedream
-                const seedreamInput = convertContentToSeedreamInput(contentArray);
-                fallbackResult = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
-              } else {
-                // No Seedream key, try the alternate Gemini model
-                const fallbackModel = aiModel.includes("flash")
-                  ? "google/gemini-3-pro-image-preview"
-                  : "google/gemini-3.1-flash-image-preview";
-                fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
-              }
-
-              if (typeof fallbackResult === "string") {
-                const publicUrl = fallbackResult.startsWith("http")
-                  ? await downloadAndUploadToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-                  : await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-                images.push(publicUrl);
-                console.log(`[generate-freestyle] Cross-provider fallback succeeded for image ${i + 1}`);
-
-                // Save to freestyle_generations so image appears in gallery
-                try {
-                  await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
-
-                  // Early finalize in queue mode after fallback success
-                  if (isQueueInternal && body.job_id && images.length > 0) {
-                    console.log(`[generate-freestyle] Early finalize (fallback): completing queue job ${body.job_id}`);
-                    const elapsedMs = Math.round(performance.now() - requestStartTime);
-                    console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=fallback`);
-                    await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, "fallback", elapsedMs);
-                    return new Response(
-                      JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
-                      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                    );
-                  }
-                } catch (dbErrFb) {
-                  console.error(`[generate-freestyle] Failed to save freestyle_generations record (fallback):`, dbErrFb);
+        // Save to freestyle_generations DB when called from queue
+        if (isQueueInternal) {
+          // Check if job was cancelled before saving
+          if (body.job_id) {
+            const { data: jobCheck } = await supabase
+              .from('generation_queue')
+              .select('status')
+              .eq('id', body.job_id)
+              .single();
+            if (jobCheck?.status === 'cancelled') {
+              console.log(`[generate-freestyle] Job ${body.job_id} cancelled — skipping save, breaking loop`);
+              try {
+                const urlObj = new URL(publicUrl);
+                const pathParts = urlObj.pathname.split('/freestyle-images/');
+                if (pathParts[1]) {
+                  const storagePath = decodeURIComponent(pathParts[1]);
+                  await supabase.storage.from('freestyle-images').remove([storagePath]);
                 }
-
-                continue;
-              }
-            } catch (fallbackErr) {
-              console.error(`Cross-provider fallback also failed:`, fallbackErr);
+              } catch (_e) {}
+              images.pop();
+              break;
             }
-            errors.push(`Image ${i + 1}: Rate limited on all providers`);
-            continue;
           }
+          try {
+            (body as any).providerUsed = actualProvider;
+            await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
 
-          if (isQueueInternal && body.job_id) {
-            const elapsedMs = Math.round(performance.now() - requestStartTime);
-            await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>, false, null, lastActualProvider, elapsedMs);
+            // Early finalize: in queue mode (1 image), complete immediately after first success
+            if (body.job_id && images.length > 0) {
+              console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
+              const elapsedMs = Math.round(performance.now() - requestStartTime);
+              console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${actualProvider}`);
+              await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, actualProvider, elapsedMs);
+              return new Response(
+                JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              );
+            }
+          } catch (dbErr) {
+            console.error(`[generate-freestyle] Failed to save freestyle_generations record:`, dbErr);
           }
-          return new Response(
-            JSON.stringify({ error: statusError.message }),
-            { status: statusError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
         }
-        errors.push(`Image ${i + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
+      } else if (result.blocked) {
+        contentBlocked = true;
+        blockReason = result.blockReason || "Content blocked by safety filter";
+        console.warn(`Image ${i + 1} blocked by content safety filter`);
+        break;
+      } else if (result.failureType === "credits_exhausted") {
+        // Terminal — complete queue job and return 402
+        if (isQueueInternal && body.job_id) {
+          const elapsedMs = Math.round(performance.now() - requestStartTime);
+          await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, ["Credits exhausted"], body as unknown as Record<string, unknown>, false, null, lastActualProvider, elapsedMs);
+        }
+        return new Response(
+          JSON.stringify({ error: "Credits exhausted. Please add more credits." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } else {
+        // All retries exhausted — record the error
+        errors.push(`Image ${i + 1}: ${result.failureType || "unknown"} (${result.rawError || "no details"})`);
       }
 
       if (i < effectiveImageCount - 1) {
