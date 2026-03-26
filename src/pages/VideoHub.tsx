@@ -1,4 +1,4 @@
-import { Film, Layers, Users } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
@@ -54,13 +54,22 @@ export default function VideoHub() {
         <div /></PageHeader>
 
       {/* Workflow Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <VideoWorkflowCard
           icon={Film}
           title="Animate Image"
           description="Turn one still image into a polished short video."
           bestFor={['Product hero', 'Campaign motion', 'Social ads']}
           to="/app/video/animate"
+        />
+        <VideoWorkflowCard
+          icon={ArrowRightLeft}
+          title="Start & End Video"
+          description="Create a smooth video between a start image and an end image."
+          bestFor={['Product reveals', 'Before / after', 'Smooth transitions']}
+          to="/app/video/start-end"
+          disabled
+          comingSoon
         />
         <VideoWorkflowCard
           icon={Layers}
@@ -77,6 +86,15 @@ export default function VideoHub() {
           description="Create videos with stronger subject consistency."
           bestFor={['Spokesmodels', 'Fashion clips', 'Creator content']}
           to="/app/video/consistent-model"
+          disabled
+          comingSoon
+        />
+        <VideoWorkflowCard
+          icon={Clapperboard}
+          title="Short Film"
+          description="Plan and generate a premium multi-shot brand film."
+          bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
+          to="/app/video/short-film"
           disabled
           comingSoon
         />
