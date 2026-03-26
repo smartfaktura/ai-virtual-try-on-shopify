@@ -225,12 +225,12 @@ function polishUserPrompt(
 
   if (context.hasScene) {
     if (context.hasModel) {
-      refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
+      refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Replicate the camera angle, framing, and composition of the scene image — if it shows a view through a window, shoot through that window; if it shows a low angle, use a low angle. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
     } else if (context.isOnModelScene && context.hasProduct) {
       // On-model scene category but no explicit model selected — inject person placement
-      refs.push(`${refNum}. SCENE: Place a professional model naturally INTO the environment shown in [SCENE REFERENCE]. The model should wear the product as the hero piece with a complete, styled outfit. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
+      refs.push(`${refNum}. SCENE: Place a professional model naturally INTO the environment shown in [SCENE REFERENCE]. Replicate the camera angle, framing, and composition of the scene image — if it shows a view through a window, shoot through that window; if it shows a low angle, use a low angle. The model should wear the product as the hero piece with a complete, styled outfit. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
     } else {
-      refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.`);
+      refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Replicate the camera angle, framing, and composition of the scene image. Ignore any products in the scene image.`);
     }
     refNum++;
   }
