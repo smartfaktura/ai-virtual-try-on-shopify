@@ -413,8 +413,15 @@ async function generateImageSeedream(
   return null;
 }
 
+// ── Seedream image role tracking ─────────────────────────────────────────
+interface SeedreamRoleImage {
+  url: string;
+  role: "model" | "product" | "scene" | "other";
+}
+
 // ── Clean prompt for Seedream (strip Gemini-specific directives) ─────────
-function cleanPromptForSeedream(prompt: string): string {
+// roleImages is used to replace [TAG] labels with numbered "image N" refs
+function cleanPromptForSeedream(prompt: string, roleImages?: SeedreamRoleImage[]): string {
   // 1. Strip "Output aspect ratio: ..." block and everything after it
   const aspectIdx = prompt.indexOf("Output aspect ratio:");
   if (aspectIdx !== -1) {
@@ -427,13 +434,34 @@ function cleanPromptForSeedream(prompt: string): string {
   // 3. Strip "Variation N:" suffixes
   prompt = prompt.replace(/Variation\s+\d+:.*/gi, "").trimEnd();
 
-  // 4. Replace image reference labels with natural language
-  prompt = prompt
-    .replace(/\[MODEL REFERENCE\]/g, "the model from the reference")
-    .replace(/\[PRODUCT REFERENCE\]/g, "the product from the reference")
-    .replace(/\[PRODUCT IMAGE\]/g, "the product from the reference")
-    .replace(/\[SCENE REFERENCE\]/g, "the scene from the reference")
-    .replace(/\[REFERENCE IMAGE\]/g, "the reference image");
+  // 4. Replace image reference labels with numbered image refs (or fallback)
+  if (roleImages && roleImages.length > 0) {
+    // Build index lookup: role → 1-based position in the array
+    const roleIndex: Record<string, number> = {};
+    roleImages.forEach((img, i) => {
+      if (!roleIndex[img.role]) roleIndex[img.role] = i + 1;
+    });
+
+    const modelIdx = roleIndex["model"];
+    const productIdx = roleIndex["product"];
+    const sceneIdx = roleIndex["scene"];
+    const otherIdx = roleIndex["other"];
+
+    prompt = prompt
+      .replace(/\[MODEL REFERENCE\]/g, modelIdx ? `the person from image ${modelIdx}` : "the model from the reference")
+      .replace(/\[PRODUCT REFERENCE\]/g, productIdx ? `the product from image ${productIdx}` : "the product from the reference")
+      .replace(/\[PRODUCT IMAGE\]/g, productIdx ? `the product from image ${productIdx}` : "the product from the reference")
+      .replace(/\[SCENE REFERENCE\]/g, sceneIdx ? `the scene/background from image ${sceneIdx}` : "the scene from the reference")
+      .replace(/\[REFERENCE IMAGE\]/g, otherIdx ? `image ${otherIdx}` : "the reference image");
+  } else {
+    // Fallback: generic natural language (no role info available)
+    prompt = prompt
+      .replace(/\[MODEL REFERENCE\]/g, "the model from the reference")
+      .replace(/\[PRODUCT REFERENCE\]/g, "the product from the reference")
+      .replace(/\[PRODUCT IMAGE\]/g, "the product from the reference")
+      .replace(/\[SCENE REFERENCE\]/g, "the scene from the reference")
+      .replace(/\[REFERENCE IMAGE\]/g, "the reference image");
+  }
 
   // 5. Collapse excessive whitespace
   prompt = prompt.replace(/\n{3,}/g, "\n\n").trim();
@@ -441,14 +469,38 @@ function cleanPromptForSeedream(prompt: string): string {
   return prompt;
 }
 
+// ── Build Seedream role directive block ──────────────────────────────────
+// Appends a numbered IMAGE ROLES block that maps 1:1 to the image array order
+function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
+  if (roleImages.length === 0) return "";
+
+  const lines: string[] = ["", "IMAGE ROLES:"];
+  roleImages.forEach((img, i) => {
+    const idx = i + 1;
+    switch (img.role) {
+      case "model":
+        lines.push(`- Image ${idx} is the MODEL: preserve exact face, hair color, skin tone, body type, and all physical features from this person.`);
+        break;
+      case "product":
+        lines.push(`- Image ${idx} is the PRODUCT: the item to feature. Match exact shape, color, material, logos, and details.`);
+        break;
+      case "scene":
+        lines.push(`- Image ${idx} is the BACKGROUND/SCENE: use for environment, lighting, and atmosphere only. Do not take person or product features from this image.`);
+        break;
+      default:
+        lines.push(`- Image ${idx} is a REFERENCE: use for style/mood inspiration.`);
+        break;
+    }
+  });
+  return lines.join("\n");
+}
+
 // ── Convert content array to Seedream flat inputs ────────────────────────
-// Reorders images so MODEL reference comes first (Seedream weights earlier images more)
+// Categorizes images by role, orders deterministically (model → product → scene → other),
+// and appends a numbered role directive to the prompt.
 function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string; imageUrls: string[] } {
   const textParts: string[] = [];
-  const imageUrls: string[] = [];
-  // Track which images are model references vs others
-  const modelImages: string[] = [];
-  const otherImages: string[] = [];
+  const roleImages: SeedreamRoleImage[] = [];
   let lastTextBeforeImage = "";
 
   for (const item of content) {
@@ -457,26 +509,39 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
       lastTextBeforeImage = item.text;
     } else if (item.type === "image_url") {
       const url = item.image_url.url;
-      // Detect model reference by checking if the preceding text mentions model/person
-      const isModelRef = /model|person|face|portrait/i.test(lastTextBeforeImage);
-      if (isModelRef) {
-        modelImages.push(url);
-      } else {
-        otherImages.push(url);
+      // Detect role from the label text preceding the image
+      let role: SeedreamRoleImage["role"] = "other";
+      if (/\[MODEL REFERENCE\]|model|person|face|portrait/i.test(lastTextBeforeImage)) {
+        role = "model";
+      } else if (/\[PRODUCT REFERENCE\]|\[PRODUCT IMAGE\]|product/i.test(lastTextBeforeImage)) {
+        role = "product";
+      } else if (/\[SCENE REFERENCE\]|scene|background|environment/i.test(lastTextBeforeImage)) {
+        role = "scene";
       }
+      roleImages.push({ url, role });
     }
   }
 
-  // Model images first for better subject consistency
-  const orderedImages = [...modelImages, ...otherImages];
-  if (modelImages.length > 0) {
-    console.log(`[seedream] Reordered images: ${modelImages.length} model ref(s) first, ${otherImages.length} other(s)`);
-  }
+  // Deterministic ordering: model → product → scene → other
+  const orderedRoleImages = [
+    ...roleImages.filter(i => i.role === "model"),
+    ...roleImages.filter(i => i.role === "product"),
+    ...roleImages.filter(i => i.role === "scene"),
+    ...roleImages.filter(i => i.role === "other"),
+  ];
+
+  const rolesSummary = orderedRoleImages.map((r, i) => `${i + 1}:${r.role}`).join(", ");
+  console.log(`[seedream] Image roles: [${rolesSummary}]`);
 
   const rawPrompt = textParts.join("\n");
-  const cleanedPrompt = cleanPromptForSeedream(rawPrompt);
-  console.log(`[generate-freestyle] Seedream prompt cleaned: ${rawPrompt.length} → ${cleanedPrompt.length} chars`);
-  return { prompt: cleanedPrompt, imageUrls: orderedImages };
+  const cleanedPrompt = cleanPromptForSeedream(rawPrompt, orderedRoleImages);
+
+  // Append role directive so Seedream knows exactly what each numbered image is
+  const roleDirective = buildSeedreamRoleDirective(orderedRoleImages);
+  const finalPrompt = roleDirective ? `${cleanedPrompt}\n${roleDirective}` : cleanedPrompt;
+
+  console.log(`[generate-freestyle] Seedream prompt cleaned: ${rawPrompt.length} → ${finalPrompt.length} chars`);
+  return { prompt: finalPrompt, imageUrls: orderedRoleImages.map(r => r.url) };
 }
 
 // ── Download a hosted URL and upload to Supabase Storage ─────────────────
