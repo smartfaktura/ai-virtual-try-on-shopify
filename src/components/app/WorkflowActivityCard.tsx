@@ -279,16 +279,18 @@ export function WorkflowActivityCard({
                       <XCircle className="w-3 h-3 text-white" />
                     </div>
                   </div>
-                  <div className="min-w-0">
+                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
                       {group.workflow_name ?? 'Workflow generation'}
                       {group.product_name ? ` — ${group.product_name}` : ''}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {group.totalCount > 1
-                        ? `${group.failedCount}/${group.totalCount} failed`
-                        : '1 image failed'}
-                      {group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 50)}` : ''}
+                      {group.completedCount > 0
+                        ? `${group.failedCount} of ${group.totalCount} failed · ${group.completedCount} image${group.completedCount !== 1 ? 's' : ''} saved to library`
+                        : group.totalCount > 1
+                          ? `${group.failedCount}/${group.totalCount} failed`
+                          : '1 image failed'}
+                      {group.completedCount === 0 && group.jobs[0]?.error_message ? ` · ${group.jobs[0].error_message.slice(0, 50)}` : ''}
                     </p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
                       {refundedCredits > 0
