@@ -1,58 +1,43 @@
 
 
-# Clean Seedream Prompt Handling
+# Fix Seedream Aspect Ratio + Improve Reference Image Handling
 
-## Problem
-The prompt sent to Seedream contains Gemini-specific directives that a diffusion model interprets literally or ignores:
+## Problems Found
 
-1. **Aspect ratio block** (line 946): `"Output aspect ratio: 1:1. CRITICAL: The image must fill the ENTIRE canvas..."` — Seedream handles this via its `size` API parameter, not prompt text
-2. **Batch consistency / variation suffixes** — Gemini-specific meta-instructions that confuse diffusion models
-3. **Image reference labels** like `[MODEL REFERENCE]`, `[PRODUCT REFERENCE]` — Seedream takes images as a separate `image` parameter, not inline; these labels become garbage text in the prompt
-4. **No blanket "no text" rule** — user may intentionally want text rendered
+### 1. Wrong aspect ratio (1:1 requested → 4:5 returned)
+The Seedream API accepts **two separate parameters**: `size` (resolution preset like "2K") and `aspect_ratio` (like "1:1", "16:9"). Our code only sends `size: "2K"` but never sends `aspect_ratio`, so Seedream picks its own default.
+
+### 2. Model hair color mismatch (brown selected → blonde generated)
+Seedream receives all reference images as a flat array via `body.image = [url1, url2, url3]` with no way to distinguish which image is the product, model, or scene. The prompt says "the model from the reference" but Seedream's diffusion model can't reliably map that text to a specific image in the array. This is a fundamental limitation — Seedream treats all images as equal "reference" inputs and blends them freely. We can improve this by **ordering images strategically** (model image first, since Seedream tends to weight earlier images more) and by **strengthening the prompt description** of the model's appearance.
 
 ## Solution
 
-Add a `cleanPromptForSeedream()` function that strips Gemini-specific meta-instructions while preserving the user's creative intent (including any intentional text requests).
-
 ### Changes in `supabase/functions/generate-freestyle/index.ts`
 
-**1. Add `cleanPromptForSeedream()` helper** (~15 lines):
-- Strip the `"Output aspect ratio: ..."` block and everything after it (canvas-filling instructions) — Seedream handles aspect ratio via `size` param
-- Strip `"BATCH CONSISTENCY: ..."` and `"Variation N: ..."` suffixes
-- Strip image reference labels (`[MODEL REFERENCE]`, `[PRODUCT REFERENCE]`, `[SCENE REFERENCE]`, `[REFERENCE IMAGE]`, `[PRODUCT IMAGE]`) since Seedream receives images separately
-- Keep ALL user prompt content, brand directives, quality instructions, framing, camera style — these are valid for any image model
-- Do NOT add any "no text" directive — respect user intent
+**1. Pass `aspect_ratio` to the Seedream API call**
+- In `generateImageSeedream()`, add the `aspect_ratio` field to the request body alongside `size`
+- Map our app ratios to Seedream's supported values: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`, `21:9`
+- For unsupported ratios (e.g. `4:5`), map to the nearest supported one (`3:4`)
 
-**2. Update `convertContentToSeedreamInput()`** (line 397):
-- After joining text parts, run through `cleanPromptForSeedream()` before returning
-- This is the single point where Seedream prompts are prepared, so cleanup only needs to happen here
+**2. Reorder images in `convertContentToSeedreamInput()`**
+- Currently images are collected in arbitrary order from the content array
+- Reorder so the **model reference image comes first** in the array — Seedream tends to give more weight to the first image for subject/identity consistency
+- This won't guarantee perfect matching but will improve fidelity to the selected model
 
-### What stays the same
-- The `polishUserPrompt()` function — its output is good photography direction that works for both models
-- Brand profile, camera style, framing, quality directives — all valid for Seedream
-- User's raw prompt text — never modified
-- No "no text" blanket rule — if user types "add SALE text on banner", Seedream should try
-
-### Example transformation
-```text
-Before (sent to Seedream today):
-"Professional photography: Blonde woman in summer dress
-REFERENCES:
-1. MODEL: Match [MODEL REFERENCE] — same face...
-2. SCENE: Use [SCENE REFERENCE] for environment...
-QUALITY: Photorealistic. Shot on 85mm f/2.8...
-
-Output aspect ratio: 1:1. CRITICAL: The image must fill the ENTIRE canvas...
-BATCH CONSISTENCY: Maintain the same color palette..."
-
-After cleanup:
-"Professional photography: Blonde woman in summer dress
-REFERENCES:
-1. MODEL: Match the person from the reference — same face...
-2. SCENE: Use the scene reference for environment...
-QUALITY: Photorealistic. Shot on 85mm f/2.8..."
+**3. Add a ratio mapping helper**
+```
+App ratio → Seedream aspect_ratio
+1:1   → "1:1"
+16:9  → "16:9"
+9:16  → "9:16"
+4:3   → "4:3"
+3:4   → "3:4"
+4:5   → "3:4"  (nearest)
+5:4   → "4:3"  (nearest)
+3:2   → "3:2"
+2:3   → "2:3"
 ```
 
 ## Files Modified
-- `supabase/functions/generate-freestyle/index.ts` — add cleanup helper, update `convertContentToSeedreamInput()`
+- `supabase/functions/generate-freestyle/index.ts` — add `aspect_ratio` param, ratio mapping, image reordering
 
