@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
