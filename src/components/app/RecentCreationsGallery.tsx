@@ -202,6 +202,13 @@ export function RecentCreationsGallery() {
               onClick={() => handleCardClick(item)}
             >
               <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border relative shadow-sm">
+                {isAdmin && item.providerUsed && (
+                  <div className="absolute top-2 left-2 z-10">
+                    <Badge variant="secondary" className="bg-black/60 text-white text-[9px] px-1.5 py-0 font-bold shadow-md border-0">
+                      {item.providerUsed.includes('seedream') ? 'SDR' : item.providerUsed.includes('pro') ? 'PRO' : 'FLASH'}
+                    </Badge>
+                  </div>
+                )}
                 <ShimmerImage
                   src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
                   alt={item.label}
