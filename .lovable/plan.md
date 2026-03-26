@@ -1,43 +1,66 @@
 
 
-# Fix: Wire Framing Selection Into Freestyle Generation Prompt
+# Fix: Pro Quality Must Use Pro Model + Seedream Must Complete Outfits
 
-## Problem
+## Two Problems Found
 
-The framing pill (Full Body, Upper Body, Close-Up, etc.) is **purely cosmetic right now**. The frontend sends `framing: "full_body"` in the payload, but the edge function **never reads it or injects it into the prompt**. Selecting "Full Body" has zero effect on the AI output — which is why you got a half-portrait instead.
+### Problem 1 — "Pro" quality pill doesn't select Pro model
 
-This affects both Nano Banana and Seedream equally — neither provider receives framing instructions.
+Line 1167-1169 in `generate-freestyle/index.ts`:
+```typescript
+const aiModel = (forceProModel || isPerspective || hasModelImage)
+  ? "google/gemini-3-pro-image-preview"
+  : "google/gemini-3.1-flash-image-preview";
+```
 
-## Fix
+The UI's "Pro" quality pill sets `quality: "high"` in the payload, but the model selection ignores it entirely. Only `forceProModel` (perspectives only), `isPerspective`, or `hasModelImage` trigger Pro. So selecting "Pro" quality without a model reference silently runs Flash — explaining the FLASH badge on your generation.
+
+**Fix**: Add `quality === "high"` to the Pro condition:
+```typescript
+const aiModel = (forceProModel || isPerspective || hasModelImage || body.quality === "high")
+  ? "google/gemini-3-pro-image-preview"
+  : "google/gemini-3.1-flash-image-preview";
+```
+
+### Problem 2 — Seedream shows only the product garment, no other clothing
+
+When the product is a jacket and a model is selected, Seedream receives only:
+- The product image with "replicate this item EXACTLY"
+- The model image with "preserve exact face, hair, body"
+- No instruction to **dress the model in a complete outfit**
+
+Nano Banana handles this better because the richer system prompt context guides it to create a full look. Seedream's stripped prompt (`cleanPromptForSeedream`) lacks any clothing-completion directive.
+
+**Fix**: Add a wardrobe-completion instruction to the Seedream prompt when:
+- A product image is provided AND
+- A model reference is provided AND
+- The product is an upper-body or single garment
+
+In `buildSeedreamRoleDirective()`, after the product role line, add:
+```
+OUTFIT COMPLETION: The product shown is a single garment. 
+Dress the model in a complete, natural outfit — add 
+complementary bottoms, shoes, and accessories that 
+match the style. The model must NEVER appear without 
+pants/skirt/shorts. The provided product is the hero 
+piece; other clothing should complement it naturally.
+```
+
+Also inject this same directive into the polished prompt for Nano Banana to reinforce it.
+
+## Changes
 
 ### File: `supabase/functions/generate-freestyle/index.ts`
 
-**1. Add framing prompt builder function**
-
-Port the `buildFramingPrompt()` logic from `src/lib/framingUtils.ts` into the edge function (since edge functions can't import from the frontend). This maps framing values like `full_body` to explicit AI instructions like `"Full body shot, head to toe. Show the complete outfit and full figure."`.
-
-**2. Inject framing into the prompt construction**
-
-In the prompt-building section (where `PRODUCT SCALE`, `GENDER RULE`, scene isolation, and brand DNA blocks are assembled), add a `FRAMING` block when `body.framing` is set:
-
-```typescript
-if (body.framing) {
-  const framingInstruction = buildFramingPrompt(body.framing, !!body.modelImage);
-  promptParts.push(framingInstruction);
-}
-```
-
-This should be injected as a high-priority instruction (near the top of the system prompt, alongside PRODUCT SCALE) since framing directly controls composition.
-
-**3. Pass framing to Seedream prompt too**
-
-When building the Seedream text prompt, append the same framing instruction so both providers respect it equally.
+1. **Model selection** (line 1167): Add `body.quality === "high"` to the Pro model condition
+2. **`buildSeedreamRoleDirective()`** (line 499): When both model and product roles exist, append outfit-completion instruction
+3. **`polishUserPrompt()`** (around line 193): When `hasProduct && hasModel`, add a brief outfit-completion note to the REFERENCES section
 
 ## What This Does NOT Do
-- No UI changes — the framing pill already works in the frontend
-- No database changes
+- No UI changes
+- No database changes  
 - No changes to fallback logic
 
 ## Files Modified
-- `supabase/functions/generate-freestyle/index.ts` — add `buildFramingPrompt()`, inject framing into prompt construction for both providers
+- `supabase/functions/generate-freestyle/index.ts`
 
