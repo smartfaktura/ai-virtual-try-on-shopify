@@ -16,6 +16,7 @@ export interface FreestyleImage {
   modelId?: string | null;
   sceneId?: string | null;
   productId?: string | null;
+  providerUsed?: string | null;
 }
 
 export interface SaveImageMeta {
@@ -69,6 +70,7 @@ export function useFreestyleImages() {
         modelId: row.model_id ?? null,
         sceneId: row.scene_id ?? null,
         productId: row.product_id ?? null,
+        providerUsed: row.provider_used ?? null,
       }));
 
       return { items, hasMore: rows.length === PAGE_SIZE };
