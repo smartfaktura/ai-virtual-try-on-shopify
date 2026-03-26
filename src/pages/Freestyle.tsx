@@ -544,7 +544,14 @@ export default function Freestyle() {
       } else if (sourceImage && imageRole === 'scene') {
         parts.push("Professional photography set in the environment shown in the uploaded image");
       } else if (selectedProduct) {
-        parts.push(`High-end product photography of "${selectedProduct.title}"`);
+        const onModelCategories = ['studio', 'lifestyle', 'editorial', 'streetwear', 'fitness', 'beauty'];
+        const isOnModelScene = selectedScene && onModelCategories.includes(selectedScene.category);
+        if (isOnModelScene && !selectedModel) {
+          const interaction = getProductModelInteraction(selectedProduct.product_type);
+          parts.push(`High-end product photography of "${selectedProduct.title}" ${interaction} a professional model`);
+        } else {
+          parts.push(`High-end product photography of "${selectedProduct.title}"`);
+        }
         if (selectedProduct.product_type) parts.push(`(${selectedProduct.product_type})`);
       } else if (sourceImage) {
         parts.push("Create a new professional product photograph featuring the item shown in the reference image. Use a fresh angle, creative composition, and professional lighting");
@@ -613,6 +620,7 @@ export default function Freestyle() {
       framing: framing || undefined,
       productDimensions: selectedProduct?.dimensions || undefined,
       sceneId: selectedScene?.poseId || undefined,
+      sceneCategory: selectedScene?.category || undefined,
       promptOnly: selectedScene?.promptOnly || undefined,
       modelId: selectedModel?.modelId || undefined,
       productId: selectedProduct?.id || undefined,
