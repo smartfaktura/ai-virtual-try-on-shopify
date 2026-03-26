@@ -1226,6 +1226,7 @@ serve(async (req) => {
             if (result !== null) actualProvider = "seedream-4.5";
           }
         }
+        lastActualProvider = actualProvider;
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
@@ -1284,7 +1285,9 @@ serve(async (req) => {
               // Early finalize: in queue mode (1 image), complete immediately after first success
               if (body.job_id && images.length > 0) {
                 console.log(`[generate-freestyle] Early finalize: completing queue job ${body.job_id} with ${images.length} images`);
-                await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                const elapsedMs = Math.round(performance.now() - requestStartTime);
+                console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${actualProvider}`);
+                await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, actualProvider, elapsedMs);
                 return new Response(
                   JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
                   { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1352,7 +1355,9 @@ serve(async (req) => {
                   // Early finalize in queue mode after fallback success
                   if (isQueueInternal && body.job_id && images.length > 0) {
                     console.log(`[generate-freestyle] Early finalize (fallback): completing queue job ${body.job_id}`);
-                    await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+                    const elapsedMs = Math.round(performance.now() - requestStartTime);
+                    console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=fallback`);
+                    await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, false, null, "fallback", elapsedMs);
                     return new Response(
                       JSON.stringify({ images, generatedCount: images.length, requestedCount: effectiveImageCount }),
                       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -1372,7 +1377,8 @@ serve(async (req) => {
           }
 
           if (isQueueInternal && body.job_id) {
-            await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
+            const elapsedMs = Math.round(performance.now() - requestStartTime);
+            await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>, false, null, lastActualProvider, elapsedMs);
           }
           return new Response(
             JSON.stringify({ error: statusError.message }),
@@ -1389,7 +1395,9 @@ serve(async (req) => {
 
     // Queue self-completion
     if (isQueueInternal && body.job_id) {
-      await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, contentBlocked, blockReason);
+      const elapsedMs = Math.round(performance.now() - requestStartTime);
+      console.log(`[generate-freestyle] Job ${body.job_id} total elapsed: ${(elapsedMs / 1000).toFixed(1)}s provider=${lastActualProvider}`);
+      await completeQueueJob(supabase, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>, contentBlocked, blockReason, lastActualProvider, elapsedMs);
     }
 
     if (contentBlocked && images.length === 0) {
