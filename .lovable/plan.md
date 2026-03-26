@@ -1,34 +1,37 @@
 
 
-# Fix Camera Orbit — Prompt-Only Approach for Kling v3
+# Video Hub — Add Detail Modal for Recent Videos
 
 ## Problem
-The previous fix added `STRUCTURED_CAMERA_MOTIONS` (line 59) which **suppresses camera text from the prompt** for orbit, push-in, pan, and drift. But since Kling v3 rejects structured `camera_control`, the result is **no camera instruction at all** — the model defaults to rotating the subject.
+The Recent Videos grid on `/app/video` currently has inline play/pause behavior with a large pause button in the center. There's no way to download, delete, or preview videos in a modal. The user wants the same modal experience as the Library.
 
-## Fix (2 files)
+## Approach
+Create a `VideoDetailModal` that opens when clicking a video card, with download, delete, play/preview, and other actions — similar to `LibraryDetailModal` but for video items.
 
-### 1. `src/lib/videoPromptTemplates.ts`
+### File 1: `src/components/app/video/VideoDetailModal.tsx` (NEW)
+- Full-screen overlay modal (same pattern as `LibraryDetailModal`)
+- Video player with controls inside the modal
+- Actions: **Download**, **Delete**, close button
+- Show metadata: date, prompt, status
+- Delete logic: remove from `video_generations` table, invalidate queries
+- Download logic: fetch video URL, trigger download as `.mp4`
 
-- **Remove** the `STRUCTURED_CAMERA_MOTIONS` set and the suppression logic in `buildCameraClause` — always emit camera text
-- **Rewrite the orbit phrase** to be much more explicit that the **camera** moves, not the subject:
+### File 2: `src/pages/VideoHub.tsx` — Refactor `RecentVideoCard`
+- **Remove** the inline play/pause/loading state machine (the big center pause button)
+- Click on card → open `VideoDetailModal` instead of toggling playback
+- Keep hover-to-play on desktop for preview (but remove the pause overlay with big button)
+- Keep the small play icon in bottom-left corner when idle
+- Add `selectedVideo` state to the hub page, pass to the modal
+- On mobile: single tap opens modal directly (no two-tap flow)
 
-```
-orbit: 'The camera physically orbits around the subject in a smooth arc. 
-The subject stays completely still and fixed in place — only the camera 
-moves. The viewing angle changes progressively as the camera circles 
-around. The subject does NOT rotate or spin.'
-```
+### Visual Behavior After Fix
+- **Desktop hover**: video auto-plays quietly (no overlay buttons)
+- **Click (any device)**: opens the detail modal with full video player + actions
+- **Modal**: video with native controls, Download button, Delete button, close (X)
 
-- Improve other phrases similarly to emphasize "camera moves, subject stays still"
-
-### 2. `src/lib/videoStrategyResolver.ts`
-
-- Remove `camera_control_config` from the strategy output (set to `undefined` always) since kling-v3 doesn't support it
-- Keep the resolver clean — no dead code
-
-### 3. `supabase/functions/generate-video/index.ts`
-
-- Remove the `camera_control` pass-through code added in the previous fix, since we're going prompt-only
-
-This is a revert of the structured camera_control approach, replaced with stronger prompt engineering that explicitly tells the model "camera moves, subject stays fixed."
+### Technical Details
+- Modal uses same overlay/z-index pattern as `LibraryDetailModal` (z-[200])
+- Delete calls `supabase.from('video_generations').delete().eq('id', video.id)` and invalidates `['video-history']`
+- Download uses `<a>` element with `download` attribute pointing to `video_url`
+- Escape key closes modal, body scroll locked while open
 
