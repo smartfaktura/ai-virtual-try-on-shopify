@@ -220,9 +220,9 @@ function polishUserPrompt(
 
   if (context.hasScene) {
     if (context.hasModel) {
-      refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Match the scene's camera angle, viewpoint, lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
+      refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
     } else {
-      refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, camera angle, viewpoint, lighting, atmosphere. Replicate the exact perspective and viewing angle of the scene. Ignore any products in the scene image.`);
+      refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.`);
     }
     refNum++;
   }
@@ -422,10 +422,12 @@ interface SeedreamRoleImage {
 // ── Clean prompt for Seedream (strip Gemini-specific directives) ─────────
 // roleImages is used to replace [TAG] labels with numbered "image N" refs
 function cleanPromptForSeedream(prompt: string, roleImages?: SeedreamRoleImage[]): string {
-  // 1. Strip "Output aspect ratio: ..." block and everything after it
+  // 1. Strip everything AFTER the "Output aspect ratio:" line, but keep the ratio instruction
   const aspectIdx = prompt.indexOf("Output aspect ratio:");
   if (aspectIdx !== -1) {
-    prompt = prompt.substring(0, aspectIdx).trimEnd();
+    const lineEnd = prompt.indexOf("\n", aspectIdx);
+    const aspectLine = lineEnd !== -1 ? prompt.substring(aspectIdx, lineEnd) : prompt.substring(aspectIdx);
+    prompt = prompt.substring(0, aspectIdx).trimEnd() + "\n\n" + aspectLine.trim();
   }
 
   // 2. Strip BATCH CONSISTENCY block
