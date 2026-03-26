@@ -1,36 +1,17 @@
 
 
-# Fix: Prompt Helper Chip Placement
+# Fix: Require at least 1 aspect ratio selected before generating
 
 ## Problem
-On desktop, the Prompt Helper button is in the first chip row (Upload, Product, Model, Scene, **Prompt Helper**). When it doesn't fit, it wraps to its own line between the two rows, creating an awkward isolated line.
+In the Virtual Try-On settings panel, users can deselect all image sizes and still click "Generate", which shouldn't be allowed.
 
-## Fix
-Move `promptHelperButton` from the first row to the **end of the second row** (after Framing, Brand, Aspect, Camera, Quality). This way it flows naturally with the settings chips and never sits alone between groups.
+## Changes
 
-## Change
+**File**: `src/components/app/generate/TryOnSettingsPanel.tsx`
 
-**File**: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+1. **Disable Generate button when no aspect ratio is selected**: Add a `const canGenerate = selectedAspectRatios.size > 0 && balance >= creditCost;` check
+2. **Update the Generate button** (line 185-190): Use `disabled={selectedAspectRatios.size === 0}` and conditionally route the click to `handleGenerateClick` vs `openBuyModal` based on balance
+3. **Show "Select at least 1" hint** next to the Image Size heading when none are selected (the screenshot already shows this red text — just need to wire it to actually block generation)
 
-**Desktop layout (lines 325-369)**: Move `{promptHelperButton}` from the first `div` to the end of the second `div`:
-
-```tsx
-<div className="flex items-center gap-2 flex-wrap">
-  {uploadButton}
-  {productChip}
-  {modelChip}
-  {sceneChip}
-  {/* promptHelperButton removed from here */}
-</div>
-<div className="flex items-center gap-2 flex-wrap">
-  <FramingSelectorChip ... />
-  {/* Brand chip */}
-  {aspectRatioChip}
-  {cameraStyleChip}
-  {qualityChip}
-  {promptHelperButton}  {/* moved here */}
-</div>
-```
-
-One line change — move line 330 to after line 368.
+Single file, ~5 lines changed.
 
