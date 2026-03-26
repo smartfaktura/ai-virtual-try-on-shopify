@@ -437,92 +437,145 @@ export default function AnimateVideo() {
       {/* ──── POST-UPLOAD: Form with image preview + settings ──── */}
       {!isPipelineActive && !isComplete && imageUrl && (
         <div className="space-y-5">
-          {/* Upload preview */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Upload Image</label>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-sm">
-              <img src={imagePreview!} alt="Upload" className="w-full aspect-square object-contain" />
-              <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
-                <X className="h-4 w-4" />
-              </button>
-              {isUploading && (
-                <div className="absolute bottom-0 left-0 right-0 p-2">
-                  <Progress value={uploadProgress} className="h-1" />
-                </div>
-              )}
+          {/* Hide small upload preview during analysis — it's shown large in the analysis grid */}
+          {!showAnalysisUI && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Upload Image</label>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-sm">
+                <img src={imagePreview!} alt="Upload" className="w-full aspect-square object-contain" />
+                <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
+                  <X className="h-4 w-4" />
+                </button>
+                {isUploading && (
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <Progress value={uploadProgress} className="h-1" />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <ValidationWarnings warnings={warnings} />
 
-          {/* Rich analysis loading state */}
-          {isAnalyzingImage && (
+          {/* ──── Premium Analysis Loading State ──── */}
+          {showAnalysisUI && (
             <div className="space-y-5">
-              {/* Image preview + step progress */}
-              <div className="grid sm:grid-cols-[200px_1fr] gap-4 rounded-2xl border border-border bg-card shadow-sm p-5">
-                {/* Left: uploaded image with inline badge */}
-                <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30">
-                  {imagePreview && <img src={imagePreview} alt="Uploaded" className="w-full aspect-square object-contain" />}
-                  <div className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-medium">
-                    <CheckCircle2 className="h-3 w-3" />
+              {/* Full-width two-column analysis layout */}
+              <div className="grid lg:grid-cols-2 gap-5">
+                {/* Left: Large image preview */}
+                <div className="relative rounded-2xl overflow-hidden border border-border bg-muted/10 shadow-sm">
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Uploaded"
+                      className="w-full aspect-[4/3] object-contain bg-muted/5"
+                    />
+                  )}
+                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-medium shadow-sm">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
                     Image uploaded
                   </div>
+                  <button
+                    onClick={removeImage}
+                    className="absolute top-3 right-3 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* Right: step-based progress */}
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">Understanding your image</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">Detecting category, scene type, and realistic motion opportunities.</p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {[
-                      { icon: CheckCircle2, label: 'Image uploaded' },
-                      { icon: ScanSearch, label: 'Detecting category' },
-                      { icon: Eye, label: 'Detecting scene type' },
-                      { icon: Zap, label: 'Preparing motion recommendations' },
-                    ].map((step, i) => {
-                      const done = analysisStep > i;
-                      const active = analysisStep === i;
-                      return (
-                        <div key={i} className="flex items-center gap-2.5">
-                          {done ? (
-                            <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                          ) : active ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
-                          ) : (
-                            <div className="h-4 w-4 rounded-full border border-border shrink-0" />
-                          )}
-                          <span className={cn('text-sm', done ? 'text-foreground' : active ? 'text-foreground font-medium' : 'text-muted-foreground/60')}>
-                            {step.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Detection preview fields */}
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Detection Preview</p>
-                    {[
-                      { label: 'Category', ready: analysisStep > 1 },
-                      { label: 'Scene type', ready: analysisStep > 2 },
-                      { label: 'Motion goals', ready: analysisStep > 3 },
-                    ].map((field) => (
-                      <div key={field.label} className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">{field.label}</span>
-                        {field.ready ? (
-                          <span className="text-foreground font-medium">detected</span>
-                        ) : (
-                          <span className="text-muted-foreground/50 italic">detecting…</span>
-                        )}
+                {/* Right: Understanding your image */}
+                <div className="rounded-2xl border border-border bg-card shadow-sm p-6 flex flex-col justify-between">
+                  <div className="space-y-5">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Brain className="h-5 w-5 text-primary" />
+                        <h3 className="text-base font-semibold text-foreground">Understanding your image</h3>
                       </div>
-                    ))}
+                      <p className="text-sm text-muted-foreground">Detecting category, scene type, and realistic motion opportunities.</p>
+                    </div>
+
+                    {/* Step-based progress */}
+                    <div className="space-y-3">
+                      {[
+                        { icon: CheckCircle2, label: 'Image uploaded' },
+                        { icon: ScanSearch, label: 'Detecting category' },
+                        { icon: Eye, label: 'Detecting scene type' },
+                        { icon: Zap, label: 'Preparing motion recommendations' },
+                      ].map((step, i) => {
+                        const done = analysisStep > i;
+                        const active = analysisStep === i;
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              'flex items-center gap-3 transition-all duration-500',
+                              done || active ? 'opacity-100' : 'opacity-40'
+                            )}
+                          >
+                            {done ? (
+                              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <CheckCircle2 className="h-4 w-4 text-primary" />
+                              </div>
+                            ) : active ? (
+                              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                              </div>
+                            ) : (
+                              <div className="h-6 w-6 rounded-full border border-border flex items-center justify-center shrink-0">
+                                <step.icon className="h-3.5 w-3.5 text-muted-foreground/50" />
+                              </div>
+                            )}
+                            <span className={cn(
+                              'text-sm transition-colors duration-300',
+                              done ? 'text-foreground' : active ? 'text-foreground font-medium' : 'text-muted-foreground/60'
+                            )}>
+                              {step.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Detection Preview fields */}
+                    <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Detection Preview</p>
+                      {(() => {
+                        const catLabel = analysisCompleteData?.category
+                          ? PRODUCT_CATEGORIES.find(c => c.id === analysisCompleteData.category)?.label || analysisCompleteData.category
+                          : null;
+                        const sceneLabel = analysisCompleteData?.ecommerce_scene_type
+                          ? SCENE_TYPES.find(s => s.id === analysisCompleteData.ecommerce_scene_type)?.label || analysisCompleteData.ecommerce_scene_type
+                          : null;
+                        const fields = [
+                          { label: 'Category', stepThreshold: 1, resolvedValue: catLabel },
+                          { label: 'Scene type', stepThreshold: 2, resolvedValue: sceneLabel },
+                          { label: 'Recommended motion', stepThreshold: 3, resolvedValue: analysisCompleteData?.recommended_motion_goals?.[0]?.replace(/_/g, ' ') },
+                          { label: 'Preservation rules', stepThreshold: 3, resolvedValue: analysisCompleteData ? 'configured' : null },
+                        ];
+                        return fields.map((field) => (
+                          <div key={field.label} className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">{field.label}</span>
+                            {analysisStep > field.stepThreshold && field.resolvedValue ? (
+                              <span className="text-foreground font-medium transition-all duration-300">{field.resolvedValue}</span>
+                            ) : analysisStep >= field.stepThreshold ? (
+                              <span className="text-primary/70 italic flex items-center gap-1">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                detecting…
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/40">pending</span>
+                            )}
+                          </div>
+                        ));
+                      })()}
+                    </div>
                   </div>
 
-                  <p className="text-[11px] text-muted-foreground">Usually takes a few seconds</p>
+                  {/* Bottom tip */}
+                  <p className="text-[11px] text-muted-foreground/60 mt-4">
+                    Usually takes a few seconds — preparing your motion options.
+                  </p>
                 </div>
               </div>
 
@@ -535,36 +588,66 @@ export default function AnimateVideo() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
-                  <p className="text-sm text-muted-foreground">We're detecting category, scene type, and the most realistic motion options for this image.</p>
+                  <p className="text-sm text-muted-foreground">We're analyzing your image to detect category, scene type, and the most realistic motion options.</p>
                 </div>
               </div>
 
-              {/* Skeleton placeholders for upcoming sections */}
-              <div className="space-y-4">
-                {/* Product Context skeleton */}
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                  <Skeleton className="h-4 w-28" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-24 rounded-full" />
-                    <Skeleton className="h-8 w-28 rounded-full" />
-                    <Skeleton className="h-8 w-20 rounded-full" />
+              {/* What we're preparing + skeleton placeholders */}
+              <div className="grid lg:grid-cols-2 gap-4">
+                {/* What we're preparing */}
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground">What we're preparing</h4>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Category & Scene</p>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-7 w-24 rounded-full" />
+                        <Skeleton className="h-7 w-28 rounded-full" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Motion goals</p>
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-12 w-full rounded-lg" />
+                        <Skeleton className="h-12 w-full rounded-lg" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Refinement controls</p>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-7 w-20 rounded-md" />
+                        <Skeleton className="h-7 w-20 rounded-md" />
+                        <Skeleton className="h-7 w-20 rounded-md" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {/* Recommended Motion skeleton */}
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                  <Skeleton className="h-4 w-36" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-14 w-full rounded-lg" />
-                    <Skeleton className="h-14 w-full rounded-lg" />
-                  </div>
-                </div>
-                {/* Settings skeleton */}
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                  <Skeleton className="h-4 w-20" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-16 rounded-md" />
-                    <Skeleton className="h-8 w-16 rounded-md" />
-                    <Skeleton className="h-8 w-16 rounded-md" />
+
+                {/* Best results reminder */}
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground">Best results</h4>
+                  <ul className="space-y-2.5">
+                    {[
+                      'AI detects product type and scene for optimal motion planning',
+                      'Preservation rules protect brand elements during animation',
+                      'Camera + subject motion are tuned to your content category',
+                      'Lower intensity = safer for product detail retention',
+                    ].map((tip, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Settings skeleton preview */}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Output settings</p>
+                    <div className="flex gap-2">
+                      <Skeleton className="h-7 w-14 rounded-md" />
+                      <Skeleton className="h-7 w-14 rounded-md" />
+                      <Skeleton className="h-7 w-14 rounded-md" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -572,7 +655,7 @@ export default function AnimateVideo() {
           )}
 
           {/* Show form sections after analysis */}
-          {!isAnalyzingImage && (
+          {!showAnalysisUI && (
             <>
               <ProductContextSelector
                 category={category}
