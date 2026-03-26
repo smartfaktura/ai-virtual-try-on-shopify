@@ -1,35 +1,48 @@
 
+Root cause confirmed from code:
 
-# Fix: Scene Composition/Perspective Not Being Replicated
+1) `src/pages/video/AnimateVideo.tsx` only renders UI for:
+- pre-upload: `!isPipelineActive && !isComplete && !imageUrl`
+- settings form: `!isPipelineActive && !isComplete && imageUrl`
 
-## Problem
-The scene reference instruction currently only asks the AI to match **lighting, color temperature, and atmosphere** from the scene image. It explicitly does NOT ask to replicate the **camera angle, composition, or framing perspective**.
+There is no render branch for `isPipelineActive === true` (generation in progress) or `isComplete === true` (finished result), so the page can appear blank after clicking Generate.
 
-For scenes like "Urban Taxi Ride" (shot from outside through the car window), the camera position IS the scene — without it, the AI improvises a completely different composition.
+2) `videoError` / pipeline errors are not surfaced in this page, so failed runs also lack visible recovery UI.
 
-This was intentionally loosened previously to give the AI "creative freedom," but it went too far — the scene's core visual identity is lost.
+3) `src/hooks/useVideoProject.ts` sets `pipelineStage` to `generating` and triggers `startGeneration()`, but stage synchronization with `useGenerateVideo` is weak, which can leave UI state inconsistent.
 
-## Solution
-Add **composition and camera perspective matching** back into the scene reference instructions, but in a balanced way that preserves the scene's visual identity without being overly rigid.
+Implementation plan:
 
-## Changes
+## 1) Add missing render states in AnimateVideo page
+File: `src/pages/video/AnimateVideo.tsx`
 
-### File: `supabase/functions/generate-freestyle/index.ts`
+- Add a dedicated “pipeline active” block (for `isPipelineActive`) using existing stage messaging (`getStageMessage`) and elapsed timer.
+- Add a dedicated “complete” block (for `isComplete`) that renders `VideoResultsPanel` with:
+  - `videoUrl`
+  - `sourceImageUrl` from uploaded image
+  - `generationContext` from `buildGenerationContext()`
+  - actions: `onReuse`, `onQuickVariation`, `onNewProject`
+- Add an explicit error block when generation fails (`videoStatus === 'error'` or pipeline error), with clear retry CTA.
 
-**Update all three scene reference blocks (lines 226-234)** to include composition/perspective matching:
+## 2) Harden pipeline state syncing
+File: `src/hooks/useVideoProject.ts` (and small contract update in `src/hooks/useGenerateVideo.ts`)
 
-- **With model (line 228)**: Add "Replicate the camera angle, framing, and composition from the scene reference" to the existing lighting/environment instructions
-- **On-model scene without explicit model (line 231)**: Same addition
-- **Product-only / no model (line 233)**: Same addition
+- Ensure `runAnimatePipeline()` reacts to generation start failure (e.g., duplicate in-flight video) instead of staying in generating state.
+- Synchronize `pipelineStage` with `generateVideo.status` (`complete` / `error`) via effect or explicit callbacks.
+- Keep `isPipelineActive` derived from both pipeline stage + generator status to prevent blank-state gaps.
 
-The updated instruction will read something like:
+## 3) Keep prompt behavior single-shot-safe (no editing language)
+File: `src/lib/videoPromptTemplates.ts` (small guard)
 
-> SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. **Replicate the camera angle, framing, and composition of the scene image** — if the scene shows a view through a window, shoot through that window; if it shows a low angle, use a low angle. Match the scene's lighting direction, color temperature, and ambient shadows...
+- Add/confirm prompt guardrail language for one continuous shot behavior (no “cut”, “split-screen”, multi-edit sequencing), matching model constraints for image-to-video.
 
-This ensures the AI treats the scene image as a **composition blueprint**, not just a mood board.
+## 4) QA checklist (manual end-to-end)
+- Upload image → wait analysis → Generate.
+- Confirm progress UI is visible during create/processing.
+- Confirm results panel appears on success with playable video + actions.
+- Trigger a failure path and confirm error UI + retry works.
+- Validate quick variation runs again without blanking.
 
-### Scope
-- 1 file: `supabase/functions/generate-freestyle/index.ts` — update 3 scene instruction strings
-- Redeploy edge function
-- No database changes
-
+Technical details:
+- Expected files touched: `AnimateVideo.tsx`, `useVideoProject.ts`, `useGenerateVideo.ts` (optional signature return), and optionally `videoPromptTemplates.ts`.
+- No database schema or migration changes required.
