@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, X, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { groupJobsIntoBatches, type ActiveJob, type BatchGroup } from '@/lib/batchGrouping';
@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TEAM_MEMBERS } from '@/data/teamData';
+import { TEAM_MEMBERS, type TeamMember } from '@/data/teamData';
 import { cn } from '@/lib/utils';
 
 /** Pages where dedicated activity UI already exists */
@@ -23,6 +23,30 @@ function elapsedLabel(dateStr: string): string {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
+/** Maps job types to the contextual team member */
+function getTeamMemberForJob(group: BatchGroup): TeamMember {
+  if (group.isCreativeDrop) return TEAM_MEMBERS.find(m => m.name === 'Amara')!;
+  switch (group.job_type) {
+    case 'video': return TEAM_MEMBERS.find(m => m.name === 'Leo')!;
+    case 'freestyle': return TEAM_MEMBERS.find(m => m.name === 'Sophia')!;
+    case 'upscale': return TEAM_MEMBERS.find(m => m.name === 'Luna')!;
+    case 'tryon': return TEAM_MEMBERS.find(m => m.name === 'Zara')!;
+    default: return TEAM_MEMBERS.find(m => m.name === 'Kenji')!;
+  }
+}
+
+/** Returns a short verb phrase for the pill text */
+function getActionVerb(group: BatchGroup): string {
+  if (group.isCreativeDrop) return 'creating your drop';
+  switch (group.job_type) {
+    case 'video': return 'animating';
+    case 'freestyle': return 'shooting';
+    case 'upscale': return 'upscaling';
+    case 'tryon': return 'styling';
+    default: return 'creating';
+  }
+}
+
 export function GlobalGenerationBar() {
   const { user } = useAuth();
   const location = useLocation();
@@ -34,6 +58,7 @@ export function GlobalGenerationBar() {
   const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
   const [, tick] = useState(0);
+  const [quoteIndex, setQuoteIndex] = useState(0);
 
   // Poll active jobs globally
   const { data: activeGroups = [] } = useQuery({
@@ -86,13 +111,8 @@ export function GlobalGenerationBar() {
     });
 
     if (justFinished.length > 0) {
-      // Look up the original group data from previous active groups
-      const prevGroups = prevActiveKeysRef.current;
-
       setCompletedGroups((prev) => {
         const newCompleted: BatchGroup[] = justFinished.map((key) => {
-          // Find the original group from the previous render's activeGroups
-          // We stored the full groups in a separate ref below
           const original = prevGroupsRef.current.find((g) => g.key === key);
           return {
             key,
@@ -119,7 +139,6 @@ export function GlobalGenerationBar() {
         return [...prev, ...newCompleted];
       });
 
-      // Invalidate library cache when upscale jobs complete
       const hadUpscale = justFinished.some((key) =>
         prevGroupsRef.current.find((g) => g.key === key && g.job_type === 'upscale')
       );
@@ -143,10 +162,16 @@ export function GlobalGenerationBar() {
     return () => clearInterval(id);
   }, [activeGroups.length]);
 
+  // Rotating quote index
+  useEffect(() => {
+    if (activeGroups.length === 0) return;
+    const id = setInterval(() => setQuoteIndex((i) => i + 1), 4000);
+    return () => clearInterval(id);
+  }, [activeGroups.length]);
+
   const isHiddenPage = HIDDEN_PATHS.some((p) => location.pathname.startsWith(p));
   const isFreestylePage = location.pathname.startsWith('/app/freestyle');
 
-  // On Freestyle, only show upscale groups (freestyle has its own generation progress)
   const filteredActive = isFreestylePage
     ? activeGroups.filter((g) => g.job_type === 'upscale')
     : activeGroups;
@@ -159,57 +184,74 @@ export function GlobalGenerationBar() {
 
   if (isHiddenPage || (visibleActive.length === 0 && visibleCompleted.length === 0)) return null;
 
-  const totalJobs = visibleActive.reduce((sum, g) => sum + g.totalCount, 0);
   const processingJobs = visibleActive.reduce((sum, g) => sum + g.processingCount, 0);
+
+  // Get unique team members for active groups (for pill display)
+  const activeMembers = visibleActive.map(g => getTeamMemberForJob(g));
+  const uniqueMembers = activeMembers.filter((m, i, arr) => arr.findIndex(x => x.name === m.name) === i).slice(0, 3);
+  const primaryMember = uniqueMembers[0];
+
+  // Rotating status message from active group members
+  const rotatingMember = activeMembers.length > 0
+    ? activeMembers[quoteIndex % activeMembers.length]
+    : null;
 
   return (
     <div className="hidden sm:block fixed top-20 right-4 lg:right-6 z-30 pointer-events-none">
-      <div className="pointer-events-auto w-64">
-        {/* Compact pill — always visible */}
+      <div className="pointer-events-auto w-72">
+        {/* Compact pill */}
         <button
           onClick={() => setMinimized((m) => !m)}
-          className="w-full flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full border border-border/60 bg-popover/95 backdrop-blur-xl shadow-lg shadow-black/10 hover:bg-muted/50 transition-colors"
+          className="w-full flex items-center gap-2.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full border border-border/60 bg-popover/95 backdrop-blur-xl shadow-lg shadow-black/10 hover:bg-muted/50 transition-colors"
         >
-          {(() => {
-            const hasUpscaleActive = visibleActive.some(g => g.job_type === 'upscale');
-            const luna = hasUpscaleActive ? TEAM_MEMBERS.find(m => m.name === 'Luna') : null;
-            if (luna && hasUpscaleActive) {
-              return (
-                <Avatar className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 ring-1 ring-primary/30">
-                  <AvatarImage src={luna.avatar} alt="Luna" />
-                  <AvatarFallback className="text-[7px] bg-primary/10 text-primary">LP</AvatarFallback>
-                </Avatar>
-              );
-            }
-            return (
-              <div className="relative flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 shrink-0">
-                {processingJobs > 0 ? (
-                  <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary animate-spin" />
-                ) : visibleCompleted.length > 0 ? (
-                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500" />
-                ) : (
-                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
-                )}
+          {visibleActive.length > 0 && primaryMember ? (
+            <div className="relative shrink-0">
+              {/* Stacked avatars */}
+              <div className="flex -space-x-1.5">
+                {uniqueMembers.map((member, i) => (
+                  <Avatar
+                    key={member.name}
+                    className={cn(
+                      'w-6 h-6 ring-2 ring-popover',
+                      i > 0 && 'relative',
+                    )}
+                    style={{ zIndex: uniqueMembers.length - i }}
+                  >
+                    <AvatarImage src={member.avatar} alt={member.name} />
+                    <AvatarFallback className="text-[7px] bg-primary/10 text-primary">{member.name[0]}</AvatarFallback>
+                  </Avatar>
+                ))}
               </div>
-            );
-          })()}
-          <span className="flex-1 text-left text-[11px] sm:text-xs font-medium truncate">
-            {visibleActive.length > 0
-              ? `${totalJobs} running`
-              : `Complete`}
+              {/* Spinning ring on primary avatar */}
+              {processingJobs > 0 && (
+                <span className="absolute -inset-0.5 rounded-full border-2 border-transparent border-t-primary animate-spin pointer-events-none" />
+              )}
+            </div>
+          ) : visibleCompleted.length > 0 ? (
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            </div>
+          ) : null}
+
+          <span className="flex-1 text-left text-[11px] sm:text-xs font-medium truncate text-foreground">
+            {visibleActive.length > 0 && primaryMember
+              ? `${primaryMember.name} is ${getActionVerb(visibleActive[0])}…`
+              : 'Complete'}
           </span>
+
           {minimized ? (
-            <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground shrink-0" />
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           ) : (
-            <ChevronUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground shrink-0" />
+            <ChevronUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           )}
         </button>
 
-        {/* Expanded detail list — renders below the pill */}
+        {/* Expanded detail list */}
         {!minimized && (
           <div className="hidden sm:block mt-2 rounded-xl border border-border/60 bg-popover/95 backdrop-blur-xl shadow-xl shadow-black/10 overflow-hidden">
-            <div className="max-h-52 overflow-y-auto">
+            <div className="max-h-60 overflow-y-auto">
               {visibleActive.map((group) => {
+                const member = getTeamMemberForJob(group);
                 const isProcessing = group.processingCount > 0;
                 const elapsed = elapsedLabel(
                   group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at,
@@ -219,110 +261,144 @@ export function GlobalGenerationBar() {
                   ? Math.round((group.completedCount / group.totalCount) * 100)
                   : undefined;
                 const isUpscale = group.job_type === 'upscale';
-                const luna = isUpscale ? TEAM_MEMBERS.find(m => m.name === 'Luna') : null;
 
                 return (
-                  <div key={group.key} className="px-3 py-2.5 border-b border-border/20 last:border-0">
-                    <div className="flex items-center gap-2">
-                      {luna && (
-                        <Avatar className="w-6 h-6 shrink-0 ring-1 ring-primary/20">
-                          <AvatarImage src={luna.avatar} alt="Luna" />
-                          <AvatarFallback className="text-[8px] bg-primary/10 text-primary">LP</AvatarFallback>
+                  <div key={group.key} className="px-3 py-3 border-b border-border/20 last:border-0">
+                    <div className="flex items-start gap-2.5">
+                      <div className="relative shrink-0 mt-0.5">
+                        <Avatar className="w-7 h-7 ring-1 ring-border/30">
+                          <AvatarImage src={member.avatar} alt={member.name} />
+                          <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{member.name[0]}</AvatarFallback>
                         </Avatar>
-                      )}
+                        {isProcessing && (
+                          <span className="absolute -inset-0.5 rounded-full border-[1.5px] border-transparent border-t-primary animate-spin pointer-events-none" />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">
+                        <p className="text-xs font-semibold truncate text-foreground">
                           {isUpscale
-                            ? `${luna?.name ?? 'Luna'} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
-                            : group.job_type === 'video' ? 'Animate Image'
-                            : group.isCreativeDrop ? 'Creative Drop'
-                            : group.job_type === 'freestyle' ? 'Freestyle'
-                            : (group.workflow_name ?? 'Generation')}
+                            ? `${member.name} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : group.job_type === 'video' ? `${member.name} is animating`
+                            : group.isCreativeDrop ? `${member.name} is creating your drop`
+                            : group.job_type === 'freestyle' ? `${member.name} is shooting`
+                            : group.job_type === 'tryon' ? `${member.name} is styling`
+                            : `${member.name} is creating`}
                           {group.product_name ? ` — ${group.product_name}` : ''}
                         </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {isBatch
-                            ? `${group.completedCount}/${group.totalCount} done · ${elapsed}`
-                            : isProcessing
-                              ? `${group.job_type === 'upscale' ? 'Upscaling' : group.job_type === 'video' ? 'Animating' : 'Generating'}… ${elapsed}`
-                              : `Queued · ${elapsed}`}
+                        <p className="text-[11px] text-muted-foreground mt-0.5 italic">
+                          "{member.statusMessage}"
                         </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Clock className="w-3 h-3 text-muted-foreground/60" />
+                          <span className="text-[10px] text-muted-foreground">
+                            {isBatch
+                              ? `${group.completedCount}/${group.totalCount} done · ${elapsed}`
+                              : `${elapsed}`}
+                          </span>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              'ml-auto shrink-0 text-[8px] uppercase tracking-wider font-bold px-1.5 py-0 h-4 rounded-md',
+                              isProcessing
+                                ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/10'
+                                : 'bg-muted text-muted-foreground hover:bg-muted',
+                            )}
+                          >
+                            {isProcessing ? 'Processing' : 'Queued'}
+                          </Badge>
+                        </div>
                       </div>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          'shrink-0 text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0',
-                          isProcessing && 'bg-primary/10 text-primary hover:bg-primary/10',
-                        )}
-                      >
-                        {isProcessing ? 'Processing' : 'Queued'}
-                      </Badge>
                     </div>
                     {progressPct !== undefined && (
-                      <Progress value={progressPct} className="h-1 mt-1.5" />
+                      <Progress value={progressPct} className="h-1 mt-2" />
                     )}
                   </div>
                 );
               })}
 
-              {visibleCompleted.map((group) => (
-                <div key={group.key} className="px-3 py-2.5 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <p className="text-xs font-medium flex-1 truncate">
-                      {group.job_type === 'upscale'
-                        ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
-                        : group.job_type === 'video' ? 'Video ready'
-                        : group.job_type === 'freestyle' ? 'Freestyle complete'
-                        : 'Complete'}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="shrink-0 gap-1 h-6 text-[11px] px-2"
-                      onClick={() => {
-                        if (location.pathname.startsWith('/app/library')) {
-                          window.dispatchEvent(new CustomEvent('library:focus-grid'));
-                        } else {
-                          navigate('/app/library');
-                        }
-                      }}
-                    >
-                      View
-                      <ArrowRight className="w-3 h-3" />
-                    </Button>
-                    <button
-                      className="shrink-0 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded"
-                      onClick={() => setDismissedKeys((s) => new Set([...s, group.key]))}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+              {visibleCompleted.map((group) => {
+                const member = getTeamMemberForJob(group);
+                const isVideo = group.job_type === 'video';
+                return (
+                  <div key={group.key} className="px-3 py-3 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar className="w-7 h-7 ring-1 ring-emerald-500/30 shrink-0">
+                        <AvatarImage src={member.avatar} alt={member.name} />
+                        <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-600">{member.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate text-foreground">
+                          {isVideo ? 'Your video is ready!' 
+                            : group.job_type === 'upscale' ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : 'Your images are ready!'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {member.name} finished the job ✨
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0 gap-1 h-6 text-[11px] px-2"
+                        onClick={() => {
+                          if (location.pathname.startsWith('/app/library')) {
+                            window.dispatchEvent(new CustomEvent('library:focus-grid'));
+                          } else {
+                            navigate('/app/library');
+                          }
+                        }}
+                      >
+                        View
+                        <ArrowRight className="w-3 h-3" />
+                      </Button>
+                      <button
+                        className="shrink-0 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded"
+                        onClick={() => setDismissedKeys((s) => new Set([...s, group.key]))}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-              {visibleActive.length > 0 && (
+            {/* Rotating quote footer */}
+            {visibleActive.length > 0 && rotatingMember && (
+              <div className="border-t border-border/30 px-3 py-2 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Avatar className="w-5 h-5 shrink-0">
+                    <AvatarImage src={rotatingMember.avatar} alt={rotatingMember.name} />
+                    <AvatarFallback className="text-[6px]">{rotatingMember.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <p className="text-[10px] text-muted-foreground italic truncate transition-all duration-300">
+                    {rotatingMember.name}: "{rotatingMember.statusMessage}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {visibleActive.length > 0 && (
               <div className="border-t border-border/40 px-3 py-2 flex justify-end">
                 {(() => {
-                   const hasCreativeDrop = visibleActive.some((g) => g.isCreativeDrop);
-                   const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
-                   const hasFreestyle = visibleActive.some((g) => g.job_type === 'freestyle');
-                   const hasVideo = visibleActive.some((g) => g.job_type === 'video');
-                   const targetPath = hasCreativeDrop ? '/app/creative-drops' : hasUpscale ? '/app/library' : hasVideo ? '/app/video/animate' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
-                   const targetLabel = hasCreativeDrop ? 'View in Creative Drops' : hasUpscale ? 'View in Library' : hasVideo ? 'View in Animate' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
-                   return (
-                     <Button
-                       size="sm"
-                       variant="outline"
-                       className="gap-1 h-7 text-[11px]"
-                       onClick={() => navigate(targetPath)}
-                     >
-                       {targetLabel}
-                       <ArrowRight className="w-3 h-3" />
-                     </Button>
-                   );
-                 })()}
+                  const hasCreativeDrop = visibleActive.some((g) => g.isCreativeDrop);
+                  const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
+                  const hasFreestyle = visibleActive.some((g) => g.job_type === 'freestyle');
+                  const hasVideo = visibleActive.some((g) => g.job_type === 'video');
+                  const targetPath = hasCreativeDrop ? '/app/creative-drops' : hasUpscale ? '/app/library' : hasVideo ? '/app/video/animate' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
+                  const targetLabel = hasCreativeDrop ? 'View in Creative Drops' : hasUpscale ? 'View in Library' : hasVideo ? 'View in Animate' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
+                  return (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 h-7 text-[11px]"
+                      onClick={() => navigate(targetPath)}
+                    >
+                      {targetLabel}
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  );
+                })()}
               </div>
             )}
           </div>
