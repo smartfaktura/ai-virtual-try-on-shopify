@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LucideIcon } from 'lucide-react';
 
@@ -30,6 +30,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
+import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
 type Duration = '5' | '10';
@@ -135,6 +136,7 @@ export default function AnimateVideo() {
   const [userPrompt, setUserPrompt] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [libraryPickerOpen, setLibraryPickerOpen] = useState(false);
 
   // Cycling tip index
   const [tipIndex, setTipIndex] = useState(0);
@@ -175,11 +177,8 @@ export default function AnimateVideo() {
     }
   }, [motionGoalId, category, sceneType]);
 
-  // Auto-analyze after upload
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Core file processing function (used by file input, paste, and library)
+  const processFile = useCallback(async (file: File) => {
     const newWarnings: ValidationWarning[] = [];
     if (file.size > 20 * 1024 * 1024) {
       newWarnings.push({ type: 'error', message: 'Image must be under 20MB.' });
@@ -204,11 +203,54 @@ export default function AnimateVideo() {
       setUploadCompleteTime(Date.now());
       const analysis = await analyzeImage(url);
       if (analysis) {
-        // Buffer the result — the useEffect gating logic will reveal after 5s minimum
         setAnalysisCompleteData(analysis);
       }
     }
   }, [upload, analyzeImage]);
+
+  // File input handler
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  }, [processFile]);
+
+  // Library image selection handler
+  const handleLibrarySelect = useCallback(async (libraryImageUrl: string) => {
+    setImagePreview(libraryImageUrl);
+    setImageUrl(libraryImageUrl);
+    setWarnings([]);
+    setHasAnalyzed(false);
+    setUiRevealReady(false);
+    setAnalysisCompleteData(null);
+    setUploadCompleteTime(Date.now());
+    const analysis = await analyzeImage(libraryImageUrl);
+    if (analysis) {
+      setAnalysisCompleteData(analysis);
+    }
+  }, [analyzeImage]);
+
+  // Paste image support (CMD+V / Ctrl+V)
+  useEffect(() => {
+    if (imageUrl) return; // Only listen when no image is loaded
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            toast.success('Image pasted — uploading...');
+            processFile(file);
+          }
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [imageUrl, processFile]);
 
   const removeImage = () => {
     setImageUrl(null);
@@ -340,27 +382,30 @@ export default function AnimateVideo() {
       {!isPipelineActive && !isComplete && !imageUrl && (
         <>
           {/* Category Chips Row */}
-          <div className="flex flex-wrap gap-1.5">
-            {PRODUCT_CATEGORIES.map((c) => {
-              const Icon = CATEGORY_ICON_MAP[c.icon];
-              return (
-                <span
-                  key={c.id}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border border-border bg-muted/30 text-muted-foreground"
-                >
-                  {Icon && <Icon className="h-3 w-3" />}
-                  {c.label}
-                </span>
-              );
-            })}
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">Works across ecommerce categories</p>
+            <div className="flex flex-wrap gap-1">
+              {PRODUCT_CATEGORIES.map((c) => {
+                const Icon = CATEGORY_ICON_MAP[c.icon];
+                return (
+                  <span
+                    key={c.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border border-border/50 bg-muted/20 text-muted-foreground/70 hover:bg-muted/40 transition-colors"
+                  >
+                    {Icon && <Icon className="h-2.5 w-2.5" />}
+                    {c.label}
+                  </span>
+                );
+              })}
+            </div>
           </div>
 
           {/* Two-column layout: Upload Card + How It Works */}
-          <div className="grid lg:grid-cols-[1fr_320px] gap-5">
-            {/* Left: Premium Upload Card */}
-            <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
+          <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5">
+            {/* Left: Dominant Upload Card */}
+            <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
               <div>
-                <h2 className="text-base font-semibold text-foreground">Upload your product image</h2>
+                <h2 className="text-lg font-semibold text-foreground">Upload your product image</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   We'll detect category, scene type, and recommended motion automatically.
                 </p>
@@ -371,28 +416,65 @@ export default function AnimateVideo() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-3 bg-muted/5 hover:bg-muted/10 group"
+                className="w-full flex-1 min-h-[200px] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-primary/[0.02] to-muted/5 hover:from-primary/[0.05] hover:to-muted/10 group"
               >
                 {isUploading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+                    <span className="text-sm text-muted-foreground">Uploading...</span>
+                  </div>
                 ) : (
                   <>
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                      <Upload className="h-5 w-5 text-primary" />
+                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 group-hover:scale-105 transition-all duration-300">
+                      <Upload className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="text-center">
-                      <span className="text-sm font-medium text-foreground">Click to upload</span>
-                      <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, WebP — Max 20 MB</p>
+                    <div className="text-center space-y-1">
+                      <span className="text-sm font-medium text-foreground">Drop image here or click to browse</span>
+                      <p className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 20 MB</p>
                     </div>
                   </>
                 )}
               </button>
+
+              {/* Secondary input methods */}
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  <Upload className="h-3 w-3" />
+                  Upload image
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30"
+                  onClick={() => setLibraryPickerOpen(true)}
+                  disabled={isUploading}
+                >
+                  <FolderOpen className="h-3 w-3" />
+                  Choose from Library
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
+                  disabled={isUploading}
+                  onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
+                >
+                  <ClipboardPaste className="h-3 w-3" />
+                  Paste (⌘V)
+                </Button>
+              </div>
             </div>
 
-            {/* Right: How It Works + Best Results */}
+            {/* Right: How It Works + Best Results (lighter) */}
             <div className="space-y-4">
               {/* How It Works */}
-              <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
+              <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4 hover:border-border/80 transition-colors">
                 <h3 className="text-sm font-semibold text-foreground">How it works</h3>
                 <div className="space-y-3">
                   {[
@@ -414,28 +496,44 @@ export default function AnimateVideo() {
                 </div>
               </div>
 
-              {/* Best Results Tips */}
-              <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-3">
-                <h3 className="text-sm font-semibold text-foreground">Best results</h3>
-                <ul className="space-y-2">
-                  {[
-                    'Use clean, sharp product or campaign images',
-                    'Keep the main subject clearly visible',
-                    'Works best with one primary focus',
-                    'Well-lit photos produce smoother motion',
-                  ].map((tip, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                      <span>{tip}</span>
-                    </li>
-                  ))}
-                </ul>
+              {/* Best Results — Lighter, no border */}
+              <div className="rounded-xl bg-muted/20 p-4 space-y-2">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Best results</h3>
+                <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Use clean, sharp images with one clear subject. Well-lit photos with visible product details produce the smoothest motion.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Smart Assistant Tip (moved below) */}
-          <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4">
+          {/* Proof-of-output strip */}
+          <div className="space-y-2">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">What Animate Image creates</p>
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {[
+                { label: 'Fashion lookbook', emoji: '👗' },
+                { label: 'Product showcase', emoji: '✨' },
+                { label: 'Lifestyle scene', emoji: '🏠' },
+                { label: 'Beauty close-up', emoji: '💄' },
+              ].map((example, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/30 shrink-0 hover:bg-muted/30 transition-colors"
+                >
+                  <span className="text-sm">{example.emoji}</span>
+                  <div className="flex items-center gap-1.5">
+                    <Image className="h-3 w-3 text-muted-foreground/50" />
+                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40" />
+                    <Play className="h-3 w-3 text-primary/60" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">{example.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Smart Assistant Banner — smarter copy */}
+          <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted/40 transition-colors">
             <div className="flex -space-x-2 shrink-0">
               {TIPS_TEAM.map((m) => (
                 <img
@@ -447,12 +545,18 @@ export default function AnimateVideo() {
               ))}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
-              <p className="text-sm text-muted-foreground truncate" key={tipIndex}>
-                {TIPS[tipIndex]}
+              <p className="text-xs font-medium text-foreground/70">VOVV AI Studio</p>
+              <p className="text-sm text-muted-foreground">
+                We detect category, scene type, and motion opportunities so you don't need to prompt from scratch.
               </p>
             </div>
           </div>
+
+          <LibraryPickerModal
+            open={libraryPickerOpen}
+            onOpenChange={setLibraryPickerOpen}
+            onSelect={handleLibrarySelect}
+          />
         </>
       )}
 
