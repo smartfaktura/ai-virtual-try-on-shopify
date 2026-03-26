@@ -801,6 +801,9 @@ async function saveFreestyleGeneration(
   if (body.workflow_label) {
     insertData.workflow_label = body.workflow_label;
   }
+  if ((body as any).providerUsed) {
+    insertData.provider_used = (body as any).providerUsed;
+  }
   const { error: insertErr } = await supabase.from('freestyle_generations').insert(insertData);
   if (insertErr) {
     console.error(`[generate-freestyle] Failed to save freestyle_generations:`, insertErr.message);
