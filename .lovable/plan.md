@@ -1,46 +1,35 @@
 
 
-# Fix Seedream 4:5 Stretch — Crop to Requested Ratio
+# Fix: Scene Composition/Perspective Not Being Replicated
 
 ## Problem
-When a user selects **4:5**, Seedream generates at **3:4** (the closest supported ratio). The image is stored as-is and displayed in a 4:5 container, causing visible stretching.
+The scene reference instruction currently only asks the AI to match **lighting, color temperature, and atmosphere** from the scene image. It explicitly does NOT ask to replicate the **camera angle, composition, or framing perspective**.
+
+For scenes like "Urban Taxi Ride" (shot from outside through the car window), the camera position IS the scene — without it, the AI improvises a completely different composition.
+
+This was intentionally loosened previously to give the AI "creative freedom," but it went too far — the scene's core visual identity is lost.
 
 ## Solution
-After downloading a Seedream-generated image, detect if the requested ratio differs from the Seedream ratio (e.g. 4:5 → 3:4). If so, **center-crop** the image to the exact requested dimensions before uploading to storage.
+Add **composition and camera perspective matching** back into the scene reference instructions, but in a balanced way that preserves the scene's visual identity without being overly rigid.
 
-## Implementation
+## Changes
 
 ### File: `supabase/functions/generate-freestyle/index.ts`
 
-1. **Track when Seedream maps to a different ratio** — add a `seedreamMappedRatio` field to `ProviderResult` so downstream code knows the actual generated ratio differs from the requested one.
+**Update all three scene reference blocks (lines 226-234)** to include composition/perspective matching:
 
-2. **Add a crop helper function** — using canvas-free approach in Deno:
-   - Fetch the Seedream image bytes
-   - Decode dimensions from the PNG/JPEG header
-   - Calculate the crop rect to go from 3:4 → 4:5 (trim equal strips from top and bottom)
-   - Use sharp-compatible Deno image processing or a simple pixel-buffer crop
-   
-   **Simpler alternative (recommended)**: Since Deno edge functions don't have native image manipulation, the most reliable approach is to **re-encode via the Lovable AI gateway** — send the Seedream output to Gemini with a simple "Output this exact image at 4:5 aspect ratio" instruction. However, this adds cost and latency.
+- **With model (line 228)**: Add "Replicate the camera angle, framing, and composition from the scene reference" to the existing lighting/environment instructions
+- **On-model scene without explicit model (line 231)**: Same addition
+- **Product-only / no model (line 233)**: Same addition
 
-   **Simplest fix**: Instead of server-side cropping, store the **actual generated ratio** alongside the image URL and let the frontend apply CSS `object-fit: cover` with the correct container ratio. This avoids any server-side image processing.
+The updated instruction will read something like:
 
-3. **Recommended approach — store actual ratio metadata**:
-   - In the `ProviderResult`, include `actualAspectRatio` when Seedream maps to a different ratio
-   - When saving to `freestyle_generations`, store the actual ratio used
-   - The frontend already uses `object-cover` for display, so the image won't stretch — it'll crop visually in the browser
+> SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. **Replicate the camera angle, framing, and composition of the scene image** — if the scene shows a view through a window, shoot through that window; if it shows a low angle, use a low angle. Match the scene's lighting direction, color temperature, and ambient shadows...
 
-### Changes needed:
-
-**`supabase/functions/generate-freestyle/index.ts`**:
-- Modify `seedreamAspectRatio()` to also return whether a mapping occurred
-- After Seedream success, attach `actualAspectRatio` to the result
-- When saving to `freestyle_generations`, store the actual Seedream ratio in the `ratio` column instead of the user-requested ratio (so the image displays at its true proportions)
-
-**`src/components/app/freestyle/FreestyleGallery.tsx`** (if needed):
-- Ensure images use `object-cover` (already the case per memory context) — no change expected
+This ensures the AI treats the scene image as a **composition blueprint**, not just a mood board.
 
 ### Scope
-- 1 backend file: `supabase/functions/generate-freestyle/index.ts`
-- Possibly 1 frontend file if gallery ratio handling needs adjustment
+- 1 file: `supabase/functions/generate-freestyle/index.ts` — update 3 scene instruction strings
+- Redeploy edge function
 - No database changes
 
