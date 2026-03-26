@@ -234,6 +234,7 @@ export function GlobalGenerationBar() {
                         <p className="text-xs font-medium truncate">
                           {isUpscale
                             ? `${luna?.name ?? 'Luna'} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : group.job_type === 'video' ? 'Animate Image'
                             : group.isCreativeDrop ? 'Creative Drop'
                             : group.job_type === 'freestyle' ? 'Freestyle'
                             : (group.workflow_name ?? 'Generation')}
@@ -243,7 +244,7 @@ export function GlobalGenerationBar() {
                           {isBatch
                             ? `${group.completedCount}/${group.totalCount} done · ${elapsed}`
                             : isProcessing
-                              ? `${group.job_type === 'upscale' ? 'Upscaling' : 'Generating'}… ${elapsed}`
+                              ? `${group.job_type === 'upscale' ? 'Upscaling' : group.job_type === 'video' ? 'Animating' : 'Generating'}… ${elapsed}`
                               : `Queued · ${elapsed}`}
                         </p>
                       </div>
@@ -271,6 +272,7 @@ export function GlobalGenerationBar() {
                     <p className="text-xs font-medium flex-1 truncate">
                       {group.job_type === 'upscale'
                         ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
+                        : group.job_type === 'video' ? 'Video ready'
                         : group.job_type === 'freestyle' ? 'Freestyle complete'
                         : 'Complete'}
                     </p>
@@ -306,8 +308,9 @@ export function GlobalGenerationBar() {
                    const hasCreativeDrop = visibleActive.some((g) => g.isCreativeDrop);
                    const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
                    const hasFreestyle = visibleActive.some((g) => g.job_type === 'freestyle');
-                   const targetPath = hasCreativeDrop ? '/app/creative-drops' : hasUpscale ? '/app/library' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
-                   const targetLabel = hasCreativeDrop ? 'View in Creative Drops' : hasUpscale ? 'View in Library' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
+                   const hasVideo = visibleActive.some((g) => g.job_type === 'video');
+                   const targetPath = hasCreativeDrop ? '/app/creative-drops' : hasUpscale ? '/app/library' : hasVideo ? '/app/video/animate' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
+                   const targetLabel = hasCreativeDrop ? 'View in Creative Drops' : hasUpscale ? 'View in Library' : hasVideo ? 'View in Animate' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
                    return (
                      <Button
                        size="sm"

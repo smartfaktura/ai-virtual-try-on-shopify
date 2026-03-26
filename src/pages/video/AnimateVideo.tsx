@@ -464,8 +464,8 @@ export default function AnimateVideo() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Upload Image</label>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-sm">
-                <img src={imagePreview!} alt="Upload" className="w-full aspect-square object-contain" />
+              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-xs">
+                <img src={imagePreview!} alt="Upload" className="w-full rounded-xl object-cover" />
                 <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
                   <X className="h-4 w-4" />
                 </button>
@@ -491,7 +491,7 @@ export default function AnimateVideo() {
                     <img
                       src={imagePreview}
                       alt="Uploaded"
-                      className="w-full aspect-[4/3] object-contain bg-muted/5"
+                      className="w-full max-h-[500px] object-cover"
                     />
                   )}
                   <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-medium shadow-sm">

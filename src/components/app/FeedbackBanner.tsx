@@ -37,7 +37,7 @@ export function FeedbackBanner() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error('Couldn't send — try again?');
+      toast.error("Couldn't send — try again?");
       return;
     }
     setSubmitted(true);
