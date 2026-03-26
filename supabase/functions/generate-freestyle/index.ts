@@ -70,6 +70,7 @@ interface FreestyleRequest {
   imageRole?: "edit" | "product" | "model" | "scene";
   editIntent?: string[];
   promptOnly?: boolean;
+  sceneCategory?: string;
 }
 
 // ── Editing intent detection — skip heavy polish for simple edits ─────────
@@ -225,6 +226,9 @@ function polishUserPrompt(
   if (context.hasScene) {
     if (context.hasModel) {
       refs.push(`${refNum}. SCENE: Place the person naturally INTO the environment shown in [SCENE REFERENCE]. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
+    } else if (context.isOnModelScene && context.hasProduct) {
+      // On-model scene category but no explicit model selected — inject person placement
+      refs.push(`${refNum}. SCENE: Place a professional model naturally INTO the environment shown in [SCENE REFERENCE]. The model should wear the product as the hero piece with a complete, styled outfit. Match the scene's lighting direction, color temperature, and ambient shadows on the person's body and face. The person must appear physically present in this space — correct perspective, scale relative to surroundings, feet/body grounded on surfaces, consistent shadow direction. Ignore any products or people already in the scene image.`);
     } else {
       refs.push(`${refNum}. SCENE: Use [SCENE REFERENCE] for environment, lighting, atmosphere. Ignore any products in the scene image.`);
     }
@@ -232,6 +236,9 @@ function polishUserPrompt(
   }
 
   if (context.hasProduct && context.hasModel) {
+    refs.push("OUTFIT COMPLETION: The product is the hero piece. The model must wear a COMPLETE outfit — never appear partially dressed or missing clothing. Choose complementary garments (bottoms, shoes, accessories) that match the scene context and style: e.g. tailored trousers for studio/urban, shorts or athletic wear for sport/outdoor/active scenes, swimwear for beach/pool settings. The outfit must look intentional and styled — never accidentally incomplete.");
+  } else if (context.hasProduct && context.isOnModelScene && !context.hasModel) {
+    // On-model scene without explicit model — still need outfit completion directive
     refs.push("OUTFIT COMPLETION: The product is the hero piece. The model must wear a COMPLETE outfit — never appear partially dressed or missing clothing. Choose complementary garments (bottoms, shoes, accessories) that match the scene context and style: e.g. tailored trousers for studio/urban, shorts or athletic wear for sport/outdoor/active scenes, swimwear for beach/pool settings. The outfit must look intentional and styled — never accidentally incomplete.");
   }
 
