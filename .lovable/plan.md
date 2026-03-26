@@ -1,82 +1,51 @@
 
 
-# Animate Image — Premium First Screen Redesign
+# Improve Loading State After Image Upload
 
 ## Current State
-The pre-upload screen shows: PageHeader → tips banner → plain upload box with "Click to upload image" label. Too much empty space, no workflow guidance, no category awareness, no sense of intelligence.
-
-## Redesigned Layout (pre-upload only)
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│  ← Video   Animate Image                               │
-│  Turn a still product image into a polished commercial  │
-│  video.                                                 │
-├─────────────────────────────────────────────────────────┤
-│  Category Chips Row (scrollable)                        │
-│  [Fashion] [Beauty] [Jewelry] [Food] [Electronics] ... │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────────────┐  ┌─────────────────────────┐  │
-│  │  UPLOAD CARD          │  │  How it works           │  │
-│  │  (Premium focal       │  │                         │  │
-│  │   point)              │  │  1. Upload your image   │  │
-│  │                       │  │  2. VOVV detects context│  │
-│  │  Upload your product  │  │  3. Choose motion       │  │
-│  │  image                │  │  4. Generate video      │  │
-│  │                       │  │                         │  │
-│  │  We'll detect         │  │  ─────────────────────  │  │
-│  │  category, scene &    │  │  Best results tips      │  │
-│  │  motion automatically │  │  • Clean, sharp images  │  │
-│  │                       │  │  • One primary subject  │  │
-│  │  [Upload zone]        │  │  • Well-lit photos      │  │
-│  │                       │  │                         │  │
-│  └──────────────────────┘  └─────────────────────────┘  │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │  Smart Assistant Tip (VOVV.AI Studio + avatars)   │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
+Lines 429-438: A simple card with `Brain` icon saying "Analyzing your image... Detecting product category and scene type". Below it, nothing — large empty space. A disconnected green success toast appears on upload.
 
 ## Changes to `src/pages/video/AnimateVideo.tsx`
 
-### 1. Category Chips Row
-Add a decorative row of category chips (from `PRODUCT_CATEGORIES`) below the header. Non-interactive, purely communicates ecommerce awareness. Small outline chips with Lucide icons matching the existing `ICON_MAP` pattern from `ProductContextSelector`.
+### 1. Add Simulated Analysis Steps
+Add a `useEffect` that cycles through analysis stages during `isAnalyzingImage`:
+- Step 0 (immediate): "Image uploaded" — checkmark
+- Step 1 (1s): "Detecting category" — active
+- Step 2 (2s): "Detecting scene type" — active  
+- Step 3 (3s): "Preparing motion recommendations" — active
 
-### 2. Redesigned Upload Card
-Replace the plain upload box with a premium card (`rounded-2xl border bg-card shadow-sm`):
-- Headline: "Upload your product image" (text-base font-medium)
-- Subline: "We'll detect category, scene type, and recommended motion automatically." (text-sm muted)
-- Upload zone inside with larger icon, refined dashed border (`border-primary/20`), and subtle hover state
-- The card is the left column in a two-column grid (`lg:grid-cols-[1fr_320px]`)
+Track with `analysisStep` state (0-3), auto-increment via interval while `isAnalyzingImage` is true.
 
-### 3. Right-Side "How It Works" + Best Results Panel
-Right column contains two stacked sections:
+### 2. Replace the Analysis Card (lines 429-438)
+Replace the simple loader with a rich analysis panel containing:
 
-**How It Works** — 4 vertical steps with numbered circles and short labels:
-1. Upload image → `Upload` icon
-2. VOVV detects context → `Brain` icon
-3. Choose realistic motion → `Wand2` icon
-4. Generate video → `Sparkles` icon
+**Left side: Image preview + inline success badge**
+Show the uploaded image with a small "Image uploaded" badge overlaid (replaces toast). Remove reliance on the green toast for upload confirmation.
 
-**Best Results** — Short tips list:
-- Use clean, sharp product or campaign images
-- Keep the main subject clearly visible
-- Works best with one primary focus
-- Ideal for fashion, beauty, jewelry, food, electronics
+**Right side: Step-based progress + live preview fields**
+- 4-step vertical progress with checkmarks for completed steps and a spinner for the active step
+- Below steps, a "Detection Preview" card showing:
+  - Category: `detecting…` → resolved label
+  - Scene type: `detecting…` → resolved label  
+  - Motion goals: `preparing…` → resolved label
+  - Best aspect ratio: `pending…`
 
-### 4. Move Tips Banner Below
-Keep the VOVV.AI Studio tips banner but move it below the two-column area as a subtle footer hint rather than the first thing users see.
+### 3. Dynamic Assistant Card During Loading
+Change the VOVV.AI Studio tip banner text while analyzing to: "We're detecting category, scene type, and the most realistic motion options for this image."
 
-### 5. Widen Container
-Already `max-w-4xl` from previous change — sufficient for two-column layout.
+### 4. Skeleton Cards for Upcoming Sections
+Below the analysis panel, show shimmer skeleton placeholders for:
+- Product Context (skeleton chips)
+- Recommended Motion (skeleton cards)
+- Motion Refinement (skeleton sliders)
+- Settings (skeleton buttons)
 
-### Post-upload behavior
-No changes to the post-upload form. Once an image is uploaded, the current flow (ProductContextSelector → MotionGoals → Settings → Generate) remains exactly as-is.
+Use the existing `Skeleton` component from `@/components/ui/skeleton`.
+
+### 5. Remove Upload Success Toast
+The `handleFileSelect` callback currently triggers a toast via `useFileUpload`. Check if the toast comes from there or from sonner directly. Integrate success state into the page flow instead — the step progress "Image uploaded ✓" replaces it.
 
 ## Files to Modify
-- `src/pages/video/AnimateVideo.tsx` — Restructure the pre-upload section (lines 369-403) into the new two-column premium layout with category chips, redesigned upload card, how-it-works panel, and best-results tips.
-
-No new files needed. All changes are contained within the existing AnimateVideo component's pre-upload branch.
+- `src/pages/video/AnimateVideo.tsx` — All changes: analysis step state, rich loading panel, skeleton sections, dynamic assistant text
+- `src/hooks/useFileUpload.ts` — Check and remove any success toast on upload
 
