@@ -1,17 +1,36 @@
 
 
-# Fix: Require at least 1 aspect ratio selected before generating
+# Fix: Selfie/UGC Workflow Credit Calculation
 
 ## Problem
-In the Virtual Try-On settings panel, users can deselect all image sizes and still click "Generate", which shouldn't be allowed.
+The Selfie/UGC workflow sets `generationMode = 'virtual-try-on'` (because `uses_tryon` is true), so the credit calculation at line 1995 takes the virtual-try-on branch:
 
-## Changes
+```
+parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
+```
 
-**File**: `src/components/app/generate/TryOnSettingsPanel.tsx`
+But `tryOnSceneCount = Math.max(1, selectedPoses.size)` — Selfie/UGC doesn't use `selectedPoses` (the try-on scene picker). It uses `selectedVariationIndices` from the workflow variation system. So `selectedPoses.size` is likely 0 or stale, making the scene count wrong.
 
-1. **Disable Generate button when no aspect ratio is selected**: Add a `const canGenerate = selectedAspectRatios.size > 0 && balance >= creditCost;` check
-2. **Update the Generate button** (line 185-190): Use `disabled={selectedAspectRatios.size === 0}` and conditionally route the click to `handleGenerateClick` vs `openBuyModal` based on balance
-3. **Show "Select at least 1" hint** next to the Image Size heading when none are selected (the screenshot already shows this red text — just need to wire it to actually block generation)
+The correct branch for Selfie/UGC is the `hasWorkflowConfig` one: `workflowImageCount * workflowCostPerImage`, which properly accounts for `selectedVariationIndices × models × ratios × framings`.
 
-Single file, ~5 lines changed.
+## Fix
+
+**File**: `src/pages/Generate.tsx`, line 1995
+
+Add `&& !isSelfieUgc && !isMirrorSelfie` to the virtual-try-on condition so these workflows fall through to the `hasWorkflowConfig` branch:
+
+```typescript
+const singleProductCreditCost = isUpscale ? 0 : (
+  generationMode === 'virtual-try-on' && !isSelfieUgc && !isMirrorSelfie
+    ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
+    : (hasWorkflowConfig
+      ? workflowImageCount * workflowCostPerImage
+      : parseInt(imageCount) * 6 * tryOnSceneCount)
+);
+```
+
+This ensures Selfie/UGC uses `workflowImageCount` (which already includes `selectedVariationIndices.size × workflowModelCount × aspectRatioCount × framingCount`) multiplied by 6 credits, matching the actual generation matrix.
+
+## Files Modified
+- `src/pages/Generate.tsx` — 1 line edit
 
