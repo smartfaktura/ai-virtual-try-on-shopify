@@ -47,6 +47,13 @@ You MUST identify:
 4. What realistic motion would work best for a commercial video
 5. What preservation risks exist (identity, product details, background stability)
 
+CRITICAL OBJECT GROUNDING RULES:
+- You MUST report ONLY objects that are actually visible in the image. Do NOT infer products from category alone.
+- visible_product_detected: set to true ONLY if a distinct product/object (bottle, package, garment on display, device, etc.) is clearly visible. A person wearing clothes does NOT count as a visible product unless the garment is the clear focal subject.
+- visible_object_list: list ONLY objects you can literally see in frame. Examples: "perfume bottle", "sneaker", "lipstick tube", "basketball". If the image is just a person with no distinct product, return an empty array.
+- product_interaction_visible: true ONLY if someone is physically holding, touching, or directly interacting with a product/object in the image.
+- Do NOT assume a product exists just because the category is "beauty" or "fashion". Analyze what is actually in the image.
+
 Return deterministic structured analysis. Do NOT generate creative concepts or cinematic descriptions. Only describe and classify what you see.`;
 
     const userContent: unknown[] = [];
@@ -58,12 +65,12 @@ Return deterministic structured analysis. Do NOT generate creative concepts or c
     if (isSingle) {
       userContent.push({
         type: "text",
-        text: `Analyze this image for ecommerce video generation. Classify the product category, scene type, subject type, and recommend the best motion approach for a commercial product video. Identify any interactive objects (balls, cups, bottles, etc.) and assess preservation risks.`,
+        text: `Analyze this image for ecommerce video generation. Classify the product category, scene type, subject type, and recommend the best motion approach for a commercial product video. Identify any interactive objects (balls, cups, bottles, etc.) and assess preservation risks. IMPORTANT: For visible_product_detected and visible_object_list, report ONLY what is literally visible in the image — do not infer from category.`,
       });
     } else {
       userContent.push({
         type: "text",
-        text: `Analyze these ${image_urls.length} images as a sequence for ecommerce video. For each image, classify category, scene type, and motion recommendations. Assess continuity.`,
+        text: `Analyze these ${image_urls.length} images as a sequence for ecommerce video. For each image, classify category, scene type, and motion recommendations. Assess continuity. Report only visible objects — do not infer from category.`,
       });
     }
 
@@ -94,7 +101,7 @@ Return deterministic structured analysis. Do NOT generate creative concepts or c
           },
           required: ["busy_background", "text_present", "multiple_people", "low_resolution", "transparent_png", "identity_sensitive", "product_detail_sensitive", "background_should_stay_static"],
         },
-        // New ecommerce fields
+        // Ecommerce fields
         category: {
           type: "string",
           enum: ["fashion_apparel", "beauty_skincare", "fragrances", "jewelry", "accessories", "home_decor", "food_beverage", "electronics", "sports_fitness", "health_supplements"],
@@ -108,6 +115,21 @@ Return deterministic structured analysis. Do NOT generate creative concepts or c
         subject_type: { type: "string", description: "e.g. athlete_with_object, skincare_bottle, fashion_model" },
         has_person: { type: "boolean" },
         interactive_object: { type: "string", description: "e.g. basketball, wine_glass, lipstick, null if none" },
+        // Object grounding fields
+        visible_product_detected: {
+          type: "boolean",
+          description: "Is a distinct product or object clearly visible in the image? A person wearing clothes alone does NOT count. Must be a focal product like a bottle, device, package, shoe, etc."
+        },
+        visible_object_list: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of objects literally visible in the image. Only include what you can see — do NOT infer from category. Empty array if no distinct objects."
+        },
+        product_interaction_visible: {
+          type: "boolean",
+          description: "Is someone physically holding, touching, or interacting with a product/object in the image?"
+        },
+        // Motion recommendations
         recommended_motion_goals: {
           type: "array",
           items: { type: "string" },
@@ -122,6 +144,7 @@ Return deterministic structured analysis. Do NOT generate creative concepts or c
         "subject_category", "scene_type", "shot_type", "camera_angle", "lighting_style",
         "mood", "motion_recommendation", "identity_sensitive", "scene_complexity", "risk_flags",
         "category", "ecommerce_scene_type", "subject_type", "has_person",
+        "visible_product_detected", "visible_object_list", "product_interaction_visible",
         "recommended_motion_goals", "recommended_camera_motion", "recommended_subject_motion",
         "recommended_realism", "recommended_loop_style"
       ],

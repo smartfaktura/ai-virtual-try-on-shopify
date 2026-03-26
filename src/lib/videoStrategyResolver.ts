@@ -41,6 +41,20 @@ export interface VideoAnalysis {
   recommended_subject_motion?: string;
   recommended_realism?: string;
   recommended_loop_style?: string;
+  // Object grounding fields
+  visible_product_detected?: boolean;
+  visible_object_list?: string[];
+  product_interaction_visible?: boolean;
+}
+
+export interface ObjectGrounding {
+  visible_product_detected: boolean;
+  visible_object_list: string[];
+  allow_new_objects: boolean;
+  allow_new_products: boolean;
+  preserve_visible_objects_only: boolean;
+  product_context_source: 'image_detected' | 'user_added' | 'library_selected' | 'none';
+  scene_expansion_mode: 'restricted' | 'guided' | 'flexible';
 }
 
 export interface VideoStrategy {
@@ -73,6 +87,8 @@ export interface VideoStrategy {
   camera_control_config?: { type: string; config: Record<string, number> };
   // CFG scale override (computed from category + realism)
   cfg_scale_override?: number;
+  // Object grounding
+  object_grounding: ObjectGrounding;
 }
 
 export type WorkflowType = 'animate' | 'ad_sequence' | 'consistent_model';
