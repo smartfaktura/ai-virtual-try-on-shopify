@@ -60,14 +60,47 @@ export default function AnimateVideo() {
   const [warnings, setWarnings] = useState<ValidationWarning[]>([]);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
-  // Simulated analysis step progress (0-3)
+  // Minimum 5s staged analysis experience
+  const [analysisCompleteData, setAnalysisCompleteData] = useState<any>(null);
+  const [uploadCompleteTime, setUploadCompleteTime] = useState<number | null>(null);
+  const [uiRevealReady, setUiRevealReady] = useState(false);
+
+  // Simulated analysis step progress (0-3) — 1500ms pacing for ~4.5s total
   const [analysisStep, setAnalysisStep] = useState(0);
+  const showAnalysisUI = isAnalyzingImage || (!!imageUrl && !uiRevealReady && !hasAnalyzed);
+
   useEffect(() => {
-    if (!isAnalyzingImage) { setAnalysisStep(0); return; }
+    if (!showAnalysisUI) { setAnalysisStep(0); return; }
     setAnalysisStep(0);
-    const iv = setInterval(() => setAnalysisStep(s => Math.min(s + 1, 3)), 1200);
+    const iv = setInterval(() => setAnalysisStep(s => Math.min(s + 1, 3)), 1500);
     return () => clearInterval(iv);
-  }, [isAnalyzingImage]);
+  }, [showAnalysisUI]);
+
+  // Gate: when backend finishes early, wait until 5s from upload before revealing
+  useEffect(() => {
+    if (!analysisCompleteData || !uploadCompleteTime) return;
+    const elapsed = Date.now() - uploadCompleteTime;
+    const remaining = Math.max(0, 5000 - elapsed);
+    const timer = setTimeout(() => setUiRevealReady(true), remaining);
+    return () => clearTimeout(timer);
+  }, [analysisCompleteData, uploadCompleteTime]);
+
+  // When uiRevealReady flips, apply buffered analysis data
+  useEffect(() => {
+    if (!uiRevealReady || !analysisCompleteData) return;
+    const analysis = analysisCompleteData;
+    setHasAnalyzed(true);
+    if (analysis.category) { setCategory(analysis.category); setDetectedCategory(analysis.category); }
+    if (analysis.ecommerce_scene_type) { setSceneType(analysis.ecommerce_scene_type); setDetectedSceneType(analysis.ecommerce_scene_type); }
+    if (analysis.recommended_motion_goals?.length) { setRecommendedGoalIds(analysis.recommended_motion_goals); setMotionGoalId(analysis.recommended_motion_goals[0]); }
+    if (analysis.recommended_camera_motion) setCameraMotion(analysis.recommended_camera_motion);
+    if (analysis.recommended_subject_motion) setSubjectMotion(analysis.recommended_subject_motion);
+    if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
+    if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
+    if (analysis.risk_flags?.identity_sensitive || analysis.identity_sensitive) { setPreserveIdentity(true); setPreserveOutfit(true); }
+    setAnalysisCompleteData(null);
+    setUploadCompleteTime(null);
+  }, [uiRevealReady, analysisCompleteData]);
 
   // Product Context
   const [category, setCategory] = useState('fashion_apparel');
