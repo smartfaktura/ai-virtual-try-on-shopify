@@ -1,39 +1,66 @@
 
 
-# Fix: Prompt Helper Chip — Layout & Styling
+# Fix: Stuck Generation — Client Never Re-triggers Cleanup
 
-## Problems
-1. **Layout**: Prompt Helper is stuck at the end of the second row. On wider screens it could fit in the first row (after Scene), on narrower screens it wraps alone. It should flow naturally with all other chips in a single wrapping container.
-2. **Styling**: The button always looks "active/clicked" (purple tinted with `border-primary/30 bg-primary/5 text-primary`) even when idle. It should match the neutral chip style used by Framing, Aspect Ratio, etc.
+## Root Cause
 
-## Changes
+The edge function crashed at ~2.5 minutes due to a Deno `TimeoutError` (signal timed out), which killed the process before it could update the queue job status. The job stayed `processing` forever because:
 
-### 1. Merge into single flex-wrap row (desktop)
-**File**: `src/components/app/freestyle/FreestyleSettingsChips.tsx` (lines 322-370)
+1. The job's `timeout_at` is 10 minutes from creation
+2. The client detects "stuck processing" at 5 minutes and triggers `retry-queue` → `process-queue` → `cleanup_stale_jobs`
+3. But at 5 minutes, `timeout_at` hasn't passed yet — cleanup ignores the job
+4. `retriggeredRef.current = true` prevents **any further retrigger attempts**
+5. The job stays stuck indefinitely — no server or client recovery fires again
 
-Remove the two-row `space-y-2` layout. Use a single `flex items-center gap-2 flex-wrap` container with all chips in natural order:
+## Fix
 
+**File**: `src/hooks/useGenerationQueue.ts` (lines 279-323)
+
+### Change 1: Allow periodic re-triggers instead of one-shot
+
+Replace the single `retriggeredRef.current` boolean with a **timestamp-based approach**. Allow re-triggering every 60 seconds (not just once) so that when the job eventually passes `timeout_at`, the next cleanup call actually catches it.
+
+### Change 2: Client-side hard timeout at 10 minutes
+
+If a job has been processing for >10 minutes (matching the server's `timeout_at` window), the client should:
+- Trigger one final cleanup call
+- After 30 more seconds, if still stuck, force the job to `failed` status locally and call the user's `onGenerationFailed` callback
+- This ensures the user is never stuck indefinitely
+
+### Implementation sketch
+
+```typescript
+// Line ~280: Replace one-shot retrigger with periodic
+if (job.status === 'processing' && job.started_at) {
+  const processingDuration = Date.now() - new Date(job.started_at).getTime();
+  const CLEANUP_INTERVAL = 60_000; // Re-trigger every 60s
+  const HARD_TIMEOUT = 10 * 60 * 1000; // 10 min
+
+  // Periodic cleanup trigger (every 60s after 5 min)
+  if (processingDuration > 5 * 60 * 1000) {
+    const lastTrigger = lastCleanupTriggerRef.current || 0;
+    if (Date.now() - lastTrigger > CLEANUP_INTERVAL) {
+      lastCleanupTriggerRef.current = Date.now();
+      fetch(...retry-queue...).catch(() => {});
+    }
+  }
+
+  // Hard client timeout: force-fail after 10 min
+  if (processingDuration > HARD_TIMEOUT) {
+    // Check images one more time, then force-complete or force-fail
+    const syntheticJob = { ...job, status: 'failed', error_message: 'Generation timed out' };
+    setActiveJob(prev => ({ ...syntheticJob, generationMeta: prev?.generationMeta }));
+    handleTerminalJob(syntheticJob);
+    onCreditRefresh?.();
+    return;
+  }
+}
 ```
-Upload → Product → Model → Scene → Framing → Brand → Aspect → Camera → Quality → Prompt Helper
-```
 
-This lets the browser wrap chips wherever they naturally fit based on available width — Prompt Helper will sit next to Scene on wide screens or flow to the next line with other chips on narrower ones.
+### Change 3: Replace `retriggeredRef` with `lastCleanupTriggerRef`
 
-### 2. Neutral idle styling for Prompt Helper button
-**File**: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 319)
-
-Change from the always-active purple style:
-```
-border-primary/30 bg-primary/5 text-primary hover:bg-primary/10
-```
-To the standard neutral chip style matching other unselected chips:
-```
-border-border bg-muted/50 text-foreground/70 hover:bg-muted
-```
-
-This makes it visually consistent — it looks like a regular chip, not a permanently pressed button.
+Replace `const retriggeredRef = useRef(false)` with `const lastCleanupTriggerRef = useRef(0)` (a timestamp). Reset it to 0 when a new job starts, not `false`. This also fixes the "queued stuck" detection at line 247 to use the same periodic pattern.
 
 ## Files Modified
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — merge desktop into single wrapping row
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` — neutral chip styling
+- `src/hooks/useGenerationQueue.ts` — periodic cleanup re-trigger + hard client timeout
 
