@@ -594,6 +594,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onShareToDiscover={shareHandler}
       onAddToDiscover={addToDiscoverHandler}
       natural={natural}
+      isAdmin={isAdmin}
       isUpscaling={upscalingSourceIds?.has(img.id)}
     />
   ));
