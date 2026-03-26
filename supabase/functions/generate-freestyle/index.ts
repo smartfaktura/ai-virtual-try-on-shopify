@@ -1119,12 +1119,9 @@ serve(async (req) => {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
 
-          // For 429, try the alternate model before giving up (rate limits are often per-model)
+          // For 429, try cross-provider fallback before giving up
           if (statusError.status === 429) {
-            const fallbackModel = aiModel.includes("flash")
-              ? "google/gemini-3-pro-image-preview"
-              : "google/gemini-3.1-flash-image-preview";
-            console.warn(`429 on ${aiModel} — trying fallback model ${fallbackModel}`);
+            console.warn(`429 on primary model — trying cross-provider fallback`);
             try {
               const fallbackPrompt = `${aspectPrompt}${batchConsistency}`;
               const contentArray = buildContentArray(
@@ -1139,11 +1136,32 @@ serve(async (req) => {
                 contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
                 contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
               }
-              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
+
+              let fallbackResult: GenerateResult = null;
+              if (useSeedream) {
+                // Was using Seedream, fallback to Nano Banana
+                const fallbackModel = aiModel.includes("flash")
+                  ? "google/gemini-3-pro-image-preview"
+                  : "google/gemini-3.1-flash-image-preview";
+                fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
+              } else if (ARK_API_KEY) {
+                // Was using Nano Banana, fallback to Seedream
+                const seedreamInput = convertContentToSeedreamInput(contentArray);
+                fallbackResult = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, 0);
+              } else {
+                // No Seedream key, try the alternate Gemini model
+                const fallbackModel = aiModel.includes("flash")
+                  ? "google/gemini-3-pro-image-preview"
+                  : "google/gemini-3.1-flash-image-preview";
+                fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0, body.quality || 'standard');
+              }
+
               if (typeof fallbackResult === "string") {
-                const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                const publicUrl = fallbackResult.startsWith("http")
+                  ? await downloadAndUploadToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+                  : await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
                 images.push(publicUrl);
-                console.log(`[generate-freestyle] Fallback model succeeded for image ${i + 1}`);
+                console.log(`[generate-freestyle] Cross-provider fallback succeeded for image ${i + 1}`);
 
                 // Save to freestyle_generations so image appears in gallery
                 try {
@@ -1165,10 +1183,9 @@ serve(async (req) => {
                 continue;
               }
             } catch (fallbackErr) {
-              console.error(`Fallback model also failed:`, fallbackErr);
+              console.error(`Cross-provider fallback also failed:`, fallbackErr);
             }
-            // 429 with failed fallback — treat as soft error, continue with remaining images
-            errors.push(`Image ${i + 1}: Rate limited on both models`);
+            errors.push(`Image ${i + 1}: Rate limited on all providers`);
             continue;
           }
 

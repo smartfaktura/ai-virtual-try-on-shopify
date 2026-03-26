@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { getExtensionFromContentType } from '@/lib/dropDownload';
 import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2, Package } from 'lucide-react';
+import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2, Package, Wrench } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
 import { FreestyleQuickPresets } from '@/components/app/freestyle/FreestyleQuickPresets';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,6 +98,7 @@ export default function Freestyle() {
   const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
   const [presetHint, setPresetHint] = useState(false);
   const [activeScenePresetId, setActiveScenePresetId] = useState<string | null>(null);
+  const [providerOverride, setProviderOverride] = useState<string | null>(null);
   const [recreateSource, setRecreateSource] = useState<{
     modelName?: string;
     sceneName?: string;
@@ -171,6 +173,7 @@ export default function Freestyle() {
   const [isUploading, setIsUploading] = useState(false);
   const isLoading = isEnqueuing || isProcessing || isUploading;
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   // Fetch user product categories for personalized presets
   const [userCategories, setUserCategories] = useState<string[]>([]);
@@ -593,7 +596,7 @@ export default function Freestyle() {
     } : undefined;
 
     // Build the payload for the queue — URLs instead of base64
-    const queuePayload = {
+    const queuePayload: Record<string, unknown> = {
       prompt: finalPrompt,
       userPrompt: prompt.trim() || null,
       sourceImage: sourceImageUrl,
@@ -618,6 +621,11 @@ export default function Freestyle() {
         ? (editIntent.length > 0 ? editIntent : ['enhance'])
         : undefined,
     };
+
+    // Admin provider override
+    if (providerOverride) {
+      queuePayload.providerOverride = providerOverride;
+    }
 
     // Enqueue via priority queue
     const enqueueResult = await enqueue({
