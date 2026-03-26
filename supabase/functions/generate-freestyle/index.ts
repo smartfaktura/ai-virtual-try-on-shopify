@@ -302,21 +302,14 @@ type GenerateResult = string | { blocked: true; reason: string } | null;
 const PROVIDERS = {
   "nanobanana-flash": { gateway: "lovable" as const, model: "google/gemini-3.1-flash-image-preview" },
   "nanobanana-pro":   { gateway: "lovable" as const, model: "google/gemini-3-pro-image-preview" },
-  "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-250422", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
+  "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-251128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
   // Future: "seedream-5.0": { gateway: "ark", model: "seedream-5-0-260128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
 } as const;
 
 // ── Seedream ARK image generation ────────────────────────────────────────
-// Map aspect ratio to explicit Seedream pixel dimensions for true 2K output
-function seedreamSizeForRatio(aspectRatio: string): string {
-  const map: Record<string, string> = {
-    "1:1": "2048x2048",
-    "3:4": "1536x2048",
-    "4:3": "2048x1536",
-    "9:16": "1152x2048",
-    "16:9": "2048x1152",
-  };
-  return map[aspectRatio] || "2048x2048";
+// Seedream API natively supports "2K" size for all aspect ratios
+function seedreamSizeForRatio(_aspectRatio: string): string {
+  return "2K";
 }
 
 async function generateImageSeedream(
