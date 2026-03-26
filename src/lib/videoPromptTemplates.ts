@@ -55,7 +55,14 @@ const LOOP_PHRASES: Record<string, string> = {
   one_natural: 'as one natural continuous movement',
 };
 
+// Camera motions that use structured camera_control — soften prompt to avoid conflicts
+const STRUCTURED_CAMERA_MOTIONS = new Set(['slow_push_in', 'gentle_pan', 'camera_drift', 'orbit']);
+
 function buildCameraClause(motion: string): string {
+  if (STRUCTURED_CAMERA_MOTIONS.has(motion)) {
+    // Structured camera_control handles this; keep prompt minimal to avoid conflicts
+    return '';
+  }
   return `Camera: ${CAMERA_PHRASES[motion] || CAMERA_PHRASES.slow_push_in}.`;
 }
 
