@@ -280,7 +280,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         const taskId = data.task_id;
         if (!taskId) throw new Error('No task ID returned');
 
-        toast.info('Video generation started — this typically takes 1-3 minutes');
+        // Toast removed — pipeline progress UI provides feedback
         startPolling(taskId);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to start video generation';

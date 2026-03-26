@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, X, Loader2, Sparkles, Brain, Wand2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,13 +18,25 @@ import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import { toast } from 'sonner';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
 type Duration = '5' | '10';
 type AudioMode = 'silent' | 'ambient';
 
+const TIPS_TEAM = TEAM_MEMBERS.filter(m => ['Sophia', 'Kenji', 'Zara', 'Leo'].includes(m.name));
+const PROGRESS_TEAM = TEAM_MEMBERS.filter(m => ['Sophia', 'Kenji', 'Luna', 'Amara', 'Yuki'].includes(m.name));
+
+const TIPS = [
+  'Our AI team analyzes your image to build the perfect motion plan.',
+  'Higher preservation = more brand-safe output. Adjust per shot.',
+  'Use "Specific Motion Note" for precise control over movement.',
+  'Match your aspect ratio to your channel for best results.',
+];
+
 export default function AnimateVideo() {
+  const navigate = useNavigate();
   const {
     pipelineStage, videoUrl, videoError, elapsedSeconds, videoStatus,
     isAnalyzing, isBuildingPrompt, isGenerating, isComplete,
@@ -69,6 +82,21 @@ export default function AnimateVideo() {
   const [userPrompt, setUserPrompt] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cycling tip index
+  const [tipIndex, setTipIndex] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setTipIndex(i => (i + 1) % TIPS.length), 5000);
+    return () => clearInterval(iv);
+  }, []);
+
+  // Cycling avatar for progress
+  const [progressAvatarIdx, setProgressAvatarIdx] = useState(0);
+  useEffect(() => {
+    if (!isPipelineActive) return;
+    const iv = setInterval(() => setProgressAvatarIdx(i => (i + 1) % PROGRESS_TEAM.length), 3000);
+    return () => clearInterval(iv);
+  }, [pipelineStage, videoStatus]);
 
   // When category or sceneType changes, update motion goals and preservation defaults
   useEffect(() => {
@@ -118,11 +146,9 @@ export default function AnimateVideo() {
       setImageUrl(url);
       setWarnings(newWarnings);
       setHasAnalyzed(false);
-      // Auto-analyze
       const analysis = await analyzeImage(url);
       if (analysis) {
         setHasAnalyzed(true);
-        // Apply AI suggestions
         if (analysis.category) {
           setCategory(analysis.category);
           setDetectedCategory(analysis.category);
@@ -139,7 +165,6 @@ export default function AnimateVideo() {
         if (analysis.recommended_subject_motion) setSubjectMotion(analysis.recommended_subject_motion);
         if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
         if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
-        // Preservation from risk flags
         if (analysis.risk_flags?.identity_sensitive || analysis.identity_sensitive) {
           setPreserveIdentity(true);
           setPreserveOutfit(true);
@@ -188,17 +213,45 @@ export default function AnimateVideo() {
   ];
 
   const getStageMessage = () => {
-    if (isAnalyzing) return { icon: Brain, text: 'Analyzing your image...', sub: 'Understanding composition and product context' };
-    if (isBuildingPrompt) return { icon: Wand2, text: 'Building motion plan...', sub: 'Applying category-aware motion strategy' };
-    if (videoStatus === 'creating') return { icon: Sparkles, text: 'Starting generation...', sub: 'Sending to video engine' };
-    return { icon: Loader2, text: 'Generating your video...', sub: `Typically 1-3 minutes • ${elapsedSeconds}s elapsed` };
+    if (isAnalyzing) return { text: 'Analyzing your image...', sub: 'Understanding composition and product context' };
+    if (isBuildingPrompt) return { text: 'Building motion plan...', sub: 'Applying category-aware motion strategy' };
+    if (videoStatus === 'creating') return { text: 'Starting generation...', sub: 'Sending to video engine' };
+    return { text: 'Generating your video...', sub: `Typically 1-3 minutes • ${elapsedSeconds}s elapsed` };
   };
+
+  const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <PageHeader title="Animate Image" subtitle="Turn a still product image into a polished commercial video.">
+      <PageHeader
+        title="Animate Image"
+        subtitle="Turn a still product image into a polished commercial video."
+        backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+      >
         <div />
       </PageHeader>
+
+      {/* VOVV.AI Team Tips Banner */}
+      {!isPipelineActive && !isComplete && (
+        <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4">
+          <div className="flex -space-x-2 shrink-0">
+            {TIPS_TEAM.map((m) => (
+              <img
+                key={m.name}
+                src={m.avatar}
+                alt={m.name}
+                className="w-7 h-7 rounded-full border-2 border-background object-cover"
+              />
+            ))}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
+            <p className="text-sm text-muted-foreground truncate" key={tipIndex}>
+              {TIPS[tipIndex]}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Results */}
       {isComplete && videoUrl && (
@@ -211,17 +264,43 @@ export default function AnimateVideo() {
         />
       )}
 
-      {/* Pipeline progress */}
+      {/* Pipeline progress — branded takeover */}
       {isPipelineActive && (() => {
         const stage = getStageMessage();
-        const StageIcon = stage.icon;
         return (
-          <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-            <StageIcon className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <div className="rounded-xl border border-border bg-card p-8 text-center space-y-5">
+            {/* VOVV.AI Studio label */}
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-semibold">VOVV.AI Studio</p>
+
+            {/* Cycling team avatar */}
+            <div className="relative mx-auto w-14 h-14">
+              {PROGRESS_TEAM.map((m, i) => (
+                <img
+                  key={m.name}
+                  src={m.avatar}
+                  alt={m.name}
+                  className={cn(
+                    'absolute inset-0 w-14 h-14 rounded-full border-2 border-primary/30 object-cover transition-opacity duration-700',
+                    i === progressAvatarIdx ? 'opacity-100' : 'opacity-0'
+                  )}
+                />
+              ))}
+              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
+              </div>
+            </div>
+
+            {/* Team member status message */}
+            <p className="text-xs text-muted-foreground/60 italic">
+              {currentProgressMember.name}: "{currentProgressMember.statusMessage}"
+            </p>
+
+            {/* Stage info */}
             <div>
               <p className="font-medium text-foreground">{stage.text}</p>
               <p className="text-sm text-muted-foreground mt-1">{stage.sub}</p>
             </div>
+
             {isGenerating && (
               <Progress value={Math.min((elapsedSeconds / 120) * 100, 95)} className="h-1.5 max-w-xs mx-auto" />
             )}
@@ -288,10 +367,9 @@ export default function AnimateVideo() {
             </div>
           )}
 
-          {/* Show form sections after upload (even before analysis completes) */}
+          {/* Show form sections after upload */}
           {imageUrl && !isAnalyzingImage && (
             <>
-              {/* Product Context */}
               <ProductContextSelector
                 category={category}
                 sceneType={sceneType}
@@ -301,7 +379,6 @@ export default function AnimateVideo() {
                 detectedSceneType={detectedSceneType}
               />
 
-              {/* Motion Goals */}
               <MotionGoalSelector
                 category={category}
                 sceneType={sceneType}
@@ -310,7 +387,6 @@ export default function AnimateVideo() {
                 recommendedGoalIds={recommendedGoalIds}
               />
 
-              {/* Motion Refinement */}
               <MotionRefinementPanel
                 cameraMotion={cameraMotion}
                 subjectMotion={subjectMotion}
@@ -324,7 +400,6 @@ export default function AnimateVideo() {
                 onMotionIntensityChange={setMotionIntensity}
               />
 
-              {/* Preservation */}
               <PreservationRulesPanel
                 preserveScene={preserveScene}
                 preserveProductDetails={preserveProductDetails}
