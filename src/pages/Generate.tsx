@@ -1992,7 +1992,7 @@ export default function Generate() {
   const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
   const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 15 : 10) : 0;
   const workflowCostPerImage = 6;
-  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
+  const singleProductCreditCost = isUpscale ? 0 : (generationMode === 'virtual-try-on' && !isSelfieUgc && !isMirrorSelfie ? parseInt(imageCount) * 6 * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount : (hasWorkflowConfig ? workflowImageCount * workflowCostPerImage : parseInt(imageCount) * 6 * tryOnSceneCount));
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
