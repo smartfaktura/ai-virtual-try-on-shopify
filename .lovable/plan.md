@@ -1,56 +1,32 @@
 
 
-# Fix: Orbit Camera Motion Not Working in Video Generation
+# Improve Recent Videos Card UI
 
-## Root Cause
+## Current Issues
+- Once a video starts playing, there's **no way to stop/pause it** — no click-to-pause, no visible stop button
+- Cards have borders + bottom text area with raw prompts that look cluttered
+- "Done" badge is redundant for completed videos
+- No hover-to-play — requires explicit click
 
-Two issues combine to make "orbit" produce only slight movement:
+## Changes to `src/pages/VideoHub.tsx` — RecentVideoCard
 
-1. **`camera_control` is never sent to Kling API**: The strategy resolver builds a `camera_control_config` object for orbit, but the `generate-video` edge function ignores it entirely — it never adds `camera_control` to the Kling API request body.
+### Playback Controls
+- **Click video to pause** — clicking a playing video pauses it and shows thumbnail again
+- **Hover-to-play on desktop** — use `onMouseEnter`/`onMouseLeave` with a `ref` to auto-play/pause without state toggling
+- **Pause icon overlay** — when video is playing, show a pause icon on hover so users know they can stop it
+- **Mobile**: tap toggles play/pause
 
-2. **Prompt-only orbit doesn't work**: The prompt says "smooth orbiting camera movement around the subject," but video generation models interpret prompts as continuous single-shot action. They cannot execute a true orbit path from text alone. The Kling API has a structured `camera_control` parameter specifically for this.
+### Visual Cleanup
+- Remove bottom text area (prompt + date) — keep cards image/video only
+- Remove card border — use borderless with subtle `shadow-sm hover:shadow-md`
+- Change aspect ratio from `aspect-square` to `aspect-[3/4]` for editorial feel
+- Only show status badge for `processing`/`queued` — hide "Done" badge
+- Add a small play triangle badge in corner for completed videos (not playing state)
 
-## Solution
-
-### 1. Pass `camera_control` to the Kling API (`supabase/functions/generate-video/index.ts`)
-
-In the worker mode, read `camera_control` from the payload and add it to the Kling API request body:
-
-```typescript
-// After existing klingBody construction
-const cameraControl = body.camera_control as Record<string, unknown> | undefined;
-if (cameraControl) {
-  klingBody.camera_control = cameraControl;
-}
-```
-
-### 2. Pass `camera_control` through the queue payload (`src/hooks/useGenerateVideo.ts`)
-
-When calling `enqueue-generation`, include the camera control config from the strategy:
-
-- Add `camera_control` to the payload sent to the queue
-- Source it from the strategy's `camera_control_config`
-
-### 3. Wire camera control from pipeline to hook (`src/hooks/useVideoProject.ts`)
-
-Pass the resolved `camera_control_config` from the strategy through to `generateVideo.startGeneration()`.
-
-### 4. Increase orbit strength (`src/lib/videoStrategyResolver.ts`)
-
-The current orbit config uses `horizontal: 10` which is the minimum. Increase to a meaningful value:
-
-```typescript
-case 'orbit':
-  return { type: 'simple', config: { horizontal: 30, vertical: 0, zoom: 0, tilt: 0, pan: 0, roll: 0 } };
-```
-
-Also add camera control configs for other motion types that benefit from structured params:
-- `slow_push_in`: `zoom: 5`  
-- `gentle_pan`: `pan: 20`
+### Grid
+- Show up to 12 items instead of 8
+- Use `gap-3` for tighter spacing
 
 ### Files Modified
-- `supabase/functions/generate-video/index.ts` — pass `camera_control` to Kling API
-- `src/hooks/useGenerateVideo.ts` — include `camera_control` in queue payload
-- `src/hooks/useVideoProject.ts` — wire strategy's camera control config through
-- `src/lib/videoStrategyResolver.ts` — increase orbit strength, add more structured configs
+- `src/pages/VideoHub.tsx` — redesign RecentVideoCard component
 
