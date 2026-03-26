@@ -1,66 +1,42 @@
 
 
-# Fix: Pro Quality Must Use Pro Model + Seedream Must Complete Outfits
+# Fix: Context-Aware Outfit Completion Instead of Blanket "Must Wear Pants"
 
-## Two Problems Found
+## Problem
 
-### Problem 1 — "Pro" quality pill doesn't select Pro model
+The current directive says: *"The model must NEVER appear without pants/skirt/shorts."* This is too rigid — if the user's prompt or scene implies sportswear, beachwear, swimwear, or activewear, forcing full bottoms contradicts the creative intent. A user generating a sports jacket on a running track should see shorts or athletic wear, not formal trousers.
 
-Line 1167-1169 in `generate-freestyle/index.ts`:
-```typescript
-const aiModel = (forceProModel || isPerspective || hasModelImage)
-  ? "google/gemini-3-pro-image-preview"
-  : "google/gemini-3.1-flash-image-preview";
-```
+## Solution
 
-The UI's "Pro" quality pill sets `quality: "high"` in the payload, but the model selection ignores it entirely. Only `forceProModel` (perspectives only), `isPerspective`, or `hasModelImage` trigger Pro. So selecting "Pro" quality without a model reference silently runs Flash — explaining the FLASH badge on your generation.
-
-**Fix**: Add `quality === "high"` to the Pro condition:
-```typescript
-const aiModel = (forceProModel || isPerspective || hasModelImage || body.quality === "high")
-  ? "google/gemini-3-pro-image-preview"
-  : "google/gemini-3.1-flash-image-preview";
-```
-
-### Problem 2 — Seedream shows only the product garment, no other clothing
-
-When the product is a jacket and a model is selected, Seedream receives only:
-- The product image with "replicate this item EXACTLY"
-- The model image with "preserve exact face, hair, body"
-- No instruction to **dress the model in a complete outfit**
-
-Nano Banana handles this better because the richer system prompt context guides it to create a full look. Seedream's stripped prompt (`cleanPromptForSeedream`) lacks any clothing-completion directive.
-
-**Fix**: Add a wardrobe-completion instruction to the Seedream prompt when:
-- A product image is provided AND
-- A model reference is provided AND
-- The product is an upper-body or single garment
-
-In `buildSeedreamRoleDirective()`, after the product role line, add:
-```
-OUTFIT COMPLETION: The product shown is a single garment. 
-Dress the model in a complete, natural outfit — add 
-complementary bottoms, shoes, and accessories that 
-match the style. The model must NEVER appear without 
-pants/skirt/shorts. The provided product is the hero 
-piece; other clothing should complement it naturally.
-```
-
-Also inject this same directive into the polished prompt for Nano Banana to reinforce it.
-
-## Changes
+Replace the hardcoded "must wear pants" rule with a **context-aware** directive that tells the AI to complete the outfit **appropriately for the scene/prompt context**, while still preventing the "naked legs with a jacket" problem for standard fashion shoots.
 
 ### File: `supabase/functions/generate-freestyle/index.ts`
 
-1. **Model selection** (line 1167): Add `body.quality === "high"` to the Pro model condition
-2. **`buildSeedreamRoleDirective()`** (line 499): When both model and product roles exist, append outfit-completion instruction
-3. **`polishUserPrompt()`** (around line 193): When `hasProduct && hasModel`, add a brief outfit-completion note to the REFERENCES section
+**1. Update both OUTFIT COMPLETION blocks (lines 235 and 531)**
+
+Replace the rigid rule with:
+
+```
+OUTFIT COMPLETION: The product is the hero piece. The model must wear 
+a COMPLETE outfit — never appear partially dressed or missing clothing. 
+Choose complementary garments (bottoms, shoes, accessories) that match 
+the scene context and style: e.g. tailored trousers for studio/urban, 
+shorts or athletic wear for sport/outdoor/active scenes, swimwear for 
+beach/pool settings. The outfit must look intentional and styled — 
+never accidentally incomplete.
+```
+
+This keeps the core protection (no accidentally half-dressed models) while letting the AI pick contextually appropriate clothing based on the prompt and scene.
+
+**2. No other changes needed**
+
+The prompt already contains scene context (scene description, user text) that the AI can read to determine the appropriate outfit style. We just need to stop over-constraining it.
 
 ## What This Does NOT Do
 - No UI changes
-- No database changes  
-- No changes to fallback logic
+- No database changes
+- No changes to fallback or model selection logic
 
 ## Files Modified
-- `supabase/functions/generate-freestyle/index.ts`
+- `supabase/functions/generate-freestyle/index.ts` — update 2 outfit completion blocks
 
