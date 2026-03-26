@@ -19,7 +19,7 @@ export function LibraryPickerModal({ open, onOpenChange, onSelect }: LibraryPick
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="text-base">Choose from Library</DialogTitle>
         </DialogHeader>
