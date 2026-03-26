@@ -134,7 +134,7 @@ function buildFramingInstruction(framing: string, hasModel: boolean): string | n
 // ── Unified prompt builder — positive framing, single path ───────────────
 function polishUserPrompt(
   rawPrompt: string,
-  context: { hasSource: boolean; hasProduct: boolean; hasModel: boolean; hasScene: boolean },
+  context: { hasSource: boolean; hasProduct: boolean; hasModel: boolean; hasScene: boolean; isOnModelScene?: boolean },
   brandProfile?: BrandProfileContext,
   _userNegatives?: string[],
   modelContext?: string,
