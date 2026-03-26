@@ -1,37 +1,72 @@
 
 
-# Video Hub — Add Detail Modal for Recent Videos
+# Improve Video Prompts with Kling v3 Cinematic Language + Add More Camera Motions
 
 ## Problem
-The Recent Videos grid on `/app/video` currently has inline play/pause behavior with a large pause button in the center. There's no way to download, delete, or preview videos in a modal. The user wants the same modal experience as the Library.
+Current camera prompts use abstract mechanical language ("the camera physically orbits around the subject") that Kling v3 poorly interprets. The official Kling v3 guide shows the model responds to **cinematic shot vocabulary** — "low-angle tracking shot", "the camera orbits in slow motion capturing the play of light", "frontal medium shot, tracking backward". We also only have 6 camera motions, missing common cinematic moves like dolly zoom, tilt up/down, crane, and tracking shots.
 
-## Approach
-Create a `VideoDetailModal` that opens when clicking a video card, with download, delete, play/preview, and other actions — similar to `LibraryDetailModal` but for video items.
+## Key Learnings from Kling v3 Guide
+1. Use **natural cinematic language**, not robotic instructions
+2. Describe **what the camera reveals** as it moves, not just the motion itself
+3. Include shot framing terms: "medium shot", "close-up", "wide shot"
+4. Timestamp-based cues work for longer clips ("At the 4th second, the camera...")
+5. Negative phrasing ("do NOT rotate") is weak — positive framing works better
+6. The model understands complex multi-action camera choreography in a single prompt
 
-### File 1: `src/components/app/video/VideoDetailModal.tsx` (NEW)
-- Full-screen overlay modal (same pattern as `LibraryDetailModal`)
-- Video player with controls inside the modal
-- Actions: **Download**, **Delete**, close button
-- Show metadata: date, prompt, status
-- Delete logic: remove from `video_generations` table, invalidate queries
-- Download logic: fetch video URL, trigger download as `.mp4`
+## Changes
 
-### File 2: `src/pages/VideoHub.tsx` — Refactor `RecentVideoCard`
-- **Remove** the inline play/pause/loading state machine (the big center pause button)
-- Click on card → open `VideoDetailModal` instead of toggling playback
-- Keep hover-to-play on desktop for preview (but remove the pause overlay with big button)
-- Keep the small play icon in bottom-left corner when idle
-- Add `selectedVideo` state to the hub page, pass to the modal
-- On mobile: single tap opens modal directly (no two-tap flow)
+### File 1: `src/lib/videoMotionRecipes.ts` — Add new camera motions
+Add 4 new camera options to the `CAMERA_MOTIONS` array:
+- **`dolly_zoom`** — "Dolly Zoom" (dramatic perspective shift)
+- **`tilt_reveal`** — "Tilt Reveal" (vertical tilt up from product to scene)
+- **`tracking_follow`** — "Tracking Follow" (lateral tracking alongside subject)
+- **`crane_up`** — "Crane Up" (rising overhead establishing shot)
 
-### Visual Behavior After Fix
-- **Desktop hover**: video auto-plays quietly (no overlay buttons)
-- **Click (any device)**: opens the detail modal with full video player + actions
-- **Modal**: video with native controls, Download button, Delete button, close (X)
+Update relevant motion goals in the `CATEGORY_SCENE_MOTION_MATRIX` to include these new options where appropriate (e.g., `crane_up` for home_decor/interior_room, `tracking_follow` for fashion/action_scene).
 
-### Technical Details
-- Modal uses same overlay/z-index pattern as `LibraryDetailModal` (z-[200])
-- Delete calls `supabase.from('video_generations').delete().eq('id', video.id)` and invalidates `['video-history']`
-- Download uses `<a>` element with `download` attribute pointing to `video_url`
-- Escape key closes modal, body scroll locked while open
+### File 2: `src/lib/videoPromptTemplates.ts` — Rewrite all camera phrases
+Replace all `CAMERA_PHRASES` with cinematic descriptions that match Kling v3's training language:
+
+```typescript
+const CAMERA_PHRASES: Record<string, string> = {
+  static: 'locked-off static camera on a tripod, no camera movement whatsoever',
+  slow_push_in: 'the camera slowly dollies forward on a smooth track, 
+    gradually tightening the frame from a medium shot to a close-up, 
+    revealing finer details as it approaches',
+  gentle_pan: 'smooth horizontal camera pan gliding left to right across 
+    the scene, revealing the full composition in one continuous sweep',
+  camera_drift: 'handheld camera with a subtle floating drift, 
+    gently swaying as if carried on a slow breath',
+  premium_handheld: 'cinematic handheld camera with natural micro-shake, 
+    like a steadicam operator walking alongside the subject',
+  orbit: 'the camera smoothly orbits around the subject in a continuous 
+    arc, gradually changing the viewing angle from front to side to back, 
+    capturing the subject from every angle as the background shifts behind 
+    them — like a steadicam operator walking in a circle around a 
+    stationary subject',
+  dolly_zoom: 'dramatic dolly zoom effect — the camera moves forward while 
+    the focal length widens, creating an unsettling perspective shift 
+    around the subject',
+  tilt_reveal: 'the camera tilts smoothly upward from a low angle starting 
+    at the base of the subject, gradually revealing the full height and 
+    scene above',
+  tracking_follow: 'lateral tracking shot moving alongside the subject, 
+    keeping them centered in frame as the background slides past',
+  crane_up: 'the camera rises smoothly overhead like a crane shot, 
+    starting at eye level and lifting to reveal the full scene from above',
+};
+```
+
+### File 3: `src/lib/videoPromptTemplates.ts` — Improve prompt structure
+- Move the camera clause **earlier** in the prompt (before preservation) so the model prioritizes it
+- Add a framing/composition hint to the camera clause (e.g., "medium shot tightening to close-up")
+- Remove the "The subject does NOT rotate" negative phrasing from orbit — replace with positive "the subject remains perfectly stationary while the viewing angle changes"
+
+### File 4: `src/components/app/video/MotionRefinementPanel.tsx`
+- No changes needed — it already renders from `CAMERA_MOTIONS` array dynamically
+
+## Summary
+- 4 new camera motion options (dolly zoom, tilt reveal, tracking follow, crane up)
+- All camera phrases rewritten in cinematic vocabulary matching Kling v3's training
+- Prompt structure improved: camera instruction placed earlier, positive framing replaces negative phrasing
 
