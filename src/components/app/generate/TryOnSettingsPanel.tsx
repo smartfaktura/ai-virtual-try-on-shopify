@@ -184,6 +184,7 @@ export default function TryOnSettingsPanel({
         <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
         <Button
           onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+          disabled={selectedAspectRatios.size === 0 || selectedFramings.size === 0}
           className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
         >
           {balance >= creditCost ? 'Generate' : 'Buy Credits'}
