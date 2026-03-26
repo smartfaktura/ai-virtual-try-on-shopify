@@ -772,6 +772,16 @@ export default function AnimateVideo() {
                 />
               </div>
 
+              {/* Object grounding note */}
+              {analysisResult && !analysisResult.visible_product_detected && (
+                <Alert className="bg-muted/30 border-border">
+                  <AlertDescription className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Eye className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    No product was explicitly provided. VOVV will keep the video grounded to the visible subject and scene.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Generate */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
@@ -874,6 +884,7 @@ export default function AnimateVideo() {
         <VideoResultsPanel
           videoUrl={videoUrl}
           sourceImageUrl={imagePreview || imageUrl || undefined}
+          aspectRatio={aspectRatio}
           generationContext={buildGenerationContext()}
           onReuse={handleReuse}
           onNewProject={handleNewProject}
