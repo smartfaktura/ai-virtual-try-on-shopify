@@ -506,31 +506,6 @@ export default function AnimateVideo() {
             </div>
           </div>
 
-          {/* Proof-of-output strip */}
-          <div className="space-y-2">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">What Animate Image creates</p>
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {[
-                { label: 'Fashion lookbook', emoji: '👗' },
-                { label: 'Product showcase', emoji: '✨' },
-                { label: 'Lifestyle scene', emoji: '🏠' },
-                { label: 'Beauty close-up', emoji: '💄' },
-              ].map((example, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/30 shrink-0 hover:bg-muted/30 transition-colors"
-                >
-                  <span className="text-sm">{example.emoji}</span>
-                  <div className="flex items-center gap-1.5">
-                    <Image className="h-3 w-3 text-muted-foreground/50" />
-                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40" />
-                    <Play className="h-3 w-3 text-primary/60" />
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">{example.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Smart Assistant Banner — smarter copy */}
           <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted/40 transition-colors">
