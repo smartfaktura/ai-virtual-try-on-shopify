@@ -199,8 +199,8 @@ export function useVideoProject() {
       }));
       console.log('[useVideoProject] Result label:', builtPrompt.result_label);
 
-      // Build generation params
-      const genParams: Parameters<typeof generateVideo.startGeneration>[0] = {
+      // Build generation params — camera motion is prompt-only (Kling v3 image2video does not support camera_control)
+      generateVideo.startGeneration({
         imageUrl: params.imageUrl,
         prompt: builtPrompt.prompt,
         duration: params.duration,
@@ -209,14 +209,7 @@ export function useVideoProject() {
         negativePrompt: builtPrompt.negative_prompt,
         cfgScale: builtPrompt.cfg_scale,
         withAudio: params.audioMode === 'ambient',
-      };
-
-      // Pass structured camera control if available
-      if (strategy.camera_control_config) {
-        (genParams as Record<string, unknown>).cameraControl = strategy.camera_control_config;
-      }
-
-      generateVideo.startGeneration(genParams);
+      });
 
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Pipeline failed';
