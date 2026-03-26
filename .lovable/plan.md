@@ -1,42 +1,117 @@
 
 
-# Animate Image Page — UX & Branding Polish
+# Premium Video Result Workspace
 
-## Problems to Fix
+Redesign `VideoResultsPanel.tsx` from a basic player + flat buttons into a two-column result workspace that feels like a premium creative output panel.
 
-1. No back button to return to Video Hub
-2. No VOVV.AI team avatar branding on the page
-3. The generation progress screen is plain — needs team avatar takeover with personality
-4. Redundant "Video generation started" toast in `useGenerateVideo.ts`
+---
 
-## Changes
+## Architecture
 
-### 1. Add Back Button to Video Hub
-In `AnimateVideo.tsx`, use the existing `PageHeader` `backAction` prop:
+The current `VideoResultsPanel` receives minimal props (videoUrl, sourceImageUrl, 3 callbacks). The redesign requires passing generation context from `AnimateVideo.tsx` so the result panel can display a full summary.
+
+---
+
+## New Props for VideoResultsPanel
+
+```typescript
+interface GenerationContext {
+  categoryLabel: string;        // "Beauty & Skincare"
+  sceneTypeLabel: string;       // "Studio Product Shot"
+  motionGoalTitle: string;      // "Luxury Product Reveal"
+  cameraMotion: string;         // "Slow Push-in"
+  subjectMotion: string;        // "Minimal"
+  duration: string;             // "5s"
+  audioMode: string;            // "Silent" | "Ambient"
+  creditsUsed: number;          // from pricing engine
+  realismLevel: string;         // "Realistic"
+  loopStyle: string;            // "None"
+}
 ```
-backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+
+Pass this from `AnimateVideo.tsx` by resolving labels from `PRODUCT_CATEGORIES`, `SCENE_TYPES`, and `getMotionGoalsForCategory` at render time.
+
+---
+
+## Layout (Two-Column on Desktop, Stacked on Mobile)
+
+```text
+┌─────────────────────────────────────────────────┐
+│  Success Header                                 │
+│  "Your video is ready"                          │
+│  "Preview, create variations, or download."     │
+├──────────────────────┬──────────────────────────┤
+│                      │  Generation Details      │
+│                      │  ── Category             │
+│   Video Player       │  ── Scene Type           │
+│   (dark bg,          │  ── Motion Goal          │
+│    premium frame)    │  ── Camera / Subject     │
+│                      │  ── Duration / Audio     │
+│                      │  ── Credits used         │
+│                      ├──────────────────────────┤
+│                      │  Quick Variations        │
+│                      │  [More subtle] [Premium] │
+│                      │  [More motion] [Cleaner] │
+├──────────────────────┴──────────────────────────┤
+│  Actions                                        │
+│  [Generate Variation]  [Adjust Motion]          │
+│  [Download Video]  Start New Video              │
+├─────────────────────────────────────────────────┤
+│  ▸ Used Settings (collapsible accordion)        │
+│  ▸ Before / After (toggle original vs video)    │
+└─────────────────────────────────────────────────┘
 ```
-Add `useNavigate` from react-router-dom.
 
-### 2. Add VOVV.AI Team Tips Banner (below header, before upload)
-Add a branded banner at the top of the form showing 3-4 team member avatars in a row with a rotating tip. Structure:
-- A compact card with overlapping team avatars (use `TEAM_MEMBERS` data — pick 4 relevant ones like Sophia, Kenji, Zara, Leo)
-- A short tip text that cycles or is static, e.g. "Our AI team analyzes your image to build the perfect motion plan"
-- Subtle styling: `bg-muted/30` border card, small avatars (28px), muted text
+---
 
-### 3. Branded Generation Progress Takeover
-Replace the current plain spinner card with a richer branded experience:
-- Show 3 cycling team avatars with a crossfade (reuse pattern from `WorkflowActivityCard`)
-- Show the team member's `statusMessage` below the avatars (e.g. "Setting up the lighting...", "Building the scene...")
-- Keep the existing stage text ("Analyzing your image...", "Building motion plan...", "Generating your video...")
-- Add a subtle "VOVV.AI Studio" label
-- Progress bar remains for the generating stage
-- Cycle avatars every 3 seconds
+## Detailed Changes
 
-### 4. Remove "Video generation started" Toast
-In `src/hooks/useGenerateVideo.ts` line 283, remove the `toast.info(...)` call. The pipeline progress UI already communicates this clearly — the toast is redundant.
+### 1. Rewrite `VideoResultsPanel.tsx`
+
+**Success header** — Small check icon + "Your video is ready" heading + subtitle.
+
+**Video player** — Wrap in a `bg-black/95 rounded-xl` container with subtle shadow for premium feel. Keep native controls but the outer frame feels designed.
+
+**Generation Details card** — Right column on desktop (`lg:grid-cols-[1fr_320px]`). Shows key-value pairs with muted labels and foreground values. Include: Category, Scene Type, Motion Goal, Camera Motion, Subject Motion, Duration, Audio, Credits Used.
+
+**Quick Variation chips** — Row of small outline buttons below details: "More subtle", "More premium", "More motion", "Better loop", "Cleaner camera". Each modifies a parameter and re-triggers generation via a new `onQuickVariation(preset)` callback.
+
+**Action buttons** — Clear hierarchy:
+- Primary: "Generate Variation" (default button style, prominent)
+- Secondary: "Adjust Motion" (outline) — calls onReuse (scrolls back to form with settings intact)
+- Tertiary: "Download Video" (outline)
+- Ghost: "Start New Video" (ghost, lower priority)
+
+**Before/After toggle** — Optional section. A toggle button that swaps the video with the source image for visual comparison.
+
+**Used Settings accordion** — Collapsible section showing all settings including preservation rules, realism, loop style. Uses shadcn `Collapsible`.
+
+### 2. Update `AnimateVideo.tsx`
+
+- Build `generationContext` object from current state values, resolving IDs to labels
+- Pass to `VideoResultsPanel`
+- Add `onQuickVariation` handler that modifies specific params and re-runs pipeline
+- Add `onAdjustMotion` handler (same as reuse but keeps form visible)
+
+### 3. Quick Variation Presets
+
+Define in `VideoResultsPanel` or a shared constant:
+```typescript
+const QUICK_VARIATIONS = [
+  { id: 'more_subtle', label: 'More subtle', changes: { motionIntensity: 'low', cameraMotion: 'camera_drift' } },
+  { id: 'more_premium', label: 'More premium', changes: { realismLevel: 'ultra_realistic', cameraMotion: 'premium_handheld' } },
+  { id: 'more_motion', label: 'More motion', changes: { motionIntensity: 'high' } },
+  { id: 'better_loop', label: 'Better loop', changes: { loopStyle: 'seamless_loop' } },
+  { id: 'cleaner_camera', label: 'Cleaner camera', changes: { cameraMotion: 'static', motionIntensity: 'low' } },
+];
+```
+
+---
 
 ## Files to Modify
-- `src/pages/video/AnimateVideo.tsx` — back button, team tips banner, branded progress takeover
-- `src/hooks/useGenerateVideo.ts` — remove toast on line 283
+- `src/components/app/video/VideoResultsPanel.tsx` — Full rewrite with two-column layout, details card, quick variations, action hierarchy, before/after, accordion
+- `src/pages/video/AnimateVideo.tsx` — Pass generation context, wire quick variation + adjust motion handlers
+
+## No New Files Needed
+All changes fit within the existing two files.
 
