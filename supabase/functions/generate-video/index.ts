@@ -133,12 +133,8 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     if (typeof cfgScale === "number") klingBody.cfg_scale = cfgScale;
     klingBody.sound = withAudio ? "on" : "off";
 
-    // Structured camera_control for Kling v3 image2video
-    const cameraControlConfig = body.camera_control_config as { type: string; config: Record<string, number> } | undefined;
-    if (cameraControlConfig) {
-      klingBody.camera_control = cameraControlConfig;
-      console.log(`[generate-video:worker] Sending camera_control:`, JSON.stringify(cameraControlConfig));
-    }
+    // Note: kling-v3 image2video does NOT support structured camera_control.
+    // All camera motion is driven via prompt text only.
 
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
       method: "POST",
