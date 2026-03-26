@@ -484,6 +484,9 @@ export function buildVideoPrompt(input: PromptBuildInput): BuiltPrompt {
     prompt = buildGenericPrompt(assemblerInput);
   }
 
+  // Single-shot guardrail — prevent AI from improvising cuts or multi-scene edits
+  prompt += ' One continuous uninterrupted shot — no cuts, no split-screen, no scene transitions.';
+
   // Negative prompt with realism extras
   let negative_prompt = CATEGORY_NEGATIVES[family] || 'blurry, distorted, morphing, flickering, watermark';
   const realismExtra = REALISM_NEGATIVE_EXTRAS[strategy.realism_level];
