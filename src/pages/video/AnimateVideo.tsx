@@ -206,6 +206,52 @@ export default function AnimateVideo() {
     setUserPrompt('');
   };
 
+  const handleQuickVariation = (preset: QuickVariationPreset) => {
+    if (!imageUrl) return;
+    const changes = preset.changes;
+    if (changes.motionIntensity) setMotionIntensity(changes.motionIntensity as 'low' | 'medium' | 'high');
+    if (changes.cameraMotion) setCameraMotion(changes.cameraMotion);
+    if (changes.realismLevel) setRealismLevel(changes.realismLevel);
+    if (changes.loopStyle) setLoopStyle(changes.loopStyle);
+
+    resetPipeline();
+    setTimeout(() => {
+      runAnimatePipeline({
+        imageUrl,
+        category, sceneType, motionGoalId,
+        cameraMotion: changes.cameraMotion || cameraMotion,
+        subjectMotion: changes.subjectMotion || subjectMotion,
+        realismLevel: changes.realismLevel || realismLevel,
+        loopStyle: changes.loopStyle || loopStyle,
+        motionIntensity: (changes.motionIntensity || motionIntensity) as 'low' | 'medium' | 'high',
+        preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+        aspectRatio, duration, audioMode,
+        userPrompt: userPrompt || undefined,
+      });
+    }, 50);
+  };
+
+  // Build generation context for results panel
+  const buildGenerationContext = () => {
+    const catLabel = PRODUCT_CATEGORIES.find(c => c.id === category)?.label || category;
+    const sceneLabel = SCENE_TYPES.find(s => s.id === sceneType)?.label || sceneType;
+    const goals = getGoals(category, sceneType);
+    const goalTitle = goals.find(g => g.id === motionGoalId)?.title || motionGoalId;
+    const credits = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+    return {
+      categoryLabel: catLabel,
+      sceneTypeLabel: sceneLabel,
+      motionGoalTitle: goalTitle,
+      cameraMotion: cameraMotion.replace(/_/g, ' '),
+      subjectMotion: subjectMotion.replace(/_/g, ' '),
+      duration: `${duration}s`,
+      audioMode: audioMode === 'silent' ? 'Silent' : 'Ambient',
+      creditsUsed: credits,
+      realismLevel: realismLevel.replace(/_/g, ' '),
+      loopStyle: loopStyle === 'none' ? 'None' : loopStyle.replace(/_/g, ' '),
+    };
+  };
+
   const isPipelineActive = pipelineStage !== 'idle' && pipelineStage !== 'error' && !isComplete;
 
   const ASPECT_RATIOS: { value: AspectRatio; label: string }[] = [
