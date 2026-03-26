@@ -259,6 +259,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         if (typeof params.cfgScale === 'number') payload.cfg_scale = params.cfgScale;
         if (params.projectId) payload.project_id = params.projectId;
         if (params.workflowType) payload.workflow_type = params.workflowType;
+        if (params.cameraControlConfig) payload.camera_control_config = params.cameraControlConfig;
 
         const result = await queue.enqueue({
           jobType: 'video' as any,
