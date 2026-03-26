@@ -1259,6 +1259,7 @@ serve(async (req) => {
               }
             }
             try {
+              (body as any).providerUsed = actualProvider;
               await saveFreestyleGeneration(supabase, userId, publicUrl, body, i);
 
               // Early finalize: in queue mode (1 image), complete immediately after first success
