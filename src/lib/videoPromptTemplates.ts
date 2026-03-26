@@ -30,12 +30,16 @@ interface BuiltPrompt {
 // ─── Shared Prompt Primitives ───
 
 const CAMERA_PHRASES: Record<string, string> = {
-  static: 'static camera, no camera movement',
-  slow_push_in: 'the camera slowly and smoothly pushes forward toward the subject. The subject stays completely still — only the camera moves closer',
-  gentle_pan: 'the camera gently pans horizontally across the scene. The subject remains fixed in place — only the camera glides sideways',
-  camera_drift: 'subtle natural camera drift with slight floating movement. The subject stays still — the camera drifts naturally',
-  premium_handheld: 'premium cinematic handheld with slight natural shake',
-  orbit: 'the camera physically orbits around the subject in a smooth arc. The subject stays completely still and fixed in place — only the camera moves. The viewing angle changes progressively as the camera circles around. The subject does NOT rotate or spin',
+  static: 'locked-off static camera on a tripod, no camera movement whatsoever',
+  slow_push_in: 'the camera slowly dollies forward on a smooth track, gradually tightening the frame from a medium shot to a close-up, revealing finer details as it approaches',
+  gentle_pan: 'smooth horizontal camera pan gliding across the scene in one continuous sweep, revealing the full composition as the frame drifts steadily sideways',
+  camera_drift: 'handheld camera with a subtle floating drift, gently swaying as if carried on a slow breath, creating an intimate observational feel',
+  premium_handheld: 'cinematic handheld camera with natural micro-shake, like a steadicam operator walking alongside the subject, grounding the shot in realistic motion',
+  orbit: 'the camera smoothly orbits around the subject in a continuous arc, gradually changing the viewing angle as the background shifts behind them — the subject remains perfectly stationary while the perspective rotates',
+  dolly_zoom: 'dramatic dolly zoom effect — the camera moves forward while the focal length widens, creating an unsettling perspective shift that isolates the subject from the background',
+  tilt_reveal: 'the camera tilts smoothly upward from a low angle starting at the base of the subject, gradually revealing the full height and scene above in a single vertical sweep',
+  tracking_follow: 'lateral tracking shot moving alongside the subject, keeping them perfectly centered in frame as the background slides past in parallax',
+  crane_up: 'the camera rises smoothly overhead like a crane shot, starting at eye level and lifting to reveal the full scene layout from above',
 };
 
 const REALISM_PHRASES: Record<string, string> = {
