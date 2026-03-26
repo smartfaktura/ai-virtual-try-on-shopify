@@ -1092,7 +1092,10 @@ serve(async (req) => {
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-3.1-flash-image-preview";
     const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
-    const useSeedream = providerOverride === "seedream-4.5" && !!ARK_API_KEY;
+    const useSeedream = providerOverride === "seedream-4.5" && !!ARK_API_KEY && body.imageRole !== 'edit';
+    if (body.imageRole === 'edit' && providerOverride === "seedream-4.5") {
+      console.log("[generate-freestyle] Edit mode: forcing Nano Banana (Seedream cannot edit images)");
+    }
 
     console.log("[generate-freestyle] ARK key present:", !!ARK_API_KEY);
     console.log("Freestyle generation:", {
