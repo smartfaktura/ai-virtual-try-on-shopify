@@ -57,17 +57,19 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
       onClick={onClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {/* Mount video only on hover */}
+        {/* Mount video only on hover — poster prevents black flash */}
         {hovering && isComplete && (
           <video
             ref={videoRef}
             src={video.video_url!}
+            poster={video.source_image_url}
             loop
             muted
             playsInline
             preload="auto"
             onCanPlay={() => setCanPlay(true)}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
+            className="absolute inset-0 w-full h-full object-cover bg-transparent"
+            style={{ visibility: isPlaying ? 'visible' : 'hidden' }}
           />
         )}
         <img
