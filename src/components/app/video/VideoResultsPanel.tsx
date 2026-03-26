@@ -141,10 +141,10 @@ export const VideoResultsPanel = React.forwardRef<HTMLDivElement, VideoResultsPa
             )}
 
             {/* Player area */}
-            <div className="bg-gradient-to-b from-muted/10 to-muted/30 flex items-center justify-center p-2">
+            <div className="bg-gradient-to-b from-muted/10 to-muted/30 p-2">
               {showBeforeAfter && sourceImageUrl ? (
-                <div className={cn('relative w-full max-w-full', arClass)}>
-                  <img src={sourceImageUrl} alt="Original" className="w-full h-full object-contain rounded-lg" />
+                <div className="relative w-full">
+                  <img src={sourceImageUrl} alt="Original" className="w-full rounded-lg" />
                   <Badge variant="secondary" className="absolute top-3 left-3 text-xs">Original Image</Badge>
                 </div>
               ) : (
@@ -154,7 +154,7 @@ export const VideoResultsPanel = React.forwardRef<HTMLDivElement, VideoResultsPa
                   loop
                   controls
                   playsInline
-                  className={cn('w-full max-w-full object-contain rounded-lg', arClass)}
+                  className="w-full rounded-lg"
                 />
               )}
             </div>
