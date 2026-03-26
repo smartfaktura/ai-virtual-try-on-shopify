@@ -218,17 +218,10 @@ function detectUserNoteConflict(
 
 // ─── Camera Control Config ───
 
-function resolveCameraControlConfig(cameraMotion: string): { type: string; config: Record<string, number> } | undefined {
-  switch (cameraMotion) {
-    case 'orbit':
-      return { type: 'simple', config: { horizontal: 10, vertical: 3, zoom: 0, tilt: 0, pan: 0, roll: 0 } };
-    case 'slow_push_in':
-      return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 5, tilt: 0, pan: 0, roll: 0 } };
-    case 'gentle_pan':
-      return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 0, tilt: 0, pan: 10, roll: 0 } };
-    default:
-      return undefined; // Prompt-only for static, camera_drift, premium_handheld
-  }
+function resolveCameraControlConfig(_cameraMotion: string): { type: string; config: Record<string, number> } | undefined {
+  // Structured camera_control is not supported by kling-v3 image2video.
+  // All camera motion is driven via prompt text instead.
+  return undefined;
 }
 
 // ─── Result Label Builder ───
