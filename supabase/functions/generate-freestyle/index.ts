@@ -482,7 +482,7 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
         lines.push(`- Image ${idx} is the MODEL: preserve exact face, hair color, skin tone, body type, and all physical features from this person.`);
         break;
       case "product":
-        lines.push(`- Image ${idx} is the PRODUCT: the item to feature. Match exact shape, color, material, logos, and details.`);
+        lines.push(`- Image ${idx} is the PRODUCT: CRITICAL — replicate this item EXACTLY as shown. Match precise shape, silhouette, color, material texture, collar/neckline style, zipper/button placement, pockets, logos, tags, and all visible construction details. This is a specific real product that must be instantly recognizable.`);
         break;
       case "scene":
         lines.push(`- Image ${idx} is the BACKGROUND/SCENE: use for environment, lighting, and atmosphere only. Do not take person or product features from this image.`);
@@ -522,10 +522,10 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
     }
   }
 
-  // Deterministic ordering: model → product → scene → other
+  // Deterministic ordering: product FIRST (highest weight) → model → scene → other
   const orderedRoleImages = [
-    ...roleImages.filter(i => i.role === "model"),
     ...roleImages.filter(i => i.role === "product"),
+    ...roleImages.filter(i => i.role === "model"),
     ...roleImages.filter(i => i.role === "scene"),
     ...roleImages.filter(i => i.role === "other"),
   ];
@@ -1088,7 +1088,7 @@ serve(async (req) => {
     const forceProModel = !!(body as Record<string, unknown>).forceProModel;
     const hasModelImage = !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model');
     const providerOverride = ((body as Record<string, unknown>).providerOverride as string) || null;
-    const aiModel = (forceProModel || isPerspective || hasModelImage)
+    const aiModel = (forceProModel || isPerspective || (hasModelImage && providerOverride !== "nanobanana"))
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-3.1-flash-image-preview";
     const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
