@@ -146,6 +146,7 @@ export function RecentCreationsGallery() {
       createdAt: item.rawDate,
       aspectRatio: item.aspectRatio,
       quality: item.quality,
+      providerUsed: item.providerUsed,
     };
     setSelectedItem(libraryItem);
     setActiveItemId(null);
