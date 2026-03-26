@@ -113,15 +113,19 @@ function detectFullBodyIntent(prompt: string): boolean {
 
 // ── Shared framing instruction builder ────────────────────────────────────
 function buildFramingInstruction(framing: string, hasModel: boolean): string | null {
+  const modelRef = hasModel
+    ? ' The body area shown must match the exact skin tone, age, and body characteristics of [MODEL REFERENCE].'
+    : '';
+
   const framingPrompts: Record<string, string> = {
-    full_body: `FRAMING: Full body shot, head to toe. Show complete figure.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-    upper_body: `FRAMING: Upper body, waist up.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-    close_up: `FRAMING: Close-up portrait from shoulders up.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
-    hand_wrist: `FRAMING: Hand and wrist only. No face.${hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-    neck_shoulders: `FRAMING: Collarbone area, jewelry display.${hasModel ? ' Match skin tone of [MODEL REFERENCE].' : ''}`,
-    lower_body: `FRAMING: Lower body, hips to feet.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-    back_view: `FRAMING: Back view, facing away.${hasModel ? ' Match body of [MODEL REFERENCE].' : ''}`,
-    side_profile: `FRAMING: Side profile, ear and jawline.${hasModel ? ' Match appearance of [MODEL REFERENCE].' : ''}`,
+    full_body: `FRAMING — MANDATORY: Full body shot, head to toe. The frame MUST include the subject's feet touching the ground and full head with hair. Show the complete outfit and full figure. Do NOT crop at the knees or waist — the entire body from head to shoes must be visible.${modelRef}`,
+    upper_body: `FRAMING — MANDATORY: Upper body shot, from the waist up. Focus on the torso and face area. Do NOT show full legs or feet.${modelRef}`,
+    close_up: `FRAMING — MANDATORY CLOSE-UP / PRODUCT DETAIL: Lens 85mm at f/2.8, shallow depth-of-field with razor-sharp focus on the product zone. Tight crop from mid-chest upward — the product/garment must fill at least 60% of the visible frame area. Show fabric texture, stitching, material drape, and pattern detail at close range. Camera distance is much closer than a standard portrait. Background should be heavily blurred (bokeh) to isolate the product area.${modelRef}`,
+    hand_wrist: `FRAMING — MANDATORY: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${modelRef}`,
+    neck_shoulders: `FRAMING — MANDATORY: Jewelry display framing — collarbone and neckline area, cropped from just below the chin to mid-chest. Do NOT include the full face. Professional product photography composition.${modelRef}`,
+    lower_body: `FRAMING — MANDATORY: Lower body shot from the hips to the feet. Focus on the legs and footwear area. Do NOT include the face or upper torso.${modelRef}`,
+    back_view: `FRAMING — MANDATORY: Back view showing the product from behind. The subject should be facing away from the camera.${modelRef}`,
+    side_profile: `FRAMING — MANDATORY: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${modelRef}`,
   };
   return framingPrompts[framing] || null;
 }
