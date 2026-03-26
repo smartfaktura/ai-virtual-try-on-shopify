@@ -51,7 +51,7 @@ export default function AnimateVideo() {
     pipelineStage, videoUrl, videoError, elapsedSeconds, videoStatus,
     isAnalyzing, isBuildingPrompt, isGenerating, isComplete,
     analysisResult, isAnalyzingImage, analyzeImage,
-    runAnimatePipeline, resetPipeline,
+    runAnimatePipeline, resetPipeline, activeJob,
   } = useVideoProject();
 
   const { balance: creditsBalance } = useCredits();
@@ -305,7 +305,7 @@ export default function AnimateVideo() {
     };
   };
 
-  const isPipelineActive = pipelineStage !== 'idle' && pipelineStage !== 'error' && !isComplete;
+  const isPipelineActive = pipelineStage !== 'idle' && pipelineStage !== 'error' && !isComplete && (isGenerating || isAnalyzing || isBuildingPrompt || pipelineStage === 'creating_project');
 
   const ASPECT_RATIOS: { value: AspectRatio; label: string }[] = [
     { value: '9:16', label: '9:16' },
@@ -316,7 +316,11 @@ export default function AnimateVideo() {
   const getStageMessage = () => {
     if (isAnalyzing) return { text: 'Analyzing your image...', sub: 'Understanding composition and product context' };
     if (isBuildingPrompt) return { text: 'Building motion plan...', sub: 'Applying category-aware motion strategy' };
-    if (videoStatus === 'creating') return { text: 'Starting generation...', sub: 'Sending to video engine' };
+    if (videoStatus === 'creating') return { text: 'Submitting to queue...', sub: 'Reserving credits and queueing your video' };
+    if (videoStatus === 'queued' || pipelineStage === 'queued') {
+      const position = activeJob?.position ?? 0;
+      return { text: 'Queued', sub: position > 0 ? `Position #${position + 1} in queue — will start automatically` : 'Starting shortly…' };
+    }
     return { text: 'Generating your video...', sub: `Typically 1-3 minutes • ${elapsedSeconds}s elapsed` };
   };
 
