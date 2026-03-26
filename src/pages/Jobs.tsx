@@ -92,6 +92,7 @@ export default function Jobs() {
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { isAdmin } = useIsAdmin();
 
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
   const items = data?.pages.flatMap(p => p.items) ?? [];
@@ -378,6 +379,7 @@ export default function Jobs() {
                       selectMode={selectMode}
                       selected={selectedIds.has(item.id)}
                       isUpscaling={upscalingSourceIds.has(item.id)}
+                      isAdmin={isAdmin}
                       onDelete={() => handleDeleteItem(item)}
                       onClick={() => {
                         if (selectMode) {
