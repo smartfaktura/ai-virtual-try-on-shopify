@@ -1,4 +1,4 @@
-// Force redeploy: v3 — normalized ProviderResult, centralized fallback executor (2026-03-26)
+// Force redeploy: v4 — 120s failover, cross-model fallback, wall-clock budget (2026-03-26)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -368,10 +368,12 @@ async function generateImageSeedream(
   model: string,
   apiKey: string,
   aspectRatio = "1:1",
+  timeoutOverrideMs?: number,
 ): Promise<ProviderResult> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const size = seedreamSizeForRatio(aspectRatio);
   const attemptStart = performance.now();
+  const timeoutMs = timeoutOverrideMs || 90_000;
 
   try {
     const seedreamRatio = seedreamAspectRatio(aspectRatio);
@@ -397,7 +399,7 @@ async function generateImageSeedream(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(150_000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     const durationMs = Math.round(performance.now() - attemptStart);
@@ -446,7 +448,7 @@ async function generateImageSeedream(
     const durationMs = Math.round(performance.now() - attemptStart);
     const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
     if (isTimeout) {
-      return { ok: false, failureType: "timeout", retryable: true, provider: "seedream", model, durationMs, rawError: "Request timed out (150s)" };
+      return { ok: false, failureType: "timeout", retryable: true, provider: "seedream", model, durationMs, rawError: `Request timed out (${timeoutMs / 1000}s)` };
     }
     return { ok: false, failureType: "network_error", retryable: true, provider: "seedream", model, durationMs, rawError: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -670,10 +672,12 @@ async function generateImage(
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  quality: "standard" | "high" = "standard"
+  quality: "standard" | "high" = "standard",
+  timeoutOverrideMs?: number,
 ): Promise<ProviderResult> {
   const isProModel = /gemini-3-pro|gemini-3\.1-pro/i.test(model);
-  const timeoutMs = isProModel ? 150_000 : 90_000;
+  const defaultTimeoutMs = isProModel ? 120_000 : 90_000;
+  const timeoutMs = timeoutOverrideMs || defaultTimeoutMs;
   const attemptStart = performance.now();
 
   try {
@@ -780,7 +784,12 @@ function buildContentArray(
 
 // ── Centralized Freestyle Fallback Executor ──────────────────────────────
 // 3-attempt chain: primary → other provider → final rescue on primary
+// Wall-clock budget enforced: primary gets max 120s, fallbacks use remaining budget.
 // No Pro→Flash auto-downgrade. Terminal failures stop immediately.
+
+const PRIMARY_ATTEMPT_TIMEOUT_MS = 120_000;   // 120s max for first attempt
+const WALL_CLOCK_BUDGET_MS = 145_000;         // 145s total budget (edge fn limit ~150s)
+const MIN_ATTEMPT_BUDGET_MS = 25_000;         // skip fallback if <25s remaining
 
 interface FallbackOpts {
   primaryProvider: "nanobanana" | "seedream";
@@ -797,6 +806,7 @@ interface FallbackOpts {
 
 async function runFreestyleWithFallback(opts: FallbackOpts): Promise<ProviderResult> {
   const { primaryProvider, primaryModel, contentArray, aspectRatio, quality, lovableApiKey, arkApiKey, canUseSeedream, imageIndex, jobId } = opts;
+  const executorStart = performance.now();
 
   const logPrefix = `[FREESTYLE] ${jobId ? `job=${jobId} ` : ""}img=${imageIndex + 1}`;
 
@@ -807,12 +817,11 @@ async function runFreestyleWithFallback(opts: FallbackOpts): Promise<ProviderRes
   // Attempt 1: primary
   chain.push({ provider: primaryProvider, model: primaryModel });
 
-  // Attempt 2: other provider
+  // Attempt 2: cross-model fallback (always try the other provider if available)
   if (primaryProvider === "nanobanana" && canUseSeedream) {
     chain.push({ provider: "seedream", model: PROVIDERS["seedream-4.5"].model });
   } else if (primaryProvider === "seedream") {
-    // Fallback to the same NB model (Pro stays Pro, Flash stays Flash)
-    chain.push({ provider: "nanobanana", model: primaryModel.includes("seedream") ? PROVIDERS["nanobanana-pro"].model : primaryModel });
+    chain.push({ provider: "nanobanana", model: PROVIDERS["nanobanana-pro"].model });
   } else {
     // No seedream available — rescue on same provider
     chain.push({ provider: primaryProvider, model: primaryModel });
@@ -830,50 +839,72 @@ async function runFreestyleWithFallback(opts: FallbackOpts): Promise<ProviderRes
     }
   }
 
+  console.log(`${logPrefix} fallback chain: ${dedupedChain.map(d => `${d.provider}/${d.model}`).join(" → ")} (budget=${WALL_CLOCK_BUDGET_MS / 1000}s)`);
+
   const summaryParts: string[] = [];
   let lastResult: ProviderResult | null = null;
 
   for (let attempt = 0; attempt < dedupedChain.length; attempt++) {
     const def = dedupedChain[attempt];
     const maxAttempts = dedupedChain.length;
+    const elapsedMs = performance.now() - executorStart;
+    const remainingMs = WALL_CLOCK_BUDGET_MS - elapsedMs;
+
+    // Wall-clock budget guard: skip if not enough time for a meaningful attempt
+    if (attempt > 0 && remainingMs < MIN_ATTEMPT_BUDGET_MS) {
+      console.log(`${logPrefix} wall-clock budget exhausted: ${(elapsedMs / 1000).toFixed(1)}s elapsed, ${(remainingMs / 1000).toFixed(1)}s remaining (<${MIN_ATTEMPT_BUDGET_MS / 1000}s minimum) — skipping ${maxAttempts - attempt} remaining fallback(s)`);
+      break;
+    }
+
+    // Compute per-attempt timeout: primary gets max 120s, fallbacks get remaining budget minus safety buffer
+    let attemptTimeoutMs: number;
+    if (attempt === 0) {
+      attemptTimeoutMs = Math.min(PRIMARY_ATTEMPT_TIMEOUT_MS, remainingMs - MIN_ATTEMPT_BUDGET_MS);
+    } else {
+      // Fallback: use remaining budget minus 5s safety buffer
+      attemptTimeoutMs = Math.min(remainingMs - 5_000, 90_000);
+    }
+    attemptTimeoutMs = Math.max(attemptTimeoutMs, 15_000); // absolute minimum 15s
 
     let result: ProviderResult;
     if (def.provider === "seedream" && arkApiKey) {
       const seedreamInput = convertContentToSeedreamInput(contentArray);
-      result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, def.model, arkApiKey, aspectRatio);
+      result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, def.model, arkApiKey, aspectRatio, attemptTimeoutMs);
     } else {
-      result = await generateImage(contentArray, lovableApiKey, def.model, aspectRatio, quality);
+      result = await generateImage(contentArray, lovableApiKey, def.model, aspectRatio, quality, attemptTimeoutMs);
     }
 
     const durationSec = (result.durationMs / 1000).toFixed(1);
+    const totalElapsedSec = ((performance.now() - executorStart) / 1000).toFixed(1);
     const outcome = result.ok ? "ok" : result.failureType || "unknown";
-    console.log(`${logPrefix} attempt=${attempt + 1}/${maxAttempts} provider=${def.provider} model=${def.model} duration=${durationSec}s result=${outcome}${result.retryable ? " retryable=true" : ""}${result.blocked ? " blocked=true" : ""}`);
+    console.log(`${logPrefix} attempt=${attempt + 1}/${maxAttempts} provider=${def.provider} model=${def.model} timeout=${(attemptTimeoutMs / 1000).toFixed(0)}s duration=${durationSec}s total_elapsed=${totalElapsedSec}s result=${outcome}${result.retryable ? " retryable=true" : ""}${result.blocked ? " blocked=true" : ""}`);
 
-    summaryParts.push(`${def.provider}/${def.model}→${outcome}`);
+    summaryParts.push(`${def.provider}/${def.model}→${outcome}(${durationSec}s)`);
     lastResult = result;
 
     // Success — return immediately
     if (result.ok) {
-      console.log(`${logPrefix} summary: ${summaryParts.join(" | ")} (total=${durationSec}s)`);
+      console.log(`${logPrefix} summary: ${summaryParts.join(" | ")} (total=${totalElapsedSec}s)`);
       return result;
     }
 
     // Terminal failure — stop the chain
     if (!result.retryable) {
       console.log(`${logPrefix} terminal failure: ${result.failureType} — stopping fallback chain`);
-      console.log(`${logPrefix} summary: ${summaryParts.join(" | ")}`);
+      console.log(`${logPrefix} summary: ${summaryParts.join(" | ")} (total=${totalElapsedSec}s)`);
       return result;
     }
 
-    // Retryable — log fallback and continue
+    // Retryable — log fallback reason and continue
     if (attempt < dedupedChain.length - 1) {
       const next = dedupedChain[attempt + 1];
-      console.log(`[FALLBACK] ${logPrefix} ${def.provider}/${def.model} → trying ${next.provider}/${next.model}`);
+      console.log(`[FALLBACK] ${logPrefix} ${def.provider}→${next.provider} reason=${result.failureType} after ${durationSec}s`);
     }
   }
 
   // All attempts exhausted
-  console.log(`${logPrefix} all attempts exhausted: ${summaryParts.join(" | ")}`);
+  const totalElapsedSec = ((performance.now() - executorStart) / 1000).toFixed(1);
+  console.log(`${logPrefix} all attempts exhausted: ${summaryParts.join(" | ")} (total=${totalElapsedSec}s)`);
   return lastResult!;
 }
 
@@ -1188,7 +1219,8 @@ serve(async (req) => {
     }
 
     // Determine if Seedream can be used as fallback
-    const canUseSeedream = !!ARK_API_KEY && body.imageRole !== 'edit' && providerOverride !== "nanobanana";
+    // Provider override is now "primary preference" — fallback can still use the other provider
+    const canUseSeedream = !!ARK_API_KEY && body.imageRole !== 'edit';
 
     console.log("[generate-freestyle] ARK key present:", !!ARK_API_KEY);
     console.log("Freestyle generation:", {
