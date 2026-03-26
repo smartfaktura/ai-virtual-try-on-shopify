@@ -1254,6 +1254,8 @@ serve(async (req) => {
       model: aiModel,
       polished: body.polishPrompt,
       isPerspective,
+      sceneCategory: body.sceneCategory || null,
+      isOnModelScene,
       isQueueInternal,
       jobId: body.job_id || null,
       providerOverride,
