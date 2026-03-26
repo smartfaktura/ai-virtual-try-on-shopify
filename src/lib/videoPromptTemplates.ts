@@ -36,7 +36,25 @@ const CAMERA_PHRASES: Record<string, string> = {
   orbit: 'the camera physically orbits around the subject in a smooth arc. The subject stays completely still and fixed in place — only the camera moves. The viewing angle changes progressively as the camera circles around. The subject does NOT rotate or spin',
 };
 
-function buildCameraClause(motion: string): string {
+const REALISM_PHRASES: Record<string, string> = {
+  ultra_realistic: 'ultra photorealistic',
+  realistic: 'realistic',
+  slightly_stylized: 'slightly stylized cinematic',
+};
+
+const INTENSITY_PHRASES: Record<string, string> = {
+  low: 'subtle restrained',
+  medium: 'moderate natural',
+  high: 'dynamic expressive',
+};
+
+const LOOP_PHRASES: Record<string, string> = {
+  none: '',
+  short_repeatable: 'suitable for a short repeatable loop with one contained action',
+  seamless_loop: 'with seamless cyclic looping motion that returns to start',
+  one_natural: 'as one natural continuous movement',
+};
+
   return `Camera: ${CAMERA_PHRASES[motion] || CAMERA_PHRASES.slow_push_in}.`;
 }
 
