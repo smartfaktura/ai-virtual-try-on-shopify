@@ -54,9 +54,16 @@ function ActiveGroupCard({
 }) {
   const navigate = useNavigate();
   const hasMultipleImages = group.totalImageCount > 1;
-  const progressPct = hasMultipleImages ? Math.round((group.generatedImageCount / group.totalImageCount) * 100) : 0;
+  const rawPct = hasMultipleImages ? Math.round((group.generatedImageCount / group.totalImageCount) * 100) : 0;
   const isProcessing = group.processingCount > 0;
-  const elapsed = elapsedLabel(group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at);
+  const startedAt = group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at;
+  const elapsed = elapsedLabel(startedAt);
+
+  // Time-based floor: crawl to 15% max so bar never shows 0%
+  const elapsedSec = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+  const estTotal = Math.max(group.totalImageCount * 8, 1);
+  const timeFloor = Math.min((elapsedSec / estTotal) * 15, 15);
+  const progressPct = isProcessing ? Math.max(rawPct, Math.round(Math.max(timeFloor, 2))) : rawPct;
 
   const stuckJobs = group.jobs.filter((j) => j.status === 'processing' && isStuck(j.started_at));
   const hasStuckJobs = stuckJobs.length > 0;
