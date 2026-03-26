@@ -1177,6 +1177,7 @@ serve(async (req) => {
         }
 
         let result: GenerateResult;
+        let actualProvider = useSeedream ? "seedream-4.5" : aiModel;
 
         if (useSeedream) {
           // Seedream path
@@ -1187,6 +1188,7 @@ serve(async (req) => {
           if (result === null) {
             console.warn(`[generate-freestyle] Seedream returned null — falling back to Nano Banana (${aiModel})`);
             result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, 0, body.quality || 'standard');
+            if (result !== null) actualProvider = aiModel;
           }
         } else {
           // Nano Banana (Gemini) path
@@ -1195,12 +1197,14 @@ serve(async (req) => {
           if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
             console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
             result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
+            if (result !== null) actualProvider = "google/gemini-3.1-flash-image-preview";
           }
           // Cross-provider fallback: Nano Banana failed → try Seedream (if key available)
           if (result === null && ARK_API_KEY && providerOverride !== "nanobanana") {
             console.warn(`[generate-freestyle] Nano Banana returned null — falling back to Seedream`);
             const seedreamInput = convertContentToSeedreamInput(contentArray);
             result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
+            if (result !== null) actualProvider = "seedream-4.5";
           }
         }
 
