@@ -1043,7 +1043,7 @@ serve(async (req) => {
           // Seedream path
           const seedreamInput = convertContentToSeedreamInput(contentArray);
           console.log(`[generate-freestyle] Using Seedream 4.5 (provider override)`);
-          result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY!, maxRetries);
+          result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY!, body.aspectRatio, maxRetries);
           // Cross-provider fallback: Seedream failed → try Nano Banana
           if (result === null) {
             console.warn(`[generate-freestyle] Seedream returned null — falling back to Nano Banana (${aiModel})`);
@@ -1061,7 +1061,7 @@ serve(async (req) => {
           if (result === null && ARK_API_KEY && providerOverride !== "nanobanana") {
             console.warn(`[generate-freestyle] Nano Banana returned null — falling back to Seedream`);
             const seedreamInput = convertContentToSeedreamInput(contentArray);
-            result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, 0);
+            result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
           }
         }
 
@@ -1166,7 +1166,7 @@ serve(async (req) => {
               } else if (ARK_API_KEY) {
                 // Was using Nano Banana, fallback to Seedream
                 const seedreamInput = convertContentToSeedreamInput(contentArray);
-                fallbackResult = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, 0);
+                fallbackResult = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
               } else {
                 // No Seedream key, try the alternate Gemini model
                 const fallbackModel = aiModel.includes("flash")
