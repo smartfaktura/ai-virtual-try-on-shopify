@@ -210,6 +210,9 @@ export function useVideoProject() {
     if (generateVideo.status === 'queued' && pipelineStage === 'generating') {
       setPipelineStage('queued');
     }
+    if (generateVideo.status === 'processing' && pipelineStage === 'queued') {
+      setPipelineStage('generating');
+    }
     if (generateVideo.status === 'error' && pipelineStage !== 'error' && pipelineStage !== 'idle') {
       setPipelineStage('error');
       setPipelineError(generateVideo.error || 'Video generation failed');
