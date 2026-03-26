@@ -28,6 +28,7 @@ import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { useCredits } from '@/contexts/CreditContext';
 import { toast } from 'sonner';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
@@ -53,6 +54,7 @@ export default function AnimateVideo() {
     runAnimatePipeline, resetPipeline,
   } = useVideoProject();
 
+  const { balance: creditsBalance } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
 
   // Upload state
@@ -886,6 +888,8 @@ export default function AnimateVideo() {
           sourceImageUrl={imagePreview || imageUrl || undefined}
           aspectRatio={aspectRatio}
           generationContext={buildGenerationContext()}
+          creditCost={estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion })}
+          creditsRemaining={creditsBalance}
           onReuse={handleReuse}
           onNewProject={handleNewProject}
           onQuickVariation={handleQuickVariation}
