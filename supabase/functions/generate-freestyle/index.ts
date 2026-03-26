@@ -911,7 +911,7 @@ async function completeQueueJob(
     return;
   }
 
-  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
+  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined, providerUsed: providerUsed || undefined, durationMs: durationMs || undefined };
 
   const { error: completeErr } = await supabase.from("generation_queue").update({
     status: "completed",
