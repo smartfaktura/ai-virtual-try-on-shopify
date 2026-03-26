@@ -1052,6 +1052,31 @@ export default function Freestyle() {
               </div>
             )}
             <FreestylePromptPanel {...panelProps} />
+            {/* Admin-only provider selector */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 px-2 pt-1">
+                <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-medium">Provider:</span>
+                {[
+                  { value: null, label: 'Auto' },
+                  { value: 'nanobanana', label: 'Nano Banana' },
+                  { value: 'seedream-4.5', label: 'Seedream 4.5' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value ?? 'auto'}
+                    onClick={() => setProviderOverride(opt.value)}
+                    className={cn(
+                      'px-2 py-0.5 rounded-full text-xs font-medium transition-colors border',
+                      providerOverride === opt.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted/60 text-muted-foreground border-border hover:bg-muted'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
