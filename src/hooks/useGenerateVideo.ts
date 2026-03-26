@@ -92,7 +92,6 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setStatus('processing');
     } else if (job.status === 'completed') {
       setStatus('complete');
-      // Extract video_url from job result
       const result = job.result as Record<string, unknown> | null;
       if (result?.video_url) {
         toSignedUrl(result.video_url as string).then(signed => setVideoUrl(signed));
@@ -103,6 +102,61 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     }
     // failed is handled by onGenerationFailed callback
   }, [queue.activeJob?.status, queue.activeJob?.id]);
+
+  // Client-side Kling status polling when job is processing
+  useEffect(() => {
+    const job = queue.activeJob;
+    if (!job || job.status !== 'processing') return;
+
+    const result = job.result as Record<string, unknown> | null;
+    const klingTaskId = result?.kling_task_id as string | undefined;
+    if (!klingTaskId) return;
+
+    let cancelled = false;
+    const MAX_POLLS = 60; // 10 min at 10s intervals
+    let pollCount = 0;
+
+    const poll = async () => {
+      if (cancelled || pollCount >= MAX_POLLS) return;
+      pollCount++;
+
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
+          body: { action: 'status', task_id: klingTaskId, queue_job_id: job.id },
+        });
+
+        if (fnError || !data) {
+          console.warn('[useGenerateVideo] Status poll error:', fnError);
+          if (!cancelled) setTimeout(poll, 10000);
+          return;
+        }
+
+        if (data.status === 'succeed' && data.video_url) {
+          // Queue job was updated by edge function — queue polling will pick it up
+          return;
+        }
+
+        if (data.status === 'failed') {
+          // Queue job was updated by edge function — queue polling will pick it up
+          return;
+        }
+
+        // Still processing — poll again
+        if (!cancelled) setTimeout(poll, 10000);
+      } catch (err) {
+        console.warn('[useGenerateVideo] Status poll exception:', err);
+        if (!cancelled) setTimeout(poll, 10000);
+      }
+    };
+
+    // Start polling after a short delay (give Kling time to start)
+    const initialDelay = setTimeout(poll, 5000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(initialDelay);
+    };
+  }, [queue.activeJob?.id, queue.activeJob?.status]);
 
   const fetchHistory = useCallback(async () => {
     try {

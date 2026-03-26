@@ -175,104 +175,8 @@ async function handleWorkerMode(body: Record<string, unknown>) {
 
     await serviceClient.from("generated_videos").insert(dbRow);
 
-    // 2. Poll Kling status (up to ~4 minutes within edge function timeout)
-    const MAX_POLLS = 48; // ~4 min at 5s intervals
-    const POLL_DELAY = 5000;
-
-    for (let i = 0; i < MAX_POLLS; i++) {
-      await new Promise(r => setTimeout(r, POLL_DELAY));
-
-      // Refresh JWT if needed (every ~20 polls)
-      let pollHeaders = headers;
-      if (i > 0 && i % 20 === 0) {
-        const freshJwt = await createKlingJWT(KLING_ACCESS_KEY, KLING_SECRET_KEY);
-        pollHeaders = { Authorization: `Bearer ${freshJwt}`, "Content-Type": "application/json" };
-      }
-
-      const statusRes = await fetch(`${KLING_API_BASE}/videos/image2video/${taskId}`, {
-        method: "GET",
-        headers: pollHeaders,
-      });
-
-      const statusResult = await statusRes.json();
-      if (!statusRes.ok || statusResult.code !== 0) {
-        console.warn(`[generate-video:worker] Poll ${i} error for ${taskId}:`, statusResult.message);
-        continue;
-      }
-
-      const taskData = statusResult.data;
-
-      // SUCCESS
-      if (taskData.task_status === "succeed" && taskData.task_result?.videos?.length > 0) {
-        const tempVideoUrl = taskData.task_result.videos[0].url;
-        let permanentUrl = tempVideoUrl;
-
-        try {
-          permanentUrl = await saveVideoToStorage(serviceClient, tempVideoUrl, userId, taskId);
-        } catch (saveErr) {
-          console.error(`[generate-video:worker] Save error:`, saveErr);
-        }
-
-        // Update generated_videos
-        await serviceClient
-          .from("generated_videos")
-          .update({ video_url: permanentUrl, status: "complete", completed_at: new Date().toISOString() })
-          .eq("kling_task_id", taskId);
-
-        // Update queue job as completed
-        await serviceClient
-          .from("generation_queue")
-          .update({
-            status: "completed",
-            result: { kling_task_id: taskId, video_url: permanentUrl },
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", jobId);
-
-        console.log(`[generate-video:worker] Job ${jobId} completed successfully`);
-        return;
-      }
-
-      // FAILED
-      if (taskData.task_status === "failed") {
-        const errorMsg = taskData.task_status_msg || "Video generation failed";
-
-        await serviceClient
-          .from("generated_videos")
-          .update({ status: "failed", error_message: errorMsg, completed_at: new Date().toISOString() })
-          .eq("kling_task_id", taskId);
-
-        await serviceClient
-          .from("generation_queue")
-          .update({
-            status: "failed",
-            error_message: errorMsg,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", jobId);
-
-        // Refund credits
-        await serviceClient.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-
-        console.log(`[generate-video:worker] Job ${jobId} failed: ${errorMsg}`);
-        return;
-      }
-
-      // Update queue result with latest status
-      if (i % 5 === 0) {
-        await serviceClient
-          .from("generation_queue")
-          .update({ result: { kling_task_id: taskId, status: taskData.task_status, poll_count: i } })
-          .eq("id", jobId);
-      }
-    }
-
-    // Polling exhausted — leave as processing, cleanup_stale_jobs will handle it
-    console.warn(`[generate-video:worker] Job ${jobId} polling exhausted after ${MAX_POLLS} polls — leaving for cleanup`);
-    await serviceClient
-      .from("generation_queue")
-      .update({ result: { kling_task_id: taskId, status: "polling_exhausted" } })
-      .eq("id", jobId);
+    // Worker is submit-only — client polls via action: "status"
+    console.log(`[generate-video:worker] Job ${jobId} submitted, kling_task_id=${taskId}. Client will poll.`);
 
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "Unknown error";
@@ -353,12 +257,14 @@ serve(async (req) => {
         task_id: taskData.task_id,
       };
 
+      const serviceClient = getServiceClient();
+      const queueJobId = body.queue_job_id as string | undefined;
+
       if (taskData.task_status === "succeed" && taskData.task_result?.videos?.length > 0) {
         const tempVideoUrl = taskData.task_result.videos[0].url;
         let permanentUrl = tempVideoUrl;
 
         try {
-          const serviceClient = getServiceClient();
           permanentUrl = await saveVideoToStorage(serviceClient, tempVideoUrl, userId, task_id);
 
           await serviceClient
@@ -369,6 +275,18 @@ serve(async (req) => {
           console.error("[generate-video] Error saving video permanently:", saveErr);
         }
 
+        // Also complete the queue job so useGenerationQueue sees it
+        if (queueJobId) {
+          await serviceClient
+            .from("generation_queue")
+            .update({
+              status: "completed",
+              result: { kling_task_id: task_id, video_url: permanentUrl },
+              completed_at: new Date().toISOString(),
+            })
+            .eq("id", queueJobId);
+        }
+
         response.video_url = permanentUrl;
         response.duration = taskData.task_result.videos[0].duration;
       }
@@ -376,11 +294,35 @@ serve(async (req) => {
       if (taskData.task_status === "failed") {
         response.error = taskData.task_status_msg || "Video generation failed";
         try {
-          const serviceClient = getServiceClient();
           await serviceClient
             .from("generated_videos")
             .update({ status: "failed", error_message: response.error as string, completed_at: new Date().toISOString() })
             .eq("kling_task_id", task_id);
+
+          // Also fail the queue job and refund credits
+          if (queueJobId) {
+            const { data: queueRow } = await serviceClient
+              .from("generation_queue")
+              .select("credits_reserved, user_id")
+              .eq("id", queueJobId)
+              .single();
+
+            await serviceClient
+              .from("generation_queue")
+              .update({
+                status: "failed",
+                error_message: response.error as string,
+                completed_at: new Date().toISOString(),
+              })
+              .eq("id", queueJobId);
+
+            if (queueRow) {
+              await serviceClient.rpc("refund_credits", {
+                p_user_id: queueRow.user_id,
+                p_amount: queueRow.credits_reserved,
+              });
+            }
+          }
         } catch (dbErr) {
           console.error("[generate-video] DB update (failed) error:", dbErr);
         }
