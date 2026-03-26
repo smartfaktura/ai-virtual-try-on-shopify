@@ -1,48 +1,44 @@
 
-Root cause confirmed from code:
 
-1) `src/pages/video/AnimateVideo.tsx` only renders UI for:
-- pre-upload: `!isPipelineActive && !isComplete && !imageUrl`
-- settings form: `!isPipelineActive && !isComplete && imageUrl`
+# Fix: Pro Quality Being Reset to Standard on Product-Only Generations
 
-There is no render branch for `isPipelineActive === true` (generation in progress) or `isComplete === true` (finished result), so the page can appear blank after clicking Generate.
+## Problem
+When the user manually selects **Pro** quality but has **no model and no scene** selected (product-only generation), a `useEffect` on lines 71-78 of `Freestyle.tsx` overrides their selection back to `'standard'`:
 
-2) `videoError` / pipeline errors are not surfaced in this page, so failed runs also lack visible recovery UI.
+```typescript
+useEffect(() => {
+  if (selectedModel || selectedScene) {
+    setQuality('high');
+  } else {
+    setQuality('standard'); // ← forces standard even if user chose Pro
+  }
+}, [selectedModel, selectedScene]);
+```
 
-3) `src/hooks/useVideoProject.ts` sets `pipelineStage` to `generating` and triggers `startGeneration()`, but stage synchronization with `useGenerateVideo` is weak, which can leave UI state inconsistent.
+This causes the backend to receive `quality: "standard"`, which selects Flash instead of Pro model. The edge function logs confirm: `quality: "standard"`, `model: "google/gemini-3.1-flash-image-preview"`.
 
-Implementation plan:
+## Solution
+Change the `useEffect` to only **upgrade** quality (standard → high) when a model/scene is added, but **never downgrade** a manual Pro selection. Remove the `else` branch that resets to standard.
 
-## 1) Add missing render states in AnimateVideo page
-File: `src/pages/video/AnimateVideo.tsx`
+## Changes
 
-- Add a dedicated “pipeline active” block (for `isPipelineActive`) using existing stage messaging (`getStageMessage`) and elapsed timer.
-- Add a dedicated “complete” block (for `isComplete`) that renders `VideoResultsPanel` with:
-  - `videoUrl`
-  - `sourceImageUrl` from uploaded image
-  - `generationContext` from `buildGenerationContext()`
-  - actions: `onReuse`, `onQuickVariation`, `onNewProject`
-- Add an explicit error block when generation fails (`videoStatus === 'error'` or pipeline error), with clear retry CTA.
+### File: `src/pages/Freestyle.tsx` (lines 71-78)
 
-## 2) Harden pipeline state syncing
-File: `src/hooks/useVideoProject.ts` (and small contract update in `src/hooks/useGenerateVideo.ts`)
+Replace the current useEffect with:
 
-- Ensure `runAnimatePipeline()` reacts to generation start failure (e.g., duplicate in-flight video) instead of staying in generating state.
-- Synchronize `pipelineStage` with `generateVideo.status` (`complete` / `error`) via effect or explicit callbacks.
-- Keep `isPipelineActive` derived from both pipeline stage + generator status to prevent blank-state gaps.
+```typescript
+// Auto-upgrade to Pro quality when model or scene is selected
+useEffect(() => {
+  if (selectedModel || selectedScene) {
+    setQuality('high');
+  }
+  // Do NOT reset to standard — respect manual user selection
+}, [selectedModel, selectedScene]);
+```
 
-## 3) Keep prompt behavior single-shot-safe (no editing language)
-File: `src/lib/videoPromptTemplates.ts` (small guard)
+This is a 1-line deletion. The quality chip will still allow manual toggling, and selecting a model/scene will still auto-upgrade to Pro, but deselecting them won't forcibly downgrade.
 
-- Add/confirm prompt guardrail language for one continuous shot behavior (no “cut”, “split-screen”, multi-edit sequencing), matching model constraints for image-to-video.
+## Scope
+- 1 file: `src/pages/Freestyle.tsx` — remove the `else` branch
+- No backend changes needed
 
-## 4) QA checklist (manual end-to-end)
-- Upload image → wait analysis → Generate.
-- Confirm progress UI is visible during create/processing.
-- Confirm results panel appears on success with playable video + actions.
-- Trigger a failure path and confirm error UI + retry works.
-- Validate quick variation runs again without blanking.
-
-Technical details:
-- Expected files touched: `AnimateVideo.tsx`, `useVideoProject.ts`, `useGenerateVideo.ts` (optional signature return), and optionally `videoPromptTemplates.ts`.
-- No database schema or migration changes required.
