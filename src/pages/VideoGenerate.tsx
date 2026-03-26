@@ -14,7 +14,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 
 type ImageSource = 'upload' | 'url';

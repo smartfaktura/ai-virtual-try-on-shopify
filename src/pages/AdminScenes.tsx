@@ -18,7 +18,7 @@ import { useSceneSortOrder, useSaveSceneSortOrder } from '@/hooks/useSceneSortOr
 import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, useUpdateSceneCategory, useUpsertCategoryLabel, slugify } from '@/hooks/useSceneCategories';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
 
 export default function AdminScenes() {

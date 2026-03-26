@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { resolveVideoStrategy, type VideoAnalysis, type WorkflowType } from '@/lib/videoStrategyResolver';
 import { buildVideoPrompt } from '@/lib/videoPromptTemplates';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 export type PipelineStage = 'idle' | 'creating_project' | 'analyzing' | 'building_prompt' | 'generating' | 'queued' | 'complete' | 'error';
 

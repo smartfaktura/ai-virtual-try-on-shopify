@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { Bug, Lightbulb, MessageCircle, ChevronDown, StickyNote, Save, User } from 'lucide-react';
 
 const STATUS_OPTIONS = ['new', 'reviewed', 'planned', 'done'] as const;

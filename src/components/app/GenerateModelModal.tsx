@@ -7,7 +7,7 @@ import { Sparkles, Upload, Loader2, Crown, X, Check } from 'lucide-react';
 import { useGenerateUserModel } from '@/hooks/useUserModels';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
 
 interface GenerateModelModalProps {

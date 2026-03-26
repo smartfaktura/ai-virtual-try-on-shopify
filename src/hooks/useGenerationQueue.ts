@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -437,7 +437,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       const token = session?.session?.access_token;
 
       if (!token) {
-        toast.error('Authentication required');
+        toast.error('Please sign in first');
         return null;
       }
 
@@ -556,7 +556,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     if (Array.isArray(updated) && updated.length > 0 && updated[0].status === 'cancelled') {
       stopPolling();
       setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
-      toast.info('Generation cancelled. Credits refunded.');
+      toast.info('Cancelled — credits returned ✨');
       onCreditRefresh?.();
     } else {
       toast.warning('Could not cancel — generation may have already completed.');

@@ -22,7 +22,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import JSZip from 'jszip';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
 import type { UpscaleItem } from '@/hooks/useUpscaleImages';

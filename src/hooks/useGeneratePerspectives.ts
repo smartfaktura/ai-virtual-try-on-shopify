@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
@@ -311,7 +311,7 @@ export function useGeneratePerspectives() {
     const token = session?.session?.access_token;
 
     if (!token) {
-      toast.error('Authentication required');
+      toast.error('Please sign in first');
       setIsGenerating(false);
       return null;
     }

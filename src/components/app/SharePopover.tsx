@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Share2, Link2, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 
 interface SharePopoverProps {
   url: string;
@@ -45,7 +45,7 @@ export function SharePopover({ url, title, variant = 'inline' }: SharePopoverPro
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast.success('Link copied');
+      toast.success('Link copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Failed to copy link');

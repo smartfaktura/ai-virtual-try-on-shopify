@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, ArrowLeft, MailCheck, Mail, AlertCircle } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';

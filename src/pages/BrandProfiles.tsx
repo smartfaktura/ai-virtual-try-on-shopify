@@ -7,7 +7,7 @@ import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { BrandProfileCard } from '@/components/app/BrandProfileCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 

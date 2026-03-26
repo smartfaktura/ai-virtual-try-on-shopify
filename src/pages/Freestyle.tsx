@@ -7,7 +7,7 @@ import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2, Packag
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';

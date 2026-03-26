@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Contact() {
@@ -21,7 +21,7 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !subject || !message.trim()) {
-      toast.error('Please fill in all fields');
+      toast.error('Fill in all fields to continue');
       return;
     }
     setSubmitting(true);

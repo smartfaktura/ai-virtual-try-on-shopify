@@ -19,7 +19,7 @@ import { Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Pack
 import { AspectRatioSelector, AspectRatioMultiSelector } from '@/components/app/AspectRatioPreview';
 import { FramingSelector, FramingMultiSelector } from '@/components/app/FramingSelector';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import type { Product, ScratchUpload, GenerationSourceType, AspectRatio, ImageQuality, FramingOption, ModelProfile } from '@/types';
 import type { Workflow, WorkflowVariationStrategy, WorkflowUIConfig, WorkflowGenerationConfig } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';

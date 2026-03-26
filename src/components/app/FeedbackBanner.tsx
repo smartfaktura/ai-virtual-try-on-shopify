@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/brandedToast';
 import { useLocation } from 'react-router-dom';
 
 const FEEDBACK_TYPES = [
@@ -37,7 +37,7 @@ export function FeedbackBanner() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error('Failed to send feedback');
+      toast.error('Couldn't send — try again?');
       return;
     }
     setSubmitted(true);

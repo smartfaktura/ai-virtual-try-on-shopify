@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { toastSienna } from '@/lib/brandedToast';
+import { toast, toastSienna } from '@/lib/brandedToast';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 
 interface BrandProfileFormProps {
