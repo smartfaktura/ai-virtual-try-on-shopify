@@ -76,7 +76,7 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
           src={video.source_image_url}
           alt=""
           loading="lazy"
-          className={`w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-cover ${isPlaying ? 'invisible' : 'visible'}`}
         />
 
         {showStatusBadge && (
