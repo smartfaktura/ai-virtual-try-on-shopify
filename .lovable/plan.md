@@ -1,37 +1,40 @@
 
 
-# Fix: Video Stuck Showing "Queued" When Actually Processing
+# Fix Video Hub Performance — Lazy Loading & Playback
 
-## Root Cause
-`useVideoProject.ts` syncs `pipelineStage` when `generateVideo.status` changes to `queued`, `complete`, or `error` — but **never syncs when it becomes `processing`**. The `pipelineStage` stays permanently stuck at `'queued'`.
+## Problem
+All video cards render `<video src={url}>` simultaneously for every card in the grid. This means the browser tries to download/buffer up to 12 video files at once, causing massive lag, unresponsive play/pause controls, and high memory usage.
 
-In `AnimateVideo.tsx`, the UI checks `videoStatus === 'queued' || pipelineStage === 'queued'` — so the stale `pipelineStage` keeps the UI showing "Queued" even though the backend is actively generating.
+## Fix Strategy
 
-## Fix
+### File: `src/pages/VideoHub.tsx`
 
-### File: `src/hooks/useVideoProject.ts` (~line 210)
-Add a sync rule: when `generateVideo.status` transitions to `'processing'`, update `pipelineStage` from `'queued'` back to `'generating'`:
+**1. Lazy-load video elements — only mount `<video>` when the user interacts**
+- Remove the always-present `<video>` element from the card
+- Only create and mount the `<video>` element when the user hovers (desktop) or taps (mobile)
+- Use `preload="none"` as a safety net
 
-```typescript
-if (generateVideo.status === 'processing' && pipelineStage === 'queued') {
-  setPipelineStage('generating');
-}
+**2. Proper play/pause with async handling**
+- `video.play()` returns a Promise — wrap in try/catch to avoid `AbortError` when pause is called before play resolves
+- Track a loading state to prevent rapid click conflicts
+
+**3. Better mobile tap behavior**
+- First tap: play. Second tap: pause. No hover events on mobile.
+- Show a loading spinner briefly while the video buffers
+
+**4. Clean up on unmount**
+- Use `useEffect` cleanup to pause and unload video when the component unmounts or scrolls out of view
+
+### Key changes:
+```text
+Before: 12 <video src="..."> elements rendered at mount → 12 parallel downloads
+After:  0 <video> elements at mount → 1 video loaded only on interaction
 ```
 
-This single line fix ensures the pipeline stage correctly follows the backend job lifecycle, and the UI will show "Generating your video..." with elapsed time instead of being stuck on "Queued".
-
-### File: `src/pages/video/AnimateVideo.tsx` (~line 362)
-Also tighten the stage message logic to prioritize `videoStatus` over `pipelineStage`:
-
-```typescript
-if (videoStatus === 'queued' && pipelineStage !== 'generating') {
-  // Only show "Queued" when videoStatus is truly queued
-}
-```
-
-This provides defense-in-depth so the UI can never get stuck showing "Queued" when the actual video status has progressed.
-
-## Files Modified
-- `src/hooks/useVideoProject.ts` — add processing→generating sync
-- `src/pages/video/AnimateVideo.tsx` — tighten stage message condition
+### Implementation details:
+- State: `idle | loading | playing | paused`
+- On hover/tap → set state to `loading`, mount `<video preload="auto">`, call `.play()` on `canplay` event
+- On leave/second tap → `.pause()`, optionally unmount video element to free memory
+- Wrap `.play()` in async try/catch for the common `AbortError` race condition
+- Add `pointer-events-none` during loading state to prevent click spam
 
