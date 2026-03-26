@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LucideIcon } from 'lucide-react';
 
@@ -30,6 +30,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
+import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
 
 type AspectRatio = '9:16' | '1:1' | '16:9';
 type Duration = '5' | '10';
