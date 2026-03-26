@@ -1,51 +1,81 @@
 
 
-# Improve Loading State After Image Upload
+# Premium Analysis Transition — Minimum 5s Staged Experience
 
-## Current State
-Lines 429-438: A simple card with `Brain` icon saying "Analyzing your image... Detecting product category and scene type". Below it, nothing — large empty space. A disconnected green success toast appears on upload.
+## Problem
+Backend analysis often completes in 1-2 seconds, making the loading state barely visible. The layout is also too narrow (single-column within the post-upload block), leaving dead space on the right.
 
-## Changes to `src/pages/video/AnimateVideo.tsx`
+## Core Mechanism: Decouple Backend from UI Reveal
 
-### 1. Add Simulated Analysis Steps
-Add a `useEffect` that cycles through analysis stages during `isAnalyzingImage`:
-- Step 0 (immediate): "Image uploaded" — checkmark
-- Step 1 (1s): "Detecting category" — active
-- Step 2 (2s): "Detecting scene type" — active  
-- Step 3 (3s): "Preparing motion recommendations" — active
+Add two new state variables:
+- `analysisCompleteData`: stores the finished analysis result when backend returns early
+- `uiRevealReady`: boolean, set to `true` only after minimum 5s has elapsed since upload succeeded
 
-Track with `analysisStep` state (0-3), auto-increment via interval while `isAnalyzingImage` is true.
+The flow:
+1. Upload completes → record `uploadCompleteTime = Date.now()`, start analysis
+2. Backend analysis finishes → store result in `analysisCompleteData` but do NOT set `hasAnalyzed = true` yet
+3. A `useEffect` watches for `analysisCompleteData` being set. It calculates remaining time to reach 5s minimum from `uploadCompleteTime`, then sets a timeout to flip `uiRevealReady = true`
+4. When `uiRevealReady` becomes true, apply the analysis data to state (category, sceneType, etc.) and set `hasAnalyzed = true`
 
-### 2. Replace the Analysis Card (lines 429-438)
-Replace the simple loader with a rich analysis panel containing:
+The `isAnalyzingImage` from the hook will go false early, so the analysis UI gate should use a new derived boolean: `const showAnalysisUI = isAnalyzingImage || (imageUrl && !uiRevealReady && !hasAnalyzed)`.
 
-**Left side: Image preview + inline success badge**
-Show the uploaded image with a small "Image uploaded" badge overlaid (replaces toast). Remove reliance on the green toast for upload confirmation.
+## Layout Redesign: Full-Width Two-Column Analysis State
 
-**Right side: Step-based progress + live preview fields**
-- 4-step vertical progress with checkmarks for completed steps and a spinner for the active step
-- Below steps, a "Detection Preview" card showing:
-  - Category: `detecting…` → resolved label
-  - Scene type: `detecting…` → resolved label  
-  - Motion goals: `preparing…` → resolved label
-  - Best aspect ratio: `pending…`
+Replace the current analysis block (lines 439-551) with a full-width two-column grid that replaces the entire post-upload section while `showAnalysisUI` is true:
 
-### 3. Dynamic Assistant Card During Loading
-Change the VOVV.AI Studio tip banner text while analyzing to: "We're detecting category, scene type, and the most realistic motion options for this image."
+```text
+┌────────────────────────────┬───────────────────────────┐
+│                            │  Understanding your image │
+│   Uploaded Image           │                           │
+│   (large preview,          │  ✓ Image uploaded         │
+│    rounded-2xl,            │  ◎ Detecting category     │
+│    bg-black/5 frame)       │  ○ Detecting scene type   │
+│                            │  ○ Preparing motion       │
+│   "Image uploaded" badge   │                           │
+│                            │  ┌─ Detection Preview ──┐ │
+│                            │  │ Category: detecting…  │ │
+│                            │  │ Scene: detecting…     │ │
+│                            │  │ Motion: preparing…    │ │
+│                            │  └──────────────────────┘ │
+│                            │                           │
+│                            │  ┌─ What's next ────────┐ │
+│                            │  │ Skeleton chips for    │ │
+│                            │  │ category + scene type │ │
+│                            │  │ + motion goal cards   │ │
+│                            │  └──────────────────────┘ │
+├────────────────────────────┴───────────────────────────┤
+│  VOVV.AI Studio assistant card (dynamic copy)          │
+├────────────────────────────────────────────────────────┤
+│  Skeleton sections: Product Context / Motion / Settings│
+└────────────────────────────────────────────────────────┘
+```
 
-### 4. Skeleton Cards for Upcoming Sections
-Below the analysis panel, show shimmer skeleton placeholders for:
-- Product Context (skeleton chips)
-- Recommended Motion (skeleton cards)
-- Motion Refinement (skeleton sliders)
-- Settings (skeleton buttons)
+Grid: `lg:grid-cols-[1fr_1fr]` — image takes full left column, analysis card takes full right. On mobile, stacked.
 
-Use the existing `Skeleton` component from `@/components/ui/skeleton`.
+## Step Progress Pacing
 
-### 5. Remove Upload Success Toast
-The `handleFileSelect` callback currently triggers a toast via `useFileUpload`. Check if the toast comes from there or from sonner directly. Integrate success state into the page flow instead — the step progress "Image uploaded ✓" replaces it.
+Slow down the step interval from 1200ms to 1500ms so 4 steps span ~4.5s, fitting naturally within the 5s minimum. Steps animate with `transition-all duration-500` for smooth entry.
+
+## Richer Right Column
+
+- **Detection Preview**: Show resolved labels once `analysisCompleteData` exists (while still in staged mode), transitioning from "detecting…" to the actual label with a subtle fade
+- **"What we're preparing" card**: Below detection preview, show skeleton chips for category/scene and skeleton motion goal cards — signals what UI sections are coming
+- **"Best results" reminder**: Small 2-line tip at the bottom of the right column
+
+## Upload Preview Section Change
+
+When `showAnalysisUI` is true, hide the small upload preview card at the top (lines 421-435) since the image is now shown large in the analysis grid. Show it again only after analysis reveals.
 
 ## Files to Modify
-- `src/pages/video/AnimateVideo.tsx` — All changes: analysis step state, rich loading panel, skeleton sections, dynamic assistant text
-- `src/hooks/useFileUpload.ts` — Check and remove any success toast on upload
+
+**`src/pages/video/AnimateVideo.tsx`**:
+- Add `analysisCompleteData`, `uploadCompleteTime`, `uiRevealReady` state
+- Modify `handleFileSelect` to record upload time and buffer analysis results
+- Add `useEffect` for minimum-time gating logic
+- Derive `showAnalysisUI` boolean
+- Replace analysis block (lines 439-551) with full-width two-column layout
+- Hide top image preview during analysis state
+- Slow step interval to 1500ms
+
+No other files need changes.
 
