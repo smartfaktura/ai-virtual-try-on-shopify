@@ -1,61 +1,34 @@
 
 
-# Fix Camera Orbit — Send Structured `camera_control` to Kling API
+# Fix Camera Orbit — Prompt-Only Approach for Kling v3
 
-## Root Cause
+## Problem
+The previous fix added `STRUCTURED_CAMERA_MOTIONS` (line 59) which **suppresses camera text from the prompt** for orbit, push-in, pan, and drift. But since Kling v3 rejects structured `camera_control`, the result is **no camera instruction at all** — the model defaults to rotating the subject.
 
-The code currently has a comment "Structured camera_control is not supported by kling-v3 image2video" and returns `undefined` for all camera control configs. This means **all camera motion (including orbit) is driven only via prompt text** like "smooth orbiting camera movement around the subject."
+## Fix (2 files)
 
-However, according to the official Kling API documentation:
+### 1. `src/lib/videoPromptTemplates.ts`
 
-1. The `camera_control` parameter **IS documented** on the image2video endpoint (lines 392-460 of the official docs)
-2. It supports `type: "simple"` with 6 axes: `horizontal`, `vertical`, `pan`, `tilt`, `roll`, `zoom` (range -10 to 10)
-3. It also supports preset types: `down_back`, `forward_up`, `right_turn_forward`, `left_turn_forward`
-4. The kling-v3 capability map lists "motion control ✅" for image2video
+- **Remove** the `STRUCTURED_CAMERA_MOTIONS` set and the suppression logic in `buildCameraClause` — always emit camera text
+- **Rewrite the orbit phrase** to be much more explicit that the **camera** moves, not the subject:
 
-The result: when users select "Orbit," the prompt says "orbiting camera" but Kling interprets this as **rotating the subject in place** rather than moving the camera around it. Structured `camera_control` with a `pan` value would produce true camera rotation.
-
-## Fix
-
-### 1. `src/lib/videoStrategyResolver.ts` — Enable `camera_control` config
-
-Replace the `resolveCameraControlConfig` function (currently returns `undefined`) with actual mappings:
-
-```text
-static       → no camera_control (let model decide)
-slow_push_in → { type: "simple", config: { zoom: -3 } }
-gentle_pan   → { type: "simple", config: { pan: 4 } }
-camera_drift → { type: "simple", config: { horizontal: 2 } }
-premium_handheld → no structured control (prompt-only is fine)
-orbit        → { type: "simple", config: { pan: 8 } }
+```
+orbit: 'The camera physically orbits around the subject in a smooth arc. 
+The subject stays completely still and fixed in place — only the camera 
+moves. The viewing angle changes progressively as the camera circles 
+around. The subject does NOT rotate or spin.'
 ```
 
-For `orbit`, a high `pan` value (8 out of 10) rotates the camera around the Y-axis — this is true camera orbiting, not subject rotation.
+- Improve other phrases similarly to emphasize "camera moves, subject stays still"
 
-### 2. `supabase/functions/generate-video/index.ts` — Pass `camera_control` to Kling
+### 2. `src/lib/videoStrategyResolver.ts`
 
-In `handleWorkerMode`, read `camera_control_config` from the payload and add it to the Kling API request body:
+- Remove `camera_control_config` from the strategy output (set to `undefined` always) since kling-v3 doesn't support it
+- Keep the resolver clean — no dead code
 
-```typescript
-const cameraControlConfig = body.camera_control_config as { type: string; config: Record<string, number> } | undefined;
-if (cameraControlConfig) {
-  klingBody.camera_control = cameraControlConfig;
-}
-```
+### 3. `supabase/functions/generate-video/index.ts`
 
-Remove the comment that says camera_control is disabled.
+- Remove the `camera_control` pass-through code added in the previous fix, since we're going prompt-only
 
-### 3. `src/hooks/useGenerateVideo.ts` — Forward config to payload
-
-In `startGeneration`, pass the `cameraControlConfig` through to the queue payload so the edge function receives it.
-
-### 4. `src/lib/videoPromptTemplates.ts` — Soften prompt camera instructions when structured control is active
-
-When structured `camera_control` is being sent, reduce the prompt camera clause to avoid conflicting with the API parameter. Change `buildCameraClause` to return a lighter hint when structured control handles it (e.g., just omit the clause for orbit/push-in/pan).
-
-## Files Modified
-- `src/lib/videoStrategyResolver.ts` — enable camera_control_config mapping
-- `supabase/functions/generate-video/index.ts` — pass camera_control to Kling API
-- `src/hooks/useGenerateVideo.ts` — forward cameraControlConfig in payload
-- `src/lib/videoPromptTemplates.ts` — soften prompt when structured control is active
+This is a revert of the structured camera_control approach, replaced with stronger prompt engineering that explicitly tells the model "camera moves, subject stays fixed."
 
