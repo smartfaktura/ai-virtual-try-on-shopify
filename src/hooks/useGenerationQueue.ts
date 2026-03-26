@@ -83,7 +83,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const jobIdRef = useRef<string | null>(null);
   const pollVersionRef = useRef(0); // Incremented on each new poll session; stale responses are ignored
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const retriggeredRef = useRef(false);
+  const lastCleanupTriggerRef = useRef(0);
   const missCountRef = useRef(0); // Consecutive poll misses for self-healing
 
   // Cleanup on unmount
@@ -142,7 +142,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     stopPolling();
     const sessionVersion = ++pollVersionRef.current;
     missCountRef.current = 0;
-    retriggeredRef.current = false;
+    lastCleanupTriggerRef.current = 0;
 
     const schedulePoll = (delayMs: number) => {
       pollTimeoutRef.current = setTimeout(() => runPoll(), delayMs);
@@ -242,10 +242,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
         // Calculate position if still queued
         if (job.status === 'queued') {
-          // Stuck detection: if queued > 30s, re-trigger process-queue
+          // Stuck detection: if queued > 30s, re-trigger process-queue (periodic, every 60s)
           const queuedDuration = Date.now() - new Date(job.created_at).getTime();
-          if (queuedDuration > 30_000 && !retriggeredRef.current) {
-            retriggeredRef.current = true;
+          if (queuedDuration > 30_000 && Date.now() - lastCleanupTriggerRef.current > 60_000) {
+            lastCleanupTriggerRef.current = Date.now();
             console.warn(`[queue] Job ${job.id} stuck for ${Math.round(queuedDuration / 1000)}s, re-triggering`);
             fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
               method: 'POST',
@@ -279,8 +279,38 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         // Stuck detection for processing jobs
         if (job.status === 'processing' && job.started_at) {
           const processingDuration = Date.now() - new Date(job.started_at).getTime();
-          if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
-            retriggeredRef.current = true;
+          const CLEANUP_INTERVAL = 60_000;
+          const HARD_TIMEOUT = 10 * 60 * 1000; // 10 min
+
+          // Hard client timeout: force-fail after 10 min so user is never stuck
+          if (processingDuration > HARD_TIMEOUT) {
+            console.warn(`[queue] Job ${job.id} hard timeout at ${Math.round(processingDuration / 1000)}s — force-failing`);
+
+            // One final cleanup trigger
+            fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ trigger: 'hard-timeout-cleanup' }),
+            }).catch(() => {});
+
+            const syntheticJob: QueueJob = {
+              ...job,
+              status: 'failed',
+              error_message: 'Generation timed out. Your credits have been refunded.',
+              completed_at: new Date().toISOString(),
+            };
+            setActiveJob(prev => ({ ...syntheticJob, generationMeta: prev?.generationMeta }));
+            handleTerminalJob(syntheticJob);
+            onCreditRefresh?.();
+            return;
+          }
+
+          // Periodic cleanup trigger (every 60s after 3 min)
+          if (processingDuration > 3 * 60 * 1000 && Date.now() - lastCleanupTriggerRef.current > CLEANUP_INTERVAL) {
+            lastCleanupTriggerRef.current = Date.now();
             console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
             fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
               method: 'POST',
