@@ -234,7 +234,7 @@ export default function AnimateVideo() {
   const buildGenerationContext = () => {
     const catLabel = PRODUCT_CATEGORIES.find(c => c.id === category)?.label || category;
     const sceneLabel = SCENE_TYPES.find(s => s.id === sceneType)?.label || sceneType;
-    const goals = getGoals(category, sceneType);
+    const goals = getMotionGoalsForCategory(category, sceneType);
     const goalTitle = goals.find(g => g.id === motionGoalId)?.title || motionGoalId;
     const credits = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
     return {
