@@ -1,22 +1,33 @@
 
 
-# Fix: Kling Camera Control Values Exceed API Limits
+# Fix: Camera Control Not Supported by Kling Model
 
 ## Problem
-The error `cameraControl.config.horizontal: must be less than or equal to 10` confirms that Kling's `camera_control` simple mode accepts values in range **[-10, 10]** for all axes. We set `horizontal: 30` for orbit and `pan: 20` for gentle_pan, both exceeding the limit.
+Kling's `image2video` endpoint returns "Camera control is not supported by the current model" when we pass the `camera_control` parameter. The `kling-v3` model doesn't support structured camera control for image-to-video generation.
 
-## Fix
+## Solution
+Remove structured `camera_control` from the pipeline entirely. Rely on prompt-based camera instructions (which already exist in the prompt builder).
 
-**File: `src/lib/videoStrategyResolver.ts`** — clamp all camera control values to [-10, 10]:
+### Changes
 
-```typescript
-case 'orbit':
-  return { type: 'simple', config: { horizontal: 10, vertical: 3, zoom: 0, tilt: 0, pan: 0, roll: 0 } };
-case 'slow_push_in':
-  return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 5, tilt: 0, pan: 0, roll: 0 } };
-case 'gentle_pan':
-  return { type: 'simple', config: { horizontal: 0, vertical: 0, zoom: 0, tilt: 0, pan: 10, roll: 0 } };
-```
+**1. `src/lib/videoStrategyResolver.ts`**
+- Make `resolveCameraControlConfig` always return `undefined`
+- Keep the function signature so nothing breaks, but it never produces a config
 
-Single file, single function — orbit uses max horizontal (10), gentle_pan uses max pan (10), slow_push_in stays at 5.
+**2. `supabase/functions/generate-video/index.ts`**  
+- Remove the `camera_control` extraction and injection into `klingBody`
+
+**3. `src/hooks/useGenerateVideo.ts`**
+- Stop passing `camera_control` in the queue payload
+
+**4. `src/hooks/useVideoProject.ts`**
+- Stop passing `cameraControlConfig` to `startGeneration`
+
+All camera motion will continue to work via prompt text (e.g., "smooth orbiting camera movement around the subject") which is already built by the strategy's prompt layer.
+
+### Files Modified
+- `src/lib/videoStrategyResolver.ts`
+- `supabase/functions/generate-video/index.ts`
+- `src/hooks/useGenerateVideo.ts`
+- `src/hooks/useVideoProject.ts`
 
