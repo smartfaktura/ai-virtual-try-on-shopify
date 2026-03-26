@@ -57,7 +57,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
   const [history, setHistory] = useState<GeneratedVideo[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
-  const { refreshCredits } = useCredits();
+  const { refreshBalance } = useCredits();
 
   // Use the shared generation queue for video jobs
   const queue = useGenerationQueue({
