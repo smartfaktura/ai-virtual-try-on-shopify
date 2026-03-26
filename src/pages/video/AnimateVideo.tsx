@@ -829,8 +829,9 @@ export default function AnimateVideo() {
                 value={
                   isAnalyzing ? 20 :
                   isBuildingPrompt ? 40 :
-                  videoStatus === 'creating' ? 55 :
-                  Math.min(70 + (elapsedSeconds / 180) * 25, 95)
+                  videoStatus === 'creating' ? 50 :
+                  (videoStatus === 'queued' || pipelineStage === 'queued') ? 55 :
+                  Math.min(60 + (elapsedSeconds / 180) * 35, 95)
                 }
                 className="h-2"
               />
@@ -838,7 +839,8 @@ export default function AnimateVideo() {
                 <span>
                   {isAnalyzing ? 'Analyzing…' :
                    isBuildingPrompt ? 'Building prompt…' :
-                   videoStatus === 'creating' ? 'Starting…' :
+                   videoStatus === 'creating' ? 'Submitting…' :
+                   (videoStatus === 'queued' || pipelineStage === 'queued') ? 'Queued' :
                    'Processing…'}
                 </span>
                 {elapsedSeconds > 0 && <span>{elapsedSeconds}s elapsed</span>}
