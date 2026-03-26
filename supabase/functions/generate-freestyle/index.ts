@@ -393,6 +393,34 @@ async function generateImageSeedream(
   return null;
 }
 
+// ── Clean prompt for Seedream (strip Gemini-specific directives) ─────────
+function cleanPromptForSeedream(prompt: string): string {
+  // 1. Strip "Output aspect ratio: ..." block and everything after it
+  const aspectIdx = prompt.indexOf("Output aspect ratio:");
+  if (aspectIdx !== -1) {
+    prompt = prompt.substring(0, aspectIdx).trimEnd();
+  }
+
+  // 2. Strip BATCH CONSISTENCY block
+  prompt = prompt.replace(/BATCH CONSISTENCY:[\s\S]*/i, "").trimEnd();
+
+  // 3. Strip "Variation N:" suffixes
+  prompt = prompt.replace(/Variation\s+\d+:.*/gi, "").trimEnd();
+
+  // 4. Replace image reference labels with natural language
+  prompt = prompt
+    .replace(/\[MODEL REFERENCE\]/g, "the model from the reference")
+    .replace(/\[PRODUCT REFERENCE\]/g, "the product from the reference")
+    .replace(/\[PRODUCT IMAGE\]/g, "the product from the reference")
+    .replace(/\[SCENE REFERENCE\]/g, "the scene from the reference")
+    .replace(/\[REFERENCE IMAGE\]/g, "the reference image");
+
+  // 5. Collapse excessive whitespace
+  prompt = prompt.replace(/\n{3,}/g, "\n\n").trim();
+
+  return prompt;
+}
+
 // ── Convert content array to Seedream flat inputs ────────────────────────
 function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string; imageUrls: string[] } {
   const textParts: string[] = [];
@@ -401,7 +429,10 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
     if (item.type === "text") textParts.push(item.text);
     else if (item.type === "image_url") imageUrls.push(item.image_url.url);
   }
-  return { prompt: textParts.join("\n"), imageUrls };
+  const rawPrompt = textParts.join("\n");
+  const cleanedPrompt = cleanPromptForSeedream(rawPrompt);
+  console.log(`[generate-freestyle] Seedream prompt cleaned: ${rawPrompt.length} → ${cleanedPrompt.length} chars`);
+  return { prompt: cleanedPrompt, imageUrls };
 }
 
 // ── Download a hosted URL and upload to Supabase Storage ─────────────────
