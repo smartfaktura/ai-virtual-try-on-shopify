@@ -307,21 +307,36 @@ const PROVIDERS = {
 } as const;
 
 // ── Seedream ARK image generation ────────────────────────────────────────
+// Map aspect ratio to explicit Seedream pixel dimensions for true 2K output
+function seedreamSizeForRatio(aspectRatio: string): string {
+  const map: Record<string, string> = {
+    "1:1": "2048x2048",
+    "3:4": "1536x2048",
+    "4:3": "2048x1536",
+    "9:16": "1152x2048",
+    "16:9": "2048x1152",
+  };
+  return map[aspectRatio] || "2048x2048";
+}
+
 async function generateImageSeedream(
   prompt: string,
   imageUrls: string[],
   model: string,
   apiKey: string,
+  aspectRatio = "1:1",
   maxRetries = 2,
 ): Promise<GenerateResult> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
+  const size = seedreamSizeForRatio(aspectRatio);
+  console.log(`[seedream] Using size=${size} for aspectRatio=${aspectRatio}`);
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const body: Record<string, unknown> = {
         model,
         prompt,
-        size: "2K",
+        size,
         response_format: "url",
         watermark: false,
         sequential_image_generation: "disabled",
@@ -946,6 +961,7 @@ serve(async (req) => {
     const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
     const useSeedream = providerOverride === "seedream-4.5" && !!ARK_API_KEY;
 
+    console.log("[generate-freestyle] ARK key present:", !!ARK_API_KEY);
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
       hasSourceImage: !!body.sourceImage,
@@ -968,6 +984,9 @@ serve(async (req) => {
       isPerspective,
       isQueueInternal,
       jobId: body.job_id || null,
+      providerOverride,
+      useSeedream,
+      hasArkKey: !!ARK_API_KEY,
     });
 
     // Extend timeout_at for queue jobs — 5 min default is too tight for cold boot + 429 + fallback
