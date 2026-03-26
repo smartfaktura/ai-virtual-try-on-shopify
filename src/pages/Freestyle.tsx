@@ -68,13 +68,12 @@ export default function Freestyle() {
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
 
-  // Auto-select Pro quality when model or scene is selected
+  // Auto-upgrade to Pro quality when model or scene is selected
   useEffect(() => {
     if (selectedModel || selectedScene) {
       setQuality('high');
-    } else {
-      setQuality('standard');
     }
+    // Do NOT reset to standard — respect manual user selection
   }, [selectedModel, selectedScene]);
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
