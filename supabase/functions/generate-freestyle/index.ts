@@ -231,6 +231,10 @@ function polishUserPrompt(
     refNum++;
   }
 
+  if (context.hasProduct && context.hasModel) {
+    refs.push("OUTFIT COMPLETION: The product is the hero piece. Dress the model in a complete outfit — add complementary bottoms, shoes, and accessories. The model must NEVER appear without pants/skirt/shorts.");
+  }
+
   if (refs.length > 0) {
     parts.push("");
     parts.push("REFERENCES:");
@@ -500,13 +504,17 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
   if (roleImages.length === 0) return "";
 
   const lines: string[] = ["", "IMAGE ROLES:"];
+  let hasModel = false;
+  let hasProduct = false;
   roleImages.forEach((img, i) => {
     const idx = i + 1;
     switch (img.role) {
       case "model":
+        hasModel = true;
         lines.push(`- Image ${idx} is the MODEL: preserve exact face, hair color, skin tone, body type, and all physical features from this person.`);
         break;
       case "product":
+        hasProduct = true;
         lines.push(`- Image ${idx} is the PRODUCT: CRITICAL — replicate this item EXACTLY as shown. Match precise shape, silhouette, color, and overall appearance. This is a specific real product that must be instantly recognizable.`);
         break;
       case "scene":
@@ -517,6 +525,12 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
         break;
     }
   });
+
+  if (hasModel && hasProduct) {
+    lines.push("");
+    lines.push("OUTFIT COMPLETION (MANDATORY): The product shown is a single garment — it is the HERO piece. Dress the model in a complete, natural outfit: add complementary bottoms, shoes, and accessories that match the style. The model must NEVER appear without pants/skirt/shorts. Other clothing should complement the hero product naturally without competing for attention.");
+  }
+
   return lines.join("\n");
 }
 
@@ -1164,7 +1178,7 @@ serve(async (req) => {
     const forceProModel = !!(body as Record<string, unknown>).forceProModel;
     const hasModelImage = !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model');
     const providerOverride = ((body as Record<string, unknown>).providerOverride as string) || null;
-    const aiModel = (forceProModel || isPerspective || hasModelImage)
+    const aiModel = (forceProModel || isPerspective || hasModelImage || body.quality === "high")
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-3.1-flash-image-preview";
     const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
