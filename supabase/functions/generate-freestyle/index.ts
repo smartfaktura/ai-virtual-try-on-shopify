@@ -298,6 +298,129 @@ function extractBlockReason(data: Record<string, unknown>): string {
 type ContentItem = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 type GenerateResult = string | { blocked: true; reason: string } | null;
 
+// ── Provider registry — change model IDs here for version upgrades ───────
+const PROVIDERS = {
+  "nanobanana-flash": { gateway: "lovable" as const, model: "google/gemini-3.1-flash-image-preview" },
+  "nanobanana-pro":   { gateway: "lovable" as const, model: "google/gemini-3-pro-image-preview" },
+  "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-250422", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
+  // Future: "seedream-5.0": { gateway: "ark", model: "seedream-5-0-260128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
+} as const;
+
+// ── Seedream ARK image generation ────────────────────────────────────────
+async function generateImageSeedream(
+  prompt: string,
+  imageUrls: string[],
+  model: string,
+  apiKey: string,
+  maxRetries = 2,
+): Promise<GenerateResult> {
+  const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const body: Record<string, unknown> = {
+        model,
+        prompt,
+        size: "2K",
+        response_format: "url",
+        watermark: false,
+        sequential_image_generation: "disabled",
+      };
+      if (imageUrls.length === 1) {
+        body.image = imageUrls[0];
+      } else if (imageUrls.length > 1) {
+        body.image = imageUrls;
+      }
+
+      const response = await fetch(ARK_BASE, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(150_000),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.warn(`[seedream] 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
+          if (attempt < maxRetries) {
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          throw { status: 429, message: "Rate limit exceeded on Seedream." };
+        }
+        const errorText = await response.text();
+        console.error(`[seedream] Error (attempt ${attempt + 1}):`, response.status, errorText);
+        if (attempt < maxRetries) {
+          await new Promise((r) => setTimeout(r, 500));
+          continue;
+        }
+        return null;
+      }
+
+      const data = await response.json();
+      const imageUrl = data?.data?.[0]?.url;
+      if (!imageUrl) {
+        console.error("[seedream] No image URL in response:", JSON.stringify(data).slice(0, 500));
+        if (attempt < maxRetries) {
+          await new Promise((r) => setTimeout(r, 500));
+          continue;
+        }
+        return null;
+      }
+      return imageUrl; // Returns a hosted URL (not base64)
+    } catch (error: unknown) {
+      if (typeof error === "object" && error !== null && "status" in error) throw error;
+      const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+      console.error(`[seedream] Attempt ${attempt + 1} failed${isTimeout ? " (timeout)" : ""}:`, error);
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 1000));
+        continue;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
+// ── Convert content array to Seedream flat inputs ────────────────────────
+function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string; imageUrls: string[] } {
+  const textParts: string[] = [];
+  const imageUrls: string[] = [];
+  for (const item of content) {
+    if (item.type === "text") textParts.push(item.text);
+    else if (item.type === "image_url") imageUrls.push(item.image_url.url);
+  }
+  return { prompt: textParts.join("\n"), imageUrls };
+}
+
+// ── Download a hosted URL and upload to Supabase Storage ─────────────────
+async function downloadAndUploadToStorage(
+  hostedUrl: string,
+  userId: string,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<string> {
+  const response = await fetch(hostedUrl);
+  if (!response.ok) throw new Error(`Failed to download image: ${response.status}`);
+  const blob = await response.blob();
+  const mimeType = blob.type || "image/png";
+  const ext = mimeType.includes("jpeg") ? "jpg" : "png";
+  const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const arrayBuf = await blob.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuf);
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  const { error } = await supabase.storage
+    .from("freestyle-images")
+    .upload(fileName, bytes, { contentType: mimeType, upsert: false });
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+  const { data: urlData } = supabase.storage.from("freestyle-images").getPublicUrl(fileName);
+  return urlData.publicUrl;
+}
+
 // ── Helpers copied from generate-tryon ────────────────────────────────────
 
 async function getAuthUserId(authHeader: string | null): Promise<string | null> {
@@ -816,9 +939,12 @@ serve(async (req) => {
 
     const forceProModel = !!(body as Record<string, unknown>).forceProModel;
     const hasModelImage = !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model');
+    const providerOverride = ((body as Record<string, unknown>).providerOverride as string) || null;
     const aiModel = (forceProModel || isPerspective || hasModelImage)
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-3.1-flash-image-preview";
+    const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
+    const useSeedream = providerOverride === "seedream-4.5" && !!ARK_API_KEY;
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
@@ -892,12 +1018,32 @@ serve(async (req) => {
           contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
         }
 
-        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
+        let result: GenerateResult;
 
-        // Fallback: if Pro model returned null (no image), try Flash model once
-        if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
-          console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
-          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
+        if (useSeedream) {
+          // Seedream path
+          const seedreamInput = convertContentToSeedreamInput(contentArray);
+          console.log(`[generate-freestyle] Using Seedream 4.5 (provider override)`);
+          result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY!, maxRetries);
+          // Cross-provider fallback: Seedream failed → try Nano Banana
+          if (result === null) {
+            console.warn(`[generate-freestyle] Seedream returned null — falling back to Nano Banana (${aiModel})`);
+            result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, 0, body.quality || 'standard');
+          }
+        } else {
+          // Nano Banana (Gemini) path
+          result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
+          // Inner fallback: Pro → Flash
+          if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
+            console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
+            result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
+          }
+          // Cross-provider fallback: Nano Banana failed → try Seedream (if key available)
+          if (result === null && ARK_API_KEY && providerOverride !== "nanobanana") {
+            console.warn(`[generate-freestyle] Nano Banana returned null — falling back to Seedream`);
+            const seedreamInput = convertContentToSeedreamInput(contentArray);
+            result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, 0);
+          }
         }
 
         if (result && typeof result === "object" && "blocked" in result) {
@@ -906,7 +1052,10 @@ serve(async (req) => {
           console.warn(`Image ${i + 1} blocked by content safety filter`);
           break;
         } else if (typeof result === "string") {
-          const publicUrl = await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          // Seedream returns hosted URLs; Gemini returns base64 data URLs
+          const publicUrl = result.startsWith("http")
+            ? await downloadAndUploadToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+            : await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
           console.log(`[generate-freestyle] Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
 
