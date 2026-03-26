@@ -316,7 +316,7 @@ export function FreestylePromptPanel({
               promptHelperButton={
                 <button
                   onClick={() => setQuizOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   Prompt Helper
