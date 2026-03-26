@@ -17,16 +17,16 @@ export interface ProductCategory {
 }
 
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
-  { id: 'fashion_apparel', label: 'Fashion & Apparel', icon: '👗' },
-  { id: 'beauty_skincare', label: 'Beauty & Skincare', icon: '✨' },
-  { id: 'fragrances', label: 'Fragrances', icon: '🌸' },
-  { id: 'jewelry', label: 'Jewelry', icon: '💎' },
-  { id: 'accessories', label: 'Accessories', icon: '👜' },
-  { id: 'home_decor', label: 'Home & Decor', icon: '🏠' },
-  { id: 'food_beverage', label: 'Food & Beverage', icon: '🍽️' },
-  { id: 'electronics', label: 'Electronics', icon: '📱' },
-  { id: 'sports_fitness', label: 'Sports & Fitness', icon: '⚡' },
-  { id: 'health_supplements', label: 'Health & Supplements', icon: '💊' },
+  { id: 'fashion_apparel', label: 'Fashion & Apparel', icon: 'Shirt' },
+  { id: 'beauty_skincare', label: 'Beauty & Skincare', icon: 'Sparkles' },
+  { id: 'fragrances', label: 'Fragrances', icon: 'Flower2' },
+  { id: 'jewelry', label: 'Jewelry', icon: 'Gem' },
+  { id: 'accessories', label: 'Accessories', icon: 'Watch' },
+  { id: 'home_decor', label: 'Home & Decor', icon: 'Lamp' },
+  { id: 'food_beverage', label: 'Food & Beverage', icon: 'UtensilsCrossed' },
+  { id: 'electronics', label: 'Electronics', icon: 'Smartphone' },
+  { id: 'sports_fitness', label: 'Sports & Fitness', icon: 'Dumbbell' },
+  { id: 'health_supplements', label: 'Health & Supplements', icon: 'Pill' },
 ];
 
 // ─── Scene Types ───

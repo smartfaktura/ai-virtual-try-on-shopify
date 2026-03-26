@@ -1,6 +1,16 @@
 import { cn } from '@/lib/utils';
 import { PRODUCT_CATEGORIES, SCENE_TYPES } from '@/lib/videoMotionRecipes';
 import { Badge } from '@/components/ui/badge';
+import {
+  Shirt, Sparkles, Flower2, Gem, Watch, Lamp,
+  UtensilsCrossed, Smartphone, Dumbbell, Pill,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Shirt, Sparkles, Flower2, Gem, Watch, Lamp,
+  UtensilsCrossed, Smartphone, Dumbbell, Pill,
+};
 
 interface ProductContextSelectorProps {
   category: string;
@@ -22,24 +32,27 @@ export function ProductContextSelector({
       <div className="space-y-2">
         <label className="text-xs text-muted-foreground">Category</label>
         <div className="flex flex-wrap gap-1.5">
-          {PRODUCT_CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onCategoryChange(c.id)}
-              className={cn(
-                'px-2.5 py-1 rounded-full text-xs border transition-colors flex items-center gap-1',
-                category === c.id
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-              )}
-            >
-              <span>{c.icon}</span>
-              <span>{c.label}</span>
-              {detectedCategory === c.id && category === c.id && (
-                <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 ml-0.5">AI</Badge>
-              )}
-            </button>
-          ))}
+          {PRODUCT_CATEGORIES.map((c) => {
+            const Icon = ICON_MAP[c.icon];
+            return (
+              <button
+                key={c.id}
+                onClick={() => onCategoryChange(c.id)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs border transition-colors flex items-center gap-1',
+                  category === c.id
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                )}
+              >
+                {Icon && <Icon className="h-3 w-3" />}
+                <span>{c.label}</span>
+                {detectedCategory === c.id && category === c.id && (
+                  <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 ml-0.5">AI</Badge>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 

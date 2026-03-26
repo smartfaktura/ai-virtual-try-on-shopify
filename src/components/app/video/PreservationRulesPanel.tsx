@@ -1,4 +1,5 @@
 import { Switch } from '@/components/ui/switch';
+import { InfoTooltip } from './InfoTooltip';
 
 interface PreservationRulesPanelProps {
   preserveScene: boolean;
@@ -11,11 +12,11 @@ interface PreservationRulesPanelProps {
   onPreserveOutfitChange: (v: boolean) => void;
 }
 
-const RULES: { key: keyof Omit<PreservationRulesPanelProps, `on${string}`>; label: string }[] = [
-  { key: 'preserveScene', label: 'Preserve scene composition' },
-  { key: 'preserveProductDetails', label: 'Preserve product details' },
-  { key: 'preserveIdentity', label: 'Preserve subject identity' },
-  { key: 'preserveOutfit', label: 'Preserve outfit / styling' },
+const RULES: { key: keyof Omit<PreservationRulesPanelProps, `on${string}`>; label: string; tooltip: string }[] = [
+  { key: 'preserveScene', label: 'Preserve scene composition', tooltip: 'Keeps background, layout, and overall framing stable.' },
+  { key: 'preserveProductDetails', label: 'Preserve product details', tooltip: 'Protects logos, labels, textures, and product geometry from distortion.' },
+  { key: 'preserveIdentity', label: 'Preserve subject identity', tooltip: 'Maintains facial features and body proportions. Important for on-model shots.' },
+  { key: 'preserveOutfit', label: 'Preserve outfit / styling', tooltip: 'Keeps clothing details, colors, and accessories consistent.' },
 ];
 
 export function PreservationRulesPanel(props: PreservationRulesPanelProps) {
@@ -28,10 +29,16 @@ export function PreservationRulesPanel(props: PreservationRulesPanelProps) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-      <h3 className="text-sm font-medium text-foreground">Preservation Rules</h3>
-      {RULES.map(({ key, label }) => (
+      <div className="flex items-center gap-1">
+        <h3 className="text-sm font-medium text-foreground">Preservation Rules</h3>
+        <InfoTooltip text="Toggle which elements the AI should protect from changing during motion. Critical for brand consistency." />
+      </div>
+      {RULES.map(({ key, label, tooltip }) => (
         <div key={key} className="flex items-center justify-between">
-          <label className="text-xs text-muted-foreground">{label}</label>
+          <div className="flex items-center gap-1">
+            <label className="text-xs text-muted-foreground">{label}</label>
+            <InfoTooltip text={tooltip} />
+          </div>
           <Switch checked={props[key] as boolean} onCheckedChange={handlers[key]} />
         </div>
       ))}
