@@ -962,6 +962,8 @@ serve(async (req) => {
   const isQueueInternal = req.headers.get("x-queue-internal") === "true"
     && authHeader === `Bearer ${serviceRoleKey}`;
 
+  const requestStartTime = performance.now();
+
   try {
     // SECURITY: Only allow internal queue calls — reject direct access
     if (!isQueueInternal) {
@@ -1200,7 +1202,7 @@ serve(async (req) => {
           result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY!, body.aspectRatio, maxRetries);
           // Cross-provider fallback: Seedream failed → try Nano Banana
           if (result === null) {
-            console.warn(`[generate-freestyle] Seedream returned null — falling back to Nano Banana (${aiModel})`);
+            console.log(`[FALLBACK] primary=seedream-4.5 result=null → trying ${aiModel}`);
             result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, 0, body.quality || 'standard');
             if (result !== null) actualProvider = aiModel;
           }
@@ -1209,13 +1211,13 @@ serve(async (req) => {
           result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, body.quality || 'standard');
           // Inner fallback: Pro → Flash
           if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
-            console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
+            console.log(`[FALLBACK] primary=${aiModel} result=null → trying google/gemini-3.1-flash-image-preview`);
             result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0, body.quality || 'standard');
             if (result !== null) actualProvider = "google/gemini-3.1-flash-image-preview";
           }
           // Cross-provider fallback: Nano Banana failed → try Seedream (if key available)
           if (result === null && ARK_API_KEY && providerOverride !== "nanobanana") {
-            console.warn(`[generate-freestyle] Nano Banana returned null — falling back to Seedream`);
+            console.log(`[FALLBACK] primary=nanobanana(${aiModel}) result=null → trying seedream-4.5`);
             const seedreamInput = convertContentToSeedreamInput(contentArray);
             result = await generateImageSeedream(seedreamInput.prompt, seedreamInput.imageUrls, PROVIDERS["seedream-4.5"].model, ARK_API_KEY, body.aspectRatio, 0);
             if (result !== null) actualProvider = "seedream-4.5";
