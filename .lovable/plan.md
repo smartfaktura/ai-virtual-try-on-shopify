@@ -1,47 +1,60 @@
 
 
-# Fix: Workflow Activity Showing Wrong Progress
+# Premium Video Results UI + Correction Confirmation Flow
 
-## Problem
-Jobs from the same batch are grouped **independently** across three separate queries (active, completed, failed). When job #3 of 5 completes, it leaves the "active" group — the remaining 2 active jobs show "0/5 images" because their completed siblings aren't counted. Similarly, the completed query doesn't include `imageCount` or `generatedCount` fields, so completed groups show wrong counts too.
+## Overview
+Redesign the video results panel to remove boxy borders and feel more premium, and add branded confirmation dialogs for quick corrections/variations that show credit cost, explanation, and VOVV.AI team avatars before generating.
 
-## Root Cause (confirmed in code)
-- **Line 355**: `activeBatchGroups = groupJobsIntoBatches(activeJobs)` — only queued/processing
-- **Line 356**: `completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs)` — only completed, and missing `imageCount`/`generatedCount` fields
-- **Line 358**: `failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs)` — only failed, also missing those fields
-- No realtime subscription needed — existing polling (5s active, 10s completed) handles updates without page refresh
+## 1. Premium Results Panel Redesign
 
-## Solution: Merge before grouping, then categorize
+**File: `src/components/app/video/VideoResultsPanel.tsx`**
 
-### File: `src/pages/Workflows.tsx`
+- Remove all `border border-border` from cards — use subtle `bg-muted/5` with `shadow-sm` or no container at all
+- Remove the outer `rounded-xl border` wrapper around the player — let the video float cleanly with just `rounded-xl overflow-hidden shadow-lg` and no explicit border
+- Remove borders from Generation Details, Quick Variations, and Quick Corrections cards — use subtle background tints and spacing instead of bordered boxes
+- Make the player background a soft gradient (`bg-gradient-to-b from-muted/20 to-muted/40`) instead of flat `bg-muted/30`
+- Auto-play the video immediately on result (skip the "click to play" poster state)
+- Make Video/Original toggle more pill-shaped with `rounded-full` and better contrast
+- Merge Quick Variations and Quick Corrections into a single section with labeled sub-groups instead of two separate bordered cards
+- Add credit cost badge to each variation/correction chip (e.g., "More subtle · 10 ⚡")
 
-1. Add `result` to the completed + failed job queries (lines 116, 155) so `imageCount`/`generatedCount` are available
-2. Add `credits_reserved` to completed + failed queries
-3. Replace the three independent `groupJobsIntoBatches` calls (lines 355-359) with:
-   - Merge all three arrays, deduplicate by `id`
-   - Call `groupJobsIntoBatches` once on the merged set
-   - Split resulting groups into active/completed/failed based on job statuses within each group:
-     - **active**: any job is `queued` or `processing`
-     - **completed**: all jobs terminal AND at least 1 completed
-     - **failed**: all jobs terminal AND 0 completed (all failed)
+## 2. Correction Confirmation Modal
 
-### File: `src/components/app/WorkflowActivityCard.tsx`
+**New file: `src/components/app/video/CorrectionConfirmModal.tsx`**
 
-4. Update `ActiveGroupCard` progress display — it already reads `group.generatedImageCount` / `group.totalImageCount`, which will now be correct because completed siblings are in the same group
-5. Update failed group card to show partial success when `group.completedCount > 0` alongside failures (e.g. "2 failed · 3 images saved")
+Create a branded confirmation dialog that appears when a user clicks any quick variation or correction chip:
 
-### File: `src/lib/batchGrouping.ts`
+- Shows the preset label as title (e.g., "Keep closer to original")
+- Short explanation of what this correction will do (stored as `description` in each preset)
+- VOVV.AI team avatars row with a message like "Our team will regenerate your video with these adjustments"
+- Credit cost display: "This will use **10 credits** from your balance" with current balance shown
+- Two buttons: "Cancel" (ghost) and "Generate Variation" (primary)
+- Uses existing `Dialog` component, no new dependencies
 
-6. No changes needed — `groupJobsIntoBatches` already handles mixed statuses correctly via `batch_id` and time-window grouping
+Add `description` and `creditEstimate` fields to each preset in `QUICK_VARIATIONS` and `CORRECTION_VARIATIONS`:
+- `more_subtle`: "Reduces motion intensity and softens camera movement for a calmer, more refined result."
+- `keep_closer`: "Maximizes preservation of the original image — tighter identity, scene, and product fidelity with minimal motion."
+- `no_added_objects`: "Adds explicit negative prompts to prevent the AI from inventing products, props, or objects not in your source image."
+- etc.
 
-## Performance
-- No additional network requests — same 3 queries, just merged client-side
-- No new polling intervals — keeps existing 5s/10s cadence
-- No realtime subscriptions needed — polling already handles live updates
-- Deduplication is O(n) with a Set, no performance impact
+## 3. Wire confirmation flow
 
-## Scope
-- 2 files modified: `Workflows.tsx`, `WorkflowActivityCard.tsx`
-- No backend/migration changes
-- No edge function changes
+**File: `src/components/app/video/VideoResultsPanel.tsx`**
+
+- When user clicks a chip, open `CorrectionConfirmModal` with the preset details
+- On confirm, call `onQuickVariation(preset)` as before
+- Pass credit estimate (computed from `estimateCredits`) and `creditsRemaining` as props
+
+**File: `src/pages/video/AnimateVideo.tsx`**
+
+- Pass `creditsRemaining` from CreditContext to `VideoResultsPanel`
+- Pass current generation params so credit estimate can be computed for the variation
+
+## Technical Details
+
+- **Files created**: `src/components/app/video/CorrectionConfirmModal.tsx`
+- **Files modified**: `src/components/app/video/VideoResultsPanel.tsx`, `src/pages/video/AnimateVideo.tsx`
+- **No backend changes**
+- Credit estimation uses existing `estimateCredits()` from `videoCreditPricing.ts`
+- Team avatars from existing `TEAM_MEMBERS` data
 
