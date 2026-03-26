@@ -311,6 +311,39 @@ export function resolveVideoStrategy(input: ResolverInput): VideoStrategy {
   // ─── Camera Control ───
   const cameraControlConfig = resolveCameraControlConfig(cameraMotion);
 
+  // ─── Object Grounding ───
+  const visibleProductDetected = analysis.visible_product_detected ?? false;
+  const visibleObjectList = analysis.visible_object_list ?? [];
+  const productInteractionVisible = analysis.product_interaction_visible ?? false;
+
+  // Determine product context source
+  let productContextSource: ObjectGrounding['product_context_source'] = 'none';
+  if (visibleProductDetected) {
+    productContextSource = 'image_detected';
+  }
+  // Note: 'user_added' and 'library_selected' would be set by the caller if applicable
+
+  // Rules: category alone NEVER allows new objects
+  const allowNewObjects = false; // Default safe — only overridden by explicit user action
+  const allowNewProducts = false; // Only true when user explicitly provides product context
+  const preserveVisibleObjectsOnly = true; // Always default to preserving what's visible
+
+  // Scene expansion mode
+  let sceneExpansionMode: ObjectGrounding['scene_expansion_mode'] = 'restricted';
+  if (allowSceneExpansion && realismLevel === 'slightly_stylized') {
+    sceneExpansionMode = 'guided';
+  }
+
+  const objectGrounding: ObjectGrounding = {
+    visible_product_detected: visibleProductDetected,
+    visible_object_list: visibleObjectList,
+    allow_new_objects: allowNewObjects,
+    allow_new_products: allowNewProducts,
+    preserve_visible_objects_only: preserveVisibleObjectsOnly,
+    product_context_source: productContextSource,
+    scene_expansion_mode: sceneExpansionMode,
+  };
+
   const strategy: VideoStrategy = {
     workflow_strategy: `${category}_${motionGoalId}`,
     preserve_scene: preserveScene,
@@ -339,6 +372,7 @@ export function resolveVideoStrategy(input: ResolverInput): VideoStrategy {
     cyclic_motion: cyclicMotion,
     camera_control_config: cameraControlConfig,
     cfg_scale_override: cfgScale,
+    object_grounding: objectGrounding,
   };
 
   // --- Animate Image (ecommerce) ---
