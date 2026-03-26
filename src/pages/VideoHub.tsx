@@ -1,21 +1,19 @@
-import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Pause, Loader2 } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
-import { useGenerateVideo } from '@/hooks/useGenerateVideo';
+import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
+import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-type PlayState = 'idle' | 'loading' | 'playing' | 'paused';
-
-function RecentVideoCard({ video }: { video: { id: string; status: string; source_image_url: string; video_url: string | null; created_at: string; prompt: string } }) {
-  const [playState, setPlayState] = useState<PlayState>('idle');
+function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const isComplete = video.status === 'complete' && video.video_url;
-  const mountVideo = playState !== 'idle';
+  const [hovering, setHovering] = useState(false);
+  const [canPlay, setCanPlay] = useState(false);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (videoRef.current) {
@@ -26,64 +24,41 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
     };
   }, []);
 
-  const startPlayback = useCallback(async () => {
-    if (!isComplete || playState === 'loading') return;
-    setPlayState('loading');
-  }, [isComplete, playState]);
-
-  const stopPlayback = useCallback(() => {
-    if (videoRef.current) {
+  // Auto-play/pause on hover
+  useEffect(() => {
+    if (!videoRef.current || !canPlay) return;
+    if (hovering) {
+      videoRef.current.play().catch(() => {});
+    } else {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-    setPlayState('idle');
-  }, []);
-
-  // When video element mounts and can play, start it
-  const handleCanPlay = useCallback(async () => {
-    if (!videoRef.current || playState !== 'loading') return;
-    try {
-      await videoRef.current.play();
-      setPlayState('playing');
-    } catch {
-      // AbortError from rapid pause/play — just reset
-      setPlayState('idle');
-    }
-  }, [playState]);
+  }, [hovering, canPlay]);
 
   const handleMouseEnter = useCallback(() => {
-    if (isMobile || !isComplete) return;
-    startPlayback();
-  }, [isMobile, isComplete, startPlayback]);
+    if (!isMobile && isComplete) setHovering(true);
+  }, [isMobile, isComplete]);
 
   const handleMouseLeave = useCallback(() => {
-    if (isMobile || !isComplete) return;
-    stopPlayback();
-  }, [isMobile, isComplete, stopPlayback]);
-
-  const handleClick = useCallback(() => {
-    if (!isComplete || playState === 'loading') return;
-    if (playState === 'playing' || playState === 'paused') {
-      stopPlayback();
-    } else {
-      startPlayback();
+    if (!isMobile && isComplete) {
+      setHovering(false);
+      setCanPlay(false);
     }
-  }, [isComplete, playState, stopPlayback, startPlayback]);
+  }, [isMobile, isComplete]);
 
   const showStatusBadge = video.status === 'processing' || video.status === 'queued';
-  const isPlaying = playState === 'playing';
-  const isLoading = playState === 'loading';
+  const isPlaying = hovering && canPlay;
 
   return (
     <div
       className="group cursor-pointer"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
+      onClick={onClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {/* Only mount video element on interaction */}
-        {mountVideo && isComplete && (
+        {/* Mount video only on hover */}
+        {hovering && isComplete && (
           <video
             ref={videoRef}
             src={video.video_url!}
@@ -91,7 +66,7 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
             muted
             playsInline
             preload="auto"
-            onCanPlay={handleCanPlay}
+            onCanPlay={() => setCanPlay(true)}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
           />
         )}
@@ -108,27 +83,18 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
           </Badge>
         )}
 
-        {/* Loading spinner */}
-        {isLoading && (
+        {/* Loading spinner while buffering on hover */}
+        {hovering && !canPlay && isComplete && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
             <Loader2 className="h-6 w-6 text-background animate-spin" />
           </div>
         )}
 
         {/* Play icon when idle */}
-        {isComplete && playState === 'idle' && (
+        {isComplete && !hovering && (
           <div className="absolute bottom-2 left-2 z-10">
             <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <Play className="h-3 w-3 text-foreground ml-0.5" />
-            </div>
-          </div>
-        )}
-
-        {/* Pause overlay on hover while playing */}
-        {isPlaying && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <div className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <Pause className="h-4 w-4 text-foreground" />
             </div>
           </div>
         )}
@@ -136,8 +102,10 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
     </div>
   );
 }
+
 export default function VideoHub() {
-  const { history, isLoadingHistory } = useGenerateVideo();
+  const { history, isLoadingHistory, refreshHistory } = useGenerateVideo();
+  const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(null);
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -206,7 +174,7 @@ export default function VideoHub() {
         ) : history.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {history.slice(0, 12).map((v) => (
-              <RecentVideoCard key={v.id} video={v} />
+              <RecentVideoCard key={v.id} video={v} onClick={() => setSelectedVideo(v)} />
             ))}
           </div>
         ) : (
@@ -216,6 +184,13 @@ export default function VideoHub() {
           </div>
         )}
       </div>
+
+      <VideoDetailModal
+        video={selectedVideo}
+        open={!!selectedVideo}
+        onClose={() => setSelectedVideo(null)}
+        onDeleted={refreshHistory}
+      />
     </div>
   );
 }
