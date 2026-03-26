@@ -1,45 +1,78 @@
-import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Pause } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Pause, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+type PlayState = 'idle' | 'loading' | 'playing' | 'paused';
+
 function RecentVideoCard({ video }: { video: { id: string; status: string; source_image_url: string; video_url: string | null; created_at: string; prompt: string } }) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playState, setPlayState] = useState<PlayState>('idle');
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const isComplete = video.status === 'complete' && video.video_url;
+  const mountVideo = playState !== 'idle';
 
-  const handleMouseEnter = useCallback(() => {
-    if (isMobile || !isComplete) return;
-    videoRef.current?.play();
-    setIsPlaying(true);
-  }, [isMobile, isComplete]);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      }
+    };
+  }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    if (isMobile || !isComplete) return;
+  const startPlayback = useCallback(async () => {
+    if (!isComplete || playState === 'loading') return;
+    setPlayState('loading');
+  }, [isComplete, playState]);
+
+  const stopPlayback = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-    setIsPlaying(false);
-  }, [isMobile, isComplete]);
+    setPlayState('idle');
+  }, []);
+
+  // When video element mounts and can play, start it
+  const handleCanPlay = useCallback(async () => {
+    if (!videoRef.current || playState !== 'loading') return;
+    try {
+      await videoRef.current.play();
+      setPlayState('playing');
+    } catch {
+      // AbortError from rapid pause/play — just reset
+      setPlayState('idle');
+    }
+  }, [playState]);
+
+  const handleMouseEnter = useCallback(() => {
+    if (isMobile || !isComplete) return;
+    startPlayback();
+  }, [isMobile, isComplete, startPlayback]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isMobile || !isComplete) return;
+    stopPlayback();
+  }, [isMobile, isComplete, stopPlayback]);
 
   const handleClick = useCallback(() => {
-    if (!isComplete) return;
-    if (isPlaying) {
-      videoRef.current?.pause();
-      if (videoRef.current) videoRef.current.currentTime = 0;
-      setIsPlaying(false);
+    if (!isComplete || playState === 'loading') return;
+    if (playState === 'playing' || playState === 'paused') {
+      stopPlayback();
     } else {
-      videoRef.current?.play();
-      setIsPlaying(true);
+      startPlayback();
     }
-  }, [isComplete, isPlaying]);
+  }, [isComplete, playState, stopPlayback, startPlayback]);
 
   const showStatusBadge = video.status === 'processing' || video.status === 'queued';
+  const isPlaying = playState === 'playing';
+  const isLoading = playState === 'loading';
 
   return (
     <div
@@ -49,19 +82,23 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
       onClick={handleClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {isComplete && (
+        {/* Only mount video element on interaction */}
+        {mountVideo && isComplete && (
           <video
             ref={videoRef}
             src={video.video_url!}
             loop
             muted
             playsInline
+            preload="auto"
+            onCanPlay={handleCanPlay}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
           />
         )}
         <img
           src={video.source_image_url}
           alt=""
+          loading="lazy"
           className={`w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
         />
 
@@ -71,7 +108,15 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
           </Badge>
         )}
 
-        {isComplete && !isPlaying && (
+        {/* Loading spinner */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
+            <Loader2 className="h-6 w-6 text-background animate-spin" />
+          </div>
+        )}
+
+        {/* Play icon when idle */}
+        {isComplete && playState === 'idle' && (
           <div className="absolute bottom-2 left-2 z-10">
             <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <Play className="h-3 w-3 text-foreground ml-0.5" />
@@ -79,6 +124,7 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
           </div>
         )}
 
+        {/* Pause overlay on hover while playing */}
         {isPlaying && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <div className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-lg">
@@ -90,7 +136,6 @@ function RecentVideoCard({ video }: { video: { id: string; status: string; sourc
     </div>
   );
 }
-
 export default function VideoHub() {
   const { history, isLoadingHistory } = useGenerateVideo();
 
