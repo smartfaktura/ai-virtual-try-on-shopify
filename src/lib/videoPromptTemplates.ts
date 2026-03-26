@@ -55,6 +55,7 @@ const LOOP_PHRASES: Record<string, string> = {
   one_natural: 'as one natural continuous movement',
 };
 
+function buildCameraClause(motion: string): string {
   return `Camera: ${CAMERA_PHRASES[motion] || CAMERA_PHRASES.slow_push_in}.`;
 }
 
