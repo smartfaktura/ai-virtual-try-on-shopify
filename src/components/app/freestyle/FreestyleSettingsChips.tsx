@@ -321,52 +321,48 @@ export function FreestyleSettingsChips({
   // --- Desktop: grouped chips with subtle dividers ---
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          {uploadButton}
-          {productChip}
-          {modelChip}
-          {sceneChip}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <FramingSelectorChip
-            framing={framing}
-            onFramingChange={onFramingChange}
-            open={framingPopoverOpen}
-            onOpenChange={onFramingPopoverChange}
-            modal={false}
+      <div className="flex items-center gap-2 flex-wrap">
+        {uploadButton}
+        {productChip}
+        {modelChip}
+        {sceneChip}
+        <FramingSelectorChip
+          framing={framing}
+          onFramingChange={onFramingChange}
+          open={framingPopoverOpen}
+          onOpenChange={onFramingPopoverChange}
+          modal={false}
+        />
+        {disabledChips?.brand ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 opacity-40 cursor-default"
+                onClick={(e) => e.preventDefault()}
+              >
+                <Palette className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Brand</span>
+                <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              Register to create your brand profile
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <BrandProfileChip
+            selectedProfile={selectedBrandProfile}
+            open={brandProfilePopoverOpen}
+            onOpenChange={onBrandProfilePopoverChange}
+            onSelect={onBrandProfileSelect}
+            profiles={brandProfiles}
+            isLoading={isLoadingBrandProfiles}
           />
-          {disabledChips?.brand ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 opacity-40 cursor-default"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <Palette className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Brand</span>
-                  <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                Register to create your brand profile
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <BrandProfileChip
-              selectedProfile={selectedBrandProfile}
-              open={brandProfilePopoverOpen}
-              onOpenChange={onBrandProfilePopoverChange}
-              onSelect={onBrandProfileSelect}
-              profiles={brandProfiles}
-              isLoading={isLoadingBrandProfiles}
-            />
-          )}
-          {aspectRatioChip}
-          {cameraStyleChip}
-          {qualityChip}
-          {promptHelperButton}
-        </div>
+        )}
+        {aspectRatioChip}
+        {cameraStyleChip}
+        {qualityChip}
+        {promptHelperButton}
       </div>
     </TooltipProvider>
   );
