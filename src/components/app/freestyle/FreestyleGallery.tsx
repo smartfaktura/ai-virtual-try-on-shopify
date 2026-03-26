@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe, Sparkles } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Progress } from '@/components/ui/progress';
@@ -323,6 +324,7 @@ function ImageCard({
   className,
   natural,
   isUpscaling,
+  isAdmin,
 }: {
   img: GalleryImage;
   idx: number;
@@ -337,6 +339,7 @@ function ImageCard({
   className?: string;
   natural?: boolean;
   isUpscaling?: boolean;
+  isAdmin?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const prevSrcRef = useRef(img.url);
