@@ -1,43 +1,77 @@
 
 
-# Fix Seedream Aspect Ratio + Improve Reference Image Handling
+# Seedream Multi-Image Role Assignment via Numbered References
 
-## Problems Found
+## Problem
 
-### 1. Wrong aspect ratio (1:1 requested → 4:5 returned)
-The Seedream API accepts **two separate parameters**: `size` (resolution preset like "2K") and `aspect_ratio` (like "1:1", "16:9"). Our code only sends `size: "2K"` but never sends `aspect_ratio`, so Seedream picks its own default.
+Seedream receives multiple reference images (product, model, scene) as a flat array with no way to know which is which. The prompt currently says generic things like "the model from the reference" — but Seedream doesn't know which image IS the model. This causes it to blend features randomly (e.g. blonde hair from a product photo onto the model).
 
-### 2. Model hair color mismatch (brown selected → blonde generated)
-Seedream receives all reference images as a flat array via `body.image = [url1, url2, url3]` with no way to distinguish which image is the product, model, or scene. The prompt says "the model from the reference" but Seedream's diffusion model can't reliably map that text to a specific image in the array. This is a fundamental limitation — Seedream treats all images as equal "reference" inputs and blends them freely. We can improve this by **ordering images strategically** (model image first, since Seedream tends to weight earlier images more) and by **strengthening the prompt description** of the model's appearance.
+## Key Discovery
+
+The Seedream docs explicitly state:
+
+> **When using multiple input images, clearly assign roles: Refer to the images as image 1, image 2, etc. Which one supplies the subject, which supplies the outfit/style/background?**
+
+So the solution is to **number the images** in a deterministic order and **rewrite the prompt** to use `image 1`, `image 2`, `image 3` labels that map exactly to the array positions.
 
 ## Solution
 
 ### Changes in `supabase/functions/generate-freestyle/index.ts`
 
-**1. Pass `aspect_ratio` to the Seedream API call**
-- In `generateImageSeedream()`, add the `aspect_ratio` field to the request body alongside `size`
-- Map our app ratios to Seedream's supported values: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`, `21:9`
-- For unsupported ratios (e.g. `4:5`), map to the nearest supported one (`3:4`)
+**1. Refactor `convertContentToSeedreamInput()` — structured role tracking**
 
-**2. Reorder images in `convertContentToSeedreamInput()`**
-- Currently images are collected in arbitrary order from the content array
-- Reorder so the **model reference image comes first** in the array — Seedream tends to give more weight to the first image for subject/identity consistency
-- This won't guarantee perfect matching but will improve fidelity to the selected model
+Instead of just splitting images into "model" vs "other", track each image with its role:
 
-**3. Add a ratio mapping helper**
+```text
+Parse content array → build typed list:
+  [{ url, role: "product" }, { url, role: "model" }, { url, role: "scene" }]
 ```
-App ratio → Seedream aspect_ratio
-1:1   → "1:1"
-16:9  → "16:9"
-9:16  → "9:16"
-4:3   → "4:3"
-3:4   → "3:4"
-4:5   → "3:4"  (nearest)
-5:4   → "4:3"  (nearest)
-3:2   → "3:2"
-2:3   → "2:3"
+
+Detection uses the label text before each image (`[PRODUCT REFERENCE]`, `[MODEL REFERENCE]`, `[SCENE REFERENCE]`, `[PRODUCT IMAGE]`, `[REFERENCE IMAGE]`).
+
+Order images deterministically: **model → product → scene → other** (model first for identity priority).
+
+**2. Add a `buildSeedreamRoleDirective()` helper**
+
+Generates a numbered role block appended to the cleaned prompt:
+
+```text
+IMAGE ROLES:
+- Image 1 is the MODEL (person/face to match — preserve exact face, hair color, skin tone, body type)
+- Image 2 is the PRODUCT (item to feature in the scene)
+- Image 3 is the BACKGROUND/SCENE (use for environment, lighting, atmosphere only)
 ```
+
+This maps 1:1 to the image array order sent to the API.
+
+**3. Update `cleanPromptForSeedream()` — replace `[TAG]` labels with numbered refs**
+
+Instead of replacing `[MODEL REFERENCE]` with "the model from the reference", replace with `the person from image 1` (matching the actual array position). This makes the full prompt consistent with the role directive.
+
+### Example transformation
+
+```text
+Images array: [model.jpg, product.jpg, scene.jpg]
+
+Prompt includes:
+"IMAGE ROLES:
+- Image 1 is the MODEL: preserve exact face, hair color, skin tone, body type
+- Image 2 is the PRODUCT: the item to showcase
+- Image 3 is the BACKGROUND: use for environment and lighting only
+
+...
+REFERENCES:
+1. MODEL: The person must match the person from image 1 (Female, brown hair) — same face, features, skin tone, hair, body.
+2. PRODUCT: Feature the product from image 2 naturally.
+3. SCENE: Place into the environment from image 3. Match lighting and perspective."
+```
+
+### What stays the same
+- Gemini (Nano Banana) path is completely untouched
+- The `buildContentArray()` function stays as-is (Gemini uses it fine)
+- User prompt content, brand directives, quality, framing — all preserved
+- Image ordering: model still comes first
 
 ## Files Modified
-- `supabase/functions/generate-freestyle/index.ts` — add `aspect_ratio` param, ratio mapping, image reordering
+- `supabase/functions/generate-freestyle/index.ts` — refactor `convertContentToSeedreamInput()`, add `buildSeedreamRoleDirective()`, update `cleanPromptForSeedream()` tag replacements to use numbered image refs
 
