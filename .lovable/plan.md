@@ -1,40 +1,39 @@
 
 
-# Fix Video Hub Performance — Lazy Loading & Playback
+# Improve Global Generation Bar with Team Avatars & Richer UI
 
-## Problem
-All video cards render `<video src={url}>` simultaneously for every card in the grid. This means the browser tries to download/buffer up to 12 video files at once, causing massive lag, unresponsive play/pause controls, and high memory usage.
+## Overview
+Replace the generic spinner/icon pill with contextual VOVV.AI team member avatars per job type, add rotating status messages, and improve the expanded detail panel with warmer, more branded styling.
 
-## Fix Strategy
+## File: `src/components/app/GlobalGenerationBar.tsx`
 
-### File: `src/pages/VideoHub.tsx`
+### 1. Map job types to team members
+Create a helper that returns the appropriate team member based on `job_type`:
+- `video` → Leo (Scene & Set Designer) — "Animating the sequence..."
+- `freestyle` → Sophia (E-commerce Photographer) — "Setting up the lighting..."
+- `upscale` → Luna (Retouch Specialist) — "Retouching the highlights..."
+- `workflow` / default → Kenji (Art Director) — "Reviewing the composition..."
+- `tryon` → Zara (Fashion Stylist) — "Aligning with brand guidelines..."
+- Creative Drops → Amara (Lifestyle Photographer)
 
-**1. Lazy-load video elements — only mount `<video>` when the user interacts**
-- Remove the always-present `<video>` element from the card
-- Only create and mount the `<video>` element when the user hovers (desktop) or taps (mobile)
-- Use `preload="none"` as a safety net
+### 2. Compact pill improvements
+- Replace the generic `Loader2` spinner with the relevant team member's avatar (with a subtle spinning ring animation around it)
+- Show the team member's name in the pill text: e.g., "Leo is animating..." instead of "1 running"
+- When multiple job types are active, show stacked avatars (up to 2-3) with count
 
-**2. Proper play/pause with async handling**
-- `video.play()` returns a Promise — wrap in try/catch to avoid `AbortError` when pause is called before play resolves
-- Track a loading state to prevent rapid click conflicts
+### 3. Expanded panel improvements
+- Each active group row: show the assigned team member avatar + their contextual `statusMessage` as a subtitle
+- Add a rotating status message that cycles through relevant team member quotes every 4 seconds (reuse existing pattern from `QueuePositionIndicator`)
+- Replace the plain `PROCESSING` / `QUEUED` badges with warmer styled variants (subtle primary tint for processing, muted for queued)
+- Add elapsed time with a small clock icon inline
 
-**3. Better mobile tap behavior**
-- First tap: play. Second tap: pause. No hover events on mobile.
-- Show a loading spinner briefly while the video buffers
+### 4. Completed group improvements
+- Show a success avatar (Sophia) with "Your images are ready!" message
+- For video completions, show Leo with "Your video is ready!"
 
-**4. Clean up on unmount**
-- Use `useEffect` cleanup to pause and unload video when the component unmounts or scrolls out of view
-
-### Key changes:
-```text
-Before: 12 <video src="..."> elements rendered at mount → 12 parallel downloads
-After:  0 <video> elements at mount → 1 video loaded only on interaction
-```
-
-### Implementation details:
-- State: `idle | loading | playing | paused`
-- On hover/tap → set state to `loading`, mount `<video preload="auto">`, call `.play()` on `canplay` event
-- On leave/second tap → `.pause()`, optionally unmount video element to free memory
-- Wrap `.play()` in async try/catch for the common `AbortError` race condition
-- Add `pointer-events-none` during loading state to prevent click spam
+### Key changes summary
+- One new helper function `getTeamMemberForJob(group: BatchGroup): TeamMember`
+- Rotating `teamIndex` state with 4s interval (already patterned in QueuePositionIndicator)
+- Avatar replaces spinner in pill; avatar + status message in expanded rows
+- Warmer badge styling with subtle color tints per state
 
