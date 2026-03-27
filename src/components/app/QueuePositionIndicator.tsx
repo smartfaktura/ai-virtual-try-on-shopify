@@ -12,9 +12,9 @@ interface QueuePositionIndicatorProps {
 }
 
 function estimateSeconds(meta?: GenerationMeta): number {
-  if (!meta) return 70; // Pro model default
+  if (!meta) return 40; // Real median for high quality
   let estimate = 15; // base
-  estimate += meta.imageCount * 10;
+  estimate += meta.imageCount * 8;
   if (meta.quality === 'high') estimate += 15;
   if (meta.hasModel) estimate += 20; // Pro model is slower
   if (meta.hasScene) estimate += 5;

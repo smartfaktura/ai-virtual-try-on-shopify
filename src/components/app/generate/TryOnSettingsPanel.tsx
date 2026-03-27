@@ -142,7 +142,7 @@ export default function TryOnSettingsPanel({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="standard">Standard — Fast generation, good quality</SelectItem>
-                <SelectItem value="high">High (Pro Model) — Best quality, ~60-120s per image</SelectItem>
+                <SelectItem value="high">High (Pro Model) — Best quality, ~30-60s per image</SelectItem>
               </SelectContent>
             </Select>
           </div>
