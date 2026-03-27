@@ -1,56 +1,56 @@
 
 
-# Enhance Admin Scenes Row with More Metadata
+# Fix: Product Listing Set Workflow Generation Failing
 
-## What changes
+## Root Cause
 
-**File: `src/pages/AdminScenes.tsx` — `SceneRow` component (lines 624–735)**
+The generation failed because of an **index mismatch** between frontend and backend variation arrays.
 
-Currently each scene row shows: thumbnail, name, category dropdown, and badges for Custom/Prompt Only/Duplicate. We'll add a compact info line below the existing badges showing additional debug data.
+**Frontend**: Merges all 31 DB variations + ~34 custom Freestyle scenes into one array (65 items). When you selected a custom scene, it was at index **64** in this merged array.
 
-### New info to display (as tiny `text-[10px]` metadata chips):
+**Payload sent**: `selected_variations: [64]`, `extra_variations: [{the 1 selected scene}]`
 
-1. **Scene ID** — the raw `poseId` (truncated, click to copy full ID)
-2. **Source type** — "Image + Prompt" or "Prompt Only" (already shown as badge, but we'll make the image source clearer)
-3. **Prompt hint** — show first ~60 chars of `promptHint` if present, with tooltip for full text
-4. **Image URL status** — show a green/red dot indicating if `previewUrl` is a Supabase storage URL (custom upload) vs a local/mock asset
-5. **Created date** — show `created_at` if available (custom scenes have this)
-6. **Has optimized image** — indicator if `optimizedImageUrl` exists
+**Backend**: Rebuilds `combinedVariations = [...31 DB variations, ...1 extra_variation]` = **32 items**. Index 64 is out of bounds → filtered out → **0 variations** → "Failed to generate any images".
 
-### Implementation
-
-Add a new `div` row inside the `<div className="min-w-0 flex-1">` block, below the existing badges row (after line 694):
-
-```tsx
-{/* Admin debug info */}
-<div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-  <span
-    className="text-[9px] font-mono text-muted-foreground/60 cursor-pointer hover:text-foreground truncate max-w-[120px]"
-    onClick={() => { navigator.clipboard.writeText(pose.poseId); toast.success('ID copied'); }}
-    title={`Click to copy: ${pose.poseId}`}
-  >
-    {pose.poseId.length > 20 ? pose.poseId.slice(0, 8) + '…' + pose.poseId.slice(-4) : pose.poseId}
-  </span>
-  {pose.promptHint && (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="text-[9px] text-muted-foreground/50 italic truncate max-w-[200px] cursor-help">
-          "{pose.promptHint.slice(0, 60)}{pose.promptHint.length > 60 ? '…' : ''}"
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs text-xs whitespace-pre-wrap">{pose.promptHint}</TooltipContent>
-    </Tooltip>
-  )}
-  {pose.optimizedImageUrl && (
-    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-green-500/10 text-green-600 border-0">Optimized</Badge>
-  )}
-  {pose.created_at && (
-    <span className="text-[9px] text-muted-foreground/40">
-      {new Date(pose.created_at).toLocaleDateString()}
-    </span>
-  )}
-</div>
+The logs confirm this:
+```
+Generating 0 variations × 1 angles = 0 images
+Refunded 6 credits for failed job
 ```
 
-This gives admins at-a-glance visibility into each scene's internal ID, prompt content, optimization status, and creation date — all without cluttering the primary UI.
+## Fix
+
+**File: `src/pages/Generate.tsx`**
+
+### Remap variation indices before sending payload
+
+When building the payload, remap `selectedVariationIndices` so that:
+- Indices pointing to **DB variations** (< `dbVariationCount`) stay as-is
+- Indices pointing to **dynamic Freestyle scenes** (≥ `dbVariationCount`) get remapped to their position in `[...dbVariations, ...extras]`
+
+This applies in **three places** where `selected_variations` is set in the payload:
+1. **Single-job path** (~line 1131): `selected_variations: [varIdx]` — remap `varIdx`
+2. **Batch path** (~line 1251): `selected_variations: Array.from(selectedVariationIndices)` — remap all indices
+3. **Multi-model loop path** (~line 1344): `selected_variations: [varIdx]` — remap `varIdx`
+
+### Remapping logic
+
+```typescript
+function remapVariationIndex(
+  frontendIdx: number,
+  dbCount: number,
+  selectedExtras: number[] // sorted frontend indices of extras
+): number {
+  if (frontendIdx < dbCount) return frontendIdx; // DB variation — unchanged
+  // Extra: position = dbCount + position within extras list
+  const extraPosition = selectedExtras.indexOf(frontendIdx);
+  return dbCount + extraPosition;
+}
+```
+
+The `extra_variations` array already correctly extracts the scene data for indices ≥ `dbVariationCount`. The only bug is that `selected_variations` indices don't match the backend's combined array.
+
+### What this fixes
+
+Any selection of dynamic Freestyle scenes in the Product Listing Set workflow will now generate correctly instead of failing with "Failed to generate any images".
 
