@@ -210,6 +210,29 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
               </div>
             </div>
           )}
+
+          {/* Discover Category */}
+          {!isAnalyzing && (
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Discover Category</label>
+              <div className="flex flex-wrap gap-1.5">
+                {DISCOVER_CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setDiscoverCategory(cat)}
+                    className={cn(
+                      'px-3 py-1 rounded-full text-[11px] font-medium transition-colors capitalize',
+                      discoverCategory === cat
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                    )}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 p-5 border-t border-border/20">
