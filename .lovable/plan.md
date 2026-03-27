@@ -1,71 +1,49 @@
-# Fix: Image Editing Mode Returns Wrong Results + Auto-Select Original Ratio
 
-## Root Causes
 
-### 1. Prompt pollution in edit mode (main bug)
+# Show ALL product scenes in workflow grid
 
-In `generate-freestyle/index.ts` line 1222, **every** generation — including edits — gets this appended:
+## Root cause
 
-```
-Output aspect ratio: 1:1. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge...
-```
-
-This aggressive instruction overrides the user's edit intent ("remove the bowl"). The AI reads "fill the ENTIRE canvas" and generates a brand-new image instead of surgically editing the original.
-
-### 2. Ambiguous image label
-
-In `buildContentArray` (line 778), the uploaded image is labeled `[REFERENCE IMAGE]` in edit mode. The AI treats it as "inspiration" rather than the actual image to modify. It should be `[IMAGE TO EDIT]`.
-
-### 3. No "Original" aspect ratio option
-
-When editing, the user shouldn't change the ratio — the output should match the input image. Currently there's no way to express this.
-
-## Changes
-
-### File 1: `supabase/functions/generate-freestyle/index.ts`
-
-**A. Skip aspect ratio directive in edit mode (~line 1222)**
+The merge logic in `Generate.tsx` line 428 uses a hardcoded list of 15 "product" category slugs:
 
 ```typescript
-// Before:
-const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}...`;
-
-// After:
-const aspectPrompt = isEditMode
-  ? `${finalPrompt}\n\nIMPORTANT: Return the edited image at the SAME dimensions and aspect ratio as the input image. Do not crop, resize, or reframe.`
-  : `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}...`;
+const PRODUCT_SCENE_CATEGORIES: PoseCategory[] = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', ...];
 ```
 
-**B. Label source image as `[IMAGE TO EDIT]` in edit mode (~line 774-778)**
+Any scene with a category NOT in this list (e.g. admin-created custom categories, or scenes with `category_override` to non-listed slugs like "Skyline Laundry") gets filtered out. The same problem exists in the Freestyle `SceneSelectorChip` Product tab (only 4 categories).
+
+## Fix: derive product categories dynamically
+
+The on-model categories are a small, stable set: `studio`, `lifestyle`, `editorial`, `streetwear`. Everything else is a product scene. Instead of listing product categories, exclude on-model ones.
+
+### File 1: `src/pages/Generate.tsx` (~line 428)
+
+Replace the hardcoded `PRODUCT_SCENE_CATEGORIES` filter with a negative filter:
 
 ```typescript
-const label = imageRole === 'edit' ? '[IMAGE TO EDIT]'
-  : imageRole === 'product' ? '[PRODUCT IMAGE]'
-  : imageRole === 'model' ? '[MODEL REFERENCE]'
-  : imageRole === 'scene' ? '[SCENE REFERENCE]'
-  : '[REFERENCE IMAGE]';
+const ON_MODEL_CATEGORIES: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
+
+// Filter: any scene NOT in on-model categories is a product scene
+.filter(s => !ON_MODEL_CATEGORIES.includes(s.category))
 ```
 
-**C. Strengthen edit prompt in `polishUserPrompt` (~line 148-164)**
-Add explicit instruction: "Return the SAME image with ONLY the requested modification. Do NOT regenerate, reimagine, or recompose the image."
+This ensures every product scene — including admin-created custom categories — appears in the workflow grid automatically.
 
-### File 2: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+### File 2: `src/components/app/freestyle/SceneSelectorChip.tsx` (~line 86-90)
 
-**Add "Original" aspect ratio option** — only visible when an image is uploaded in edit mode - and make it auto selected.
+Same fix for the Freestyle Product tab filter. Currently hardcoded to 4 categories:
 
 ```typescript
-export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '9:16' | '16:9' | 'original';
+product: ['clean-studio', 'surface', 'flat-lay', 'product-editorial'],
 ```
 
-Add to `ASPECT_RATIOS` array with a dedicated icon (e.g. `ImageIcon`).
+Change to dynamic: when `activeFilter === 'product'`, show all scenes whose category is NOT in the on-model set, instead of matching against a fixed list.
 
-### File 3: `src/pages/Freestyle.tsx`
+### File 3: `src/components/app/CreativeDropWizard.tsx` (~line 312)
 
-**Auto-select "original" ratio when entering edit mode:**
-
-- When `imageRole` changes to `'edit'` and a source image exists, set `aspectRatio` to `'original'`.
-- When `imageRole` changes away from `'edit'`, revert to `'1:1'` (or previous value).
+Same pattern — replace `PRODUCT_CATEGORIES` hardcoded list with the inverse of `ON_MODEL_CATEGORIES`.
 
 ## Summary
 
-Three files changed. The core fix is backend: stop appending "fill the canvas" instructions in edit mode and relabel the image. The frontend improvement auto-locks ratio to "Original" for a smoother editing UX.
+Three files, same one-line logic change in each: flip from "include these product categories" to "exclude on-model categories". This makes every non-on-model scene appear as a product scene everywhere — workflow grid, Freestyle picker, and Creative Drops. New admin-created categories will automatically be included.
+
