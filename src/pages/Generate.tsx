@@ -446,8 +446,10 @@ export default function Generate() {
 
     const mappedScenes = freestyleScenes.map(s => ({
       label: s.name,
-      instruction: s.promptHint,
+      instruction: s.promptHint?.trim() || s.description?.trim() || `Place the product in a ${s.name} environment, styled as ${poseCategoryLabels[s.category] || s.category} product photography`,
       preview_url: s.previewUrl,
+      prompt_only: s.promptOnly || false,
+      use_scene_reference: !s.promptOnly && !!s.previewUrl,
       category: poseCategoryLabels[s.category] || s.category,
     }));
 
@@ -4361,7 +4363,6 @@ export default function Generate() {
               </div>
 
             </CardContent></Card>
-                   const visibleProducts = filteredProducts.slice(0, visibleProductCount);
 
             {/* Crafted by team */}
             <div className="flex items-center justify-center gap-3 pt-2">
