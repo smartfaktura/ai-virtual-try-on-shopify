@@ -37,6 +37,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
 
   useEffect(() => {
     if (open && imageUrl) {
+      if (sourcePrompt) setPromptHint(sourcePrompt);
       analyzeImage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
