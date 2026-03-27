@@ -1,31 +1,27 @@
 
 
-# Improve Scene Selection — Full Dialog with Search and Larger Thumbnails
+# Show "Metadata saved" Toast on Opposite Side
 
 ## Problem
-The current scene selector in the Discover Detail Modal is a small `<Select>` dropdown with tiny 20×20px thumbnails, no search, and limited scrolling. With many scenes it's hard to find the right one.
+The "Metadata saved" toast appears top-right (same as all other toasts). The user wants it on the opposite side for this specific action.
 
-## Solution
-Replace the `<Select>` with a button that opens a `<Dialog>` containing:
-- A search input to filter scenes by name
-- A grid of scene cards with larger thumbnails (~80×100px, 4:5 aspect ratio)
-- Grouped by category (like the SceneSelectorChip expanded view)
-- A "None" option to clear selection
+## Fix
 
-## Changes
+### `src/components/app/DiscoverDetailModal.tsx` (line 696)
+Change the toast call to include a `position` override:
 
-### `src/components/app/DiscoverDetailModal.tsx`
+```typescript
+// Before
+toast.success('Metadata saved');
 
-1. **Add state**: `sceneDialogOpen` boolean, `sceneSearch` string
-2. **Replace the Scene Selection `<Select>`** (lines 397-412) with:
-   - A trigger button showing the current scene name + thumbnail (or "None")
-   - A `<Dialog>` with search input and a grid of scene cards
-3. **Dialog content**:
-   - Search input at top filtering `allSceneOptions` by name
-   - Grid layout (3-4 columns) with scene images at ~4:5 aspect ratio
-   - Category grouping using `poseCategoryLabels` from mockData
-   - Click selects and closes dialog
-4. **Import `Dialog, DialogContent, DialogTitle`** (already available in the project)
+// After
+toast.success('Metadata saved', { position: 'top-left' });
+```
 
-Single file change, ~60 lines added/modified.
+Also apply to the error toast on line 694:
+```typescript
+toast.error('Failed to save', { position: 'top-left' });
+```
+
+One-line change per toast call. Sonner supports per-toast position overrides natively.
 
