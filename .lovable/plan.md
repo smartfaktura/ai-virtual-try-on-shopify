@@ -1,32 +1,35 @@
 
 
-# Make /pricing Page Dynamic (Match Homepage Data)
-
-## Problem
-The `/pricing` page has **hardcoded** JSON-LD offers (Starter $29, Pro $79, Business $199) that don't match the actual plan data in `pricingPlans` (Starter $39, Growth $79, Pro $179). The pricing section itself already renders `<LandingPricing />` which uses the shared `pricingPlans` data — so the visual cards are correct, but the structured data is stale.
-
-## Solution
-Generate the JSON-LD `offers` array dynamically from the `pricingPlans` data source, so it always stays in sync.
+# Add Brand Models & Video Generation to Pricing Plans
 
 ## Changes
 
-### `src/pages/Pricing.tsx`
+### 1. Update `PricingPlan` type (`src/types/index.ts`)
+- Change `features` from `string[]` to `Array<string | { text: string; badge?: string }>` to support feature labels like "NEW"
 
-1. Import `pricingPlans` from `@/data/mockData`
-2. Build the `pricingJsonLd.offers` array dynamically by mapping over `pricingPlans` (excluding enterprise):
-   ```ts
-   offers: pricingPlans
-     .filter(p => !p.isEnterprise)
-     .map(p => ({
-       '@type': 'Offer',
-       name: p.name,
-       price: String(p.monthlyPrice),
-       priceCurrency: 'USD',
-       url: `${SITE_URL}/pricing`,
-       availability: 'https://schema.org/InStock',
-     }))
-   ```
-3. Remove the hardcoded `pricingJsonLd` constant and replace with this dynamic version
+### 2. Update `pricingPlans` data (`src/data/mockData.ts`)
 
-This is a single-file change — the visual pricing cards are already dynamic via `<LandingPricing />`.
+**Growth plan** — add `{ text: 'Brand Models', badge: 'NEW' }` to features
+**Pro plan** — add `{ text: 'Brand Models', badge: 'NEW' }` to features, change `'Video Generation (coming soon)'` to `'Video Generation'`
+**All plans (Free, Starter, Growth, Pro)** — add `'Video Generation'` to features (since user wants it on all workflows)
+
+### 3. Update `PlanCard` rendering (`src/components/app/PlanCard.tsx`)
+- In the features `.map()`, handle both string and object features:
+  ```tsx
+  {typeof feature === 'string' ? feature : (
+    <span className="flex items-center gap-1.5">
+      {feature.text}
+      {feature.badge && (
+        <Badge className="text-[9px] px-1.5 py-0 bg-primary/15 text-primary">
+          {feature.badge}
+        </Badge>
+      )}
+    </span>
+  )}
+  ```
+
+### 4. Update `LandingPricing` if it renders features independently
+- Apply the same string/object feature rendering logic
+
+This ensures both `/pricing` and the homepage pricing section stay in sync since they share the same `pricingPlans` data source.
 
