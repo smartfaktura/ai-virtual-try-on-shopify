@@ -449,6 +449,8 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          product_image_url: string | null
+          product_name: string | null
           prompt: string
           quality: string
           source_generation_id: string | null
@@ -464,6 +466,8 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          product_image_url?: string | null
+          product_name?: string | null
           prompt?: string
           quality?: string
           source_generation_id?: string | null
@@ -479,6 +483,8 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          product_image_url?: string | null
+          product_name?: string | null
           prompt?: string
           quality?: string
           source_generation_id?: string | null
