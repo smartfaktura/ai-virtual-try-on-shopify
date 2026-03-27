@@ -1,56 +1,39 @@
 
 
-# Fix: Product Listing Set Workflow Generation Failing
+# Add Scene Thumbnail to "Recreating look from Discover" Banner
 
-## Root Cause
+## Problem
+The banner already supports showing scene thumbnails (the `img` tag is there), but the `sceneImage` URL param is often empty because:
+1. Scene-type items store their image as `previewUrl`, not `scene_image_url`
+2. Navigation paths from Discover don't always resolve and pass the scene image
 
-The generation failed because of an **index mismatch** between frontend and backend variation arrays.
+## Changes
 
-**Frontend**: Merges all 31 DB variations + ~34 custom Freestyle scenes into one array (65 items). When you selected a custom scene, it was at index **64** in this merged array.
-
-**Payload sent**: `selected_variations: [64]`, `extra_variations: [{the 1 selected scene}]`
-
-**Backend**: Rebuilds `combinedVariations = [...31 DB variations, ...1 extra_variation]` = **32 items**. Index 64 is out of bounds → filtered out → **0 variations** → "Failed to generate any images".
-
-The logs confirm this:
-```
-Generating 0 variations × 1 angles = 0 images
-Refunded 6 credits for failed job
-```
-
-## Fix
-
-**File: `src/pages/Generate.tsx`**
-
-### Remap variation indices before sending payload
-
-When building the payload, remap `selectedVariationIndices` so that:
-- Indices pointing to **DB variations** (< `dbVariationCount`) stay as-is
-- Indices pointing to **dynamic Freestyle scenes** (≥ `dbVariationCount`) get remapped to their position in `[...dbVariations, ...extras]`
-
-This applies in **three places** where `selected_variations` is set in the payload:
-1. **Single-job path** (~line 1131): `selected_variations: [varIdx]` — remap `varIdx`
-2. **Batch path** (~line 1251): `selected_variations: Array.from(selectedVariationIndices)` — remap all indices
-3. **Multi-model loop path** (~line 1344): `selected_variations: [varIdx]` — remap `varIdx`
-
-### Remapping logic
+### 1. `src/components/app/DiscoverDetailModal.tsx` — Pass scene image for scene-type items
+In the "Recreate this" button click handler (~line 628), when the item is a scene-type, also set `sceneImage` from `item.data.previewUrl`:
 
 ```typescript
-function remapVariationIndex(
-  frontendIdx: number,
-  dbCount: number,
-  selectedExtras: number[] // sorted frontend indices of extras
-): number {
-  if (frontendIdx < dbCount) return frontendIdx; // DB variation — unchanged
-  // Extra: position = dbCount + position within extras list
-  const extraPosition = selectedExtras.indexOf(frontendIdx);
-  return dbCount + extraPosition;
+// For scene-type items, use previewUrl as sceneImage
+if (item.type === 'scene') {
+  params.set('sceneImage', (item.data as any).previewUrl || '');
+  params.set('scene', (item.data as any).name || '');
 }
 ```
 
-The `extra_variations` array already correctly extracts the scene data for indices ≥ `dbVariationCount`. The only bug is that `selected_variations` indices don't match the backend's combined array.
+### 2. `src/pages/Discover.tsx` — Same fix in `handleUseItem`
+For scene-type items navigating to freestyle (~line 430), pass `sceneImage` from `previewUrl`:
+```typescript
+if (item.type === 'scene') {
+  params.set('sceneImage', item.data.previewUrl || '');
+  params.set('fromDiscover', '1');
+}
+```
 
-### What this fixes
+### 3. `src/pages/PublicDiscover.tsx` — Same fix in `handleUseItem`
+Mirror the same logic for the public page's scene navigation (~line 315).
 
-Any selection of dynamic Freestyle scenes in the Product Listing Set workflow will now generate correctly instead of failing with "Failed to generate any images".
+### 4. `src/components/app/PublicDiscoverDetailModal.tsx` — Pass scene image
+In the CTA click handler (~line 179), add `sceneImage` from `previewUrl` for scene-type items.
+
+All four files need the same small change: when navigating from a scene-type Discover item, include `sceneImage={previewUrl}` in the URL params. The banner rendering code in Generate.tsx and Freestyle.tsx already handles displaying the thumbnail — no changes needed there.
 
