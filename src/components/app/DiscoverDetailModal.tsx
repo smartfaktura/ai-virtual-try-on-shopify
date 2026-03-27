@@ -653,8 +653,9 @@ export function DiscoverDetailModal({
                       }
                     }
 
-                    const presetData: Record<string, string | null> = {
+                    const presetData: Record<string, any> = {
                       category: editCategories[0] || 'fashion',
+                      discover_categories: editCategories,
                       model_name: selectedModel?.name ?? null,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,

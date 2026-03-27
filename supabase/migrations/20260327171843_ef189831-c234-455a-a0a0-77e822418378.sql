@@ -1,0 +1,1 @@
+ALTER TABLE public.discover_presets ADD COLUMN discover_categories text[] NOT NULL DEFAULT '{}'::text[];

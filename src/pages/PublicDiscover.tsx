@@ -107,13 +107,9 @@ function resolveCategory(cat: string): string {
 }
 
 function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
-  const itemCat = item.data.category;
-  if (itemCat === productCat) return true;
-  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
-  if (mapped.includes(productCat)) return true;
-  const discoverCats = (item.data as any).discover_categories;
-  if (Array.isArray(discoverCats) && discoverCats.includes(productCat)) return true;
-  return false;
+  if (item.data.category === productCat) return true;
+  const cats = (item.data as any).discover_categories;
+  return Array.isArray(cats) && cats.includes(productCat);
 }
 
 function useColumnCount() {

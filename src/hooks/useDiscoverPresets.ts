@@ -21,6 +21,7 @@ export interface DiscoverPreset {
   workflow_name: string | null;
   product_name: string | null;
   product_image_url: string | null;
+  discover_categories: string[] | null;
   created_at: string;
   slug: string;
 }

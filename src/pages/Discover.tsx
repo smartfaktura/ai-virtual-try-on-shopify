@@ -37,46 +37,6 @@ const CATEGORIES = [
   { id: 'supplements', label: 'Health' },
 ] as const;
 
-// Map old style-based categories → new product categories
-const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
-  // Preset style categories
-  editorial: ['fashion', 'fragrances', 'jewelry'],
-  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  lifestyle: ['home', 'food', 'accessories', 'fashion'],
-  fashion: ['fashion', 'accessories'],
-  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
-  cinematic: ['fashion', 'fragrances', 'jewelry'],
-  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  styling: ['fashion', 'accessories', 'jewelry'],
-  ads: ['fashion', 'sports', 'beauty', 'electronics'],
-  // Scene categories
-  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  streetwear: ['fashion', 'accessories'],
-  fitness: ['sports', 'supplements'],
-  athletic: ['sports', 'supplements'],
-  gym: ['sports', 'supplements'],
-  beauty: ['beauty', 'fragrances'],
-  desert: ['fashion', 'fragrances'],
-  outdoor: ['sports', 'home', 'fashion'],
-  beach: ['fashion', 'accessories'],
-  garden: ['home', 'beauty', 'fragrances'],
-  industrial: ['electronics', 'fashion'],
-  urban: ['fashion', 'accessories'],
-  rooftop: ['fashion', 'food'],
-  cafe: ['food', 'home'],
-  mirror: ['beauty', 'fashion'],
-  casual: ['fashion', 'accessories'],
-  cozy: ['home', 'fashion'],
-  professional: ['electronics', 'accessories'],
-  skincare: ['beauty', 'fragrances'],
-  'Beauty & Skincare': ['beauty'],
-  'Fashion & Apparel': ['fashion'],
-  'Home & Decor': ['home'],
-  'Food & Beverage': ['food'],
-  'Sports & Fitness': ['sports'],
-  'Health & Supplements': ['supplements'],
-};
-
 // Stop words for keyword extraction
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
@@ -119,14 +79,9 @@ function resolveCategory(cat: string): string {
 }
 
 function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
-  const itemCat = item.data.category;
-  if (itemCat === productCat) return true;
-  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
-  if (mapped.includes(productCat)) return true;
-  // Check discover_categories array on scene items
-  const discoverCats = (item.data as any).discover_categories;
-  if (Array.isArray(discoverCats) && discoverCats.includes(productCat)) return true;
-  return false;
+  if (item.data.category === productCat) return true;
+  const cats = (item.data as any).discover_categories;
+  return Array.isArray(cats) && cats.includes(productCat);
 }
 
 function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
