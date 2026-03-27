@@ -1,32 +1,36 @@
 
 
-# Fix Admin Metadata Editor UX
+# Add Scene Name & Category Editing to Admin Metadata Editor
 
-## Problems
-1. All four Select dropdowns (Category, Workflow, Model, Scene) and the Product popover have `onPointerDownOutside={(e) => e.preventDefault()}` which prevents closing them by clicking outside. This was added to stop the modal from closing, but it also traps the user inside the dropdown.
-2. The admin editor lacks useful debug info (item ID, type, poseId, slug, prompt_only status, etc.) that would help with development.
+## Problem
+When viewing a scene-type item in the Discover detail modal, the admin metadata editor doesn't let you edit the scene's own **name** or **category** — the fields that control what appears as the label and subtext on workflow cards (e.g., "Studio Chair Pose" / "fashion").
 
 ## Changes
 
 **File: `src/components/app/DiscoverDetailModal.tsx`**
 
-### 1. Fix dropdown dismissal (lines 290, 300, 311, 327, 368)
+### 1. Add editable fields for scene-type items
 
-Remove `onPointerDownOutside={(e) => e.preventDefault()}` from all five `SelectContent` / `PopoverContent` elements. The dropdowns already render inside the modal panel (z-[300]), so clicking outside the dropdown will close the dropdown but not the modal — the modal backdrop click handler is on a separate element and the panel has `onClick={e => e.stopPropagation()}`.
+When `item.type === 'scene'` and the scene is a custom scene (`poseId.startsWith('custom-')`), add two new fields to the admin editor:
 
-### 2. Add admin debug info section
+- **Scene Name** — text input, pre-filled with current `item.data.name`, saves to `custom_scenes.name`
+- **Scene Category** — dropdown of scene categories (fetched from `scene_categories` table or using the existing category constants), pre-filled with `item.data.category`, saves to `custom_scenes.category`
 
-Add a compact debug info block below the "Admin: Edit Metadata" header showing:
-- **Item type** (preset / scene)
-- **ID** (preset id or poseId)
-- **Slug** (for URL deep-linking)
-- **Prompt Only** flag (for scenes)
-- **Category** (current DB value)
-- **Workflow slug** (current DB value)
+Built-in scenes remain read-only (already marked as such).
 
-Display these as a small grid of `text-[10px]` key-value pairs with `font-mono` styling, making it easy to inspect DB state at a glance. Include a copy-ID button.
+### 2. Wire up save handler
 
-### 3. Show current DB values vs edited values
+The existing `handleSaveMetadata` function already handles custom scene updates (writing to `custom_scenes` table). Extend it to include `name` and `category` fields in the update payload when those values have changed.
 
-Add subtle visual indicator (dot or color change) on the Save button when any field has been modified from its original value, so admin knows there are unsaved changes.
+### 3. State initialization
+
+Add `editSceneDisplayName` and `editSceneCategory` state variables, initialized from `item.data.name` and `item.data.category` when the modal opens with a scene-type item.
+
+### 4. Include in unsaved-changes detection
+
+Add these two new fields to the `hasChanges` check so the Save button highlights when name or category has been modified.
+
+## What this enables
+
+Admins can click any custom scene in Discover, edit its display name (e.g., rename "Studio Chair Pose" → "Chair Studio") and category (e.g., change from "fashion" → "lifestyle"), hit Save, and see the change reflected everywhere — workflow cards, Freestyle scene grid, and Discover feed.
 
