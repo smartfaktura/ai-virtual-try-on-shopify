@@ -430,8 +430,6 @@ export default function Generate() {
   // Merge Freestyle product scenes into workflow variation strategy
   const variationStrategy = useMemo(() => {
     if (!rawVariationStrategy || rawVariationStrategy.type !== 'scene') return rawVariationStrategy;
-    // Only merge for workflows that show scene picker (not flat-lay, not interior)
-    const wName = activeWorkflow?.name;
     // Only inject library scenes into Product Listing Set; all other workflows keep their DB scenes unchanged
     if (activeWorkflow?.slug !== 'product-listing-set') return rawVariationStrategy;
 
