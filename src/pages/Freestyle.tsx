@@ -314,8 +314,11 @@ export default function Freestyle() {
   // Deferred custom scene matching (custom scenes load async)
   useEffect(() => {
     const sceneParam = initialSceneParam.current;
-    if (!sceneParam || !sceneParam.startsWith('custom-') || customScenePoses.length === 0) return;
-    const matched = customScenePoses.find((s) => s.poseId === sceneParam);
+    if (!sceneParam || customScenePoses.length === 0) return;
+    if (selectedScene) return;
+    const matched = customScenePoses.find(
+      (s) => s.poseId === sceneParam || s.name === sceneParam
+    );
     if (matched) {
       setSelectedScene(matched);
       initialSceneParam.current = null;
