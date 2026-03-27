@@ -302,6 +302,7 @@ export default function Freestyle() {
     convertImageToBase64(editImageParam).then(b64 => setSourceImage(b64)).catch(() => setSourceImage(editImageParam));
     if (imageRoleParam === 'edit') {
       setImageRole('edit');
+      setAspectRatio('original');
     }
     setIsPromptCollapsed(false);
     // Clear only the edit params
