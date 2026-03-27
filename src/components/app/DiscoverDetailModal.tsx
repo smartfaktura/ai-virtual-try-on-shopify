@@ -337,24 +337,13 @@ export function DiscoverDetailModal({
                     </SelectContent>
                   </Select>
                 </div>
-                {!isScene && editWorkflowSlug === '__freestyle__' && (
-                  <Textarea
-                    value={editPrompt}
-                    onChange={(e) => setEditPrompt(e.target.value)}
-                    placeholder="Prompt for Recreate this..."
-                    className="text-xs min-h-[60px]"
-                    rows={3}
-                  />
-                )}
-                {isScene && isCustomScene && (
-                  <Textarea
-                    value={editPrompt}
-                    onChange={(e) => setEditPrompt(e.target.value)}
-                    placeholder="Prompt hint / description"
-                    className="text-xs min-h-[60px]"
-                    rows={3}
-                  />
-                )}
+                <Textarea
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  placeholder={isScene ? "Prompt hint / description" : "Prompt for Recreate this..."}
+                  className="text-xs min-h-[60px]"
+                  rows={3}
+                />
                 {!isScene && (
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
