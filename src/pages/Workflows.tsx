@@ -35,7 +35,7 @@ export default function Workflows() {
       const saved = localStorage.getItem('workflow-layout') as LayoutMode | null;
       if (saved && ['rows', '2col', '3col'].includes(saved)) return saved;
     } catch {}
-    return 'rows';
+    return '3col';
   });
 
   const handleLayoutChange = (value: string) => {
@@ -46,7 +46,7 @@ export default function Workflows() {
   };
 
   // On mobile/tablet, clamp to 2col max
-  const effectiveLayout = isMobile && layout === '3col' ? '2col' : layout;
+  const effectiveLayout = isMobile ? (layout === '3col' ? '2col' : layout) : layout;
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
@@ -470,7 +470,7 @@ export default function Workflows() {
             ))}
           </div>
         ) : (
-          <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="rounded-lg border overflow-hidden">
                 <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
@@ -497,7 +497,7 @@ export default function Workflows() {
           <FeedbackBanner />
         </div>
       ) : (
-        <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
           {workflows.map((workflow) => (
             <WorkflowCardCompact
               key={workflow.id}
