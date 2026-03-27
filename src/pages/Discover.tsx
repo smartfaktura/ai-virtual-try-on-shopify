@@ -126,13 +126,6 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
   // Check discover_categories array on scene items
   const discoverCats = (item.data as any).discover_categories;
   if (Array.isArray(discoverCats) && discoverCats.includes(productCat)) return true;
-  // Also check tags for presets
-  if (item.type === 'preset' && item.data.tags) {
-    return item.data.tags.some((t: string) => {
-      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
-      return tagMapped.includes(productCat);
-    });
-  }
   return false;
 }
 

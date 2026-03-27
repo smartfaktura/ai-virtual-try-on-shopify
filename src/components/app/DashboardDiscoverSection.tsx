@@ -69,12 +69,8 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
   if (itemCat === productCat) return true;
   const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
   if (mapped.includes(productCat)) return true;
-  if (item.type === 'preset' && item.data.tags) {
-    return item.data.tags.some((t: string) => {
-      const tagMapped = PRODUCT_CATEGORY_MAP[t.toLowerCase()] ?? [];
-      return tagMapped.includes(productCat);
-    });
-  }
+  const discoverCats = (item.data as any).discover_categories;
+  if (Array.isArray(discoverCats) && discoverCats.includes(productCat)) return true;
   return false;
 }
 
