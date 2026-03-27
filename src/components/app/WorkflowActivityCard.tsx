@@ -61,7 +61,7 @@ function ActiveGroupCard({
 
   // Time-based floor: crawl to 15% max so bar never shows 0%
   const elapsedSec = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
-  const estTotal = Math.max(group.totalImageCount * 8, 1);
+  const estTotal = Math.max(group.totalImageCount * 45, 1);
   const timeFloor = Math.min((elapsedSec / estTotal) * 15, 15);
   const progressPct = isProcessing ? Math.max(rawPct, Math.round(Math.max(timeFloor, 2))) : rawPct;
 

@@ -647,7 +647,7 @@ function VideoGenerateInner() {
                       {status === 'creating' ? 'Submitting task...' : 'Generating video...'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      This typically takes 1-3 minutes
+                      This typically takes 3-5 minutes
                     </p>
                   </div>
                   <div className="space-y-2">

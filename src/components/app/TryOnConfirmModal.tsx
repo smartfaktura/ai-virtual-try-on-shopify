@@ -158,7 +158,7 @@ export function TryOnConfirmModal({
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Virtual Try-On uses advanced AI and typically takes 20-30 seconds to generate {imageCount} images.
+              Virtual Try-On uses advanced AI and typically takes 40-90 seconds to generate {imageCount} images.
             </AlertDescription>
           </Alert>
 
