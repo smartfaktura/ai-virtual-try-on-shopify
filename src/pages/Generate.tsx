@@ -460,6 +460,25 @@ export default function Generate() {
   // Track how many variations came from DB vs dynamic
   const dbVariationCount = rawVariationStrategy?.variations?.length ?? 0;
 
+  // Remap frontend variation indices to backend-compatible indices.
+  // Frontend merges DB variations + all dynamic scenes into one big array.
+  // Backend rebuilds: [...DB variations, ...only the selected extras].
+  // So extras at frontend index N must be remapped to dbCount + position within the selected extras list.
+  const remapVariationIndices = useCallback((frontendIndices: number[]): { remapped: number[]; extras: Array<Record<string, unknown>> } => {
+    const extraFrontendIndices = frontendIndices.filter(i => i >= dbVariationCount).sort((a, b) => a - b);
+    const extras = extraFrontendIndices
+      .map(i => variationStrategy?.variations[i])
+      .filter(Boolean) as Array<Record<string, unknown>>;
+
+    const remapped = frontendIndices.map(idx => {
+      if (idx < dbVariationCount) return idx;
+      const posInExtras = extraFrontendIndices.indexOf(idx);
+      return dbVariationCount + posInExtras;
+    });
+
+    return { remapped, extras: extras.length > 0 ? extras : [] };
+  }, [dbVariationCount, variationStrategy]);
+
   // Selected variation indices for workflow generation
   const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
   const variationInitRef = useRef<string | null>(null);
@@ -1128,7 +1147,14 @@ export default function Generate() {
               composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
               photography_reference: selectedBrandProfile.photography_reference,
             } : undefined,
-            selected_variations: [varIdx],
+            selected_variations: (() => {
+              const { remapped } = remapVariationIndices([varIdx]);
+              return remapped;
+            })(),
+            extra_variations: (() => {
+              const { extras } = remapVariationIndices([varIdx]);
+              return extras.length > 0 ? extras : undefined;
+            })(),
             product_angles: productAngle !== 'front' ? productAngle : undefined,
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
@@ -1248,13 +1274,14 @@ export default function Generate() {
         composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
         photography_reference: selectedBrandProfile.photography_reference,
       } : undefined,
-      selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      selected_variations: (() => {
+        if (selectedVariationIndices.size === 0) return undefined;
+        const { remapped } = remapVariationIndices(Array.from(selectedVariationIndices));
+        return remapped;
+      })(),
       extra_variations: (() => {
         if (selectedVariationIndices.size === 0) return undefined;
-        const extras = Array.from(selectedVariationIndices)
-          .filter(i => i >= dbVariationCount)
-          .map(i => variationStrategy?.variations[i])
-          .filter(Boolean);
+        const { extras } = remapVariationIndices(Array.from(selectedVariationIndices));
         return extras.length > 0 ? extras : undefined;
       })(),
       product_angles: productAngle !== 'front' ? productAngle : undefined,
@@ -1317,7 +1344,7 @@ export default function Generate() {
         } else { setCurrentStep('settings'); }
       } else {
         const success = await startBatch({
-          payload, selectedVariationIndices: Array.from(selectedVariationIndices), angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: modelsToGenerate.length > 0, hasScene: false,
+          payload, selectedVariationIndices: remapVariationIndices(Array.from(selectedVariationIndices)).remapped, angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: modelsToGenerate.length > 0, hasScene: false,
           onJobEnqueued: (jobId) => injectActiveJob(queryClient, { jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 }),
         });
         if (!success) { setCurrentStep('settings'); }
@@ -1341,7 +1368,8 @@ export default function Generate() {
         for (const ratio of ratiosToGenerate) {
           for (const framingVal of framingsToGenerate) {
             for (const varIdx of variationIndices) {
-              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: [varIdx] };
+              const { remapped: remappedVar, extras: varExtras } = remapVariationIndices([varIdx]);
+              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: remappedVar, extra_variations: varExtras.length > 0 ? varExtras : undefined };
               if (modelProfile && base64ModelImage) {
                 comboPayload.model = {
                   name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
