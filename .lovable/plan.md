@@ -1,53 +1,70 @@
 
 
-# Fix: Scene items in Discover detail modal should match preset UI
+# Merge Freestyle Product Scenes into Product Listing Set Workflow
 
-## Problem
-The detail modal hides three sections for `type: 'scene'` items:
-1. **"Created with" section** (line 218: `{isPreset && (`)
-2. **Admin metadata editor** (line 289: `{isAdmin && isPreset && (`)
-3. **CTA button** says "Use Scene" instead of "Recreate this" (line 527)
+## What changes
 
-Scene items in Discover are also `discover_presets` rows, so they should show the same UI.
+The Product Listing Set workflow scene grid currently only shows scenes from the workflow's database config (`generation_config.variation_strategy.variations`). This plan adds all Freestyle "Product" category scenes (from `mockTryOnPoses` + custom scenes) dynamically to the same grid, so new scenes added to the Freestyle library automatically appear in the workflow too.
 
-## Changes — `src/components/app/DiscoverDetailModal.tsx`
+## Prompt-only scenes
 
-### 1. Show "Created with" for all items (line 218)
-```typescript
-// Before:
-{isPreset && (
+No conflict. The workflow already renders placeholder gradients for variations without `preview_url`. Prompt-only scenes will show the same placeholder in the grid and send their `promptHint` as the generation instruction — the backend never uses scene images for Product Listing Set, only the prompt text.
 
-// After:
-{(
-```
-Remove the `isPreset &&` guard so scenes also show scene/model/product thumbnails.
+## Technical approach
 
-### 2. Show admin metadata editor for all items (line 289)
-```typescript
-// Before:
-{isAdmin && isPreset && (
+### 1. Frontend — Merge scenes into variation grid
 
-// After:
-{isAdmin && (
-```
+**`src/pages/Generate.tsx`** (~line 420-425, near `variationStrategy` usage):
+- Import `mockTryOnPoses` product categories + `useCustomScenes` + `useHiddenScenes`
+- Create a `mergedVariations` array that combines:
+  - Original `variationStrategy.variations` from DB
+  - Freestyle product scenes (`clean-studio`, `surface`, `flat-lay`, `product-editorial` categories) mapped to `WorkflowVariationItem` format: `{ label: scene.name, instruction: scene.promptHint, preview_url: scene.previewUrl, category: poseCategoryLabels[scene.category] }`
+  - Deduplicate by label (if a scene name matches an existing DB variation, skip the duplicate)
+- Pass `mergedVariations` to `WorkflowSettingsPanel` instead of raw `variationStrategy`
 
-### 3. Unify CTA button label (line 527)
-```typescript
-// Before:
-{isPreset ? 'Recreate this' : 'Use Scene'}
-
-// After:
-Recreate this
+**Key mapping:**
+```text
+TryOnPose → WorkflowVariationItem
+  name         → label
+  promptHint   → instruction  
+  previewUrl   → preview_url
+  category     → category (via poseCategoryLabels lookup)
+  promptOnly   → if true, preview_url = undefined (shows placeholder)
 ```
 
-### 4. Unify CTA onClick (line 499-523)
-The `else` branch (line 520-523) calls `onUseItem(item)` for scenes instead of navigating to Freestyle. Change the CTA to always use the preset navigation logic — for scene items without workflow_slug, navigate to Freestyle with available params.
+### 2. Backend — Support extra_variations
 
-### 5. Initialize editor from preset data for scenes too (line 129-138)
-The `else` branch resets all fields to defaults for scenes. Since scene items in Discover are also `discover_presets` rows, they should populate from `item.data` just like presets. Remove the `else` branch and always use the preset initialization path (line 115-128). For `type: 'scene'` items, the fields that don't exist on the scene data type will just default to empty — but we should handle this by checking if the data has those fields.
+**`supabase/functions/generate-workflow/index.ts`** (~line 868-877):
+- Add `extra_variations?: VariationItem[]` to `WorkflowRequest` interface
+- When processing selected variations, check if an index falls beyond `allVariations.length` — if so, look it up from `body.extra_variations` array instead
+- This lets the frontend send dynamic scene data without modifying the DB config
 
-### 6. Save metadata — handle scene item ID (line 458, 485)
-The save handler references `item.data.id`. For scene items, the ID field is `poseId`. Need to ensure the correct ID is used when saving. Since scene items that appear in Discover *are* `discover_presets` rows, we should check if `item.data` has an `id` field or fall back.
+**Frontend send logic** (`src/pages/Generate.tsx` ~line 1200):
+- When building the generation payload, check if any selected index maps to a dynamic scene (index >= original DB variations length)
+- Include those as `extra_variations` in the request body
+- Adjust `selected_variations` indices accordingly for extra variations
 
-One file changed, ~6 small edits. Scene items will show "Created with", admin editing, and "Recreate this" — identical to presets.
+### 3. Pre-select scene from Discover "Recreate this"
+
+**`src/pages/Generate.tsx`** (~line 602-625):
+- Extend the `prefillSceneName` logic: after merging variations, find the matching scene by label/name and auto-add its index to `selectedVariationIndices`
+- Works for both DB scenes and dynamically added Freestyle scenes
+
+### 4. Scene count badge update
+
+**`src/components/app/generate/WorkflowSettingsPanel.tsx`** (~line 239-243):
+- The badge already reads `variationStrategy.variations.length` — since we pass merged data, count updates automatically
+
+## Files changed
+
+1. **`src/pages/Generate.tsx`** — Merge Freestyle product scenes into workflow variations, handle extra_variations in payload, pre-select from URL params
+2. **`supabase/functions/generate-workflow/index.ts`** — Accept `extra_variations` field, resolve dynamic scene indices  
+3. **`src/components/app/generate/WorkflowSettingsPanel.tsx`** — No changes needed (already renders from passed data)
+
+## What stays the same
+
+- DB workflow config is not modified
+- Existing scene selection UI and category filters work unchanged
+- Backend prompt building uses `variation.instruction` which maps directly to `promptHint`
+- Free user scene limits still enforced
 
