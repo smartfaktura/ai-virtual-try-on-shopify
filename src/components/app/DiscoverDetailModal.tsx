@@ -384,7 +384,6 @@ export function DiscoverDetailModal({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                  <div className="space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground/60">Workflow</p>
                     <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
                       <SelectTrigger className="h-8 text-xs">
