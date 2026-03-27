@@ -1,0 +1,1 @@
+ALTER TABLE public.custom_scenes ADD COLUMN discover_categories text[] NOT NULL DEFAULT '{}'::text[];

@@ -312,6 +312,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
+          discover_categories: string[]
           id: string
           image_url: string
           is_active: boolean
@@ -325,6 +326,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string
+          discover_categories?: string[]
           id?: string
           image_url: string
           is_active?: boolean
@@ -338,6 +340,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string
+          discover_categories?: string[]
           id?: string
           image_url?: string
           is_active?: boolean
