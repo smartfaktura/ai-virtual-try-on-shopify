@@ -3,6 +3,7 @@ import { X, Globe, Tag, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -59,6 +60,9 @@ export function AddToDiscoverModal({
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [showModel, setShowModel] = useState(true);
+  const [showScene, setShowScene] = useState(true);
+  const [showProduct, setShowProduct] = useState(false);
   const queryClient = useQueryClient();
 
   // Auto-fill with AI when modal opens
@@ -70,6 +74,9 @@ export function AddToDiscoverModal({
     setTags([]);
     setTagInput('');
     setAiLoading(true);
+    setShowModel(true);
+    setShowScene(true);
+    setShowProduct(false);
 
     supabase.functions
       .invoke('describe-discover-metadata', {
