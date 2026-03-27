@@ -1,47 +1,58 @@
 
 
-# Fix: Scene not selected in Freestyle after "Recreate" from Discover
+# Fix: Scene items in Discover should behave identically to presets
 
 ## Problem
-When clicking "Recreate" on a Discover preset that uses a custom scene (e.g., "Skyline Laundry"), the scene is not selected in Freestyle because:
+Scene-type items in the Discover card have three differences from presets:
+1. Button says "Use this scene" instead of "Recreate this"
+2. Hover overlay **skips** scene/model/product thumbnails (guarded by `isPreset &&`)
+3. Fallback text shows just the scene name instead of prompt
 
-1. **Discover passes `scene_name`** (e.g., "Skyline Laundry") as the `scene` URL param
-2. **Freestyle line 264** tries to match by name, but only searches `mockTryOnPoses` (built-in scenes) — custom scenes are not checked
-3. **Freestyle line 317** (deferred custom scene matching) only matches by `poseId` and only if the param starts with `custom-` — but the param is a name, not a poseId
+Since scenes published to Discover have metadata in their `discover_presets` row, they should display identically to presets.
 
-Custom scenes load asynchronously, so they aren't available during the initial matching on line 264.
+## Changes — `src/components/app/DiscoverCard.tsx`
 
-## Fix
-
-### `src/pages/Freestyle.tsx` — Expand deferred custom scene matching (~line 314-326)
-
-Update the deferred custom scene effect to also match by **name** (not just poseId starting with `custom-`):
-
+**Line 88** — Remove `isPreset` guard so thumbnails show for all items:
 ```typescript
-// Deferred custom scene matching (custom scenes load async)
-useEffect(() => {
-  const sceneParam = initialSceneParam.current;
-  if (!sceneParam || customScenePoses.length === 0) return;
-  // Already matched by the initial effect
-  if (selectedScene) return;
-  
-  const matched = customScenePoses.find(
-    (s) => s.poseId === sceneParam || s.name === sceneParam
-  );
-  if (matched) {
-    setSelectedScene(matched);
-    initialSceneParam.current = null;
-    if (!localStorage.getItem('hideSceneAppliedHint')) {
-      setShowSceneHint(true);
-    }
-  }
-}, [customScenePoses]);
+// Before:
+{isPreset && (sceneThumb || modelThumb) && (
+
+// After:
+{(sceneThumb || modelThumb) && (
 ```
 
-Key changes:
-- Remove the `sceneParam.startsWith('custom-')` gate — allow name-based matching
-- Add `s.name === sceneParam` as a fallback match
-- Add `if (selectedScene) return` guard to skip if already matched by the initial effect
+**Line 117** — Unified button label:
+```typescript
+// Before:
+{isScene ? 'Use this scene' : 'Recreate this'}
 
-Single file, ~3 lines changed. No other files affected.
+// After:
+Recreate this
+```
+
+**Lines 120-126** — Unified fallback text (when no `onRecreate`):
+```typescript
+// Before:
+{isScene ? (
+  <span ...>{item.data.name}</span>
+) : (
+  <p ...>{item.data.prompt}</p>
+)}
+
+// After:
+<p className="text-white/80 text-xs line-clamp-2 leading-relaxed">
+  {isPreset ? item.data.prompt : item.data.name}
+</p>
+```
+
+**Line 130** — Remove `isPreset` guard on product chip:
+```typescript
+// Before:
+{isPreset && productName && !productThumb && (
+
+// After:
+{productName && !productThumb && (
+```
+
+Four small edits, one file. Scene items will show thumbnails, "Recreate this", and product chips — identical to presets.
 
