@@ -319,7 +319,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
     }
     const needsModelsForWf = selectedWorkflow.generation_config?.ui_config?.show_model_picker;
     if (!needsModelsForWf) {
-      return sorted.filter(p => PRODUCT_CATEGORIES.includes(p.category));
+      return sorted.filter(p => !ON_MODEL_CATEGORIES.includes(p.category));
     }
     return sorted;
   }, [customScenePoses, filterVisible, sortScenes, applyCategoryOverrides, selectedWorkflow]);
@@ -987,8 +987,9 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                               const wfSceneCount = wfUsesVariationsOnly
                                 ? variations.length
                                 : (() => {
-                                    const cats = wf.uses_tryon ? ON_MODEL_CATEGORIES : PRODUCT_CATEGORIES;
-                                    return filterVisible(mockTryOnPoses).filter(p => cats.includes(p.category)).length + customScenePoses.filter(p => cats.includes(p.category)).length;
+                                    const isOnModel = wf.uses_tryon;
+                                    const filterFn = (p: any) => isOnModel ? ON_MODEL_CATEGORIES.includes(p.category) : !ON_MODEL_CATEGORIES.includes(p.category);
+                                    return filterVisible(mockTryOnPoses).filter(filterFn).length + customScenePoses.filter(filterFn).length;
                                   })();
                               return wfSceneCount > 0 ? <Badge variant="secondary" className="text-[10px] rounded-full px-1.5 py-0">{wfSceneCount} scenes</Badge> : null;
                             })()}

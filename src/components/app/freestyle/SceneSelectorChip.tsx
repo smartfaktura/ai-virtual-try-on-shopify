@@ -102,7 +102,9 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     : Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories
-    : filterCategoryMap[activeFilter];
+    : activeFilter === 'on-model'
+      ? ON_MODEL_CATEGORIES
+      : allCategories.filter(cat => !ON_MODEL_CATEGORIES.includes(cat));
 
   const handleSelect = (scene: TryOnPose | null) => {
     onSelect(scene);
