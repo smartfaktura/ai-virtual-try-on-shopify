@@ -628,6 +628,8 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           prompt={shareImg.prompt}
           aspectRatio={shareImg.aspectRatio}
           sourceGenerationId={shareImg.id}
+          productName={shareProduct?.title}
+          productImageUrl={shareProduct?.image_url}
         />
       )}
       {addToDiscoverImg && (
