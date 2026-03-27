@@ -1,19 +1,66 @@
 
 
-# Set Default Grid Layout to 3 Columns (Desktop/Tablet) and 2 Columns (Mobile)
+# Discover Cards: Add Product Chip to Hover + Secure Preview Pipeline
+
+## Summary
+- On **hover cards only**: replace the workflow/generation-type label with a product chip (when product data exists). Keep workflow info intact in detail/preview modals.
+- Create a secure product preview pipeline so private product images are never exposed publicly.
+- Add privacy controls to the Publish to Discover modal.
+- Add admin product selector in the detail modal.
+
+## Architecture: Secure Product Preview
+
+```text
+Private product image (user's bucket)
+       │
+       ▼  [at publish time]
+Edge function: generate-discover-preview
+       │  Downloads via service role
+       │  Resizes to 240×240 .webp, strips EXIF
+       └─ Uploads to public bucket: discover-previews/{postId}/{random}.webp
+       │
+       ▼
+discover_presets.product_image_url = public preview URL
+```
 
 ## Changes
 
-### File: `src/pages/Workflows.tsx`
+### 1. SQL Migration — Create `discover-previews` public storage bucket
+Create a public bucket for sanitized product preview assets.
 
-1. **Change default layout** from `'rows'` to `'3col'` (line 38) — so new users and users without a saved preference see the 3-column grid by default.
+### 2. New Edge Function: `generate-discover-preview/index.ts`
+- Accepts `{ sourceUrl, postId }`
+- Downloads image via service role
+- Resizes to 240×240 compressed .webp, strips metadata
+- Uploads to `discover-previews/{postId}/{nanoid}.webp`
+- Returns the public URL
 
-2. **Fix the mobile/tablet clamp logic** (line 49) — currently `isMobile` only covers `<768px`. Need to allow `'3col'` on tablet too (768–1279px). The current clamp forces tablet to `'2col'` which is wrong per the request. Change:
-   - `const effectiveLayout = isMobile && layout === '3col' ? '2col' : layout;`
-   - To: `const effectiveLayout = isMobile ? (layout === '3col' ? '2col' : layout) : layout;`
-   - This keeps 3col available on tablet (since `isMobile` is `<768`), and clamps to 2col on mobile. Tablet and desktop both get 3col by default.
+### 3. `src/components/app/DiscoverCard.tsx` — Hover overlay changes
+- Add `productThumb` and `productName` from `item.data.product_image_url` / `item.data.product_name`
+- In the hover overlay's thumbnail list (lines 87-101), add a product row below model (same style: 7×7 thumbnail + name)
+- **Remove the generation type badge** (lines 122-127 — the `genLabel` showing workflow name) from the hover overlay only
+- The `getGenerationLabel` function stays — it may be used elsewhere
 
-3. **Update grid column classes** (lines 473 and 500) — currently `'3col'` uses `grid-cols-2 lg:grid-cols-3`. Change to `grid-cols-2 md:grid-cols-3` so tablet (≥768px) also gets 3 columns instead of waiting for `lg` (≥1024px).
+### 4. `src/components/app/AddToDiscoverModal.tsx` — Privacy controls + preview generation
+Add a toggles section before the Publish button:
+- "Show model name" (Switch, default on)
+- "Show scene name" (Switch, default on)
+- "Show product used" (Switch, default off — only visible when `productName` exists)
+- When product toggle is on and `productImageUrl` exists: call `generate-discover-preview` to create sanitized preview, use returned URL as `product_image_url`
+- When toggles are off: null out the corresponding fields in the preset data
+- **Keep `workflow_name`** in the saved data (it stays in detail modals)
 
-These are the only changes needed — 3 small edits in one file.
+### 5. `src/components/app/DiscoverDetailModal.tsx` — Admin product editor
+- In the admin metadata editor grid, add a text input for product name and product image URL
+- When admin saves with a new product image URL, call `generate-discover-preview` to create a safe preview
+- The existing "Created with" section already renders product data — no changes needed there
+- **Workflow info stays as-is in the detail modal**
+
+### 6. `src/components/app/PublicDiscoverDetailModal.tsx`
+- Already shows product_name/product_image_url in "Created with" section — no changes needed
+
+## What does NOT change
+- Detail/preview modals keep showing workflow name, scene, model, product — everything stays
+- "Recreate this" continues to pass workflow/settings but not the original product source
+- The `getGenerationLabel` function is preserved
 
