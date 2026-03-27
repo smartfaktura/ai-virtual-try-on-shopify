@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -531,7 +533,17 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string; productId?: string | null } | null>(null);
   const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ id: string; url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
 
-  const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
+  // Resolve product info for share modal
+  const shareProductId = shareImg?.productId;
+  const { data: shareProduct } = useQuery({
+    queryKey: ['product-for-share', shareProductId],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_products').select('title, image_url').eq('id', shareProductId!).single();
+      return data;
+    },
+    enabled: !!shareProductId,
+  });
+
 
   if (!hasContent) {
     return (
