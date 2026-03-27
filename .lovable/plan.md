@@ -1,24 +1,32 @@
 
 
-# Add Search to Admin Product Selector in Discover Detail Modal
+# Make /pricing Page Dynamic (Match Homepage Data)
 
 ## Problem
-The product dropdown in the admin Discover detail modal uses a basic `<Select>` with no search. With many products, finding the right one is tedious (as shown in the screenshot).
+The `/pricing` page has **hardcoded** JSON-LD offers (Starter $29, Pro $79, Business $199) that don't match the actual plan data in `pricingPlans` (Starter $39, Growth $79, Pro $179). The pricing section itself already renders `<LandingPricing />` which uses the shared `pricingPlans` data — so the visual cards are correct, but the structured data is stale.
 
 ## Solution
-Replace the Radix `<Select>` with a `<Popover>` + `<Input>` + filtered list pattern, similar to a combobox. This allows typing to filter products by name.
+Generate the JSON-LD `offers` array dynamically from the `pricingPlans` data source, so it always stays in sync.
 
-## Changes in `src/components/app/DiscoverDetailModal.tsx`
+## Changes
 
-1. **Replace `<Select>` with `<Popover>`** containing:
-   - A trigger button showing the current selection (product thumbnail + name, "None", or "Custom")
-   - A popover content with a search `<Input>` at the top
-   - A scrollable list of products filtered by the search term
-   - "None" and "Custom" options at the top before the product list
+### `src/pages/Pricing.tsx`
 
-2. **Add `productSearch` state** to track the filter text
+1. Import `pricingPlans` from `@/data/mockData`
+2. Build the `pricingJsonLd.offers` array dynamically by mapping over `pricingPlans` (excluding enterprise):
+   ```ts
+   offers: pricingPlans
+     .filter(p => !p.isEnterprise)
+     .map(p => ({
+       '@type': 'Offer',
+       name: p.name,
+       price: String(p.monthlyPrice),
+       priceCurrency: 'USD',
+       url: `${SITE_URL}/pricing`,
+       availability: 'https://schema.org/InStock',
+     }))
+   ```
+3. Remove the hardcoded `pricingJsonLd` constant and replace with this dynamic version
 
-3. **Filter `myProducts`** by `title.toLowerCase().includes(search)` before rendering
-
-4. **Keep all existing logic** for `editProductSource`, `editProductName`, `editProductImageUrl` unchanged — only the UI component changes
+This is a single-file change — the visual pricing cards are already dynamic via `<LandingPricing />`.
 
