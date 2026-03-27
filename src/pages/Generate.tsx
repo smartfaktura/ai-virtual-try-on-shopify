@@ -3203,11 +3203,15 @@ export default function Generate() {
               </div>
             )}
 
-            <div className="flex justify-between">
+          </CardContent></Card>
+          <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
+            <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
+              {selectedProductIds.size === 0 && (
+                <span className="text-xs text-muted-foreground text-center flex-1">Select a product to continue</span>
+              )}
               <Button disabled={selectedProductIds.size === 0} onClick={() => {
                 if (activeWorkflow?.uses_tryon) {
-                  // Build candidate list: DB products + sample product
                   const dbMapped = userProducts.filter(p => selectedProductIds.has(p.id)).map(up => mapUserProductToProduct(up));
                   const sampleSelected = [SAMPLE_TRYON_PRODUCT, SAMPLE_UGC_PRODUCT, SAMPLE_MIRROR_PRODUCT].filter(sp => selectedProductIds.has(sp.id));
                   const candidates = [...dbMapped, ...sampleSelected];
@@ -3236,7 +3240,6 @@ export default function Generate() {
                     : [nonTryOnSample];
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   
-                  // Flat Lay: store all selected products and go to brand/surfaces
                   if (isFlatLay) {
                     setSelectedFlatLayProductIds(new Set(selected.map(p => p.id)));
                     setSelectedProduct(selected[0]);
@@ -3250,11 +3253,9 @@ export default function Generate() {
                     return;
                   }
                   
-                  // Mirror Selfie: always go to scenes, even with multiple products
                   if (isMirrorSelfie) {
                     setSelectedProduct(selected[0]);
                     if (selected[0].images.length > 0) setSelectedSourceImages(new Set([selected[0].images[0].id]));
-                    // Initialize multi-product queue if multiple selected
                     if (selected.length > 1) {
                       setProductQueue(selected);
                       setCurrentProductIndex(0);
@@ -3289,7 +3290,6 @@ export default function Generate() {
                        setCurrentStep('template');
                      }
                   } else {
-                    // Multi-product: queue them and start with the first one
                     setProductQueue(selected);
                     setCurrentProductIndex(0);
                     setMultiProductResults(new Map());
@@ -3319,7 +3319,8 @@ export default function Generate() {
                 {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
             </div>
-          </CardContent></Card>
+          </div>
+        </div>
         )}
 
         {/* Library Selection Step */}
