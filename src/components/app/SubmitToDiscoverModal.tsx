@@ -3,10 +3,9 @@ import { X, Send, Tag, Sparkles, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useSubmitToDiscover } from '@/hooks/useDiscoverSubmissions';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
@@ -42,21 +41,10 @@ export function SubmitToDiscoverModal({
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string>('none');
+  const [includeProduct, setIncludeProduct] = useState(false);
   const submitMutation = useSubmitToDiscover();
 
-  // Fetch user's products for the dropdown
-  const { data: myProducts } = useQuery({
-    queryKey: ['my-products-for-discover'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('user_products')
-        .select('id, title, image_url')
-        .order('created_at', { ascending: false });
-      return data ?? [];
-    },
-    enabled: open,
-  });
+  const hasProduct = !!(productName && productImageUrl);
 
   // Auto-fill with AI when modal opens
   useEffect(() => {
@@ -65,15 +53,8 @@ export function SubmitToDiscoverModal({
     setCategory('lifestyle');
     setTags([]);
     setTagInput('');
+    setIncludeProduct(hasProduct);
     setAiLoading(true);
-
-    // If product was pre-attached via props, try to find matching product
-    if (productName && productImageUrl && myProducts?.length) {
-      const match = myProducts.find(p => p.title === productName);
-      setSelectedProductId(match?.id ?? 'none');
-    } else {
-      setSelectedProductId('none');
-    }
 
     supabase.functions
       .invoke('describe-discover-metadata', {
@@ -92,18 +73,7 @@ export function SubmitToDiscoverModal({
       .finally(() => setAiLoading(false));
   }, [open, imageUrl, prompt]);
 
-  // When products load after modal opens, try to pre-select
-  useEffect(() => {
-    if (!open || !productName || !myProducts?.length) return;
-    const match = myProducts.find(p => p.title === productName);
-    if (match) setSelectedProductId(match.id);
-  }, [myProducts, open, productName]);
-
   if (!open) return null;
-
-  const selectedProduct = selectedProductId !== 'none'
-    ? myProducts?.find(p => p.id === selectedProductId)
-    : null;
 
   const handleAddTag = () => {
     const tag = tagInput.trim().toLowerCase();
@@ -130,14 +100,13 @@ export function SubmitToDiscoverModal({
     let finalProductName: string | undefined;
     let finalProductImageUrl: string | undefined;
 
-    // If a product is selected, generate a safe public preview
-    if (selectedProduct) {
+    if (includeProduct && hasProduct) {
       try {
         const { data: previewData } = await supabase.functions.invoke('generate-discover-preview', {
-          body: { sourceUrl: selectedProduct.image_url, postId: `submission-${Date.now()}` },
+          body: { sourceUrl: productImageUrl, postId: `submission-${Date.now()}` },
         });
         if (previewData?.publicUrl) {
-          finalProductName = selectedProduct.title;
+          finalProductName = productName;
           finalProductImageUrl = previewData.publicUrl;
         }
       } catch (err) {
@@ -233,40 +202,33 @@ export function SubmitToDiscoverModal({
             </div>
           </div>
 
-          {/* Product selector — always visible */}
-          {myProducts && myProducts.length > 0 && (
+          {/* Product — only if generation had a product */}
+          {hasProduct && (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product (optional)</label>
-              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger className="rounded-xl h-10">
-                  <SelectValue placeholder="None — no product" />
-                </SelectTrigger>
-                <SelectContent className="max-h-48">
-                  <SelectItem value="none">None — no product</SelectItem>
-                  {myProducts.map(p => (
-                    <SelectItem key={p.id} value={p.id}>
-                      <span className="flex items-center gap-2">
-                        <img src={p.image_url} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
-                        <span className="truncate">{p.title}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedProduct && (
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/30 border border-border/30">
-                  <img
-                    src={selectedProduct.image_url}
-                    alt={selectedProduct.title}
-                    className="w-9 h-9 rounded-lg object-cover border border-border/30"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{selectedProduct.title}</p>
-                    <p className="text-[10px] text-muted-foreground">Will be shown as product reference</p>
-                  </div>
-                  <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Include</span>
+                  <Switch checked={includeProduct} onCheckedChange={setIncludeProduct} />
                 </div>
-              )}
+              </div>
+              <div className={cn(
+                'flex items-center gap-3 p-2.5 rounded-xl border border-border/30 transition-opacity',
+                includeProduct ? 'bg-muted/30' : 'bg-muted/10 opacity-50',
+              )}>
+                <img
+                  src={productImageUrl}
+                  alt={productName}
+                  className="w-9 h-9 rounded-lg object-cover border border-border/30"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{productName}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {includeProduct ? 'Will be shown as product reference' : 'Product won\'t be included'}
+                  </p>
+                </div>
+                <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+              </div>
             </div>
           )}
 
