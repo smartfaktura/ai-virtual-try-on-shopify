@@ -1,36 +1,56 @@
 
 
-# Add Scene Name & Category Editing to Admin Metadata Editor
+# Enhance Admin Scenes Row with More Metadata
 
-## Problem
-When viewing a scene-type item in the Discover detail modal, the admin metadata editor doesn't let you edit the scene's own **name** or **category** — the fields that control what appears as the label and subtext on workflow cards (e.g., "Studio Chair Pose" / "fashion").
+## What changes
 
-## Changes
+**File: `src/pages/AdminScenes.tsx` — `SceneRow` component (lines 624–735)**
 
-**File: `src/components/app/DiscoverDetailModal.tsx`**
+Currently each scene row shows: thumbnail, name, category dropdown, and badges for Custom/Prompt Only/Duplicate. We'll add a compact info line below the existing badges showing additional debug data.
 
-### 1. Add editable fields for scene-type items
+### New info to display (as tiny `text-[10px]` metadata chips):
 
-When `item.type === 'scene'` and the scene is a custom scene (`poseId.startsWith('custom-')`), add two new fields to the admin editor:
+1. **Scene ID** — the raw `poseId` (truncated, click to copy full ID)
+2. **Source type** — "Image + Prompt" or "Prompt Only" (already shown as badge, but we'll make the image source clearer)
+3. **Prompt hint** — show first ~60 chars of `promptHint` if present, with tooltip for full text
+4. **Image URL status** — show a green/red dot indicating if `previewUrl` is a Supabase storage URL (custom upload) vs a local/mock asset
+5. **Created date** — show `created_at` if available (custom scenes have this)
+6. **Has optimized image** — indicator if `optimizedImageUrl` exists
 
-- **Scene Name** — text input, pre-filled with current `item.data.name`, saves to `custom_scenes.name`
-- **Scene Category** — dropdown of scene categories (fetched from `scene_categories` table or using the existing category constants), pre-filled with `item.data.category`, saves to `custom_scenes.category`
+### Implementation
 
-Built-in scenes remain read-only (already marked as such).
+Add a new `div` row inside the `<div className="min-w-0 flex-1">` block, below the existing badges row (after line 694):
 
-### 2. Wire up save handler
+```tsx
+{/* Admin debug info */}
+<div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+  <span
+    className="text-[9px] font-mono text-muted-foreground/60 cursor-pointer hover:text-foreground truncate max-w-[120px]"
+    onClick={() => { navigator.clipboard.writeText(pose.poseId); toast.success('ID copied'); }}
+    title={`Click to copy: ${pose.poseId}`}
+  >
+    {pose.poseId.length > 20 ? pose.poseId.slice(0, 8) + '…' + pose.poseId.slice(-4) : pose.poseId}
+  </span>
+  {pose.promptHint && (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="text-[9px] text-muted-foreground/50 italic truncate max-w-[200px] cursor-help">
+          "{pose.promptHint.slice(0, 60)}{pose.promptHint.length > 60 ? '…' : ''}"
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs text-xs whitespace-pre-wrap">{pose.promptHint}</TooltipContent>
+    </Tooltip>
+  )}
+  {pose.optimizedImageUrl && (
+    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-green-500/10 text-green-600 border-0">Optimized</Badge>
+  )}
+  {pose.created_at && (
+    <span className="text-[9px] text-muted-foreground/40">
+      {new Date(pose.created_at).toLocaleDateString()}
+    </span>
+  )}
+</div>
+```
 
-The existing `handleSaveMetadata` function already handles custom scene updates (writing to `custom_scenes` table). Extend it to include `name` and `category` fields in the update payload when those values have changed.
-
-### 3. State initialization
-
-Add `editSceneDisplayName` and `editSceneCategory` state variables, initialized from `item.data.name` and `item.data.category` when the modal opens with a scene-type item.
-
-### 4. Include in unsaved-changes detection
-
-Add these two new fields to the `hasChanges` check so the Save button highlights when name or category has been modified.
-
-## What this enables
-
-Admins can click any custom scene in Discover, edit its display name (e.g., rename "Studio Chair Pose" → "Chair Studio") and category (e.g., change from "fashion" → "lifestyle"), hit Save, and see the change reflected everywhere — workflow cards, Freestyle scene grid, and Discover feed.
+This gives admins at-a-glance visibility into each scene's internal ID, prompt content, optimization status, and creation date — all without cluttering the primary UI.
 
