@@ -319,8 +319,8 @@ export function DiscoverDetailModal({
                     </SelectTrigger>
                     <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
-                      {allModelOptions.map(m => (
-                        <SelectItem key={m.name} value={m.name} className="text-xs" textValue={m.name}>
+                      {allModelOptions.map((m, idx) => (
+                        <SelectItem key={`model-${idx}`} value={m.name} className="text-xs" textValue={m.name}>
                           <div className="flex items-center gap-2">
                             <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
                             <span>{m.name}</span>
@@ -335,8 +335,8 @@ export function DiscoverDetailModal({
                     </SelectTrigger>
                     <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
-                      {allSceneOptions.map(s => (
-                        <SelectItem key={s.name} value={s.name} className="text-xs" textValue={s.name}>
+                      {allSceneOptions.map((s, idx) => (
+                        <SelectItem key={`scene-${idx}`} value={s.name} className="text-xs" textValue={s.name}>
                           <div className="flex items-center gap-2">
                             <img src={getOptimizedUrl(s.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
                             <span>{s.name}</span>
@@ -485,16 +485,6 @@ export function DiscoverDetailModal({
                       .eq('id', item.data.id);
                     setSavingMeta(false);
                     if (error) { toast.error('Failed to save'); return; }
-                    (item.data as any).category = editCategory;
-                    (item.data as any).model_name = update.model_name;
-                    (item.data as any).model_image_url = update.model_image_url;
-                    (item.data as any).scene_name = update.scene_name;
-                    (item.data as any).scene_image_url = update.scene_image_url;
-                    (item.data as any).workflow_slug = update.workflow_slug;
-                    (item.data as any).workflow_name = update.workflow_name;
-                    (item.data as any).prompt = editPrompt || null;
-                    (item.data as any).product_name = update.product_name;
-                    (item.data as any).product_image_url = update.product_image_url;
                     queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
                     toast.success('Metadata saved');
                   }}
