@@ -432,13 +432,14 @@ export default function Generate() {
     if (!rawVariationStrategy || rawVariationStrategy.type !== 'scene') return rawVariationStrategy;
     // Only merge for workflows that show scene picker (not flat-lay, not interior)
     const wName = activeWorkflow?.name;
-    if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging') return rawVariationStrategy;
+    if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging' || activeWorkflow?.uses_tryon) return rawVariationStrategy;
 
     const dbVariations = rawVariationStrategy.variations;
     const dbLabelsLower = new Set(dbVariations.map(v => v.label.toLowerCase()));
 
-    const freestyleScenes = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]))
-      .filter(s => !ON_MODEL_CATEGORIES.includes(s.category))
+    // Only filter on-model categories from built-in mock poses; include ALL custom admin scenes
+    const filteredMockPoses = filterVisible(mockTryOnPoses).filter(s => !ON_MODEL_CATEGORIES.includes(s.category));
+    const freestyleScenes = sortScenes(applyCategoryOverrides([...filteredMockPoses, ...customPoses]))
       .filter(s => !dbLabelsLower.has(s.name.toLowerCase()));
 
     if (freestyleScenes.length === 0) return rawVariationStrategy;
