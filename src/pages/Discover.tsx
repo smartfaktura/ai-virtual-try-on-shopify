@@ -580,12 +580,19 @@ export default function Discover() {
         onToggleFeatured={selectedItem ? () => handleToggleFeatured(selectedItem) : undefined}
         onDelete={selectedItem && isAdmin ? async () => {
           if (selectedItem.type === 'preset') {
+            const presetTitle = (selectedItem.data as any).title;
             const { error } = await supabase.from('discover_presets').delete().eq('id', selectedItem.data.id);
             if (error) { toast.error('Failed to delete'); return; }
+            // Also remove matching custom_scene by name
+            if (presetTitle) {
+              await supabase.from('custom_scenes').delete().eq('name', presetTitle);
+            }
             toast.success('Deleted from Discover');
             queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+            queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
           } else {
             const poseId = (selectedItem.data as any).poseId ?? '';
+            const sceneName = (selectedItem.data as any).name;
             if (!poseId.startsWith('custom-')) {
               // Hide built-in scene via hidden_scenes table
               await hideScene.mutateAsync(poseId);
@@ -596,8 +603,13 @@ export default function Discover() {
             const sceneId = poseId.replace('custom-', '');
             const { error } = await supabase.from('custom_scenes').delete().eq('id', sceneId);
             if (error) { toast.error('Failed to delete scene'); return; }
+            // Also remove matching discover_preset by title
+            if (sceneName) {
+              await supabase.from('discover_presets').delete().eq('title', sceneName);
+            }
             toast.success('Scene deleted');
             queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
+            queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
           }
           setSelectedItem(null);
         } : undefined}
