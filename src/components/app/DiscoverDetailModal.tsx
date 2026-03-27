@@ -344,7 +344,6 @@ export function DiscoverDetailModal({
                   className="text-xs min-h-[60px]"
                   rows={3}
                 />
-                {!isScene && (
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
                   <Popover open={productPopoverOpen} onOpenChange={(o) => { setProductPopoverOpen(o); if (!o) setProductSearch(''); }}>
@@ -429,7 +428,6 @@ export function DiscoverDetailModal({
                     </div>
                   )}
                 </div>
-                )}
                 <Button
                   size="sm"
                   variant="outline"
