@@ -112,30 +112,15 @@ export function DiscoverDetailModal({
   useEffect(() => {
     if (!itemId || !open) return;
     panelRef.current?.scrollTo({ top: 0 });
-    if (item?.type === 'preset') {
-      setEditModelName(item.data.model_name || '__none__');
-      setEditSceneName(item.data.scene_name || '__none__');
-      setEditCategory(item.data.category || 'fashion');
-      setEditWorkflowSlug(item.data.workflow_slug || '__freestyle__');
-      setEditPrompt(item.data.prompt || '');
-      setEditProductName(item.data.product_name || '');
-      setEditProductImageUrl(item.data.product_image_url || '');
-      // Determine product source
-      if (item.data.product_name) {
-        setEditProductSource('__custom__');
-      } else {
-        setEditProductSource('__none__');
-      }
-    } else {
-      setEditModelName('__none__');
-      setEditSceneName('__none__');
-      setEditCategory('fashion');
-      setEditWorkflowSlug('__freestyle__');
-      setEditPrompt('');
-      setEditProductName('');
-      setEditProductImageUrl('');
-      setEditProductSource('__none__');
-    }
+    const d = item?.data as any;
+    setEditModelName(d?.model_name || '__none__');
+    setEditSceneName(d?.scene_name || '__none__');
+    setEditCategory(d?.category || 'fashion');
+    setEditWorkflowSlug(d?.workflow_slug || '__freestyle__');
+    setEditPrompt(d?.prompt || '');
+    setEditProductName(d?.product_name || '');
+    setEditProductImageUrl(d?.product_image_url || '');
+    setEditProductSource(d?.product_name ? '__custom__' : '__none__');
   }, [itemId, open]);
 
   // Lock body scroll when open
@@ -215,7 +200,7 @@ export function DiscoverDetailModal({
             </div>
 
             {/* Created with section */}
-            {isPreset && (
+            {(
               <div className="space-y-3">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
@@ -286,7 +271,7 @@ export function DiscoverDetailModal({
             )}
 
             {/* Admin metadata editor */}
-            {isAdmin && isPreset && (
+            {isAdmin && (
               <div className="space-y-3 p-3 border border-dashed border-border/50 rounded-xl">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Admin: Edit Metadata
@@ -455,7 +440,7 @@ export function DiscoverDetailModal({
                     if (editProductImageUrl.trim()) {
                       try {
                         const { data: previewData, error: previewErr } = await supabase.functions.invoke('generate-discover-preview', {
-                          body: { sourceUrl: editProductImageUrl.trim(), postId: item.data.id },
+                          body: { sourceUrl: editProductImageUrl.trim(), postId: (item.data as any).id || (item.data as any).poseId },
                         });
                         if (!previewErr && previewData?.publicUrl) {
                           safeProductImageUrl = previewData.publicUrl;
@@ -482,7 +467,7 @@ export function DiscoverDetailModal({
                     const { error } = await supabase
                       .from('discover_presets')
                       .update(update)
-                      .eq('id', item.data.id);
+                      .eq('id', (item.data as any).id || (item.data as any).poseId);
                     setSavingMeta(false);
                     if (error) { toast.error('Failed to save'); return; }
                     queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
@@ -497,34 +482,33 @@ export function DiscoverDetailModal({
             {/* Primary CTA */}
             <Button
               onClick={() => {
-                if (isPreset && item.data.workflow_slug) {
+                const d = item.data as any;
+                const wSlug = d.workflow_slug;
+                if (wSlug) {
                   onClose();
                   const params = new URLSearchParams();
-                  if (item.data.model_name) params.set('model', item.data.model_name);
-                  if (item.data.scene_name) params.set('scene', item.data.scene_name);
-                  if (item.data.model_image_url) params.set('modelImage', item.data.model_image_url);
-                  if (item.data.scene_image_url) params.set('sceneImage', item.data.scene_image_url);
-                  navigate(`/app/generate/${item.data.workflow_slug}?${params.toString()}`);
-                } else if (isPreset) {
+                  if (d.model_name) params.set('model', d.model_name);
+                  if (d.scene_name) params.set('scene', d.scene_name);
+                  if (d.model_image_url) params.set('modelImage', d.model_image_url);
+                  if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
+                  navigate(`/app/generate/${wSlug}?${params.toString()}`);
+                } else {
                   onClose();
                   const params = new URLSearchParams();
-                  if (item.data.prompt) params.set('prompt', item.data.prompt);
-                  if (item.data.aspect_ratio) params.set('ratio', item.data.aspect_ratio);
-                  if (item.data.quality) params.set('quality', item.data.quality);
-                  if (item.data.model_name) params.set('model', item.data.model_name);
-                  if (item.data.scene_name) params.set('scene', item.data.scene_name);
-                  if (item.data.model_image_url) params.set('modelImage', item.data.model_image_url);
-                  if (item.data.scene_image_url) params.set('sceneImage', item.data.scene_image_url);
+                  if (d.prompt) params.set('prompt', d.prompt);
+                  if (d.aspect_ratio) params.set('ratio', d.aspect_ratio);
+                  if (d.quality) params.set('quality', d.quality);
+                  if (d.model_name) params.set('model', d.model_name);
+                  if (d.scene_name) params.set('scene', d.scene_name);
+                  if (d.model_image_url) params.set('modelImage', d.model_image_url);
+                  if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
                   params.set('fromDiscover', '1');
                   navigate(`/app/freestyle?${params.toString()}`);
-                } else {
-                  onUseItem(item);
-                  onClose();
                 }
               }}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              {isPreset ? 'Recreate this' : 'Use Scene'}
+              Recreate this
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 
