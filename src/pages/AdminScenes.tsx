@@ -30,6 +30,7 @@ export default function AdminScenes() {
   const { sortMap, categoryMap } = useSceneSortOrder();
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
+  const updateSceneMutation = useUpdateCustomScene();
   const { allCategoryLabels, allCategorySlugs, customCategories } = useSceneCategories();
   const addCategoryMutation = useAddSceneCategory();
   const updateCategoryMutation = useUpdateSceneCategory();
@@ -45,6 +46,10 @@ export default function AdminScenes() {
   const [showHidden, setShowHidden] = useState(false);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState('');
+
+  // Track prompt_hint and prompt_only edits for custom scenes
+  const [promptEdits, setPromptEdits] = useState<Record<string, { prompt_hint?: string; prompt_only?: boolean }>>({});
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
 
   // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
