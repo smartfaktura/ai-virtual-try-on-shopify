@@ -22,7 +22,7 @@ import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
 
-const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements', 'editorial', 'commercial', 'lifestyle', 'campaign', 'cinematic', 'photography', 'styling', 'ads'] as const;
+import { DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -346,67 +346,82 @@ export function DiscoverDetailModal({
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
-                  <Select value={editCategory} onValueChange={setEditCategory}>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                     <SelectContent className="z-[300] max-h-60">
-                      {DISCOVER_CATEGORIES.map(c => (
-                        <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Workflow" />
-                    </SelectTrigger>
-                     <SelectContent className="z-[300] max-h-60">
-                      <SelectItem value="__freestyle__" className="text-xs">Freestyle</SelectItem>
-                      {(workflows ?? []).map(w => (
-                        <SelectItem key={w.slug} value={w.slug} className="text-xs">{w.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={editModelName} onValueChange={setEditModelName}>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Model" />
-                    </SelectTrigger>
-                     <SelectContent className="z-[300] max-h-60">
-                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
-                      {allModelOptions.map((m, idx) => (
-                        <SelectItem key={`model-${idx}`} value={m.name} className="text-xs" textValue={m.name}>
-                          <div className="flex items-center gap-2">
-                            <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
-                            <span>{m.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={editSceneName} onValueChange={setEditSceneName}>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Scene" />
-                    </SelectTrigger>
-                     <SelectContent className="z-[300] max-h-60">
-                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
-                      {allSceneOptions.map((s, idx) => (
-                        <SelectItem key={`scene-${idx}`} value={s.name} className="text-xs" textValue={s.name}>
-                          <div className="flex items-center gap-2">
-                            <img src={getOptimizedUrl(s.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
-                            <span>{s.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground/60">Discover Category</p>
+                    <Select value={editCategory} onValueChange={setEditCategory}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                       <SelectContent className="z-[300] max-h-60">
+                        {DISCOVER_CATEGORIES.map(c => (
+                          <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground/60">Workflow</p>
+                    <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Workflow" />
+                      </SelectTrigger>
+                       <SelectContent className="z-[300] max-h-60">
+                        <SelectItem value="__freestyle__" className="text-xs">Freestyle</SelectItem>
+                        {(workflows ?? []).map(w => (
+                          <SelectItem key={w.slug} value={w.slug} className="text-xs">{w.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground/60">Model Selection</p>
+                    <Select value={editModelName} onValueChange={setEditModelName}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Model" />
+                      </SelectTrigger>
+                       <SelectContent className="z-[300] max-h-60">
+                        <SelectItem value="__none__" className="text-xs">None</SelectItem>
+                        {allModelOptions.map((m, idx) => (
+                          <SelectItem key={`model-${idx}`} value={m.name} className="text-xs" textValue={m.name}>
+                            <div className="flex items-center gap-2">
+                              <img src={getOptimizedUrl(m.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                              <span>{m.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground/60">Scene Selection</p>
+                    <Select value={editSceneName} onValueChange={setEditSceneName}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Scene" />
+                      </SelectTrigger>
+                       <SelectContent className="z-[300] max-h-60">
+                        <SelectItem value="__none__" className="text-xs">None</SelectItem>
+                        {allSceneOptions.map((s, idx) => (
+                          <SelectItem key={`scene-${idx}`} value={s.name} className="text-xs" textValue={s.name}>
+                            <div className="flex items-center gap-2">
+                              <img src={getOptimizedUrl(s.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                              <span>{s.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <Textarea
-                  value={editPrompt}
-                  onChange={(e) => setEditPrompt(e.target.value)}
-                  placeholder={isScene ? "Prompt hint / description" : "Prompt for Recreate this..."}
-                  className="text-xs min-h-[60px]"
-                  rows={3}
-                />
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground/60">Prompt</p>
+                  <Textarea
+                    value={editPrompt}
+                    onChange={(e) => setEditPrompt(e.target.value)}
+                    placeholder={isScene ? "Prompt hint / description" : "Prompt for Recreate this..."}
+                    className="text-xs min-h-[60px]"
+                    rows={3}
+                  />
+                </div>
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
                   <Popover open={productPopoverOpen} onOpenChange={(o) => { setProductPopoverOpen(o); if (!o) setProductSearch(''); }}>

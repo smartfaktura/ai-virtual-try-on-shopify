@@ -10,6 +10,7 @@ import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { poseCategoryLabels } from '@/data/mockData';
+import { DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
 
 type SceneType = 'on-model' | 'product';
 
@@ -32,6 +33,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
   const [promptOnly, setPromptOnly] = useState(false);
   const [sceneType, setSceneType] = useState<SceneType>('on-model');
   const [category, setCategory] = useState('studio');
+  const [discoverCategory, setDiscoverCategory] = useState('fashion');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const addScene = useAddCustomScene();
 
@@ -154,7 +156,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
           {/* Scene Type Toggle */}
           {!isAnalyzing && (
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Scene Type</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Freestyle Scene Type</label>
               <div className="grid grid-cols-2 gap-2">
                 {([
                   { key: 'on-model' as SceneType, label: 'On-Model', icon: User, desc: 'Fashion & people' },
@@ -186,10 +188,10 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
             </div>
           )}
 
-          {/* Category */}
+          {/* Freestyle Category */}
           {!isAnalyzing && (
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Category</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Freestyle Category</label>
               <div className="flex flex-wrap gap-1.5">
                 {visibleCategories.map(cat => (
                   <button
@@ -203,6 +205,29 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
                     )}
                   >
                     {poseCategoryLabels[cat] || cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Discover Category */}
+          {!isAnalyzing && (
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Discover Category</label>
+              <div className="flex flex-wrap gap-1.5">
+                {DISCOVER_CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setDiscoverCategory(cat)}
+                    className={cn(
+                      'px-3 py-1 rounded-full text-[11px] font-medium transition-colors capitalize',
+                      discoverCategory === cat
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                    )}
+                  >
+                    {cat}
                   </button>
                 ))}
               </div>

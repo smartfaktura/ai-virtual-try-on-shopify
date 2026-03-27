@@ -1,3 +1,5 @@
+export const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements', 'editorial', 'commercial', 'lifestyle', 'campaign', 'cinematic', 'photography', 'styling', 'ads'] as const;
+
 export const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },
   { id: 'beauty', label: 'Beauty & Skincare' },
