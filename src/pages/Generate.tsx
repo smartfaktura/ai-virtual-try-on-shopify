@@ -457,7 +457,7 @@ export default function Generate() {
       ...rawVariationStrategy,
       variations: [...dbVariations, ...mappedScenes],
     };
-  }, [rawVariationStrategy, customPoses, activeWorkflow?.name, sortScenes, applyCategoryOverrides, filterVisible]);
+  }, [rawVariationStrategy, customPoses, activeWorkflow?.slug, sortScenes, applyCategoryOverrides, filterVisible]);
 
   // Track how many variations came from DB vs dynamic
   const dbVariationCount = rawVariationStrategy?.variations?.length ?? 0;
