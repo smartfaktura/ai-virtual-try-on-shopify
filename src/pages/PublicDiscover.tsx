@@ -57,8 +57,8 @@ const CATEGORIES = [
   { id: 'supplements', label: 'Health' },
 ] as const;
 
-  commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  lifestyle: ['home', 'food', 'accessories', 'fashion'],
+
+
   fashion: ['fashion', 'accessories'],
   campaign: ['fashion', 'sports', 'beauty', 'electronics'],
   cinematic: ['fashion', 'fragrances', 'jewelry'],
