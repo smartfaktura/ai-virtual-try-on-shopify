@@ -380,6 +380,7 @@ export type Database = {
           aspect_ratio: string
           category: string
           created_at: string
+          discover_categories: string[]
           id: string
           image_url: string
           is_featured: boolean
@@ -402,6 +403,7 @@ export type Database = {
           aspect_ratio?: string
           category?: string
           created_at?: string
+          discover_categories?: string[]
           id?: string
           image_url: string
           is_featured?: boolean
@@ -424,6 +426,7 @@ export type Database = {
           aspect_ratio?: string
           category?: string
           created_at?: string
+          discover_categories?: string[]
           id?: string
           image_url?: string
           is_featured?: boolean
