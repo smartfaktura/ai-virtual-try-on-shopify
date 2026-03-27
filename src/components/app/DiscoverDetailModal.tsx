@@ -611,7 +611,7 @@ export function DiscoverDetailModal({
                   const origProduct = (item.data as any).product_name || '';
                   const origSceneDisplayName = (item.data as any).name || '';
                   const origSceneCategory = (item.data as any).category || 'lifestyle';
-                  const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
+                  const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                   return null; // rendered below
                 })()}
                 <Button
@@ -627,7 +627,7 @@ export function DiscoverDetailModal({
                     const origProduct = (item.data as any).product_name || '';
                     const origSceneDisplayName = (item.data as any).name || '';
                     const origSceneCategory = (item.data as any).category || 'lifestyle';
-                    const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
+                    const hasChanges = editCategories.join(',') !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                     return hasChanges ? 'border-primary text-primary hover:bg-primary/10' : '';
                   })())}
                   onClick={async () => {
@@ -654,7 +654,7 @@ export function DiscoverDetailModal({
                     }
 
                     const presetData: Record<string, string | null> = {
-                      category: editCategory,
+                      category: editCategories[0] || 'fashion',
                       model_name: selectedModel?.name ?? null,
                       model_image_url: selectedModel?.imageUrl ?? null,
                       scene_name: selectedScene?.name ?? null,
@@ -677,9 +677,9 @@ export function DiscoverDetailModal({
                         await supabase
                           .from('custom_scenes')
                           .update({
-                            category: editSceneCategory || editCategory,
+                            category: editSceneCategory || editCategories[0] || 'fashion',
                             name: editSceneDisplayName.trim() || (item.data as any).name,
-                            discover_categories: [editCategory],
+                            discover_categories: editCategories,
                           })
                           .eq('id', realId);
                       }
