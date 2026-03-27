@@ -528,7 +528,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   }, [hasMore, onLoadMore, isFetchingMore]);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
-  const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
+  const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string; productId?: string | null } | null>(null);
   const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ id: string; url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
@@ -551,7 +551,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
-  const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setShareImg(img);
+  const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string; productId?: string | null }) => setShareImg(img);
   const addToDiscoverHandler = isAdmin ? (img: GalleryImage) => setAddToDiscoverImg(img) : undefined;
 
   const generatingCards = generatingCount > 0

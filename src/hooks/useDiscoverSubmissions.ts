@@ -55,6 +55,8 @@ export function useSubmitToDiscover() {
       tags: string[];
       aspect_ratio: string;
       quality: string;
+      product_name?: string;
+      product_image_url?: string;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
