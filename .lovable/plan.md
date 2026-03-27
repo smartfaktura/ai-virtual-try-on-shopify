@@ -1,21 +1,28 @@
 
 
-# Fix: Deleted Scenes Still Appearing in Discover
+# Fix: Discover Category Not Saving on the Actual Discover Item
 
 ## Problem
-When you delete a scene/preset from Discover, the item reappears because it exists in **two tables** (`custom_scenes` and `discover_presets`) and only one gets cleaned up.
+There are two separate "Discover Category" fields being saved to different places:
 
-- Deleting a **preset** leaves the underlying `custom_scenes` row → the scene reappears as a scene-type item
-- Deleting a **custom scene** leaves the promoted `discover_presets` row → it reappears as a preset-type item
+1. **AddSceneModal** saves `discover_categories` (text array) to the `custom_scenes` table — but this field is **never read** by the Discover feed filtering logic.
+2. **DiscoverDetailModal** saves `category` (single text) to the `discover_presets` table — this IS what filtering uses.
+
+So when you set a Discover Category in the "Add as Scene" modal, it gets stored in `custom_scenes.discover_categories` but the Discover feed filters by `item.data.category`, which for scenes comes from `custom_scenes.category` (the Freestyle category like "studio", "lifestyle"), not the product-focused discover categories.
 
 ## Fix
-**`src/pages/Discover.tsx`** — update the `onDelete` handler (~lines 581-603):
 
-1. **When deleting a preset**: After deleting from `discover_presets`, also check for and delete any matching `custom_scenes` row (match by title = scene name).
+**`src/components/app/AddSceneModal.tsx`** — When saving a new scene, also set the `category` field to the first selected discover category (mapped to the matching Discover filter key). This ensures the scene appears under the correct Discover filter tab.
 
-2. **When deleting a custom scene**: After deleting from `custom_scenes`, also delete any matching `discover_presets` row (match by title = scene name).
+**`src/components/app/DiscoverDetailModal.tsx`** — When saving metadata for a custom scene, also update `custom_scenes.discover_categories` alongside `category`, so both fields stay in sync.
 
-3. After both deletions, invalidate **both** query keys (`discover-presets` and `custom-scenes`).
+### Detailed changes
 
-This is a single-file change to the existing `onDelete` callback, adding ~6 lines of cross-table cleanup logic.
+1. **AddSceneModal.tsx**: Map the first selected `discoverCategories` entry to the corresponding filter key (e.g., "Fashion & Apparel" → "fashion") and pass it as the scene's `category` field, so the scene immediately shows under the right Discover tab.
+
+2. **DiscoverDetailModal.tsx** (scene save path, ~line 654-662): When updating `custom_scenes`, also sync the `discover_categories` array from the selected `editCategory` value, keeping both fields consistent.
+
+3. **Discover feed filtering** (`itemMatchesProductCategory`): Optionally enhance to also check `discover_categories` array on scene items, providing a secondary match path for scenes that have this field populated.
+
+This is a 2-file change (~10 lines added/modified).
 
