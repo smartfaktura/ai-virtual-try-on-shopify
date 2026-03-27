@@ -83,11 +83,7 @@ const filterTabs: { key: SceneFilter; label: string }[] = [
   { key: 'product', label: 'Product' },
 ];
 
-const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
-  all: [],
-  'on-model': ['studio', 'lifestyle', 'editorial', 'streetwear'],
-  product: ['clean-studio', 'surface', 'flat-lay', 'product-editorial'],
-};
+const ON_MODEL_CATEGORIES: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
 
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal, fullWidth }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
@@ -106,7 +102,9 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     : Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories
-    : filterCategoryMap[activeFilter];
+    : activeFilter === 'on-model'
+      ? ON_MODEL_CATEGORIES
+      : allCategories.filter(cat => !ON_MODEL_CATEGORIES.includes(cat));
 
   const handleSelect = (scene: TryOnPose | null) => {
     onSelect(scene);
