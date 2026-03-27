@@ -33,6 +33,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
   const [promptOnly, setPromptOnly] = useState(false);
   const [sceneType, setSceneType] = useState<SceneType>('on-model');
   const [category, setCategory] = useState('studio');
+  const [discoverCategory, setDiscoverCategory] = useState('fashion');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const addScene = useAddCustomScene();
 
@@ -155,7 +156,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
           {/* Scene Type Toggle */}
           {!isAnalyzing && (
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Scene Type</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Freestyle Scene Type</label>
               <div className="grid grid-cols-2 gap-2">
                 {([
                   { key: 'on-model' as SceneType, label: 'On-Model', icon: User, desc: 'Fashion & people' },
@@ -187,10 +188,10 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
             </div>
           )}
 
-          {/* Category */}
+          {/* Freestyle Category */}
           {!isAnalyzing && (
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Category</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Freestyle Category</label>
               <div className="flex flex-wrap gap-1.5">
                 {visibleCategories.map(cat => (
                   <button
