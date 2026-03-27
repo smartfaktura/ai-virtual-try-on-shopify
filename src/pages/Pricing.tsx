@@ -6,6 +6,7 @@ import { gtagViewItem } from '@/lib/gtag';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/constants';
+import { pricingPlans } from '@/data/mockData';
 
 const pricingJsonLd = {
   '@context': 'https://schema.org',
@@ -13,32 +14,16 @@ const pricingJsonLd = {
   name: 'VOVV AI Visual Studio',
   description: 'AI-powered product photography platform for e-commerce brands.',
   brand: { '@type': 'Brand', name: 'VOVV AI' },
-  offers: [
-    {
+  offers: pricingPlans
+    .filter((p) => !p.isEnterprise)
+    .map((p) => ({
       '@type': 'Offer',
-      name: 'Starter',
-      price: '29',
+      name: p.name,
+      price: String(p.monthlyPrice),
       priceCurrency: 'USD',
       url: `${SITE_URL}/pricing`,
       availability: 'https://schema.org/InStock',
-    },
-    {
-      '@type': 'Offer',
-      name: 'Pro',
-      price: '79',
-      priceCurrency: 'USD',
-      url: `${SITE_URL}/pricing`,
-      availability: 'https://schema.org/InStock',
-    },
-    {
-      '@type': 'Offer',
-      name: 'Business',
-      price: '199',
-      priceCurrency: 'USD',
-      url: `${SITE_URL}/pricing`,
-      availability: 'https://schema.org/InStock',
-    },
-  ],
+    })),
 };
 
 export default function Pricing() {
