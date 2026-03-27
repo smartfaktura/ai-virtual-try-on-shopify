@@ -293,7 +293,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  {!isScene && (
                   <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Workflow" />
@@ -305,8 +304,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  )}
-                  {!isScene && (
                   <Select value={editModelName} onValueChange={setEditModelName}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
@@ -323,8 +320,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  )}
-                  {!isScene && (
                   <Select value={editSceneName} onValueChange={setEditSceneName}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Scene" />
@@ -341,7 +336,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  )}
                 </div>
                 {!isScene && editWorkflowSlug === '__freestyle__' && (
                   <Textarea
