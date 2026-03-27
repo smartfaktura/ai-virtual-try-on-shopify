@@ -69,11 +69,11 @@ export function useAddCustomScene() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (scene: { name: string; description: string; category: string; image_url: string; prompt_hint?: string; prompt_only?: boolean }) => {
+    mutationFn: async (scene: { name: string; description: string; category: string; image_url: string; prompt_hint?: string; prompt_only?: boolean; discover_categories?: string[] }) => {
       const optimized = buildOptimizedUrl(scene.image_url);
       const { data, error } = await supabase
         .from('custom_scenes' as any)
-        .insert({ ...scene, created_by: user!.id, optimized_image_url: optimized, prompt_hint: scene.prompt_hint || '', prompt_only: scene.prompt_only || false })
+        .insert({ ...scene, created_by: user!.id, optimized_image_url: optimized, prompt_hint: scene.prompt_hint || '', prompt_only: scene.prompt_only || false, discover_categories: scene.discover_categories || [] })
         .select()
         .single();
       if (error) throw error;
@@ -97,7 +97,7 @@ export function useDeleteCustomScene() {
 export function useUpdateCustomScene() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string }) => {
+    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string; discover_categories?: string[] }) => {
       const { id, ...updates } = params;
       const { error } = await supabase.from('custom_scenes' as any).update(updates).eq('id', id);
       if (error) throw error;

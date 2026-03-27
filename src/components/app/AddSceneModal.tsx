@@ -33,7 +33,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
   const [promptOnly, setPromptOnly] = useState(true);
   const [sceneType, setSceneType] = useState<SceneType>('on-model');
   const [category, setCategory] = useState('studio');
-  const [discoverCategory, setDiscoverCategory] = useState('fashion');
+  const [discoverCategories, setDiscoverCategories] = useState<string[]>(['fashion']);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const addScene = useAddCustomScene();
 
@@ -95,7 +95,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
       return;
     }
     try {
-      await addScene.mutateAsync({ name, description, category, image_url: imageUrl, prompt_hint: finalPromptHint, prompt_only: promptOnly });
+      await addScene.mutateAsync({ name, description, category, image_url: imageUrl, prompt_hint: finalPromptHint, prompt_only: promptOnly, discover_categories: discoverCategories });
       toast.success('Scene added for all users');
       onClose();
     } catch {
@@ -216,20 +216,29 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Discover Category</label>
               <div className="flex flex-wrap gap-1.5">
-              {PRODUCT_CATEGORIES.filter(cat => cat.id !== 'any').map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setDiscoverCategory(cat.id)}
-                    className={cn(
-                      'px-3 py-1 rounded-full text-[11px] font-medium transition-colors',
-                      discoverCategory === cat.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted/60 text-muted-foreground hover:bg-muted'
-                    )}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+              {PRODUCT_CATEGORIES.filter(cat => cat.id !== 'any').map(cat => {
+                  const isSelected = discoverCategories.includes(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setDiscoverCategories(prev =>
+                          isSelected
+                            ? (prev.length > 1 ? prev.filter(c => c !== cat.id) : prev)
+                            : [...prev, cat.id]
+                        );
+                      }}
+                      className={cn(
+                        'px-3 py-1 rounded-full text-[11px] font-medium transition-colors',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
