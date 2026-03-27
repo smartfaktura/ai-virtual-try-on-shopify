@@ -424,8 +424,8 @@ export default function Generate() {
   const rawVariationStrategy = workflowConfig?.variation_strategy;
   const uiConfig = workflowConfig?.ui_config;
 
-  // Product-scene categories to merge from Freestyle into scene-type workflows
-  const PRODUCT_SCENE_CATEGORIES: PoseCategory[] = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor', 'workspace', 'restaurant', 'retail', 'seasonal', 'beauty', 'fitness'];
+  // On-model categories are a small stable set; everything else is a product scene
+  const ON_MODEL_CATEGORIES: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
 
   // Merge Freestyle product scenes into workflow variation strategy
   const variationStrategy = useMemo(() => {
@@ -438,7 +438,7 @@ export default function Generate() {
     const dbLabelsLower = new Set(dbVariations.map(v => v.label.toLowerCase()));
 
     const freestyleScenes = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]))
-      .filter(s => PRODUCT_SCENE_CATEGORIES.includes(s.category))
+      .filter(s => !ON_MODEL_CATEGORIES.includes(s.category))
       .filter(s => !dbLabelsLower.has(s.name.toLowerCase()));
 
     if (freestyleScenes.length === 0) return rawVariationStrategy;

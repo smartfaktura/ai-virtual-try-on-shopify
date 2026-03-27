@@ -309,7 +309,6 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
   const useVariationsAsScenes = hasVariations && !selectedWorkflow?.uses_tryon;
 
   const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
-  const PRODUCT_CATEGORIES = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor'];
 
   const allScenePoses = useMemo(() => {
     const raw = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customScenePoses]);
