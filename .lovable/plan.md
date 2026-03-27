@@ -1,23 +1,27 @@
 
 
-# Fix Product Toggle in Submit to Discover Modal
+# Fix Product Section in Submit to Discover Modal
 
 ## Problem
-The product toggle only appears when `productName` AND `productImageUrl` are already attached to the generation. If the image wasn't created with a product, the toggle is hidden entirely — users have no way to attach a product from their library.
+The modal currently shows a generic product library dropdown, even when the generation already has a product attached. The user expects to see the product this generation was created with, displayed directly — not buried in a dropdown.
 
 ## Solution
-Always show a "Product" section in the modal. If no product is pre-attached, let the user pick one from their `user_products` library via a dropdown. If a product IS pre-attached, show it with a toggle to include/exclude it.
+Replace the dropdown with a simpler approach:
 
-## Changes
+1. **If the generation has a product attached** (props `productName` + `productImageUrl` are set): Show the product card directly (thumbnail + name) with a Switch toggle to include/exclude it. No dropdown needed.
 
-### `src/components/app/SubmitToDiscoverModal.tsx`
+2. **If no product was attached**: Show nothing (or a subtle "No product attached" note). Remove the library dropdown entirely — users shouldn't pick a random product for a generation that wasn't made with one.
 
-1. **Add product library query** — fetch user's products from `user_products` table (id, title, image_url), same pattern as admin modal
-2. **Replace the conditional `hasProduct` block** with an always-visible "Product (optional)" section:
-   - If products exist in library, show a `<Select>` dropdown with thumbnail + name for each product, plus a "None" option
-   - If a product was pre-attached via props, pre-select it
-   - When a product is selected, show preview card (thumbnail + name) with the existing Package icon style
-3. **Update state** — replace `showProduct` boolean with `selectedProductId` state. Derive `finalProductName` / `finalProductImageUrl` from the selected product
-4. **Keep submit logic** — still calls `generate-discover-preview` when a product is selected, same as before
-5. **Ensure modal fits screen** — the modal already has `max-h-[90vh] overflow-y-auto`, which handles long content. Reduce image preview height from `max-h-48` to `max-h-36` to save vertical space
+### Changes in `src/components/app/SubmitToDiscoverModal.tsx`
+
+- Remove the `useQuery` for `myProducts` (no longer needed)
+- Remove `selectedProductId` state
+- Add `includeProduct` boolean state (default `true` when props have product data)
+- Replace the `<Select>` dropdown block (lines 236-271) with:
+  - If `productName && productImageUrl`: show the product preview card with a `<Switch>` toggle labeled "Include product"
+  - If no product props: show nothing
+- Update `handleSubmit`: if `includeProduct` is true and product props exist, call `generate-discover-preview` and include product data; otherwise omit product fields
+- Remove the second `useEffect` that tried to match products from library (lines 96-100)
+
+This makes the modal shorter, clearer, and directly shows the product context from the generation.
 
