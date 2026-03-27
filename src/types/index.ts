@@ -196,7 +196,7 @@ export interface PricingPlan {
   monthlyPrice: number;
   annualPrice: number;
   credits: number | 'unlimited';
-  features: string[];
+  features: Array<string | { text: string; badge?: string }>;
   highlighted?: boolean;
   badge?: string;
   ctaText: string;

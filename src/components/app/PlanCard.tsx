@@ -106,7 +106,18 @@ export function PlanCard({
             {plan.features.map((feature, index) => (
               <div key={index} className="flex items-start gap-2.5">
                 <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
-                <span className={`${compact ? 'text-xs' : 'text-sm'} text-muted-foreground`}>{feature}</span>
+                <span className={`${compact ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
+                  {typeof feature === 'string' ? feature : (
+                    <span className="inline-flex items-center gap-1.5">
+                      {feature.text}
+                      {feature.badge && (
+                        <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                          {feature.badge}
+                        </Badge>
+                      )}
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
           </div>

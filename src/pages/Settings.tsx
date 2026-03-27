@@ -466,7 +466,7 @@ export default function Settings() {
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
                     {enterprisePlan.features.slice(0, 4).map((f, i) => (
                       <span key={i} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Check className="w-3.5 h-3.5 text-primary" /> {f}
+                        <Check className="w-3.5 h-3.5 text-primary" /> {typeof f === 'string' ? f : f.text}
                       </span>
                     ))}
                   </div>
