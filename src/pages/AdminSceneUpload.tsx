@@ -98,13 +98,25 @@ export default function AdminSceneUpload() {
   const handleSave = async () => {
     if (!name.trim()) { toast.error('Name is required'); return; }
     if (!imageUrl) { toast.error('Upload an image first'); return; }
+    // Auto-fill prompt hint from description or name if empty
+    let finalPromptHint = promptHint.trim();
+    if (!finalPromptHint && description.trim()) {
+      finalPromptHint = description.trim();
+    }
+    if (!finalPromptHint) {
+      finalPromptHint = `Place the product in a ${name.trim()} environment, styled as ${category} photography`;
+    }
+    if (promptOnly && !finalPromptHint) {
+      toast.error('Prompt-only scenes require a prompt hint');
+      return;
+    }
     try {
       await addScene.mutateAsync({
         name,
         description,
         category,
         image_url: imageUrl,
-        prompt_hint: promptHint,
+        prompt_hint: finalPromptHint,
         prompt_only: promptOnly,
       });
       toast.success('Scene added successfully');
