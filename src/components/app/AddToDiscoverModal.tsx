@@ -393,6 +393,29 @@ export function AddToDiscoverModal({
             <p className="text-[10px] text-muted-foreground/50">{tags.length}/5 tags</p>
           </div>
 
+          {/* Visibility toggles */}
+          <div className="space-y-2.5 p-3 rounded-xl bg-muted/30 border border-border/30">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Visibility</p>
+            {(modelName || modelId) && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-foreground/80">Show model name</span>
+                <Switch checked={showModel} onCheckedChange={setShowModel} />
+              </div>
+            )}
+            {(sceneName || sceneId) && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-foreground/80">Show scene name</span>
+                <Switch checked={showScene} onCheckedChange={setShowScene} />
+              </div>
+            )}
+            {productName && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-foreground/80">Show product used</span>
+                <Switch checked={showProduct} onCheckedChange={setShowProduct} />
+              </div>
+            )}
+          </div>
+
           {/* Publish */}
           <Button
             onClick={handlePublish}
