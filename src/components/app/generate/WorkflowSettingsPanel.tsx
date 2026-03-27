@@ -299,6 +299,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
 
         {/* Scene category filter tabs */}
         {variationStrategy?.type === 'scene' && (() => {
+          if (activeWorkflow?.slug === 'product-listing-set') return null;
           const scopeFilteredVars = isInteriorDesign
             ? variationStrategy.variations.filter((v: any) => !v.scope || v.scope === interiorType)
             : variationStrategy.variations;
