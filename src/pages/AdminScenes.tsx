@@ -7,6 +7,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,7 +21,7 @@ import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, useUpd
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from '@/lib/brandedToast';
-import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
+import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomScenes';
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
