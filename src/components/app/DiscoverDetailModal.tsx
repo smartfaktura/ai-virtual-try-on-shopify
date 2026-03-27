@@ -293,7 +293,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  {!isScene && (
                   <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Workflow" />
@@ -305,8 +304,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  )}
-                  {!isScene && (
                   <Select value={editModelName} onValueChange={setEditModelName}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
@@ -323,8 +320,6 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  )}
-                  {!isScene && (
                   <Select value={editSceneName} onValueChange={setEditSceneName}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Scene" />
@@ -341,27 +336,14 @@ export function DiscoverDetailModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  )}
                 </div>
-                {!isScene && editWorkflowSlug === '__freestyle__' && (
-                  <Textarea
-                    value={editPrompt}
-                    onChange={(e) => setEditPrompt(e.target.value)}
-                    placeholder="Prompt for Recreate this..."
-                    className="text-xs min-h-[60px]"
-                    rows={3}
-                  />
-                )}
-                {isScene && isCustomScene && (
-                  <Textarea
-                    value={editPrompt}
-                    onChange={(e) => setEditPrompt(e.target.value)}
-                    placeholder="Prompt hint / description"
-                    className="text-xs min-h-[60px]"
-                    rows={3}
-                  />
-                )}
-                {!isScene && (
+                <Textarea
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  placeholder={isScene ? "Prompt hint / description" : "Prompt for Recreate this..."}
+                  className="text-xs min-h-[60px]"
+                  rows={3}
+                />
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
                   <Popover open={productPopoverOpen} onOpenChange={(o) => { setProductPopoverOpen(o); if (!o) setProductSearch(''); }}>
@@ -446,74 +428,101 @@ export function DiscoverDetailModal({
                     </div>
                   )}
                 </div>
-                )}
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={savingMeta || isBuiltInScene}
+                  disabled={savingMeta}
                   className="w-full h-8 text-xs"
                   onClick={async () => {
-                    if (isBuiltInScene) {
-                      toast.info('Built-in scenes cannot be edited');
-                      return;
-                    }
-
                     setSavingMeta(true);
 
-                    if (isCustomScene) {
-                      // Update custom_scenes table
-                      const realId = poseId!.replace('custom-', '');
-                      const sceneUpdate: Record<string, string | null> = {
-                        category: editCategory,
-                        description: editPrompt || '',
-                        prompt_hint: editPrompt || '',
-                      };
-                      const { error } = await supabase
-                        .from('custom_scenes')
-                        .update(sceneUpdate)
-                        .eq('id', realId);
-                      setSavingMeta(false);
-                      if (error) { toast.error('Failed to save'); return; }
-                      queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
-                      toast.success('Scene metadata saved');
-                    } else {
-                      // Update discover_presets table (preset type)
-                      const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
-                      const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
-                      const selectedWorkflow = editWorkflowSlug !== '__freestyle__' ? (workflows ?? []).find(w => w.slug === editWorkflowSlug) : null;
+                    const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
+                    const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
+                    const selectedWorkflow = editWorkflowSlug !== '__freestyle__' ? (workflows ?? []).find(w => w.slug === editWorkflowSlug) : null;
 
-                      let safeProductImageUrl: string | null = null;
-                      if (editProductImageUrl.trim()) {
-                        try {
-                          const { data: previewData, error: previewErr } = await supabase.functions.invoke('generate-discover-preview', {
-                            body: { sourceUrl: editProductImageUrl.trim(), postId: (item.data as any).id || (item.data as any).poseId },
-                          });
-                          if (!previewErr && previewData?.publicUrl) {
-                            safeProductImageUrl = previewData.publicUrl;
-                          } else {
-                            safeProductImageUrl = editProductImageUrl.trim();
-                          }
-                        } catch {
+                    let safeProductImageUrl: string | null = null;
+                    if (editProductImageUrl.trim()) {
+                      try {
+                        const { data: previewData, error: previewErr } = await supabase.functions.invoke('generate-discover-preview', {
+                          body: { sourceUrl: editProductImageUrl.trim(), postId: (item.data as any).id || (item.data as any).poseId },
+                        });
+                        if (!previewErr && previewData?.publicUrl) {
+                          safeProductImageUrl = previewData.publicUrl;
+                        } else {
                           safeProductImageUrl = editProductImageUrl.trim();
                         }
+                      } catch {
+                        safeProductImageUrl = editProductImageUrl.trim();
+                      }
+                    }
+
+                    const presetData: Record<string, string | null> = {
+                      category: editCategory,
+                      model_name: selectedModel?.name ?? null,
+                      model_image_url: selectedModel?.imageUrl ?? null,
+                      scene_name: selectedScene?.name ?? null,
+                      scene_image_url: selectedScene?.imageUrl ?? null,
+                      workflow_slug: selectedWorkflow?.slug ?? null,
+                      workflow_name: selectedWorkflow?.name ?? null,
+                      prompt: editPrompt ?? '',
+                      product_name: editProductName.trim() || null,
+                      product_image_url: safeProductImageUrl,
+                    };
+
+                    if (isScene) {
+                      // For scenes: upsert into discover_presets to "promote" them
+                      const sceneTitle = (item.data as any).name || title;
+                      const sceneImage = (item.data as any).previewUrl || imageUrl;
+
+                      // Also update custom_scenes if it's a custom scene
+                      if (isCustomScene) {
+                        const realId = poseId!.replace('custom-', '');
+                        await supabase
+                          .from('custom_scenes')
+                          .update({
+                            category: editCategory,
+                            description: editPrompt || '',
+                            prompt_hint: editPrompt || '',
+                          })
+                          .eq('id', realId);
                       }
 
-                      const update: Record<string, string | null> = {
-                        category: editCategory,
-                        model_name: selectedModel?.name ?? null,
-                        model_image_url: selectedModel?.imageUrl ?? null,
-                        scene_name: selectedScene?.name ?? null,
-                        scene_image_url: selectedScene?.imageUrl ?? null,
-                        workflow_slug: selectedWorkflow?.slug ?? null,
-                        workflow_name: selectedWorkflow?.name ?? null,
-                        prompt: editPrompt ?? '',
-                        product_name: editProductName.trim() || null,
-                        product_image_url: safeProductImageUrl,
-                      };
+                      // Check if a discover_presets row already exists for this scene
+                      const { data: existingPreset } = await supabase
+                        .from('discover_presets')
+                        .select('id')
+                        .eq('title', sceneTitle)
+                        .maybeSingle();
+
+                      if (existingPreset) {
+                        const { error } = await supabase
+                          .from('discover_presets')
+                          .update(presetData)
+                          .eq('id', existingPreset.id);
+                        setSavingMeta(false);
+                        if (error) { toast.error('Failed to save'); return; }
+                      } else {
+                        const { error } = await supabase
+                          .from('discover_presets')
+                          .insert({
+                            ...presetData,
+                            title: sceneTitle,
+                            slug: '',
+                            image_url: sceneImage,
+                          } as any);
+                        setSavingMeta(false);
+                        if (error) { toast.error('Failed to save: ' + error.message); return; }
+                      }
+
+                      queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+                      queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
+                      queryClient.invalidateQueries({ queryKey: ['public-custom-scenes'] });
+                      toast.success('Scene promoted to Discover preset');
+                    } else {
                       const { error } = await supabase
                         .from('discover_presets')
-                        .update(update)
-                        .eq('id', (item.data as any).id || (item.data as any).poseId);
+                        .update(presetData)
+                        .eq('id', (item.data as any).id);
                       setSavingMeta(false);
                       if (error) { toast.error('Failed to save'); return; }
                       queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
@@ -521,7 +530,7 @@ export function DiscoverDetailModal({
                     }
                   }}
                 >
-                  {savingMeta ? 'Saving…' : isBuiltInScene ? 'Built-in (read-only)' : 'Save metadata'}
+                  {savingMeta ? 'Saving…' : isScene ? 'Save & promote to preset' : 'Save metadata'}
                 </Button>
               </div>
               );

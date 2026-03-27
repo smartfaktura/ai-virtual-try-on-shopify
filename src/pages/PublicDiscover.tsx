@@ -194,10 +194,13 @@ export default function PublicDiscover() {
     enabled: !!selectedItem && !!user,
   });
 
-  // Build unified feed
+  // Build unified feed — deduplicate scenes that have been promoted to presets
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
-    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
+    const presetTitles = new Set(presets.map((p) => p.title));
+    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses]
+      .filter((s) => !presetTitles.has(s.name))
+      .map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
