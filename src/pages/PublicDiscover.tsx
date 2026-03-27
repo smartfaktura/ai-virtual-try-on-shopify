@@ -59,39 +59,6 @@ const CATEGORIES = [
 
 
 
-  fashion: ['fashion', 'accessories'],
-  campaign: ['fashion', 'sports', 'beauty', 'electronics'],
-  cinematic: ['fashion', 'fragrances', 'jewelry'],
-  photography: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  styling: ['fashion', 'accessories', 'jewelry'],
-  ads: ['fashion', 'sports', 'beauty', 'electronics'],
-  studio: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
-  streetwear: ['fashion', 'accessories'],
-  fitness: ['sports', 'supplements'],
-  athletic: ['sports', 'supplements'],
-  gym: ['sports', 'supplements'],
-  beauty: ['beauty', 'fragrances'],
-  desert: ['fashion', 'fragrances'],
-  outdoor: ['sports', 'home', 'fashion'],
-  beach: ['fashion', 'accessories'],
-  garden: ['home', 'beauty', 'fragrances'],
-  industrial: ['electronics', 'fashion'],
-  urban: ['fashion', 'accessories'],
-  rooftop: ['fashion', 'food'],
-  cafe: ['food', 'home'],
-  mirror: ['beauty', 'fashion'],
-  casual: ['fashion', 'accessories'],
-  cozy: ['home', 'fashion'],
-  professional: ['electronics', 'accessories'],
-  skincare: ['beauty', 'fragrances'],
-  'Beauty & Skincare': ['beauty'],
-  'Fashion & Apparel': ['fashion'],
-  'Home & Decor': ['home'],
-  'Food & Beverage': ['food'],
-  'Sports & Fitness': ['sports'],
-  'Health & Supplements': ['supplements'],
-};
-
 function getItemId(item: DiscoverItem): string {
   return item.type === 'preset' ? item.data.id : item.data.poseId;
 }
