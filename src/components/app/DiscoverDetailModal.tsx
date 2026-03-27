@@ -82,6 +82,8 @@ export function DiscoverDetailModal({
   const [editCategory, setEditCategory] = useState('fashion');
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [editPrompt, setEditPrompt] = useState('');
+  const [editProductName, setEditProductName] = useState('');
+  const [editProductImageUrl, setEditProductImageUrl] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
@@ -102,12 +104,16 @@ export function DiscoverDetailModal({
       setEditCategory(item.data.category || 'fashion');
       setEditWorkflowSlug(item.data.workflow_slug || '__freestyle__');
       setEditPrompt(item.data.prompt || '');
+      setEditProductName(item.data.product_name || '');
+      setEditProductImageUrl(item.data.product_image_url || '');
     } else {
       setEditModelName('__none__');
       setEditSceneName('__none__');
       setEditCategory('fashion');
       setEditWorkflowSlug('__freestyle__');
       setEditPrompt('');
+      setEditProductName('');
+      setEditProductImageUrl('');
     }
   }, [itemId, open]);
 
