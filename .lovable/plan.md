@@ -1,49 +1,62 @@
 
 
-# Show ALL product scenes in workflow grid
+# Fix: Replace "Original" ratio with auto-detected closest ratio + auto-enable Pro in edit mode
 
-## Root cause
+## Problem
 
-The merge logic in `Generate.tsx` line 428 uses a hardcoded list of 15 "product" category slugs:
+The `original` aspect ratio value is sent to the AI provider API, which rejects it (only accepts `1:1`, `3:4`, `4:5`, `9:16`, `16:9`). The error in the screenshot confirms: `invalid_value`.
 
+## Solution
+
+Remove `original` from the ratio list entirely. Instead, detect the uploaded image's dimensions and auto-select the closest matching ratio from the existing set. Also auto-enable Pro quality when entering edit mode.
+
+## Changes
+
+### File 1: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+
+- Remove `'original'` from the `FreestyleAspectRatio` type union
+- Remove the `{ value: 'original', ... }` entry from the `ASPECT_RATIOS` array
+
+### File 2: `src/pages/Freestyle.tsx`
+
+**A. Add image dimension detection helper:**
 ```typescript
-const PRODUCT_SCENE_CATEGORIES: PoseCategory[] = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', ...];
+function detectClosestRatio(imageUrl: string): Promise<FreestyleAspectRatio> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const r = img.width / img.height;
+      // Compare to supported ratios: 1:1(1.0), 3:4(0.75), 4:5(0.8), 9:16(0.5625), 16:9(1.778)
+      const ratios: { value: FreestyleAspectRatio; r: number }[] = [
+        { value: '1:1', r: 1 },
+        { value: '3:4', r: 0.75 },
+        { value: '4:5', r: 0.8 },
+        { value: '9:16', r: 0.5625 },
+        { value: '16:9', r: 1.7778 },
+      ];
+      let best = ratios[0];
+      for (const entry of ratios) {
+        if (Math.abs(r - entry.r) < Math.abs(r - best.r)) best = entry;
+      }
+      resolve(best.value);
+    };
+    img.onerror = () => resolve('1:1');
+    img.src = imageUrl;
+  });
+}
 ```
 
-Any scene with a category NOT in this list (e.g. admin-created custom categories, or scenes with `category_override` to non-listed slugs like "Skyline Laundry") gets filtered out. The same problem exists in the Freestyle `SceneSelectorChip` Product tab (only 4 categories).
+**B. Auto-detect ratio on image upload** (`handleFileSelect` and `handleFileDrop`):
+After setting the preview URL, call `detectClosestRatio(previewUrl)` and set the aspect ratio.
 
-## Fix: derive product categories dynamically
+**C. Auto-detect ratio on edit from Library** (the `editImage` useEffect ~line 303):
+Replace `setAspectRatio('original')` with `detectClosestRatio(editImageParam).then(setAspectRatio)`.
 
-The on-model categories are a small, stable set: `studio`, `lifestyle`, `editorial`, `streetwear`. Everything else is a product scene. Instead of listing product categories, exclude on-model ones.
+**D. Auto-enable Pro quality in edit mode** (~line 303):
+Add `setQuality('high')` when entering edit mode.
 
-### File 1: `src/pages/Generate.tsx` (~line 428)
+## Files changed
 
-Replace the hardcoded `PRODUCT_SCENE_CATEGORIES` filter with a negative filter:
-
-```typescript
-const ON_MODEL_CATEGORIES: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
-
-// Filter: any scene NOT in on-model categories is a product scene
-.filter(s => !ON_MODEL_CATEGORIES.includes(s.category))
-```
-
-This ensures every product scene — including admin-created custom categories — appears in the workflow grid automatically.
-
-### File 2: `src/components/app/freestyle/SceneSelectorChip.tsx` (~line 86-90)
-
-Same fix for the Freestyle Product tab filter. Currently hardcoded to 4 categories:
-
-```typescript
-product: ['clean-studio', 'surface', 'flat-lay', 'product-editorial'],
-```
-
-Change to dynamic: when `activeFilter === 'product'`, show all scenes whose category is NOT in the on-model set, instead of matching against a fixed list.
-
-### File 3: `src/components/app/CreativeDropWizard.tsx` (~line 312)
-
-Same pattern — replace `PRODUCT_CATEGORIES` hardcoded list with the inverse of `ON_MODEL_CATEGORIES`.
-
-## Summary
-
-Three files, same one-line logic change in each: flip from "include these product categories" to "exclude on-model categories". This makes every non-on-model scene appear as a product scene everywhere — workflow grid, Freestyle picker, and Creative Drops. New admin-created categories will automatically be included.
+1. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — remove `original` option
+2. `src/pages/Freestyle.tsx` — add ratio detection, auto-select closest ratio on upload/edit, auto-enable Pro quality
 
