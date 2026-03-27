@@ -23,7 +23,14 @@ import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
 
-import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
+import { PRODUCT_CATEGORIES, DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
+
+const ALL_DISCOVER_OPTIONS = [
+  ...PRODUCT_CATEGORIES.filter(c => c.id !== 'any'),
+  ...DISCOVER_CATEGORIES
+    .filter(c => !PRODUCT_CATEGORIES.some(p => p.id === c))
+    .map(c => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) })),
+];
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -356,7 +363,7 @@ export function DiscoverDetailModal({
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                        <SelectContent className="z-[300] max-h-60">
-                        {PRODUCT_CATEGORIES.filter(cat => cat.id !== 'any').map(cat => (
+                        {ALL_DISCOVER_OPTIONS.map(cat => (
                           <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.label}</SelectItem>
                         ))}
                       </SelectContent>
