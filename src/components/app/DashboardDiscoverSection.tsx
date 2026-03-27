@@ -57,6 +57,11 @@ const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
   professional: ['electronics', 'accessories'],
   skincare: ['beauty', 'fragrances'],
   'Beauty & Skincare': ['beauty'],
+  'Fashion & Apparel': ['fashion'],
+  'Home & Decor': ['home'],
+  'Food & Beverage': ['food'],
+  'Sports & Fitness': ['sports'],
+  'Health & Supplements': ['supplements'],
 };
 
 function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
