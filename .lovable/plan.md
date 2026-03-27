@@ -1,34 +1,32 @@
 
 
-# Add floating bottom bar to the Product selection step
+# Fix Admin Metadata Editor UX
 
-## What changes
+## Problems
+1. All four Select dropdowns (Category, Workflow, Model, Scene) and the Product popover have `onPointerDownOutside={(e) => e.preventDefault()}` which prevents closing them by clicking outside. This was added to stop the modal from closing, but it also traps the user inside the dropdown.
+2. The admin editor lacks useful debug info (item ID, type, poseId, slug, prompt_only status, etc.) that would help with development.
 
-**File: `src/pages/Generate.tsx`**
+## Changes
 
-The model step (line ~3560) and scene/pose step (line ~3616) both use a fixed floating bar at the bottom of the screen with Back/Continue buttons. The product step currently has the Continue button inline inside the card (around line 3318). We'll move it to a matching floating bar.
+**File: `src/components/app/DiscoverDetailModal.tsx`**
 
-### Changes
+### 1. Fix dropdown dismissal (lines 290, 300, 311, 327, 368)
 
-1. **Remove the inline button group** at the end of the product step (the `<div className="flex justify-end">` block around lines 3275–3321 containing the Continue button).
+Remove `onPointerDownOutside={(e) => e.preventDefault()}` from all five `SelectContent` / `PopoverContent` elements. The dropdowns already render inside the modal panel (z-[300]), so clicking outside the dropdown will close the dropdown but not the modal — the modal backdrop click handler is on a separate element and the panel has `onClick={e => e.stopPropagation()}`.
 
-2. **Add a fixed floating bar** right after the closing `</Card>` of the product step (before the `)}` that closes the `currentStep === 'product'` block). Use the same pattern as the model/scene steps:
+### 2. Add admin debug info section
 
-```tsx
-<div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
-  <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
-    <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
-    {selectedProductIds.size === 0 && (
-      <span className="text-xs text-muted-foreground text-center flex-1">Select a product to continue</span>
-    )}
-    <Button disabled={selectedProductIds.size === 0} onClick={/* existing continue logic */}>
-      {/* existing dynamic label */}
-    </Button>
-  </div>
-</div>
-```
+Add a compact debug info block below the "Admin: Edit Metadata" header showing:
+- **Item type** (preset / scene)
+- **ID** (preset id or poseId)
+- **Slug** (for URL deep-linking)
+- **Prompt Only** flag (for scenes)
+- **Category** (current DB value)
+- **Workflow slug** (current DB value)
 
-3. The Continue button's `onClick` handler and label text will be preserved exactly as-is — just relocated into the floating bar.
+Display these as a small grid of `text-[10px]` key-value pairs with `font-mono` styling, making it easy to inspect DB state at a glance. Include a copy-ID button.
 
-This gives the product step the same polished fixed-bottom navigation as models and scenes, keeping the UI consistent across all workflow steps.
+### 3. Show current DB values vs edited values
+
+Add subtle visual indicator (dot or color change) on the Save button when any field has been modified from its original value, so admin knows there are unsaved changes.
 
