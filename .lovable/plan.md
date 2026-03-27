@@ -1,27 +1,33 @@
 
 
-# Show Item's Discover Categories (Multi-Select)
+# Fix: Stop Tag-Based Category Cross-Matching
 
 ## Problem
-The "Discover Category" dropdown currently includes product label aliases (like "Fashion & Apparel") that aren't real discover categories. Also, items can belong to **multiple** discover categories (stored as `discover_categories` array), but the UI only allows selecting one.
+Items appear in wrong Discover tabs because the filter checks tags against `PRODUCT_CATEGORY_MAP`. A sports/activewear image tagged `"studio"` or `"commercial"` gets pulled into Beauty, Jewelry, Electronics, etc. because those style words broadly map to many product categories.
 
-## Plan
+The new multi-select `discover_categories` array on each item is the correct source for cross-category visibility. Tags should not be used for tab filtering.
 
-**File: `src/components/app/DiscoverDetailModal.tsx`**
+## Fix
 
-1. **Replace `ALL_DISCOVER_OPTIONS` with just `DISCOVER_CATEGORIES`** — only the 18 real discover category slugs, formatted with capitalized labels. Remove `PRODUCT_CATEGORIES` from the options list entirely.
+**Files: `src/pages/Discover.tsx`, `src/pages/PublicDiscover.tsx`, `src/components/app/DashboardDiscoverSection.tsx`**
 
-2. **Convert the single-select `<Select>` for "Discover Category" into a multi-select chip/checkbox UI** that:
-   - Shows all 18 `DISCOVER_CATEGORIES` as toggleable chips or checkboxes
-   - Pre-selects the item's current `discover_categories` array values
-   - Uses the first selected category as the primary `category` field (for backward compatibility)
+In `itemMatchesProductCategory`, remove the tag-matching block (lines ~130-135 in Discover.tsx). Keep only:
+1. Direct `category === productCat` match
+2. `PRODUCT_CATEGORY_MAP[category]` lookup
+3. `discover_categories` array check
 
-3. **Update the save logic** (~line 643-668) to:
-   - Save the full array to `discover_categories` on `custom_scenes`
-   - Save the first selected value as the primary `category` on `discover_presets`
+```typescript
+function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
+  const itemCat = item.data.category;
+  if (itemCat === productCat) return true;
+  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
+  if (mapped.includes(productCat)) return true;
+  const discoverCats = (item.data as any).discover_categories;
+  if (Array.isArray(discoverCats) && discoverCats.includes(productCat)) return true;
+  return false;
+  // REMOVED: tag-based matching that caused false positives
+}
+```
 
-### UI approach
-Replace the single `<Select>` with a compact grid of small toggleable chips (similar to tag selectors elsewhere in the app). Each chip shows the category name and highlights when selected.
-
-**1 file changed.**
+**3 files changed, ~5 lines removed per file.**
 
