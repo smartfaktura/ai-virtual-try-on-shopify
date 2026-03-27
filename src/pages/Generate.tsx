@@ -432,14 +432,16 @@ export default function Generate() {
     if (!rawVariationStrategy || rawVariationStrategy.type !== 'scene') return rawVariationStrategy;
     // Only merge for workflows that show scene picker (not flat-lay, not interior)
     const wName = activeWorkflow?.name;
-    if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging' || activeWorkflow?.uses_tryon) return rawVariationStrategy;
+    // Only inject library scenes into Product Listing Set; all other workflows keep their DB scenes unchanged
+    if (activeWorkflow?.slug !== 'product-listing-set') return rawVariationStrategy;
 
     const dbVariations = rawVariationStrategy.variations;
     const dbLabelsLower = new Set(dbVariations.map(v => v.label.toLowerCase()));
 
-    // Only filter on-model categories from built-in mock poses; include ALL custom admin scenes
-    const filteredMockPoses = filterVisible(mockTryOnPoses).filter(s => !ON_MODEL_CATEGORIES.includes(s.category));
-    const freestyleScenes = sortScenes(applyCategoryOverrides([...filteredMockPoses, ...customPoses]))
+    // Include only product-category scenes (exclude on-model categories) from both built-in and custom admin scenes
+    const allLibraryScenes = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]));
+    const freestyleScenes = allLibraryScenes
+      .filter(s => !ON_MODEL_CATEGORIES.includes(s.category))
       .filter(s => !dbLabelsLower.has(s.name.toLowerCase()));
 
     if (freestyleScenes.length === 0) return rawVariationStrategy;
