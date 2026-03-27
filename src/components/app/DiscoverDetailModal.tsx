@@ -6,6 +6,7 @@ import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/lib/brandedToast';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
@@ -17,7 +18,7 @@ import { SharePopover } from '@/components/app/SharePopover';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
-import { mockModels, mockTryOnPoses } from '@/data/mockData';
+import { mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
@@ -73,9 +74,9 @@ export function DiscoverDetailModal({
   }, [customModelProfiles]);
 
   const allSceneOptions = useMemo(() => {
-    const items: { name: string; imageUrl: string }[] = mockTryOnPoses.map(s => ({ name: s.name, imageUrl: s.previewUrl }));
+    const items: { name: string; imageUrl: string; category: string }[] = mockTryOnPoses.map(s => ({ name: s.name, imageUrl: s.previewUrl, category: s.category }));
     customSceneProfiles?.forEach(cs => {
-      if (!items.find(i => i.name === cs.name)) items.push({ name: cs.name, imageUrl: cs.previewUrl });
+      if (!items.find(i => i.name === cs.name)) items.push({ name: cs.name, imageUrl: cs.previewUrl, category: cs.category });
     });
     return items;
   }, [customSceneProfiles]);
@@ -91,6 +92,8 @@ export function DiscoverDetailModal({
   const [savingMeta, setSavingMeta] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
+  const [sceneDialogOpen, setSceneDialogOpen] = useState(false);
+  const [sceneSearch, setSceneSearch] = useState('');
   const [editSceneDisplayName, setEditSceneDisplayName] = useState('');
   const [editSceneCategory, setEditSceneCategory] = useState('lifestyle');
 
@@ -394,22 +397,86 @@ export function DiscoverDetailModal({
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground/60">Scene Selection</p>
-                    <Select value={editSceneName} onValueChange={setEditSceneName}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Scene" />
-                      </SelectTrigger>
-                       <SelectContent className="z-[300] max-h-60">
-                        <SelectItem value="__none__" className="text-xs">None</SelectItem>
-                        {allSceneOptions.map((s, idx) => (
-                          <SelectItem key={`scene-${idx}`} value={s.name} className="text-xs" textValue={s.name}>
-                            <div className="flex items-center gap-2">
-                              <img src={getOptimizedUrl(s.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
-                              <span>{s.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <button
+                      onClick={() => { setSceneDialogOpen(true); setSceneSearch(''); }}
+                      className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-xs ring-offset-background hover:bg-accent/50 transition-colors"
+                    >
+                      {editSceneName === '__none__' ? (
+                        <span className="text-muted-foreground">None</span>
+                      ) : (
+                        <div className="flex items-center gap-2 min-w-0">
+                          {(() => { const sc = allSceneOptions.find(s => s.name === editSceneName); return sc ? <img src={getOptimizedUrl(sc.imageUrl, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" /> : null; })()}
+                          <span className="truncate">{editSceneName}</span>
+                        </div>
+                      )}
+                      <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                    <Dialog open={sceneDialogOpen} onOpenChange={setSceneDialogOpen}>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col p-0">
+                        <div className="px-4 pt-4 pb-2 border-b border-border/40 space-y-2">
+                          <DialogTitle className="text-sm font-semibold">Select Scene</DialogTitle>
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input
+                              value={sceneSearch}
+                              onChange={(e) => setSceneSearch(e.target.value)}
+                              placeholder="Search scenes..."
+                              className="h-8 pl-8 text-xs"
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+                          <button
+                            onClick={() => { setEditSceneName('__none__'); setSceneDialogOpen(false); }}
+                            className={cn('w-full text-left px-3 py-2 rounded-md text-xs transition-colors', editSceneName === '__none__' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground')}
+                          >
+                            None (no scene)
+                          </button>
+                          {(() => {
+                            const q = sceneSearch.toLowerCase();
+                            const filtered = q ? allSceneOptions.filter(s => s.name.toLowerCase().includes(q)) : allSceneOptions;
+                            const grouped = new Map<string, typeof filtered>();
+                            filtered.forEach(s => {
+                              const arr = grouped.get(s.category) ?? [];
+                              arr.push(s);
+                              grouped.set(s.category, arr);
+                            });
+                            return Array.from(grouped.entries()).map(([cat, scenes]) => (
+                              <div key={cat}>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-2 px-1">
+                                  {poseCategoryLabels[cat] ?? cat}
+                                </p>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {scenes.map(s => (
+                                    <button
+                                      key={s.name}
+                                      onClick={() => { setEditSceneName(s.name); setSceneDialogOpen(false); }}
+                                      className={cn(
+                                        'rounded-lg overflow-hidden border-2 transition-all',
+                                        editSceneName === s.name ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border'
+                                      )}
+                                    >
+                                      <ShimmerImage
+                                        src={getOptimizedUrl(s.imageUrl, { quality: 50 })}
+                                        alt={s.name}
+                                        className="w-full aspect-[4/5] object-cover"
+                                        wrapperClassName="h-auto"
+                                        aspectRatio="4/5"
+                                        loading="lazy"
+                                      />
+                                      <div className="px-1.5 py-1 bg-background">
+                                        <p className="text-[10px] font-medium text-foreground leading-tight truncate">{s.name}</p>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
                 <div className="space-y-1">
