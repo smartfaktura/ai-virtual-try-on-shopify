@@ -1,16 +1,27 @@
 
 
-# Unify Discover Category Dropdown in Detail Modal
+# Show Scene Preview Image in "Recreating look from Discover" Banner for Prompt-Only Scenes
 
 ## Problem
-The Discover Detail Modal (`DiscoverDetailModal.tsx`, line 356) uses `DISCOVER_CATEGORIES` which shows raw slugs ("fashion", "beauty", "home", "food", "editorial", "cinematic", etc.) — 18 items including content-style tags. The Add Scene modal now uses `PRODUCT_CATEGORIES` with proper labels. These should match.
+When navigating from Discover to a workflow (e.g. Product Listing Set) with a prompt-only scene like "Skyline Laundry", the `sceneImage` URL param is never set because `scene_image_url` is null in the discover_presets data and the fallback only triggers for `item.type === 'scene'`. The banner shows the scene name but no thumbnail.
 
-## Change
+## Fix
 
-### `src/components/app/DiscoverDetailModal.tsx` (lines 355-358)
-- Replace `DISCOVER_CATEGORIES` with `PRODUCT_CATEGORIES` (imported from `@/lib/categoryConstants`)
-- Filter out `'any'` and use `cat.id` as value, `cat.label` as display text
-- This gives the same 10 product categories with proper labels (e.g. "Fashion & Apparel" instead of "fashion")
+### `src/components/app/DiscoverDetailModal.tsx` (~line 650)
+In the workflow navigation block, after checking `d.scene_image_url` and the scene-type fallback, add a final fallback that uses the item's own `image_url` (the discover card image) when no scene image is available:
 
-One file, ~4 lines changed.
+```typescript
+if (!d.scene_image_url && item.type === 'scene' && (item.data as any).previewUrl) {
+  params.set('sceneImage', (item.data as any).previewUrl);
+  ...
+}
+// NEW: fallback to item's own image_url for presets with no scene_image_url
+if (!params.get('sceneImage') && d.image_url) {
+  params.set('sceneImage', d.image_url);
+}
+```
+
+Apply the same fallback to the freestyle navigation block (~line 665) as well.
+
+Two small additions in one file. The banner in Generate.tsx and Freestyle.tsx already renders the image when the param exists — no changes needed there.
 
