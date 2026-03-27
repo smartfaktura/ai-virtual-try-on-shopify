@@ -3634,9 +3634,23 @@ export default function Generate() {
                   </Badge>
                 </div>
               </div>
-              {Object.entries(posesByCategory).map(([category, poses]) => (
-                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} />
-              ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {Object.values(posesByCategory).flat().map((pose) => {
+                  const selectionIndex = selectedPoses.has(pose.poseId)
+                    ? Array.from(selectedPoses).indexOf(pose.poseId) + 1
+                    : undefined;
+                  return (
+                    <PoseSelectorCard
+                      key={pose.poseId}
+                      pose={pose}
+                      isSelected={selectedPoses.has(pose.poseId)}
+                      onSelect={() => handleSelectPose(pose)}
+                      selectedGender={selectedModel?.gender}
+                      selectionIndex={selectionIndex}
+                    />
+                  );
+                })}
+              </div>
               <MissingRequestBanner
                 category="scene"
                 title="Missing a scene? Tell us and we'll create it."
