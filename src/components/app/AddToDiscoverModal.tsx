@@ -203,6 +203,25 @@ export function AddToDiscoverModal({
       }
     }
 
+    // Generate secure product preview if product toggle is on
+    let safeProductImageUrl: string | null = null;
+    let safeProductName: string | null = null;
+    if (showProduct && productName) {
+      safeProductName = productName;
+      if (productImageUrl) {
+        try {
+          const { data: previewData, error: previewErr } = await supabase.functions.invoke('generate-discover-preview', {
+            body: { sourceUrl: productImageUrl, postId: crypto.randomUUID().slice(0, 12) },
+          });
+          if (!previewErr && previewData?.publicUrl) {
+            safeProductImageUrl = previewData.publicUrl;
+          }
+        } catch {
+          console.warn('Product preview generation failed, publishing without image');
+        }
+      }
+    }
+
     const presetData = {
       title: title.trim(),
       prompt,
@@ -215,12 +234,12 @@ export function AddToDiscoverModal({
       is_featured: false,
       workflow_slug: effectiveSlug,
       workflow_name: workflowName || null,
-      scene_name: resolvedSceneName,
-      model_name: resolvedModelName,
-      scene_image_url: resolvedSceneImageUrl,
-      model_image_url: resolvedModelImageUrl,
-      product_name: productName || null,
-      product_image_url: productImageUrl || null,
+      scene_name: showScene ? resolvedSceneName : null,
+      model_name: showModel ? resolvedModelName : null,
+      scene_image_url: showScene ? resolvedSceneImageUrl : null,
+      model_image_url: showModel ? resolvedModelImageUrl : null,
+      product_name: safeProductName,
+      product_image_url: safeProductImageUrl,
     } as any;
 
     // Check for existing preset with same image_url that's missing metadata — update instead of duplicate
