@@ -26,11 +26,6 @@ export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender, s
       <div className="aspect-[4/5] overflow-hidden bg-muted">
         <ShimmerImage src={displayImage} alt={pose.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" aspectRatio="4/5" />
       </div>
-      <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
-        <Badge className="text-[8px] sm:text-[10px] px-1.5 py-0.5 bg-foreground/80 text-background border-0 shadow-sm backdrop-blur-sm">
-          {poseCategoryLabels[pose.category]}
-        </Badge>
-      </div>
       {isSelected && (
         <div className="absolute inset-0 bg-primary/10 pointer-events-none">
           <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-7 sm:h-7 bg-primary rounded-full flex items-center justify-center shadow-md">
@@ -47,7 +42,7 @@ export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender, s
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
         <div className="space-y-0.5 sm:space-y-1">
           <p className="text-white text-xs sm:text-sm font-bold">{pose.name}</p>
-          <p className="text-white/80 text-[10px] sm:text-[11px] line-clamp-2 hidden sm:block">{pose.description}</p>
+          
         </div>
       </div>
     </div>
