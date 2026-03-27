@@ -1,70 +1,71 @@
+# Fix: Image Editing Mode Returns Wrong Results + Auto-Select Original Ratio
 
+## Root Causes
 
-# Merge Freestyle Product Scenes into Product Listing Set Workflow
+### 1. Prompt pollution in edit mode (main bug)
 
-## What changes
+In `generate-freestyle/index.ts` line 1222, **every** generation — including edits — gets this appended:
 
-The Product Listing Set workflow scene grid currently only shows scenes from the workflow's database config (`generation_config.variation_strategy.variations`). This plan adds all Freestyle "Product" category scenes (from `mockTryOnPoses` + custom scenes) dynamically to the same grid, so new scenes added to the Freestyle library automatically appear in the workflow too.
-
-## Prompt-only scenes
-
-No conflict. The workflow already renders placeholder gradients for variations without `preview_url`. Prompt-only scenes will show the same placeholder in the grid and send their `promptHint` as the generation instruction — the backend never uses scene images for Product Listing Set, only the prompt text.
-
-## Technical approach
-
-### 1. Frontend — Merge scenes into variation grid
-
-**`src/pages/Generate.tsx`** (~line 420-425, near `variationStrategy` usage):
-- Import `mockTryOnPoses` product categories + `useCustomScenes` + `useHiddenScenes`
-- Create a `mergedVariations` array that combines:
-  - Original `variationStrategy.variations` from DB
-  - Freestyle product scenes (`clean-studio`, `surface`, `flat-lay`, `product-editorial` categories) mapped to `WorkflowVariationItem` format: `{ label: scene.name, instruction: scene.promptHint, preview_url: scene.previewUrl, category: poseCategoryLabels[scene.category] }`
-  - Deduplicate by label (if a scene name matches an existing DB variation, skip the duplicate)
-- Pass `mergedVariations` to `WorkflowSettingsPanel` instead of raw `variationStrategy`
-
-**Key mapping:**
-```text
-TryOnPose → WorkflowVariationItem
-  name         → label
-  promptHint   → instruction  
-  previewUrl   → preview_url
-  category     → category (via poseCategoryLabels lookup)
-  promptOnly   → if true, preview_url = undefined (shows placeholder)
+```
+Output aspect ratio: 1:1. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge...
 ```
 
-### 2. Backend — Support extra_variations
+This aggressive instruction overrides the user's edit intent ("remove the bowl"). The AI reads "fill the ENTIRE canvas" and generates a brand-new image instead of surgically editing the original.
 
-**`supabase/functions/generate-workflow/index.ts`** (~line 868-877):
-- Add `extra_variations?: VariationItem[]` to `WorkflowRequest` interface
-- When processing selected variations, check if an index falls beyond `allVariations.length` — if so, look it up from `body.extra_variations` array instead
-- This lets the frontend send dynamic scene data without modifying the DB config
+### 2. Ambiguous image label
 
-**Frontend send logic** (`src/pages/Generate.tsx` ~line 1200):
-- When building the generation payload, check if any selected index maps to a dynamic scene (index >= original DB variations length)
-- Include those as `extra_variations` in the request body
-- Adjust `selected_variations` indices accordingly for extra variations
+In `buildContentArray` (line 778), the uploaded image is labeled `[REFERENCE IMAGE]` in edit mode. The AI treats it as "inspiration" rather than the actual image to modify. It should be `[IMAGE TO EDIT]`.
 
-### 3. Pre-select scene from Discover "Recreate this"
+### 3. No "Original" aspect ratio option
 
-**`src/pages/Generate.tsx`** (~line 602-625):
-- Extend the `prefillSceneName` logic: after merging variations, find the matching scene by label/name and auto-add its index to `selectedVariationIndices`
-- Works for both DB scenes and dynamically added Freestyle scenes
+When editing, the user shouldn't change the ratio — the output should match the input image. Currently there's no way to express this.
 
-### 4. Scene count badge update
+## Changes
 
-**`src/components/app/generate/WorkflowSettingsPanel.tsx`** (~line 239-243):
-- The badge already reads `variationStrategy.variations.length` — since we pass merged data, count updates automatically
+### File 1: `supabase/functions/generate-freestyle/index.ts`
 
-## Files changed
+**A. Skip aspect ratio directive in edit mode (~line 1222)**
 
-1. **`src/pages/Generate.tsx`** — Merge Freestyle product scenes into workflow variations, handle extra_variations in payload, pre-select from URL params
-2. **`supabase/functions/generate-workflow/index.ts`** — Accept `extra_variations` field, resolve dynamic scene indices  
-3. **`src/components/app/generate/WorkflowSettingsPanel.tsx`** — No changes needed (already renders from passed data)
+```typescript
+// Before:
+const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}...`;
 
-## What stays the same
+// After:
+const aspectPrompt = isEditMode
+  ? `${finalPrompt}\n\nIMPORTANT: Return the edited image at the SAME dimensions and aspect ratio as the input image. Do not crop, resize, or reframe.`
+  : `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}...`;
+```
 
-- DB workflow config is not modified
-- Existing scene selection UI and category filters work unchanged
-- Backend prompt building uses `variation.instruction` which maps directly to `promptHint`
-- Free user scene limits still enforced
+**B. Label source image as `[IMAGE TO EDIT]` in edit mode (~line 774-778)**
 
+```typescript
+const label = imageRole === 'edit' ? '[IMAGE TO EDIT]'
+  : imageRole === 'product' ? '[PRODUCT IMAGE]'
+  : imageRole === 'model' ? '[MODEL REFERENCE]'
+  : imageRole === 'scene' ? '[SCENE REFERENCE]'
+  : '[REFERENCE IMAGE]';
+```
+
+**C. Strengthen edit prompt in `polishUserPrompt` (~line 148-164)**
+Add explicit instruction: "Return the SAME image with ONLY the requested modification. Do NOT regenerate, reimagine, or recompose the image."
+
+### File 2: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+
+**Add "Original" aspect ratio option** — only visible when an image is uploaded in edit mode - and make it auto selected.
+
+```typescript
+export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '9:16' | '16:9' | 'original';
+```
+
+Add to `ASPECT_RATIOS` array with a dedicated icon (e.g. `ImageIcon`).
+
+### File 3: `src/pages/Freestyle.tsx`
+
+**Auto-select "original" ratio when entering edit mode:**
+
+- When `imageRole` changes to `'edit'` and a source image exists, set `aspectRatio` to `'original'`.
+- When `imageRole` changes away from `'edit'`, revert to `'1:1'` (or previous value).
+
+## Summary
+
+Three files changed. The core fix is backend: stop appending "fill the canvas" instructions in edit mode and relabel the image. The frontend improvement auto-locks ratio to "Original" for a smoother editing UX.
