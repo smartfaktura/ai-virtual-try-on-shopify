@@ -447,7 +447,7 @@ export default function Generate() {
     const mappedScenes = freestyleScenes.map(s => ({
       label: s.name,
       instruction: s.promptHint,
-      preview_url: s.promptOnly ? undefined : s.previewUrl,
+      preview_url: s.previewUrl,
       category: poseCategoryLabels[s.category] || s.category,
     }));
 
