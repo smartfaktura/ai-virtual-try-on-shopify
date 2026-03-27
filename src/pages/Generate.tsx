@@ -430,8 +430,9 @@ export default function Generate() {
   // Merge Freestyle product scenes into workflow variation strategy
   const variationStrategy = useMemo(() => {
     if (!rawVariationStrategy || rawVariationStrategy.type !== 'scene') return rawVariationStrategy;
-    // Only merge for workflows that show scene picker (not try-on, not flat-lay, not interior)
-    if (isFlatLay || isInteriorDesign) return rawVariationStrategy;
+    // Only merge for workflows that show scene picker (not flat-lay, not interior)
+    const wName = activeWorkflow?.name;
+    if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging') return rawVariationStrategy;
 
     const dbVariations = rawVariationStrategy.variations;
     const dbLabelsLower = new Set(dbVariations.map(v => v.label.toLowerCase()));
@@ -453,7 +454,7 @@ export default function Generate() {
       ...rawVariationStrategy,
       variations: [...dbVariations, ...mappedScenes],
     };
-  }, [rawVariationStrategy, customPoses, isFlatLay, isInteriorDesign, sortScenes, applyCategoryOverrides, filterVisible]);
+  }, [rawVariationStrategy, customPoses, activeWorkflow?.name, sortScenes, applyCategoryOverrides, filterVisible]);
 
   // Track how many variations came from DB vs dynamic
   const dbVariationCount = rawVariationStrategy?.variations?.length ?? 0;
