@@ -3656,6 +3656,21 @@ export default function Generate() {
                   </Badge>
                 </div>
               </div>
+              {selectedPoses.size > 0 && (
+                <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
+                  <span className="text-xs text-muted-foreground self-center mr-1">Selected:</span>
+                  {Array.from(selectedPoses).map(id => {
+                    const pose = selectedPoseMap.get(id);
+                    if (!pose) return null;
+                    return (
+                      <div key={id} className="flex items-center gap-1.5 bg-background rounded-md px-2 py-1 border border-border text-xs">
+                        <img src={getOptimizedUrl(pose.previewUrl, { quality: 50 })} alt={pose.name} className="w-6 h-6 rounded object-cover" />
+                        <span className="font-medium truncate max-w-[120px] text-foreground">{pose.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {Object.values(posesByCategory).flat().map((pose) => {
                   const selectionIndex = selectedPoses.has(pose.poseId)
