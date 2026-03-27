@@ -1,27 +1,35 @@
 
 
-# Show Scene Preview Image in "Recreating look from Discover" Banner for Prompt-Only Scenes
+# Multi-Select Discover Categories for Scenes
 
 ## Problem
-When navigating from Discover to a workflow (e.g. Product Listing Set) with a prompt-only scene like "Skyline Laundry", the `sceneImage` URL param is never set because `scene_image_url` is null in the discover_presets data and the fallback only triggers for `item.type === 'scene'`. The banner shows the scene name but no thumbnail.
+1. The "Discover Category" selection in the Add Scene modal currently only allows single selection
+2. The selected `discoverCategory` is **never actually saved** — it's collected in state but not passed to `addScene.mutateAsync`
+3. Both `custom_scenes` and `discover_presets` tables only have a single `category` text column
 
-## Fix
+## Approach
+Add a `discover_categories` text array column to `custom_scenes`, update the Add Scene modal to support multi-select, and use this array when promoting scenes to the Discover feed.
 
-### `src/components/app/DiscoverDetailModal.tsx` (~line 650)
-In the workflow navigation block, after checking `d.scene_image_url` and the scene-type fallback, add a final fallback that uses the item's own `image_url` (the discover card image) when no scene image is available:
+## Changes
 
-```typescript
-if (!d.scene_image_url && item.type === 'scene' && (item.data as any).previewUrl) {
-  params.set('sceneImage', (item.data as any).previewUrl);
-  ...
-}
-// NEW: fallback to item's own image_url for presets with no scene_image_url
-if (!params.get('sceneImage') && d.image_url) {
-  params.set('sceneImage', d.image_url);
-}
-```
+### 1. Database Migration
+Add a `discover_categories text[] default '{}'::text[]'` column to `custom_scenes`. This stores the selected Discover categories as an array (e.g. `{fashion,beauty,jewelry}`).
 
-Apply the same fallback to the freestyle navigation block (~line 665) as well.
+### 2. `src/components/app/AddSceneModal.tsx`
+- Change `discoverCategory` state from `string` to `string[]` (default `['fashion']`)
+- Toggle logic: clicking a chip adds/removes it from the array (minimum 1 required)
+- Active state uses `discoverCategories.includes(cat.id)` instead of `=== cat.id`
+- Pass `discover_categories` array to `addScene.mutateAsync`
 
-Two small additions in one file. The banner in Generate.tsx and Freestyle.tsx already renders the image when the param exists — no changes needed there.
+### 3. `src/hooks/useCustomScenes.ts`
+- Update `useAddCustomScene` mutation to accept and insert `discover_categories: string[]`
+- Update `useUpdateCustomScene` to accept `discover_categories`
+
+### 4. Discover Feed Integration
+When scenes appear in the Discover feed, they will match against any of their `discover_categories` entries rather than just the single `category` field. This means the same scene shows up when filtering by any of its assigned categories.
+
+## UI Behavior
+- Chips toggle on/off with multi-select (filled = selected, outlined = unselected)
+- At least one category must remain selected
+- Visual feedback: selected chips use primary color (same as current), multiple can be active simultaneously
 
