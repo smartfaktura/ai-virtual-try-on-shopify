@@ -692,6 +692,43 @@ function SceneRow({
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-blue-500/10 text-blue-600 border-0">Duplicate</Badge>
           )}
         </div>
+        {/* Admin debug info */}
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          <span
+            className="text-[9px] font-mono text-muted-foreground/60 cursor-pointer hover:text-foreground truncate max-w-[120px]"
+            onClick={() => { navigator.clipboard.writeText(pose.poseId); toast.success('ID copied'); }}
+            title={`Click to copy: ${pose.poseId}`}
+          >
+            {pose.poseId.length > 20 ? pose.poseId.slice(0, 8) + '…' + pose.poseId.slice(-4) : pose.poseId}
+          </span>
+          {pose.previewUrl?.includes('/storage/v1/') ? (
+            <span className="flex items-center gap-0.5 text-[9px] text-green-600/70">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />Storage
+            </span>
+          ) : (
+            <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground/40">
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 inline-block" />Local
+            </span>
+          )}
+          {pose.promptHint && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-[9px] text-muted-foreground/50 italic truncate max-w-[200px] cursor-help">
+                  "{pose.promptHint.slice(0, 60)}{pose.promptHint.length > 60 ? '…' : ''}"
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs whitespace-pre-wrap">{pose.promptHint}</TooltipContent>
+            </Tooltip>
+          )}
+          {pose.optimizedImageUrl && (
+            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-green-500/10 text-green-600 border-0">Optimized</Badge>
+          )}
+          {pose.created_at && (
+            <span className="text-[9px] text-muted-foreground/40">
+              {new Date(pose.created_at).toLocaleDateString()}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
