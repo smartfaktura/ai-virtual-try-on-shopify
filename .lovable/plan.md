@@ -1,38 +1,47 @@
 
 
-# Fix: Crash after saving Discover metadata
+# Fix: Scene not selected in Freestyle after "Recreate" from Discover
 
-## Root Cause
-After saving metadata, lines 488-497 in `DiscoverDetailModal.tsx` **directly mutate** the `item.data` object (which is owned by React Query cache). Then `queryClient.invalidateQueries` triggers a refetch, causing a race between the mutated stale data and new data. This can crash the React tree (caught by ErrorBoundary → reload page).
+## Problem
+When clicking "Recreate" on a Discover preset that uses a custom scene (e.g., "Skyline Laundry"), the scene is not selected in Freestyle because:
+
+1. **Discover passes `scene_name`** (e.g., "Skyline Laundry") as the `scene` URL param
+2. **Freestyle line 264** tries to match by name, but only searches `mockTryOnPoses` (built-in scenes) — custom scenes are not checked
+3. **Freestyle line 317** (deferred custom scene matching) only matches by `poseId` and only if the param starts with `custom-` — but the param is a name, not a poseId
+
+Custom scenes load asynchronously, so they aren't available during the initial matching on line 264.
 
 ## Fix
 
-### 1. `DiscoverDetailModal.tsx` — Remove direct item.data mutations (lines 488-497)
-Delete the block that mutates `item.data` after a successful save. The `queryClient.invalidateQueries` on line 498 already handles refreshing the data correctly — the mutations are redundant and dangerous.
+### `src/pages/Freestyle.tsx` — Expand deferred custom scene matching (~line 314-326)
+
+Update the deferred custom scene effect to also match by **name** (not just poseId starting with `custom-`):
 
 ```typescript
-// REMOVE these lines (488-497):
-(item.data as any).category = editCategory;
-(item.data as any).model_name = update.model_name;
-(item.data as any).model_image_url = update.model_image_url;
-(item.data as any).scene_name = update.scene_name;
-(item.data as any).scene_image_url = update.scene_image_url;
-(item.data as any).workflow_slug = update.workflow_slug;
-(item.data as any).workflow_name = update.workflow_name;
-(item.data as any).prompt = editPrompt || null;
-(item.data as any).product_name = update.product_name;
-(item.data as any).product_image_url = update.product_image_url;
+// Deferred custom scene matching (custom scenes load async)
+useEffect(() => {
+  const sceneParam = initialSceneParam.current;
+  if (!sceneParam || customScenePoses.length === 0) return;
+  // Already matched by the initial effect
+  if (selectedScene) return;
+  
+  const matched = customScenePoses.find(
+    (s) => s.poseId === sceneParam || s.name === sceneParam
+  );
+  if (matched) {
+    setSelectedScene(matched);
+    initialSceneParam.current = null;
+    if (!localStorage.getItem('hideSceneAppliedHint')) {
+      setShowSceneHint(true);
+    }
+  }
+}, [customScenePoses]);
 ```
 
-Keep only the `queryClient.invalidateQueries` call and `toast.success`.
+Key changes:
+- Remove the `sceneParam.startsWith('custom-')` gate — allow name-based matching
+- Add `s.name === sceneParam` as a fallback match
+- Add `if (selectedScene) return` guard to skip if already matched by the initial effect
 
-### 2. `DiscoverDetailModal.tsx` — Fix duplicate model keys (line 323)
-The model Select uses `m.name` as key, but `allModelOptions` can contain duplicates between `mockModels` and `customModelProfiles` (e.g. "Priya" appears in both). The dedup check on line 69 uses `items.find(i => i.name === cm.name)` which should prevent this, but the mock data itself may have duplicates.
-
-Add index to key: `key={\`model-${idx}\`}` for models and `key={\`scene-${idx}\`}` for scenes.
-
-## Summary
-Two changes, both in `DiscoverDetailModal.tsx`:
-1. Remove unsafe direct mutations of cached React Query data (the actual crash cause)
-2. Fix duplicate Select keys (warning cleanup)
+Single file, ~3 lines changed. No other files affected.
 
