@@ -1,33 +1,49 @@
 
 
-# Fix: Stop Tag-Based Category Cross-Matching
+# Fix: Explicit-Only Discover Category Filtering
 
 ## Problem
-Items appear in wrong Discover tabs because the filter checks tags against `PRODUCT_CATEGORY_MAP`. A sports/activewear image tagged `"studio"` or `"commercial"` gets pulled into Beauty, Jewelry, Electronics, etc. because those style words broadly map to many product categories.
+Items appear in wrong Discover tabs because `PRODUCT_CATEGORY_MAP` automatically cross-maps style categories (e.g., `beauty` maps to `['beauty', 'fragrances']`, `studio` maps to 5 different tabs). This causes items like skincare products to show up in Fragrances, or activewear in Beauty.
 
-The new multi-select `discover_categories` array on each item is the correct source for cross-category visibility. Tags should not be used for tab filtering.
+Additionally, `discover_presets` table lacks a `discover_categories` column, so even when admin saves categories via the multi-select chips, the array is never persisted or fetched for presets.
 
-## Fix
+## Plan
 
-**Files: `src/pages/Discover.tsx`, `src/pages/PublicDiscover.tsx`, `src/components/app/DashboardDiscoverSection.tsx`**
+### 1. Add `discover_categories` column to `discover_presets` table
+**Database migration:**
+```sql
+ALTER TABLE public.discover_presets
+  ADD COLUMN discover_categories text[] NOT NULL DEFAULT '{}'::text[];
+```
 
-In `itemMatchesProductCategory`, remove the tag-matching block (lines ~130-135 in Discover.tsx). Keep only:
-1. Direct `category === productCat` match
-2. `PRODUCT_CATEGORY_MAP[category]` lookup
-3. `discover_categories` array check
+### 2. Update `useDiscoverPresets.ts` — add field to interface
+Add `discover_categories: string[] | null` to the `DiscoverPreset` interface so TypeScript recognizes the field from `select('*')`.
+
+### 3. Remove `PRODUCT_CATEGORY_MAP` and simplify filtering in all 3 files
+**Files:** `src/pages/Discover.tsx`, `src/pages/PublicDiscover.tsx`, `src/components/app/DashboardDiscoverSection.tsx`
+
+Delete the entire `PRODUCT_CATEGORY_MAP` object. Replace `itemMatchesProductCategory` with:
 
 ```typescript
 function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boolean {
-  const itemCat = item.data.category;
-  if (itemCat === productCat) return true;
-  const mapped = PRODUCT_CATEGORY_MAP[itemCat] ?? [];
-  if (mapped.includes(productCat)) return true;
-  const discoverCats = (item.data as any).discover_categories;
-  if (Array.isArray(discoverCats) && discoverCats.includes(productCat)) return true;
-  return false;
-  // REMOVED: tag-based matching that caused false positives
+  if (item.data.category === productCat) return true;
+  const cats = (item.data as any).discover_categories;
+  return Array.isArray(cats) && cats.includes(productCat);
 }
 ```
 
-**3 files changed, ~5 lines removed per file.**
+Items with no `discover_categories` set will only appear in the tab matching their primary `category`.
+
+### 4. Save `discover_categories` array when saving preset metadata
+**File:** `src/components/app/DiscoverDetailModal.tsx` (~line 656-667)
+
+Add `discover_categories: editCategories` to the `presetData` object so the array is persisted to `discover_presets` (not just `custom_scenes`).
+
+### 5. Remove stale `PRODUCT_CATEGORY_MAP` from `DashboardDiscoverSection.tsx`
+Same deletion as step 3 — the large map object at the top of the file gets removed entirely.
+
+## Summary
+- **1 migration** — adds `discover_categories` column to `discover_presets`
+- **4 files changed** — removes ~35 lines of cross-mapping, adds ~2 lines for explicit filtering
+- **Result**: items appear only in their primary category tab + any categories explicitly selected by admin
 
