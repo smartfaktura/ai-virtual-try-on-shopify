@@ -32,6 +32,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
+  const [sceneModalPrompt, setSceneModalPrompt] = useState<string>('');
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
   const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
@@ -367,7 +368,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   </p>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setSceneModalUrl(item.imageUrl)}
+                      onClick={() => { setSceneModalUrl(item.imageUrl); setSceneModalPrompt(item.prompt || ''); }}
                       className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
                     >
                       <Camera className="w-3.5 h-3.5" /> Add as Scene
@@ -393,7 +394,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
       </div>
 
       {sceneModalUrl && (
-        <AddSceneModal open={!!sceneModalUrl} onClose={() => setSceneModalUrl(null)} imageUrl={sceneModalUrl} />
+        <AddSceneModal open={!!sceneModalUrl} onClose={() => setSceneModalUrl(null)} imageUrl={sceneModalUrl} sourcePrompt={sceneModalPrompt} />
       )}
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
