@@ -1,17 +1,17 @@
 
 
-# Hide Scene Category Filters on Product Listing Set + Admin Sort Note
+# Use Product Categories (not Discover Categories) in Add Scene Modal
 
 ## Problem
-The product-listing-set workflow shows many category filter tabs (All, Studio Essentials, Surface & Texture, etc.) which clutter the UI. The user wants them hidden for this workflow.
+The "Add as Scene" modal currently shows all 18 Discover categories including content-style tags (editorial, commercial, cinematic, etc.) that don't make sense when categorizing a scene by product type. It should show only the 10 product categories with proper labels.
 
-## Changes
+## Change
 
-### 1. Hide category filter tabs for product-listing-set (`src/components/app/generate/WorkflowSettingsPanel.tsx`)
-- In the scene category filter section (around line 301), add a condition to skip rendering when the active workflow slug is `product-listing-set`
-- Simple one-line check: `if (activeWorkflow?.slug === 'product-listing-set') return null;`
-- This keeps filters available for other workflows (e.g., interior design) where they're useful
+### `src/components/app/AddSceneModal.tsx`
+- Replace `DISCOVER_CATEGORIES` import with `PRODUCT_CATEGORIES` import from `categoryConstants.ts`
+- Update the Discover Category chip section to iterate over `PRODUCT_CATEGORIES` instead
+- Use `cat.label` for display text and `cat.id` for the value
+- This gives: Fashion & Apparel, Beauty & Skincare, Fragrances, Jewelry, Accessories, Home & Decor, Food & Beverage, Electronics, Sports & Fitness, Health & Supplements
 
-### 2. Admin sorting of scenes
-The existing Scene Manager (`/app/admin/scenes`) already supports drag-and-drop reordering of scenes via the `scene_sort_order` table and `useSceneSortOrder` hook. This sort order is already applied to the product-listing-set scene grid (via `sortScenes()` in `Generate.tsx` line 440). So **admin sorting already works** — reordering scenes in the admin panel will change their order on this page too. No new code needed.
+One file, ~5 lines changed.
 
