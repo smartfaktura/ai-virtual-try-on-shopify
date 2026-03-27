@@ -68,6 +68,8 @@ const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
   casual: ['fashion', 'accessories'],
   cozy: ['home', 'fashion'],
   professional: ['electronics', 'accessories'],
+  skincare: ['beauty', 'fragrances'],
+  'Beauty & Skincare': ['beauty'],
 };
 
 // Stop words for keyword extraction
