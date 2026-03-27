@@ -1,62 +1,46 @@
 
 
-# Fix: Replace "Original" ratio with auto-detected closest ratio + auto-enable Pro in edit mode
+# Fix: Product scenes leaking into wrong workflows + Skyline scene missing
 
-## Problem
+## Problems
 
-The `original` aspect ratio value is sent to the AI provider API, which rejects it (only accepts `1:1`, `3:4`, `4:5`, `9:16`, `16:9`). The error in the screenshot confirms: `invalid_value`.
+1. **Product scenes appearing in Selfie/UGC and Mirror Selfie workflows**: The merge logic at line 435 only skips "Flat Lay Set" and "Interior / Exterior Staging". Selfie/UGC and Mirror Selfie are NOT excluded, so all product scenes get injected into them.
 
-## Solution
+2. **Skyline Laundry missing from Product Listing Set**: Custom scenes whose category (or `category_override`) maps to an on-model category (studio/lifestyle/editorial/streetwear) get filtered out by `!ON_MODEL_CATEGORIES.includes(s.category)`. "Skyline Laundry" likely has a lifestyle or similar category, so it's excluded from the product scene merge.
 
-Remove `original` from the ratio list entirely. Instead, detect the uploaded image's dimensions and auto-select the closest matching ratio from the existing set. Also auto-enable Pro quality when entering edit mode.
+## Fix (single file: `src/pages/Generate.tsx`)
 
-## Changes
+### A. Restrict merge to product-only workflows (~line 435)
 
-### File 1: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+Change the exclusion list to a whitelist approach — only merge product scenes for workflows that are actually product-oriented. Skip the merge for:
+- `Flat Lay Set` (already skipped)
+- `Interior / Exterior Staging` (already skipped)  
+- Any workflow with `uses_tryon` (Try-On, Selfie/UGC, Mirror Selfie)
 
-- Remove `'original'` from the `FreestyleAspectRatio` type union
-- Remove the `{ value: 'original', ... }` entry from the `ASPECT_RATIOS` array
-
-### File 2: `src/pages/Freestyle.tsx`
-
-**A. Add image dimension detection helper:**
 ```typescript
-function detectClosestRatio(imageUrl: string): Promise<FreestyleAspectRatio> {
-  return new Promise((resolve) => {
-    const img = new window.Image();
-    img.onload = () => {
-      const r = img.width / img.height;
-      // Compare to supported ratios: 1:1(1.0), 3:4(0.75), 4:5(0.8), 9:16(0.5625), 16:9(1.778)
-      const ratios: { value: FreestyleAspectRatio; r: number }[] = [
-        { value: '1:1', r: 1 },
-        { value: '3:4', r: 0.75 },
-        { value: '4:5', r: 0.8 },
-        { value: '9:16', r: 0.5625 },
-        { value: '16:9', r: 1.7778 },
-      ];
-      let best = ratios[0];
-      for (const entry of ratios) {
-        if (Math.abs(r - entry.r) < Math.abs(r - best.r)) best = entry;
-      }
-      resolve(best.value);
-    };
-    img.onerror = () => resolve('1:1');
-    img.src = imageUrl;
-  });
-}
+if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging' || activeWorkflow?.uses_tryon) return rawVariationStrategy;
 ```
 
-**B. Auto-detect ratio on image upload** (`handleFileSelect` and `handleFileDrop`):
-After setting the preview URL, call `detectClosestRatio(previewUrl)` and set the aspect ratio.
+This prevents product scenes from appearing in Selfie/UGC and Mirror Selfie.
 
-**C. Auto-detect ratio on edit from Library** (the `editImage` useEffect ~line 303):
-Replace `setAspectRatio('original')` with `detectClosestRatio(editImageParam).then(setAspectRatio)`.
+### B. Include ALL custom scenes in product workflow merge (~line 440-441)
 
-**D. Auto-enable Pro quality in edit mode** (~line 303):
-Add `setQuality('high')` when entering edit mode.
+For product workflows, remove the `ON_MODEL_CATEGORIES` filter from the merge. Custom scenes created by admins (like "Skyline Laundry") should appear regardless of their category. The filter was meant to exclude on-model *mock* poses (studio/lifestyle/editorial/streetwear from `mockTryOnPoses`), not custom admin scenes.
 
-## Files changed
+Split the filtering: keep the on-model filter for mock poses only, but include all custom scenes:
 
-1. `src/components/app/freestyle/FreestyleSettingsChips.tsx` — remove `original` option
-2. `src/pages/Freestyle.tsx` — add ratio detection, auto-select closest ratio on upload/edit, auto-enable Pro quality
+```typescript
+const filteredMockPoses = filterVisible(mockTryOnPoses).filter(s => !ON_MODEL_CATEGORIES.includes(s.category));
+const allCustom = customPoses; // Include ALL custom scenes
+const freestyleScenes = sortScenes(applyCategoryOverrides([...filteredMockPoses, ...allCustom]))
+  .filter(s => !dbLabelsLower.has(s.name.toLowerCase()));
+```
+
+This ensures "Skyline Laundry" and any other admin-created custom scene appears in Product Listing Set, regardless of its category assignment.
+
+## Summary
+
+One file changed (`Generate.tsx`), two tweaks:
+1. Add `activeWorkflow?.uses_tryon` to the skip condition → no product scenes in Selfie/UGC or Mirror Selfie
+2. Only apply `ON_MODEL_CATEGORIES` filter to built-in mock poses, not custom scenes → Skyline Laundry appears in Product Listing Set
 
