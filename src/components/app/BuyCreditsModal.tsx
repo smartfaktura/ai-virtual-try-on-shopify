@@ -383,7 +383,7 @@ export function BuyCreditsModal() {
                           {p.features.map((f, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
-                              <span className="text-[11px] text-muted-foreground leading-snug">{f}</span>
+                              <span className="text-[11px] text-muted-foreground leading-snug">{typeof f === 'string' ? f : f.text}</span>
                             </div>
                           ))}
                         </div>
