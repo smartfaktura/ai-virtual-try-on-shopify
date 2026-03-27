@@ -341,7 +341,7 @@ function ImageCard({
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
   onCopySettings?: (settings: CopySettings) => void;
-  onAddAsScene?: (imageUrl: string) => void;
+  onAddAsScene?: (imageUrl: string, prompt: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
   onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string; productId?: string | null }) => void;
   onAddToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
@@ -393,7 +393,7 @@ function ImageCard({
         )}
         {onAddAsScene && (
           <button
-            onClick={(e) => { e.stopPropagation(); onAddAsScene(img.url); }}
+            onClick={(e) => { e.stopPropagation(); onAddAsScene(img.url, img.prompt || ''); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             title="Add as Scene"
           >
@@ -529,6 +529,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     return () => observer.disconnect();
   }, [hasMore, onLoadMore, isFetchingMore]);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
+  const [sceneModalPrompt, setSceneModalPrompt] = useState<string>('');
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string; productId?: string | null } | null>(null);
   const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ id: string; url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
@@ -562,7 +563,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     );
   }
 
-  const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
+  const adminSceneHandler = isAdmin ? (url: string, prompt: string) => { setSceneModalUrl(url); setSceneModalPrompt(prompt); } : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
   const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string; productId?: string | null }) => setShareImg(img);
   const addToDiscoverHandler = isAdmin ? (img: GalleryImage) => setAddToDiscoverImg(img) : undefined;
@@ -615,7 +616,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const modals = (
     <>
       {sceneModalUrl && (
-        <AddSceneModal open={!!sceneModalUrl} onClose={() => setSceneModalUrl(null)} imageUrl={sceneModalUrl} />
+        <AddSceneModal open={!!sceneModalUrl} onClose={() => setSceneModalUrl(null)} imageUrl={sceneModalUrl} sourcePrompt={sceneModalPrompt} />
       )}
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />

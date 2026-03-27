@@ -22,9 +22,10 @@ interface AddSceneModalProps {
   open: boolean;
   onClose: () => void;
   imageUrl: string;
+  sourcePrompt?: string;
 }
 
-export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
+export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddSceneModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [promptHint, setPromptHint] = useState('');
@@ -36,6 +37,7 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
 
   useEffect(() => {
     if (open && imageUrl) {
+      if (sourcePrompt) setPromptHint(sourcePrompt);
       analyzeImage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,6 +60,7 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
       if (error) throw error;
       setName(data.name || '');
       setDescription(data.description || '');
+      setPromptHint(sourcePrompt || data.description || '');
       const allCats = [...CATEGORIES_BY_TYPE['on-model'], ...CATEGORIES_BY_TYPE.product];
       if (allCats.includes(data.category)) {
         // Auto-detect scene type from returned category
