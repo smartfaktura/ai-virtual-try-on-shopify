@@ -354,20 +354,56 @@ export function DiscoverDetailModal({
                 )}
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={editProductName}
-                      onChange={(e) => setEditProductName(e.target.value)}
-                      placeholder="Product name"
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      value={editProductImageUrl}
-                      onChange={(e) => setEditProductImageUrl(e.target.value)}
-                      placeholder="Product image URL"
-                      className="h-8 text-xs"
-                    />
-                  </div>
+                  <Select
+                    value={editProductSource}
+                    onValueChange={(val) => {
+                      setEditProductSource(val);
+                      if (val === '__none__') {
+                        setEditProductName('');
+                        setEditProductImageUrl('');
+                      } else if (val === '__custom__') {
+                        // keep current values for manual editing
+                      } else {
+                        const found = myProducts?.find(p => p.id === val);
+                        if (found) {
+                          setEditProductName(found.title);
+                          setEditProductImageUrl(found.image_url);
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
+                      <SelectItem value="__custom__" className="text-xs">Custom</SelectItem>
+                      {(myProducts ?? []).map(p => (
+                        <SelectItem key={p.id} value={p.id} className="text-xs" textValue={p.title}>
+                          <div className="flex items-center gap-2">
+                            <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                            <span>{p.title}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editProductSource === '__custom__' && (
+                    <div className="grid grid-cols-2 gap-2 mt-1.5">
+                      <Input
+                        value={editProductName}
+                        onChange={(e) => setEditProductName(e.target.value)}
+                        placeholder="Product name"
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={editProductImageUrl}
+                        onChange={(e) => setEditProductImageUrl(e.target.value)}
+                        placeholder="Product image URL"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  )}
                 </div>
                 <Button
                   size="sm"
