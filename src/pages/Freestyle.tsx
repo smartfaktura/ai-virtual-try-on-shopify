@@ -316,6 +316,27 @@ export default function Freestyle() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Resolve missing image URLs for recreate banner (when DB fields are null)
+  useEffect(() => {
+    if (!recreateSource) return;
+    let updated = false;
+    const patch = { ...recreateSource };
+
+    if (!patch.modelImageUrl && patch.modelName) {
+      const allModelsArr = [...mockModels, ...customModelProfiles];
+      const found = allModelsArr.find(m => m.name.toLowerCase() === patch.modelName!.toLowerCase());
+      if (found) { patch.modelImageUrl = found.previewUrl; updated = true; }
+    }
+
+    if (!patch.sceneImageUrl && patch.sceneName) {
+      const allPoses = [...mockTryOnPoses, ...customScenePoses];
+      const found = allPoses.find(p => p.name.toLowerCase() === patch.sceneName!.toLowerCase());
+      if (found) { patch.sceneImageUrl = found.previewUrl; updated = true; }
+    }
+
+    if (updated) setRecreateSource(patch);
+  }, [customModelProfiles, customScenePoses]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Edit image from Library — reactive to searchParams so it works on navigation
   useEffect(() => {
     const editImageParam = searchParams.get('editImage');
