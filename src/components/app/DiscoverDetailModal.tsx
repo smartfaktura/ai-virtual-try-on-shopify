@@ -475,7 +475,7 @@ export function DiscoverDetailModal({
                       scene_image_url: selectedScene?.imageUrl ?? null,
                       workflow_slug: selectedWorkflow?.slug ?? null,
                       workflow_name: selectedWorkflow?.name ?? null,
-                      prompt: editPrompt || null,
+                      prompt: editPrompt ?? '',
                       product_name: editProductName.trim() || null,
                       product_image_url: safeProductImageUrl,
                     };
