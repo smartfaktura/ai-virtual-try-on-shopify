@@ -1,27 +1,24 @@
 
 
-# Fix Product Section in Submit to Discover Modal
+# Add Search to Admin Product Selector in Discover Detail Modal
 
 ## Problem
-The modal currently shows a generic product library dropdown, even when the generation already has a product attached. The user expects to see the product this generation was created with, displayed directly — not buried in a dropdown.
+The product dropdown in the admin Discover detail modal uses a basic `<Select>` with no search. With many products, finding the right one is tedious (as shown in the screenshot).
 
 ## Solution
-Replace the dropdown with a simpler approach:
+Replace the Radix `<Select>` with a `<Popover>` + `<Input>` + filtered list pattern, similar to a combobox. This allows typing to filter products by name.
 
-1. **If the generation has a product attached** (props `productName` + `productImageUrl` are set): Show the product card directly (thumbnail + name) with a Switch toggle to include/exclude it. No dropdown needed.
+## Changes in `src/components/app/DiscoverDetailModal.tsx`
 
-2. **If no product was attached**: Show nothing (or a subtle "No product attached" note). Remove the library dropdown entirely — users shouldn't pick a random product for a generation that wasn't made with one.
+1. **Replace `<Select>` with `<Popover>`** containing:
+   - A trigger button showing the current selection (product thumbnail + name, "None", or "Custom")
+   - A popover content with a search `<Input>` at the top
+   - A scrollable list of products filtered by the search term
+   - "None" and "Custom" options at the top before the product list
 
-### Changes in `src/components/app/SubmitToDiscoverModal.tsx`
+2. **Add `productSearch` state** to track the filter text
 
-- Remove the `useQuery` for `myProducts` (no longer needed)
-- Remove `selectedProductId` state
-- Add `includeProduct` boolean state (default `true` when props have product data)
-- Replace the `<Select>` dropdown block (lines 236-271) with:
-  - If `productName && productImageUrl`: show the product preview card with a `<Switch>` toggle labeled "Include product"
-  - If no product props: show nothing
-- Update `handleSubmit`: if `includeProduct` is true and product props exist, call `generate-discover-preview` and include product data; otherwise omit product fields
-- Remove the second `useEffect` that tried to match products from library (lines 96-100)
+3. **Filter `myProducts`** by `title.toLowerCase().includes(search)` before rendering
 
-This makes the modal shorter, clearer, and directly shows the product context from the generation.
+4. **Keep all existing logic** for `editProductSource`, `editProductName`, `editProductImageUrl` unchanged — only the UI component changes
 
