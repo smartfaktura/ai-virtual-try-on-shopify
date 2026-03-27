@@ -663,6 +663,12 @@ interface SceneRowProps {
   defaultCategoryOrder: PoseCategory[];
   categoryLabels: Record<string, string>;
   showReorderButtons: boolean;
+  promptEdits: Record<string, { prompt_hint?: string; prompt_only?: boolean }>;
+  editingPromptId: string | null;
+  setEditingPromptId: (id: string | null) => void;
+  updatePromptHint: (poseId: string, value: string) => void;
+  togglePromptOnly: (poseId: string, value: boolean) => void;
+  customScenesRaw: import('@/hooks/useCustomScenes').CustomScene[];
 }
 
 function SceneRow({
@@ -671,9 +677,17 @@ function SceneRow({
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
   handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
+  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
+  const isCustom = isCustomScene(pose.poseId);
+
+  // Get the current prompt_hint value (edited or from DB)
+  const rawScene = isCustom ? customScenesRaw.find(s => `custom-${s.id}` === pose.poseId) : null;
+  const currentPromptHint = promptEdits[pose.poseId]?.prompt_hint ?? rawScene?.prompt_hint ?? pose.promptHint ?? '';
+  const currentPromptOnly = promptEdits[pose.poseId]?.prompt_only ?? pose.promptOnly ?? false;
+  const isEditingPrompt = editingPromptId === pose.poseId;
 
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 group">
