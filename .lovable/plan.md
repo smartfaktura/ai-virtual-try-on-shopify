@@ -1,30 +1,42 @@
 
 
-# Fix: "Save metadata" fails for scene-type Discover items
+# Give scene-type Discover items full metadata editing
 
-## Problem
+## What changes
 
-The Discover feed contains two item types:
-- **Presets** — stored in the `discover_presets` table, updates work fine
-- **Scenes** — sourced from mock data / `custom_scenes` table, have NO row in `discover_presets`
+**File: `src/components/app/DiscoverDetailModal.tsx`**
 
-The "Save metadata" handler always runs `supabase.from('discover_presets').update(...)`, which silently fails (0 rows matched) for scene-type items since they don't exist in that table.
+Currently, when a scene appears in Discover and an admin opens it, the editor hides 4 fields: Workflow, Model, Scene, and Product (all wrapped in `{!isScene && ...}`). This means you can only edit category and prompt hint for scenes.
 
-## Fix
+### Changes
 
-**File: `src/components/app/DiscoverDetailModal.tsx`** (save handler, ~line 432)
+1. **Remove the `{!isScene && ...}` guards** from the Workflow selector (line 296), Model selector (line 309), Scene selector (line 327), Product picker (line 364), and Prompt textarea (line 346). All fields will now appear for every item type.
 
-Add a type check before the update. If the item is a scene type, update the `custom_scenes` table instead (for admin-created custom scenes), or show a message that built-in scenes can't have their metadata edited.
+2. **Update the save handler for custom scenes** (line 463 branch): Instead of only updating `custom_scenes` with category/description, also **upsert into `discover_presets`** with the full metadata (workflow, model, scene, product, prompt, category). This "promotes" the scene to a full discover preset entry, giving it parity with any other preset.
 
-Specifically:
-1. If `item.type === 'preset'` → update `discover_presets` as today (works)
-2. If `item.type === 'scene'` and the poseId starts with `custom-` → update `custom_scenes` table with the relevant fields (name, category, description/prompt_hint)
-3. If `item.type === 'scene'` and it's a built-in mock scene → show a toast "Built-in scenes cannot be edited"
+   The upsert will use the scene's name as title, scene image as image_url, and store all the admin-selected workflow/model/scene/product data. A stable ID strategy (e.g., using `custom-{scene_id}` as a convention or generating a new UUID) will be used.
 
-The custom_scenes table supports: `name`, `description`, `category`, `prompt_hint`, `prompt_only`. Fields like `model_name`, `scene_name`, `workflow_slug` don't apply to scenes themselves, so those fields should be hidden or disabled in the admin panel when viewing a scene-type item.
+3. **For built-in (mock) scenes**: Same approach — show all fields and on save, upsert a `discover_presets` row. The built-in scene restriction ("read-only") will be removed since the admin is creating/editing a *Discover preset entry*, not modifying the scene definition itself.
 
-### Changes summary
+4. **After save**: Invalidate both `discover-presets` and `custom-scenes` query caches. The scene item may now appear as a preset in the feed (or both — we can deduplicate by checking if a preset already exists for that scene).
 
-- **~line 432-478**: Wrap the existing save logic in an `if (item.type === 'preset')` branch. Add an `else` branch for scene items that updates `custom_scenes` using the real UUID (strip the `custom-` prefix from poseId).
-- **~line 340-425** (admin panel UI): Optionally hide workflow/model/scene selectors when viewing a scene-type item since those fields don't exist on `custom_scenes`.
+5. **Deduplication**: In `Discover.tsx` and `PublicDiscover.tsx`, when building `allItems`, skip scene items that already have a corresponding `discover_presets` row (matched by title or a stored `source_scene_id`). This prevents duplicates after promotion.
+
+### Technical detail
+
+The save flow for scene items becomes:
+```
+Admin fills all fields → Save →
+  1. If custom scene: update custom_scenes (category, prompt_hint)
+  2. Upsert discover_presets with:
+     - title = scene name
+     - image_url = scene image
+     - category, prompt, model_name, model_image_url,
+       scene_name, scene_image_url, workflow_slug, workflow_name,
+       product_name, product_image_url, aspect_ratio
+  3. Invalidate both query caches
+  4. Toast success
+```
+
+This means once an admin saves metadata on a scene item, it becomes a full discover preset and behaves identically to any other preset going forward.
 
