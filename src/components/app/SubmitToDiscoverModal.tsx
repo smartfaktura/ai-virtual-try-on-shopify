@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Send, Tag, Sparkles } from 'lucide-react';
+import { X, Send, Tag, Sparkles, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useSubmitToDiscover } from '@/hooks/useDiscoverSubmissions';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,8 @@ interface SubmitToDiscoverModalProps {
   aspectRatio?: string;
   quality?: string;
   sourceGenerationId?: string;
+  productName?: string;
+  productImageUrl?: string;
 }
 
 export function SubmitToDiscoverModal({
@@ -30,13 +33,18 @@ export function SubmitToDiscoverModal({
   aspectRatio = '1:1',
   quality = 'standard',
   sourceGenerationId,
+  productName,
+  productImageUrl,
 }: SubmitToDiscoverModalProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>('fashion');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const [showProduct, setShowProduct] = useState(false);
   const submitMutation = useSubmitToDiscover();
+
+  const hasProduct = !!(productName && productImageUrl);
 
   // Auto-fill with AI when modal opens
   useEffect(() => {
@@ -45,6 +53,7 @@ export function SubmitToDiscoverModal({
     setCategory('lifestyle');
     setTags([]);
     setTagInput('');
+    setShowProduct(false);
     setAiLoading(true);
 
     supabase.functions
@@ -85,8 +94,28 @@ export function SubmitToDiscoverModal({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) return;
+
+    let finalProductName: string | undefined;
+    let finalProductImageUrl: string | undefined;
+
+    // If showProduct is on, generate a safe public preview for the product image
+    if (showProduct && hasProduct) {
+      try {
+        const { data: previewData } = await supabase.functions.invoke('generate-discover-preview', {
+          body: { sourceUrl: productImageUrl, postId: `submission-${Date.now()}` },
+        });
+        if (previewData?.publicUrl) {
+          finalProductName = productName;
+          finalProductImageUrl = previewData.publicUrl;
+        }
+      } catch (err) {
+        console.warn('Product preview generation failed:', err);
+        // Still submit without product preview
+      }
+    }
+
     submitMutation.mutate(
       {
         image_url: imageUrl,
@@ -97,6 +126,8 @@ export function SubmitToDiscoverModal({
         tags,
         aspect_ratio: aspectRatio,
         quality,
+        product_name: finalProductName,
+        product_image_url: finalProductImageUrl,
       },
       { onSuccess: onClose },
     );
@@ -106,7 +137,7 @@ export function SubmitToDiscoverModal({
     <div className="fixed inset-0 z-[300] flex items-center justify-center" onClick={onClose}>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative z-10 bg-background rounded-2xl border border-border/50 shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+        className="relative z-10 bg-background rounded-2xl border border-border/50 shadow-2xl w-full max-w-md mx-4 overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -172,6 +203,30 @@ export function SubmitToDiscoverModal({
               ))}
             </div>
           </div>
+
+          {/* Product toggle */}
+          {hasProduct && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Show Product</label>
+                <Switch checked={showProduct} onCheckedChange={setShowProduct} />
+              </div>
+              {showProduct && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+                  <img
+                    src={productImageUrl}
+                    alt={productName}
+                    className="w-10 h-10 rounded-lg object-cover border border-border/30"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{productName}</p>
+                    <p className="text-[10px] text-muted-foreground">Will be shown as product reference</p>
+                  </div>
+                  <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Tags */}
           <div className="space-y-1.5">

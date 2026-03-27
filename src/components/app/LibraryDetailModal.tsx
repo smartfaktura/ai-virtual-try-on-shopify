@@ -424,6 +424,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           prompt={item.prompt || ''}
           aspectRatio={item.aspectRatio}
           quality={item.quality}
+          productName={item.productName}
+          productImageUrl={item.productImageUrl}
         />
       )}
       {upscaleModalOpen && item && (

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -341,7 +343,7 @@ function ImageCard({
   onCopySettings?: (settings: CopySettings) => void;
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
-  onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
+  onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string; productId?: string | null }) => void;
   onAddToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
@@ -528,8 +530,19 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   }, [hasMore, onLoadMore, isFetchingMore]);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
-  const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
+  const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string; productId?: string | null } | null>(null);
   const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ id: string; url: string; prompt: string; aspectRatio?: string; modelId?: string | null; sceneId?: string | null } | null>(null);
+
+  // Resolve product info for share modal
+  const shareProductId = shareImg?.productId;
+  const { data: shareProduct } = useQuery({
+    queryKey: ['product-for-share', shareProductId],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_products').select('title, image_url').eq('id', shareProductId!).single();
+      return data;
+    },
+    enabled: !!shareProductId,
+  });
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
 
@@ -551,7 +564,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
-  const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setShareImg(img);
+  const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string; productId?: string | null }) => setShareImg(img);
   const addToDiscoverHandler = isAdmin ? (img: GalleryImage) => setAddToDiscoverImg(img) : undefined;
 
   const generatingCards = generatingCount > 0
@@ -615,6 +628,8 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           prompt={shareImg.prompt}
           aspectRatio={shareImg.aspectRatio}
           sourceGenerationId={shareImg.id}
+          productName={shareProduct?.title}
+          productImageUrl={shareProduct?.image_url}
         />
       )}
       {addToDiscoverImg && (
