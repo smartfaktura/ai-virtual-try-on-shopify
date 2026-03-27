@@ -35,7 +35,7 @@ export default function Workflows() {
       const saved = localStorage.getItem('workflow-layout') as LayoutMode | null;
       if (saved && ['rows', '2col', '3col'].includes(saved)) return saved;
     } catch {}
-    return 'rows';
+    return '3col';
   });
 
   const handleLayoutChange = (value: string) => {
@@ -46,7 +46,7 @@ export default function Workflows() {
   };
 
   // On mobile/tablet, clamp to 2col max
-  const effectiveLayout = isMobile && layout === '3col' ? '2col' : layout;
+  const effectiveLayout = isMobile ? (layout === '3col' ? '2col' : layout) : layout;
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
