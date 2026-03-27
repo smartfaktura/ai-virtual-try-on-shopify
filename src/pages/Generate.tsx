@@ -1344,7 +1344,7 @@ export default function Generate() {
         } else { setCurrentStep('settings'); }
       } else {
         const success = await startBatch({
-          payload, selectedVariationIndices: Array.from(selectedVariationIndices), angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: modelsToGenerate.length > 0, hasScene: false,
+          payload, selectedVariationIndices: remapVariationIndices(Array.from(selectedVariationIndices)).remapped, angleMultiplier, quality: 'high', imageCount: baseImageCount, hasModel: modelsToGenerate.length > 0, hasScene: false,
           onJobEnqueued: (jobId) => injectActiveJob(queryClient, { jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 }),
         });
         if (!success) { setCurrentStep('settings'); }
