@@ -227,7 +227,7 @@ export default function AdminScenes() {
     setEditingNameValue('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let globalOrder = 0;
     const entries: { scene_id: string; sort_order: number; category_override?: string | null }[] = [];
     for (const cat of categoryOrder) {
@@ -243,13 +243,48 @@ export default function AdminScenes() {
         });
       }
     }
+
+    // Also persist any prompt_hint / prompt_only edits for custom scenes
+    const promptUpdatePromises = Object.entries(promptEdits).map(([poseId, edits]) => {
+      const realId = poseId.replace('custom-', '');
+      return updateSceneMutation.mutateAsync({ id: realId, ...edits });
+    });
+
+    try {
+      await Promise.all(promptUpdatePromises);
+    } catch {
+      toast.error('Failed to save scene prompt changes');
+      return;
+    }
+
     saveSortOrder.mutate(entries, {
       onSuccess: () => {
         toast.success('Sort order saved');
         setDirty(false);
+        setPromptEdits({});
       },
       onError: () => toast.error('Failed to save sort order'),
     });
+  };
+
+  const updatePromptHint = (poseId: string, value: string) => {
+    setPromptEdits(prev => ({
+      ...prev,
+      [poseId]: { ...prev[poseId], prompt_hint: value },
+    }));
+    setDirty(true);
+  };
+
+  const togglePromptOnly = (poseId: string, value: boolean) => {
+    setPromptEdits(prev => ({
+      ...prev,
+      [poseId]: { ...prev[poseId], prompt_only: value },
+    }));
+    // Also update local orderedPoses so the UI reflects the change
+    setOrderedPoses(prev =>
+      prev.map(p => p.poseId === poseId ? { ...p, promptOnly: value } : p)
+    );
+    setDirty(true);
   };
 
   const activeCats = categoryOrder.filter(cat =>
