@@ -1368,7 +1368,8 @@ export default function Generate() {
         for (const ratio of ratiosToGenerate) {
           for (const framingVal of framingsToGenerate) {
             for (const varIdx of variationIndices) {
-              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: [varIdx] };
+              const { remapped: remappedVar, extras: varExtras } = remapVariationIndices([varIdx]);
+              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: remappedVar, extra_variations: varExtras.length > 0 ? varExtras : undefined };
               if (modelProfile && base64ModelImage) {
                 comboPayload.model = {
                   name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
