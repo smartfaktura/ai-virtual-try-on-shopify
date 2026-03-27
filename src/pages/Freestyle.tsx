@@ -284,8 +284,8 @@ export default function Freestyle() {
     }
     // Match scene by name first, then by poseId
     if (sceneParam) {
-      const byName = filterVisible(mockTryOnPoses).find((s) => s.name === sceneParam);
-      const byId = !byName ? filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam) : null;
+      const byName = mockTryOnPoses.find((s) => s.name === sceneParam);
+      const byId = !byName ? mockTryOnPoses.find((s) => s.poseId === sceneParam) : null;
       const matchedScene = byName || byId;
       if (matchedScene) {
         setSelectedScene(matchedScene);
