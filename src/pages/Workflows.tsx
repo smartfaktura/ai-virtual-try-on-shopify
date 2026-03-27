@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { groupJobsIntoBatches } from '@/lib/batchGrouping';
 import type { ActiveJob } from '@/lib/batchGrouping';
 import type { Workflow } from '@/types/workflow';
-import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { WorkflowRequestBanner } from '@/components/app/WorkflowRequestBanner';
 
 export type { Workflow } from '@/types/workflow';
 
@@ -494,7 +494,7 @@ export default function Workflows() {
               reversed={index % 2 !== 0}
             />
           ))}
-          <FeedbackBanner />
+          <WorkflowRequestBanner />
         </div>
       ) : (
         <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
@@ -507,6 +507,7 @@ export default function Workflows() {
               mobileCompact={isMobile && effectiveLayout === '2col'}
             />
           ))}
+          <WorkflowRequestBanner />
         </div>
       )}
     </PageHeader>
