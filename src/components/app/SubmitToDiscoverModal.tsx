@@ -3,9 +3,10 @@ import { X, Send, Tag, Sparkles, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useSubmitToDiscover } from '@/hooks/useDiscoverSubmissions';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
@@ -41,10 +42,21 @@ export function SubmitToDiscoverModal({
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
-  const [showProduct, setShowProduct] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string>('none');
   const submitMutation = useSubmitToDiscover();
 
-  const hasProduct = !!(productName && productImageUrl);
+  // Fetch user's products for the dropdown
+  const { data: myProducts } = useQuery({
+    queryKey: ['my-products-for-discover'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('user_products')
+        .select('id, title, image_url')
+        .order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: open,
+  });
 
   // Auto-fill with AI when modal opens
   useEffect(() => {
@@ -53,8 +65,15 @@ export function SubmitToDiscoverModal({
     setCategory('lifestyle');
     setTags([]);
     setTagInput('');
-    setShowProduct(false);
     setAiLoading(true);
+
+    // If product was pre-attached via props, try to find matching product
+    if (productName && productImageUrl && myProducts?.length) {
+      const match = myProducts.find(p => p.title === productName);
+      setSelectedProductId(match?.id ?? 'none');
+    } else {
+      setSelectedProductId('none');
+    }
 
     supabase.functions
       .invoke('describe-discover-metadata', {
@@ -73,7 +92,18 @@ export function SubmitToDiscoverModal({
       .finally(() => setAiLoading(false));
   }, [open, imageUrl, prompt]);
 
+  // When products load after modal opens, try to pre-select
+  useEffect(() => {
+    if (!open || !productName || !myProducts?.length) return;
+    const match = myProducts.find(p => p.title === productName);
+    if (match) setSelectedProductId(match.id);
+  }, [myProducts, open, productName]);
+
   if (!open) return null;
+
+  const selectedProduct = selectedProductId !== 'none'
+    ? myProducts?.find(p => p.id === selectedProductId)
+    : null;
 
   const handleAddTag = () => {
     const tag = tagInput.trim().toLowerCase();
@@ -100,19 +130,18 @@ export function SubmitToDiscoverModal({
     let finalProductName: string | undefined;
     let finalProductImageUrl: string | undefined;
 
-    // If showProduct is on, generate a safe public preview for the product image
-    if (showProduct && hasProduct) {
+    // If a product is selected, generate a safe public preview
+    if (selectedProduct) {
       try {
         const { data: previewData } = await supabase.functions.invoke('generate-discover-preview', {
-          body: { sourceUrl: productImageUrl, postId: `submission-${Date.now()}` },
+          body: { sourceUrl: selectedProduct.image_url, postId: `submission-${Date.now()}` },
         });
         if (previewData?.publicUrl) {
-          finalProductName = productName;
+          finalProductName = selectedProduct.title;
           finalProductImageUrl = previewData.publicUrl;
         }
       } catch (err) {
         console.warn('Product preview generation failed:', err);
-        // Still submit without product preview
       }
     }
 
@@ -157,34 +186,34 @@ export function SubmitToDiscoverModal({
         </div>
 
         {/* Preview */}
-        <div className="px-6 pb-4">
+        <div className="px-6 pb-3">
           <img
             src={imageUrl}
             alt="Preview"
-            className="w-full max-h-48 object-cover rounded-xl border border-border/30"
+            className="w-full max-h-36 object-cover rounded-xl border border-border/30"
           />
         </div>
 
         {/* Form */}
-        <div className="px-6 pb-6 space-y-4">
+        <div className="px-6 pb-6 space-y-3">
           {/* Title */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title *</label>
             {aiLoading ? (
-              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
             ) : (
               <Input
                 value={title}
                 onChange={e => setTitle(e.target.value.slice(0, 60))}
                 placeholder="Give it a catchy title..."
-                className="rounded-xl h-11"
+                className="rounded-xl h-10"
               />
             )}
             <p className="text-[10px] text-muted-foreground/50 text-right">{title.length}/60</p>
           </div>
 
           {/* Category */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</label>
             <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.map(cat => (
@@ -192,7 +221,7 @@ export function SubmitToDiscoverModal({
                   key={cat}
                   onClick={() => setCategory(cat)}
                   className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 capitalize',
+                    'px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 capitalize',
                     category === cat
                       ? 'bg-foreground text-background'
                       : 'bg-muted/40 text-muted-foreground hover:bg-muted/70',
@@ -204,22 +233,35 @@ export function SubmitToDiscoverModal({
             </div>
           </div>
 
-          {/* Product toggle */}
-          {hasProduct && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Show Product</label>
-                <Switch checked={showProduct} onCheckedChange={setShowProduct} />
-              </div>
-              {showProduct && (
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+          {/* Product selector — always visible */}
+          {myProducts && myProducts.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product (optional)</label>
+              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                <SelectTrigger className="rounded-xl h-10">
+                  <SelectValue placeholder="None — no product" />
+                </SelectTrigger>
+                <SelectContent className="max-h-48">
+                  <SelectItem value="none">None — no product</SelectItem>
+                  {myProducts.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      <span className="flex items-center gap-2">
+                        <img src={p.image_url} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                        <span className="truncate">{p.title}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedProduct && (
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/30 border border-border/30">
                   <img
-                    src={productImageUrl}
-                    alt={productName}
-                    className="w-10 h-10 rounded-lg object-cover border border-border/30"
+                    src={selectedProduct.image_url}
+                    alt={selectedProduct.title}
+                    className="w-9 h-9 rounded-lg object-cover border border-border/30"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{productName}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{selectedProduct.title}</p>
                     <p className="text-[10px] text-muted-foreground">Will be shown as product reference</p>
                   </div>
                   <Package className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -229,7 +271,7 @@ export function SubmitToDiscoverModal({
           )}
 
           {/* Tags */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags (optional)</label>
             {aiLoading ? (
               <div className="flex gap-1.5">
@@ -245,7 +287,7 @@ export function SubmitToDiscoverModal({
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
                     placeholder="Add a tag..."
-                    className="rounded-xl h-10 flex-1"
+                    className="rounded-xl h-9 flex-1"
                     disabled={tags.length >= 5}
                   />
                   <Button
@@ -253,7 +295,7 @@ export function SubmitToDiscoverModal({
                     size="sm"
                     onClick={handleAddTag}
                     disabled={!tagInput.trim() || tags.length >= 5}
-                    className="rounded-xl h-10 px-3"
+                    className="rounded-xl h-9 px-3"
                   >
                     <Tag className="w-3.5 h-3.5" />
                   </Button>
@@ -282,7 +324,7 @@ export function SubmitToDiscoverModal({
           <Button
             onClick={handleSubmit}
             disabled={!title.trim() || submitMutation.isPending || aiLoading}
-            className="w-full h-12 rounded-xl text-sm font-medium"
+            className="w-full h-11 rounded-xl text-sm font-medium"
           >
             <Send className="w-4 h-4 mr-2" />
             {submitMutation.isPending ? 'Submitting...' : 'Submit for Review'}
