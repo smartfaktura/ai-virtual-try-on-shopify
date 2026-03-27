@@ -1,43 +1,34 @@
 
 
-# Fix "Recreating look from Discover" Banner — Show Images for Model & Scene
+# Add Selected Scenes Summary Above Scene Grid
 
-## Problem
-The banner shows model and scene names but no thumbnail images when the `modelImage`/`sceneImage` URL params are missing. This happens when the Discover preset's `model_image_url` or `scene_image_url` fields are null in the database — only the names are passed.
+## What
+Add a compact summary strip above the "Select Scenes" grid showing thumbnails + names of currently selected scenes. Only visible when ≥1 scene is selected. Improves clarity especially when scenes are pre-selected from Discover.
 
-## Solution
-In `Generate.tsx`, when initializing `recreateSource`, resolve missing image URLs by looking up the model/scene name against the existing mock data (models array, poses array) and custom scenes. This ensures images always appear regardless of how the navigation happened.
+## Where
+**`src/pages/Generate.tsx`** — between the header row (line 3657) and the scene grid (line 3659).
 
-### Changes to `src/pages/Generate.tsx`
+## Implementation
 
-1. **After models/poses data is available**, enhance `recreateSource` with resolved image URLs:
-   - If `recreateSource.modelImageUrl` is missing but `modelName` exists → find model in `models` array by name, use its `previewUrl`
-   - If `recreateSource.sceneImageUrl` is missing but `sceneName` exists → find pose in `poses` array or custom scenes by name, use its `previewUrl`
+Insert a conditional block that renders when `selectedPoses.size > 0`:
 
-2. **Add a `useEffect`** that runs when `recreateSource`, `models`, and `poses` are available:
-```typescript
-useEffect(() => {
-  if (!recreateSource) return;
-  let updated = false;
-  const patch = { ...recreateSource };
-  
-  if (!patch.modelImageUrl && patch.modelName) {
-    const found = models.find(m => m.name === patch.modelName);
-    if (found) { patch.modelImageUrl = found.previewUrl; updated = true; }
-  }
-  
-  if (!patch.sceneImageUrl && patch.sceneName) {
-    const found = poses.find(p => p.name === patch.sceneName);
-    if (found) { patch.sceneImageUrl = found.previewUrl; updated = true; }
-  }
-  
-  if (updated) setRecreateSource(patch);
-}, [models, poses]); // run once when data loads
+```tsx
+{selectedPoses.size > 0 && (
+  <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
+    <span className="text-xs text-muted-foreground self-center mr-1">Selected:</span>
+    {Array.from(selectedPoses).map(id => {
+      const pose = selectedPoseMap.get(id);
+      if (!pose) return null;
+      return (
+        <div key={id} className="flex items-center gap-1.5 bg-background rounded-md px-2 py-1 border text-xs">
+          <img src={getOptimizedUrl(pose.previewUrl, { quality: 50 })} alt={pose.name} className="w-6 h-6 rounded object-cover" />
+          <span className="font-medium truncate max-w-[120px]">{pose.name}</span>
+        </div>
+      );
+    })}
+  </div>
+)}
 ```
 
-This is ~15 lines added, single file change. The same pattern should also be applied to **`src/pages/Freestyle.tsx`** for consistency.
-
-### Files Modified
-- `src/pages/Generate.tsx` — add useEffect to resolve missing image URLs
-- `src/pages/Freestyle.tsx` — same resolution logic for the Freestyle recreate banner
+Single insertion (~15 lines), one file. Uses existing `selectedPoseMap` and `getOptimizedUrl` already available in scope.
 
