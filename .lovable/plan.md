@@ -1,30 +1,27 @@
 
 
-# Show All Discover Categories in Admin Metadata Dropdown
+# Show Item's Discover Categories (Multi-Select)
 
 ## Problem
-The "Discover Category" dropdown in the admin metadata editor only shows the 10 product-focused categories from `PRODUCT_CATEGORIES`. But `DISCOVER_CATEGORIES` in `categoryConstants.ts` includes 8 additional style categories (`editorial`, `commercial`, `lifestyle`, `campaign`, `cinematic`, `photography`, `styling`, `ads`) that items can be tagged with. Items with those categories show a blank/mismatched value in the dropdown.
+The "Discover Category" dropdown currently includes product label aliases (like "Fashion & Apparel") that aren't real discover categories. Also, items can belong to **multiple** discover categories (stored as `discover_categories` array), but the UI only allows selecting one.
 
-## Fix
+## Plan
 
-**File: `src/components/app/DiscoverDetailModal.tsx`** (~line 354-362)
+**File: `src/components/app/DiscoverDetailModal.tsx`**
 
-Replace the `PRODUCT_CATEGORIES` source with a combined list that includes all categories from `DISCOVER_CATEGORIES`:
+1. **Replace `ALL_DISCOVER_OPTIONS` with just `DISCOVER_CATEGORIES`** — only the 18 real discover category slugs, formatted with capitalized labels. Remove `PRODUCT_CATEGORIES` from the options list entirely.
 
-```typescript
-// Import DISCOVER_CATEGORIES alongside PRODUCT_CATEGORIES
-import { PRODUCT_CATEGORIES, DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
+2. **Convert the single-select `<Select>` for "Discover Category" into a multi-select chip/checkbox UI** that:
+   - Shows all 18 `DISCOVER_CATEGORIES` as toggleable chips or checkboxes
+   - Pre-selects the item's current `discover_categories` array values
+   - Uses the first selected category as the primary `category` field (for backward compatibility)
 
-// Build full dropdown options: product categories + style categories not already covered
-const ALL_DISCOVER_OPTIONS = [
-  ...PRODUCT_CATEGORIES.filter(c => c.id !== 'any'),
-  ...DISCOVER_CATEGORIES
-    .filter(c => !PRODUCT_CATEGORIES.some(p => p.id === c))
-    .map(c => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) })),
-];
-```
+3. **Update the save logic** (~line 643-668) to:
+   - Save the full array to `discover_categories` on `custom_scenes`
+   - Save the first selected value as the primary `category` on `discover_presets`
 
-Then use `ALL_DISCOVER_OPTIONS` in the Select dropdown instead of `PRODUCT_CATEGORIES.filter(...)`.
+### UI approach
+Replace the single `<Select>` with a compact grid of small toggleable chips (similar to tag selectors elsewhere in the app). Each chip shows the category name and highlights when selected.
 
-**1 file changed, ~5 lines modified.**
+**1 file changed.**
 
