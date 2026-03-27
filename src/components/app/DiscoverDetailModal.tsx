@@ -221,32 +221,32 @@ export function DiscoverDetailModal({
                   </button>
                 </div>
                 <div className="flex flex-col gap-2.5">
-                  {item.data.scene_name && (
+                  {(item.data as any).scene_name && (
                     <div className="flex items-center gap-2.5">
-                      {item.data.scene_image_url && (
+                      {(item.data as any).scene_image_url && (
                         <img
-                          src={getOptimizedUrl(item.data.scene_image_url, { quality: 60 })}
-                          alt={item.data.scene_name}
-           className="w-10 h-10 rounded-lg object-cover"
+                          src={getOptimizedUrl((item.data as any).scene_image_url, { quality: 60 })}
+                          alt={(item.data as any).scene_name}
+                          className="w-10 h-10 rounded-lg object-cover"
                         />
                       )}
                       <div>
-                        <p className="text-xs font-medium text-foreground">{item.data.scene_name}</p>
+                        <p className="text-xs font-medium text-foreground">{(item.data as any).scene_name}</p>
                         <p className="text-[10px] text-muted-foreground/60">Scene</p>
                       </div>
                     </div>
                   )}
-                  {item.data.model_name && (
+                  {(item.data as any).model_name && (
                     <div className="flex items-center gap-2.5">
-                      {item.data.model_image_url && (
+                      {(item.data as any).model_image_url && (
                         <img
-                          src={getOptimizedUrl(item.data.model_image_url, { quality: 60 })}
-                          alt={item.data.model_name}
-           className="w-10 h-10 rounded-lg object-cover"
+                          src={getOptimizedUrl((item.data as any).model_image_url, { quality: 60 })}
+                          alt={(item.data as any).model_name}
+                          className="w-10 h-10 rounded-lg object-cover"
                         />
                       )}
                       <div>
-                        <p className="text-xs font-medium text-foreground">{item.data.model_name}</p>
+                        <p className="text-xs font-medium text-foreground">{(item.data as any).model_name}</p>
                         <p className="text-[10px] text-muted-foreground/60">Model</p>
                       </div>
                     </div>
