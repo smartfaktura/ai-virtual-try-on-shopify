@@ -10,6 +10,7 @@ import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { poseCategoryLabels } from '@/data/mockData';
+import { DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
 
 type SceneType = 'on-model' | 'product';
 
