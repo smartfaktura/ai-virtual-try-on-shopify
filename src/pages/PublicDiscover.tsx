@@ -57,8 +57,6 @@ const CATEGORIES = [
   { id: 'supplements', label: 'Health' },
 ] as const;
 
-const PRODUCT_CATEGORY_MAP: Record<string, string[]> = {
-  editorial: ['fashion', 'fragrances', 'jewelry'],
   commercial: ['fashion', 'jewelry', 'accessories', 'electronics', 'beauty'],
   lifestyle: ['home', 'food', 'accessories', 'fashion'],
   fashion: ['fashion', 'accessories'],
