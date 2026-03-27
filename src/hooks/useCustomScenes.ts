@@ -93,3 +93,15 @@ export function useDeleteCustomScene() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['custom-scenes'] }),
   });
 }
+
+export function useUpdateCustomScene() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string }) => {
+      const { id, ...updates } = params;
+      const { error } = await supabase.from('custom_scenes' as any).update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['custom-scenes'] }),
+  });
+}

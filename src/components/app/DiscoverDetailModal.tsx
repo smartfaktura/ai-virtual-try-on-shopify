@@ -568,8 +568,6 @@ export function DiscoverDetailModal({
                           .update({
                             category: editSceneCategory || editCategory,
                             name: editSceneDisplayName.trim() || (item.data as any).name,
-                            description: editPrompt || '',
-                            prompt_hint: editPrompt || '',
                           })
                           .eq('id', realId);
                       }
