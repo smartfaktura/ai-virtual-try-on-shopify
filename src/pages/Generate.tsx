@@ -1147,7 +1147,14 @@ export default function Generate() {
               composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
               photography_reference: selectedBrandProfile.photography_reference,
             } : undefined,
-            selected_variations: [varIdx],
+            selected_variations: (() => {
+              const { remapped } = remapVariationIndices([varIdx]);
+              return remapped;
+            })(),
+            extra_variations: (() => {
+              const { extras } = remapVariationIndices([varIdx]);
+              return extras.length > 0 ? extras : undefined;
+            })(),
             product_angles: productAngle !== 'front' ? productAngle : undefined,
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
