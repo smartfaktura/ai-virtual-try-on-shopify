@@ -667,33 +667,33 @@ export function DiscoverDetailModal({
                           .update(presetData)
                           .eq('id', existingPreset.id);
                         setSavingMeta(false);
-                        if (error) { toast.error('Failed to save'); return; }
-                      } else {
-                        const { error } = await supabase
-                          .from('discover_presets')
-                          .insert({
-                            ...presetData,
-                            title: sceneTitle,
-                            slug: '',
-                            image_url: sceneImage,
-                          } as any);
-                        setSavingMeta(false);
-                        if (error) { toast.error('Failed to save: ' + error.message); return; }
-                      }
+if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
+                       } else {
+                         const { error } = await supabase
+                           .from('discover_presets')
+                           .insert({
+                             ...presetData,
+                             title: sceneTitle,
+                             slug: '',
+                             image_url: sceneImage,
+                           } as any);
+                         setSavingMeta(false);
+                         if (error) { toast.error('Failed to save: ' + error.message, { position: 'top-left' }); return; }
+                       }
 
-                      queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
-                      queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
-                      queryClient.invalidateQueries({ queryKey: ['public-custom-scenes'] });
-                      toast.success('Scene promoted to Discover preset');
-                    } else {
-                      const { error } = await supabase
-                        .from('discover_presets')
-                        .update(presetData)
-                        .eq('id', (item.data as any).id);
-                      setSavingMeta(false);
-                      if (error) { toast.error('Failed to save'); return; }
-                      queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
-                      toast.success('Metadata saved');
+                       queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+                       queryClient.invalidateQueries({ queryKey: ['custom-scenes'] });
+                       queryClient.invalidateQueries({ queryKey: ['public-custom-scenes'] });
+                       toast.success('Scene promoted to Discover preset', { position: 'top-left' });
+                     } else {
+                       const { error } = await supabase
+                         .from('discover_presets')
+                         .update(presetData)
+                         .eq('id', (item.data as any).id);
+                       setSavingMeta(false);
+                       if (error) { toast.error('Failed to save', { position: 'top-left' }); return; }
+                       queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+                       toast.success('Metadata saved', { position: 'top-left' });
                     }
                   }}
                 >
