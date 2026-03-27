@@ -17,6 +17,8 @@ export interface DiscoverSubmission {
   status: string;
   admin_note: string | null;
   created_at: string;
+  product_name?: string | null;
+  product_image_url?: string | null;
 }
 
 export function useDiscoverSubmissions() {
@@ -126,6 +128,8 @@ export function useApproveSubmission() {
           quality: submission.quality,
           sort_order: 0,
           is_featured: false,
+          product_name: submission.product_name || null,
+          product_image_url: submission.product_image_url || null,
         });
       if (insertError) throw insertError;
 
