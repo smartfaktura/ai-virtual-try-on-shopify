@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SharePopover } from '@/components/app/SharePopover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
 import { mockModels, mockTryOnPoses } from '@/data/mockData';
@@ -87,6 +88,8 @@ export function DiscoverDetailModal({
   const [editProductImageUrl, setEditProductImageUrl] = useState('');
   const [editProductSource, setEditProductSource] = useState<string>('__none__');
   const [savingMeta, setSavingMeta] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [productPopoverOpen, setProductPopoverOpen] = useState(false);
 
   const { data: workflows } = useQuery({
     queryKey: ['workflows-list'],
@@ -354,40 +357,71 @@ export function DiscoverDetailModal({
                 )}
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
-                  <Select
-                    value={editProductSource}
-                    onValueChange={(val) => {
-                      setEditProductSource(val);
-                      if (val === '__none__') {
-                        setEditProductName('');
-                        setEditProductImageUrl('');
-                      } else if (val === '__custom__') {
-                        // keep current values for manual editing
-                      } else {
-                        const found = myProducts?.find(p => p.id === val);
-                        if (found) {
-                          setEditProductName(found.title);
-                          setEditProductImageUrl(found.image_url);
-                        }
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select product" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
-                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
-                      <SelectItem value="__custom__" className="text-xs">Custom</SelectItem>
-                      {(myProducts ?? []).map(p => (
-                        <SelectItem key={p.id} value={p.id} className="text-xs" textValue={p.title}>
-                          <div className="flex items-center gap-2">
-                            <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
-                            <span>{p.title}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={productPopoverOpen} onOpenChange={(o) => { setProductPopoverOpen(o); if (!o) setProductSearch(''); }}>
+                    <PopoverTrigger asChild>
+                      <button className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-xs ring-offset-background hover:bg-accent/50 transition-colors">
+                        {editProductSource === '__none__' ? (
+                          <span className="text-muted-foreground">None</span>
+                        ) : editProductSource === '__custom__' ? (
+                          <span>Custom</span>
+                        ) : (() => {
+                          const found = myProducts?.find(p => p.id === editProductSource);
+                          return found ? (
+                            <div className="flex items-center gap-2 truncate">
+                              <img src={getOptimizedUrl(found.image_url, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                              <span className="truncate">{found.title}</span>
+                            </div>
+                          ) : <span className="text-muted-foreground">Select product</span>;
+                        })()}
+                        <Search className="h-3 w-3 shrink-0 opacity-50 ml-1" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="z-[300] w-[var(--radix-popover-trigger-width)] p-0" align="start" sideOffset={4} onPointerDownOutside={(e) => e.preventDefault()}>
+                      <div className="p-2 border-b border-border">
+                        <Input
+                          value={productSearch}
+                          onChange={(e) => setProductSearch(e.target.value)}
+                          placeholder="Search products..."
+                          className="h-7 text-xs"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-52 overflow-y-auto p-1">
+                        {!productSearch && (
+                          <>
+                            <button
+                              className={cn("flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs cursor-default hover:bg-accent", editProductSource === '__none__' && "bg-accent")}
+                              onClick={() => { setEditProductSource('__none__'); setEditProductName(''); setEditProductImageUrl(''); setProductPopoverOpen(false); }}
+                            >None</button>
+                            <button
+                              className={cn("flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs cursor-default hover:bg-accent", editProductSource === '__custom__' && "bg-accent")}
+                              onClick={() => { setEditProductSource('__custom__'); setProductPopoverOpen(false); }}
+                            >Custom</button>
+                          </>
+                        )}
+                        {(myProducts ?? [])
+                          .filter(p => !productSearch || p.title?.toLowerCase().includes(productSearch.toLowerCase()))
+                          .map(p => (
+                            <button
+                              key={p.id}
+                              className={cn("flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs cursor-default hover:bg-accent", editProductSource === p.id && "bg-accent")}
+                              onClick={() => {
+                                setEditProductSource(p.id);
+                                setEditProductName(p.title);
+                                setEditProductImageUrl(p.image_url);
+                                setProductPopoverOpen(false);
+                              }}
+                            >
+                              <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                              <span className="truncate">{p.title}</span>
+                            </button>
+                          ))}
+                        {productSearch && (myProducts ?? []).filter(p => p.title?.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                          <p className="text-xs text-muted-foreground text-center py-3">No products found</p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   {editProductSource === '__custom__' && (
                     <div className="grid grid-cols-2 gap-2 mt-1.5">
                       <Input
