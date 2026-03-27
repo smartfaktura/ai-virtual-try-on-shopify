@@ -7,6 +7,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,7 +21,7 @@ import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, useUpd
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from '@/lib/brandedToast';
-import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
+import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomScenes';
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
@@ -28,6 +30,7 @@ export default function AdminScenes() {
   const { sortMap, categoryMap } = useSceneSortOrder();
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
+  const updateSceneMutation = useUpdateCustomScene();
   const { allCategoryLabels, allCategorySlugs, customCategories } = useSceneCategories();
   const addCategoryMutation = useAddSceneCategory();
   const updateCategoryMutation = useUpdateSceneCategory();
@@ -43,6 +46,10 @@ export default function AdminScenes() {
   const [showHidden, setShowHidden] = useState(false);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState('');
+
+  // Track prompt_hint and prompt_only edits for custom scenes
+  const [promptEdits, setPromptEdits] = useState<Record<string, { prompt_hint?: string; prompt_only?: boolean }>>({});
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
 
   // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
@@ -220,7 +227,7 @@ export default function AdminScenes() {
     setEditingNameValue('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let globalOrder = 0;
     const entries: { scene_id: string; sort_order: number; category_override?: string | null }[] = [];
     for (const cat of categoryOrder) {
@@ -236,13 +243,48 @@ export default function AdminScenes() {
         });
       }
     }
+
+    // Also persist any prompt_hint / prompt_only edits for custom scenes
+    const promptUpdatePromises = Object.entries(promptEdits).map(([poseId, edits]) => {
+      const realId = poseId.replace('custom-', '');
+      return updateSceneMutation.mutateAsync({ id: realId, ...edits });
+    });
+
+    try {
+      await Promise.all(promptUpdatePromises);
+    } catch {
+      toast.error('Failed to save scene prompt changes');
+      return;
+    }
+
     saveSortOrder.mutate(entries, {
       onSuccess: () => {
         toast.success('Sort order saved');
         setDirty(false);
+        setPromptEdits({});
       },
       onError: () => toast.error('Failed to save sort order'),
     });
+  };
+
+  const updatePromptHint = (poseId: string, value: string) => {
+    setPromptEdits(prev => ({
+      ...prev,
+      [poseId]: { ...prev[poseId], prompt_hint: value },
+    }));
+    setDirty(true);
+  };
+
+  const togglePromptOnly = (poseId: string, value: boolean) => {
+    setPromptEdits(prev => ({
+      ...prev,
+      [poseId]: { ...prev[poseId], prompt_only: value },
+    }));
+    // Also update local orderedPoses so the UI reflects the change
+    setOrderedPoses(prev =>
+      prev.map(p => p.poseId === poseId ? { ...p, promptOnly: value } : p)
+    );
+    setDirty(true);
   };
 
   const activeCats = categoryOrder.filter(cat =>
@@ -502,6 +544,12 @@ export default function AdminScenes() {
                    defaultCategoryOrder={defaultCategoryOrder}
                    categoryLabels={allCategoryLabels}
                    showReorderButtons={false}
+                   promptEdits={promptEdits}
+                   editingPromptId={editingPromptId}
+                   setEditingPromptId={setEditingPromptId}
+                   updatePromptHint={updatePromptHint}
+                   togglePromptOnly={togglePromptOnly}
+                   customScenesRaw={customScenesRaw}
                 />
               ))}
             </div>
@@ -539,6 +587,12 @@ export default function AdminScenes() {
                        defaultCategoryOrder={defaultCategoryOrder}
                        categoryLabels={allCategoryLabels}
                        showReorderButtons={true}
+                       promptEdits={promptEdits}
+                       editingPromptId={editingPromptId}
+                       setEditingPromptId={setEditingPromptId}
+                       updatePromptHint={updatePromptHint}
+                       togglePromptOnly={togglePromptOnly}
+                       customScenesRaw={customScenesRaw}
                     />
                   ))}
                 </div>
@@ -609,6 +663,12 @@ interface SceneRowProps {
   defaultCategoryOrder: PoseCategory[];
   categoryLabels: Record<string, string>;
   showReorderButtons: boolean;
+  promptEdits: Record<string, { prompt_hint?: string; prompt_only?: boolean }>;
+  editingPromptId: string | null;
+  setEditingPromptId: (id: string | null) => void;
+  updatePromptHint: (poseId: string, value: string) => void;
+  togglePromptOnly: (poseId: string, value: boolean) => void;
+  customScenesRaw: import('@/hooks/useCustomScenes').CustomScene[];
 }
 
 function SceneRow({
@@ -617,9 +677,17 @@ function SceneRow({
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
   handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
+  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
+  const isCustom = isCustomScene(pose.poseId);
+
+  // Get the current prompt_hint value (edited or from DB)
+  const rawScene = isCustom ? customScenesRaw.find(s => `custom-${s.id}` === pose.poseId) : null;
+  const currentPromptHint = promptEdits[pose.poseId]?.prompt_hint ?? rawScene?.prompt_hint ?? pose.promptHint ?? '';
+  const currentPromptOnly = promptEdits[pose.poseId]?.prompt_only ?? pose.promptOnly ?? false;
+  const isEditingPrompt = editingPromptId === pose.poseId;
 
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 group">
@@ -674,19 +742,22 @@ function SceneRow({
               ))}
             </SelectContent>
           </Select>
-          {isCustomScene(pose.poseId) && (
+          {isCustom && (
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-0">Custom</Badge>
           )}
-          {isPromptOnly(pose) && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-amber-500/10 text-amber-600 border-0 cursor-help">Prompt Only</Badge>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[200px] text-xs">
-                Image is not sent to AI — only the prompt text is used for generation
-                {pose.promptHint && <p className="mt-1 text-muted-foreground italic truncate">{pose.promptHint}</p>}
-              </TooltipContent>
-            </Tooltip>
+          {isCustom ? (
+            <div className="flex items-center gap-1">
+              <Switch
+                checked={currentPromptOnly}
+                onCheckedChange={(val) => togglePromptOnly(pose.poseId, val)}
+                className="h-4 w-7 data-[state=checked]:bg-amber-500"
+              />
+              <span className="text-[9px] text-muted-foreground">Prompt Only</span>
+            </div>
+          ) : (
+            isPromptOnly(pose) && (
+              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-amber-500/10 text-amber-600 border-0">Prompt Only</Badge>
+            )
           )}
           {isDuplicate && (
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-blue-500/10 text-blue-600 border-0">Duplicate</Badge>
@@ -710,7 +781,7 @@ function SceneRow({
               <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 inline-block" />Local
             </span>
           )}
-          {pose.promptHint && (
+          {!isCustom && pose.promptHint && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-[9px] text-muted-foreground/50 italic truncate max-w-[200px] cursor-help">
@@ -729,6 +800,44 @@ function SceneRow({
             </span>
           )}
         </div>
+        {/* Inline prompt editor for custom scenes */}
+        {isCustom && (
+          <div className="mt-1.5">
+            {isEditingPrompt ? (
+              <div className="space-y-1">
+                <Textarea
+                  value={currentPromptHint}
+                  onChange={e => updatePromptHint(pose.poseId, e.target.value)}
+                  className="text-xs min-h-[60px] resize-y bg-muted/30 border-border/50"
+                  placeholder="Enter prompt hint for this scene…"
+                  rows={3}
+                />
+                <button
+                  onClick={() => setEditingPromptId(null)}
+                  className="text-[10px] text-primary hover:underline"
+                >
+                  Done editing
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setEditingPromptId(pose.poseId)}
+                className="text-left w-full group/prompt"
+              >
+                {currentPromptHint ? (
+                  <p className="text-[10px] text-muted-foreground/70 italic line-clamp-2 group-hover/prompt:text-foreground transition-colors">
+                    <span className="not-italic text-muted-foreground/40 mr-1">Prompt:</span>
+                    {currentPromptHint}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-destructive/60 group-hover/prompt:text-destructive transition-colors">
+                    ⚠ No prompt hint — click to add
+                  </p>
+                )}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
