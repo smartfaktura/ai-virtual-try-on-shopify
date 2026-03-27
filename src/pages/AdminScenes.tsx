@@ -838,7 +838,6 @@ function SceneRow({
             )}
           </div>
         )}
-        </div>
       </div>
 
       {/* Actions */}
