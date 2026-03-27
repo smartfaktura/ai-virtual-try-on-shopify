@@ -2693,6 +2693,7 @@ export default function Generate() {
 
         {/* Product Selection */}
         {currentStep === 'product' && (
+          <div className="space-y-4 pb-20">
           <Card><CardContent className="p-5 space-y-5">
             <div className="flex items-center justify-between">
               <div>
