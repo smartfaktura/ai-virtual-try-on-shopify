@@ -866,12 +866,15 @@ serve(async (req) => {
     );
 
     const allVariations = config.variation_strategy.variations;
+    // Support extra_variations sent from frontend (dynamic Freestyle scenes)
+    const extraVariations: VariationItem[] = Array.isArray(body.extra_variations) ? body.extra_variations : [];
+    const combinedVariations = [...allVariations, ...extraVariations];
     let variationsToGenerate: VariationItem[];
 
     if (body.selected_variations?.length) {
       variationsToGenerate = body.selected_variations
-        .filter((i) => i >= 0 && i < allVariations.length)
-        .map((i) => allVariations[i]);
+        .filter((i: number) => i >= 0 && i < combinedVariations.length)
+        .map((i: number) => combinedVariations[i]);
     } else {
       variationsToGenerate = allVariations;
     }

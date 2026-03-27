@@ -656,8 +656,21 @@ export default function Generate() {
         setSelectedPoses(new Set([matchedScene.poseId]));
         setSelectedPoseMap(new Map([[matchedScene.poseId, matchedScene]]));
       }
+      // Also pre-select in workflow variation grid if applicable
+      if (variationStrategy?.type === 'scene' && variationStrategy.variations?.length) {
+        const matchIdx = variationStrategy.variations.findIndex(
+          v => v.label.toLowerCase() === prefillSceneName.toLowerCase()
+        );
+        if (matchIdx >= 0) {
+          setSelectedVariationIndices(prev => {
+            const next = new Set(prev);
+            next.add(matchIdx);
+            return next;
+          });
+        }
+      }
     }
-  }, [prefillModelName, prefillSceneName, customPoses, allModels]);
+  }, [prefillModelName, prefillSceneName, customPoses, allModels, variationStrategy]);
 
   // Scroll to top when step changes
   useEffect(() => {
