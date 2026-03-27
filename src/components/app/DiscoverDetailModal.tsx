@@ -411,72 +411,80 @@ export function DiscoverDetailModal({
                       )}
                       <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     </button>
-                    <Dialog open={sceneDialogOpen} onOpenChange={setSceneDialogOpen}>
-                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col p-0">
-                        <div className="px-4 pt-4 pb-2 border-b border-border/40 space-y-2">
-                          <DialogTitle className="text-sm font-semibold">Select Scene</DialogTitle>
-                          <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <Input
-                              value={sceneSearch}
-                              onChange={(e) => setSceneSearch(e.target.value)}
-                              placeholder="Search scenes..."
-                              className="h-8 pl-8 text-xs"
-                              autoFocus
-                            />
+                    {sceneDialogOpen && (
+                      <div className="fixed inset-0 z-[250] flex items-center justify-center p-4" onClick={() => setSceneDialogOpen(false)}>
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+                        <div className="relative z-10 bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                          <div className="px-4 pt-4 pb-2 border-b border-border/40 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-semibold">Select Scene</p>
+                              <button onClick={() => setSceneDialogOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input
+                                value={sceneSearch}
+                                onChange={(e) => setSceneSearch(e.target.value)}
+                                placeholder="Search scenes..."
+                                className="h-8 pl-8 text-xs"
+                                autoFocus
+                              />
+                            </div>
+                          </div>
+                          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+                            <button
+                              onClick={() => { setEditSceneName('__none__'); setSceneDialogOpen(false); }}
+                              className={cn('w-full text-left px-3 py-2 rounded-md text-xs transition-colors', editSceneName === '__none__' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground')}
+                            >
+                              None (no scene)
+                            </button>
+                            {(() => {
+                              const q = sceneSearch.toLowerCase();
+                              const filtered = q ? allSceneOptions.filter(s => s.name.toLowerCase().includes(q)) : allSceneOptions;
+                              const grouped = new Map<string, typeof filtered>();
+                              filtered.forEach(s => {
+                                const arr = grouped.get(s.category) ?? [];
+                                arr.push(s);
+                                grouped.set(s.category, arr);
+                              });
+                              return Array.from(grouped.entries()).map(([cat, scenes]) => (
+                                <div key={cat}>
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-2 px-1">
+                                    {poseCategoryLabels[cat] ?? cat}
+                                  </p>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {scenes.map(s => (
+                                      <button
+                                        key={s.name}
+                                        onClick={() => { setEditSceneName(s.name); setSceneDialogOpen(false); }}
+                                        className={cn(
+                                          'rounded-lg overflow-hidden border-2 transition-all',
+                                          editSceneName === s.name ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border'
+                                        )}
+                                      >
+                                        <ShimmerImage
+                                          src={getOptimizedUrl(s.imageUrl, { quality: 50 })}
+                                          alt={s.name}
+                                          className="w-full aspect-[4/5] object-cover"
+                                          wrapperClassName="h-auto"
+                                          aspectRatio="4/5"
+                                          loading="lazy"
+                                        />
+                                        <div className="px-1.5 py-1 bg-background">
+                                          <p className="text-[10px] font-medium text-foreground leading-tight truncate">{s.name}</p>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ));
+                            })()}
                           </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-                          <button
-                            onClick={() => { setEditSceneName('__none__'); setSceneDialogOpen(false); }}
-                            className={cn('w-full text-left px-3 py-2 rounded-md text-xs transition-colors', editSceneName === '__none__' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-muted-foreground')}
-                          >
-                            None (no scene)
-                          </button>
-                          {(() => {
-                            const q = sceneSearch.toLowerCase();
-                            const filtered = q ? allSceneOptions.filter(s => s.name.toLowerCase().includes(q)) : allSceneOptions;
-                            const grouped = new Map<string, typeof filtered>();
-                            filtered.forEach(s => {
-                              const arr = grouped.get(s.category) ?? [];
-                              arr.push(s);
-                              grouped.set(s.category, arr);
-                            });
-                            return Array.from(grouped.entries()).map(([cat, scenes]) => (
-                              <div key={cat}>
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-2 px-1">
-                                  {poseCategoryLabels[cat] ?? cat}
-                                </p>
-                                <div className="grid grid-cols-4 gap-2">
-                                  {scenes.map(s => (
-                                    <button
-                                      key={s.name}
-                                      onClick={() => { setEditSceneName(s.name); setSceneDialogOpen(false); }}
-                                      className={cn(
-                                        'rounded-lg overflow-hidden border-2 transition-all',
-                                        editSceneName === s.name ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border'
-                                      )}
-                                    >
-                                      <ShimmerImage
-                                        src={getOptimizedUrl(s.imageUrl, { quality: 50 })}
-                                        alt={s.name}
-                                        className="w-full aspect-[4/5] object-cover"
-                                        wrapperClassName="h-auto"
-                                        aspectRatio="4/5"
-                                        loading="lazy"
-                                      />
-                                      <div className="px-1.5 py-1 bg-background">
-                                        <p className="text-[10px] font-medium text-foreground leading-tight truncate">{s.name}</p>
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-1">
