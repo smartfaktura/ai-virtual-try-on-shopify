@@ -73,7 +73,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { convertImageToBase64 } from '@/lib/imageUtils';
-import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
+import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
 import { useModelSortOrder } from '@/hooks/useModelSortOrder';
@@ -421,8 +421,43 @@ export default function Generate() {
   // Workflow generation config shortcuts
   const workflowConfig = activeWorkflow?.generation_config ?? null;
   const hasWorkflowConfig = !!workflowConfig;
-  const variationStrategy = workflowConfig?.variation_strategy;
+  const rawVariationStrategy = workflowConfig?.variation_strategy;
   const uiConfig = workflowConfig?.ui_config;
+
+  // Product-scene categories to merge from Freestyle into scene-type workflows
+  const PRODUCT_SCENE_CATEGORIES: PoseCategory[] = ['clean-studio', 'surface', 'flat-lay', 'product-editorial', 'kitchen', 'living-space', 'bathroom', 'botanical', 'outdoor', 'workspace', 'restaurant', 'retail', 'seasonal', 'beauty', 'fitness'];
+
+  // Merge Freestyle product scenes into workflow variation strategy
+  const variationStrategy = useMemo(() => {
+    if (!rawVariationStrategy || rawVariationStrategy.type !== 'scene') return rawVariationStrategy;
+    // Only merge for workflows that show scene picker (not flat-lay, not interior)
+    const wName = activeWorkflow?.name;
+    if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging') return rawVariationStrategy;
+
+    const dbVariations = rawVariationStrategy.variations;
+    const dbLabelsLower = new Set(dbVariations.map(v => v.label.toLowerCase()));
+
+    const freestyleScenes = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]))
+      .filter(s => PRODUCT_SCENE_CATEGORIES.includes(s.category))
+      .filter(s => !dbLabelsLower.has(s.name.toLowerCase()));
+
+    if (freestyleScenes.length === 0) return rawVariationStrategy;
+
+    const mappedScenes = freestyleScenes.map(s => ({
+      label: s.name,
+      instruction: s.promptHint,
+      preview_url: s.promptOnly ? undefined : s.previewUrl,
+      category: poseCategoryLabels[s.category] || s.category,
+    }));
+
+    return {
+      ...rawVariationStrategy,
+      variations: [...dbVariations, ...mappedScenes],
+    };
+  }, [rawVariationStrategy, customPoses, activeWorkflow?.name, sortScenes, applyCategoryOverrides, filterVisible]);
+
+  // Track how many variations came from DB vs dynamic
+  const dbVariationCount = rawVariationStrategy?.variations?.length ?? 0;
 
   // Selected variation indices for workflow generation
   const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
@@ -621,8 +656,21 @@ export default function Generate() {
         setSelectedPoses(new Set([matchedScene.poseId]));
         setSelectedPoseMap(new Map([[matchedScene.poseId, matchedScene]]));
       }
+      // Also pre-select in workflow variation grid if applicable
+      if (variationStrategy?.type === 'scene' && variationStrategy.variations?.length) {
+        const matchIdx = variationStrategy.variations.findIndex(
+          v => v.label.toLowerCase() === prefillSceneName.toLowerCase()
+        );
+        if (matchIdx >= 0) {
+          setSelectedVariationIndices(prev => {
+            const next = new Set(prev);
+            next.add(matchIdx);
+            return next;
+          });
+        }
+      }
     }
-  }, [prefillModelName, prefillSceneName, customPoses, allModels]);
+  }, [prefillModelName, prefillSceneName, customPoses, allModels, variationStrategy]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -1200,6 +1248,14 @@ export default function Generate() {
         photography_reference: selectedBrandProfile.photography_reference,
       } : undefined,
       selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      extra_variations: (() => {
+        if (selectedVariationIndices.size === 0) return undefined;
+        const extras = Array.from(selectedVariationIndices)
+          .filter(i => i >= dbVariationCount)
+          .map(i => variationStrategy?.variations[i])
+          .filter(Boolean);
+        return extras.length > 0 ? extras : undefined;
+      })(),
       product_angles: productAngle !== 'front' ? productAngle : undefined,
       quality,
       aspectRatio: selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios)[0] : aspectRatio,
