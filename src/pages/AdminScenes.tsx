@@ -742,19 +742,22 @@ function SceneRow({
               ))}
             </SelectContent>
           </Select>
-          {isCustomScene(pose.poseId) && (
+          {isCustom && (
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-0">Custom</Badge>
           )}
-          {isPromptOnly(pose) && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-amber-500/10 text-amber-600 border-0 cursor-help">Prompt Only</Badge>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[200px] text-xs">
-                Image is not sent to AI — only the prompt text is used for generation
-                {pose.promptHint && <p className="mt-1 text-muted-foreground italic truncate">{pose.promptHint}</p>}
-              </TooltipContent>
-            </Tooltip>
+          {isCustom ? (
+            <div className="flex items-center gap-1">
+              <Switch
+                checked={currentPromptOnly}
+                onCheckedChange={(val) => togglePromptOnly(pose.poseId, val)}
+                className="h-4 w-7 data-[state=checked]:bg-amber-500"
+              />
+              <span className="text-[9px] text-muted-foreground">Prompt Only</span>
+            </div>
+          ) : (
+            isPromptOnly(pose) && (
+              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-amber-500/10 text-amber-600 border-0">Prompt Only</Badge>
+            )
           )}
           {isDuplicate && (
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-blue-500/10 text-blue-600 border-0">Duplicate</Badge>
@@ -778,7 +781,7 @@ function SceneRow({
               <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 inline-block" />Local
             </span>
           )}
-          {pose.promptHint && (
+          {!isCustom && pose.promptHint && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-[9px] text-muted-foreground/50 italic truncate max-w-[200px] cursor-help">
@@ -796,6 +799,45 @@ function SceneRow({
               {new Date(pose.created_at).toLocaleDateString()}
             </span>
           )}
+        </div>
+        {/* Inline prompt editor for custom scenes */}
+        {isCustom && (
+          <div className="mt-1.5">
+            {isEditingPrompt ? (
+              <div className="space-y-1">
+                <Textarea
+                  value={currentPromptHint}
+                  onChange={e => updatePromptHint(pose.poseId, e.target.value)}
+                  className="text-xs min-h-[60px] resize-y bg-muted/30 border-border/50"
+                  placeholder="Enter prompt hint for this scene…"
+                  rows={3}
+                />
+                <button
+                  onClick={() => setEditingPromptId(null)}
+                  className="text-[10px] text-primary hover:underline"
+                >
+                  Done editing
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setEditingPromptId(pose.poseId)}
+                className="text-left w-full group/prompt"
+              >
+                {currentPromptHint ? (
+                  <p className="text-[10px] text-muted-foreground/70 italic line-clamp-2 group-hover/prompt:text-foreground transition-colors">
+                    <span className="not-italic text-muted-foreground/40 mr-1">Prompt:</span>
+                    {currentPromptHint}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-destructive/60 group-hover/prompt:text-destructive transition-colors">
+                    ⚠ No prompt hint — click to add
+                  </p>
+                )}
+              </button>
+            )}
+          </div>
+        )}
         </div>
       </div>
 
