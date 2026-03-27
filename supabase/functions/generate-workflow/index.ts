@@ -37,6 +37,9 @@ interface VariationItem {
   aspect_ratio?: string;
   category?: string;
   scope?: string;
+  preview_url?: string;
+  prompt_only?: boolean;
+  use_scene_reference?: boolean;
 }
 
 // Room Type Descriptions for Interior Design workflow
@@ -868,7 +871,15 @@ serve(async (req) => {
     const allVariations = config.variation_strategy.variations;
     // Support extra_variations sent from frontend (dynamic Freestyle scenes)
     const extraVariations: VariationItem[] = Array.isArray(body.extra_variations) ? body.extra_variations : [];
-    const combinedVariations = [...allVariations, ...extraVariations];
+    // Normalize: ensure every variation has a non-empty instruction
+    const normalizeInstruction = (v: VariationItem): VariationItem => {
+      if (v.instruction?.trim()) return v;
+      const fallback = v.label
+        ? `Place the product in a ${v.label} environment, styled as ${v.category || 'product'} photography`
+        : 'A high-quality product photograph in a professional setting';
+      return { ...v, instruction: fallback };
+    };
+    const combinedVariations = [...allVariations, ...extraVariations].map(normalizeInstruction);
     let variationsToGenerate: VariationItem[];
 
     if (body.selected_variations?.length) {
@@ -997,6 +1008,11 @@ serve(async (req) => {
           }
           if (body.model?.imageUrl) {
             referenceImages.push({ url: body.model.imageUrl, label: "model" });
+          }
+          // Add scene reference image when available and not prompt-only
+          if (variation.use_scene_reference && variation.preview_url && !variation.prompt_only) {
+            referenceImages.push({ url: variation.preview_url, label: "scene_reference" });
+            console.log(`[generate-workflow] Adding scene reference image for "${variation.label}"`);
           }
 
           const imageUrl = await generateImage(
