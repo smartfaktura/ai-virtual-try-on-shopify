@@ -544,6 +544,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     enabled: !!shareProductId,
   });
 
+  const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
 
   if (!hasContent) {
     return (
