@@ -635,6 +635,10 @@ export function DiscoverDetailModal({
                   if (d.scene_name) params.set('scene', d.scene_name);
                   if (d.model_image_url) params.set('modelImage', d.model_image_url);
                   if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
+                  if (!d.scene_image_url && item.type === 'scene' && (item.data as any).previewUrl) {
+                    params.set('sceneImage', (item.data as any).previewUrl);
+                    if (!d.scene_name && (item.data as any).name) params.set('scene', (item.data as any).name);
+                  }
                   navigate(`/app/generate/${wSlug}?${params.toString()}`);
                 } else {
                   onClose();
@@ -646,6 +650,10 @@ export function DiscoverDetailModal({
                   if (d.scene_name) params.set('scene', d.scene_name);
                   if (d.model_image_url) params.set('modelImage', d.model_image_url);
                   if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
+                  if (!d.scene_image_url && item.type === 'scene' && (item.data as any).previewUrl) {
+                    params.set('sceneImage', (item.data as any).previewUrl);
+                    if (!d.scene_name && (item.data as any).name) params.set('scene', (item.data as any).name);
+                  }
                   params.set('fromDiscover', '1');
                   navigate(`/app/freestyle?${params.toString()}`);
                 }

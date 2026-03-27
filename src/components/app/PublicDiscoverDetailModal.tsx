@@ -181,6 +181,13 @@ export function PublicDiscoverDetailModal({
                   if (item.data.scene_image_url) params.set('sceneImage', item.data.scene_image_url);
                   params.set('fromDiscover', '1');
                   navigate(`/auth?redirect=/app/freestyle?${params.toString()}`);
+                } else if (item.type === 'scene') {
+                  const params = new URLSearchParams();
+                  params.set('scene', (item.data as any).poseId || '');
+                  if ((item.data as any).previewUrl) params.set('sceneImage', (item.data as any).previewUrl);
+                  if ((item.data as any).name) params.set('sceneName', (item.data as any).name);
+                  params.set('fromDiscover', '1');
+                  navigate(`/auth?redirect=/app/freestyle?${params.toString()}`);
                 } else {
                   navigate('/auth');
                 }

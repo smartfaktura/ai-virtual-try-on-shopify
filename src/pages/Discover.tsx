@@ -427,7 +427,12 @@ export default function Discover() {
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
-      navigate(`/app/freestyle?scene=${item.data.poseId}`);
+      const sp = new URLSearchParams();
+      sp.set('scene', item.data.poseId);
+      if (item.data.previewUrl) sp.set('sceneImage', item.data.previewUrl);
+      if (item.data.name) sp.set('sceneName', item.data.name);
+      sp.set('fromDiscover', '1');
+      navigate(`/app/freestyle?${sp.toString()}`);
     } else {
       const d = item.data;
       // If it's a workflow preset, route to Generate page with model/scene pre-filled
