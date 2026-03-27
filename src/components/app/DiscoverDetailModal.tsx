@@ -658,6 +658,7 @@ export function DiscoverDetailModal({
                           .update({
                             category: editSceneCategory || editCategory,
                             name: editSceneDisplayName.trim() || (item.data as any).name,
+                            discover_categories: [editCategory],
                           })
                           .eq('id', realId);
                       }
