@@ -127,10 +127,19 @@ export function LandingPricing() {
                 </div>
 
                 <ul className="flex-1 space-y-3 mb-6">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                      {feature}
+                      {typeof feature === 'string' ? feature : (
+                        <span className="inline-flex items-center gap-1.5">
+                          {feature.text}
+                          {feature.badge && (
+                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                              {feature.badge}
+                            </Badge>
+                          )}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
