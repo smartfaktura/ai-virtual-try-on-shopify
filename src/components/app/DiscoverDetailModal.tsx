@@ -282,12 +282,39 @@ export function DiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Admin: Edit Metadata {isScene && <span className="text-primary/60">(Scene)</span>}
                 </p>
+                {/* Debug info */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] font-mono bg-muted/30 rounded-lg p-2">
+                  <span className="text-muted-foreground/60">Type</span>
+                  <span className="text-foreground/80">{isScene ? 'scene' : 'preset'}</span>
+                  <span className="text-muted-foreground/60">ID</span>
+                  <button
+                    className="text-foreground/80 text-left hover:text-primary truncate transition-colors"
+                    title="Click to copy"
+                    onClick={() => {
+                      const id = isScene ? poseId : (item.data as any).id;
+                      navigator.clipboard.writeText(id || '');
+                      toast.success('ID copied');
+                    }}
+                  >{isScene ? poseId : (item.data as any).id}</button>
+                  <span className="text-muted-foreground/60">Slug</span>
+                  <span className="text-foreground/80 truncate">{getItemSlug(item)}</span>
+                  {isScene && (
+                    <>
+                      <span className="text-muted-foreground/60">Prompt Only</span>
+                      <span className="text-foreground/80">{(item.data as any).promptOnly ? 'yes' : 'no'}</span>
+                    </>
+                  )}
+                  <span className="text-muted-foreground/60">DB Category</span>
+                  <span className="text-foreground/80">{isScene ? (item.data as any).category || '—' : (item.data as any).category || '—'}</span>
+                  <span className="text-muted-foreground/60">DB Workflow</span>
+                  <span className="text-foreground/80">{(item.data as any).workflow_slug || '—'}</span>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={editCategory} onValueChange={setEditCategory}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+                     <SelectContent className="z-[300] max-h-60">
                       {DISCOVER_CATEGORIES.map(c => (
                         <SelectItem key={c} value={c} className="text-xs capitalize">{c}</SelectItem>
                       ))}
@@ -297,7 +324,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Workflow" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+                     <SelectContent className="z-[300] max-h-60">
                       <SelectItem value="__freestyle__" className="text-xs">Freestyle</SelectItem>
                       {(workflows ?? []).map(w => (
                         <SelectItem key={w.slug} value={w.slug} className="text-xs">{w.name}</SelectItem>
@@ -308,7 +335,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Model" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+                     <SelectContent className="z-[300] max-h-60">
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allModelOptions.map((m, idx) => (
                         <SelectItem key={`model-${idx}`} value={m.name} className="text-xs" textValue={m.name}>
@@ -324,7 +351,7 @@ export function DiscoverDetailModal({
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Scene" />
                     </SelectTrigger>
-                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+                     <SelectContent className="z-[300] max-h-60">
                       <SelectItem value="__none__" className="text-xs">None</SelectItem>
                       {allSceneOptions.map((s, idx) => (
                         <SelectItem key={`scene-${idx}`} value={s.name} className="text-xs" textValue={s.name}>
@@ -365,7 +392,7 @@ export function DiscoverDetailModal({
                         <Search className="h-3 w-3 shrink-0 opacity-50 ml-1" />
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="z-[300] w-[var(--radix-popover-trigger-width)] p-0" align="start" sideOffset={4} onPointerDownOutside={(e) => e.preventDefault()}>
+                    <PopoverContent className="z-[300] w-[var(--radix-popover-trigger-width)] p-0" align="start" sideOffset={4}>
                       <div className="p-2 border-b border-border">
                         <Input
                           value={productSearch}
@@ -428,11 +455,30 @@ export function DiscoverDetailModal({
                     </div>
                   )}
                 </div>
+                {(() => {
+                  const origCategory = isScene ? ((item.data as any).category || 'lifestyle') : ((item.data as any).category || 'fashion');
+                  const origWorkflow = (item.data as any).workflow_slug || '__freestyle__';
+                  const origModel = (item.data as any).model_name || '__none__';
+                  const origScene = (item.data as any).scene_name || '__none__';
+                  const origPrompt = isScene ? ((item.data as any).promptHint || (item.data as any).description || '') : ((item.data as any).prompt || '');
+                  const origProduct = (item.data as any).product_name || '';
+                  const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct;
+                  return null; // rendered below
+                })()}
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={savingMeta}
-                  className="w-full h-8 text-xs"
+                  className={cn("w-full h-8 text-xs", (() => {
+                    const origCategory = isScene ? ((item.data as any).category || 'lifestyle') : ((item.data as any).category || 'fashion');
+                    const origWorkflow = (item.data as any).workflow_slug || '__freestyle__';
+                    const origModel = (item.data as any).model_name || '__none__';
+                    const origScene = (item.data as any).scene_name || '__none__';
+                    const origPrompt = isScene ? ((item.data as any).promptHint || (item.data as any).description || '') : ((item.data as any).prompt || '');
+                    const origProduct = (item.data as any).product_name || '';
+                    const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct;
+                    return hasChanges ? 'border-primary text-primary hover:bg-primary/10' : '';
+                  })())}
                   onClick={async () => {
                     setSavingMeta(true);
 
