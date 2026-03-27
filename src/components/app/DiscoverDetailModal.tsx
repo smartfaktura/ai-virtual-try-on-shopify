@@ -85,6 +85,7 @@ export function DiscoverDetailModal({
   const [editPrompt, setEditPrompt] = useState('');
   const [editProductName, setEditProductName] = useState('');
   const [editProductImageUrl, setEditProductImageUrl] = useState('');
+  const [editProductSource, setEditProductSource] = useState<string>('__none__');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
@@ -93,6 +94,15 @@ export function DiscoverDetailModal({
       const { data } = await supabase.from('workflows').select('id, name, slug').order('sort_order');
       return data ?? [];
     },
+  });
+
+  const { data: myProducts } = useQuery({
+    queryKey: ['my-products'],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_products').select('id, title, image_url').order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!isAdmin,
   });
 
   const itemId = item?.type === 'preset' ? item.data.id : item?.type === 'scene' ? item.data.poseId : null;
@@ -107,6 +117,12 @@ export function DiscoverDetailModal({
       setEditPrompt(item.data.prompt || '');
       setEditProductName(item.data.product_name || '');
       setEditProductImageUrl(item.data.product_image_url || '');
+      // Determine product source
+      if (item.data.product_name) {
+        setEditProductSource('__custom__');
+      } else {
+        setEditProductSource('__none__');
+      }
     } else {
       setEditModelName('__none__');
       setEditSceneName('__none__');
@@ -115,6 +131,7 @@ export function DiscoverDetailModal({
       setEditPrompt('');
       setEditProductName('');
       setEditProductImageUrl('');
+      setEditProductSource('__none__');
     }
   }, [itemId, open]);
 
@@ -337,20 +354,56 @@ export function DiscoverDetailModal({
                 )}
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={editProductName}
-                      onChange={(e) => setEditProductName(e.target.value)}
-                      placeholder="Product name"
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      value={editProductImageUrl}
-                      onChange={(e) => setEditProductImageUrl(e.target.value)}
-                      placeholder="Product image URL"
-                      className="h-8 text-xs"
-                    />
-                  </div>
+                  <Select
+                    value={editProductSource}
+                    onValueChange={(val) => {
+                      setEditProductSource(val);
+                      if (val === '__none__') {
+                        setEditProductName('');
+                        setEditProductImageUrl('');
+                      } else if (val === '__custom__') {
+                        // keep current values for manual editing
+                      } else {
+                        const found = myProducts?.find(p => p.id === val);
+                        if (found) {
+                          setEditProductName(found.title);
+                          setEditProductImageUrl(found.image_url);
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[300] max-h-60" onPointerDownOutside={(e) => e.preventDefault()}>
+                      <SelectItem value="__none__" className="text-xs">None</SelectItem>
+                      <SelectItem value="__custom__" className="text-xs">Custom</SelectItem>
+                      {(myProducts ?? []).map(p => (
+                        <SelectItem key={p.id} value={p.id} className="text-xs" textValue={p.title}>
+                          <div className="flex items-center gap-2">
+                            <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                            <span>{p.title}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editProductSource === '__custom__' && (
+                    <div className="grid grid-cols-2 gap-2 mt-1.5">
+                      <Input
+                        value={editProductName}
+                        onChange={(e) => setEditProductName(e.target.value)}
+                        placeholder="Product name"
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={editProductImageUrl}
+                        onChange={(e) => setEditProductImageUrl(e.target.value)}
+                        placeholder="Product image URL"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  )}
                 </div>
                 <Button
                   size="sm"
