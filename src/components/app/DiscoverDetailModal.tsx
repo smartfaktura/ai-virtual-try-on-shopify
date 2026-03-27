@@ -85,6 +85,7 @@ export function DiscoverDetailModal({
   const [editPrompt, setEditPrompt] = useState('');
   const [editProductName, setEditProductName] = useState('');
   const [editProductImageUrl, setEditProductImageUrl] = useState('');
+  const [editProductSource, setEditProductSource] = useState<string>('__none__');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
@@ -93,6 +94,15 @@ export function DiscoverDetailModal({
       const { data } = await supabase.from('workflows').select('id, name, slug').order('sort_order');
       return data ?? [];
     },
+  });
+
+  const { data: myProducts } = useQuery({
+    queryKey: ['my-products'],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_products').select('id, title, image_url').order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!isAdmin,
   });
 
   const itemId = item?.type === 'preset' ? item.data.id : item?.type === 'scene' ? item.data.poseId : null;
