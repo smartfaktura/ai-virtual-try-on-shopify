@@ -2,7 +2,7 @@ import React from 'react';
 import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Smartphone, Camera, Lock, Gauge, Sparkles, Palette, Image,
+  Smartphone, Camera, Lock, Gauge, Sparkles, Palette,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,7 +19,7 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
-export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '9:16' | '16:9' | 'original';
+export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '9:16' | '16:9';
 
 const AspectIcon34 = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 14 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="16" rx="2" /></svg>
@@ -32,7 +32,6 @@ const AspectIcon916 = ({ className }: { className?: string }) => (
 );
 
 const ASPECT_RATIOS: { value: FreestyleAspectRatio; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { value: 'original', label: 'Original', icon: Image },
   { value: '1:1', label: '1:1', icon: Square },
   { value: '3:4', label: '3:4', icon: AspectIcon34 },
   { value: '4:5', label: '4:5', icon: AspectIcon45 },

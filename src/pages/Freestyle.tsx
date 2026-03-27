@@ -42,6 +42,29 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
+function detectClosestRatio(imageUrl: string): Promise<FreestyleAspectRatio> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const r = img.width / img.height;
+      const ratios: { value: FreestyleAspectRatio; r: number }[] = [
+        { value: '1:1', r: 1 },
+        { value: '3:4', r: 0.75 },
+        { value: '4:5', r: 0.8 },
+        { value: '9:16', r: 0.5625 },
+        { value: '16:9', r: 1.7778 },
+      ];
+      let best = ratios[0];
+      for (const entry of ratios) {
+        if (Math.abs(r - entry.r) < Math.abs(r - best.r)) best = entry;
+      }
+      resolve(best.value);
+    };
+    img.onerror = () => resolve('1:1');
+    img.src = imageUrl;
+  });
+}
+
 
 function getProductModelInteraction(productType: string): string {
   const type = productType.toLowerCase();
@@ -302,7 +325,8 @@ export default function Freestyle() {
     convertImageToBase64(editImageParam).then(b64 => setSourceImage(b64)).catch(() => setSourceImage(editImageParam));
     if (imageRoleParam === 'edit') {
       setImageRole('edit');
-      setAspectRatio('original');
+      setQuality('high');
+      detectClosestRatio(editImageParam).then(setAspectRatio);
     }
     setIsPromptCollapsed(false);
     // Clear only the edit params
@@ -428,6 +452,7 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
+    detectClosestRatio(previewUrl).then(setAspectRatio);
   }, []);
 
   const handleFileDrop = useCallback(async (file: File) => {
@@ -436,6 +461,7 @@ export default function Freestyle() {
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    detectClosestRatio(previewUrl).then(setAspectRatio);
   }, []);
 
   const removeSourceImage = useCallback(() => {
