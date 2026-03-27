@@ -30,7 +30,7 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [promptHint, setPromptHint] = useState('');
-  const [promptOnly, setPromptOnly] = useState(false);
+  const [promptOnly, setPromptOnly] = useState(true);
   const [sceneType, setSceneType] = useState<SceneType>('on-model');
   const [category, setCategory] = useState('studio');
   const [discoverCategory, setDiscoverCategory] = useState('fashion');
