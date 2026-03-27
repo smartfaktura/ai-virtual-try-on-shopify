@@ -117,6 +117,12 @@ export function DiscoverDetailModal({
       setEditPrompt(item.data.prompt || '');
       setEditProductName(item.data.product_name || '');
       setEditProductImageUrl(item.data.product_image_url || '');
+      // Determine product source
+      if (item.data.product_name) {
+        setEditProductSource('__custom__');
+      } else {
+        setEditProductSource('__none__');
+      }
     } else {
       setEditModelName('__none__');
       setEditSceneName('__none__');
@@ -125,6 +131,7 @@ export function DiscoverDetailModal({
       setEditPrompt('');
       setEditProductName('');
       setEditProductImageUrl('');
+      setEditProductSource('__none__');
     }
   }, [itemId, open]);
 
