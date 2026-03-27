@@ -1274,13 +1274,14 @@ export default function Generate() {
         composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
         photography_reference: selectedBrandProfile.photography_reference,
       } : undefined,
-      selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      selected_variations: (() => {
+        if (selectedVariationIndices.size === 0) return undefined;
+        const { remapped } = remapVariationIndices(Array.from(selectedVariationIndices));
+        return remapped;
+      })(),
       extra_variations: (() => {
         if (selectedVariationIndices.size === 0) return undefined;
-        const extras = Array.from(selectedVariationIndices)
-          .filter(i => i >= dbVariationCount)
-          .map(i => variationStrategy?.variations[i])
-          .filter(Boolean);
+        const { extras } = remapVariationIndices(Array.from(selectedVariationIndices));
         return extras.length > 0 ? extras : undefined;
       })(),
       product_angles: productAngle !== 'front' ? productAngle : undefined,
