@@ -694,6 +694,26 @@ export default function Generate() {
     }
   }, [prefillModelName, prefillSceneName, customPoses, allModels, variationStrategy]);
 
+  // Resolve missing image URLs for recreate banner (when DB fields are null)
+  useEffect(() => {
+    if (!recreateSource) return;
+    let updated = false;
+    const patch = { ...recreateSource };
+
+    if (!patch.modelImageUrl && patch.modelName) {
+      const found = allModels.find(m => m.name.toLowerCase() === patch.modelName!.toLowerCase());
+      if (found) { patch.modelImageUrl = found.previewUrl; updated = true; }
+    }
+
+    if (!patch.sceneImageUrl && patch.sceneName) {
+      const allPoses = [...mockTryOnPoses, ...customPoses];
+      const found = allPoses.find(p => p.name.toLowerCase() === patch.sceneName!.toLowerCase());
+      if (found) { patch.sceneImageUrl = found.previewUrl; updated = true; }
+    }
+
+    if (updated) setRecreateSource(patch);
+  }, [allModels, customPoses]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Scroll to top when step changes
   useEffect(() => {
     document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
