@@ -23,14 +23,12 @@ import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneCategories } from '@/hooks/useSceneCategories';
 
-import { PRODUCT_CATEGORIES, DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
+import { DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
 
-const ALL_DISCOVER_OPTIONS = [
-  ...PRODUCT_CATEGORIES.filter(c => c.id !== 'any'),
-  ...DISCOVER_CATEGORIES
-    .filter(c => !PRODUCT_CATEGORIES.some(p => p.id === c))
-    .map(c => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) })),
-];
+const DISCOVER_CATEGORY_OPTIONS = DISCOVER_CATEGORIES.map(c => ({
+  id: c,
+  label: c.charAt(0).toUpperCase() + c.slice(1),
+}));
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -90,7 +88,7 @@ export function DiscoverDetailModal({
 
   const [editModelName, setEditModelName] = useState('__none__');
   const [editSceneName, setEditSceneName] = useState('__none__');
-  const [editCategory, setEditCategory] = useState('fashion');
+  const [editCategories, setEditCategories] = useState<string[]>(['fashion']);
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [editPrompt, setEditPrompt] = useState('');
   const [editProductName, setEditProductName] = useState('');
@@ -130,7 +128,7 @@ export function DiscoverDetailModal({
     const d = item?.data as any;
     setEditModelName(d?.model_name || '__none__');
     setEditSceneName(d?.scene_name || '__none__');
-    setEditCategory(d?.category || 'fashion');
+    setEditCategories(d?.discover_categories?.length ? [...d.discover_categories] : d?.category ? [d.category] : ['fashion']);
     setEditWorkflowSlug(d?.workflow_slug || '__freestyle__');
     setEditPrompt(d?.prompt || '');
     setEditProductName(d?.product_name || '');
@@ -355,20 +353,37 @@ export function DiscoverDetailModal({
                     </div>
                   </div>
                 )}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground/60">Discover Categories</p>
+                  <div className="flex flex-wrap gap-1">
+                    {DISCOVER_CATEGORY_OPTIONS.map(cat => {
+                      const isSelected = editCategories.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setEditCategories(prev =>
+                              isSelected
+                                ? prev.filter(c => c !== cat.id)
+                                : [...prev, cat.id]
+                            );
+                          }}
+                          className={cn(
+                            'h-6 px-2 rounded-full text-[10px] font-medium border transition-colors',
+                            isSelected
+                              ? 'border-primary/40 bg-primary/10 text-primary'
+                              : 'border-border/60 bg-muted/30 text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground/70'
+                          )}
+                        >
+                          {cat.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-medium text-muted-foreground/60">Discover Category</p>
-                    <Select value={editCategory} onValueChange={setEditCategory}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Category" />
-                      </SelectTrigger>
-                       <SelectContent className="z-[300] max-h-60">
-                        {ALL_DISCOVER_OPTIONS.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground/60">Workflow</p>
                     <Select value={editWorkflowSlug} onValueChange={setEditWorkflowSlug}>
