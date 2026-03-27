@@ -39,7 +39,8 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
   const sceneName = isPreset ? item.data.scene_name : null;
   const modelThumb = isPreset ? item.data.model_image_url : null;
   const modelName = isPreset ? item.data.model_name : null;
-  const genLabel = getGenerationLabel(item);
+  const productThumb = isPreset ? item.data.product_image_url : null;
+  const productName = isPreset ? item.data.product_name : null;
 
   return (
     <div
@@ -98,6 +99,12 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
                 <span className="text-white/90 text-[11px] font-medium truncate">{modelName}</span>
               </div>
             )}
+            {productThumb && productName && (
+              <div className="flex items-center gap-2">
+                <img src={getOptimizedUrl(productThumb, { quality: 60 })} alt={productName} className="w-7 h-7 rounded-md object-cover" />
+                <span className="text-white/90 text-[11px] font-medium truncate">{productName}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -119,12 +126,14 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
           </div>
         )}
 
-        {/* Generation type badge */}
-        <div className="flex items-center justify-center">
-          <span className="text-white/50 text-[10px] font-medium tracking-wide uppercase">
-            {genLabel}
-          </span>
-        </div>
+        {/* Product chip or scene label for items without thumbnails */}
+        {isPreset && productName && !productThumb && (
+          <div className="flex items-center justify-center">
+            <span className="text-white/50 text-[10px] font-medium tracking-wide">
+              {productName}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Mobile-only recreate button (touch devices) */}

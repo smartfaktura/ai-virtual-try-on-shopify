@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { Input } from '@/components/ui/input';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Heart, Search, X, Eye, Star, Trash2 } from 'lucide-react';
@@ -82,6 +83,8 @@ export function DiscoverDetailModal({
   const [editCategory, setEditCategory] = useState('fashion');
   const [editWorkflowSlug, setEditWorkflowSlug] = useState('__freestyle__');
   const [editPrompt, setEditPrompt] = useState('');
+  const [editProductName, setEditProductName] = useState('');
+  const [editProductImageUrl, setEditProductImageUrl] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
 
   const { data: workflows } = useQuery({
@@ -102,12 +105,16 @@ export function DiscoverDetailModal({
       setEditCategory(item.data.category || 'fashion');
       setEditWorkflowSlug(item.data.workflow_slug || '__freestyle__');
       setEditPrompt(item.data.prompt || '');
+      setEditProductName(item.data.product_name || '');
+      setEditProductImageUrl(item.data.product_image_url || '');
     } else {
       setEditModelName('__none__');
       setEditSceneName('__none__');
       setEditCategory('fashion');
       setEditWorkflowSlug('__freestyle__');
       setEditPrompt('');
+      setEditProductName('');
+      setEditProductImageUrl('');
     }
   }, [itemId, open]);
 
@@ -328,6 +335,23 @@ export function DiscoverDetailModal({
                     rows={3}
                   />
                 )}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-medium text-muted-foreground/60">Product</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={editProductName}
+                      onChange={(e) => setEditProductName(e.target.value)}
+                      placeholder="Product name"
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      value={editProductImageUrl}
+                      onChange={(e) => setEditProductImageUrl(e.target.value)}
+                      placeholder="Product image URL"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
@@ -338,6 +362,24 @@ export function DiscoverDetailModal({
                     const selectedModel = editModelName !== '__none__' ? allModelOptions.find(m => m.name === editModelName) : null;
                     const selectedScene = editSceneName !== '__none__' ? allSceneOptions.find(s => s.name === editSceneName) : null;
                     const selectedWorkflow = editWorkflowSlug !== '__freestyle__' ? (workflows ?? []).find(w => w.slug === editWorkflowSlug) : null;
+
+                    // Generate secure preview for product image if provided
+                    let safeProductImageUrl: string | null = null;
+                    if (editProductImageUrl.trim()) {
+                      try {
+                        const { data: previewData, error: previewErr } = await supabase.functions.invoke('generate-discover-preview', {
+                          body: { sourceUrl: editProductImageUrl.trim(), postId: item.data.id },
+                        });
+                        if (!previewErr && previewData?.publicUrl) {
+                          safeProductImageUrl = previewData.publicUrl;
+                        } else {
+                          safeProductImageUrl = editProductImageUrl.trim();
+                        }
+                      } catch {
+                        safeProductImageUrl = editProductImageUrl.trim();
+                      }
+                    }
+
                     const update: Record<string, string | null> = {
                       category: editCategory,
                       model_name: selectedModel?.name ?? null,
@@ -347,6 +389,8 @@ export function DiscoverDetailModal({
                       workflow_slug: selectedWorkflow?.slug ?? null,
                       workflow_name: selectedWorkflow?.name ?? null,
                       prompt: editPrompt || null,
+                      product_name: editProductName.trim() || null,
+                      product_image_url: safeProductImageUrl,
                     };
                     const { error } = await supabase
                       .from('discover_presets')
@@ -362,6 +406,8 @@ export function DiscoverDetailModal({
                     (item.data as any).workflow_slug = update.workflow_slug;
                     (item.data as any).workflow_name = update.workflow_name;
                     (item.data as any).prompt = editPrompt || null;
+                    (item.data as any).product_name = update.product_name;
+                    (item.data as any).product_image_url = update.product_image_url;
                     queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
                     toast.success('Metadata saved');
                   }}

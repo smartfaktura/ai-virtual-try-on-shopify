@@ -75,3 +75,5 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.try-website-shot]
     verify_jwt = false
+  [functions.generate-discover-preview]
+    verify_jwt = false
