@@ -1,16 +1,15 @@
 
 
-# Disable MetricCard Hover Popovers on Mobile
+# Hide Subtitles and Category Badges on PoseSelectorCard
 
 ## Problem
-The hover-triggered popovers on dashboard metric cards don't work well on mobile (no hover events on touch devices).
+The scene cards in Virtual Try-On show category badges ("Lifestyle", "Studio") and description subtitles that clutter the UI unnecessarily.
 
 ## Fix
-**`src/components/app/MetricCard.tsx`**
+**`src/components/app/PoseSelectorCard.tsx`**
 
-1. Import `useIsMobile` hook
-2. Call it inside the component
-3. When `isMobile` is true, skip the Popover wrapper entirely — just return `cardContent` directly (same as the `if (!tooltip)` branch)
+1. Remove the category badge (`poseCategoryLabels` badge in top-left corner)
+2. Remove the description line (`pose.description` paragraph) — keep only the pose name
 
-This is a ~3-line change: one import, one hook call, and updating the condition from `if (!tooltip)` to `if (!tooltip || isMobile)`.
+Two deletions, single file.
 
