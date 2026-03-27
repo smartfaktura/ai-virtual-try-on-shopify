@@ -1,63 +1,19 @@
 
 
-# Analysis: Video Settings Audit + Fix Hover Flash
+# Set Default Grid Layout to 3 Columns (Desktop/Tablet) and 2 Columns (Mobile)
 
-## 1. Fix: Video Hub Hover Flash
+## Changes
 
-The flash happens because when you hover, the `<video>` element mounts with `opacity-0`, but there's a brief moment where the video element renders before `onCanPlay` fires. The black/white flash is the video element's default background appearing.
+### File: `src/pages/Workflows.tsx`
 
-**Fix in `src/pages/VideoHub.tsx`**:
-- Add `bg-transparent` to the video element
-- Start with `visibility: hidden` until `canPlay` is true (instead of just opacity)
-- Or simpler: keep the video element always mounted but hidden, and only show poster image swap after canPlay
+1. **Change default layout** from `'rows'` to `'3col'` (line 38) — so new users and users without a saved preference see the 3-column grid by default.
 
-## 2. Audit: What Actually Reaches Kling API
+2. **Fix the mobile/tablet clamp logic** (line 49) — currently `isMobile` only covers `<768px`. Need to allow `'3col'` on tablet too (768–1279px). The current clamp forces tablet to `'2col'` which is wrong per the request. Change:
+   - `const effectiveLayout = isMobile && layout === '3col' ? '2col' : layout;`
+   - To: `const effectiveLayout = isMobile ? (layout === '3col' ? '2col' : layout) : layout;`
+   - This keeps 3col available on tablet (since `isMobile` is `<768`), and clamps to 2col on mobile. Tablet and desktop both get 3col by default.
 
-Here's exactly what the edge function (`generate-video/index.ts` line 124-134) sends to Kling's `image2video` endpoint:
+3. **Update grid column classes** (lines 473 and 500) — currently `'3col'` uses `grid-cols-2 lg:grid-cols-3`. Change to `grid-cols-2 md:grid-cols-3` so tablet (≥768px) also gets 3 columns instead of waiting for `lg` (≥1024px).
 
-| Setting in UI | Sent to Kling API? | How? |
-|---|---|---|
-| **Image URL** | YES | `image` field directly |
-| **Prompt** (built from all category assemblers) | YES | `prompt` field — this is where ALL motion/camera/audio hints live |
-| **Duration** (5s/10s) | YES | `duration` field |
-| **Aspect Ratio** (9:16, 1:1, 16:9) | YES | `aspect_ratio` field |
-| **Mode** (std/pro) | YES | `mode` field (hardcoded to `std`) |
-| **Negative Prompt** | YES | `negative_prompt` field |
-| **CFG Scale** | YES | `cfg_scale` field |
-| **Audio** (silent/ambient) | YES | `sound: "on"/"off"` toggle |
-| **Model Name** | YES | `model_name` (defaults to `kling-v3`) |
-| **Camera Motion** | PROMPT ONLY | Baked into prompt text via `CAMERA_PHRASES` — no structured `camera_control` param sent |
-| **Subject Motion** | PROMPT ONLY | Baked into prompt via strategy's `action_verb`/`action_style` |
-| **Realism Level** | PROMPT + CFG | Affects prompt wording + adjusts `cfg_scale` |
-| **Loop Style** | PROMPT ONLY | Appended as text clause |
-| **Motion Intensity** | PROMPT ONLY | Wording only (subtle/moderate/dynamic) |
-| **Preservation Rules** (scene, product, identity, outfit) | PROMPT ONLY | Text clauses like "Preserve: scene composition..." |
-| **Audio Hints** | PROMPT ONLY | Appended text when ambient mode is on |
-| **Product Category** | PROMPT ONLY | Selects which category assembler builds the prompt |
-| **Scene Type** | PROMPT ONLY | Influences motion goal selection + audio hints |
-| **Motion Goal** | PROMPT ONLY | Determines action verb/style/moving elements |
-| **`camera_control_config`** | **NOT SENT** | Passed through to payload but the edge function **ignores it** (line 136 comment: "kling-v3 does NOT support structured camera_control") |
-
-### Key Finding: `camera_control_config` is Dead Code
-The strategy resolver computes it, `useGenerateVideo` includes it in the payload, but the edge function deliberately drops it. This is correct per Kling v3 docs — structured camera control isn't supported for image2video.
-
-### What Actually Matters
-Everything flows through the **prompt text**. The only Kling-native controls that affect output are:
-1. `prompt` — the main driver of all motion/camera/style
-2. `negative_prompt` — what to avoid
-3. `cfg_scale` — prompt adherence strength
-4. `sound` — on/off toggle
-5. `duration` — 5 or 10 seconds
-6. `aspect_ratio` — frame shape
-7. `mode` — std vs pro quality
-
-## Plan
-
-### File 1: `src/pages/VideoHub.tsx` — Fix hover flash
-- Add `poster` attribute to `<video>` pointing to the source image to prevent black frame flash
-- Add `bg-transparent` styling
-- Use `visibility: hidden` instead of `opacity-0` for the pre-canPlay state to fully prevent any rendering flash
-
-### File 2: No code changes needed
-The audit above is the deliverable — the settings pipeline is working as designed. All controls correctly funnel into prompt text since Kling v3 doesn't support structured params for image2video.
+These are the only changes needed — 3 small edits in one file.
 
