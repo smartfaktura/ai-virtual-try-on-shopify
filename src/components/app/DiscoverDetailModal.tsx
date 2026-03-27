@@ -20,6 +20,7 @@ import { getItemSlug } from '@/lib/slugUtils';
 import { mockModels, mockTryOnPoses } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useSceneCategories } from '@/hooks/useSceneCategories';
 
 const DISCOVER_CATEGORIES = ['fashion', 'beauty', 'fragrances', 'jewelry', 'accessories', 'home', 'food', 'electronics', 'sports', 'supplements', 'editorial', 'commercial', 'lifestyle', 'campaign', 'cinematic', 'photography', 'styling', 'ads'] as const;
 
@@ -90,6 +91,10 @@ export function DiscoverDetailModal({
   const [savingMeta, setSavingMeta] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
+  const [editSceneDisplayName, setEditSceneDisplayName] = useState('');
+  const [editSceneCategory, setEditSceneCategory] = useState('lifestyle');
+
+  const { allCategoryLabels, allCategorySlugs } = useSceneCategories();
 
   const { data: workflows } = useQuery({
     queryKey: ['workflows-list'],
@@ -121,6 +126,8 @@ export function DiscoverDetailModal({
     setEditProductName(d?.product_name || '');
     setEditProductImageUrl(d?.product_image_url || '');
     setEditProductSource(d?.product_name ? '__custom__' : '__none__');
+    setEditSceneDisplayName(d?.name || '');
+    setEditSceneCategory(d?.category || 'lifestyle');
   }, [itemId, open]);
 
   // Lock body scroll when open
@@ -309,6 +316,35 @@ export function DiscoverDetailModal({
                   <span className="text-muted-foreground/60">DB Workflow</span>
                   <span className="text-foreground/80">{(item.data as any).workflow_slug || '—'}</span>
                 </div>
+                {/* Scene-specific editable fields */}
+                {isCustomScene && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-2">
+                      <p className="text-[10px] font-medium text-muted-foreground/60 mb-1">Scene Display Name</p>
+                      <Input
+                        value={editSceneDisplayName}
+                        onChange={(e) => setEditSceneDisplayName(e.target.value)}
+                        placeholder="Scene name"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-[10px] font-medium text-muted-foreground/60 mb-1">Scene Category</p>
+                      <Select value={editSceneCategory} onValueChange={setEditSceneCategory}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[300] max-h-60">
+                          {allCategorySlugs.map(slug => (
+                            <SelectItem key={slug} value={slug} className="text-xs capitalize">
+                              {allCategoryLabels[slug] || slug}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={editCategory} onValueChange={setEditCategory}>
                     <SelectTrigger className="h-8 text-xs">
@@ -462,7 +498,9 @@ export function DiscoverDetailModal({
                   const origScene = (item.data as any).scene_name || '__none__';
                   const origPrompt = isScene ? ((item.data as any).promptHint || (item.data as any).description || '') : ((item.data as any).prompt || '');
                   const origProduct = (item.data as any).product_name || '';
-                  const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct;
+                  const origSceneDisplayName = (item.data as any).name || '';
+                  const origSceneCategory = (item.data as any).category || 'lifestyle';
+                  const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                   return null; // rendered below
                 })()}
                 <Button
@@ -476,7 +514,9 @@ export function DiscoverDetailModal({
                     const origScene = (item.data as any).scene_name || '__none__';
                     const origPrompt = isScene ? ((item.data as any).promptHint || (item.data as any).description || '') : ((item.data as any).prompt || '');
                     const origProduct = (item.data as any).product_name || '';
-                    const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct;
+                    const origSceneDisplayName = (item.data as any).name || '';
+                    const origSceneCategory = (item.data as any).category || 'lifestyle';
+                    const hasChanges = editCategory !== origCategory || editWorkflowSlug !== origWorkflow || editModelName !== origModel || editSceneName !== origScene || editPrompt !== origPrompt || editProductName !== origProduct || (isScene && (editSceneDisplayName !== origSceneDisplayName || editSceneCategory !== origSceneCategory));
                     return hasChanges ? 'border-primary text-primary hover:bg-primary/10' : '';
                   })())}
                   onClick={async () => {
@@ -526,7 +566,8 @@ export function DiscoverDetailModal({
                         await supabase
                           .from('custom_scenes')
                           .update({
-                            category: editCategory,
+                            category: editSceneCategory || editCategory,
+                            name: editSceneDisplayName.trim() || (item.data as any).name,
                             description: editPrompt || '',
                             prompt_hint: editPrompt || '',
                           })
