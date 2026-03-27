@@ -460,6 +460,25 @@ export default function Generate() {
   // Track how many variations came from DB vs dynamic
   const dbVariationCount = rawVariationStrategy?.variations?.length ?? 0;
 
+  // Remap frontend variation indices to backend-compatible indices.
+  // Frontend merges DB variations + all dynamic scenes into one big array.
+  // Backend rebuilds: [...DB variations, ...only the selected extras].
+  // So extras at frontend index N must be remapped to dbCount + position within the selected extras list.
+  const remapVariationIndices = useCallback((frontendIndices: number[]): { remapped: number[]; extras: Array<Record<string, unknown>> } => {
+    const extraFrontendIndices = frontendIndices.filter(i => i >= dbVariationCount).sort((a, b) => a - b);
+    const extras = extraFrontendIndices
+      .map(i => variationStrategy?.variations[i])
+      .filter(Boolean) as Array<Record<string, unknown>>;
+
+    const remapped = frontendIndices.map(idx => {
+      if (idx < dbVariationCount) return idx;
+      const posInExtras = extraFrontendIndices.indexOf(idx);
+      return dbVariationCount + posInExtras;
+    });
+
+    return { remapped, extras: extras.length > 0 ? extras : [] };
+  }, [dbVariationCount, variationStrategy]);
+
   // Selected variation indices for workflow generation
   const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
   const variationInitRef = useRef<string | null>(null);
