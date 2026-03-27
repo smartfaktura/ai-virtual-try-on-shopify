@@ -85,7 +85,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
       {/* Hover overlay (desktop) */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 gap-2 hidden [@media(hover:hover)]:flex">
         {/* Scene & Model thumbnails */}
-        {isPreset && (sceneThumb || modelThumb) && (
+        {(sceneThumb || modelThumb) && (
           <div className="flex flex-col gap-1.5 mb-1">
             {sceneThumb && sceneName && (
               <div className="flex items-center gap-2">
@@ -114,20 +114,18 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
             onClick={(e) => { e.stopPropagation(); onRecreate(e); }}
             className="self-center px-4 py-1.5 rounded-full bg-white/95 text-black text-xs font-semibold hover:bg-white transition-colors flex items-center gap-1.5 shadow-lg"
           >
-            {isScene ? 'Use this scene' : 'Recreate this'} <ArrowRight className="w-3 h-3" />
+            Recreate this <ArrowRight className="w-3 h-3" />
           </button>
         ) : (
           <div className="text-center">
-            {isScene ? (
-              <span className="text-white/80 text-xs">{item.data.name}</span>
-            ) : (
-              <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">{item.data.prompt}</p>
-            )}
+            <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">
+              {isPreset ? item.data.prompt : item.data.name}
+            </p>
           </div>
         )}
 
         {/* Product chip or scene label for items without thumbnails */}
-        {isPreset && productName && !productThumb && (
+        {productName && !productThumb && (
           <div className="flex items-center justify-center">
             <span className="text-white/50 text-[10px] font-medium tracking-wide">
               {productName}
