@@ -544,6 +544,12 @@ export default function AdminScenes() {
                    defaultCategoryOrder={defaultCategoryOrder}
                    categoryLabels={allCategoryLabels}
                    showReorderButtons={false}
+                   promptEdits={promptEdits}
+                   editingPromptId={editingPromptId}
+                   setEditingPromptId={setEditingPromptId}
+                   updatePromptHint={updatePromptHint}
+                   togglePromptOnly={togglePromptOnly}
+                   customScenesRaw={customScenesRaw}
                 />
               ))}
             </div>
@@ -581,6 +587,12 @@ export default function AdminScenes() {
                        defaultCategoryOrder={defaultCategoryOrder}
                        categoryLabels={allCategoryLabels}
                        showReorderButtons={true}
+                       promptEdits={promptEdits}
+                       editingPromptId={editingPromptId}
+                       setEditingPromptId={setEditingPromptId}
+                       updatePromptHint={updatePromptHint}
+                       togglePromptOnly={togglePromptOnly}
+                       customScenesRaw={customScenesRaw}
                     />
                   ))}
                 </div>
