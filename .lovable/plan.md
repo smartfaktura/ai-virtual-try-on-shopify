@@ -1,17 +1,15 @@
 
 
-# Use Product Categories (not Discover Categories) in Add Scene Modal
+# Show Scroll Arrows on "Steal This Look" Category Bar
 
 ## Problem
-The "Add as Scene" modal currently shows all 18 Discover categories including content-style tags (editorial, commercial, cinematic, etc.) that don't make sense when categorizing a scene by product type. It should show only the 10 product categories with proper labels.
+The category bar in the Dashboard's "Steal This Look" section passes `hideArrows` prop, which hides the left/right scroll arrows. This makes it hard to navigate the horizontal category list.
 
 ## Change
 
-### `src/components/app/AddSceneModal.tsx`
-- Replace `DISCOVER_CATEGORIES` import with `PRODUCT_CATEGORIES` import from `categoryConstants.ts`
-- Update the Discover Category chip section to iterate over `PRODUCT_CATEGORIES` instead
-- Use `cat.label` for display text and `cat.id` for the value
-- This gives: Fashion & Apparel, Beauty & Skincare, Fragrances, Jewelry, Accessories, Home & Decor, Food & Beverage, Electronics, Sports & Fitness, Health & Supplements
+### `src/components/app/DashboardDiscoverSection.tsx` (line 226)
+- Remove the `hideArrows` prop from the `<DiscoverCategoryBar>` component
+- The arrows will then appear automatically when the list is scrollable (using the existing `useScrollArrows` hook logic in `DiscoverCategoryBar`)
 
-One file, ~5 lines changed.
+One line removed, no other files affected.
 
