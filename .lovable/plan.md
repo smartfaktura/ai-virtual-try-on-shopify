@@ -1,34 +1,30 @@
 
 
-# Fix: Remaining Category Label Mismatches
+# Show All Discover Categories in Admin Metadata Dropdown
 
 ## Problem
-When a category gets saved using its full display label (e.g. "Fashion & Apparel" instead of "fashion"), the Discover filter can't match it. We fixed "Beauty & Skincare" already, but 5 other full-label variants are still missing from `PRODUCT_CATEGORY_MAP`.
-
-Missing aliases:
-- `"Fashion & Apparel"` → should map to `['fashion']`
-- `"Home & Decor"` → should map to `['home']`
-- `"Food & Beverage"` → should map to `['food']`
-- `"Sports & Fitness"` → should map to `['sports']`
-- `"Health & Supplements"` → should map to `['supplements']`
+The "Discover Category" dropdown in the admin metadata editor only shows the 10 product-focused categories from `PRODUCT_CATEGORIES`. But `DISCOVER_CATEGORIES` in `categoryConstants.ts` includes 8 additional style categories (`editorial`, `commercial`, `lifestyle`, `campaign`, `cinematic`, `photography`, `styling`, `ads`) that items can be tagged with. Items with those categories show a blank/mismatched value in the dropdown.
 
 ## Fix
 
-Add these 5 entries to `PRODUCT_CATEGORY_MAP` in all 3 files:
-- `src/pages/Discover.tsx`
-- `src/pages/PublicDiscover.tsx`
-- `src/components/app/DashboardDiscoverSection.tsx`
+**File: `src/components/app/DiscoverDetailModal.tsx`** (~line 354-362)
+
+Replace the `PRODUCT_CATEGORIES` source with a combined list that includes all categories from `DISCOVER_CATEGORIES`:
 
 ```typescript
-'Fashion & Apparel': ['fashion'],
-'Home & Decor': ['home'],
-'Food & Beverage': ['food'],
-'Sports & Fitness': ['sports'],
-'Health & Supplements': ['supplements'],
+// Import DISCOVER_CATEGORIES alongside PRODUCT_CATEGORIES
+import { PRODUCT_CATEGORIES, DISCOVER_CATEGORIES } from '@/lib/categoryConstants';
+
+// Build full dropdown options: product categories + style categories not already covered
+const ALL_DISCOVER_OPTIONS = [
+  ...PRODUCT_CATEGORIES.filter(c => c.id !== 'any'),
+  ...DISCOVER_CATEGORIES
+    .filter(c => !PRODUCT_CATEGORIES.some(p => p.id === c))
+    .map(c => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) })),
+];
 ```
 
-5 lines added per file, 3 files changed.
+Then use `ALL_DISCOVER_OPTIONS` in the Select dropdown instead of `PRODUCT_CATEGORIES.filter(...)`.
 
-## Bonus: DRY improvement (optional)
-All three files have identical `PRODUCT_CATEGORY_MAP` definitions. Could extract to a shared constant in `src/lib/categoryConstants.ts` alongside the existing `PRODUCT_CATEGORIES`. This would prevent future drift. Can do this as a follow-up if desired.
+**1 file changed, ~5 lines modified.**
 
