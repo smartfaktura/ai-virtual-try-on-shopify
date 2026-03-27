@@ -1,46 +1,50 @@
 
+Goal: restore strict workflow behavior so:
+1) Mirror Selfie Set shows only its built-in workflow scenes
+2) Product Listing Set shows only product-scene library items (including custom admin scenes like Skyline Laundry)
 
-# Fix: Product scenes leaking into wrong workflows + Skyline scene missing
+What I found
+- The dynamic scene injection in `src/pages/Generate.tsx` currently runs for almost all scene workflows except a few name checks.
+- Mirror Selfie is currently getting injected because it has `uses_tryon: false`, so it does not hit the skip condition.
+- Product Listing currently injects all custom scenes, including on-model ones, which causes unrelated scenes to appear.
 
-## Problems
+Implementation plan
 
-1. **Product scenes appearing in Selfie/UGC and Mirror Selfie workflows**: The merge logic at line 435 only skips "Flat Lay Set" and "Interior / Exterior Staging". Selfie/UGC and Mirror Selfie are NOT excluded, so all product scenes get injected into them.
+1) Make scene injection workflow-specific (whitelist, not broad rules)
+- File: `src/pages/Generate.tsx`
+- Change the merge gate so dynamic library injection runs only for `Product Listing Set` (prefer slug check: `product-listing-set`).
+- For every other workflow (including `mirror-selfie-set`), return DB `variation_strategy` unchanged.
 
-2. **Skyline Laundry missing from Product Listing Set**: Custom scenes whose category (or `category_override`) maps to an on-model category (studio/lifestyle/editorial/streetwear) get filtered out by `!ON_MODEL_CATEGORIES.includes(s.category)`. "Skyline Laundry" likely has a lifestyle or similar category, so it's excluded from the product scene merge.
+2) Enforce product-only filtering for injected scenes
+- File: `src/pages/Generate.tsx`
+- Keep a single predicate for “product scene” = category not in on-model set (`studio`, `lifestyle`, `editorial`, `streetwear`).
+- Apply this predicate to both built-in library scenes and custom admin scenes before merge.
+- Keep dedupe against existing DB variation labels so built-in workflow scenes are not duplicated.
 
-## Fix (single file: `src/pages/Generate.tsx`)
+3) Preserve existing behavior everywhere else
+- Do not change Freestyle picker logic or Creative Drop wizard in this pass (your report says only workflow scene lists are wrong now).
+- No database or backend function changes required.
 
-### A. Restrict merge to product-only workflows (~line 435)
+Technical details
+- Primary edit area: the `variationStrategy` `useMemo` in `Generate.tsx` (around current merge logic near lines ~430-458).
+- Replace current condition:
+  - from: broad exclusion checks (`Flat Lay`, `Interior`, `uses_tryon`)
+  - to: explicit inclusion check (`activeWorkflow?.slug === 'product-listing-set'`)
+- Build injected list with:
+  - `allLibraryScenes = sortScenes(applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]))`
+  - `productLibraryScenes = allLibraryScenes.filter(isProductScene)`
+  - merge only these into Product Listing Set.
 
-Change the exclusion list to a whitelist approach — only merge product scenes for workflows that are actually product-oriented. Skip the merge for:
-- `Flat Lay Set` (already skipped)
-- `Interior / Exterior Staging` (already skipped)  
-- Any workflow with `uses_tryon` (Try-On, Selfie/UGC, Mirror Selfie)
+Validation checklist (after implementation)
+1) `/app/generate/product-listing-set`:
+- Skyline Laundry is visible
+- only product-scene categories appear (no on-model scenes)
 
-```typescript
-if (wName === 'Flat Lay Set' || wName === 'Interior / Exterior Staging' || activeWorkflow?.uses_tryon) return rawVariationStrategy;
-```
+2) `/app/generate/mirror-selfie-set`:
+- only workflow’s built-in mirror environments appear
+- no injected product library scenes
 
-This prevents product scenes from appearing in Selfie/UGC and Mirror Selfie.
-
-### B. Include ALL custom scenes in product workflow merge (~line 440-441)
-
-For product workflows, remove the `ON_MODEL_CATEGORIES` filter from the merge. Custom scenes created by admins (like "Skyline Laundry") should appear regardless of their category. The filter was meant to exclude on-model *mock* poses (studio/lifestyle/editorial/streetwear from `mockTryOnPoses`), not custom admin scenes.
-
-Split the filtering: keep the on-model filter for mock poses only, but include all custom scenes:
-
-```typescript
-const filteredMockPoses = filterVisible(mockTryOnPoses).filter(s => !ON_MODEL_CATEGORIES.includes(s.category));
-const allCustom = customPoses; // Include ALL custom scenes
-const freestyleScenes = sortScenes(applyCategoryOverrides([...filteredMockPoses, ...allCustom]))
-  .filter(s => !dbLabelsLower.has(s.name.toLowerCase()));
-```
-
-This ensures "Skyline Laundry" and any other admin-created custom scene appears in Product Listing Set, regardless of its category assignment.
-
-## Summary
-
-One file changed (`Generate.tsx`), two tweaks:
-1. Add `activeWorkflow?.uses_tryon` to the skip condition → no product scenes in Selfie/UGC or Mirror Selfie
-2. Only apply `ON_MODEL_CATEGORIES` filter to built-in mock poses, not custom scenes → Skyline Laundry appears in Product Listing Set
-
+3) Quick regression:
+- Selfie / UGC Set unchanged
+- Flat Lay Set unchanged
+- Interior / Exterior Staging unchanged
