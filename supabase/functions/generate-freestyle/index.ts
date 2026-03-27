@@ -148,7 +148,7 @@ function polishUserPrompt(
   if (imageRole === 'edit' && context.hasSource) {
     const editLayers: string[] = [];
     if (rawPrompt.trim()) editLayers.push(rawPrompt);
-    editLayers.push("Edit the provided image. Preserve composition unless specified.");
+    editLayers.push("Edit the provided image surgically. Return the SAME image with ONLY the requested modification. Do NOT regenerate, reimagine, or recompose the image. Preserve all other details, composition, lighting, and colors exactly as they are.");
 
     const intentInstructions: Record<string, string> = {
       replace_product: "Replace the product in the image while preserving everything else.",
@@ -772,7 +772,8 @@ function buildContentArray(
   }
 
   if (sourceImage) {
-    const label = imageRole === 'product' ? '[PRODUCT IMAGE]'
+    const label = imageRole === 'edit' ? '[IMAGE TO EDIT]'
+      : imageRole === 'product' ? '[PRODUCT IMAGE]'
       : imageRole === 'model' ? '[MODEL REFERENCE]'
       : imageRole === 'scene' ? '[SCENE REFERENCE]'
       : '[REFERENCE IMAGE]';
@@ -1219,11 +1220,14 @@ serve(async (req) => {
       finalPrompt = unpolished;
     }
 
-    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
+    const isEditMode = body.imageRole === 'edit' && !!body.sourceImage;
+    const aspectPrompt = isEditMode
+      ? `${finalPrompt}\n\nIMPORTANT: Return the edited image at the SAME dimensions and aspect ratio as the input image. Do not crop, resize, or reframe. Preserve everything except the requested edit.`
+      : `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
 
     const forceProModel = !!(body as Record<string, unknown>).forceProModel;
     const hasModelImage = !!body.modelImage || (!!body.sourceImage && body.imageRole === 'model');
-    const isEditMode = body.imageRole === 'edit' && !!body.sourceImage;
+    // isEditMode already declared above
     const providerOverride = ((body as Record<string, unknown>).providerOverride as string) || null;
     const aiModel = (forceProModel || isPerspective || hasModelImage || body.quality === "high" || isEditMode)
       ? "google/gemini-3-pro-image-preview"
