@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BrandedTooltip {
   text: string;
@@ -114,7 +115,9 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     </div>
   );
 
-  if (!tooltip) return cardContent;
+  const isMobile = useIsMobile();
+
+  if (!tooltip || isMobile) return cardContent;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
