@@ -95,7 +95,9 @@ export function AddSceneModal({ open, onClose, imageUrl, sourcePrompt }: AddScen
       return;
     }
     try {
-      await addScene.mutateAsync({ name, description, category, image_url: imageUrl, prompt_hint: finalPromptHint, prompt_only: promptOnly, discover_categories: discoverCategories });
+      // Use the first selected discover category as the scene's primary category for Discover filtering
+      const discoverCategory = discoverCategories.length > 0 ? discoverCategories[0] : category;
+      await addScene.mutateAsync({ name, description, category: discoverCategory, image_url: imageUrl, prompt_hint: finalPromptHint, prompt_only: promptOnly, discover_categories: discoverCategories });
       toast.success('Scene added for all users');
       onClose();
     } catch {
