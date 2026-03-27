@@ -1,35 +1,29 @@
 
 
-# Add Brand Models & Video Generation to Pricing Plans
+# Add Branded "Missing Workflow?" Banner to Workflows Page
+
+## What
+Replace the generic `FeedbackBanner` at the bottom of the workflows page with a branded VOVV.AI card featuring team avatars and a message inviting users to request missing workflows. Show it in **all layout modes** (rows, 2col, 3col), not just rows.
+
+## Design
+A full-width card after all workflow cards with:
+- VOVV.AI branding (logo text or styled heading)
+- Stacked team member avatars (3-4 from `TEAM_MEMBERS`)
+- Headline: "Missing a workflow for your brand?" 
+- Subtitle: "Tell us what you need — we'll build it and add it to our lineup."
+- Expandable textarea (reusing `MissingRequestBanner` pattern with `category="workflow"`) that submits to the `feedback` table
+- Styled with `bg-primary/5 border border-primary/20 rounded-2xl` to match the dashboard aesthetic
 
 ## Changes
 
-### 1. Update `PricingPlan` type (`src/types/index.ts`)
-- Change `features` from `string[]` to `Array<string | { text: string; badge?: string }>` to support feature labels like "NEW"
+### 1. Create `src/components/app/WorkflowRequestBanner.tsx`
+- New branded component with avatar stack from `TEAM_MEMBERS` (first 4 avatars)
+- Uses the same feedback submission logic as `MissingRequestBanner` (insert into `feedback` table)
+- Collapsed state: avatars + headline + "Share Request" button
+- Expanded state: textarea + submit button
+- Responsive: stacks vertically on mobile
 
-### 2. Update `pricingPlans` data (`src/data/mockData.ts`)
-
-**Growth plan** — add `{ text: 'Brand Models', badge: 'NEW' }` to features
-**Pro plan** — add `{ text: 'Brand Models', badge: 'NEW' }` to features, change `'Video Generation (coming soon)'` to `'Video Generation'`
-**All plans (Free, Starter, Growth, Pro)** — add `'Video Generation'` to features (since user wants it on all workflows)
-
-### 3. Update `PlanCard` rendering (`src/components/app/PlanCard.tsx`)
-- In the features `.map()`, handle both string and object features:
-  ```tsx
-  {typeof feature === 'string' ? feature : (
-    <span className="flex items-center gap-1.5">
-      {feature.text}
-      {feature.badge && (
-        <Badge className="text-[9px] px-1.5 py-0 bg-primary/15 text-primary">
-          {feature.badge}
-        </Badge>
-      )}
-    </span>
-  )}
-  ```
-
-### 4. Update `LandingPricing` if it renders features independently
-- Apply the same string/object feature rendering logic
-
-This ensures both `/pricing` and the homepage pricing section stay in sync since they share the same `pricingPlans` data source.
+### 2. Update `src/pages/Workflows.tsx`
+- Replace `<FeedbackBanner />` in rows layout with `<WorkflowRequestBanner />`
+- Add `<WorkflowRequestBanner />` after the grid in 2col/3col layouts too (currently missing any CTA there)
 
