@@ -1,27 +1,34 @@
 
 
-# Fix: "Beauty" and "Skincare" Category Mismatch
+# Fix: Remaining Category Label Mismatches
 
 ## Problem
-Items categorized as `"skincare"` don't appear under the "Beauty" filter in Discover because:
-1. `PRODUCT_CATEGORY_MAP` has no `skincare` entry — so items with `category: "skincare"` are invisible to the "Beauty" filter
-2. The `resolveCategory` function (used for sorting/similarity) also doesn't map `skincare` → `beauty`
+When a category gets saved using its full display label (e.g. "Fashion & Apparel" instead of "fashion"), the Discover filter can't match it. We fixed "Beauty & Skincare" already, but 5 other full-label variants are still missing from `PRODUCT_CATEGORY_MAP`.
 
-This affects all three places where `PRODUCT_CATEGORY_MAP` is defined: `Discover.tsx`, `PublicDiscover.tsx`, and `DashboardDiscoverSection.tsx`.
+Missing aliases:
+- `"Fashion & Apparel"` → should map to `['fashion']`
+- `"Home & Decor"` → should map to `['home']`
+- `"Food & Beverage"` → should map to `['food']`
+- `"Sports & Fitness"` → should map to `['sports']`
+- `"Health & Supplements"` → should map to `['supplements']`
 
 ## Fix
 
-**Add `skincare` as an alias for `beauty`** in the `PRODUCT_CATEGORY_MAP` in all 3 files:
+Add these 5 entries to `PRODUCT_CATEGORY_MAP` in all 3 files:
+- `src/pages/Discover.tsx`
+- `src/pages/PublicDiscover.tsx`
+- `src/components/app/DashboardDiscoverSection.tsx`
 
 ```typescript
-skincare: ['beauty', 'fragrances'],
+'Fashion & Apparel': ['fashion'],
+'Home & Decor': ['home'],
+'Food & Beverage': ['food'],
+'Sports & Fitness': ['sports'],
+'Health & Supplements': ['supplements'],
 ```
 
-Also add `"Beauty & Skincare"` as a full-label alias (in case the label gets saved as the category value):
+5 lines added per file, 3 files changed.
 
-```typescript
-'Beauty & Skincare': ['beauty'],
-```
-
-This is a 3-file change, adding 2 lines to each `PRODUCT_CATEGORY_MAP`.
+## Bonus: DRY improvement (optional)
+All three files have identical `PRODUCT_CATEGORY_MAP` definitions. Could extract to a shared constant in `src/lib/categoryConstants.ts` alongside the existing `PRODUCT_CATEGORIES`. This would prevent future drift. Can do this as a follow-up if desired.
 
