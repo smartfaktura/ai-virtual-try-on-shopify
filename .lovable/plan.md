@@ -1,28 +1,35 @@
 
 
-# Fix Favicon in Chrome
+# Remove Shopify OAuth Infrastructure
 
-## Problem
-Chrome requests `/favicon.ico` by default. Since no `favicon.ico` exists in `public/`, the hosting platform's default (Lovable logo) is served instead, overriding the `<link>` tags.
+## Summary
+Remove the Shopify OAuth tables, edge functions, and related database functions since you're not using Shopify integration. The ShopifyImportTab (CSV-based Shopify export import) is a separate feature — we can keep or remove it based on your preference.
 
-## Fix
+## What gets removed
 
-### 1. Create `public/favicon.ico`
-- Copy `public/favicon.png` → `public/favicon.ico` (browsers accept PNG data inside a `.ico` filename)
+### Database (migration)
+- Drop table `shopify_oauth_nonces`
+- Drop table `shopify_connections`
+- Drop function `encrypt_shopify_token`
+- Drop function `decrypt_shopify_token`
+- Drop function `cleanup_expired_nonces`
 
-### 2. Update `index.html` favicon references (line 6-8)
-```html
-<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-<link rel="apple-touch-icon" href="/favicon.png" />
-```
-- Put `.ico` first so Chrome picks it up immediately
-- Fix the type mismatch (was `type="image/x-icon"` pointing to `.png`)
+### Edge Functions (delete)
+- `supabase/functions/shopify-oauth/index.ts`
+- `supabase/functions/shopify-oauth-callback/index.ts`
+- `supabase/functions/shopify-sync/index.ts`
 
-### Files changed
-- `public/favicon.ico` — new (copy of favicon.png)
-- `index.html` — reorder and fix favicon link tags
+### Secrets (can be removed manually)
+- `SHOPIFY_CLIENT_ID`
+- `SHOPIFY_CLIENT_SECRET`
 
-### Note
-After deploying, users may need to hard-refresh (`Ctrl+Shift+R`) since Chrome caches favicons aggressively.
+## What stays (no functional impact)
+- `ShopifyImportTab.tsx` — this is a local CSV parser for Shopify product exports, has no OAuth dependency. We can keep it or remove it separately.
+- Blog/landing page text mentions of "Shopify" — purely marketing copy, no code dependency.
+- `StoreImportTab.tsx` — URL-based product import, unrelated to Shopify OAuth.
+
+## Files changed
+- 3 edge function directories deleted
+- 1 new database migration (drop tables + functions)
+- `supabase/config.toml` — remove any Shopify function config blocks if present
 
