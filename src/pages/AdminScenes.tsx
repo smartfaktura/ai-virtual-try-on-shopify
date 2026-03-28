@@ -64,6 +64,21 @@ export default function AdminScenes() {
   const upsertCategoryLabel = useUpsertCategoryLabel();
   const deleteCategoryMutation = useDeleteSceneCategory();
 
+  // Fetch workflows for workflow indicator badges
+  const { data: workflows = [] } = useQuery({
+    queryKey: ['workflows-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workflows')
+        .select('name, slug, uses_tryon, generation_config')
+        .eq('is_system', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return (data as unknown as WorkflowInfo[]) ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [editingCatSlug, setEditingCatSlug] = useState<string | null>(null);
