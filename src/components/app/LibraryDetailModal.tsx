@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
@@ -26,9 +26,11 @@ interface LibraryDetailModalProps {
   onClose: () => void;
   isUpscaling?: boolean;
   onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
+  items?: LibraryItem[];
+  initialIndex?: number;
 }
 
-export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings, items, initialIndex = 0 }: LibraryDetailModalProps) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
@@ -42,8 +44,27 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
+  // Multi-image navigation
+  const hasMultiple = items && items.length > 1;
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Reset index when modal opens with new items
+  useEffect(() => { setCurrentIndex(initialIndex); }, [initialIndex, open]);
+
+  const activeItem = hasMultiple ? items[currentIndex] ?? item : item;
+
+  const goPrev = useCallback(() => {
+    if (!hasMultiple) return;
+    setCurrentIndex(i => (i > 0 ? i - 1 : items.length - 1));
+  }, [hasMultiple, items?.length]);
+
+  const goNext = useCallback(() => {
+    if (!hasMultiple) return;
+    setCurrentIndex(i => (i < items.length - 1 ? i + 1 : 0));
+  }, [hasMultiple, items?.length]);
+
   // Reset prompt expanded when item changes
-  useEffect(() => { setPromptExpanded(false); }, [item?.id]);
+  useEffect(() => { setPromptExpanded(false); }, [activeItem?.id]);
 
   // Lock body scroll
   useEffect(() => {
@@ -55,32 +76,34 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  // Close on Escape
+  // Close on Escape + arrow key navigation
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if (hasMultiple && e.key === 'ArrowLeft') goPrev();
+      if (hasMultiple && e.key === 'ArrowRight') goNext();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  }, [open, onClose, hasMultiple, goPrev, goNext]);
 
-  if (!open || !item) return null;
+  if (!open || !activeItem) return null;
 
   const handleDownload = async () => {
-    await saveOrShareImage(item.imageUrl, `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}`);
+    await saveOrShareImage(activeItem.imageUrl, `${activeItem.label.replace(/\s+/g, '-').toLowerCase()}-${activeItem.id.slice(0, 8)}`);
   };
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      if (item.source === 'freestyle') {
-        const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
+      if (activeItem.source === 'freestyle') {
+        const { error } = await supabase.from('freestyle_generations').delete().eq('id', activeItem.id);
         if (error) throw error;
       } else {
-        const dashIndex = item.id.lastIndexOf('-');
-        const jobId = item.id.substring(0, dashIndex);
-        const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
+        const dashIndex = activeItem.id.lastIndexOf('-');
+        const jobId = activeItem.id.substring(0, dashIndex);
+        const imageIndex = parseInt(activeItem.id.substring(dashIndex + 1), 10);
 
         const { data: job } = await supabase
           .from('generation_jobs')
@@ -111,8 +134,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
     setDeleting(false);
   };
 
-  const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
-  const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : item.quality === 'upscaled' ? 'HD' : null;
+  const isUpscaled = activeItem.quality?.startsWith('upscaled_') || activeItem.quality === 'upscaled';
+  const upscaleLabel = activeItem.quality === 'upscaled_4k' ? '4K' : activeItem.quality === 'upscaled_2k' ? '2K' : activeItem.quality === 'upscaled' ? 'HD' : null;
 
   return (
     <>
@@ -130,13 +153,34 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           onClick={(e) => e.stopPropagation()}
         >
           {/* Left — Image */}
-          <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
+          <div className="relative w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12 group/img">
             <ShimmerImage
-              src={item.imageUrl}
-              alt={item.label}
+              src={activeItem.imageUrl}
+              alt={activeItem.label}
               className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
               wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
             />
+
+            {/* Multi-image navigation arrows */}
+            {hasMultiple && (
+              <>
+                <button
+                  onClick={goPrev}
+                  className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur border border-border/30 flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={goNext}
+                  className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur border border-border/30 flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur rounded-full px-3 py-1 text-xs font-medium text-foreground/80">
+                  {currentIndex + 1} / {items.length}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Right — Info panel */}
@@ -153,9 +197,9 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
               {/* Source + label */}
               <div className="space-y-2">
                 {(() => {
-                  const hasSeparator = item.label.includes(' — ');
-                  const smallLabel = isUpscaled ? 'Enhanced' : item.source === 'freestyle' ? 'Freestyle Generation' : hasSeparator ? item.label.split(' — ')[0] : 'Generation';
-                  const heading = isUpscaled ? 'Enhanced' : hasSeparator ? item.label.split(' — ')[1] : item.label;
+                  const hasSeparator = activeItem.label.includes(' — ');
+                  const smallLabel = isUpscaled ? 'Enhanced' : activeItem.source === 'freestyle' ? 'Freestyle Generation' : hasSeparator ? activeItem.label.split(' — ')[0] : 'Generation';
+                  const heading = isUpscaled ? 'Enhanced' : hasSeparator ? activeItem.label.split(' — ')[1] : activeItem.label;
                   return (
                     <>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
@@ -174,15 +218,15 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 })()}
                 <div className="flex items-center gap-2 pt-0.5">
                   <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                    {item.date}
+                    {activeItem.date}
                   </span>
                 </div>
               </div>
 
               {/* Prompt */}
-              {item.prompt && !isUpscaled && (() => {
-                const isLong = item.prompt!.length > 150;
-                const displayText = isLong && !promptExpanded ? `${item.prompt!.slice(0, 150)}…` : item.prompt;
+              {activeItem.prompt && !isUpscaled && (() => {
+                const isLong = activeItem.prompt!.length > 150;
+                const displayText = isLong && !promptExpanded ? `${activeItem.prompt!.slice(0, 150)}…` : activeItem.prompt;
                 return (
                   <div className="space-y-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
@@ -233,7 +277,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 <Button
                   variant="outline"
                   onClick={() => {
-                    navigate(`/app/freestyle?editImage=${encodeURIComponent(item.imageUrl)}&imageRole=edit`);
+                    navigate(`/app/freestyle?editImage=${encodeURIComponent(activeItem.imageUrl)}&imageRole=edit`);
                     onClose();
                   }}
                   className="w-full h-11 rounded-xl text-sm font-medium"
@@ -242,16 +286,16 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   Edit Image
                 </Button>
 
-                {item.source === 'freestyle' && onCopySettings && (
+                {activeItem.source === 'freestyle' && onCopySettings && (
                   <Button
                     variant="outline"
                     onClick={() => {
                       onCopySettings({
-                        prompt: item.prompt || '',
-                        modelId: item.modelId,
-                        sceneId: item.sceneId,
-                        productId: item.productId,
-                        aspectRatio: item.aspectRatio,
+                        prompt: activeItem.prompt || '',
+                        modelId: activeItem.modelId,
+                        sceneId: activeItem.sceneId,
+                        productId: activeItem.productId,
+                        aspectRatio: activeItem.aspectRatio,
                       });
                       onClose();
                     }}
@@ -284,7 +328,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
 
                 <Button
                   variant="outline"
-                  onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(item.imageUrl)}`)}
+                  onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(activeItem.imageUrl)}`)}
                   className="w-full h-11 rounded-xl text-sm font-medium"
                 >
                   <Layers className="w-4 h-4 mr-2" />
@@ -368,13 +412,13 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   </p>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => { setSceneModalUrl(item.imageUrl); setSceneModalPrompt(item.prompt || ''); }}
+                      onClick={() => { setSceneModalUrl(activeItem.imageUrl); setSceneModalPrompt(activeItem.prompt || ''); }}
                       className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
                     >
                       <Camera className="w-3.5 h-3.5" /> Add as Scene
                     </button>
                     <button
-                      onClick={() => setModelModalUrl(item.imageUrl)}
+                      onClick={() => setModelModalUrl(activeItem.imageUrl)}
                       className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
                     >
                       <User className="w-3.5 h-3.5" /> Add as Model
@@ -403,30 +447,30 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
         <AddToDiscoverModal
           open={discoverModalOpen}
           onClose={() => setDiscoverModalOpen(false)}
-          imageUrl={item.imageUrl}
-          prompt={item.prompt || ''}
-          aspectRatio={item.aspectRatio}
-          quality={item.quality}
-          workflowName={item.source === 'generation' ? item.label : undefined}
-          workflowSlug={item.workflowSlug}
-          sceneName={item.sceneName}
-          modelName={item.modelName}
-          sceneImageUrl={item.sceneImageUrl}
-          modelImageUrl={item.modelImageUrl}
-          productName={item.productName}
-          productImageUrl={item.productImageUrl}
+          imageUrl={activeItem.imageUrl}
+          prompt={activeItem.prompt || ''}
+          aspectRatio={activeItem.aspectRatio}
+          quality={activeItem.quality}
+          workflowName={activeItem.source === 'generation' ? activeItem.label : undefined}
+          workflowSlug={activeItem.workflowSlug}
+          sceneName={activeItem.sceneName}
+          modelName={activeItem.modelName}
+          sceneImageUrl={activeItem.sceneImageUrl}
+          modelImageUrl={activeItem.modelImageUrl}
+          productName={activeItem.productName}
+          productImageUrl={activeItem.productImageUrl}
         />
       )}
       {submitDiscoverOpen && item && (
         <SubmitToDiscoverModal
           open={submitDiscoverOpen}
           onClose={() => setSubmitDiscoverOpen(false)}
-          imageUrl={item.imageUrl}
-          prompt={item.prompt || ''}
-          aspectRatio={item.aspectRatio}
-          quality={item.quality}
-          productName={item.productName}
-          productImageUrl={item.productImageUrl}
+          imageUrl={activeItem.imageUrl}
+          prompt={activeItem.prompt || ''}
+          aspectRatio={activeItem.aspectRatio}
+          quality={activeItem.quality}
+          productName={activeItem.productName}
+          productImageUrl={activeItem.productImageUrl}
         />
       )}
       {upscaleModalOpen && item && (
@@ -434,9 +478,9 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           open={upscaleModalOpen}
           onClose={() => setUpscaleModalOpen(false)}
           items={[{
-            imageUrl: item.imageUrl,
-            sourceType: item.source as 'freestyle' | 'generation',
-            sourceId: item.id,
+            imageUrl: activeItem.imageUrl,
+            sourceType: activeItem.source as 'freestyle' | 'generation',
+            sourceId: activeItem.id,
           }]}
           onComplete={() => {
             queryClient.invalidateQueries({ queryKey: ['library'] });
