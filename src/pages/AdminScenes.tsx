@@ -2,17 +2,19 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import {
   ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus,
-  Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X,
+  Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X, Info,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
@@ -22,6 +24,31 @@ import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from '@/lib/brandedToast';
 import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomScenes';
+
+const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
+
+interface WorkflowInfo {
+  name: string;
+  slug: string;
+  uses_tryon: boolean;
+  generation_config: any;
+}
+
+function getWorkflowsForScene(category: string, workflows: WorkflowInfo[]): WorkflowInfo[] {
+  const isOnModel = ON_MODEL_CATEGORIES.includes(category);
+  return workflows.filter(wf => {
+    if (isOnModel && wf.uses_tryon) return true;
+    if (!isOnModel && wf.slug === 'product-listing-set') return true;
+    // Check if workflow has show_scene_picker or show_pose_picker in ui_config
+    const uiConfig = wf.generation_config?.ui_config;
+    if (uiConfig?.show_scene_picker || uiConfig?.show_pose_picker) return true;
+    return false;
+  });
+}
+
+function getCategoryWorkflowHint(category: string): string {
+  return ON_MODEL_CATEGORIES.includes(category) ? '→ Try-On' : '→ Product';
+}
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
@@ -36,6 +63,21 @@ export default function AdminScenes() {
   const updateCategoryMutation = useUpdateSceneCategory();
   const upsertCategoryLabel = useUpsertCategoryLabel();
   const deleteCategoryMutation = useDeleteSceneCategory();
+
+  // Fetch workflows for workflow indicator badges
+  const { data: workflows = [] } = useQuery({
+    queryKey: ['workflows-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workflows')
+        .select('name, slug, uses_tryon, generation_config')
+        .eq('is_system', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return (data as unknown as WorkflowInfo[]) ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -550,6 +592,7 @@ export default function AdminScenes() {
                    updatePromptHint={updatePromptHint}
                    togglePromptOnly={togglePromptOnly}
                    customScenesRaw={customScenesRaw}
+                   workflows={workflows}
                 />
               ))}
             </div>
@@ -593,6 +636,7 @@ export default function AdminScenes() {
                        updatePromptHint={updatePromptHint}
                        togglePromptOnly={togglePromptOnly}
                        customScenesRaw={customScenesRaw}
+                       workflows={workflows}
                     />
                   ))}
                 </div>
@@ -669,6 +713,7 @@ interface SceneRowProps {
   updatePromptHint: (poseId: string, value: string) => void;
   togglePromptOnly: (poseId: string, value: boolean) => void;
   customScenesRaw: import('@/hooks/useCustomScenes').CustomScene[];
+  workflows: WorkflowInfo[];
 }
 
 function SceneRow({
@@ -677,7 +722,7 @@ function SceneRow({
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
   handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
-  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw,
+  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw, workflows,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
@@ -688,6 +733,7 @@ function SceneRow({
   const currentPromptHint = promptEdits[pose.poseId]?.prompt_hint ?? rawScene?.prompt_hint ?? pose.promptHint ?? '';
   const currentPromptOnly = promptEdits[pose.poseId]?.prompt_only ?? pose.promptOnly ?? false;
   const isEditingPrompt = editingPromptId === pose.poseId;
+  const sceneWorkflows = useMemo(() => getWorkflowsForScene(pose.category, workflows), [pose.category, workflows]);
 
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 group">
@@ -737,9 +783,22 @@ function SceneRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {defaultCategoryOrder.map(c => (
-                <SelectItem key={c} value={c} className="text-xs">{categoryLabels[c] || c}</SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel className="text-[9px] text-muted-foreground font-semibold">On-Model → Try-On Workflows</SelectLabel>
+                {defaultCategoryOrder.filter(c => ON_MODEL_CATEGORIES.includes(c)).map(c => (
+                  <SelectItem key={c} value={c} className="text-xs">
+                    {categoryLabels[c] || c}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel className="text-[9px] text-muted-foreground font-semibold">Product → Listing Workflows</SelectLabel>
+                {defaultCategoryOrder.filter(c => !ON_MODEL_CATEGORIES.includes(c)).map(c => (
+                  <SelectItem key={c} value={c} className="text-xs">
+                    {categoryLabels[c] || c}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           {isCustom && (
@@ -761,6 +820,24 @@ function SceneRow({
           )}
           {isDuplicate && (
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-blue-500/10 text-blue-600 border-0">Duplicate</Badge>
+          )}
+          {/* Workflow indicator badges */}
+          {sceneWorkflows.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-0.5">
+                  {sceneWorkflows.map(wf => (
+                    <Badge key={wf.slug} variant="outline" className="text-[8px] h-3.5 px-1 font-normal text-muted-foreground border-border">
+                      {wf.name}
+                    </Badge>
+                  ))}
+                  <Info className="w-2.5 h-2.5 text-muted-foreground/50" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs">
+                Scene appears in these workflows based on its category. Change category to move between workflows.
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
         {/* Admin debug info */}
