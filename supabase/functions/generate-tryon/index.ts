@@ -293,6 +293,95 @@ async function uploadBase64ToStorage(
   return urlData.publicUrl;
 }
 
+// ── Seedream ARK image generation (ported from generate-freestyle) ────────
+function seedreamSizeForRatio(_aspectRatio: string): string {
+  return "2K";
+}
+
+function seedreamAspectRatio(appRatio: string): string {
+  const map: Record<string, string> = {
+    "1:1": "1:1", "16:9": "16:9", "9:16": "9:16",
+    "4:3": "4:3", "3:4": "3:4", "4:5": "3:4",
+    "5:4": "4:3", "3:2": "3:2", "2:3": "2:3", "21:9": "21:9",
+  };
+  return map[appRatio] || "1:1";
+}
+
+const SEEDREAM_MODERATION_CODES = [1301, 1302, 1303, 1304, 1305, 1024];
+
+async function generateImageSeedream(
+  prompt: string,
+  imageUrls: string[],
+  model: string,
+  apiKey: string,
+  aspectRatio = "1:1",
+): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
+  const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
+  const size = seedreamSizeForRatio(aspectRatio);
+  const seedreamRatio = seedreamAspectRatio(aspectRatio);
+  const timeoutMs = 90_000;
+
+  try {
+    const body: Record<string, unknown> = {
+      model, prompt, size,
+      aspect_ratio: seedreamRatio,
+      response_format: "url",
+      watermark: false,
+      sequential_image_generation: "disabled",
+    };
+    if (imageUrls.length === 1) {
+      body.image = imageUrls[0];
+    } else if (imageUrls.length > 1) {
+      body.image = imageUrls;
+    }
+
+    const response = await fetch(ARK_BASE, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!response.ok) {
+      let errorText = "";
+      try { errorText = await response.text(); } catch (_) { /* ignore */ }
+      // Check for moderation in error body
+      try {
+        const errJson = JSON.parse(errorText);
+        const errCode = errJson?.error?.code || errJson?.code;
+        if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
+          return { ok: false, error: `Content moderated: ${errJson?.error?.message || errJson?.message}` };
+        }
+      } catch (_) { /* not JSON */ }
+      return { ok: false, error: `ARK API error ${response.status}: ${errorText.slice(0, 200)}` };
+    }
+
+    const data = await response.json();
+    const respCode = data?.error?.code || data?.code;
+    if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
+      return { ok: false, error: `Content moderated: ${data?.error?.message || data?.message}` };
+    }
+
+    const imageUrl = data?.data?.[0]?.url;
+    if (!imageUrl) {
+      return { ok: false, error: "No URL in Seedream response" };
+    }
+    return { ok: true, imageUrl };
+  } catch (error: unknown) {
+    const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+    return { ok: false, error: isTimeout ? "Seedream request timed out (90s)" : (error instanceof Error ? error.message : "Unknown error") };
+  }
+}
+
+/** Fetch an image URL and convert to base64 data URL for storage upload */
+async function fetchImageAsBase64(url: string): Promise<string> {
+  const resp = await fetch(url);
+  const buf = new Uint8Array(await resp.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+  return `data:image/png;base64,${btoa(binary)}`;
+}
+
 async function generateImage(
   prompt: string,
   productImageUrl: string,
@@ -618,12 +707,21 @@ serve(async (req) => {
           base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
         }
 
-        // Fallback tier 2: if Flash also returned null (content-policy), try Seedream
+        // Fallback tier 2: if Flash also returned null (content-policy), try Seedream 4.5 via ARK API
         if (base64Url === null) {
-          console.warn(`Flash model also returned null — falling back to Seedream 5.0 Lite for image ${i + 1}`);
-          // Seedream doesn't support 4:5, map to 3:4
-          const seedreamRatio = (body.aspectRatio === "4:5") ? "3:4" : (body.aspectRatio || "1:1");
-          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, seedreamRatio, "bytedance/seedream-5.0-lite", body.pose.imageUrl);
+          const arkApiKey = Deno.env.get("BYTEPLUS_ARK_API_KEY");
+          if (arkApiKey) {
+            console.warn(`Flash model also returned null — falling back to Seedream 4.5 via ARK API for image ${i + 1}`);
+            const refImages = [body.product.imageUrl, body.model.imageUrl, body.pose?.imageUrl].filter(Boolean) as string[];
+            const seedreamResult = await generateImageSeedream(
+              variationPrompt, refImages, "seedream-4-5-251128", arkApiKey, body.aspectRatio || "1:1"
+            );
+            if (seedreamResult.ok && seedreamResult.imageUrl) {
+              base64Url = await fetchImageAsBase64(seedreamResult.imageUrl);
+            } else {
+              console.warn(`Seedream fallback failed:`, seedreamResult.error);
+            }
+          }
         }
 
         if (base64Url) {
