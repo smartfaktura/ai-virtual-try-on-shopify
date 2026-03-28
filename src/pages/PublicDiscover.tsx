@@ -48,12 +48,12 @@ const CATEGORIES = [
   { id: 'fashion', label: 'Fashion' },
   { id: 'beauty', label: 'Beauty' },
   { id: 'fragrances', label: 'Fragrances' },
+  { id: 'sports', label: 'Sports' },
   { id: 'jewelry', label: 'Jewelry' },
   { id: 'accessories', label: 'Accessories' },
   { id: 'home', label: 'Home' },
   { id: 'food', label: 'Food & Drink' },
   { id: 'electronics', label: 'Electronics' },
-  { id: 'sports', label: 'Sports' },
   { id: 'supplements', label: 'Health' },
 ] as const;
 
