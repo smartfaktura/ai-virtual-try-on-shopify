@@ -5,7 +5,8 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
-import { WorkflowPreviewModal } from '@/components/app/WorkflowPreviewModal';
+import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
+import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 interface RecentJob {
   id: string;
@@ -106,7 +107,7 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
 }
 
 export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRowProps) {
-  const [selectedJob, setSelectedJob] = useState<RecentJob | null>(null);
+  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const jobIds = useMemo(() => jobs.map(j => j.id).sort().join(','), [jobs]);
@@ -164,16 +165,27 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
                 key={job.id}
                 job={job}
                 signedUrl={urlsReady ? (signedUrlMap[job.id] ?? null) : undefined}
-                onSelect={setSelectedJob}
+                onSelect={(j) => {
+                  const url = signedUrlMap[j.id] ?? firstImageUrl(j.results);
+                  if (!url) return;
+                  setSelectedItem({
+                    id: j.id,
+                    imageUrl: url,
+                    source: 'generation',
+                    label: j.workflow_name ?? 'Workflow',
+                    date: new Date(j.created_at).toLocaleDateString(),
+                    createdAt: j.created_at,
+                  });
+                }}
               />
             ))}
       </div>
 
 
-      <WorkflowPreviewModal
-        open={selectedJob !== null}
-        onOpenChange={(open) => { if (!open) setSelectedJob(null); }}
-        job={selectedJob}
+      <LibraryDetailModal
+        item={selectedItem}
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
       />
     </div>
   );
