@@ -1,23 +1,28 @@
 
 
-# Add Source Filter to Library (Freestyle / Workflow)
+# Fix Favicon in Chrome
 
-## What
-Add filter chips next to the existing Sort buttons that let users filter library items by source: **All**, **Freestyle**, **Workflow**.
+## Problem
+Chrome requests `/favicon.ico` by default. Since no `favicon.ico` exists in `public/`, the hosting platform's default (Lovable logo) is served instead, overriding the `<link>` tags.
 
-## How
+## Fix
 
-### 1. `src/hooks/useLibraryItems.ts`
-- Add a new `sourceFilter` parameter: `'all' | 'freestyle' | 'workflow'`
-- When `'freestyle'`: skip the jobs query entirely (`skipJobs = true`)
-- When `'workflow'`: skip the freestyle query entirely (`skipFs = true`)
-- When `'all'`: fetch both (current behavior)
+### 1. Create `public/favicon.ico`
+- Copy `public/favicon.png` → `public/favicon.ico` (browsers accept PNG data inside a `.ico` filename)
 
-### 2. `src/pages/Jobs.tsx` (Library page)
-- Add state: `const [sourceFilter, setSourceFilter] = useState<'all' | 'freestyle' | 'workflow'>('all')`
-- Pass it to `useLibraryItems(sortBy, searchQuery, sourceFilter)`
-- Render 3 filter chips ("All", "Freestyle", "Workflow") in the toolbar row, placed between the search bar and the sort buttons, styled consistently with the existing sort toggle pills
+### 2. Update `index.html` favicon references (line 6-8)
+```html
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+```
+- Put `.ico` first so Chrome picks it up immediately
+- Fix the type mismatch (was `type="image/x-icon"` pointing to `.png`)
 
-## Result
-Users can quickly narrow their library to only freestyle creations or only workflow-generated images. The filter integrates cleanly with existing search and sort controls.
+### Files changed
+- `public/favicon.ico` — new (copy of favicon.png)
+- `index.html` — reorder and fix favicon link tags
+
+### Note
+After deploying, users may need to hard-refresh (`Ctrl+Shift+R`) since Chrome caches favicons aggressively.
 
