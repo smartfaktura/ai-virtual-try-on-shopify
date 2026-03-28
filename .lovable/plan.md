@@ -1,16 +1,16 @@
 
 
-# Move Sports After Fragrances in Discover Tabs
+# Add "Lifestyle" Category After Beauty in Discover Tabs
 
 ## Change
-Reorder the `CATEGORIES` array in all 3 Discover files so Sports comes right after Fragrances.
+Add `{ id: 'lifestyle', label: 'Lifestyle' }` after Beauty in the `CATEGORIES` array in all 3 Discover files.
 
-**New order:** All → Fashion → Beauty → Fragrances → **Sports** → Jewelry → Accessories → Home → Food & Drink → Electronics → Health
+**New order:** All → Fashion → Beauty → **Lifestyle** → Fragrances → Sports → Jewelry → Accessories → Home → Food & Drink → Electronics → Health
 
 ## Files
-- `src/pages/Discover.tsx` (line 26-38)
-- `src/pages/PublicDiscover.tsx` (line 46-58)
-- `src/components/app/DashboardDiscoverSection.tsx` (line 16-28)
+- `src/pages/Discover.tsx`
+- `src/pages/PublicDiscover.tsx`
+- `src/components/app/DashboardDiscoverSection.tsx`
 
-Same change in each: move `{ id: 'sports', label: 'Sports' }` from position 9 to position 4 (after Fragrances).
+Insert `{ id: 'lifestyle', label: 'Lifestyle' }` at index 3 (after Beauty, before Fragrances) in each file's `CATEGORIES` constant.
 
