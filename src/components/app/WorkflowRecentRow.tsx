@@ -38,12 +38,15 @@ function firstImageUrl(results: unknown): string | null {
 
 const SWIPE_THRESHOLD = 8;
 
-function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl: string | null | undefined; onSelect: (job: RecentJob) => void }) {
+const MAX_MINI_THUMBS = 4;
+
+function ThumbnailCard({ job, signedUrl, allSignedUrls, onSelect }: { job: RecentJob; signedUrl: string | null | undefined; allSignedUrls: string[]; onSelect: (job: RecentJob, startIndex?: number) => void }) {
   const [errored, setErrored] = useState(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
   const optimizedUrl = signedUrl ? getOptimizedUrl(signedUrl, { quality: 60 }) : null;
   const isLoading = signedUrl === undefined;
+  const hasMultiple = allSignedUrls.length > 1;
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerStart.current = { x: e.clientX, y: e.clientY };
@@ -58,57 +61,97 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
         return;
       }
     }
-    onSelect(job);
+    onSelect(job, 0);
   };
 
   return (
-    <button
-      onPointerDown={handlePointerDown}
-      onClick={handleClick}
-      className="group/thumb flex flex-col gap-2 shrink-0 w-[130px] sm:w-[140px] text-left touch-pan-x"
-    >
-      <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
-        {errored || (!isLoading && !optimizedUrl) ? (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-            <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
-            {errored && <span className="text-[9px] text-muted-foreground/50">Failed</span>}
+    <div className="group/thumb flex flex-col gap-1.5 shrink-0 w-[130px] sm:w-[140px] text-left touch-pan-x">
+      <button
+        onPointerDown={handlePointerDown}
+        onClick={handleClick}
+        className="w-full text-left"
+      >
+        <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
+          {errored || (!isLoading && !optimizedUrl) ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+              <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+              {errored && <span className="text-[9px] text-muted-foreground/50">Failed</span>}
+            </div>
+          ) : optimizedUrl ? (
+            <ShimmerImage
+              src={optimizedUrl}
+              alt=""
+              aspectRatio="1/1"
+              className="w-full h-full object-cover"
+              onError={() => setErrored(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+          )}
+
+          {/* Desktop hover overlay */}
+          <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition-colors duration-200 hidden md:flex items-center justify-center">
+            <div className="flex items-center gap-1.5 opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-200">
+              <Eye className="w-4 h-4 text-white" />
+              <span className="text-xs font-medium text-white">View</span>
+            </div>
           </div>
-        ) : optimizedUrl ? (
-          <ShimmerImage
-            src={optimizedUrl}
-            alt=""
-            aspectRatio="1/1"
-            className="w-full h-full object-cover"
-            onError={() => setErrored(true)}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
-        )}
 
-        {/* Desktop hover overlay */}
-        <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition-colors duration-200 hidden md:flex items-center justify-center">
-          <div className="flex items-center gap-1.5 opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-200">
-            <Eye className="w-4 h-4 text-white" />
-            <span className="text-xs font-medium text-white">View</span>
+          {/* Mobile permanent eye badge */}
+          <div className="absolute bottom-1.5 left-1.5 bg-background/70 backdrop-blur rounded-full p-1 md:hidden">
+            <Eye className="w-3 h-3 text-foreground/60" />
           </div>
-        </div>
 
-        {/* Mobile permanent eye badge */}
-        <div className="absolute bottom-1.5 left-1.5 bg-background/70 backdrop-blur rounded-full p-1 md:hidden">
-          <Eye className="w-3 h-3 text-foreground/60" />
+          {/* Count badge only for single-image jobs */}
+          {!hasMultiple && (
+            <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              {Array.isArray(job.results) ? (job.results as unknown[]).length : job.requested_count} imgs
+            </span>
+          )}
         </div>
+      </button>
 
-        <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
-          {Array.isArray(job.results) ? (job.results as unknown[]).length : job.requested_count} imgs
-        </span>
-      </div>
+      {/* Mini-thumbnail strip for multi-image jobs */}
+      {hasMultiple && (
+        <div className="flex gap-1 px-0.5">
+          {allSignedUrls.slice(0, MAX_MINI_THUMBS).map((url, i) => (
+            <button
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(job, i);
+              }}
+              className="w-7 h-7 rounded-sm border border-border overflow-hidden hover:ring-1 hover:ring-primary transition-all shrink-0"
+            >
+              <img
+                src={getOptimizedUrl(url, { quality: 40 })}
+                alt=""
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </button>
+          ))}
+          {allSignedUrls.length > MAX_MINI_THUMBS && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(job, MAX_MINI_THUMBS);
+              }}
+              className="w-7 h-7 rounded-sm border border-border bg-muted flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
+            >
+              <span className="text-[9px] font-semibold text-muted-foreground">+{allSignedUrls.length - MAX_MINI_THUMBS}</span>
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="space-y-0.5 px-0.5">
         <p className="text-xs font-medium truncate">{job.workflow_name ?? 'Workflow'}</p>
         <p className="text-[10px] text-muted-foreground">
           {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
         </p>
       </div>
-    </button>
+    </div>
   );
 }
 
