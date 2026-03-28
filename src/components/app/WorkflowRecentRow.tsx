@@ -38,7 +38,7 @@ function firstImageUrl(results: unknown): string | null {
 
 const SWIPE_THRESHOLD = 8;
 
-const MAX_MINI_THUMBS = 4;
+const MAX_MINI_THUMBS = 3;
 
 function ThumbnailCard({ job, signedUrl, allSignedUrls, onSelect }: { job: RecentJob; signedUrl: string | null | undefined; allSignedUrls: string[]; onSelect: (job: RecentJob, startIndex?: number) => void }) {
   const [errored, setErrored] = useState(false);
@@ -121,7 +121,7 @@ function ThumbnailCard({ job, signedUrl, allSignedUrls, onSelect }: { job: Recen
                 e.stopPropagation();
                 onSelect(job, i);
               }}
-              className="w-7 h-7 rounded-sm border border-border overflow-hidden hover:ring-1 hover:ring-primary transition-all shrink-0"
+              className="w-6 h-6 rounded-sm border border-border overflow-hidden hover:ring-1 hover:ring-primary transition-all shrink-0"
             >
               <img
                 src={getOptimizedUrl(url, { quality: 40 })}
@@ -137,7 +137,7 @@ function ThumbnailCard({ job, signedUrl, allSignedUrls, onSelect }: { job: Recen
                 e.stopPropagation();
                 onSelect(job, MAX_MINI_THUMBS);
               }}
-              className="w-7 h-7 rounded-sm border border-border bg-muted flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
+              className="w-6 h-6 rounded-sm border border-border bg-muted flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
             >
               <span className="text-[9px] font-semibold text-muted-foreground">+{allSignedUrls.length - MAX_MINI_THUMBS}</span>
             </button>
