@@ -13,12 +13,14 @@ const FS_FETCH_LIMIT = PAGE_SIZE;
 
 type Cursor = { jobCursor?: string; fsCursor?: string; jobsDone?: boolean; fsDone?: boolean };
 
-export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
+export type LibrarySourceFilter = 'all' | 'freestyle' | 'workflow';
+
+export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sourceFilter: LibrarySourceFilter = 'all') {
   const { user } = useAuth();
   const ascending = sortBy === 'oldest';
 
   return useInfiniteQuery({
-    queryKey: ['library', sortBy, searchQuery, user?.id],
+    queryKey: ['library', sortBy, searchQuery, sourceFilter, user?.id],
     queryFn: async ({ pageParam }): Promise<{ items: LibraryItem[]; nextCursor: Cursor | null }> => {
       try {
         const cursor = pageParam as Cursor;
@@ -50,8 +52,8 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
             : fsQuery.lt('created_at', cursor.fsCursor);
         }
 
-        const skipJobs = !!cursor.jobsDone;
-        const skipFs = !!cursor.fsDone;
+        const skipJobs = !!cursor.jobsDone || sourceFilter === 'freestyle';
+        const skipFs = !!cursor.fsDone || sourceFilter === 'workflow';
 
         const [jobsResult, freestyleResult] = await Promise.all([
           skipJobs ? Promise.resolve({ data: [], error: null }) : jobsQuery,

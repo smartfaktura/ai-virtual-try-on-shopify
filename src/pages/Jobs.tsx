@@ -7,7 +7,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
-import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
+import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,12 @@ import type { UpscaleItem } from '@/hooks/useUpscaleImages';
 const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'newest', label: 'Newest' },
   { id: 'oldest', label: 'Oldest' },
+];
+
+const SOURCE_FILTERS: { id: LibrarySourceFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'freestyle', label: 'Freestyle' },
+  { id: 'workflow', label: 'Workflow' },
 ];
 
 
@@ -81,6 +87,7 @@ export default function Jobs() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
+  const [sourceFilter, setSourceFilter] = useState<LibrarySourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('search') || '';
@@ -94,7 +101,7 @@ export default function Jobs() {
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
-  const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
+  const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery, sourceFilter);
   const items = data?.pages.flatMap(p => p.items) ?? [];
   const { lastCompletedAt } = useGenerationQueue();
   const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
@@ -275,6 +282,23 @@ export default function Jobs() {
           </div>
 
           <div className="flex items-center gap-2">
+            {SOURCE_FILTERS.map(f => (
+              <button
+                key={f.id}
+                onClick={() => setSourceFilter(f.id)}
+                className={cn(
+                  'px-4 py-2 rounded-full text-xs font-medium transition-all',
+                  sourceFilter === f.id
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+
+            <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
+
             {SORTS.map(s => (
               <button
                 key={s.id}
