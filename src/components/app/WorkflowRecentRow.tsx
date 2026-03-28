@@ -185,16 +185,20 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
                 job={job}
                 signedUrl={urlsReady ? (signedUrlMap[job.id] ?? null) : undefined}
                 onSelect={(j) => {
-                  const url = signedUrlMap[j.id] ?? firstImageUrl(j.results);
-                  if (!url) return;
-                  setSelectedItem({
-                    id: j.id,
+                  const signedUrls = signedAllMap[j.id] ?? [];
+                  const rawUrls = allImageUrls(j.results);
+                  const urls = signedUrls.length > 0 ? signedUrls : rawUrls;
+                  if (urls.length === 0) return;
+                  const items: LibraryItem[] = urls.map((url, idx) => ({
+                    id: `${j.id}-${idx}`,
                     imageUrl: url,
-                    source: 'generation',
+                    source: 'generation' as const,
                     label: j.workflow_name ?? 'Workflow',
                     date: new Date(j.created_at).toLocaleDateString(),
                     createdAt: j.created_at,
-                  });
+                  }));
+                  setSelectedItems(items);
+                  setSelectedIndex(0);
                 }}
               />
             ))}
@@ -202,9 +206,11 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
 
 
       <LibraryDetailModal
-        item={selectedItem}
-        open={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
+        item={selectedItems?.[selectedIndex] ?? null}
+        open={!!selectedItems}
+        onClose={() => setSelectedItems(null)}
+        items={selectedItems ?? undefined}
+        initialIndex={selectedIndex}
       />
     </div>
   );
