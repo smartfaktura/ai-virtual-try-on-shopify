@@ -1,19 +1,23 @@
 
 
-# Bigger Mobile CTA Buttons on Workflow Cards
+# Add Source Filter to Library (Freestyle / Workflow)
 
-## Problem
-On mobile (390px viewport), the "Start Creating →" buttons are too small and cramped, especially on the compact card variants.
+## What
+Add filter chips next to the existing Sort buttons that let users filter library items by source: **All**, **Freestyle**, **Workflow**.
 
-## Changes
+## How
 
-### `src/components/app/WorkflowCardCompact.tsx`
-- **mobileCompact variant** (line 133): increase button height from `h-6` to `h-8`, padding from `px-2` to `px-3`, text from `text-[10px]` to `text-xs`
-- **mobileRow variant** (line 72): increase height from `h-8` to `h-9`
-- **Button label**: change "Start Creating" to just "Start" when `mobileCompact` or `mobileRow` is true
+### 1. `src/hooks/useLibraryItems.ts`
+- Add a new `sourceFilter` parameter: `'all' | 'freestyle' | 'workflow'`
+- When `'freestyle'`: skip the jobs query entirely (`skipJobs = true`)
+- When `'workflow'`: skip the freestyle query entirely (`skipFs = true`)
+- When `'all'`: fetch both (current behavior)
 
-### `src/components/app/WorkflowCard.tsx`
-- No changes needed — this is the full-size card used on desktop/tablet layout, CTA is already `h-11 px-8`
+### 2. `src/pages/Jobs.tsx` (Library page)
+- Add state: `const [sourceFilter, setSourceFilter] = useState<'all' | 'freestyle' | 'workflow'>('all')`
+- Pass it to `useLibraryItems(sortBy, searchQuery, sourceFilter)`
+- Render 3 filter chips ("All", "Freestyle", "Workflow") in the toolbar row, placed between the search bar and the sort buttons, styled consistently with the existing sort toggle pills
 
-**Result**: Larger, easier-to-tap buttons on mobile with shorter "Start →" label that fits comfortably.
+## Result
+Users can quickly narrow their library to only freestyle creations or only workflow-generated images. The filter integrates cleanly with existing search and sort controls.
 
