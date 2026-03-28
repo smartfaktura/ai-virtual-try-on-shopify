@@ -115,7 +115,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       <ShimmerImage
         src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
         alt={item.label}
-        className="w-full h-auto block group-hover:scale-[1.03] transition-all duration-500"
+        className="w-full h-full object-cover block group-hover:scale-[1.03] transition-all duration-500"
         loading="lazy"
         aspectRatio={item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : '3/4'}
       />
