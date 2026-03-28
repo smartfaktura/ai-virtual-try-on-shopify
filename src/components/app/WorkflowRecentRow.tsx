@@ -113,36 +113,49 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
 }
 
 export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRowProps) {
-  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<LibraryItem[] | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const jobIds = useMemo(() => jobs.map(j => j.id).sort().join(','), [jobs]);
 
-  const { data: signedUrlMap = {}, isFetched: urlsReady } = useQuery({
-    queryKey: ['workflow-recent-thumbnails', jobIds],
+  // Sign ALL result URLs for each job (not just the first)
+  const { data: signedAllMap = {}, isFetched: urlsReady } = useQuery({
+    queryKey: ['workflow-recent-all-thumbnails', jobIds],
     queryFn: async () => {
       const rawUrls: string[] = [];
-      const indexMap: { jobId: string; idx: number }[] = [];
+      const indexMap: { jobId: string; startIdx: number; count: number }[] = [];
 
       jobs.forEach((job) => {
-        const url = firstImageUrl(job.results);
-        if (url) {
-          indexMap.push({ jobId: job.id, idx: rawUrls.length });
-          rawUrls.push(url);
+        const urls = allImageUrls(job.results);
+        if (urls.length > 0) {
+          indexMap.push({ jobId: job.id, startIdx: rawUrls.length, count: urls.length });
+          rawUrls.push(...urls);
         }
       });
 
-      if (rawUrls.length === 0) return {} as Record<string, string>;
+      if (rawUrls.length === 0) return {} as Record<string, string[]>;
 
       const signed = await toSignedUrls(rawUrls);
-      const map: Record<string, string> = {};
-      indexMap.forEach(({ jobId, idx }) => { map[jobId] = signed[idx]; });
+      const map: Record<string, string[]> = {};
+      indexMap.forEach(({ jobId, startIdx, count }) => {
+        map[jobId] = signed.slice(startIdx, startIdx + count);
+      });
       return map;
     },
     enabled: jobs.length > 0,
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
+
+  // Derive first-image map for thumbnails
+  const signedUrlMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const [jobId, urls] of Object.entries(signedAllMap)) {
+      if (urls.length > 0) m[jobId] = urls[0];
+    }
+    return m;
+  }, [signedAllMap]);
 
 
 
