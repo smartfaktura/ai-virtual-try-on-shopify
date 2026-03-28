@@ -618,6 +618,14 @@ serve(async (req) => {
           base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
         }
 
+        // Fallback tier 2: if Flash also returned null (content-policy), try Seedream
+        if (base64Url === null) {
+          console.warn(`Flash model also returned null — falling back to Seedream 5.0 Lite for image ${i + 1}`);
+          // Seedream doesn't support 4:5, map to 3:4
+          const seedreamRatio = (body.aspectRatio === "4:5") ? "3:4" : (body.aspectRatio || "1:1");
+          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, seedreamRatio, "bytedance/seedream-5.0-lite", body.pose.imageUrl);
+        }
+
         if (base64Url) {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
