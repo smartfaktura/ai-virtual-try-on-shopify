@@ -402,7 +402,7 @@ async function generateImageWithModel(
   aiModel: string,
   sceneImageUrl?: string
 ): Promise<string | null> {
-  const maxRetries = 2;
+  const maxRetries = 0;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
