@@ -227,7 +227,8 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
                 key={job.id}
                 job={job}
                 signedUrl={urlsReady ? (signedUrlMap[job.id] ?? null) : undefined}
-                onSelect={(j) => {
+                allSignedUrls={signedAllMap[job.id] ?? []}
+                onSelect={(j, startIndex = 0) => {
                   const signedUrls = signedAllMap[j.id] ?? [];
                   const rawUrls = allImageUrls(j.results);
                   const urls = signedUrls.length > 0 ? signedUrls : rawUrls;
@@ -241,7 +242,7 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
                     createdAt: j.created_at,
                   }));
                   setSelectedItems(items);
-                  setSelectedIndex(0);
+                  setSelectedIndex(startIndex);
                 }}
               />
             ))}
