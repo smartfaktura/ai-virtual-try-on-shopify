@@ -212,6 +212,22 @@ export default function Perspectives() {
     staleTime: 60_000,
   });
 
+  // Auto-load more library items on scroll (infinite scroll)
+  useEffect(() => {
+    const sentinel = librarySentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setLibraryVisibleCount(c => c + 30);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  });
+
   const filteredProducts = products.filter(p =>
     p.title.toLowerCase().includes(productSearch.toLowerCase())
   );
