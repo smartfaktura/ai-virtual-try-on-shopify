@@ -590,6 +590,7 @@ export default function AdminScenes() {
                    editingPromptId={editingPromptId}
                    setEditingPromptId={setEditingPromptId}
                    updatePromptHint={updatePromptHint}
+                   togglePromptOnly={togglePromptOnly}
                    customScenesRaw={customScenesRaw}
                    workflows={workflows}
                 />
