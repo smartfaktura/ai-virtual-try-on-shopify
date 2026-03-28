@@ -1,39 +1,34 @@
 
 
-# Fix Discover Mobile Image Re-loading (Shimmer on Scroll-Back)
+# Show & Control Workflow Assignments per Scene in Admin Scenes
 
-## Problem
-When scrolling down and back up on mobile Discover, images re-shimmer because:
-1. **Masonry column redistribution on load-more**: `visibleItems` grows when IntersectionObserver fires, and `columns[i % columnCount]` redistributes ALL items. Items shift between column containers, React unmounts/remounts them, resetting `ShimmerImage`'s `loaded` state.
-2. **ShimmerImage drops aspect-ratio after load** (line 47: `aspectRatio && !loaded`), so on remount the container collapses momentarily before the shimmer reappears.
+## Current Architecture
 
-## Changes (safe, no layout breakage)
+Scenes don't have explicit workflow assignments. Instead, workflow membership is determined by **category**:
+- **On-model categories** (`studio`, `lifestyle`, `editorial`, `streetwear`) → scenes appear in **Try-On workflows** (`uses_tryon: true`)
+- **All other categories** → scenes appear in **Product Listing Set** workflow
+- Workflows with `show_scene_picker` or `show_pose_picker` in their config pull from both pools
 
-### 1. ShimmerImage: Always keep aspect-ratio on wrapper
-**File: `src/components/ui/shimmer-image.tsx` (line 47)**
+This means **changing a scene's category already controls which workflows it appears in**. The admin can already change categories via the category dropdown.
 
-Change `aspectRatio && !loaded` → `aspectRatio` so the wrapper always reserves space. The `<img>` inside already fills `w-full h-full`, so removing the `!loaded` condition has zero visual effect — it just prevents layout collapse on remount.
+## What This Plan Adds
 
-### 2. Stable masonry columns (append-only)
-**Files: `src/pages/PublicDiscover.tsx`, `src/pages/Discover.tsx`, `src/pages/PublicFreestyle.tsx`**
+### 1. Workflow indicator badges (read)
+For each scene row, show small badges indicating which workflows the scene currently appears in, based on its category. This makes the implicit mapping visible.
 
-Wrap the column-building logic in `useMemo` keyed on `[sorted/visibleItems, columnCount]` and — critically — build columns from the full `sorted` array up front, then slice per-column to `visibleCount`. This way, when `visibleCount` increases, existing items stay in the same column and React reuses DOM nodes instead of unmounting them.
+### 2. Quick workflow toggle (control)
+Instead of a separate control, enhance the existing **category dropdown** with a visual hint showing "→ Try-On workflows" or "→ Product workflows" next to each category option. This way the admin understands the consequence of changing categories.
 
-```text
-Before:  visibleItems = sorted.slice(0, N)  →  columns[i % cols]
-After:   columns built from sorted  →  each column sliced to its share of N
-```
+Additionally, add a small info tooltip next to the workflow badges explaining: "Scene appears in these workflows based on its category. Change category to move between workflows."
 
-Items keep the same column assignment regardless of how many are visible. No unmount, no state reset, no re-shimmer.
+### Files to Edit
 
-### 3. ShimmerImage: Eager cache check on mount
-**File: `src/components/ui/shimmer-image.tsx`**
+**`src/pages/AdminScenes.tsx`**
+- Fetch workflows table via `useQuery` to get workflow names and their `uses_tryon` flag
+- Create a helper: `getWorkflowsForScene(category)` → returns list of workflow names
+- Render compact `Badge variant="outline"` components next to each scene showing workflow names
+- Add workflow group labels in the category `<Select>` dropdown (e.g., category options grouped under "On-Model (Try-On)" and "Product Scenes")
+- Add info tooltip on workflow badges
 
-Use a lazy state initializer that creates a temporary `Image()` object with the same `src` to check `.complete` — catches browser-cached images even on fresh mount. This is a safety net for any remaining remount scenarios.
-
-## Layout Safety
-- The aspect-ratio change keeps the same CSS value, just removes the conditional. The `<img>` with `object-cover` fills identically whether or not `loaded` is true.
-- Column stability only changes *when* items enter columns, not their visual layout.
-- The `ShimmerImage` is used in 31 files — all pass `aspectRatio` as a hint for the placeholder. Keeping it permanently active is strictly better (prevents CLS).
-- The `DashboardDiscoverSection` uses `aspectRatioOverride` on `DiscoverCard` which wraps `ShimmerImage` in its own fixed-ratio div — unaffected.
+No database changes needed — this is purely a UI enhancement using existing data relationships.
 
