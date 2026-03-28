@@ -590,8 +590,8 @@ export default function AdminScenes() {
                    editingPromptId={editingPromptId}
                    setEditingPromptId={setEditingPromptId}
                    updatePromptHint={updatePromptHint}
-                   togglePromptOnly={togglePromptOnly}
                    customScenesRaw={customScenesRaw}
+                   workflows={workflows}
                 />
               ))}
             </div>
@@ -635,6 +635,7 @@ export default function AdminScenes() {
                        updatePromptHint={updatePromptHint}
                        togglePromptOnly={togglePromptOnly}
                        customScenesRaw={customScenesRaw}
+                       workflows={workflows}
                     />
                   ))}
                 </div>
@@ -711,6 +712,7 @@ interface SceneRowProps {
   updatePromptHint: (poseId: string, value: string) => void;
   togglePromptOnly: (poseId: string, value: boolean) => void;
   customScenesRaw: import('@/hooks/useCustomScenes').CustomScene[];
+  workflows: WorkflowInfo[];
 }
 
 function SceneRow({
@@ -719,7 +721,7 @@ function SceneRow({
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
   handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
-  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw,
+  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw, workflows,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
