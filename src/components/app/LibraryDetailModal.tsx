@@ -153,13 +153,34 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
           onClick={(e) => e.stopPropagation()}
         >
           {/* Left — Image */}
-          <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
+          <div className="relative w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12 group/img">
             <ShimmerImage
-              src={item.imageUrl}
-              alt={item.label}
+              src={activeItem.imageUrl}
+              alt={activeItem.label}
               className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
               wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
             />
+
+            {/* Multi-image navigation arrows */}
+            {hasMultiple && (
+              <>
+                <button
+                  onClick={goPrev}
+                  className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur border border-border/30 flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={goNext}
+                  className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur border border-border/30 flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all md:opacity-0 md:group-hover/img:opacity-100"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur rounded-full px-3 py-1 text-xs font-medium text-foreground/80">
+                  {currentIndex + 1} / {items.length}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Right — Info panel */}
