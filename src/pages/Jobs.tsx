@@ -98,6 +98,7 @@ export default function Jobs() {
   const [isZipping, setIsZipping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -348,6 +349,7 @@ export default function Jobs() {
                   </div>
                 </>
               )}
+            </div>
 
             <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
 
