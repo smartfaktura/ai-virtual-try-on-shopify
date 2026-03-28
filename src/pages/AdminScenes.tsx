@@ -783,9 +783,22 @@ function SceneRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {defaultCategoryOrder.map(c => (
-                <SelectItem key={c} value={c} className="text-xs">{categoryLabels[c] || c}</SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel className="text-[9px] text-muted-foreground font-semibold">On-Model → Try-On Workflows</SelectLabel>
+                {defaultCategoryOrder.filter(c => ON_MODEL_CATEGORIES.includes(c)).map(c => (
+                  <SelectItem key={c} value={c} className="text-xs">
+                    {categoryLabels[c] || c}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel className="text-[9px] text-muted-foreground font-semibold">Product → Listing Workflows</SelectLabel>
+                {defaultCategoryOrder.filter(c => !ON_MODEL_CATEGORIES.includes(c)).map(c => (
+                  <SelectItem key={c} value={c} className="text-xs">
+                    {categoryLabels[c] || c}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           {isCustom && (
@@ -807,6 +820,24 @@ function SceneRow({
           )}
           {isDuplicate && (
             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-blue-500/10 text-blue-600 border-0">Duplicate</Badge>
+          )}
+          {/* Workflow indicator badges */}
+          {sceneWorkflows.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-0.5">
+                  {sceneWorkflows.map(wf => (
+                    <Badge key={wf.slug} variant="outline" className="text-[8px] h-3.5 px-1 font-normal text-muted-foreground border-border">
+                      {wf.name}
+                    </Badge>
+                  ))}
+                  <Info className="w-2.5 h-2.5 text-muted-foreground/50" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs">
+                Scene appears in these workflows based on its category. Change category to move between workflows.
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
         {/* Admin debug info */}
