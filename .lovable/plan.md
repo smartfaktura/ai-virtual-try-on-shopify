@@ -1,35 +1,52 @@
 
 
-# Remove Shopify OAuth Infrastructure
+# Fix: Add Admin Authentication to generate-style-previews
 
-## Summary
-Remove the Shopify OAuth tables, edge functions, and related database functions since you're not using Shopify integration. The ShopifyImportTab (CSV-based Shopify export import) is a separate feature — we can keep or remove it based on your preference.
+## Problem
+The `generate-style-previews` edge function has no authentication. Anyone can call it to consume AI credits and overwrite landing-asset images.
 
-## What gets removed
+## Fix
+Add JWT verification + admin role check at the top of the handler, using `getClaims()` for JWT validation and a `user_roles` table lookup for admin authorization.
 
-### Database (migration)
-- Drop table `shopify_oauth_nonces`
-- Drop table `shopify_connections`
-- Drop function `encrypt_shopify_token`
-- Drop function `decrypt_shopify_token`
-- Drop function `cleanup_expired_nonces`
+### File: `supabase/functions/generate-style-previews/index.ts`
 
-### Edge Functions (delete)
-- `supabase/functions/shopify-oauth/index.ts`
-- `supabase/functions/shopify-oauth-callback/index.ts`
-- `supabase/functions/shopify-sync/index.ts`
+After the CORS preflight check, add:
 
-### Secrets (can be removed manually)
-- `SHOPIFY_CLIENT_ID`
-- `SHOPIFY_CLIENT_SECRET`
+```typescript
+// 1. Require Authorization header
+const authHeader = req.headers.get("Authorization");
+if (!authHeader?.startsWith("Bearer ")) {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
+}
 
-## What stays (no functional impact)
-- `ShopifyImportTab.tsx` — this is a local CSV parser for Shopify product exports, has no OAuth dependency. We can keep it or remove it separately.
-- Blog/landing page text mentions of "Shopify" — purely marketing copy, no code dependency.
-- `StoreImportTab.tsx` — URL-based product import, unrelated to Shopify OAuth.
+// 2. Verify JWT via anon client
+const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+  global: { headers: { Authorization: authHeader } }
+});
+const token = authHeader.replace("Bearer ", "");
+const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+if (claimsError || !claimsData?.claims) {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
+}
+const userId = claimsData.claims.sub;
 
-## Files changed
-- 3 edge function directories deleted
-- 1 new database migration (drop tables + functions)
-- `supabase/config.toml` — remove any Shopify function config blocks if present
+// 3. Check admin role via service-role client
+const { data: roleData } = await supabase
+  .from("user_roles").select("role")
+  .eq("user_id", userId).eq("role", "admin").maybeSingle();
+if (!roleData) {
+  return new Response(JSON.stringify({ error: "Admin access required" }), {
+    status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
+}
+```
+
+Move the `supabaseUrl` / `supabase` client creation before the auth block so it's available for the role check.
+
+### Security finding
+Mark `style_previews_no_auth` as resolved after applying the fix.
 
