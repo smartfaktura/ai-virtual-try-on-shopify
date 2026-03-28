@@ -1,32 +1,30 @@
 
 
-# Use Full Library Modal for Workflow Recent Creations
+# Fix Picture Perspectives Library Picker — Load All Images at Once
 
 ## Problem
-Clicking a recent creation on `/app/workflows` opens `WorkflowPreviewModal` — a simplified modal with only download, upscale, perspectives, and "view in library". The Library and Freestyle pages use `LibraryDetailModal` which has full functionality (delete, copy settings, submit to discover, add as scene/model, etc.).
+The Perspectives page has its own inline library fetcher that only loads **50 freestyle + 50 jobs** (hard limit), and then shows them **10 at a time** with a "Load more" button (incrementing by 10). Users must click "Load more" many times to see all their images, and can never see more than ~100 total.
 
 ## Solution
-Replace `WorkflowPreviewModal` usage in `WorkflowRecentRow` with `LibraryDetailModal`, converting the workflow job data to `LibraryItem` format — the same pattern `RecentCreationsGallery` already uses on the Dashboard.
+Two changes:
 
-## Changes
+### 1. Increase fetch limits & show more per page
+- Increase both query limits from `50` to `200` each (freestyle + jobs) — this covers the vast majority of users' recent work
+- Change initial visible count from `10` to `30` and increment from `10` to `30` per click
+- This drastically reduces clicking while keeping the page responsive
 
-### File: `src/components/app/WorkflowRecentRow.tsx`
-1. Remove `WorkflowPreviewModal` import, add `LibraryDetailModal` import and `LibraryItem` type
-2. When a thumbnail is selected, convert the `RecentJob` into a `LibraryItem` (with signed URL, source: `'generation'`, label from workflow name, etc.)
-3. For multi-image jobs, open the first image as a `LibraryItem` (user can navigate to others via Library)
-4. Replace `<WorkflowPreviewModal>` with `<LibraryDetailModal>` at the bottom of the component
+### 2. Add infinite scroll (auto-load on scroll)
+- Replace the manual "Load more" button with an `IntersectionObserver` that auto-loads the next batch when the user scrolls near the bottom of the grid
+- Keep the button as a fallback but auto-trigger it
 
-The conversion follows the same pattern as `RecentCreationsGallery.openItem()`:
-```typescript
-const libraryItem: LibraryItem = {
-  id: job.id,
-  imageUrl: signedUrlMap[job.id],
-  source: 'generation',
-  label: job.workflow_name ?? 'Workflow',
-  date: new Date(job.created_at).toLocaleDateString(),
-  createdAt: job.created_at,
-};
-```
+## File Changes
 
-No other files need changes. `WorkflowPreviewModal.tsx` can remain in the codebase (it may be used elsewhere or useful later).
+### `src/pages/Perspectives.tsx`
+1. **Line 163**: Change freestyle `.limit(50)` → `.limit(200)`
+2. **Line 169**: Change jobs `.limit(50)` → `.limit(200)`
+3. **Line 90**: Change initial `libraryVisibleCount` from `10` → `30`
+4. **Line 775**: Change increment from `c + 10` → `c + 30`
+5. Add a small `useEffect` with `IntersectionObserver` on a sentinel div placed after the grid — when it enters viewport, auto-increment `libraryVisibleCount`
+
+This keeps the single-fetch architecture (no pagination complexity) while making the experience feel seamless.
 
