@@ -91,19 +91,19 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   if (!open || !activeItem) return null;
 
   const handleDownload = async () => {
-    await saveOrShareImage(item.imageUrl, `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}`);
+    await saveOrShareImage(activeItem.imageUrl, `${activeItem.label.replace(/\s+/g, '-').toLowerCase()}-${activeItem.id.slice(0, 8)}`);
   };
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      if (item.source === 'freestyle') {
-        const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
+      if (activeItem.source === 'freestyle') {
+        const { error } = await supabase.from('freestyle_generations').delete().eq('id', activeItem.id);
         if (error) throw error;
       } else {
-        const dashIndex = item.id.lastIndexOf('-');
-        const jobId = item.id.substring(0, dashIndex);
-        const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
+        const dashIndex = activeItem.id.lastIndexOf('-');
+        const jobId = activeItem.id.substring(0, dashIndex);
+        const imageIndex = parseInt(activeItem.id.substring(dashIndex + 1), 10);
 
         const { data: job } = await supabase
           .from('generation_jobs')
@@ -134,8 +134,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
     setDeleting(false);
   };
 
-  const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
-  const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : item.quality === 'upscaled' ? 'HD' : null;
+  const isUpscaled = activeItem.quality?.startsWith('upscaled_') || activeItem.quality === 'upscaled';
+  const upscaleLabel = activeItem.quality === 'upscaled_4k' ? '4K' : activeItem.quality === 'upscaled_2k' ? '2K' : activeItem.quality === 'upscaled' ? 'HD' : null;
 
   return (
     <>
