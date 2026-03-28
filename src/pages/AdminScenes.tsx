@@ -733,6 +733,7 @@ function SceneRow({
   const currentPromptHint = promptEdits[pose.poseId]?.prompt_hint ?? rawScene?.prompt_hint ?? pose.promptHint ?? '';
   const currentPromptOnly = promptEdits[pose.poseId]?.prompt_only ?? pose.promptOnly ?? false;
   const isEditingPrompt = editingPromptId === pose.poseId;
+  const sceneWorkflows = useMemo(() => getWorkflowsForScene(pose.category, workflows), [pose.category, workflows]);
 
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 group">
