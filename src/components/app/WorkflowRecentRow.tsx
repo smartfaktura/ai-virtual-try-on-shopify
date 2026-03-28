@@ -22,12 +22,18 @@ interface WorkflowRecentRowProps {
   isLoading?: boolean;
 }
 
+function allImageUrls(results: unknown): string[] {
+  if (!Array.isArray(results) || results.length === 0) return [];
+  return results.map((r) => {
+    if (typeof r === 'string') return r;
+    if (r && typeof r === 'object' && 'url' in r) return (r as { url: string }).url;
+    return null;
+  }).filter(Boolean) as string[];
+}
+
 function firstImageUrl(results: unknown): string | null {
-  if (!Array.isArray(results) || results.length === 0) return null;
-  const first = results[0];
-  if (typeof first === 'string') return first;
-  if (first && typeof first === 'object' && 'url' in first) return (first as { url: string }).url;
-  return null;
+  const urls = allImageUrls(results);
+  return urls[0] ?? null;
 }
 
 const SWIPE_THRESHOLD = 8;
