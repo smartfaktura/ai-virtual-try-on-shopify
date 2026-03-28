@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
@@ -26,9 +26,11 @@ interface LibraryDetailModalProps {
   onClose: () => void;
   isUpscaling?: boolean;
   onCopySettings?: (settings: { prompt: string; modelId?: string | null; sceneId?: string | null; productId?: string | null; aspectRatio?: string }) => void;
+  items?: LibraryItem[];
+  initialIndex?: number;
 }
 
-export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySettings, items, initialIndex = 0 }: LibraryDetailModalProps) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
@@ -42,8 +44,27 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
+  // Multi-image navigation
+  const hasMultiple = items && items.length > 1;
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Reset index when modal opens with new items
+  useEffect(() => { setCurrentIndex(initialIndex); }, [initialIndex, open]);
+
+  const activeItem = hasMultiple ? items[currentIndex] ?? item : item;
+
+  const goPrev = useCallback(() => {
+    if (!hasMultiple) return;
+    setCurrentIndex(i => (i > 0 ? i - 1 : items.length - 1));
+  }, [hasMultiple, items?.length]);
+
+  const goNext = useCallback(() => {
+    if (!hasMultiple) return;
+    setCurrentIndex(i => (i < items.length - 1 ? i + 1 : 0));
+  }, [hasMultiple, items?.length]);
+
   // Reset prompt expanded when item changes
-  useEffect(() => { setPromptExpanded(false); }, [item?.id]);
+  useEffect(() => { setPromptExpanded(false); }, [activeItem?.id]);
 
   // Lock body scroll
   useEffect(() => {
@@ -55,17 +76,19 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  // Close on Escape
+  // Close on Escape + arrow key navigation
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if (hasMultiple && e.key === 'ArrowLeft') goPrev();
+      if (hasMultiple && e.key === 'ArrowRight') goNext();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  }, [open, onClose, hasMultiple, goPrev, goNext]);
 
-  if (!open || !item) return null;
+  if (!open || !activeItem) return null;
 
   const handleDownload = async () => {
     await saveOrShareImage(item.imageUrl, `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}`);
