@@ -253,7 +253,20 @@ export default function PublicDiscover() {
     return () => observer.disconnect();
   }, [sorted.length]);
 
-  const visibleItems = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+  // Build stable columns: assign each item a fixed column so load-more doesn't reshuffle existing items
+  const stableColumns = useMemo(() => {
+    const cols: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
+    sorted.forEach((item, i) => {
+      cols[i % columnCount].push(item);
+    });
+    return cols;
+  }, [sorted, columnCount]);
+
+  // Slice each column to show only up to visibleCount total items
+  const visibleColumns = useMemo(() => {
+    const itemsPerCol = Math.ceil(visibleCount / columnCount);
+    return stableColumns.map((col) => col.slice(0, itemsPerCol));
+  }, [stableColumns, visibleCount, columnCount]);
 
   // Related items for modal
   const relatedItems = useMemo(() => {
@@ -366,15 +379,9 @@ export default function PublicDiscover() {
             </p>
           </div>
         ) : (
-          (() => {
-            const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
-            visibleItems.forEach((item, i) => {
-              columns[i % columnCount].push(item);
-            });
-            return (
-              <>
+          <>
                 <div className="flex gap-1">
-                  {columns.map((col, colIdx) => (
+                  {visibleColumns.map((col, colIdx) => (
                     <div key={colIdx} className="flex-1 flex flex-col gap-1">
                       {col.map((item) => {
                         const itemId = getItemId(item);
@@ -402,8 +409,6 @@ export default function PublicDiscover() {
                   <div ref={sentinelRef} className="h-4 w-full" aria-hidden="true" />
                 )}
               </>
-            );
-          })()
         )}
 
         {/* Detail modal — auth-aware */}

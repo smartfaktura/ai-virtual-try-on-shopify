@@ -348,16 +348,18 @@ export default function PublicFreestyle() {
               </div>
             ) : (
               (() => {
-                const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
-                visibleItems.forEach((item, i) => {
-                  columns[i % columnCount].push(item);
+                // Stable columns: items stay in their assigned column as visibleCount grows
+                const stableCols: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
+                sorted.forEach((item, i) => {
+                  stableCols[i % columnCount].push(item);
                 });
+                const itemsPerCol = Math.ceil(visibleCount / columnCount);
                 return (
                   <>
                     <div className="flex gap-1">
-                      {columns.map((col, colIdx) => (
+                      {stableCols.map((col, colIdx) => (
                         <div key={colIdx} className="flex-1 flex flex-col gap-1">
-                          {col.map((item) => {
+                          {col.slice(0, itemsPerCol).map((item) => {
                             const itemId = getItemId(item);
                             return (
                               <DiscoverCard
