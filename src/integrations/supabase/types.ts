@@ -1138,63 +1138,6 @@ export type Database = {
         }
         Relationships: []
       }
-      shopify_connections: {
-        Row: {
-          access_token: string
-          created_at: string
-          id: string
-          scope: string
-          shop_domain: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          id?: string
-          scope?: string
-          shop_domain: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          id?: string
-          scope?: string
-          shop_domain?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      shopify_oauth_nonces: {
-        Row: {
-          app_origin: string
-          created_at: string
-          expires_at: string
-          id: string
-          nonce: string
-          user_id: string
-          user_token: string
-        }
-        Insert: {
-          app_origin?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          nonce: string
-          user_id: string
-          user_token: string
-        }
-        Update: {
-          app_origin?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          nonce?: string
-          user_id?: string
-          user_token?: string
-        }
-        Relationships: []
-      }
       try_shot_sessions: {
         Row: {
           created_at: string | null
@@ -1556,19 +1499,10 @@ export type Database = {
         Returns: Json
       }
       claim_next_job: { Args: never; Returns: Json }
-      cleanup_expired_nonces: { Args: never; Returns: undefined }
       cleanup_stale_jobs: { Args: never; Returns: Json }
-      decrypt_shopify_token: {
-        Args: { p_encrypted: string; p_key: string }
-        Returns: string
-      }
       deduct_credits: {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
-      }
-      encrypt_shopify_token: {
-        Args: { p_key: string; p_token: string }
-        Returns: string
       }
       enqueue_generation: {
         Args: {
