@@ -87,7 +87,8 @@ export default function Perspectives() {
   const quality = 'high' as const;
   const [productSearch, setProductSearch] = useState('');
   const [librarySearch, setLibrarySearch] = useState('');
-  const [libraryVisibleCount, setLibraryVisibleCount] = useState(10);
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(30);
+  const librarySentinelRef = useRef<HTMLDivElement>(null);
   const [productVisibleCount, setProductVisibleCount] = useState(10);
   const [referenceImages, setReferenceImages] = useState<Record<number, string>>({});
   const [uploadingRefIndex, setUploadingRefIndex] = useState<number | null>(null);
@@ -160,13 +161,13 @@ export default function Perspectives() {
           .from('freestyle_generations')
           .select('id, image_url, prompt, created_at')
           .order('created_at', { ascending: false })
-          .limit(50),
+          .limit(200),
         supabase
           .from('generation_jobs')
           .select('id, results, created_at, status, workflows(name), user_products(title)')
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
-          .limit(50),
+          .limit(200),
       ]);
 
       const items: LibraryPickerItem[] = [];
@@ -209,6 +210,22 @@ export default function Perspectives() {
     },
     enabled: !!user,
     staleTime: 60_000,
+  });
+
+  // Auto-load more library items on scroll (infinite scroll)
+  useEffect(() => {
+    const sentinel = librarySentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setLibraryVisibleCount(c => c + 30);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   });
 
   const filteredProducts = products.filter(p =>
@@ -771,8 +788,8 @@ export default function Perspectives() {
                 </div>
               )}
               {!libraryLoading && filteredLibrary.length > libraryVisibleCount && (
-                <div className="text-center pt-2">
-                  <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 10)}>
+                <div ref={librarySentinelRef} className="text-center pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 30)}>
                     Load more ({filteredLibrary.length - libraryVisibleCount} remaining)
                   </Button>
                 </div>
