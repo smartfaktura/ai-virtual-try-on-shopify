@@ -1,52 +1,43 @@
-
-
-# Fix: Add Admin Authentication to generate-style-previews
+# Add Seedream Fallback for Content-Policy Rejections in Try-On
 
 ## Problem
-The `generate-style-previews` edge function has no authentication. Anyone can call it to consume AI credits and overwrite landing-asset images.
 
-## Fix
-Add JWT verification + admin role check at the top of the handler, using `getClaims()` for JWT validation and a `user_roles` table lookup for admin authorization.
+When generating bikini/swimwear try-on images, Gemini Pro returns `IMAGE_PROHIBITED_CONTENT` and `null`. The current fallback chain (Pro → Flash) doesn't help because Flash has the same content policy. All 3 Pro retries fail, Flash also fails, and the job ends as "failed" with full credit refund.
 
-### File: `supabase/functions/generate-style-previews/index.ts`
+## Solution
 
-After the CORS preflight check, add:
+Add a second fallback tier using ByteDance Seedream 5.0 Lite (`bytedance/seedream-5.0-lite`) which has more permissive content policies for legitimate fashion/swimwear photography. The chain becomes:
+
+```text
+Gemini Pro (3 retries) → Gemini Flash (3 retries) → Seedream 5.0 Lite (3 retries)
+```
+
+## Changes
+
+### File: `supabase/functions/generate-tryon/index.ts`
+
+In the main generation loop (lines 606-645), after the Flash fallback at line 618, add a Seedream fallback:
 
 ```typescript
-// 1. Require Authorization header
-const authHeader = req.headers.get("Authorization");
-if (!authHeader?.startsWith("Bearer ")) {
-  return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
-  });
+// Existing: Pro model returned null → try Flash
+if (base64Url === null) {
+  console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview for image ${i + 1}`);
+  base64Url = await generateImageWithModel(..., "google/gemini-3.1-flash-image-preview", ...);
 }
 
-// 2. Verify JWT via anon client
-const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-  global: { headers: { Authorization: authHeader } }
-});
-const token = authHeader.replace("Bearer ", "");
-const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
-if (claimsError || !claimsData?.claims) {
-  return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
-  });
-}
-const userId = claimsData.claims.sub;
-
-// 3. Check admin role via service-role client
-const { data: roleData } = await supabase
-  .from("user_roles").select("role")
-  .eq("user_id", userId).eq("role", "admin").maybeSingle();
-if (!roleData) {
-  return new Response(JSON.stringify({ error: "Admin access required" }), {
-    status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
-  });
+// NEW: Flash also returned null → try Seedream (handles content-policy rejections)
+if (base64Url === null) {
+  console.warn(`Flash model also returned null — falling back to Seedream for image ${i + 1}`);
+  base64Url = await generateImageWithModel(..., "bytedance/seedream-3.0", ...);
 }
 ```
 
-Move the `supabaseUrl` / `supabase` client creation before the auth block so it's available for the role check.
+Seedream uses the same OpenAI-compatible API format through the Lovable AI gateway, so no changes to `generateImageWithModel` are needed — it already accepts arbitrary model strings.
 
-### Security finding
-Mark `style_previews_no_auth` as resolved after applying the fix.
+### Aspect ratio note
 
+Per the existing memory on Seedream, 4:5 ratio may need mapping to 3:4. We should add ratio mapping inside `generateImageWithModel` when the model is Seedream-based, storing `actualAspectRatio` if needed. However, since try-on jobs already support multiple ratios and Seedream 3.0 supports common ratios, we'll add a lightweight mapping only if needed. (Please do it!)
+
+## Files changed
+
+- `supabase/functions/generate-tryon/index.ts` — add Seedream as third fallback tier after Flash
