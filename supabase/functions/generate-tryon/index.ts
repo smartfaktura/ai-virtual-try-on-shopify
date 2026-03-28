@@ -707,12 +707,21 @@ serve(async (req) => {
           base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
         }
 
-        // Fallback tier 2: if Flash also returned null (content-policy), try Seedream
+        // Fallback tier 2: if Flash also returned null (content-policy), try Seedream 4.5 via ARK API
         if (base64Url === null) {
-          console.warn(`Flash model also returned null — falling back to Seedream 5.0 Lite for image ${i + 1}`);
-          // Seedream doesn't support 4:5, map to 3:4
-          const seedreamRatio = (body.aspectRatio === "4:5") ? "3:4" : (body.aspectRatio || "1:1");
-          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, seedreamRatio, "bytedance/seedream-5.0-lite", body.pose.imageUrl);
+          const arkApiKey = Deno.env.get("BYTEPLUS_ARK_API_KEY");
+          if (arkApiKey) {
+            console.warn(`Flash model also returned null — falling back to Seedream 4.5 via ARK API for image ${i + 1}`);
+            const refImages = [body.product.imageUrl, body.model.imageUrl, body.pose?.imageUrl].filter(Boolean) as string[];
+            const seedreamResult = await generateImageSeedream(
+              variationPrompt, refImages, "seedream-4-5-251128", arkApiKey, body.aspectRatio || "1:1"
+            );
+            if (seedreamResult.ok && seedreamResult.imageUrl) {
+              base64Url = await fetchImageAsBase64(seedreamResult.imageUrl);
+            } else {
+              console.warn(`Seedream fallback failed:`, seedreamResult.error);
+            }
+          }
         }
 
         if (base64Url) {
