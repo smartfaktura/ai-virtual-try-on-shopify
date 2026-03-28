@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid, Layers, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -98,6 +98,7 @@ export default function Jobs() {
   const [isZipping, setIsZipping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -282,37 +283,73 @@ export default function Jobs() {
           </div>
 
           <div className="flex items-center gap-2">
-            {SOURCE_FILTERS.map(f => (
+            {/* Filter popover trigger */}
+            <div className="relative group">
               <button
-                key={f.id}
-                onClick={() => setSourceFilter(f.id)}
+                onClick={() => setFilterOpen(o => !o)}
                 className={cn(
-                  'px-4 py-2 rounded-full text-xs font-medium transition-all',
-                  sourceFilter === f.id
+                  'px-3 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-1.5',
+                  (sourceFilter !== 'all' || sortBy !== 'newest')
                     ? 'bg-foreground text-background shadow-sm'
                     : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
                 )}
               >
-                {f.label}
-              </button>
-            ))}
-
-            <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
-
-            {SORTS.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setSortBy(s.id)}
-                className={cn(
-                  'px-4 py-2 rounded-full text-xs font-medium transition-all',
-                  sortBy === s.id
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Filters</span>
+                {(sourceFilter !== 'all' || sortBy !== 'newest') && (
+                  <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                    {(sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0)}
+                  </span>
                 )}
-              >
-                {s.label}
               </button>
-            ))}
+
+              {filterOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 z-50 w-56 rounded-2xl bg-popover border border-border shadow-xl p-4 space-y-4">
+                    <div>
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Source</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {SOURCE_FILTERS.map(f => (
+                          <button
+                            key={f.id}
+                            onClick={() => { setSourceFilter(f.id); }}
+                            className={cn(
+                              'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                              sourceFilter === f.id
+                                ? 'bg-foreground text-background shadow-sm'
+                                : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                            )}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="h-px bg-border/50" />
+                    <div>
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Sort</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {SORTS.map(s => (
+                          <button
+                            key={s.id}
+                            onClick={() => { setSortBy(s.id); }}
+                            className={cn(
+                              'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                              sortBy === s.id
+                                ? 'bg-foreground text-background shadow-sm'
+                                : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                            )}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
 
