@@ -2,17 +2,19 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import {
   ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2, Plus,
-  Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X,
+  Search, Copy, Eye, EyeOff, ChevronDown, ChevronRight, Pencil, Check, X, Info,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
@@ -22,6 +24,31 @@ import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from '@/lib/brandedToast';
 import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomScenes';
+
+const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
+
+interface WorkflowInfo {
+  name: string;
+  slug: string;
+  uses_tryon: boolean;
+  generation_config: any;
+}
+
+function getWorkflowsForScene(category: string, workflows: WorkflowInfo[]): WorkflowInfo[] {
+  const isOnModel = ON_MODEL_CATEGORIES.includes(category);
+  return workflows.filter(wf => {
+    if (isOnModel && wf.uses_tryon) return true;
+    if (!isOnModel && wf.slug === 'product-listing-set') return true;
+    // Check if workflow has show_scene_picker or show_pose_picker in ui_config
+    const uiConfig = wf.generation_config?.ui_config;
+    if (uiConfig?.show_scene_picker || uiConfig?.show_pose_picker) return true;
+    return false;
+  });
+}
+
+function getCategoryWorkflowHint(category: string): string {
+  return ON_MODEL_CATEGORIES.includes(category) ? '→ Try-On' : '→ Product';
+}
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
