@@ -27,6 +27,7 @@ const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'fashion', label: 'Fashion' },
   { id: 'beauty', label: 'Beauty' },
+  { id: 'lifestyle', label: 'Lifestyle' },
   { id: 'fragrances', label: 'Fragrances' },
   { id: 'sports', label: 'Sports' },
   { id: 'jewelry', label: 'Jewelry' },
