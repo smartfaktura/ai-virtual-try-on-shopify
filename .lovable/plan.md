@@ -1,30 +1,35 @@
 
 
-# Fix Picture Perspectives Library Picker — Load All Images at Once
+# Multi-Image Navigation in Library Detail Modal for Workflow Recent Creations
 
 ## Problem
-The Perspectives page has its own inline library fetcher that only loads **50 freestyle + 50 jobs** (hard limit), and then shows them **10 at a time** with a "Load more" button (incrementing by 10). Users must click "Load more" many times to see all their images, and can never see more than ~100 total.
+When a workflow job has 5 images (shown as "5 imgs" badge), clicking it opens the modal with only the first image. There's no way to browse the other 4 images within the modal.
 
-## Solution
-Two changes:
+## Approach
+Add optional `items` + `currentIndex` props to `LibraryDetailModal` so it can show prev/next arrows when multiple images are available. The `WorkflowRecentRow` will convert all job results into `LibraryItem[]` and pass them.
 
-### 1. Increase fetch limits & show more per page
-- Increase both query limits from `50` to `200` each (freestyle + jobs) — this covers the vast majority of users' recent work
-- Change initial visible count from `10` to `30` and increment from `10` to `30` per click
-- This drastically reduces clicking while keeping the page responsive
+## Changes
 
-### 2. Add infinite scroll (auto-load on scroll)
-- Replace the manual "Load more" button with an `IntersectionObserver` that auto-loads the next batch when the user scrolls near the bottom of the grid
-- Keep the button as a fallback but auto-trigger it
+### 1. `src/components/app/LibraryDetailModal.tsx`
+- Add optional props: `items?: LibraryItem[]`, `initialIndex?: number`, `onNavigate?: (item: LibraryItem) => void`
+- When `items` is provided and has more than 1 entry, show left/right `ChevronLeft`/`ChevronRight` arrow buttons on the image panel
+- Track `currentIndex` state internally, update displayed `item` from `items[currentIndex]`
+- Add keyboard navigation: left/right arrow keys cycle through images
+- Show a small "2 / 5" counter at the bottom of the image area
+- All existing single-item usage remains unchanged (no `items` prop = current behavior)
 
-## File Changes
+### 2. `src/components/app/WorkflowRecentRow.tsx`
+- When a thumbnail is clicked, extract ALL image URLs from `job.results` (not just the first)
+- Sign all URLs for that job (expand the signing query to sign all result URLs, not just the first per job)
+- Convert each result into a `LibraryItem` with unique id (`jobId-0`, `jobId-1`, etc.)
+- Pass `items={allItems}` and `initialIndex={0}` to `LibraryDetailModal`
 
-### `src/pages/Perspectives.tsx`
-1. **Line 163**: Change freestyle `.limit(50)` → `.limit(200)`
-2. **Line 169**: Change jobs `.limit(50)` → `.limit(200)`
-3. **Line 90**: Change initial `libraryVisibleCount` from `10` → `30`
-4. **Line 775**: Change increment from `c + 10` → `c + 30`
-5. Add a small `useEffect` with `IntersectionObserver` on a sentinel div placed after the grid — when it enters viewport, auto-increment `libraryVisibleCount`
+### 3. Signing all results
+- Update the `useQuery` in `WorkflowRecentRow` to build a `signedAllUrlsMap: Record<string, string[]>` — mapping each job ID to an array of signed URLs for all its results, not just the first thumbnail
+- The thumbnail display still uses only the first signed URL
 
-This keeps the single-fetch architecture (no pagination complexity) while making the experience feel seamless.
+## UI Details
+- Arrow buttons: semi-transparent circles on the left/right edges of the image panel, only visible on hover (desktop) or always visible (mobile)
+- Counter: small pill "2 / 5" centered below the image
+- Keyboard: ArrowLeft/ArrowRight when modal is open with multiple items
 
