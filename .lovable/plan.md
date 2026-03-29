@@ -1,32 +1,24 @@
 
 
-# Rotating Gallery on Auth Page Right Side
+# Dynamic Auth Gallery from Storage
 
 ## What changes
 
-Replace the single static hero image on the right side of `/auth` with a rotating gallery that crossfades between multiple product images from your storage bucket.
+Update `AuthHeroGallery` in `src/pages/Auth.tsx` to dynamically list all files in the `landing-assets` bucket under the `auth/` prefix, then shuffle and rotate through them — instead of using a hardcoded array.
 
 ## How it works
 
-**File: `src/pages/Auth.tsx`**
+1. On mount, call `supabase.storage.from('landing-assets').list('auth')` to get all files
+2. Build public URLs for each file using the storage base URL
+3. Shuffle the array randomly
+4. Use the existing crossfade rotation logic (every 5s) on the dynamic list
+5. Keep a fallback to the current hardcoded images if the fetch fails or returns empty
 
-1. Define an array of image URLs (from `landing-assets` storage) — you can upload your own images to that bucket and add them to the array
-2. Add a `useState` for the current index and a `useEffect` with a `setInterval` (every 5 seconds) to cycle through images
-3. Render two `<img>` layers with CSS `opacity` + `transition-opacity duration-1000` for a smooth crossfade
-4. Keep the existing gradient overlay and "Generated with VOVV.AI" caption
+| # | Action | Detail |
+|---|--------|--------|
+| 1 | Replace hardcoded `AUTH_GALLERY_IMAGES` array | Fetch file list from `landing-assets/auth/` on mount |
+| 2 | Add shuffle utility | Randomize order each page load |
+| 3 | Keep fallback | Use current images if bucket is empty or fetch fails |
 
-**Implementation detail:**
-- Preload the next image in the sequence to avoid flash-of-loading
-- Use `absolute inset-0` positioning on both image layers with `transition-opacity duration-1000 ease-in-out`
-- Current image gets `opacity-100`, previous gets `opacity-0`
-
-| # | Action | File |
-|---|--------|------|
-| 1 | Replace single `<img>` with rotating gallery component | `src/pages/Auth.tsx` (lines 590-603) |
-
-## Your images
-
-You mentioned you have pictures to use. After implementation, you can either:
-- Upload them to your `landing-assets` storage bucket under `auth/` and add the paths to the array
-- Or share them here and I'll add them directly to the code
+**Your workflow after this:** Just upload images to `landing-assets → auth/` folder in Cloud Storage. They'll automatically appear in the rotating gallery on next page load. No code changes needed.
 
