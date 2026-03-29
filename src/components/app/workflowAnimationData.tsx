@@ -1,6 +1,9 @@
 import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home, Sparkles, Maximize2, Users } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
 /* ── Asset URLs ── */
 
