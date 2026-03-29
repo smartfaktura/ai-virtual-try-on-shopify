@@ -88,4 +88,4 @@ export function ShimmerImage({
       />
     </div>
   );
-}
+});
