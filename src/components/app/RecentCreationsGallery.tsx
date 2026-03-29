@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -164,6 +164,16 @@ export function RecentCreationsGallery() {
     }
   }, [isMobile, activeItemId, openItem]);
 
+
+  // Preload first 4 images to eliminate shimmer for above-fold cards
+  useEffect(() => {
+    if (creations.length > 0) {
+      creations.slice(0, 4).forEach((item) => {
+        const img = new window.Image();
+        img.src = item.imageUrl;
+      });
+    }
+  }, [creations]);
 
   if (isLoading) {
     return (
