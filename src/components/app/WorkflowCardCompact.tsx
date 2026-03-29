@@ -52,7 +52,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
             <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact modalCompact />
           ) : (
             <img
-              src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { width: 480, quality: 60 })}
+              src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { quality: 60 })}
               alt={workflow.name}
               className="w-full h-full object-cover bg-muted/50"
             />
@@ -100,7 +100,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} modalCompact={modalCompact} />
         ) : (
           <img
-            src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { width: 480, quality: 60 })}
+            src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { quality: 60 })}
             alt={workflow.name}
             className="w-full h-full object-cover bg-muted/50"
           />
