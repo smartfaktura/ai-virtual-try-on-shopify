@@ -1,69 +1,67 @@
 
 
-# Optimize Final Batch of Unoptimized Thumbnails
+# Final Remaining Unoptimized Thumbnails
 
-After a thorough audit, here are the remaining files where Supabase storage images (via `getLandingAssetUrl` or `TEAM_MEMBERS`) are rendered without `getOptimizedUrl`.
+After a thorough audit, here are the last unoptimized Supabase storage image locations. Grouped by priority.
 
 ---
 
-## Files to update (8 files, ~15 image locations)
+## High Priority — App UI Thumbnails
 
-### 1. `src/components/app/WorkflowActivityCard.tsx`
-- **Lines 100, 217, 272**: Team avatars (40px) — `member.avatar` / `team[0].avatar` used in `<AvatarImage>` without optimization (3 locations)
+### 1. `src/components/app/freestyle/FreestyleQuickPresets.tsx`
+- **Line 161**: `amara.avatar` (28px) — wrap with `getOptimizedUrl(..., { quality: 60 })`
 
-### 2. `src/components/app/StudioChat.tsx`
-- **Lines 124, 128, 132, 183, 209**: `avatarSophia`, `avatarKenji`, `avatarZara` (28px) — 5 `<AvatarImage>` locations, all raw `getLandingAssetUrl` URLs
+### 2. `src/pages/Generate.tsx`
+- **Line 4300**: Product summary thumbnail (48px) — `scratchUpload?.previewUrl` / `selectedProduct?.images[0]?.url`
+- **Line 4309**: Model summary thumbnail (48px) — `model.previewUrl`
+- **Line 4318**: Scene summary thumbnail (48px) — `pose.previewUrl`
 
-### 3. `src/components/app/ContactFormDialog.tsx`
-- **Lines 98, 102, 106**: `avatarSophia`, `avatarKenji`, `avatarZara` (36px) — 3 `<AvatarImage>` locations
+### 3. `src/components/app/generate/WorkflowSettingsPanel.tsx`
+- **Line 190**: Flat-lay product thumbnails (56px) — `up.image_url`
 
-### 4. `src/components/app/video/CorrectionConfirmModal.tsx`
-- **Line 42**: `m.avatar` (32px) — team avatars in confirmation modal
+### 4. `src/components/app/SubmitToDiscoverModal.tsx`
+- **Line 160**: Preview image — `imageUrl` (Supabase URL)
+- **Line 220**: Product thumbnail (36px) — `productImageUrl`
 
-### 5. `src/components/app/freestyle/FreestyleGallery.tsx`
-- **Lines 127, 181, 264, 306**: `crew.avatar` / `luna.avatar` (40–64px) — 4 `<img>` locations in generating/error/upscaling overlays
+## Medium Priority — Landing Page Images
 
-### 6. `src/components/app/BrandProfileWizard.tsx`
-- **Line 58**: `avatar` (32px) — team tip avatars from `getLandingAssetUrl`
+### 5. `src/components/landing/StudioTeamSection.tsx`
+- **Line 153**: Team member avatars (large cards) — `member.avatar`
 
-### 7. `src/components/app/OnboardingChecklist.tsx`
-- **Line 104**: `member.avatar` (48–56px) — step avatars
+### 6. `src/components/landing/BeforeAfterGallery.tsx`
+- **Lines 6–11**: 12 `getLandingAssetUrl` images used as ShimmerImage `src` without optimization
 
-### 8. `src/pages/About.tsx`
-- **Line 156**: `member.avatar` (80px) — team grid on About page
+### 7. `src/components/landing/CreativeDropsSection.tsx`
+- **Lines 17–43**: 9 drop thumbnail URLs from `getLandingAssetUrl` without optimization
 
-### 9. `src/pages/Discover.tsx`
-- **Line 177**: `member.avatar` (44px) — rotating avatars
+### 8. `src/components/landing/EnvironmentShowcaseSection.tsx`
+- **Lines 12–43**: ~20 environment card images from `getLandingAssetUrl` and direct Supabase URLs without optimization
 
-### 10. `src/pages/Freestyle.tsx`
-- **Line 1085**: `TEAM_MEMBERS.find(...).avatar` (20px) — Sophia hint avatar
+### 9. `src/components/app/workflowAnimationData.tsx`
+- **Lines 8–47**: ~30 asset URLs from `getLandingAssetUrl` used as background/recipe images without optimization
 
-### 11. `src/pages/video/AnimateVideo.tsx`
-- **Line 688**: `m.avatar` (28px) — TIPS_TEAM avatars (already optimized at line 517 but missed at 688)
+## Low Priority — Admin Pages
 
-### 12. `src/components/app/LibraryImageCard.tsx`
-- **Line 129**: `luna?.avatar` (40px) — upscaling overlay avatar
+### 10. `src/pages/AdminScenes.tsx`
+- **Lines 663, 743**: Scene thumbnails (admin-only, low traffic)
 
 ---
 
 ## Pattern
 
-Same as all previous batches — import + wrap:
+Same as all previous batches:
 ```tsx
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-// Before
-src={member.avatar}
-
-// After
-src={getOptimizedUrl(member.avatar, { quality: 60 })}
+src={getOptimizedUrl(url, { quality: 60 })}
 ```
 
-Quality-only compression. No width constraints.
+For landing data arrays (BeforeAfterGallery, CreativeDropsSection, EnvironmentShowcaseSection, workflowAnimationData), optimize at the data definition level using a helper like `const s = (path) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 })`.
 
 ## Summary
 
-| Files | ~Image locations |
-|---|---|
-| 12 files | ~22 locations |
+| Category | Files | ~Image locations |
+|---|---|---|
+| App UI thumbnails | 4 files | ~7 locations |
+| Landing page images | 5 files | ~70+ locations |
+| Admin pages | 1 file | 2 locations |
+| **Total** | **~10 files** | **~80 locations** |
 
