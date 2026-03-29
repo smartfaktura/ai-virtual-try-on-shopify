@@ -1,37 +1,15 @@
 
 
-# Add Uploaded Images to Beauty Showcase
+# Add CTA Button Below Product Category Showcase
 
 ## What changes
 
-Add the 5 uploaded fragrance/beauty images as the first shots in the "Beauty" category rotation on the landing page.
+Add a "Try It Free →" button centered below the category cards grid, matching the style used in FinalCTA (rounded-full, primary, with ArrowRight icon).
 
-## Steps
+## File: `src/components/landing/ProductCategoryShowcase.tsx`
 
-| # | Action | Detail |
-|---|--------|--------|
-| 1 | Copy images to `public/images/showcase/` | Save as `beauty-perfume-ice.jpg`, `beauty-perfume-driftwood.jpg`, `beauty-perfume-splash.jpg`, `beauty-perfume-rocks.jpg`, `beauty-perfume-aloe.jpg` |
-| 2 | Update CATEGORIES array | Prepend 5 new `/images/showcase/` paths before the existing 4 Beauty images in `src/components/landing/ProductCategoryShowcase.tsx` |
-
-**Updated Beauty entry:**
-
-```typescript
-{
-  label: 'Beauty',
-  images: [
-    '/images/showcase/beauty-perfume-ice.jpg',
-    '/images/showcase/beauty-perfume-driftwood.jpg',
-    '/images/showcase/beauty-perfume-splash.jpg',
-    '/images/showcase/beauty-perfume-rocks.jpg',
-    '/images/showcase/beauty-perfume-aloe.jpg',
-    s('skincare-serum-marble.png'),
-    s('skincare-perfume-vanity.png'),
-    s('skincare-serum-model.png'),
-    s('skincare-model-light.png'),
-  ],
-  cycleDuration: 8500,
-},
-```
-
-Local assets served directly from `/public`, existing Supabase images continue using `s()` optimization.
+- Import `Button` from `@/components/ui/button`, `ArrowRight` from `lucide-react`, `useNavigate` from `react-router-dom`, and `useAuth` from `@/contexts/AuthContext`
+- Add a centered `div` after the grid containing a `Button` with text "Try It Free" and an `ArrowRight` icon
+- On click: navigate to `/app` if logged in, `/auth` otherwise
+- Style: `rounded-full px-8 py-5 text-base font-semibold gap-2 shadow-lg shadow-primary/20`, `mt-10 text-center`
 
