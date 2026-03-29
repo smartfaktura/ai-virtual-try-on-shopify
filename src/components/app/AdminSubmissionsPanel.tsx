@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, X, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   useAdminSubmissions,
   useApproveSubmission,
@@ -127,7 +128,7 @@ function SubmissionCard({
   return (
     <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
       <img
-        src={submission.image_url}
+        src={getOptimizedUrl(submission.image_url, { quality: 60 })}
         alt={submission.title}
         className="w-full aspect-[3/4] object-cover"
       />
