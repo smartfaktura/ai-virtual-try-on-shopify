@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { Loader2, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';

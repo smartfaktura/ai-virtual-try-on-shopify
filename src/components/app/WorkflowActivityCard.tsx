@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, XCircle, CheckCircle2, Clock, X, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';

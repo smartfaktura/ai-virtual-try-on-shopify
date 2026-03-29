@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, X, Clock } from 'lucide-react';
