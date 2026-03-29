@@ -1,0 +1,1 @@
+DROP POLICY "Users can insert their own jobs" ON public.generation_jobs;
