@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, X, Clock } from 'lucide-react';
@@ -57,8 +58,6 @@ export function GlobalGenerationBar() {
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
   const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
-  const [, tick] = useState(0);
-  const [quoteIndex, setQuoteIndex] = useState(0);
 
   // Poll active jobs globally
   const { data: activeGroups = [] } = useQuery({
@@ -155,19 +154,8 @@ export function GlobalGenerationBar() {
     prevGroupsRef.current = activeGroups;
   }, [activeGroups, queryClient]);
 
-  // Tick for elapsed time
-  useEffect(() => {
-    if (activeGroups.length === 0) return;
-    const id = setInterval(() => tick((t) => t + 1), 1000);
-    return () => clearInterval(id);
-  }, [activeGroups.length]);
-
-  // Rotating quote index
-  useEffect(() => {
-    if (activeGroups.length === 0) return;
-    const id = setInterval(() => setQuoteIndex((i) => i + 1), 4000);
-    return () => clearInterval(id);
-  }, [activeGroups.length]);
+  useVisibilityTick(1000, activeGroups.length > 0);
+  const quoteIndex = useVisibilityTick(4000, activeGroups.length > 0);
 
   const isHiddenPage = HIDDEN_PATHS.some((p) => location.pathname.startsWith(p));
   const isFreestylePage = location.pathname.startsWith('/app/freestyle');
