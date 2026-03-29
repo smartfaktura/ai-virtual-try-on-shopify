@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const f = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
 const features = [
   {
