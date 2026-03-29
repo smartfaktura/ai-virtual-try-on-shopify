@@ -1,12 +1,19 @@
 
 
-# Fix Grey Bar on Discover Image Cards
+# Fix Discover Masonry: Show Natural Image Sizes
 
 ## Problem
-Images in the `/app/discover` masonry grid show a grey bar because the `ShimmerImage` wrapper enforces a `3/4` aspect ratio, but the `<img>` uses `h-auto` — leaving unfilled space that shows the `bg-muted` background.
+The previous fix forced all images to a `3/4` aspect ratio via `ShimmerImage`, making them all the same height. The Discover page uses a masonry layout where images should display at their natural aspect ratio for visual variety.
 
 ## Fix
-In `src/components/app/DiscoverCard.tsx`, line 63: change the image className from `w-full h-auto block` to `w-full h-full object-cover block`. This ensures the image fills the entire 3:4 container, cropping slightly if needed rather than leaving grey gaps.
+In `src/components/app/DiscoverCard.tsx`, remove the hardcoded `aspectRatio="3/4"` from the non-override `ShimmerImage` branch (line 65). Without a fixed aspect ratio, each image will load at its natural dimensions, and the masonry column layout will flow correctly.
 
-**One line change, one file.**
+The `aspectRatioOverride` branch (used by Dashboard's uniform grid) stays unchanged — it correctly forces `3/4` there.
+
+**One line removal, one file.**
+
+### Technical Detail
+- **File**: `src/components/app/DiscoverCard.tsx`, line 65
+- **Change**: Remove `aspectRatio="3/4"` prop from `ShimmerImage`
+- The `object-cover` + `h-full` classes become irrelevant without a fixed container height — change to `w-full h-auto` so the image sizes naturally, eliminating both the grey bar and the forced uniform sizing
 
