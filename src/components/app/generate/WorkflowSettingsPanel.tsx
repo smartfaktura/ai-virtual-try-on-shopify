@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
