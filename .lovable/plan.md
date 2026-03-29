@@ -1,19 +1,30 @@
 
 
-# Fix Discover Masonry: Show Natural Image Sizes
+# Optimize Workflow Thumbnail Image Sizes
 
 ## Problem
-The previous fix forced all images to a `3/4` aspect ratio via `ShimmerImage`, making them all the same height. The Discover page uses a masonry layout where images should display at their natural aspect ratio for visual variety.
+Workflow thumbnail images are loading at full resolution even though they display at small sizes (~140-400px). Three locations render fallback `<img>` tags without any optimization, and the animated thumbnail backgrounds use `quality: 60` but no `width` constraint.
 
-## Fix
-In `src/components/app/DiscoverCard.tsx`, remove the hardcoded `aspectRatio="3/4"` from the non-override `ShimmerImage` branch (line 65). Without a fixed aspect ratio, each image will load at its natural dimensions, and the masonry column layout will flow correctly.
+## Changes
 
-The `aspectRatioOverride` branch (used by Dashboard's uniform grid) stays unchanged — it correctly forces `3/4` there.
+### 1. Fallback images — add `getOptimizedUrl` (3 files)
 
-**One line removal, one file.**
+**`src/components/app/WorkflowCard.tsx`** (line 106):
+- Wrap `workflow.preview_image_url || imgFallback` with `getOptimizedUrl(..., { width: 480, quality: 60 })`
 
-### Technical Detail
-- **File**: `src/components/app/DiscoverCard.tsx`, line 65
-- **Change**: Remove `aspectRatio="3/4"` prop from `ShimmerImage`
-- The `object-cover` + `h-full` classes become irrelevant without a fixed container height — change to `w-full h-auto` so the image sizes naturally, eliminating both the grey bar and the forced uniform sizing
+**`src/components/app/WorkflowCardCompact.tsx`** (lines 54, 102):
+- Same optimization for both fallback `<img>` tags. Import `getOptimizedUrl`.
+
+**`src/pages/Dashboard.tsx`** (line 65):
+- Same optimization. Import `getOptimizedUrl`.
+
+### 2. Animated thumbnail backgrounds — add width constraint
+
+**`src/components/app/WorkflowAnimatedThumbnail.tsx`**:
+- In `CarouselThumbnail` (line 237): change `getOptimizedUrl(bg, { quality: 60 })` → `getOptimizedUrl(bg, { width: 600, quality: 60 })`
+- In `UpscaleThumbnail` (line 348): same change for the background
+- In the default/staging mode background (around line 500+): same change
+- Element images (chips/circles at 38-60px) already use quality-only which is correct for their small size
+
+This matches the pattern used across the app (e.g., `WorkflowRecentRow` line 47, `PoseSelectorCard`, `SceneSelectorChip`) where thumbnails use `getOptimizedUrl` with quality compression. Adding `width: 600` caps the download at ~600px wide which is more than enough for these card thumbnails.
 
