@@ -336,13 +336,11 @@ serve(async (req) => {
     // ---- RECOVER stuck videos ----
     if (action === "recover") {
       const serviceClient = getServiceClient();
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       const { data: stuckVideos, error: queryError } = await serviceClient
         .from("generated_videos")
         .select("kling_task_id")
         .eq("user_id", userId)
         .eq("status", "processing")
-        .lt("created_at", tenMinutesAgo)
         .not("kling_task_id", "is", null);
 
       if (queryError) {
