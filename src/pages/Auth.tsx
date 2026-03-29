@@ -78,7 +78,7 @@ function AuthHeroGallery() {
 
   return (
     <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative overflow-hidden">
-      {AUTH_GALLERY_IMAGES.map((src, i) => (
+      {images.map((src, i) => (
         <img
           key={i}
           src={src}
