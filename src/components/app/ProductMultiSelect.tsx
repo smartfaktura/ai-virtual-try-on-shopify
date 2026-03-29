@@ -86,7 +86,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
                 <Checkbox checked={isSelected} disabled={isDisabled} onCheckedChange={() => handleToggle(product.id)} />
               </div>
               <div className="aspect-square rounded overflow-hidden mb-2 bg-muted">
-                {product.images[0] ? <img src={product.images[0].url} alt={product.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>}
+                {product.images[0] ? <img src={getOptimizedUrl(product.images[0].url, { width: 200, quality: 50 })} alt={product.title} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>}
               </div>
               <p className="text-xs font-medium truncate">{product.title}</p>
               <p className="text-xs text-muted-foreground truncate">{product.productType}</p>
