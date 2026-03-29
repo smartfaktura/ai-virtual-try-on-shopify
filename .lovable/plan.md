@@ -1,20 +1,32 @@
 
 
-# Fix: Replace Auto-Load with Manual "Load More" in Perspectives Library Picker
+# Rotating Gallery on Auth Page Right Side
 
-## Problem
-The library image picker in `/app/perspectives` uses an `IntersectionObserver` that automatically loads more items when scrolling, making it hard to control. The "Load more" button already exists but is immediately triggered by the observer.
+## What changes
 
-## Change
+Replace the single static hero image on the right side of `/auth` with a rotating gallery that crossfades between multiple product images from your storage bucket.
 
-**Single file: `src/pages/Perspectives.tsx`**
+## How it works
 
-Remove the `useEffect` block (lines 216-230) containing the `IntersectionObserver`. The existing "Load more" button (line 793) already handles manual loading — it just needs to stop being auto-triggered.
+**File: `src/pages/Auth.tsx`**
 
-Also remove the `librarySentinelRef` from the div wrapper (line 792) since it's no longer needed, and remove the `useRef` declaration (line 92).
+1. Define an array of image URLs (from `landing-assets` storage) — you can upload your own images to that bucket and add them to the array
+2. Add a `useState` for the current index and a `useEffect` with a `setInterval` (every 5 seconds) to cycle through images
+3. Render two `<img>` layers with CSS `opacity` + `transition-opacity duration-1000` for a smooth crossfade
+4. Keep the existing gradient overlay and "Generated with VOVV.AI" caption
 
-| # | Action | Detail |
-|---|---|---|
-| 1 | Remove IntersectionObserver effect | Delete the `useEffect` (lines 216-230) that auto-increments `libraryVisibleCount` |
-| 2 | Clean up ref | Remove `librarySentinelRef` declaration and its usage on the wrapper div |
+**Implementation detail:**
+- Preload the next image in the sequence to avoid flash-of-loading
+- Use `absolute inset-0` positioning on both image layers with `transition-opacity duration-1000 ease-in-out`
+- Current image gets `opacity-100`, previous gets `opacity-0`
+
+| # | Action | File |
+|---|--------|------|
+| 1 | Replace single `<img>` with rotating gallery component | `src/pages/Auth.tsx` (lines 590-603) |
+
+## Your images
+
+You mentioned you have pictures to use. After implementation, you can either:
+- Upload them to your `landing-assets` storage bucket under `auth/` and add the paths to the array
+- Or share them here and I'll add them directly to the code
 
