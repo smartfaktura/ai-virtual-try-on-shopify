@@ -1,30 +1,19 @@
 
 
-# Fix Zoomed-In Product Images in Workflow Thumbnails
+# Make Video Generation Status Clearer in Global Bar
 
 ## Problem
-Adding `width: 600` to `getOptimizedUrl` calls causes Supabase's image transform to resize and crop images, creating a zoomed-in effect on product thumbnails. The project's established convention is **quality-only compression** (no width constraint) to prevent this exact distortion.
+When a video is being generated, the bar says "Leo is animating…" which is vague — it could mean any animation. It should clearly indicate it's a **video** being created.
 
-## Fix
-Revert the `width` parameter from all `getOptimizedUrl` calls added in the previous optimization pass. Keep `quality: 60` for bandwidth savings.
+## Changes
 
-### Files to change
+**File: `src/components/app/GlobalGenerationBar.tsx`**
 
-**`src/components/app/WorkflowAnimatedThumbnail.tsx`** — Remove `width: 600` from all 5 occurrences:
-- Line 237: `{ width: 600, quality: 60 }` → `{ quality: 60 }`
-- Line 348: same
-- Line 526: same
-- Line 528: same
-- Line 748: same
+1. **Pill text** (line 42): Change `'animating'` → `'creating your video'` in `getActionVerb()`
 
-**`src/components/app/WorkflowCard.tsx`** — Remove `width: 480` from fallback img:
-- `{ width: 480, quality: 60 }` → `{ quality: 60 }`
+2. **Expanded panel title** (line 281): Change `"${member.name} is animating"` → `"${member.name} is creating your video"`
 
-**`src/components/app/WorkflowCardCompact.tsx`** — Remove `width: 480` from both fallback imgs:
-- Same change in two locations
+3. **Completed "View" button** (lines 343-352): For video jobs, navigate to `/app/video` instead of `/app/library`, and label the button "View in Videos" instead of just "View"
 
-**`src/pages/Dashboard.tsx`** — Remove `width: 480` if added:
-- Same change
-
-All calls keep `{ quality: 60 }` for compression without dimensional distortion.
+4. **Leo's status message** in `src/data/teamData.ts` (line 125): Change `'Animating the sequence...'` → `'Creating your video...'` so the rotating quote footer also reflects video context
 
