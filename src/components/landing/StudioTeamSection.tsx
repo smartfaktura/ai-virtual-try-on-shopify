@@ -141,7 +141,7 @@ export function StudioTeamSection() {
                   {member.videoUrl ? (
                     <video
                       src={member.videoUrl}
-                      poster={member.avatar}
+                      poster={getOptimizedUrl(member.avatar, { quality: 60 })}
                       autoPlay
                       muted
                       loop

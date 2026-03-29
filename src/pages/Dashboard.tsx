@@ -535,14 +535,14 @@ export default function Dashboard() {
           value={`€${(generatedCount * 30).toLocaleString()}`}
           suffix="vs traditional photoshoots"
           icon={Euro}
-          tooltip={{ text: "Based on €30 average cost per professional product photo", memberName: "Omar", avatar: getLandingAssetUrl('team/avatar-omar.jpg') }}
+          tooltip={{ text: "Based on €30 average cost per professional product photo", memberName: "Omar", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-omar.jpg'), { quality: 60 }) }}
         />
         <MetricCard
           title="Time Saved"
           value={`${Math.round(generatedCount * 20 / 60)}h`}
           suffix="no shooting or editing needed"
           icon={Clock}
-          tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getLandingAssetUrl('team/avatar-max.jpg') }}
+          tooltip={{ text: "Estimated 20 min saved per image vs traditional workflow", memberName: "Max", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-max.jpg'), { quality: 60 }) }}
         />
         <MetricCard
           title="Credits"
@@ -552,7 +552,7 @@ export default function Dashboard() {
           onClick={openBuyModal}
           progress={Math.max(0, Math.round((balance / 300) * 100))}
           progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
-          tooltip={{ text: "Credits refresh monthly based on your plan", memberName: "Kenji", avatar: getLandingAssetUrl('team/avatar-kenji.jpg') }}
+          tooltip={{ text: "Credits refresh monthly based on your plan", memberName: "Kenji", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 }) }}
         />
         <MetricCard
           title="Continue Last"
@@ -562,7 +562,7 @@ export default function Dashboard() {
             label: 'Continue',
             onClick: () => navigate(`/app/generate/${(lastJob.workflows as any)?.slug || 'product-on-model'}`),
           } : undefined}
-          tooltip={{ text: "Pick up where you left off", memberName: "Sophia", avatar: getLandingAssetUrl('team/avatar-sophia.jpg') }}
+          tooltip={{ text: "Pick up where you left off", memberName: "Sophia", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 }) }}
         />
         <div className="hidden md:block">
           <MetricCard
@@ -574,7 +574,7 @@ export default function Dashboard() {
               label: 'Recreate',
               onClick: () => navigate(`/app/generate/${topWorkflow.slug}`),
             } : undefined}
-            tooltip={{ text: "Your most-used workflow based on completed jobs", memberName: "Sienna", avatar: getLandingAssetUrl('team/avatar-sienna.jpg') }}
+            tooltip={{ text: "Your most-used workflow based on completed jobs", memberName: "Sienna", avatar: getOptimizedUrl(getLandingAssetUrl('team/avatar-sienna.jpg'), { quality: 60 }) }}
           />
         </div>
       </div>

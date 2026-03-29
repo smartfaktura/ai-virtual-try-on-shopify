@@ -5,6 +5,7 @@ import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
 import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: () => void }) {
@@ -62,7 +63,7 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
           <video
             ref={videoRef}
             src={video.video_url!}
-            poster={video.source_image_url}
+            poster={getOptimizedUrl(video.source_image_url, { quality: 60 })}
             loop
             muted
             playsInline
@@ -73,7 +74,7 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
           />
         )}
         <img
-          src={video.source_image_url}
+          src={getOptimizedUrl(video.source_image_url, { quality: 60 })}
           alt=""
           loading="lazy"
           className={`w-full h-full object-cover ${isPlaying ? 'invisible' : 'visible'}`}

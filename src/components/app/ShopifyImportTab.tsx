@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ShopifyImportTabProps {
   onProductAdded: () => void;
@@ -478,7 +479,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
                       </td>
                       <td className="px-2 py-1.5">
                         {p.image_url ? (
-                          <img src={p.image_url} alt="" className="w-8 h-8 rounded object-cover bg-muted" loading="lazy" />
+                          <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt="" className="w-8 h-8 rounded object-cover bg-muted" loading="lazy" />
                         ) : (
                           <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
                             <ImageOff className="w-3.5 h-3.5 text-muted-foreground" />

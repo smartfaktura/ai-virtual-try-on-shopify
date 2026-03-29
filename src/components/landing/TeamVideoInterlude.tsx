@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const HERO_INDEX = 3; // Kenji — Campaign Art Director
 
@@ -46,7 +47,7 @@ function VideoTile({
       <video
         ref={videoRef}
         src={member.videoUrl}
-        poster={member.avatar}
+        poster={getOptimizedUrl(member.avatar, { quality: 60 })}
         muted
         loop
         playsInline

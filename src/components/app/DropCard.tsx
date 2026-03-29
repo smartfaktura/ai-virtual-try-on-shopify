@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow, format } from 'date-fns';
 import type { CreativeSchedule, CreativeDrop } from '@/pages/CreativeDrops';
 
@@ -219,7 +220,7 @@ export function DropCard(props: Props) {
                 <div className="flex items-center gap-1">
                   {scheduleProducts.slice(0, 3).map(p => (
                     <div key={p.id} className="w-7 h-7 rounded-md overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/20">
-                      <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
                     </div>
                   ))}
                   {productCount > 3 && (

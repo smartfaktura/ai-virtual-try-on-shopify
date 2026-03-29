@@ -7,6 +7,7 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Upload, ScanSearch, Wand2, Zap, Sparkles, CreditCard, X } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /* ─── Staggered-fade hook via IntersectionObserver ─── */
 function useStaggeredReveal(count: number) {
@@ -101,7 +102,7 @@ export default function Team() {
               <div className="aspect-[4/5] overflow-hidden bg-muted">
                 <video
                   src={member.videoUrl}
-                  poster={member.avatar}
+                  poster={getOptimizedUrl(member.avatar, { quality: 60 })}
                   autoPlay
                   muted
                   loop

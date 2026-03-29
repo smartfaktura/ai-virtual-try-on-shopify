@@ -2,17 +2,20 @@ import { useState, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
 const goodExamples = [
-  { src: getLandingAssetUrl('products/tank-white-1.jpg'), label: 'Front-facing' },
-  { src: getLandingAssetUrl('products/sports-bra-black-1.jpg'), label: 'Single item' },
-  { src: getLandingAssetUrl('products/leggings-black-1.jpg'), label: 'Clean background' },
+  { src: s('products/tank-white-1.jpg'), label: 'Front-facing' },
+  { src: s('products/sports-bra-black-1.jpg'), label: 'Single item' },
+  { src: s('products/leggings-black-1.jpg'), label: 'Clean background' },
 ];
 
 const badExamples = [
-  { src: getLandingAssetUrl('products/avoid-flatlay.jpg'), label: 'Busy background' },
-  { src: getLandingAssetUrl('products/avoid-lowcontrast.jpg'), label: 'Too many items' },
-  { src: getLandingAssetUrl('products/avoid-cropped.jpg'), label: 'Cropped photo' },
+  { src: s('products/avoid-flatlay.jpg'), label: 'Busy background' },
+  { src: s('products/avoid-lowcontrast.jpg'), label: 'Too many items' },
+  { src: s('products/avoid-cropped.jpg'), label: 'Cropped photo' },
 ];
 
 export function TryOnUploadGuide() {
