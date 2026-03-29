@@ -62,7 +62,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} mobileCompact={isMobile} />
         ) : (
           <img
-            src={workflow.preview_image_url || '/placeholder.svg'}
+            src={getOptimizedUrl(workflow.preview_image_url || '/placeholder.svg', { width: 480, quality: 60 })}
             alt={workflow.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}

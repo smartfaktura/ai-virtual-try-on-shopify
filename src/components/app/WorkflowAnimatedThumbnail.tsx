@@ -234,7 +234,7 @@ const FloatingEl = memo(function FloatingEl({ element, compact, mobileCompact, m
 function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { scene: WorkflowScene; isActive: boolean; mobileCompact?: boolean; modalCompact?: boolean }) {
   const rawBackgrounds = scene.backgrounds ?? [scene.background];
   const backgrounds = useMemo(
-    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
+    () => rawBackgrounds.map((bg) => getOptimizedUrl(bg, { width: 600, quality: 60 })),
     [rawBackgrounds],
   );
   const INTERVAL = 2500;
@@ -345,7 +345,7 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
 function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const [bgLoaded, setBgLoaded] = useState(false);
   const [phase, setPhase] = useState<'blur' | 'wiping' | 'sharp'>('blur');
-  const bgSrc = useMemo(() => getOptimizedUrl(scene.background, { quality: 60 }), [scene.background]);
+  const bgSrc = useMemo(() => getOptimizedUrl(scene.background, { width: 600, quality: 60 }), [scene.background]);
 
   useEffect(() => {
     if (!isActive) {
@@ -523,9 +523,9 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
   const [bgLoaded, setBgLoaded] = useState(false);
 
   // Optimized URLs
-  const optimizedEmpty = useMemo(() => getOptimizedUrl(emptyRoom, { quality: 60 }), [emptyRoom]);
+  const optimizedEmpty = useMemo(() => getOptimizedUrl(emptyRoom, { width: 600, quality: 60 }), [emptyRoom]);
   const optimizedStyled = useMemo(
-    () => styledBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
+    () => styledBackgrounds.map((bg) => getOptimizedUrl(bg, { width: 600, quality: 60 })),
     [styledBackgrounds],
   );
 
