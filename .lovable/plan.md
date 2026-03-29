@@ -1,24 +1,37 @@
 
 
-# Dynamic Auth Gallery from Storage
+# Add Uploaded Images to Fashion & Apparel Showcase
 
 ## What changes
 
-Update `AuthHeroGallery` in `src/pages/Auth.tsx` to dynamically list all files in the `landing-assets` bucket under the `auth/` prefix, then shuffle and rotate through them — instead of using a hardcoded array.
+Add the 3 uploaded fashion/model images as the first shots in the Fashion & Apparel category rotation on the landing page.
 
-## How it works
-
-1. On mount, call `supabase.storage.from('landing-assets').list('auth')` to get all files
-2. Build public URLs for each file using the storage base URL
-3. Shuffle the array randomly
-4. Use the existing crossfade rotation logic (every 5s) on the dynamic list
-5. Keep a fallback to the current hardcoded images if the fetch fails or returns empty
+## Steps
 
 | # | Action | Detail |
 |---|--------|--------|
-| 1 | Replace hardcoded `AUTH_GALLERY_IMAGES` array | Fetch file list from `landing-assets/auth/` on mount |
-| 2 | Add shuffle utility | Randomize order each page load |
-| 3 | Keep fallback | Use current images if bucket is empty or fetch fails |
+| 1 | Copy images to project | Copy the 3 uploaded images to `public/images/showcase/` with clean filenames |
+| 2 | Update CATEGORIES array | Prepend 3 new image paths before the existing 4 Fashion images, using direct `/images/showcase/` paths (non-Supabase URLs pass through `getOptimizedUrl` unchanged) |
 
-**Your workflow after this:** Just upload images to `landing-assets → auth/` folder in Cloud Storage. They'll automatically appear in the rotating gallery on next page load. No code changes needed.
+**File: `src/components/landing/ProductCategoryShowcase.tsx`**
+
+Update the Fashion & Apparel entry to include the new images first:
+
+```typescript
+{
+  label: 'Fashion & Apparel',
+  images: [
+    '/images/showcase/fashion-portrait-curls.jpg',
+    '/images/showcase/fashion-white-dress-stadium.jpg',
+    '/images/showcase/fashion-blonde-coat.jpg',
+    s('fashion-camel-coat.png'),
+    s('fashion-white-suit.png'),
+    s('fashion-knit-loft.png'),
+    s('fashion-activewear-gym.png'),
+  ],
+  cycleDuration: 7000,
+},
+```
+
+The new images won't go through Supabase optimization (since they're local assets), but they'll be served directly from the public folder which is efficient for static assets. The existing Supabase-hosted images continue using the `s()` helper as before.
 
