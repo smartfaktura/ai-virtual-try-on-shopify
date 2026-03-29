@@ -122,7 +122,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     description: 'Builds backgrounds, props, and environments. From rustic tabletops to sleek studios, he sets the perfect scene.',
     avatar: avatarLeo,
     videoUrl: `${VIDEO_BASE}/849399365948022876.mp4`,
-    statusMessage: 'Animating the sequence...',
+    statusMessage: 'Creating your video...',
     expertiseTag: 'Scene Generation',
   },
 ];
