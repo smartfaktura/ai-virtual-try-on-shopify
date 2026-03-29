@@ -17,6 +17,7 @@ import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
@@ -253,7 +254,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 return (
                   <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-in fade-in">
                     <Avatar className="w-10 h-10 ring-2 ring-primary/30 animate-pulse">
-                      <AvatarImage src={luna?.avatar} alt="Luna" />
+                      <AvatarImage src={getOptimizedUrl(luna?.avatar, { quality: 60 })} alt="Luna" />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs">LP</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">

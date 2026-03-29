@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { CorrectionConfirmModal } from './CorrectionConfirmModal';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const RESULTS_TEAM = TEAM_MEMBERS.filter(m => ['Sophia', 'Kenji', 'Zara'].includes(m.name));
 
@@ -111,7 +112,7 @@ export const VideoResultsPanel = React.forwardRef<HTMLDivElement, VideoResultsPa
           </div>
           <div className="ml-auto flex -space-x-2 shrink-0">
             {RESULTS_TEAM.map(m => (
-              <img key={m.name} src={m.avatar} alt={m.name} className="w-7 h-7 rounded-full border-2 border-background object-cover" />
+              <img key={m.name} src={getOptimizedUrl(m.avatar, { quality: 60 })} alt={m.name} className="w-7 h-7 rounded-full border-2 border-background object-cover" />
             ))}
           </div>
         </div>

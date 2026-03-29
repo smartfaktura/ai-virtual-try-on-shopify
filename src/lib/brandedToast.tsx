@@ -1,5 +1,6 @@
 import { toast as sonnerToast, type ExternalToast } from 'sonner';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 type ToastMessage = string | React.ReactNode;
 
@@ -8,7 +9,7 @@ function getAvatar(name: string) {
   if (!member) return undefined;
   return (
     <img
-      src={member.avatar}
+      src={getOptimizedUrl(member.avatar, { quality: 60 })}
       alt={member.name}
       className="w-6 h-6 rounded-full object-cover flex-shrink-0 ring-1 ring-border/40"
     />

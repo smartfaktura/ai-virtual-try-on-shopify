@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import type { QueueJob } from '@/hooks/useGenerationQueue';
 import { QueuePositionIndicator } from './QueuePositionIndicator';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface Product {
   id: string;
@@ -162,7 +163,7 @@ export function MultiProductProgressBanner({
       {completedCount < totalJobCount && (
         <div className="flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
           <Avatar className="w-6 h-6 border border-border">
-            <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
+            <AvatarImage src={getOptimizedUrl(currentMember.avatar, { quality: 60 })} alt={currentMember.name} />
             <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
           </Avatar>
           <p className="text-xs text-muted-foreground italic">

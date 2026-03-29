@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -137,7 +138,7 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
         <div className="flex items-start gap-2.5">
           {isBranded && (
             <img
-              src={(tooltip as BrandedTooltip).avatar}
+              src={getOptimizedUrl((tooltip as BrandedTooltip).avatar, { quality: 60 })}
               alt={(tooltip as BrandedTooltip).memberName}
               className="w-6 h-6 rounded-full object-cover flex-shrink-0 ring-1 ring-border/30 mt-0.5"
             />

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { cn } from '@/lib/utils';
 
 interface SidebarTeamAvatarProps {
@@ -29,7 +30,7 @@ export function SidebarTeamAvatar({ collapsed = false }: SidebarTeamAvatarProps)
               <TeamAvatarHoverCard member={member} side="right" sideOffset={16}>
                 <button className="focus:outline-none">
                   <img
-                    src={member.avatar}
+                    src={getOptimizedUrl(member.avatar, { quality: 60 })}
                     alt={member.name}
                     className="w-7 h-7 rounded-full object-cover border border-white/10 transition-all duration-500"
                   />
@@ -50,7 +51,7 @@ export function SidebarTeamAvatar({ collapsed = false }: SidebarTeamAvatarProps)
       <TeamAvatarHoverCard member={member} side="right" sideOffset={16}>
         <button className="w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-white/[0.04] transition-colors focus:outline-none">
           <img
-            src={member.avatar}
+            src={getOptimizedUrl(member.avatar, { quality: 60 })}
             alt={member.name}
             className="w-6 h-6 rounded-full object-cover border border-white/10 flex-shrink-0 transition-all duration-500"
           />

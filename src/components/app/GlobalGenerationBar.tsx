@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TEAM_MEMBERS, type TeamMember } from '@/data/teamData';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /** Pages where dedicated activity UI already exists */
 const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/perspectives'];
@@ -205,7 +206,7 @@ export function GlobalGenerationBar() {
                     )}
                     style={{ zIndex: uniqueMembers.length - i }}
                   >
-                    <AvatarImage src={member.avatar} alt={member.name} />
+                    <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                     <AvatarFallback className="text-[7px] bg-primary/10 text-primary">{member.name[0]}</AvatarFallback>
                   </Avatar>
                 ))}
@@ -255,7 +256,7 @@ export function GlobalGenerationBar() {
                     <div className="flex items-start gap-2.5">
                       <div className="relative shrink-0 mt-0.5">
                         <Avatar className="w-7 h-7 ring-1 ring-border/30">
-                          <AvatarImage src={member.avatar} alt={member.name} />
+                        <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                           <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{member.name[0]}</AvatarFallback>
                         </Avatar>
                         {isProcessing && (
@@ -311,7 +312,7 @@ export function GlobalGenerationBar() {
                   <div key={group.key} className="px-3 py-3 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
                     <div className="flex items-center gap-2.5">
                       <Avatar className="w-7 h-7 ring-1 ring-emerald-500/30 shrink-0">
-                        <AvatarImage src={member.avatar} alt={member.name} />
+                        <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                         <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-600">{member.name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -358,7 +359,7 @@ export function GlobalGenerationBar() {
               <div className="border-t border-border/30 px-3 py-2 bg-muted/30">
                 <div className="flex items-center gap-2">
                   <Avatar className="w-5 h-5 shrink-0">
-                    <AvatarImage src={rotatingMember.avatar} alt={rotatingMember.name} />
+                    <AvatarImage src={getOptimizedUrl(rotatingMember.avatar, { quality: 60 })} alt={rotatingMember.name} />
                     <AvatarFallback className="text-[6px]">{rotatingMember.name[0]}</AvatarFallback>
                   </Avatar>
                   <p className="text-[10px] text-muted-foreground italic truncate transition-all duration-300">
