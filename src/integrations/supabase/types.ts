@@ -1484,84 +1484,7 @@ export type Database = {
       }
     }
     Views: {
-      hidden_scene_ids: {
-        Row: {
-          scene_id: string | null
-        }
-        Insert: {
-          scene_id?: string | null
-        }
-        Update: {
-          scene_id?: string | null
-        }
-        Relationships: []
-      }
-      public_custom_scenes: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          discover_categories: string[] | null
-          id: string | null
-          image_url: string | null
-          is_active: boolean | null
-          name: string | null
-          optimized_image_url: string | null
-          prompt_hint: string | null
-          prompt_only: boolean | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          discover_categories?: string[] | null
-          id?: string | null
-          image_url?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          optimized_image_url?: string | null
-          prompt_hint?: string | null
-          prompt_only?: boolean | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          discover_categories?: string[] | null
-          id?: string | null
-          image_url?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          optimized_image_url?: string | null
-          prompt_hint?: string | null
-          prompt_only?: boolean | null
-        }
-        Relationships: []
-      }
-      public_featured_items: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          item_id: string | null
-          item_type: string | null
-          sort_order: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          item_id?: string | null
-          item_type?: string | null
-          sort_order?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          item_id?: string | null
-          item_type?: string | null
-          sort_order?: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_purchased_credits: {
@@ -1594,6 +1517,38 @@ export type Database = {
       get_discover_view_count: {
         Args: { p_item_id: string; p_item_type: string }
         Returns: number
+      }
+      get_hidden_scene_ids: {
+        Args: never
+        Returns: {
+          scene_id: string
+        }[]
+      }
+      get_public_custom_scenes: {
+        Args: never
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          discover_categories: string[]
+          id: string
+          image_url: string
+          is_active: boolean
+          name: string
+          optimized_image_url: string
+          prompt_hint: string
+          prompt_only: boolean
+        }[]
+      }
+      get_public_featured_items: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          sort_order: number
+        }[]
       }
       get_user_emails_for_admin: {
         Args: { p_user_ids: string[] }
