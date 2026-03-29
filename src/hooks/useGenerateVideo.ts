@@ -206,6 +206,17 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     fetchHistory().then(() => recoverStuckVideos());
   }, [fetchHistory, recoverStuckVideos]);
 
+  // Auto-refresh history while any video is still processing
+  useEffect(() => {
+    const hasProcessing = history.some(v => v.status === 'processing' || v.status === 'queued');
+    if (!hasProcessing) return;
+    const interval = setInterval(() => {
+      fetchHistory();
+      recoverStuckVideos();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [history, fetchHistory, recoverStuckVideos]);
+
   const reset = useCallback(() => {
     queue.reset();
     setStatus('idle');
