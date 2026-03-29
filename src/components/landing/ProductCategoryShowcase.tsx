@@ -83,6 +83,11 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Beauty',
     images: [
+      '/images/showcase/beauty-perfume-ice.jpg',
+      '/images/showcase/beauty-perfume-driftwood.jpg',
+      '/images/showcase/beauty-perfume-splash.jpg',
+      '/images/showcase/beauty-perfume-rocks.jpg',
+      '/images/showcase/beauty-perfume-aloe.jpg',
       s('skincare-serum-marble.png'),
       s('skincare-perfume-vanity.png'),
       s('skincare-serum-model.png'),
