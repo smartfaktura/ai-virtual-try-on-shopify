@@ -12,7 +12,8 @@ import { toast } from '@/lib/brandedToast';
 import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
 import { ArrowRight, Check } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
-const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+const authHero = getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 });
 
 const REFERRAL_OPTIONS = [
   'Social media post',

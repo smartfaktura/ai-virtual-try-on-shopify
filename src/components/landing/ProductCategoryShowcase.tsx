@@ -48,7 +48,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       {images.map((img, i) => (
          <ShimmerImage
            key={i}
-            src={getOptimizedUrl(img, { quality: 60 })}
+            src={img}
             alt={`${label} AI-generated product shot`}
             loading="lazy"
             decoding="async"
@@ -64,7 +64,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   );
 }
 
-const s = (path: string) => getLandingAssetUrl(`showcase/${path}`);
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
 
 const CATEGORIES: CategoryCardProps[] = [
   {
