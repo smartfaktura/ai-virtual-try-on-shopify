@@ -20,7 +20,7 @@ const features = [
     headline: 'A fresh library of studio-grade visuals. Every month.',
     description:
       'Curated product shots, lifestyle scenes, and ad creatives delivered to your dashboard automatically. Always fresh. Always on-brand.',
-    image: getLandingAssetUrl('templates/clothing-streetwear.jpg'),
+    image: f('templates/clothing-streetwear.jpg'),
   },
   {
     icon: Users,
@@ -28,7 +28,7 @@ const features = [
     headline: 'Your models. Your look. Already configured.',
     description:
       '34+ diverse AI models across body types and styles. Save favourites \u2014 they appear in every generation without a single casting call.',
-    image: getLandingAssetUrl('features/feature-ai-models.jpg'),
+    image: f('features/feature-ai-models.jpg'),
   },
   {
     icon: SlidersHorizontal,
@@ -36,7 +36,7 @@ const features = [
     headline: 'Tell us your style once. We remember it forever.',
     description:
       'Lighting, tone, backgrounds, composition \u2014 locked into a Brand Profile. Every visual follows your creative direction automatically.',
-    image: getLandingAssetUrl('features/feature-brand-memory.jpg'),
+    image: f('features/feature-brand-memory.jpg'),
   },
   {
     icon: Camera,
@@ -44,7 +44,7 @@ const features = [
     headline: 'Full editorial campaigns. No studio. No timeline.',
     description:
       'Holiday collections, seasonal rebrands, product launches \u2014 generate an entire campaign in minutes with styled scenes and multiple ratios.',
-    image: getLandingAssetUrl('features/feature-campaigns.jpg'),
+    image: f('features/feature-campaigns.jpg'),
   },
   {
     icon: Repeat,
@@ -52,7 +52,7 @@ const features = [
     headline: 'Schedule once. Fresh visuals arrive on autopilot.',
     description:
       'Recurring Creative Drops tied to your catalog. Assign workflows and brand profiles \u2014 new assets generated weekly or monthly.',
-    image: getLandingAssetUrl('features/feature-auto-drops.jpg'),
+    image: f('features/feature-auto-drops.jpg'),
   },
   {
     icon: Sparkles,
@@ -60,7 +60,7 @@ const features = [
     headline: 'Your garments on real-looking models. Instantly.',
     description:
       'Upload any clothing item and see it on AI models in natural poses and environments. Lookbook-quality imagery without the overhead.',
-    image: getLandingAssetUrl('features/feature-tryon.jpg'),
+    image: f('features/feature-tryon.jpg'),
   },
 ];
 
