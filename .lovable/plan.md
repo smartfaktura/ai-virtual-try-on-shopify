@@ -1,41 +1,51 @@
 
 
-# Final Micro-Batch: 3 Remaining Thumbnail Optimizations
+# Audit Results: Remaining Unoptimized Images
 
-After an exhaustive audit, only **3 unoptimized thumbnail locations** remain. Everything else is either already optimized or intentionally full-size (lightboxes, detail modals, before/after comparisons).
+After a thorough final audit of every `getLandingAssetUrl`, `image_url`, `avatar`, and `previewUrl` usage, here's what I found:
+
+## Already Optimized ✓
+- **FreestyleGallery.tsx** — avatars already wrapped with `getOptimizedUrl` at render level (lines 127, 181, 264, 306)
+- **WorkflowCardCompact.tsx** — `imgFallback` already optimized at render (line 55)
+- **ProductUploadTips.tsx** — already optimized at data level with `quality: 50` (line 8)
+- **DashboardTipCard.tsx** — already optimized at data level with `quality: 50` (line 8)
+- **All video posters** — already optimized in previous batch
+- **All team avatars in app components** — already optimized
+
+## Still Unoptimized — 5 Remaining Locations
+
+### 1. `src/pages/Auth.tsx` (line 16, rendered line 592)
+- `authHero` — large hero background image, raw `getLandingAssetUrl('auth/auth-hero.jpg')`
+- Full-bleed background but still benefits from quality compression
+
+### 2. `src/pages/Onboarding.tsx` (line ~304)
+- Same `authHero` image used as background — also unoptimized
+
+### 3. `src/components/app/GenerateModelModal.tsx` (line 104)
+- `result.image_url` — 80px model creation result thumbnail, raw Supabase URL
+
+### 4. `src/components/app/StoreImportTab.tsx` (line 296)
+- `extracted.image_url` — 80px imported product preview thumbnail, external URL (may not be Supabase — `getOptimizedUrl` will safely pass through non-Supabase URLs)
+
+### 5. `src/components/landing/ProductCategoryShowcase.tsx` (line 67)
+- Helper `s()` uses raw `getLandingAssetUrl` without optimization at data level — render level already wraps with `getOptimizedUrl`, so this causes double-processing. Should optimize at data level and remove render-level wrap for cleanliness. **Low priority / cosmetic.**
+
+## Intentionally Skipped
+- `UploadSourceCard.tsx` — blob URL, not Supabase
+- `ManualProductTab.tsx` — user-uploaded blob preview URLs
+- `Generate.tsx` line 3721 — `scratchUpload.previewUrl` is a blob URL
 
 ---
 
-## Files to update
+## Changes
 
-### 1. `src/components/app/AdminSubmissionsPanel.tsx`
-- **Line 130**: `submission.image_url` — admin review card thumbnail (aspect-[3/4])
-- Wrap with `getOptimizedUrl(..., { quality: 60 })`
+| # | File | Location | Fix |
+|---|---|---|---|
+| 1 | `Auth.tsx` | line 16 | Wrap `authHero` with `getOptimizedUrl` |
+| 2 | `Onboarding.tsx` | import | Import optimized `authHero` or wrap locally |
+| 3 | `GenerateModelModal.tsx` | line 104 | Wrap `result.image_url` |
+| 4 | `StoreImportTab.tsx` | line 296 | Wrap extracted image URL |
+| 5 | `ProductCategoryShowcase.tsx` | line 67 | Optimize at data level, remove render-level double-wrap |
 
-### 2. `src/components/app/DropCard.tsx`
-- **Line 326**: `img.url` — drop result grid thumbnails (~28px each in a 2x2 grid)
-- Wrap with `getOptimizedUrl(..., { quality: 60 })`
-
-### 3. `src/components/app/freestyle/ProductSelectorChip.tsx`
-- **Line 127**: `sample.image_url` — draft product selector grid thumbnails
-- Wrap with `getOptimizedUrl(..., { quality: 60 })`
-
-## Intentionally skipped (full-size views)
-- `VideoDetailModal.tsx` line 112 — large video source preview
-- `LibraryDetailModal.tsx` line 159 — full-size lightbox
-- `VideoResultsPanel.tsx` line 148 — before/after comparison
-- `UploadSourceCard.tsx` line 116 — user blob URL (not Supabase)
-
-## Pattern
-```tsx
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-src={getOptimizedUrl(url, { quality: 60 })}
-```
-
-## Summary
-| Files | Locations |
-|---|---|
-| 3 files | 3 locations |
-
-This is the final batch — the codebase is now fully optimized.
+Pattern: `getOptimizedUrl(url, { quality: 60 })`
 
