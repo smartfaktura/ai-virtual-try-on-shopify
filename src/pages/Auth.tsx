@@ -22,7 +22,45 @@ const AUTH_GALLERY_IMAGES = [
   getOptimizedUrl(getLandingAssetUrl('showcase/food-cocktail-bar.png'), { quality: 60 }),
 ];
 
-export default function Auth() {
+function AuthHeroGallery() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % AUTH_GALLERY_IMAGES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Preload next image
+  useEffect(() => {
+    const nextIndex = (currentIndex + 1) % AUTH_GALLERY_IMAGES.length;
+    const img = new Image();
+    img.src = AUTH_GALLERY_IMAGES[nextIndex];
+  }, [currentIndex]);
+
+  return (
+    <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative overflow-hidden">
+      {AUTH_GALLERY_IMAGES.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt="AI-generated product photography showcase"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
+          style={{ opacity: i === currentIndex ? 1 : 0 }}
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      <div className="absolute bottom-8 left-8 right-8">
+        <p className="text-white/90 text-sm font-medium">
+          Generated with VOVV.AI
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
   const navigate = useNavigate();
   const { signUp, signIn, user, isLoading } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>(() => localStorage.getItem('has_account') === 'true' ? 'login' : 'signup');
