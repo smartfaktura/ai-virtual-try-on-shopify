@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -187,7 +188,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
               <div key={up.id} className="flex-shrink-0 w-[72px]">
                 <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                  <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(up.image_url || '/placeholder.svg', { quality: 60 })} alt={up.title} className="w-full h-full object-cover" />
                 </div>
                 <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
               </div>
