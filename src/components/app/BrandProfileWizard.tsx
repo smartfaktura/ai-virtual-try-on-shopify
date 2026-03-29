@@ -17,10 +17,11 @@ import type { BrandProfileData } from '@/lib/brandPromptBuilder';
 
 // Team avatar URLs
 import { getLandingAssetUrl } from '@/lib/landingAssets';
-const avatarSienna = getLandingAssetUrl('team/avatar-sienna.jpg');
-const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
-const avatarLuna = getLandingAssetUrl('team/avatar-luna.jpg');
-const avatarKenji = getLandingAssetUrl('team/avatar-kenji.jpg');
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+const avatarSienna = getOptimizedUrl(getLandingAssetUrl('team/avatar-sienna.jpg'), { quality: 60 });
+const avatarSophia = getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 });
+const avatarLuna = getOptimizedUrl(getLandingAssetUrl('team/avatar-luna.jpg'), { quality: 60 });
+const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 });
 
 // ── Team step tips ──────────────────────────────────────────────────────
 const STEP_TEAM_TIPS = [

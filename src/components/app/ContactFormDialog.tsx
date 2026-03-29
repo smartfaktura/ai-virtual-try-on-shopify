@@ -5,10 +5,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
-const avatarKenji = getLandingAssetUrl('team/avatar-kenji.jpg');
-const avatarZara = getLandingAssetUrl('team/avatar-zara.jpg');
+const avatarSophia = getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 });
+const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 });
+const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
 
 interface ContactFormDialogProps {
   open: boolean;

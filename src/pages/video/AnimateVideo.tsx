@@ -685,7 +685,7 @@ export default function AnimateVideo() {
               <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4">
                 <div className="flex -space-x-2 shrink-0">
                   {TIPS_TEAM.map((m) => (
-                    <img key={m.name} src={m.avatar} alt={m.name} className="w-7 h-7 rounded-full border-2 border-background object-cover" />
+                    <img key={m.name} src={getOptimizedUrl(m.avatar, { quality: 60 })} alt={m.name} className="w-7 h-7 rounded-full border-2 border-background object-cover" />
                   ))}
                 </div>
                 <div className="min-w-0">

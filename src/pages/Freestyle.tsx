@@ -5,6 +5,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2, Package, Wrench } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/brandedToast';
@@ -1082,7 +1083,7 @@ export default function Freestyle() {
               <div className="mt-0 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm">
                   <img
-                    src={TEAM_MEMBERS.find(m => m.name === 'Sophia')!.avatar}
+                    src={getOptimizedUrl(TEAM_MEMBERS.find(m => m.name === 'Sophia')!.avatar, { quality: 60 })}
                     alt="Sophia"
                     className="w-5 h-5 rounded-full object-cover shrink-0 ring-1 ring-primary-foreground/30"
                   />

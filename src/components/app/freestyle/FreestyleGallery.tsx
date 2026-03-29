@@ -124,7 +124,7 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
       <div className="relative flex-shrink-0">
         <div className={cn('absolute rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]', isWide ? '-inset-1' : '-inset-1 sm:-inset-1.5')} />
         <img
-          src={crew.avatar}
+          src={getOptimizedUrl(crew.avatar, { quality: 60 })}
           alt={crew.name}
           className={cn('relative rounded-full object-cover ring-2 ring-primary/40', isWide ? 'w-10 h-10' : 'w-10 h-10 sm:w-16 sm:h-16')}
         />
@@ -178,7 +178,7 @@ function ContentBlockedCard({
       <div className="relative">
         <div className="absolute -inset-1.5 rounded-full bg-red-500/15 animate-[pulse_3s_ease-in-out_infinite]" />
         <img
-          src={crew.avatar}
+          src={getOptimizedUrl(crew.avatar, { quality: 60 })}
           alt={crew.name}
           className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white/20"
         />
@@ -261,7 +261,7 @@ function GenerationFailedCard({
       <div className="relative">
         <div className="absolute -inset-1.5 rounded-full bg-amber-500/15 animate-[pulse_3s_ease-in-out_infinite]" />
         <img
-          src={crew.avatar}
+          src={getOptimizedUrl(crew.avatar, { quality: 60 })}
           alt={crew.name}
           className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white/20"
         />
@@ -303,7 +303,7 @@ function UpscalingOverlay() {
   const luna = STUDIO_CREW.find(m => m.name === 'Luna')!;
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-[3px] rounded-xl">
-      <img src={luna.avatar} alt="Luna" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30 mb-2" />
+      <img src={getOptimizedUrl(luna.avatar, { quality: 60 })} alt="Luna" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30 mb-2" />
       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
         <Sparkles className="w-3 h-3 text-primary animate-pulse" />
         <span className="text-[11px] font-medium text-primary">Luna is enhancing…</span>

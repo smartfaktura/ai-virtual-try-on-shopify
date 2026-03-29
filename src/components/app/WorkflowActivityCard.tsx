@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { BatchGroup } from '@/lib/batchGrouping';
 
 interface WorkflowActivityCardProps {
@@ -97,7 +98,7 @@ function ActiveGroupCard({
                       i === msgIdx % team.length ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
-                    <AvatarImage src={member.avatar} alt={member.name} />
+                    <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                     <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
                   </Avatar>
                 ))}
@@ -214,7 +215,7 @@ export function WorkflowActivityCard({
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="relative shrink-0">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={team[0].avatar} alt={team[0].name} />
+                      <AvatarImage src={getOptimizedUrl(team[0].avatar, { quality: 60 })} alt={team[0].name} />
                       <AvatarFallback className="text-[10px] font-bold">{team[0].name[0]}</AvatarFallback>
                     </Avatar>
                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-background">
@@ -269,7 +270,7 @@ export function WorkflowActivityCard({
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="relative shrink-0">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={team[0].avatar} alt={team[0].name} />
+                      <AvatarImage src={getOptimizedUrl(team[0].avatar, { quality: 60 })} alt={team[0].name} />
                       <AvatarFallback className="text-[10px] font-bold">{team[0].name[0]}</AvatarFallback>
                     </Avatar>
                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-destructive flex items-center justify-center border-2 border-background">

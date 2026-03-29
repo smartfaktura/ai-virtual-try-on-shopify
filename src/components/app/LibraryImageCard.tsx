@@ -126,7 +126,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
         return (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-[3px]">
             <Avatar className="w-10 h-10 ring-2 ring-primary/30 mb-2">
-              <AvatarImage src={luna?.avatar} alt="Luna" />
+              <AvatarImage src={getOptimizedUrl(luna?.avatar, { quality: 60 })} alt="Luna" />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">LP</AvatarFallback>
             </Avatar>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
