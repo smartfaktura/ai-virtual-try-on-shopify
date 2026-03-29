@@ -1,36 +1,63 @@
 
 
-# Fix Video "Processing" Badge Stuck After Completion
+# Fix Mobile Workflow Generation UI Freezing
 
 ## Problem
-When a video finishes generating, the `/app/video` page can still show "Processing" on the card. This happens because:
+On mobile, when generating via workflows, the elapsed timer stops counting, progress animations freeze, and the rotating team messages don't cycle. The UI appears stuck on "Generating..." with no movement.
 
-1. The `generated_videos` table is only updated to `'complete'` when the **client-side** Kling status poll runs (via the `action: 'status'` edge function call)
-2. If the user navigates away mid-generation, the poll stops. The video completes on Kling's side but `generated_videos` stays `'processing'`
-3. The auto-recovery on mount only checks videos **older than 10 minutes** — so recently-completed videos slip through
-4. There is no periodic re-check for videos still showing `'processing'` in the history
+**Root cause**: Mobile browsers aggressively throttle or pause `setInterval`/`setTimeout` when tabs are backgrounded, the screen locks, or even during scroll inertia. The `WorkflowActivityCard` and its child `ActiveGroupCard` rely entirely on intervals for:
+1. Elapsed time ticking (parent's `tick` state, every 1s)
+2. Team message rotation (`msgIdx` state, every 3s)
 
-## Fix (two changes)
+When these intervals pause, no state updates fire, no re-renders happen, and the UI freezes — even though `elapsedLabel()` uses `Date.now()` correctly, it never gets called.
 
-### 1. Remove the 10-minute threshold from recovery
-**File: `supabase/functions/generate-video/index.ts`** (line 339)
+## Fix
 
-Change recovery to check ALL `processing` videos for the user, not just those older than 10 minutes. Remove the `.lt("created_at", tenMinutesAgo)` filter. This way, when the page loads, any video stuck as `'processing'` gets its true status from Kling immediately.
+### 1. Add a visibility-aware tick hook
+**New file: `src/hooks/useVisibilityTick.ts`**
 
-### 2. Auto-refresh history when processing videos exist
-**File: `src/hooks/useGenerateVideo.ts`**
+Create a reusable hook that:
+- Runs a `setInterval` for regular ticking
+- Listens for `document.visibilitychange` events
+- When the page becomes visible again, immediately forces a tick (state update) so all computed values refresh instantly
+- Returns a tick counter that components can depend on
 
-Add a `useEffect` that sets up a 15-second polling interval whenever the `history` array contains any video with `status === 'processing'`. When no processing videos remain, polling stops. This ensures the UI updates promptly after recovery completes or after any status change.
-
-```
+```text
 // Pseudo-logic
-useEffect(() => {
-  const hasProcessing = history.some(v => v.status === 'processing');
-  if (!hasProcessing) return;
-  const interval = setInterval(fetchHistory, 15000);
-  return () => clearInterval(interval);
-}, [history, fetchHistory]);
+function useVisibilityTick(intervalMs: number, enabled: boolean): number {
+  const [tick, setTick] = useState(0);
+  
+  useEffect(() => {
+    if (!enabled) return;
+    const bump = () => setTick(t => t + 1);
+    const interval = setInterval(bump, intervalMs);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') bump();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
+  }, [intervalMs, enabled]);
+  
+  return tick;
+}
 ```
 
-These two changes together ensure: on page load, recovery immediately checks all stuck videos against Kling, and the UI polls until all cards reflect their true status.
+### 2. Update `WorkflowActivityCard.tsx`
+- Replace the manual `setInterval` tick (lines 192-200) with `useVisibilityTick(1000, hasActiveGroups)`
+- Replace `ActiveGroupCard`'s team rotation interval (lines 74-79) with `useVisibilityTick(3000, isProcessing)` and derive `msgIdx` from tick value
+
+### 3. Update `GlobalGenerationBar.tsx`
+- Replace elapsed tick interval (lines 159-163) and quote rotation interval (lines 166-170) with the same `useVisibilityTick` hook
+- This fixes the same freeze issue on the global bar (currently desktop-only with `hidden sm:block`, but future-proofs it)
+
+### 4. Update `QueuePositionIndicator.tsx`
+- Replace the `ProcessingState` elapsed timer (line 72-79) and team rotation interval (lines 82-86) with the visibility-aware hook for consistency
+
+## Summary of changes
+| File | Change |
+|---|---|
+| `src/hooks/useVisibilityTick.ts` | New hook |
+| `src/components/app/WorkflowActivityCard.tsx` | Use visibility-aware tick |
+| `src/components/app/GlobalGenerationBar.tsx` | Use visibility-aware tick |
+| `src/components/app/QueuePositionIndicator.tsx` | Use visibility-aware tick |
 
