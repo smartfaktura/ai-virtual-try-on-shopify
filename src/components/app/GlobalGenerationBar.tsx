@@ -154,7 +154,8 @@ export function GlobalGenerationBar() {
     prevGroupsRef.current = activeGroups;
   }, [activeGroups, queryClient]);
 
-  const quoteIndex = useVisibilityTick(4000, hasActive);
+  useVisibilityTick(1000, activeGroups.length > 0);
+  const quoteIndex = useVisibilityTick(4000, activeGroups.length > 0);
 
   const isHiddenPage = HIDDEN_PATHS.some((p) => location.pathname.startsWith(p));
   const isFreestylePage = location.pathname.startsWith('/app/freestyle');
