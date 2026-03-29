@@ -16,6 +16,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 type ImageSource = 'upload' | 'url';
 
@@ -49,7 +50,7 @@ function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
             <>
               {video.source_image_url && (
                 <img
-                  src={video.source_image_url}
+                  src={getOptimizedUrl(video.source_image_url, { quality: 60 })}
                   alt="Source"
                   className="w-full h-full object-cover"
                 />

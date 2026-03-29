@@ -877,7 +877,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                               </div>
                             )}
                             <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-1">
-                              <img src={product.image_url} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                              <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                             <p className="text-[11px] font-medium truncate px-0.5">{product.title}</p>
                           </button>
@@ -904,7 +904,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                             )}
                           >
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              <img src={product.image_url} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                              <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                             <span className="text-sm font-medium flex-1 truncate">{product.title}</span>
                             <div className={cn(
@@ -1133,7 +1133,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                                     )}
                                   >
                                     <div className="aspect-[3/4] w-full bg-muted overflow-hidden">
-                                      <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="3/4" />
+                                      <ShimmerImage src={getOptimizedUrl(m.image_url, { quality: 60 })} alt={m.name} className="w-full h-full object-cover" aspectRatio="3/4" />
                                     </div>
                                     {isModelSelected && (
                                       <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
@@ -1826,7 +1826,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                         <div className="flex gap-1.5 mt-2 flex-wrap">
                           {products.filter(p => selectedProductIds.has(p.id)).slice(0, 6).map(p => (
                             <div key={p.id} className="w-8 h-8 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                              <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                              <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                           ))}
                           {selectedProductIds.size > 6 && (
@@ -1915,7 +1915,7 @@ export function CreativeDropWizard({ onClose, onLaunched, initialData, editingSc
                           const model = allModels.find(m => m.id === mId);
                           return model ? (
                             <div key={mId} className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                              <img src={model.image_url} alt={model.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                              <img src={getOptimizedUrl(model.image_url, { quality: 60 })} alt={model.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                           ) : null;
                         })}

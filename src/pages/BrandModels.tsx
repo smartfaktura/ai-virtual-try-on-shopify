@@ -697,7 +697,7 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
   return (
     <Card className="overflow-hidden group border-border/60 hover:border-border transition-colors duration-150">
       <div className="aspect-[3/4] relative bg-muted">
-        <img src={model.image_url} alt={model.name} className="w-full h-full object-cover" />
+        <img src={getOptimizedUrl(model.image_url, { quality: 60 })} alt={model.name} className="w-full h-full object-cover" />
         <button
           type="button"
           onClick={() => onDelete(model.id)}
@@ -805,7 +805,7 @@ export default function BrandModels() {
                 {models.map((m) => (
                   <Card key={m.id} className="overflow-hidden border-border/60 opacity-50 grayscale relative">
                     <div className="aspect-[3/4] relative bg-muted">
-                      <img src={m.image_url} alt={m.name} className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(m.image_url, { quality: 60 })} alt={m.name} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center bg-background/30">
                         <Crown className="h-6 w-6 text-primary" />
                       </div>

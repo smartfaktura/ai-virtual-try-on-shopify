@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 export function FinalCTA() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export function FinalCTA() {
             {TEAM_MEMBERS.map((member, i) => (
               <TeamAvatarHoverCard key={member.name} member={member} side="bottom">
                 <ShimmerImage
-                  src={member.avatar}
+                  src={getOptimizedUrl(member.avatar, { quality: 60 })}
                   alt={member.name}
                   className="w-10 h-10 rounded-full border-2 border-background object-cover transition-transform duration-200 hover:scale-110 hover:z-10 relative cursor-pointer"
                   wrapperClassName="w-10 h-10 rounded-full"

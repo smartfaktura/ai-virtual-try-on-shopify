@@ -1,4 +1,5 @@
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 export function DashboardTeamCarousel() {
   return (
@@ -23,7 +24,7 @@ export function DashboardTeamCarousel() {
             >
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-border group-hover:border-accent-foreground/40 transition-all duration-300 shadow-sm">
                 <img
-                  src={member.avatar}
+                  src={getOptimizedUrl(member.avatar, { quality: 60 })}
                   alt={member.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   loading="lazy"

@@ -25,6 +25,7 @@ import type { PerspectiveJobInfo } from '@/hooks/useGeneratePerspectives';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 type UserProduct = Tables<'user_products'>;
 type SourceType = 'library' | 'product' | 'scratch';
@@ -603,7 +604,7 @@ export default function Perspectives() {
             {/* Team avatar rotation */}
             <div className="flex items-center gap-3 pt-2 border-t border-border">
               <Avatar className="w-8 h-8 border border-border">
-                <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
+                <AvatarImage src={getOptimizedUrl(currentMember.avatar, { quality: 60 })} alt={currentMember.name} />
                 <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
               </Avatar>
               <p className="text-sm text-muted-foreground italic">
@@ -779,7 +780,7 @@ export default function Perspectives() {
                           </div>
                         )}
                         <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                          <img src={getOptimizedUrl(item.imageUrl, { quality: 60 })} alt={item.title} className="w-full h-full object-cover" />
                         </div>
                         <p className="text-[10px] text-muted-foreground truncate mt-1 px-0.5">{item.title}</p>
                       </div>
@@ -845,7 +846,7 @@ export default function Perspectives() {
                       </div>
                       <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                         {product.image_url ? (
-                          <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+                          <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
                         )}

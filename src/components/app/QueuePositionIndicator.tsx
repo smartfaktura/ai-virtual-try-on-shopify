@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { QueueJob, GenerationMeta } from '@/hooks/useGenerationQueue';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface QueuePositionIndicatorProps {
   job: QueueJob;
@@ -103,7 +104,7 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
       {/* Rotating team message */}
       <div className="hidden sm:flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
         <Avatar className="w-6 h-6 border border-border">
-          <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
+          <AvatarImage src={getOptimizedUrl(currentMember.avatar, { quality: 60 })} alt={currentMember.name} />
           <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
         </Avatar>
         <p className="text-xs text-muted-foreground italic">

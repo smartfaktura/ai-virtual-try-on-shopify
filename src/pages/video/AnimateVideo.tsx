@@ -29,6 +29,7 @@ import { useVideoProject } from '@/hooks/useVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { useCredits } from '@/contexts/CreditContext';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toast } from '@/lib/brandedToast';
 import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
 
@@ -513,7 +514,7 @@ export default function AnimateVideo() {
               {TIPS_TEAM.map((m) => (
                 <img
                   key={m.name}
-                  src={m.avatar}
+                  src={getOptimizedUrl(m.avatar, { quality: 60 })}
                   alt={m.name}
                   className="w-7 h-7 rounded-full border-2 border-background object-cover"
                 />
@@ -887,7 +888,7 @@ export default function AnimateVideo() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img
-                  src={currentProgressMember.avatar}
+                  src={getOptimizedUrl(currentProgressMember.avatar, { quality: 60 })}
                   alt={currentProgressMember.name}
                   className="w-12 h-12 rounded-full border-2 border-primary/20 object-cover transition-all duration-700"
                 />

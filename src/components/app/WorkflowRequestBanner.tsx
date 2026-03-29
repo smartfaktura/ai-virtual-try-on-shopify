@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { useLocation } from 'react-router-dom';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const AVATARS = TEAM_MEMBERS.slice(0, 4);
 
@@ -59,7 +60,7 @@ export function WorkflowRequestBanner() {
             <div className="flex -space-x-2.5 shrink-0">
               {AVATARS.map((member) => (
                 <Avatar key={member.name} className="w-9 h-9 border-2 border-background ring-1 ring-primary/10">
-                  <AvatarImage src={member.avatar} alt={member.name} />
+                   <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
                     {member.name[0]}
                   </AvatarFallback>
@@ -91,7 +92,7 @@ export function WorkflowRequestBanner() {
             <div className="flex -space-x-2 shrink-0">
               {AVATARS.slice(0, 3).map((member) => (
                 <Avatar key={member.name} className="w-7 h-7 border-2 border-background">
-                  <AvatarImage src={member.avatar} alt={member.name} />
+                  <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                   <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-semibold">
                     {member.name[0]}
                   </AvatarFallback>
