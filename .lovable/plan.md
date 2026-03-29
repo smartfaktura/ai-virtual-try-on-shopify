@@ -1,28 +1,20 @@
 
 
-# Fix: Add Explicit DELETE Guard on Profiles Table
+# Fix: Replace Auto-Load with Manual "Load More" in Perspectives Library Picker
 
-## Analysis
-
-- **INSERT**: Already correctly guarded — `WITH CHECK (auth.uid() = user_id)` prevents spoofing.
-- **DELETE**: No policy exists. RLS default-deny already blocks all deletes. The scanner flags this as a risk, but it's functionally safe.
-- **Risk level**: Low — defense-in-depth improvement only.
+## Problem
+The library image picker in `/app/perspectives` uses an `IntersectionObserver` that automatically loads more items when scrolling, making it hard to control. The "Load more" button already exists but is immediately triggered by the observer.
 
 ## Change
 
-Single database migration to add an explicit DELETE policy that blocks all client-side deletes (only service_role can delete profiles, which bypasses RLS anyway):
+**Single file: `src/pages/Perspectives.tsx`**
 
-```sql
-CREATE POLICY "No client profile deletion"
-  ON profiles FOR DELETE TO authenticated
-  USING (false);
-```
+Remove the `useEffect` block (lines 216-230) containing the `IntersectionObserver`. The existing "Load more" button (line 793) already handles manual loading — it just needs to stop being auto-triggered.
 
-This makes the intent explicit: profiles cannot be deleted by any authenticated user. Service role (used by backend functions for account cleanup) bypasses RLS and remains unaffected.
-
-No frontend code changes required.
+Also remove the `librarySentinelRef` from the div wrapper (line 792) since it's no longer needed, and remove the `useRef` declaration (line 92).
 
 | # | Action | Detail |
 |---|---|---|
-| 1 | Database migration | Add explicit DELETE-deny policy on `profiles` table |
+| 1 | Remove IntersectionObserver effect | Delete the `useEffect` (lines 216-230) that auto-increments `libraryVisibleCount` |
+| 2 | Clean up ref | Remove `librarySentinelRef` declaration and its usage on the wrapper div |
 
