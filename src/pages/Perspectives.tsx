@@ -604,7 +604,7 @@ export default function Perspectives() {
             {/* Team avatar rotation */}
             <div className="flex items-center gap-3 pt-2 border-t border-border">
               <Avatar className="w-8 h-8 border border-border">
-                <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
+                <AvatarImage src={getOptimizedUrl(currentMember.avatar, { quality: 60 })} alt={currentMember.name} />
                 <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
               </Avatar>
               <p className="text-sm text-muted-foreground italic">
