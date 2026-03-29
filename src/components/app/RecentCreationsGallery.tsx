@@ -131,8 +131,8 @@ export function RecentCreationsGallery() {
       return top;
     },
     enabled: !!user,
-    refetchInterval: 15_000,
-    staleTime: 10_000,
+    refetchInterval: 60_000,
+    staleTime: 2 * 60 * 1000,
   });
 
   const openItem = useCallback((item: CreationItem) => {
