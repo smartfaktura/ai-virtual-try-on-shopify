@@ -58,8 +58,6 @@ export function GlobalGenerationBar() {
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
   const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
-  const hasActive = activeGroups.length > 0;
-  useVisibilityTick(1000, hasActive);
 
   // Poll active jobs globally
   const { data: activeGroups = [] } = useQuery({

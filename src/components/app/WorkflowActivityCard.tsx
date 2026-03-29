@@ -186,6 +186,7 @@ export function WorkflowActivityCard({
   onDismiss,
 }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
+  const hasActiveGroups = batchGroups.some((g) => g.processingCount > 0 || g.queuedCount > 0);
   useVisibilityTick(1000, hasActiveGroups);
 
   const hasContent = batchGroups.length > 0 || completedGroups.length > 0 || failedGroups.length > 0;
