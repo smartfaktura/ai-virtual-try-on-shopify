@@ -48,9 +48,8 @@ export function useCustomScenes() {
     queryKey: ['custom-scenes'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('custom_scenes' as any)
+        .from('public_custom_scenes' as any)
         .select('*')
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data as unknown as CustomScene[]) ?? [];

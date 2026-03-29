@@ -19,7 +19,7 @@ export function useFeaturedItems() {
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('featured_items' as any)
+        .from('public_featured_items' as any)
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
