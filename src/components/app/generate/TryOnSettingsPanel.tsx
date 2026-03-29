@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { AlertCircle } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   Select,
   SelectContent,
@@ -95,7 +96,7 @@ export default function TryOnSettingsPanel({
             {modelsArray.map(m => (
               <div key={m.modelId} className="flex items-center gap-2 min-w-0">
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/20 flex-shrink-0">
-                  <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(m.previewUrl, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-xs font-medium truncate">{m.name}</p>
               </div>
@@ -112,7 +113,7 @@ export default function TryOnSettingsPanel({
             {posesArray.map(p => (
               <div key={p.poseId} className="flex items-center gap-2 min-w-0">
                 <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-primary/20 flex-shrink-0">
-                  <img src={p.previewUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(p.previewUrl, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-xs font-medium truncate">{p.name}</p>
               </div>

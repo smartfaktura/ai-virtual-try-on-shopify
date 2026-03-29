@@ -1,6 +1,7 @@
 import type { ModelProfile, TryOnPose } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface PopularCombination {
   id: string; model: ModelProfile; pose: TryOnPose; label: string; bestFor: string;
@@ -24,8 +25,8 @@ export function PopularCombinations({ combinations, onSelect }: PopularCombinati
           <Card key={combo.id} onClick={() => onSelect(combo.model, combo.pose)} className="p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 group">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-12 h-12 rounded-lg overflow-hidden border border-border"><img src={combo.model.previewUrl} alt={combo.model.name} className="w-full h-full object-cover" /></div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-md overflow-hidden border-2 border-background shadow-sm"><img src={combo.pose.previewUrl} alt={combo.pose.name} className="w-full h-full object-cover" /></div>
+                <div className="w-12 h-12 rounded-lg overflow-hidden border border-border"><img src={getOptimizedUrl(combo.model.previewUrl, { quality: 60 })} alt={combo.model.name} className="w-full h-full object-cover" /></div>
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-md overflow-hidden border-2 border-background shadow-sm"><img src={getOptimizedUrl(combo.pose.previewUrl, { quality: 60 })} alt={combo.pose.name} className="w-full h-full object-cover" /></div>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold">{combo.label}</p>

@@ -2,6 +2,7 @@ import type { ModelProfile } from '@/types';
 import { bodyTypeLabels } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ModelSelectorCardProps {
   model: ModelProfile;
@@ -19,7 +20,7 @@ export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = f
       }`}
     >
       <div className="aspect-[3/4] overflow-hidden bg-muted">
-        <ShimmerImage src={model.previewUrl} alt={model.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" aspectRatio="3/4" />
+        <ShimmerImage src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" aspectRatio="3/4" />
       </div>
       {showAiMatch && (
         <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">

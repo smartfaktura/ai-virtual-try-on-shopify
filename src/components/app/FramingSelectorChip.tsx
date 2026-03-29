@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { FRAMING_OPTIONS } from '@/lib/framingUtils';
 import type { FramingOption } from '@/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const FramingThumbnail = ({ framing, size = 16 }: { framing: FramingOption | null; size?: number }) => {
   if (!framing) return <Frame className="flex-shrink-0" style={{ width: size, height: size }} />;
@@ -11,7 +12,7 @@ const FramingThumbnail = ({ framing, size = 16 }: { framing: FramingOption | nul
   if (!option) return <Frame className="flex-shrink-0" style={{ width: size, height: size }} />;
   return (
     <img
-      src={option.previewUrl}
+      src={getOptimizedUrl(option.previewUrl, { quality: 60 })}
       alt={option.label}
       className="rounded-full object-cover flex-shrink-0"
       style={{ width: size, height: size }}
@@ -80,7 +81,7 @@ export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChan
             )}
           >
             <img
-              src={opt.previewUrl}
+              src={getOptimizedUrl(opt.previewUrl, { quality: 60 })}
               alt={opt.label}
               className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
             />

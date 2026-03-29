@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Search, ImageIcon } from 'lucide-react';
 import { useLibraryItems } from '@/hooks/useLibraryItems';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface LibraryPickerModalProps {
   open: boolean;
@@ -61,7 +62,7 @@ export function LibraryPickerModal({ open, onOpenChange, onSelect }: LibraryPick
                     )}
                   >
                     <img
-                      src={item.imageUrl}
+                      src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
                       alt={item.label}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />

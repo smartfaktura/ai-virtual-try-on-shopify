@@ -7,6 +7,7 @@ import { Wallet, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import type { Product, Template, AspectRatio, ImageQuality } from '@/types';
 import { getTemplateImage } from './TemplatePreviewCard';
 import { categoryLabels } from '@/data/mockData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface GenerateConfirmModalProps {
   open: boolean;
@@ -66,7 +67,7 @@ export function GenerateConfirmModal({
               <p className="text-sm font-semibold">Generating for</p>
               <div className="flex items-center gap-3">
                 <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                  <img src={selectedSourceImages[0]?.url || product.images[0]?.url || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(selectedSourceImages[0]?.url || product.images[0]?.url || '/placeholder.svg', { quality: 60 })} alt={product.title} className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <p className="font-bold text-sm">{product.title}</p>
@@ -78,7 +79,7 @@ export function GenerateConfirmModal({
                 <div className="flex gap-1">
                   {selectedSourceImages.map(img => (
                     <div key={img.id} className="w-8 h-8 rounded overflow-hidden ring-1 ring-primary/50">
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(img.url, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                     </div>
                   ))}
                 </div>
@@ -91,7 +92,7 @@ export function GenerateConfirmModal({
               <div className="flex items-center gap-2">
                 {templateImage ? (
                   <div className="w-10 h-10 rounded-md overflow-hidden">
-                    <img src={templateImage} alt={template.name} className="w-full h-full object-cover" />
+                    <img src={getOptimizedUrl(templateImage, { quality: 60 })} alt={template.name} className="w-full h-full object-cover" />
                   </div>
                 ) : (
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">

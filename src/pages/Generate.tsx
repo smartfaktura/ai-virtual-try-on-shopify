@@ -2811,7 +2811,7 @@ export default function Generate() {
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img src={sampleProduct.images[0].url} alt={sampleProduct.title} className="w-full h-full object-cover" />
+                        <img src={getOptimizedUrl(sampleProduct.images[0].url, { quality: 60 })} alt={sampleProduct.title} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{sampleProduct.title}</p>
@@ -2868,7 +2868,7 @@ export default function Generate() {
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img src={nonTryOnSample.images[0].url} alt={nonTryOnSample.title} className="w-full h-full object-cover" loading="eager" />
+                        <img src={getOptimizedUrl(nonTryOnSample.images[0].url, { quality: 60 })} alt={nonTryOnSample.title} className="w-full h-full object-cover" loading="eager" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{nonTryOnSample.title}</p>
@@ -4327,7 +4327,7 @@ export default function Generate() {
                       <div key={`scene-${idx}`} className="flex-shrink-0 text-center">
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
                           {v.preview_url ? (
-                            <img src={v.preview_url} alt={v.label} className="w-full h-full object-cover" />
+                            <img src={getOptimizedUrl(v.preview_url, { quality: 60 })} alt={v.label} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-[10px]">Scene</div>
                           )}

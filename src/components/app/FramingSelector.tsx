@@ -2,6 +2,7 @@ import { Frame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FRAMING_OPTIONS } from '@/lib/framingUtils';
 import type { FramingOption } from '@/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface FramingSelectorProps {
   framing: FramingOption | null;
@@ -30,7 +31,7 @@ export function FramingSelector({ framing, onFramingChange }: FramingSelectorPro
             )}
           >
             {opt.previewUrl ? (
-              <img src={opt.previewUrl} alt={opt.label} className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg object-cover" />
+              <img src={getOptimizedUrl(opt.previewUrl, { quality: 60 })} alt={opt.label} className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg object-cover" />
             ) : (
               <Frame className="w-10 h-10 sm:w-14 sm:h-14" />
             )}
@@ -108,7 +109,7 @@ export function FramingMultiSelector({ selectedFramings, onSelectedFramingsChang
             )}
           >
             {opt.previewUrl ? (
-              <img src={opt.previewUrl} alt={opt.label} className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg object-cover" />
+              <img src={getOptimizedUrl(opt.previewUrl, { quality: 60 })} alt={opt.label} className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg object-cover" />
             ) : (
               <Frame className="w-10 h-10 sm:w-14 sm:h-14" />
             )}
