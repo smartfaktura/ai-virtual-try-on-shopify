@@ -1,9 +1,85 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { supabase } from '@/integrations/supabase/client';
+
+/* ── helpers ─────────────────────────────────────────────────────── */
+
+const opt = (path: string) =>
+  getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 800, quality: 60 });
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const IMAGE_EXT = /\.(jpg|jpeg|png|webp)$/i;
+
+/* ── category definitions ────────────────────────────────────────── */
+
+interface CategoryDef {
+  label: string;
+  prefix: string;
+  cycleDuration: number;
+  fallback: string[];
+}
+
+const CATEGORY_DEFS: CategoryDef[] = [
+  {
+    label: 'Fashion & Apparel',
+    prefix: 'fashion-',
+    cycleDuration: 7000,
+    fallback: [
+      opt('fashion-camel-coat.png'),
+      opt('fashion-white-suit.png'),
+      opt('fashion-knit-loft.png'),
+      opt('fashion-activewear-gym.png'),
+    ],
+  },
+  {
+    label: 'Beauty',
+    prefix: 'skincare-',
+    cycleDuration: 8500,
+    fallback: [
+      opt('skincare-serum-marble.png'),
+      opt('skincare-perfume-vanity.png'),
+      opt('skincare-serum-model.png'),
+      opt('skincare-model-light.png'),
+    ],
+  },
+  {
+    label: 'Food & Drinks',
+    prefix: 'food-',
+    cycleDuration: 6000,
+    fallback: [
+      opt('food-avocado-toast.png'),
+      opt('food-cocktail-bar.png'),
+      opt('food-pavlova-berries.png'),
+      opt('food-raspberry-dessert.png'),
+      opt('food-cocktail-rocks.png'),
+    ],
+  },
+  {
+    label: 'Home & Living',
+    prefix: 'home-',
+    cycleDuration: 7500,
+    fallback: [
+      opt('home-candle-evening.png'),
+      opt('home-vases-shelf.png'),
+      opt('home-lamp-evening.png'),
+      opt('home-bedroom-morning.png'),
+      opt('home-pendant-kitchen.png'),
+    ],
+  },
+];
+
+/* ── CategoryCard ─────────────────────────────────────────────────── */
 
 interface CategoryCardProps {
   label: string;
@@ -26,6 +102,16 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
     return () => clearInterval(timer);
   }, [advance, cycleDuration, images.length]);
 
+  // Only render current + next image (preload), not all images
+  const visibleIndices = useMemo(() => {
+    const indices = new Set<number>();
+    indices.add(currentIndex);
+    if (images.length > 1) {
+      indices.add((currentIndex + 1) % images.length);
+    }
+    return indices;
+  }, [currentIndex, images.length]);
+
   return (
     <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
       <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-muted/40">
@@ -44,123 +130,62 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         </span>
       </div>
 
-      {images.map((img, i) => (
-        <ShimmerImage
-          key={img}
-          src={img}
-          alt={`${label} AI-generated product shot`}
-          loading="lazy"
-          decoding="async"
-          wrapperClassName="absolute inset-0"
-          wrapperStyle={{
-            opacity: i === currentIndex ? 1 : 0,
-            transition: 'opacity 1.2s ease-in-out',
-          }}
-          className="w-full h-full object-cover"
-        />
-      ))}
+      {images.map((img, i) =>
+        visibleIndices.has(i) ? (
+          <ShimmerImage
+            key={img}
+            src={img}
+            alt={`${label} AI-generated product shot`}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            wrapperClassName="absolute inset-0"
+            wrapperStyle={{
+              opacity: i === currentIndex ? 1 : 0,
+              transition: 'opacity 1.2s ease-in-out',
+            }}
+            className="w-full h-full object-cover"
+          />
+        ) : null
+      )}
     </div>
   );
 }
 
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-const IMAGE_EXT = /\.(jpg|jpeg|png|webp)$/i;
-
-interface CategoryDef {
-  label: string;
-  folder: string;
-  cycleDuration: number;
-  fallback: string[];
-}
-
-const CATEGORY_DEFS: CategoryDef[] = [
-  {
-    label: 'Fashion & Apparel',
-    folder: 'fashion',
-    cycleDuration: 7000,
-    fallback: [
-      s('fashion-camel-coat.png'),
-      s('fashion-white-suit.png'),
-      s('fashion-knit-loft.png'),
-      s('fashion-activewear-gym.png'),
-    ],
-  },
-  {
-    label: 'Beauty',
-    folder: 'beauty',
-    cycleDuration: 8500,
-    fallback: [
-      s('skincare-serum-marble.png'),
-      s('skincare-perfume-vanity.png'),
-      s('skincare-serum-model.png'),
-      s('skincare-model-light.png'),
-    ],
-  },
-  {
-    label: 'Food & Drinks',
-    folder: 'food',
-    cycleDuration: 6000,
-    fallback: [
-      s('food-avocado-toast.png'),
-      s('food-cocktail-bar.png'),
-      s('food-pavlova-berries.png'),
-      s('food-raspberry-dessert.png'),
-      s('food-cocktail-rocks.png'),
-    ],
-  },
-  {
-    label: 'Home & Living',
-    folder: 'home',
-    cycleDuration: 7500,
-    fallback: [
-      s('home-candle-evening.png'),
-      s('home-vases-shelf.png'),
-      s('home-lamp-evening.png'),
-      s('home-bedroom-morning.png'),
-      s('home-pendant-kitchen.png'),
-    ],
-  },
-];
+/* ── Showcase section ─────────────────────────────────────────────── */
 
 export function ProductCategoryShowcase() {
   const [categoryImages, setCategoryImages] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     async function fetchAll() {
-      const results: Record<string, string[]> = {};
-      await Promise.all(
-        CATEGORY_DEFS.map(async (cat) => {
-          try {
-            const { data } = await supabase.storage
-              .from('landing-assets')
-              .list(`showcase/${cat.folder}`, { limit: 100 });
-            const urls = data
-              ?.filter((f) => IMAGE_EXT.test(f.name))
-              .map((f) =>
-                getOptimizedUrl(
-                  getLandingAssetUrl(`showcase/${cat.folder}/${f.name}`),
-                  { quality: 60 }
-                )
-              );
-            if (urls?.length) {
-              results[cat.folder] = shuffleArray(urls);
-            }
-          } catch {
-            // fallback will be used
+      try {
+        const { data } = await supabase.storage
+          .from('landing-assets')
+          .list('showcase', { limit: 200 });
+
+        if (!data?.length) return;
+
+        const results: Record<string, string[]> = {};
+
+        for (const cat of CATEGORY_DEFS) {
+          const urls = data
+            .filter((f) => f.name.startsWith(cat.prefix) && IMAGE_EXT.test(f.name))
+            .map((f) =>
+              getOptimizedUrl(getLandingAssetUrl(`showcase/${f.name}`), {
+                width: 800,
+                quality: 60,
+              })
+            );
+
+          if (urls.length) {
+            results[cat.prefix] = shuffleArray(urls);
           }
-        })
-      );
-      if (Object.keys(results).length) setCategoryImages(results);
+        }
+
+        if (Object.keys(results).length) setCategoryImages(results);
+      } catch {
+        // fallback images will be used
+      }
     }
     fetchAll();
   }, []);
@@ -192,7 +217,7 @@ export function ProductCategoryShowcase() {
             <CategoryCard
               key={cat.label}
               label={cat.label}
-              images={categoryImages[cat.folder] ?? cat.fallback}
+              images={categoryImages[cat.prefix] ?? cat.fallback}
               cycleDuration={cat.cycleDuration}
             />
           ))}
