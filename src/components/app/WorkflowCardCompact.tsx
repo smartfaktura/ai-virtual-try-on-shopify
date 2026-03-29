@@ -8,6 +8,7 @@ import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const imgFallback = getLandingAssetUrl('templates/universal-clean.jpg');
 
@@ -51,7 +52,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
             <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact modalCompact />
           ) : (
             <img
-              src={workflow.preview_image_url || imgFallback}
+              src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { width: 480, quality: 60 })}
               alt={workflow.name}
               className="w-full h-full object-cover bg-muted/50"
             />
@@ -99,7 +100,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact mobileCompact={mobileCompact} modalCompact={modalCompact} />
         ) : (
           <img
-            src={workflow.preview_image_url || imgFallback}
+            src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { width: 480, quality: 60 })}
             alt={workflow.name}
             className="w-full h-full object-cover bg-muted/50"
           />
