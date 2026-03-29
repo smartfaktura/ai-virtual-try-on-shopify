@@ -60,7 +60,7 @@ function AuthHeroGallery() {
   );
 }
 
-
+export default function Auth() {
   const navigate = useNavigate();
   const { signUp, signIn, user, isLoading } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>(() => localStorage.getItem('has_account') === 'true' ? 'login' : 'signup');
