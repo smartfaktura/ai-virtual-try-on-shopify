@@ -8,6 +8,7 @@ import { CheckCircle, Info, Expand } from 'lucide-react';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import type { GenerationJob } from '@/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface JobDetailModalProps {
   open: boolean;
@@ -145,7 +146,7 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
                         selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : result.publishedToShopify ? 'opacity-60' : 'hover:ring-2 hover:ring-primary/50'
                       }`}
                     >
-                      <img src={result.imageUrl} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" />
+                      <img src={getOptimizedUrl(result.imageUrl, { quality: 60 })} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" />
                       {result.publishedToShopify && (
                         <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">Published</div>
                       )}

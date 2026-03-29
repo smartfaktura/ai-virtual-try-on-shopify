@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Product, GenerationSourceType, ScratchUpload } from '@/types';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface UpscaleSettingsPanelProps {
   selectedProduct: Product | null;
@@ -50,7 +51,7 @@ export default function UpscaleSettingsPanel({
         ) : (
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-              <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg', { quality: 60 })} alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>

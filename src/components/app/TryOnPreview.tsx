@@ -1,6 +1,7 @@
 import { Plus, ArrowRight } from 'lucide-react';
 import type { Product, ModelProfile, TryOnPose, ScratchUpload, ModelGender } from '@/types';
 import { Card } from '@/components/ui/card';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface TryOnPreviewProps {
   product?: Product | null;
@@ -113,7 +114,7 @@ function MultiProductThumbs({ products }: { products: Product[] }) {
             className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0"
           >
             {p.images[0]?.url ? (
-              <img src={p.images[0].url} alt={p.title} className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(p.images[0].url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-muted">
                 <span className="text-[8px] text-muted-foreground">No img</span>

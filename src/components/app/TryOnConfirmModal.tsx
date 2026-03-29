@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Wallet, User, AlertCircle, Info } from 'lucide-react';
 import type { Product, AspectRatio, ModelProfile, TryOnPose } from '@/types';
 import { poseCategoryLabels } from '@/data/mockData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface TryOnConfirmModalProps {
   open: boolean;
@@ -81,7 +82,7 @@ export function TryOnConfirmModal({
               {allModels.length === 1 ? (
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img src={allModels[0].previewUrl} alt={allModels[0].name} className="w-full h-full object-cover" />
+                    <img src={getOptimizedUrl(allModels[0].previewUrl, { quality: 60 })} alt={allModels[0].name} className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold truncate">{allModels[0].name}</p>
@@ -92,7 +93,7 @@ export function TryOnConfirmModal({
                 <div className="flex items-center gap-1">
                   {allModels.slice(0, 3).map((m) => (
                     <div key={m.modelId} className="w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0">
-                      <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(m.previewUrl, { quality: 60 })} alt={m.name} className="w-full h-full object-cover" />
                     </div>
                   ))}
                   {allModels.length > 3 && (
@@ -106,7 +107,7 @@ export function TryOnConfirmModal({
               <p className="text-xs font-semibold">Pose</p>
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  <img src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(pose.previewUrl, { quality: 60 })} alt={pose.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold truncate">{pose.name}</p>
