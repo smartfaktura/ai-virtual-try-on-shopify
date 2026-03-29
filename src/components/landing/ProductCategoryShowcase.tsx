@@ -111,6 +111,7 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Home & Living',
     images: [
+      '/images/showcase/home-boucle-chair.jpg',
       s('home-candle-evening.png'),
       s('home-vases-shelf.png'),
       s('home-lamp-evening.png'),
