@@ -23,6 +23,7 @@ import { useSceneCategories, useAddSceneCategory, useDeleteSceneCategory, useUpd
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from '@/lib/brandedToast';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomScenes';
 
 const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
@@ -660,7 +661,7 @@ export default function AdminScenes() {
                 {hiddenBuiltInScenes.map(scene => (
                   <div key={scene.poseId} className="flex items-center gap-3 px-3 py-2">
                     <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      <img src={scene.previewUrl} alt={scene.name} className="w-full h-full object-cover opacity-50" />
+                      <img src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene.name} className="w-full h-full object-cover opacity-50" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate text-muted-foreground">{scene.name}</p>
@@ -740,7 +741,7 @@ function SceneRow({
       {/* Thumbnail */}
       <div className="relative w-10 h-12 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
         <img
-          src={pose.previewUrl}
+          src={getOptimizedUrl(pose.previewUrl, { quality: 60 })}
           alt={pose.name}
           className="w-full h-full object-cover"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}

@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
 const comparisons = [
-  { original: getLandingAssetUrl('products/serum-vitamin-c.jpg'), output: getLandingAssetUrl('templates/cosmetics-luxury.jpg'), label: 'Instagram Ad', category: 'Ads' },
-  { original: getLandingAssetUrl('products/hoodie-gray-1.jpg'), output: getLandingAssetUrl('templates/clothing-studio.jpg'), label: 'Amazon Listing', category: 'Listing' },
-  { original: getLandingAssetUrl('products/granola-organic.jpg'), output: getLandingAssetUrl('templates/food-rustic.jpg'), label: 'Website Hero', category: 'Website' },
-  { original: getLandingAssetUrl('products/collagen-powder.jpg'), output: getLandingAssetUrl('templates/supplements-luxury.jpg'), label: 'Seasonal Campaign', category: 'Seasonal' },
-  { original: getLandingAssetUrl('products/candle-soy.jpg'), output: getLandingAssetUrl('templates/home-japandi.jpg'), label: 'Lifestyle Blog', category: 'Lifestyle' },
-  { original: getLandingAssetUrl('products/leggings-black-1.jpg'), output: getLandingAssetUrl('templates/clothing-streetwear.jpg'), label: 'TikTok Ad', category: 'Ads' },
+  { original: s('products/serum-vitamin-c.jpg'), output: s('templates/cosmetics-luxury.jpg'), label: 'Instagram Ad', category: 'Ads' },
+  { original: s('products/hoodie-gray-1.jpg'), output: s('templates/clothing-studio.jpg'), label: 'Amazon Listing', category: 'Listing' },
+  { original: s('products/granola-organic.jpg'), output: s('templates/food-rustic.jpg'), label: 'Website Hero', category: 'Website' },
+  { original: s('products/collagen-powder.jpg'), output: s('templates/supplements-luxury.jpg'), label: 'Seasonal Campaign', category: 'Seasonal' },
+  { original: s('products/candle-soy.jpg'), output: s('templates/home-japandi.jpg'), label: 'Lifestyle Blog', category: 'Lifestyle' },
+  { original: s('products/leggings-black-1.jpg'), output: s('templates/clothing-streetwear.jpg'), label: 'TikTok Ad', category: 'Ads' },
 ];
 
 const categories = ['All', 'Ads', 'Website', 'Listing', 'Seasonal', 'Lifestyle'];

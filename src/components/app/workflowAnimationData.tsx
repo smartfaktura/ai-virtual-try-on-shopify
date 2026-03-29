@@ -1,53 +1,56 @@
 import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home, Sparkles, Maximize2, Users } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
 /* ── Asset URLs ── */
 
 // Virtual Try-On
-const tryonProduct = getLandingAssetUrl('workflows/workflow-tryon-product-flatlay.png');
-const tryonModel = getLandingAssetUrl('models/model-female-average-european.jpg');
-const tryonScene = getLandingAssetUrl('poses/pose-editorial-minimal.jpg');
-const tryonResult = getLandingAssetUrl('workflows/workflow-tryon-result.png');
+const tryonProduct = s('workflows/workflow-tryon-product-flatlay.png');
+const tryonModel = s('models/model-female-average-european.jpg');
+const tryonScene = s('poses/pose-editorial-minimal.jpg');
+const tryonResult = s('workflows/workflow-tryon-result.png');
 
 // Virtual Try-On Showcase Carousel
-const tryonShowcase1 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-1.jpg');
-const tryonShowcase2 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-2.jpg');
-const tryonShowcase3 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-3.jpg');
-const tryonShowcase4 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-4.jpg');
-const tryonShowcase5 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-5.jpg');
-const tryonShowcase6 = getLandingAssetUrl('workflows/virtual-tryon-showcase/Vovvai-6.jpg');
+const tryonShowcase1 = s('workflows/virtual-tryon-showcase/Vovvai-1.jpg');
+const tryonShowcase2 = s('workflows/virtual-tryon-showcase/Vovvai-2.jpg');
+const tryonShowcase3 = s('workflows/virtual-tryon-showcase/Vovvai-3.jpg');
+const tryonShowcase4 = s('workflows/virtual-tryon-showcase/Vovvai-4.jpg');
+const tryonShowcase5 = s('workflows/virtual-tryon-showcase/Vovvai-5.jpg');
+const tryonShowcase6 = s('workflows/virtual-tryon-showcase/Vovvai-6.jpg');
 
 // Product Listing Set
-const listingProduct = getLandingAssetUrl('workflows/product-listing-product.png');
-const listingResult = getLandingAssetUrl('workflows/product-listing-result.png');
+const listingProduct = s('workflows/product-listing-product.png');
+const listingResult = s('workflows/product-listing-result.png');
 
 // Product Showcase Carousel
-const showcase1 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-1.jpg');
-const showcase2 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-2.jpg');
-const showcase3 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-3.jpg');
+const showcase1 = s('workflows/product-showcase/Vovvai-products-1.jpg');
+const showcase2 = s('workflows/product-showcase/Vovvai-products-2.jpg');
+const showcase3 = s('workflows/product-showcase/Vovvai-products-3.jpg');
 
-const showcase5 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-5.jpg');
-const showcase6 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-6.jpg');
-const showcase7 = getLandingAssetUrl('workflows/product-showcase/Vovvai-products-7.jpg');
+const showcase5 = s('workflows/product-showcase/Vovvai-products-5.jpg');
+const showcase6 = s('workflows/product-showcase/Vovvai-products-6.jpg');
+const showcase7 = s('workflows/product-showcase/Vovvai-products-7.jpg');
 
 // Selfie / UGC Set
-const ugcProduct = getLandingAssetUrl('products/ice-roller-white.png');
-const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
-const ugcResult1 = getLandingAssetUrl('workflows/ugc-result-1.jpg');
-const ugcResult2 = getLandingAssetUrl('workflows/ugc-result-2.jpg');
-const ugcResult3 = getLandingAssetUrl('workflows/ugc-result-3.jpg');
-const ugcResult4 = getLandingAssetUrl('workflows/ugc-result-4.jpg');
+const ugcProduct = s('products/ice-roller-white.png');
+const ugcModel = s('models/model-female-average-american-redhead.jpg');
+const ugcResult1 = s('workflows/ugc-result-1.jpg');
+const ugcResult2 = s('workflows/ugc-result-2.jpg');
+const ugcResult3 = s('workflows/ugc-result-3.jpg');
+const ugcResult4 = s('workflows/ugc-result-4.jpg');
 
 // Mirror Selfie Set
-const mirrorSelfieModel = getLandingAssetUrl('models/model-mirror-selfie-blonde.jpg');
-const mirrorSelfieScene = getLandingAssetUrl('scenes/scene-cozy-bedroom.jpg');
-const mirrorSelfieProduct = getLandingAssetUrl('products/crop-top-white.jpg');
+const mirrorSelfieModel = s('models/model-mirror-selfie-blonde.jpg');
+const mirrorSelfieScene = s('scenes/scene-cozy-bedroom.jpg');
+const mirrorSelfieProduct = s('products/crop-top-white.jpg');
 
 // Flat Lay Set
-const flatProduct1 = getLandingAssetUrl('products/powder-setting.jpg');
-const flatProduct2 = getLandingAssetUrl('products/lipstick-matte.jpg');
-const flatResult = getLandingAssetUrl('workflows/workflow-flat-lay.jpg');
+const flatProduct1 = s('products/powder-setting.jpg');
+const flatProduct2 = s('products/lipstick-matte.jpg');
+const flatResult = s('workflows/workflow-flat-lay.jpg');
 
 /* ── Scene definitions ── */
 

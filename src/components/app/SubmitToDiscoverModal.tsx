@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useSubmitToDiscover } from '@/hooks/useDiscoverSubmissions';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -157,7 +158,7 @@ export function SubmitToDiscoverModal({
         {/* Preview */}
         <div className="px-6 pb-3">
           <img
-            src={imageUrl}
+            src={getOptimizedUrl(imageUrl, { quality: 60 })}
             alt="Preview"
             className="w-full max-h-36 object-cover rounded-xl border border-border/30"
           />
@@ -217,7 +218,7 @@ export function SubmitToDiscoverModal({
                 includeProduct ? 'bg-muted/30' : 'bg-muted/10 opacity-50',
               )}>
                 <img
-                  src={productImageUrl}
+                  src={getOptimizedUrl(productImageUrl, { quality: 60 })}
                   alt={productName}
                   className="w-9 h-9 rounded-lg object-cover border border-border/30"
                 />

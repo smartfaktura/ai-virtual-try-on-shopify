@@ -158,7 +158,7 @@ export function FreestyleQuickPresets({ onSelect, activeSceneId, userCategories 
     <div className="w-full sm:px-0">
       <div className="flex items-center justify-center gap-2 mb-1.5">
         <img
-          src={amara.avatar}
+          src={getOptimizedUrl(amara.avatar, { quality: 60 })}
           alt={amara.name}
           className="w-7 h-7 rounded-full object-cover ring-1 ring-border"
         />

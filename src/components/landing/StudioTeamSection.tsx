@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 export function StudioTeamSection() {
   const navigate = useNavigate();
@@ -150,7 +151,7 @@ export function StudioTeamSection() {
                     />
                   ) : (
                     <img
-                      src={member.avatar}
+                      src={getOptimizedUrl(member.avatar, { quality: 60 })}
                       alt={member.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"

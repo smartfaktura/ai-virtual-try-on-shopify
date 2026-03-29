@@ -4297,7 +4297,7 @@ export default function Generate() {
                   ) : (selectedProduct || scratchUpload) && (
                     <div className="flex-shrink-0 text-center">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-                        <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="Product" className="w-full h-full object-cover" />
+                        <img src={getOptimizedUrl(sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg', { quality: 60 })} alt="Product" className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
                       <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
@@ -4306,7 +4306,7 @@ export default function Generate() {
                   {Array.from(selectedModelMap.values()).map(model => (
                     <div key={model.modelId} className="flex-shrink-0 text-center">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-                        <img src={model.previewUrl} alt={model.name} className="w-full h-full object-cover" />
+                        <img src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Model</p>
                       <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{model.name}</p>
@@ -4315,7 +4315,7 @@ export default function Generate() {
                   {Array.from(selectedPoseMap.values()).map(pose => (
                     <div key={pose.poseId} className="flex-shrink-0 text-center">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-                        <img src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" />
+                        <img src={getOptimizedUrl(pose.previewUrl, { quality: 60 })} alt={pose.name} className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Scene</p>
                       <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{pose.name}</p>
