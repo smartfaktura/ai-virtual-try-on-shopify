@@ -22,6 +22,28 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
+// Prefetch map for top routes — triggers lazy chunk download on hover
+const prefetchMap: Record<string, () => void> = {
+  '/app': () => { import('@/pages/Dashboard'); },
+  '/app/products': () => { import('@/pages/Products'); },
+  '/app/generate': () => { import('@/pages/Generate'); },
+  '/app/workflows': () => { import('@/pages/Workflows'); },
+  '/app/library': () => { import('@/pages/Jobs'); },
+  '/app/freestyle': () => { import('@/pages/Freestyle'); },
+  '/app/discover': () => { import('@/pages/Discover'); },
+  '/app/settings': () => { import('@/pages/Settings'); },
+  '/app/creative-drops': () => { import('@/pages/CreativeDrops'); },
+  '/app/video': () => { import('@/pages/VideoHub'); },
+  '/app/models': () => { import('@/pages/BrandModels'); },
+  '/app/brand-profiles': () => { import('@/pages/BrandProfiles'); },
+};
+const prefetched = new Set<string>();
+const prefetchRoute = (path: string) => {
+  if (prefetched.has(path)) return;
+  const fn = prefetchMap[path];
+  if (fn) { prefetched.add(path); fn(); }
+};
+
 const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
   { label: 'Products', icon: Package, path: '/app/products' },
