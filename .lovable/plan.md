@@ -1,14 +1,12 @@
 
 
-# Fix Broken Terms & Privacy Links on Auth Page
+# Fix Grey Bar on Discover Image Cards
 
 ## Problem
-The signup form links point to `/terms-of-service` and `/privacy-policy`, but the actual routes are `/terms` and `/privacy`.
+Images in the `/app/discover` masonry grid show a grey bar because the `ShimmerImage` wrapper enforces a `3/4` aspect ratio, but the `<img>` uses `h-auto` — leaving unfilled space that shows the `bg-muted` background.
 
 ## Fix
-In `src/pages/Auth.tsx`, update the two `<Link>` components (around lines 509-511):
-- `/terms-of-service` → `/terms`
-- `/privacy-policy` → `/privacy`
+In `src/components/app/DiscoverCard.tsx`, line 63: change the image className from `w-full h-auto block` to `w-full h-full object-cover block`. This ensures the image fills the entire 3:4 container, cropping slightly if needed rather than leaving grey gaps.
 
-Single file, two-word change each. No other files affected.
+**One line change, one file.**
 
