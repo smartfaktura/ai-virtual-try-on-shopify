@@ -31,26 +31,28 @@ export function LandingPricing() {
           </p>
 
           {/* Toggle */}
-          <div className="inline-flex items-center gap-3 p-1 rounded-full bg-muted">
-            <button
-              onClick={() => setAnnual(false)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                !annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setAnnual(true)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors relative ${
-                annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
-              }`}
-            >
-              Annual
-              <span className="absolute -top-2.5 -right-3 inline-flex items-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 whitespace-nowrap">
-                −20%
-              </span>
-            </button>
+          <div className="inline-flex items-center gap-3">
+            <div className="inline-flex items-center p-1 rounded-full bg-muted">
+              <button
+                onClick={() => setAnnual(false)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                  !annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                  annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                }`}
+              >
+                Annual
+              </button>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 whitespace-nowrap">
+              Save 20%
+            </span>
           </div>
         </div>
 
