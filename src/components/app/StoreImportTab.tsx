@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface StoreImportTabProps {
   onProductAdded: () => void;
@@ -293,7 +294,7 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
           <div className="flex gap-4">
             <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
               <img
-                src={(extracted.image_urls?.[selectedImageIndex]) || extracted.image_url}
+                src={getOptimizedUrl((extracted.image_urls?.[selectedImageIndex]) || extracted.image_url, { quality: 60 })}
                 alt={extracted.title}
                 className="w-full h-full object-cover"
               />

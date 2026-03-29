@@ -13,7 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, ArrowLeft, MailCheck, Mail, AlertCircle } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
-const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+const authHero = getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 });
 
 export default function Auth() {
   const navigate = useNavigate();

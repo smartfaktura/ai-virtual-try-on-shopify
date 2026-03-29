@@ -9,6 +9,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface GenerateModelModalProps {
   open: boolean;
@@ -101,7 +102,7 @@ export function GenerateModelModal({ open, onOpenChange, userPlan }: GenerateMod
             </div>
             <div className="flex gap-3 items-center">
               <img
-                src={result.image_url}
+                src={getOptimizedUrl(result.image_url, { quality: 60 })}
                 alt={result.name}
                 className="w-20 h-20 rounded-lg object-cover border border-border"
               />
