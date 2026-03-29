@@ -1484,7 +1484,84 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      hidden_scene_ids: {
+        Row: {
+          scene_id: string | null
+        }
+        Insert: {
+          scene_id?: string | null
+        }
+        Update: {
+          scene_id?: string | null
+        }
+        Relationships: []
+      }
+      public_custom_scenes: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          discover_categories: string[] | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          name: string | null
+          optimized_image_url: string | null
+          prompt_hint: string | null
+          prompt_only: boolean | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          discover_categories?: string[] | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          optimized_image_url?: string | null
+          prompt_hint?: string | null
+          prompt_only?: boolean | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          discover_categories?: string[] | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          optimized_image_url?: string | null
+          prompt_hint?: string | null
+          prompt_only?: boolean | null
+        }
+        Relationships: []
+      }
+      public_featured_items: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          item_id: string | null
+          item_type: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          item_id?: string | null
+          item_type?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          item_id?: string | null
+          item_type?: string | null
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_purchased_credits: {
