@@ -15,7 +15,7 @@ import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
-const teamAvatar = (file: string) => getLandingAssetUrl(`team/${file}`);
+const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { quality: 60 });
 const avatarSophia = teamAvatar('avatar-sophia.jpg');
 const avatarZara = teamAvatar('avatar-zara.jpg');
 const avatarKenji = teamAvatar('avatar-kenji.jpg');
