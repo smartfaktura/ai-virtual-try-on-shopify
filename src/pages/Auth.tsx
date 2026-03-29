@@ -506,9 +506,9 @@ export default function Auth() {
                 />
                 <label htmlFor="termsAccept" className="text-sm text-muted-foreground leading-snug cursor-pointer">
                   I agree to the{' '}
-                  <Link to="/terms-of-service" target="_blank" className="underline text-foreground hover:text-primary">Terms of Service</Link>
-                  {' '}and{' '}
-                  <Link to="/privacy-policy" target="_blank" className="underline text-foreground hover:text-primary">Privacy Policy</Link>
+                   <Link to="/terms" target="_blank" className="underline text-foreground hover:text-primary">Terms of Service</Link>
+                   {' '}and{' '}
+                   <Link to="/privacy" target="_blank" className="underline text-foreground hover:text-primary">Privacy Policy</Link>
                 </label>
               </div>
               {errors.terms && <p className="text-sm text-destructive">{errors.terms}</p>}
