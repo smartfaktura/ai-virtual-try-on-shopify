@@ -72,12 +72,8 @@ function ActiveGroupCard({
   const team = useMemo(() => pickTeamForGroup(group.key), [group.key]);
 
   // Cycle through team members
-  const [msgIdx, setMsgIdx] = useState(0);
-  useEffect(() => {
-    if (!isProcessing) return;
-    const id = setInterval(() => setMsgIdx((i) => (i + 1) % team.length), 3000);
-    return () => clearInterval(id);
-  }, [isProcessing, team.length]);
+  const teamTick = useVisibilityTick(3000, isProcessing);
+  const msgIdx = teamTick % team.length;
 
   const currentAgent = team[msgIdx % team.length];
   const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
@@ -190,15 +186,7 @@ export function WorkflowActivityCard({
   onDismiss,
 }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
-  const [, tick] = useState(0);
-
-  const hasActiveGroups = batchGroups.some((g) => g.processingCount > 0 || g.queuedCount > 0);
-
-  useEffect(() => {
-    if (!hasActiveGroups) return;
-    const id = setInterval(() => tick((t) => t + 1), 1000);
-    return () => clearInterval(id);
-  }, [hasActiveGroups]);
+  useVisibilityTick(1000, hasActiveGroups);
 
   const hasContent = batchGroups.length > 0 || completedGroups.length > 0 || failedGroups.length > 0;
   if (!hasContent) return null;

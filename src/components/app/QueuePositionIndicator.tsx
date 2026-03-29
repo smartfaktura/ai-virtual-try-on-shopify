@@ -54,35 +54,20 @@ function formatEstimateRange(seconds: number): string {
 }
 
 function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => void }) {
-  const [elapsed, setElapsed] = useState(0);
-  const [teamIndex, setTeamIndex] = useState(0);
+  useVisibilityTick(1000, true);
 
   const estimatedSeconds = useMemo(
     () => estimateSeconds(job.generationMeta),
     [job.generationMeta]
   );
 
-  // Elapsed timer
-  useEffect(() => {
-    const startTime = job.started_at || job.created_at;
-    const start = new Date(startTime).getTime();
+  const startTime = job.started_at || job.created_at;
+  const elapsed = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
 
-    const update = () => setElapsed(Math.floor((Date.now() - start) / 1000));
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, [job.started_at, job.created_at]);
-
-  // Rotating team messages every 4s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTeamIndex(prev => (prev + 1) % TEAM_MEMBERS.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const teamTick = useVisibilityTick(4000, true);
+  const teamIndex = teamTick % TEAM_MEMBERS.length;
 
   const ratio = elapsed / estimatedSeconds;
-  // Progress: normal up to 90%, then crawl to 95% in overtime
   const progress = ratio <= 1
     ? Math.min(ratio * 90, 90)
     : Math.min(90 + (ratio - 1) * 5, 95);

@@ -58,8 +58,8 @@ export function GlobalGenerationBar() {
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
   const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
-  const [, tick] = useState(0);
-  const [quoteIndex, setQuoteIndex] = useState(0);
+  const hasActive = activeGroups.length > 0;
+  useVisibilityTick(1000, hasActive);
 
   // Poll active jobs globally
   const { data: activeGroups = [] } = useQuery({
@@ -156,19 +156,7 @@ export function GlobalGenerationBar() {
     prevGroupsRef.current = activeGroups;
   }, [activeGroups, queryClient]);
 
-  // Tick for elapsed time
-  useEffect(() => {
-    if (activeGroups.length === 0) return;
-    const id = setInterval(() => tick((t) => t + 1), 1000);
-    return () => clearInterval(id);
-  }, [activeGroups.length]);
-
-  // Rotating quote index
-  useEffect(() => {
-    if (activeGroups.length === 0) return;
-    const id = setInterval(() => setQuoteIndex((i) => i + 1), 4000);
-    return () => clearInterval(id);
-  }, [activeGroups.length]);
+  const quoteIndex = useVisibilityTick(4000, hasActive);
 
   const isHiddenPage = HIDDEN_PATHS.some((p) => location.pathname.startsWith(p));
   const isFreestylePage = location.pathname.startsWith('/app/freestyle');
