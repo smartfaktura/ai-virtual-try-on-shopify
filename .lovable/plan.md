@@ -1,46 +1,44 @@
 
 
-# Improve Annual/Monthly Toggle Design
+# Fix "Save 20%" Badge Clarity
 
 ## Problem
-The "−20%" badge overlaps awkwardly with the Annual button, creating poor spacing and unclear association.
+The "Save 20%" pill floats next to the toggle with no context — users don't know *when* they save 20%.
 
 ## Solution
-Replace the floating badge with a cleaner layout: place the "−20%" badge as a separate pill to the right of the toggle, outside the toggle container. This gives clear spacing and makes it obvious the discount applies to annual billing.
+Move the savings text inside the Annual button area so it's clearly tied to annual billing. Change the Annual button label to include the discount context:
 
-## File: `src/components/landing/LandingPricing.tsx` (lines 33-54)
+**Approach**: Keep the toggle clean but make the "Save 20%" badge only appear when Monthly is selected (as an incentive to switch). When Annual is active, show a checkmark or "Saving 20%" confirmation instead.
 
-Replace the toggle markup with:
+Simpler approach: Put "Save 20%" as a small tag directly attached to the Annual option, not as a separate floating element.
+
+## File: `src/components/landing/LandingPricing.tsx` (lines 33-56)
+
+Replace the toggle with:
 
 ```tsx
-<div className="inline-flex items-center gap-3">
-  <div className="inline-flex items-center p-1 rounded-full bg-muted">
-    <button
-      onClick={() => setAnnual(false)}
-      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-        !annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
-      }`}
-    >
-      Monthly
-    </button>
-    <button
-      onClick={() => setAnnual(true)}
-      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-        annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
-      }`}
-    >
-      Annual
-    </button>
-  </div>
-  <span className="inline-flex items-center rounded-full bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 whitespace-nowrap">
-    Save 20%
-  </span>
+<div className="inline-flex items-center p-1 rounded-full bg-muted">
+  <button
+    onClick={() => setAnnual(false)}
+    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+      !annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+    }`}
+  >
+    Monthly
+  </button>
+  <button
+    onClick={() => setAnnual(true)}
+    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+      annual ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+    }`}
+  >
+    Annual
+    <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+      −20%
+    </span>
+  </button>
 </div>
 ```
 
-Key improvements:
-- Badge moved outside the toggle as a sibling pill with proper `gap-3` spacing
-- "Save 20%" is clearer copy than "−20%"
-- Slightly taller buttons (`py-2.5`) for better tap targets
-- No absolute positioning or negative offsets
+The "−20%" pill is now inside the Annual button, making it immediately clear that annual billing saves 20%. No separate floating badge.
 
