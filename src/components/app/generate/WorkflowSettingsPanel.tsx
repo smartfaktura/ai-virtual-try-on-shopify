@@ -396,7 +396,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
                   <div className={cn("relative", (isMirrorSelfie || isSelfieUgc) ? "aspect-[9/16]" : "aspect-square")}>
                     {hasPreview ? (
                       <img
-                        src={getOptimizedUrl(v.preview_url, { quality: 60 })}
+                        src={getOptimizedUrl(v.preview_url, { width: 400, quality: 60 })}
                         alt={v.label}
                         className="w-full h-full object-cover"
                         loading="lazy"
