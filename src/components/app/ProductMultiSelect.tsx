@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import type { Product } from '@/types';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 import { detectProductCategory, categoryLabels } from '@/lib/categoryUtils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ProductMultiSelectProps {
   products: Product[];
