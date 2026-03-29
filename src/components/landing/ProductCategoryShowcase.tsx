@@ -70,6 +70,8 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
     images: [
+      '/images/showcase/fashion-activewear-track.jpg',
+      '/images/showcase/fashion-leopard-sneakers.jpg',
       '/images/showcase/fashion-portrait-curls.jpg',
       '/images/showcase/fashion-white-dress-stadium.jpg',
       '/images/showcase/fashion-blonde-coat.jpg',
