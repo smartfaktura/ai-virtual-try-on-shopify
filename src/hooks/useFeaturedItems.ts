@@ -18,10 +18,7 @@ export function useFeaturedItems() {
     queryKey: ['featured-items'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('public_featured_items' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_public_featured_items');
       if (error) throw error;
       return (data as unknown as FeaturedItem[]) ?? [];
     },

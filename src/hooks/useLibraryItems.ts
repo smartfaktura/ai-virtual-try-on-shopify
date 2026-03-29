@@ -122,7 +122,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
 
         const [customModelsRes, customScenesRes] = await Promise.all([
           customModelIds.length ? supabase.from('custom_models').select('id, name, image_url').in('id', customModelIds) : Promise.resolve({ data: [] as any[] }),
-          customSceneIds.length ? supabase.from('public_custom_scenes' as any).select('id, name, image_url').in('id', customSceneIds) : Promise.resolve({ data: [] as any[] }),
+          customSceneIds.length ? supabase.rpc('get_public_custom_scenes').then(res => ({ ...res, data: (res.data as any[] ?? []).filter((s: any) => customSceneIds.includes(s.id)) })) : Promise.resolve({ data: [] as any[] }),
         ]);
 
         const customModelsMap = new Map((customModelsRes.data ?? []).map((m: any) => [m.id, m]));

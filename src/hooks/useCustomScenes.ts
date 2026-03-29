@@ -47,10 +47,7 @@ export function useCustomScenes() {
   const query = useQuery({
     queryKey: ['custom-scenes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('public_custom_scenes' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_public_custom_scenes');
       if (error) throw error;
       return (data as unknown as CustomScene[]) ?? [];
     },
