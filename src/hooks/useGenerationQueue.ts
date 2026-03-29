@@ -537,23 +537,12 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       return;
     }
 
-    // Attempt cancel with return=representation to verify
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobIdRef.current}`,
-      {
-        method: 'PATCH',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation',
-        },
-        body: JSON.stringify({ status: 'cancelled' }),
-      }
-    );
+    // Cancel via secure RPC (no direct UPDATE policy)
+    const { data: cancelled, error: rpcError } = await supabase.rpc('cancel_queue_job', {
+      p_job_id: jobIdRef.current,
+    });
 
-    const updated = await res.json();
-    if (Array.isArray(updated) && updated.length > 0 && updated[0].status === 'cancelled') {
+    if (!rpcError && cancelled === true) {
       stopPolling();
       setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
       toast.info('Cancelled — credits returned ✨');
