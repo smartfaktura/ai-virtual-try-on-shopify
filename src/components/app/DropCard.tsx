@@ -323,7 +323,7 @@ export function DropCard(props: Props) {
             <div className="flex-shrink-0 grid grid-cols-2 gap-0.5 w-[56px] h-[56px] sm:w-[68px] sm:h-[68px] rounded-xl overflow-hidden">
               {dropImages.slice(0, 4).map((img, i) => (
                 <div key={i} className="bg-muted overflow-hidden">
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(img.url, { quality: 60 })} alt="" className="w-full h-full object-cover" />
                 </div>
               ))}
               {dropImages.length < 4 && Array.from({ length: 4 - Math.min(dropImages.length, 4) }).map((_, i) => (
