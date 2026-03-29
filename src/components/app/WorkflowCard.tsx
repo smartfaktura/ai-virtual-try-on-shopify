@@ -104,7 +104,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowPr
               <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
             ) : (
               <img
-                src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { width: 480, quality: 60 })}
+                src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { quality: 60 })}
                 alt={workflow.name}
                 className="w-full h-full object-cover"
               />
