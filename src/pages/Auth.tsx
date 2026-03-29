@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,13 @@ import { CheckCircle2, ArrowLeft, MailCheck, Mail, AlertCircle } from 'lucide-re
 import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-const authHero = getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 });
+const AUTH_GALLERY_IMAGES = [
+  getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 }),
+  getOptimizedUrl(getLandingAssetUrl('showcase/fashion-camel-coat.png'), { quality: 60 }),
+  getOptimizedUrl(getLandingAssetUrl('showcase/skincare-serum-marble.png'), { quality: 60 }),
+  getOptimizedUrl(getLandingAssetUrl('showcase/home-candle-evening.png'), { quality: 60 }),
+  getOptimizedUrl(getLandingAssetUrl('showcase/food-cocktail-bar.png'), { quality: 60 }),
+];
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -587,20 +593,8 @@ export default function Auth() {
         </div>
       </div>
 
-      {/* Right side - Hero image (hidden on mobile) */}
-      <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative">
-        <img
-          src={authHero}
-          alt="AI-generated product photography showcase"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-        <div className="absolute bottom-8 left-8 right-8">
-          <p className="text-white/90 text-sm font-medium">
-            Generated with VOVV.AI
-          </p>
-        </div>
-      </div>
+      {/* Right side - Rotating gallery (hidden on mobile) */}
+      <AuthHeroGallery />
       {/* Forgot Password Dialog */}
       <Dialog open={showResetDialog} onOpenChange={(open) => { setShowResetDialog(open); if (!open) setResetSent(false); }}>
         <DialogContent className="sm:max-w-md rounded-2xl p-8">
