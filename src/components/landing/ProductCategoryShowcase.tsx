@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CategoryCardProps {
   label: string;
@@ -123,6 +127,8 @@ const CATEGORIES: CategoryCardProps[] = [
 ];
 
 export function ProductCategoryShowcase() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <section className="py-16 lg:py-24 bg-background">
       {/* Inline keyframes for progress bar */}
@@ -150,6 +156,17 @@ export function ProductCategoryShowcase() {
           {CATEGORIES.map((cat) => (
             <CategoryCard key={cat.label} {...cat} />
           ))}
+        </div>
+
+        <div className="mt-10 text-center">
+          <Button
+            size="lg"
+            className="rounded-full px-8 py-5 text-base font-semibold gap-2 shadow-lg shadow-primary/20"
+            onClick={() => navigate(user ? '/app' : '/auth')}
+          >
+            Try It Free
+            <ArrowRight className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </section>
