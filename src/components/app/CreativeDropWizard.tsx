@@ -17,7 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
