@@ -156,7 +156,7 @@ export function AddToDiscoverModal({
       if (sceneId.startsWith('custom-')) {
         try {
           const { data } = await supabase
-            .from('custom_scenes' as any)
+            .from('public_custom_scenes' as any)
             .select('name, image_url')
             .eq('id', sceneId.replace('custom-', ''))
             .limit(1)
@@ -179,7 +179,7 @@ export function AddToDiscoverModal({
     if (!resolvedSceneImageUrl && resolvedSceneName) {
       try {
         const { data } = await supabase
-          .from('custom_scenes' as any)
+          .from('public_custom_scenes' as any)
           .select('image_url')
           .eq('name', resolvedSceneName)
           .limit(1)

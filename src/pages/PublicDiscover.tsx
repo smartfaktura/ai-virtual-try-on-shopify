@@ -120,9 +120,8 @@ export default function PublicDiscover() {
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('custom_scenes' as any)
+        .from('public_custom_scenes' as any)
         .select('*')
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data as unknown as PublicCustomScene[]) ?? [];
