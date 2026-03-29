@@ -1,0 +1,1 @@
+DROP POLICY "Anyone can insert contact submissions" ON public.contact_submissions;
