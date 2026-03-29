@@ -1,62 +1,54 @@
 
 
-# Optimize Remaining Unoptimized Thumbnails
+# Optimize Final Batch of Unoptimized Thumbnails
 
-After auditing all image sources across the app, here are the remaining locations where Supabase storage images are rendered as small thumbnails without `getOptimizedUrl` compression.
+After a thorough audit, here are the remaining files where Supabase storage images (via `getLandingAssetUrl` or `TEAM_MEMBERS`) are rendered without `getOptimizedUrl`.
 
 ---
 
-## Files to update
+## Files to update (8 files, ~15 image locations)
 
-### 1. Team avatar images (~26 files, but focus on high-traffic ones)
+### 1. `src/components/app/WorkflowActivityCard.tsx`
+- **Lines 100, 217, 272**: Team avatars (40px) — `member.avatar` / `team[0].avatar` used in `<AvatarImage>` without optimization (3 locations)
 
-Team avatars (`member.avatar`) are Supabase storage URLs via `getLandingAssetUrl` and are rendered at 6–24px across many components without optimization.
+### 2. `src/components/app/StudioChat.tsx`
+- **Lines 124, 128, 132, 183, 209**: `avatarSophia`, `avatarKenji`, `avatarZara` (28px) — 5 `<AvatarImage>` locations, all raw `getLandingAssetUrl` URLs
 
-**Files:**
-- `src/components/app/DashboardTeamCarousel.tsx` — 80–96px avatars
-- `src/components/app/SidebarTeamAvatar.tsx` — 24–28px avatars
-- `src/components/app/DashboardTipCard.tsx` — 36px avatar
-- `src/components/app/MetricCard.tsx` — 24px avatar
-- `src/components/app/QueuePositionIndicator.tsx` — 24px avatar
-- `src/components/app/MultiProductProgressBanner.tsx` — 24px avatar
-- `src/components/app/WorkflowRequestBanner.tsx` — 28–36px avatars
-- `src/components/app/GlobalGenerationBar.tsx` — 24–28px avatars
-- `src/components/app/LibraryDetailModal.tsx` — 40px avatar (Luna)
-- `src/components/app/video/VideoResultsPanel.tsx` — 28px avatars
-- `src/pages/video/AnimateVideo.tsx` — 28px avatars
-- `src/pages/Perspectives.tsx` — 32px avatar
-- `src/lib/brandedToast.tsx` — 24px avatar
-- `src/components/landing/FinalCTA.tsx` — 40px avatars
+### 3. `src/components/app/ContactFormDialog.tsx`
+- **Lines 98, 102, 106**: `avatarSophia`, `avatarKenji`, `avatarZara` (36px) — 3 `<AvatarImage>` locations
 
-Each: wrap `member.avatar` / `tip.avatar` / equivalent with `getOptimizedUrl(..., { quality: 60 })`.
+### 4. `src/components/app/video/CorrectionConfirmModal.tsx`
+- **Line 42**: `m.avatar` (32px) — team avatars in confirmation modal
 
-### 2. Product/model thumbnails in CreativeDropWizard
-**File: `src/components/app/CreativeDropWizard.tsx`**
-- Line 880: product grid thumbnails — `product.image_url`
-- Line 907: product list thumbnails — `product.image_url`
-- Line 1136: model grid ShimmerImage — `m.image_url`
-- Line 1829: summary product thumbnails (32px) — `p.image_url`
-- Line 1918: summary model avatars (24px) — `model.image_url`
+### 5. `src/components/app/freestyle/FreestyleGallery.tsx`
+- **Lines 127, 181, 264, 306**: `crew.avatar` / `luna.avatar` (40–64px) — 4 `<img>` locations in generating/error/upscaling overlays
 
-### 3. Perspectives page thumbnails
-**File: `src/pages/Perspectives.tsx`**
-- Line 782: library picker grid — `item.imageUrl`
-- Line 848: product picker grid — `product.image_url`
+### 6. `src/components/app/BrandProfileWizard.tsx`
+- **Line 58**: `avatar` (32px) — team tip avatars from `getLandingAssetUrl`
 
-### 4. BrandModels page
-**File: `src/pages/BrandModels.tsx`**
-- Line 700: model card image — `model.image_url`
-- Line 808: locked model card — `m.image_url`
+### 7. `src/components/app/OnboardingChecklist.tsx`
+- **Line 104**: `member.avatar` (48–56px) — step avatars
 
-### 5. VideoGenerate page
-**File: `src/pages/VideoGenerate.tsx`**
-- Line 52: source image thumbnail — `video.source_image_url`
+### 8. `src/pages/About.tsx`
+- **Line 156**: `member.avatar` (80px) — team grid on About page
+
+### 9. `src/pages/Discover.tsx`
+- **Line 177**: `member.avatar` (44px) — rotating avatars
+
+### 10. `src/pages/Freestyle.tsx`
+- **Line 1085**: `TEAM_MEMBERS.find(...).avatar` (20px) — Sophia hint avatar
+
+### 11. `src/pages/video/AnimateVideo.tsx`
+- **Line 688**: `m.avatar` (28px) — TIPS_TEAM avatars (already optimized at line 517 but missed at 688)
+
+### 12. `src/components/app/LibraryImageCard.tsx`
+- **Line 129**: `luna?.avatar` (40px) — upscaling overlay avatar
 
 ---
 
 ## Pattern
 
-All changes follow the same convention used everywhere else:
+Same as all previous batches — import + wrap:
 ```tsx
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
@@ -67,14 +59,11 @@ src={member.avatar}
 src={getOptimizedUrl(member.avatar, { quality: 60 })}
 ```
 
-No width constraints. Quality-only compression to avoid zoom/crop distortion.
+Quality-only compression. No width constraints.
 
 ## Summary
 
-| Category | Files | ~Image locations |
-|---|---|---|
-| Team avatars | 14 files | ~20 locations |
-| Product/model thumbnails | 3 files | ~7 locations |
-| Video source thumbnail | 1 file | 1 location |
-| **Total** | **~18 files** | **~28 locations** |
+| Files | ~Image locations |
+|---|---|
+| 12 files | ~22 locations |
 
