@@ -155,15 +155,11 @@ export function AddToDiscoverModal({
     if (sceneId && (!resolvedSceneName || !resolvedSceneImageUrl)) {
       if (sceneId.startsWith('custom-')) {
         try {
-          const { data } = await supabase
-            .from('public_custom_scenes' as any)
-            .select('name, image_url')
-            .eq('id', sceneId.replace('custom-', ''))
-            .limit(1)
-            .single();
-          if (data) {
-            resolvedSceneName = resolvedSceneName || (data as any).name;
-            resolvedSceneImageUrl = resolvedSceneImageUrl || (data as any).image_url;
+          const { data: allScenes } = await supabase.rpc('get_public_custom_scenes');
+          const match = (allScenes as any[] ?? []).find((s: any) => s.id === sceneId.replace('custom-', ''));
+          if (match) {
+            resolvedSceneName = resolvedSceneName || match.name;
+            resolvedSceneImageUrl = resolvedSceneImageUrl || match.image_url;
           }
         } catch {}
       } else {
@@ -178,13 +174,9 @@ export function AddToDiscoverModal({
     // Fallback: resolve by name if we have names but no images
     if (!resolvedSceneImageUrl && resolvedSceneName) {
       try {
-        const { data } = await supabase
-          .from('public_custom_scenes' as any)
-          .select('image_url')
-          .eq('name', resolvedSceneName)
-          .limit(1)
-          .single();
-        if (data) resolvedSceneImageUrl = (data as any).image_url;
+        const { data: allScenes2 } = await supabase.rpc('get_public_custom_scenes');
+        const match2 = (allScenes2 as any[] ?? []).find((s: any) => s.name === resolvedSceneName);
+        if (match2) resolvedSceneImageUrl = match2.image_url;
       } catch {}
     }
     if (!resolvedModelImageUrl && resolvedModelName) {

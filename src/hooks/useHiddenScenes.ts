@@ -11,9 +11,7 @@ export function useHiddenScenes() {
   const { data: hiddenIds = [], isLoading } = useQuery({
     queryKey: ['hidden-scenes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hidden_scene_ids' as any)
-        .select('scene_id');
+      const { data, error } = await supabase.rpc('get_hidden_scene_ids');
       if (error) throw error;
       return (data as any[]).map((r: any) => r.scene_id as string);
     },
