@@ -2,10 +2,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PackageOpen } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const imgFashion = getLandingAssetUrl('showcase/fashion-blazer-golden.jpg');
-const imgSkincare = getLandingAssetUrl('showcase/skincare-serum-marble.jpg');
-const imgFood = getLandingAssetUrl('showcase/food-coffee-artisan.jpg');
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
+const imgFashion = s('showcase/fashion-blazer-golden.jpg');
+const imgSkincare = s('showcase/skincare-serum-marble.jpg');
+const imgFood = s('showcase/food-coffee-artisan.jpg');
 
 interface TeamMemberDisplay {
   name: string;

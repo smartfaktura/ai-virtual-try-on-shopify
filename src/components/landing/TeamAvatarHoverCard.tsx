@@ -2,6 +2,7 @@ import { useRef, useCallback } from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import type { TeamMember } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface TeamAvatarHoverCardProps {
   member: TeamMember;
@@ -51,7 +52,7 @@ export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset
           <video
             ref={videoRef}
             src={member.videoUrl}
-            poster={member.avatar}
+            poster={getOptimizedUrl(member.avatar, { quality: 60 })}
             muted
             loop
             playsInline

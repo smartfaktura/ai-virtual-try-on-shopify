@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ModelCard {
   name: string;
   image: string;
 }
 
-const m = (name: string, file: string): ModelCard => ({ name, image: getLandingAssetUrl(`models/${file}`) });
+const m = (name: string, file: string): ModelCard => ({ name, image: getOptimizedUrl(getLandingAssetUrl(`models/${file}`), { quality: 60 }) });
 
 const ROW_1: ModelCard[] = [
   m('Freya', 'model-female-average-nordic.jpg'),

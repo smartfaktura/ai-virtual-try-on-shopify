@@ -198,7 +198,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             {productQueue.map(p => (
               <div key={p.id} className="flex-shrink-0 w-[72px]">
                 <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                  <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                  <img src={getOptimizedUrl(p.images[0]?.url || '/placeholder.svg', { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
                 </div>
                 <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
               </div>
@@ -207,7 +207,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
         ) : (
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-              <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg', { quality: 60 })} alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>

@@ -2,25 +2,28 @@ import { CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Template } from '@/types';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
 const templateImages: Record<string, string> = {
-  'tpl_001': getLandingAssetUrl('templates/clothing-studio.jpg'),
-  'tpl_002': getLandingAssetUrl('templates/clothing-streetwear.jpg'),
-  'tpl_003': getLandingAssetUrl('templates/clothing-flatlay.jpg'),
-  'tpl_004': getLandingAssetUrl('templates/cosmetics-luxury.jpg'),
-  'tpl_005': getLandingAssetUrl('templates/cosmetics-water.jpg'),
-  'tpl_006': getLandingAssetUrl('templates/cosmetics-pastel.jpg'),
-  'tpl_007': getLandingAssetUrl('templates/food-commercial.jpg'),
-  'tpl_008': getLandingAssetUrl('templates/food-rustic.jpg'),
-  'tpl_009': getLandingAssetUrl('templates/food-packaging.jpg'),
-  'tpl_010': getLandingAssetUrl('templates/home-japandi.jpg'),
-  'tpl_011': getLandingAssetUrl('templates/home-warm.jpg'),
-  'tpl_012': getLandingAssetUrl('templates/home-concrete.jpg'),
-  'tpl_013': getLandingAssetUrl('templates/supplements-clinical.jpg'),
-  'tpl_014': getLandingAssetUrl('templates/supplements-athletic.jpg'),
-  'tpl_015': getLandingAssetUrl('templates/supplements-luxury.jpg'),
-  'tpl_016': getLandingAssetUrl('templates/universal-clean.jpg'),
-  'tpl_017': getLandingAssetUrl('templates/universal-gradient.jpg'),
+  'tpl_001': s('templates/clothing-studio.jpg'),
+  'tpl_002': s('templates/clothing-streetwear.jpg'),
+  'tpl_003': s('templates/clothing-flatlay.jpg'),
+  'tpl_004': s('templates/cosmetics-luxury.jpg'),
+  'tpl_005': s('templates/cosmetics-water.jpg'),
+  'tpl_006': s('templates/cosmetics-pastel.jpg'),
+  'tpl_007': s('templates/food-commercial.jpg'),
+  'tpl_008': s('templates/food-rustic.jpg'),
+  'tpl_009': s('templates/food-packaging.jpg'),
+  'tpl_010': s('templates/home-japandi.jpg'),
+  'tpl_011': s('templates/home-warm.jpg'),
+  'tpl_012': s('templates/home-concrete.jpg'),
+  'tpl_013': s('templates/supplements-clinical.jpg'),
+  'tpl_014': s('templates/supplements-athletic.jpg'),
+  'tpl_015': s('templates/supplements-luxury.jpg'),
+  'tpl_016': s('templates/universal-clean.jpg'),
+  'tpl_017': s('templates/universal-gradient.jpg'),
 };
 
 export function getTemplateImage(templateId: string): string | undefined {
