@@ -48,7 +48,7 @@ export function LandingPricing() {
             >
               Annual
               <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                −20%
+                -20%
               </span>
             </button>
           </div>
