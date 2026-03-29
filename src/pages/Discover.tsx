@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Compass, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { PageHeader } from '@/components/app/PageHeader';
 import { DiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
 
@@ -174,7 +175,7 @@ function DiscoverLoadingState() {
                   : 'border-border/40 opacity-50 grayscale-[30%]'
               )}
             >
-              <AvatarImage src={member.avatar} alt={member.name} />
+              <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
               <AvatarFallback className="text-xs">{member.name[0]}</AvatarFallback>
             </Avatar>
           </div>

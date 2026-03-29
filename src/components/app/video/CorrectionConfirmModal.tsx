@@ -3,6 +3,7 @@ import { Zap, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const CONFIRM_TEAM = TEAM_MEMBERS.filter(m => ['Sophia', 'Kenji', 'Zara'].includes(m.name));
 
@@ -39,7 +40,7 @@ export function CorrectionConfirmModal({
         <div className="flex items-center gap-3 py-3">
           <div className="flex -space-x-2 shrink-0">
             {CONFIRM_TEAM.map(m => (
-              <img key={m.name} src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full border-2 border-background object-cover" />
+              <img key={m.name} src={getOptimizedUrl(m.avatar, { quality: 60 })} alt={m.name} className="w-8 h-8 rounded-full border-2 border-background object-cover" />
             ))}
           </div>
           <p className="text-xs text-muted-foreground">

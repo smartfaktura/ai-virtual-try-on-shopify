@@ -3,6 +3,7 @@ import { Users, Lightbulb, Heart, Zap, Linkedin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 import founderImg from '@/assets/founder-tomas.jpg';
@@ -153,7 +154,7 @@ export default function About() {
               <TeamAvatarHoverCard key={member.name} member={member} side="top">
                 <div className="text-center group cursor-pointer">
                   <div className="w-20 h-20 mx-auto rounded-full overflow-hidden mb-3 ring-2 ring-border group-hover:ring-primary/50 transition-all">
-                    <img src={member.avatar} alt={member.fullName} className="w-full h-full object-cover" />
+                    <img src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.fullName} className="w-full h-full object-cover" />
                   </div>
                   <h4 className="text-sm font-medium text-foreground">{member.fullName}</h4>
                   <p className="text-xs text-muted-foreground">{member.role}</p>

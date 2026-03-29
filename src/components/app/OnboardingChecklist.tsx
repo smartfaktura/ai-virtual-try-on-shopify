@@ -3,6 +3,7 @@ import { Check, Upload, Palette, Sparkles, Wand2, ArrowRight } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const findMember = (name: string) => TEAM_MEMBERS.find(m => m.name === name)!;
 
@@ -101,7 +102,7 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount,
                     <button className="focus:outline-none flex-shrink-0">
                       <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-border">
                         <img
-                          src={member.avatar}
+                          src={getOptimizedUrl(member.avatar, { quality: 60 })}
                           alt={member.name}
                           className="w-full h-full object-cover"
                           loading="lazy"
