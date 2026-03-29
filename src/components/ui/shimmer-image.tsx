@@ -67,6 +67,7 @@ export function ShimmerImage({
         src={src}
         alt={alt}
         loading={rest.loading ?? 'lazy'}
+        decoding="async"
         className={cn(
           'transition-opacity duration-300',
           loaded ? 'opacity-100' : 'opacity-0',
