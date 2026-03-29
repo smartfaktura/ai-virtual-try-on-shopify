@@ -1,0 +1,1 @@
+DROP POLICY "Anyone can view generated videos" ON storage.objects;
