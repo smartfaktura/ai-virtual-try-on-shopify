@@ -1,0 +1,1 @@
+DROP POLICY "Generation inputs are publicly readable" ON storage.objects;
