@@ -1,29 +1,28 @@
 
 
-# Fix: Attach Missing Billing Protection Trigger
+# Fix: Restrict `contact_submissions` INSERT to Block Anonymous Abuse
 
 ## Analysis
 
-The `protect_billing_fields()` function already exists in the database and correctly blocks client-side modifications to `credits_balance`, `plan`, `subscription_status`, `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `billing_interval`, and `credits_renewed_at`.
+The `contact_submissions` table has an INSERT policy with `{public}` role and `WITH CHECK: true`, meaning anyone (including anonymous/unauthenticated users) can insert rows directly via the Supabase client, bypassing the edge function entirely. This enables spam and data poisoning.
 
-However, the database shows **no triggers are attached**. The function exists but is never invoked — meaning the protection is inactive.
+However, all legitimate inserts go through the `send-contact` edge function, which uses `service_role` (bypasses RLS). No client code inserts directly into this table.
 
 ## Change (1 item)
 
-### Create the BEFORE UPDATE trigger on `profiles`
+### Replace the permissive INSERT policy
 
-Run a migration to attach the existing function as a trigger:
+Drop the current open INSERT policy and replace it with one restricted to `service_role` only (or simply drop it, since `service_role` bypasses RLS). Dropping it is cleanest:
 
 ```sql
-CREATE TRIGGER trg_protect_billing_fields
-BEFORE UPDATE ON public.profiles
-FOR EACH ROW
-EXECUTE FUNCTION public.protect_billing_fields();
+DROP POLICY "Anyone can insert contact submissions" ON public.contact_submissions;
 ```
 
-No code changes needed — all edge functions already use `service_role` for billing updates, which the function explicitly allows through.
+This means only the `send-contact` edge function (via `service_role`) can insert. Direct client-side inserts from anonymous or authenticated users will be blocked.
 
 | # | Action | Detail |
 |---|---|---|
-| 1 | Database migration | Attach `protect_billing_fields()` as a `BEFORE UPDATE` trigger on `profiles` |
+| 1 | Database migration | Drop the open INSERT policy on `contact_submissions` |
+
+No code changes needed — the edge function uses `service_role` which bypasses RLS.
 
