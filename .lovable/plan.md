@@ -1,29 +1,24 @@
 
 
-# Optimize Product Category Showcase — Prefix-Based + Fast Loading
+# Dynamic Auth Gallery from Storage
 
-## Problems
-1. Code lists from subfolders (`showcase/fashion/`) but images are flat in `showcase/` with prefixes like `fashion-`, `skincare-`, `food-`, `home-`
-2. All images render as `<img>` tags simultaneously (even unseen ones), wasting bandwidth
-3. No width optimization — full-size images loaded for card-sized display
+## What changes
 
-## Plan
+Update `AuthHeroGallery` in `src/pages/Auth.tsx` to dynamically list all files in the `landing-assets` bucket under the `auth/` prefix, then shuffle and rotate through them — instead of using a hardcoded array.
 
-| # | Change | Detail |
+## How it works
+
+1. On mount, call `supabase.storage.from('landing-assets').list('auth')` to get all files
+2. Build public URLs for each file using the storage base URL
+3. Shuffle the array randomly
+4. Use the existing crossfade rotation logic (every 5s) on the dynamic list
+5. Keep a fallback to the current hardcoded images if the fetch fails or returns empty
+
+| # | Action | Detail |
 |---|--------|--------|
-| 1 | **Single fetch, prefix filter** | One `list('showcase')` call, group files by prefix (`fashion-`, `skincare-`, `food-`, `home-`) |
-| 2 | **Only load visible + next image** | Instead of rendering all `<img>` tags, only mount the current image and preload the next one — avoids downloading 15+ images at once |
-| 3 | **Add width param** | Pass `width: 800` to `getOptimizedUrl` — cards are ~300px wide, 800px covers 2x retina comfortably |
-| 4 | **Preload first image per category** | Eagerly load index-0 image so initial paint is instant; lazy-load the rest |
+| 1 | Replace hardcoded `AUTH_GALLERY_IMAGES` array | Fetch file list from `landing-assets/auth/` on mount |
+| 2 | Add shuffle utility | Randomize order each page load |
+| 3 | Keep fallback | Use current images if bucket is empty or fetch fails |
 
-### Category → prefix mapping
-- Fashion & Apparel → `fashion-`
-- Beauty → `skincare-`
-- Food & Drinks → `food-`
-- Home & Living → `home-`
-
-### File changed
-- `src/components/landing/ProductCategoryShowcase.tsx`
-
-Result: faster initial load (fewer images, smaller files), same visual experience, and you just drop new images into `showcase/` with the right prefix — no subfolders needed.
+**Your workflow after this:** Just upload images to `landing-assets → auth/` folder in Cloud Storage. They'll automatically appear in the rotating gallery on next page load. No code changes needed.
 
