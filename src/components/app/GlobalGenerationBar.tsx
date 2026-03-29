@@ -39,7 +39,7 @@ function getTeamMemberForJob(group: BatchGroup): TeamMember {
 function getActionVerb(group: BatchGroup): string {
   if (group.isCreativeDrop) return 'creating your drop';
   switch (group.job_type) {
-    case 'video': return 'animating';
+    case 'video': return 'creating your video';
     case 'freestyle': return 'shooting';
     case 'upscale': return 'upscaling';
     case 'tryon': return 'styling';
@@ -278,7 +278,7 @@ export function GlobalGenerationBar() {
                         <p className="text-xs font-semibold truncate text-foreground">
                           {isUpscale
                             ? `${member.name} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
-                            : group.job_type === 'video' ? `${member.name} is animating`
+                            : group.job_type === 'video' ? `${member.name} is creating your video`
                             : group.isCreativeDrop ? `${member.name} is creating your drop`
                             : group.job_type === 'freestyle' ? `${member.name} is shooting`
                             : group.job_type === 'tryon' ? `${member.name} is styling`
@@ -341,14 +341,16 @@ export function GlobalGenerationBar() {
                         variant="ghost"
                         className="shrink-0 gap-1 h-6 text-[11px] px-2"
                         onClick={() => {
-                          if (location.pathname.startsWith('/app/library')) {
+                          if (group.job_type === 'video') {
+                            navigate('/app/video');
+                          } else if (location.pathname.startsWith('/app/library')) {
                             window.dispatchEvent(new CustomEvent('library:focus-grid'));
                           } else {
                             navigate('/app/library');
                           }
                         }}
                       >
-                        View
+                        {group.job_type === 'video' ? 'View in Videos' : 'View'}
                         <ArrowRight className="w-3 h-3" />
                       </Button>
                       <button
