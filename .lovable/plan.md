@@ -1,28 +1,26 @@
 
 
-# Fix: Restrict `contact_submissions` INSERT to Block Anonymous Abuse
+# Fix: Remove Public SELECT Policy on `generation-inputs` Bucket
 
 ## Analysis
 
-The `contact_submissions` table has an INSERT policy with `{public}` role and `WITH CHECK: true`, meaning anyone (including anonymous/unauthenticated users) can insert rows directly via the Supabase client, bypassing the edge function entirely. This enables spam and data poisoning.
+The `generation-inputs` storage bucket is correctly marked private, and the client code already uses signed URLs (via `createSignedUrl` in `Freestyle.tsx` and the `signedUrl.ts` helper). However, a storage policy named **"Generation inputs are publicly readable"** grants `SELECT` to the `public` role with no ownership check, effectively making every user's uploaded inputs readable by anyone.
 
-However, all legitimate inserts go through the `send-contact` edge function, which uses `service_role` (bypasses RLS). No client code inserts directly into this table.
+A separate policy **"Users can view own generation inputs"** already exists and correctly scopes reads by folder ownership (`auth.uid()` prefix matching).
 
 ## Change (1 item)
 
-### Replace the permissive INSERT policy
-
-Drop the current open INSERT policy and replace it with one restricted to `service_role` only (or simply drop it, since `service_role` bypasses RLS). Dropping it is cleanest:
+### Drop the permissive public SELECT storage policy
 
 ```sql
-DROP POLICY "Anyone can insert contact submissions" ON public.contact_submissions;
+DROP POLICY "Generation inputs are publicly readable" ON storage.objects;
 ```
 
-This means only the `send-contact` edge function (via `service_role`) can insert. Direct client-side inserts from anonymous or authenticated users will be blocked.
+The ownership-scoped policy remains in place. Signed URLs (already used by all client code) will continue to work since they are generated server-side.
 
 | # | Action | Detail |
 |---|---|---|
-| 1 | Database migration | Drop the open INSERT policy on `contact_submissions` |
+| 1 | Database migration | Drop the `"Generation inputs are publicly readable"` policy on `storage.objects` |
 
-No code changes needed — the edge function uses `service_role` which bypasses RLS.
+No code changes needed.
 
