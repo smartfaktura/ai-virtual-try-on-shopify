@@ -29,6 +29,7 @@ import {
 
 /* ── Plan gate upgrade prompt ── */
 function UpgradeHero() {
+  const { openBuyModal } = useCredits();
   return (
     <div className="flex flex-col items-center text-center py-20 px-4 max-w-2xl mx-auto gap-10">
       <div className="space-y-2">
@@ -60,7 +61,7 @@ function UpgradeHero() {
         ))}
       </div>
 
-      <Button size="lg" className="gap-2 px-8" onClick={() => window.location.href = '/pricing'}>
+      <Button size="lg" className="gap-2 px-8" onClick={openBuyModal}>
         <Crown className="h-4 w-4" /> Upgrade to Growth
       </Button>
     </div>
