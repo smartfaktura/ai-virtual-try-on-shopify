@@ -214,7 +214,8 @@ export function HeroSection() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
           <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight leading-[1.1] mb-6">
-            Your AI Photography Team.
+            <span className="hidden sm:inline">Use Your AI Product Visual Team.</span>
+            <span className="sm:hidden">Use Your AI Visual Team.</span>
             <br />
             <span className="text-primary inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
               {typedText}
@@ -222,13 +223,11 @@ export function HeroSection() {
             </span>
           </h1>
 
-          
-
           <p className="hidden sm:block text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
+            Upload a product photo and create high-quality visuals for ads, product listings, and campaigns in seconds.
           </p>
           <p className="sm:hidden text-[15px] text-muted-foreground max-w-xs mx-auto mb-8 leading-relaxed">
-            Upload a product photo — get ∞ brand-ready visuals in seconds.
+            Upload one product photo, get ∞ brand ready visuals in seconds.
           </p>
 
           {/* CTAs */}
