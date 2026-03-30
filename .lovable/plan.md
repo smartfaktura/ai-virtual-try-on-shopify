@@ -1,49 +1,40 @@
 
 
-## Fix: Progress Banner Shows "0 images" and "Almost there" Instantly + Workflow Card Per-Image Estimates
+## Fix: Group Batch Workflow Jobs in Recent Creations
 
-### Problems
+### Problem
 
-1. **"Almost there" shows at 3 seconds**: In `MultiProductProgressBanner`, `totalEstSeconds = totalImages * 8`. When `totalImages = 0` (jobs not yet enqueued), `ratio = elapsed / 0 = Infinity`, immediately triggering the overtime message.
+Workflow batches are split into individual 1-image jobs for parallel processing. The "Recent Creations" query fetches the 5 most recent `generation_jobs` rows individually, so a 5-image try-on batch shows as 5 separate "Virtual Try-On Set" cards with "1 imgs" each, instead of 1 grouped card with 5 images and mini-thumbnails.
 
-2. **"Generating 0 images" / "Est. ~0 sec for 0 images"**: `totalExpectedImages` is passed as `multiProductJobIds.size` which is 0 until the enqueue loop populates it. The banner renders before any jobs exist.
+### Root Cause
 
-3. **Workflow Activity Card shows per-image estimate** ("~60-120s/img") instead of total batch estimate (e.g., "est. ~48-96 min total").
+The query at line 201 in `Workflows.tsx` uses `.limit(5)` on individual jobs. There's no `batch_id` column on `generation_jobs` — it only exists in the `generation_queue.payload` JSON. Jobs from the same batch share the same `workflow_id`, `product_id`, and are created within seconds of each other.
 
-4. **`estimatePerImage = 8` is wrong for try-on**: Try-on jobs take 60-120s each, not 8s. The estimate is wildly inaccurate.
+### Solution
 
-### Plan
+Group completed `generation_jobs` by `workflow_id + product_id` within a 60-second time window (same pattern already used for Picture Perspectives grouping). This merges batch jobs into single cards with all their result images.
 
-#### 1. Fix MultiProductProgressBanner zero-state
+### Changes
 
-**File**: `src/components/app/MultiProductProgressBanner.tsx`
+**File: `src/pages/Workflows.tsx`**
 
-- Guard against `totalImages === 0`: show a "Preparing batch…" message instead of "Generating 0 images"
-- Use `Math.max(totalEstSeconds, 1)` in the ratio calculation to prevent division by zero
-- Detect job type (try-on vs standard) via a new `isProModel` prop and use 45s estimate for pro, 8s for standard
-- Don't show overtime message until at least 30 seconds have passed (add `elapsed > 30` guard)
+1. Increase the raw fetch limit from 5 → 50 to capture all jobs in recent batches
+2. After fetching, group rows by `(workflow_id, product_id)` where `created_at` timestamps are within 60 seconds of each other
+3. Merge each group's `results` arrays into a single `RecentJob` entry
+4. Slice to 8 grouped entries for display
 
-#### 2. Fix WorkflowActivityCard to show total batch estimate
+```text
+Before:  5 rows → 5 cards (1 img each)
+After:   50 rows → group by batch proximity → ~3-5 cards (multiple imgs each)
+```
 
-**File**: `src/components/app/WorkflowActivityCard.tsx`
-
-- Replace per-image estimate text (`~60-120s/img`) with total batch estimate
-- Calculate: `const estPerImg = isProModel ? 90 : 22; const totalEst = group.totalImageCount * estPerImg;`
-- Display: `est. ~${formatRange(totalEst)} total` (e.g., "est. ~48-96 min total")
-- Show elapsed time relative to total batch, not individual image
-
-#### 3. Pass `isProModel` to MultiProductProgressBanner
-
-**File**: `src/pages/Generate.tsx`
-
-- Add `isProModel` prop based on workflow quality or job type (try-on detection)
-- Already has the data: `isTryOn` and quality settings are available in the generation flow
-
-### Files changed
+**Grouping logic** (same pattern as the existing perspectives grouper at line 245):
+- Sort by `created_at` descending
+- Walk rows; if same `workflow_id + product_id` and within 60s of current group's timestamp → merge
+- Otherwise start a new group
+- Each group becomes one `RecentJob` with combined results
 
 | File | Change |
 |------|--------|
-| `src/components/app/MultiProductProgressBanner.tsx` | Guard zero-state; fix estimate per image for pro/try-on; prevent instant overtime message |
-| `src/components/app/WorkflowActivityCard.tsx` | Show total batch estimate instead of per-image; format as minutes for large batches |
-| `src/pages/Generate.tsx` | Pass `isProModel` prop to banner |
+| `src/pages/Workflows.tsx` | Group `generation_jobs` by batch proximity in the `workflow-recent-jobs` query; increase raw limit to 50; output grouped entries |
 
