@@ -12,8 +12,6 @@ export interface FeaturedItem {
 }
 
 export function useFeaturedItems() {
-  const { user } = useAuth();
-
   const query = useQuery({
     queryKey: ['featured-items'],
     staleTime: 5 * 60 * 1000,
@@ -22,7 +20,6 @@ export function useFeaturedItems() {
       if (error) throw error;
       return (data as unknown as FeaturedItem[]) ?? [];
     },
-    enabled: !!user,
   });
 
   const featuredMap = new Map<string, FeaturedItem>();
