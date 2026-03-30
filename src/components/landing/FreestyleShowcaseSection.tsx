@@ -280,6 +280,7 @@ export function FreestyleShowcaseSection() {
                 <ShimmerImage
                   src={card.src}
                   alt={card.label}
+                  loading="lazy"
                   aspectRatio="4/5"
                   className="w-full h-full object-cover"
                 />

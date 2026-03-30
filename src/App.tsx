@@ -92,7 +92,6 @@ const App = () => {
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
     <AuthProvider>
-      <AdminViewProvider>
         <BrowserRouter>
           <ScrollToTop />
           <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
@@ -149,6 +148,7 @@ const App = () => {
               path="/app/*"
               element={
                 <ProtectedRoute>
+                  <AdminViewProvider>
                   <CreditProvider>
                     <AppShell>
                       <Suspense fallback={<AppShellLoading />}>
@@ -191,6 +191,7 @@ const App = () => {
                     </AppShell>
                     <BuyCreditsModal />
                   </CreditProvider>
+                  </AdminViewProvider>
                 </ProtectedRoute>
               }
             />
@@ -199,7 +200,6 @@ const App = () => {
           </Routes>
           </Suspense>
         </BrowserRouter>
-      </AdminViewProvider>
     </AuthProvider>
   </QueryClientProvider>
   </ErrorBoundary>

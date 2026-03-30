@@ -61,6 +61,7 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { item
               <ShimmerImage
                 src={env.image}
                 alt={env.name}
+                loading="lazy"
                 className="w-full h-full object-cover"
                 decoding="async"
                 aspectRatio="3/4"

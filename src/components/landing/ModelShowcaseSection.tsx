@@ -74,6 +74,7 @@ function ModelCardItem({ model }: { model: ModelCard }) {
         <ShimmerImage
           src={model.image}
           alt={model.name}
+          loading="lazy"
           className="w-full h-full object-cover object-top"
           aspectRatio="3/4"
           onError={() => setHidden(true)}
