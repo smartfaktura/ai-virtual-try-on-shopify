@@ -61,7 +61,7 @@ function UpgradeHero() {
         ))}
       </div>
 
-      <Button size="lg" className="gap-2 px-8" onClick={() => window.location.href = '/pricing'}>
+      <Button size="lg" className="gap-2 px-8" onClick={openBuyModal}>
         <Crown className="h-4 w-4" /> Upgrade to Growth
       </Button>
     </div>
