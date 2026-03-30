@@ -1,32 +1,19 @@
 
 
-## Fix Email Sending + Mobile OTP Layout
+## Fix: Dot Indicators Not Tracking Scroll Position
 
-### Issue 1: Auth Emails Not Sending
+### Problem
+The dot indicators in the hero carousel don't update when scrolling because the scroll-to-dot-index calculation uses a hardcoded `itemWidth = 196` (line 186), but actual items are `155px wide + 10px gap = 165px`. The dot click handler also uses a different wrong value (`168`, line 336).
 
-**Root cause:** The `auth-email-hook` uses the old direct-send pattern (`@lovable.dev/email-js` + `callback_url`) and has `SENDER_DOMAIN = "vovv.ai"` (root domain). The verified sender domain is `notify.vovv.ai`. The email API rejects sends because no verified domain matches `vovv.ai`.
+### Fix
 
-**Fix:** Re-scaffold the auth email templates using the managed tool (auto-detects `notify.vovv.ai` as sender domain and upgrades to the queue-based pattern with retry safety). Then re-apply the existing VOVV.AI brand styling (Inter font, slate colors, `notifications@vovv.ai` as from address) and redeploy.
+**File: `src/components/landing/HeroSection.tsx`**
 
-The from address will be `VOVV.AI <notifications@vovv.ai>` as requested.
+1. **Line 186** — Change `itemWidth` from `196` to `165` (matching `w-[155px]` + `gap-2.5` = 10px)
+2. **Line 336** — Change dot click scroll offset from `i * 168` to `i * 165`
 
-### Issue 2: Mobile OTP Still Clipping
+Both values must match the real rendered item width for dot tracking and dot-click navigation to work correctly.
 
-The 8 OTP slots at `w-10` (40px) + gaps + separator dash still exceed ~360px viewports.
-
-**Fix:**
-- `src/components/ui/input-otp.tsx` — Reduce mobile slots to `h-9 w-9` (36px)
-- `src/pages/Auth.tsx` — Reduce separator padding from `px-2` to `px-1` on mobile
-
-### Steps
-1. Re-scaffold auth email templates (auto-fixes sender domain + queue upgrade)
-2. Apply VOVV.AI brand styling to all 6 templates (Inter font, slate-900 headings, slate-500 body text, slate-800 buttons, "notifications@vovv.ai" from address)
-3. Deploy `auth-email-hook`
-4. Reduce OTP slot size and separator padding for mobile
-
-### Files affected
-- `supabase/functions/auth-email-hook/index.ts` (re-scaffolded)
-- `supabase/functions/_shared/email-templates/*.tsx` (re-scaffolded + branded)
-- `src/components/ui/input-otp.tsx` — smaller mobile slots
-- `src/pages/Auth.tsx` — tighter separator
+### Files to edit
+- `src/components/landing/HeroSection.tsx` (2 line changes)
 
