@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, XCircle, CheckCircle2, Clock, X, Sparkles } from 'lucide-react';
@@ -11,20 +11,18 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { BatchGroup } from '@/lib/batchGrouping';
 
-interface WorkflowActivityCardProps {
-  batchGroups: BatchGroup[];
-  completedGroups?: BatchGroup[];
-  failedGroups?: BatchGroup[];
-  onCancelJob?: (jobId: string, creditsReserved: number) => void;
-  onDismiss?: (groupKey: string) => void;
-}
-
 function elapsedLabel(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return `${seconds}s`;
   const mins = Math.floor(seconds / 60);
   if (mins < 60) return `${mins}m ${seconds % 60}s`;
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+}
+
+/** Self-ticking elapsed timer — isolates 1s re-renders to just this text node */
+function ElapsedTimer({ startedAt, enabled }: { startedAt: string; enabled: boolean }) {
+  useVisibilityTick(1000, enabled);
+  return <>{elapsedLabel(startedAt)}</>;
 }
 
 function isStuck(dateStr: string | null): boolean {
@@ -53,7 +51,15 @@ function uniqueProductCount(group: BatchGroup): number {
   return names.size;
 }
 
-function ActiveGroupCard({
+interface WorkflowActivityCardProps {
+  batchGroups: BatchGroup[];
+  completedGroups?: BatchGroup[];
+  failedGroups?: BatchGroup[];
+  onCancelJob?: (jobId: string, creditsReserved: number) => void;
+  onDismiss?: (groupKey: string) => void;
+}
+
+const ActiveGroupCard = React.memo(function ActiveGroupCard({
   group,
   onCancelJob,
 }: {
@@ -65,7 +71,6 @@ function ActiveGroupCard({
   const rawPct = hasMultipleImages ? Math.round((group.generatedImageCount / group.totalImageCount) * 100) : 0;
   const isProcessing = group.processingCount > 0;
   const startedAt = group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at;
-  const elapsed = elapsedLabel(startedAt);
 
   // Time-based floor: crawl to 15% max so bar never shows 0%
   const elapsedSec = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
@@ -107,7 +112,7 @@ function ActiveGroupCard({
                 {team.map((member, i) => (
                   <Avatar
                     key={member.name}
-                    className={`w-10 h-10 absolute inset-0 transition-opacity duration-500 ${
+                    className={`w-10 h-10 absolute inset-0 transition-opacity duration-500 will-change-[opacity] ${
                       i === msgIdx % team.length ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
@@ -129,11 +134,11 @@ function ActiveGroupCard({
               </p>
               <p className="text-xs text-muted-foreground">
                 {hasMultipleImages ? (
-                  <>{group.generatedImageCount}/{group.totalImageCount} {unitLabel} · {elapsed}</>
+                  <>{group.generatedImageCount}/{group.totalImageCount} {unitLabel} · <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 ) : isProcessing ? (
-                  <>Generating… {elapsed}</>
+                  <>Generating… <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 ) : (
-                  <>Queued · {elapsed}</>
+                  <>Queued · <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 )}
                 {isProcessing && (
                   <span className="hidden sm:inline text-muted-foreground/60">
@@ -190,7 +195,16 @@ function ActiveGroupCard({
       </CardContent>
     </Card>
   );
-}
+}, (prev, next) => {
+  const pg = prev.group;
+  const ng = next.group;
+  return pg.key === ng.key
+    && pg.generatedImageCount === ng.generatedImageCount
+    && pg.processingCount === ng.processingCount
+    && pg.queuedCount === ng.queuedCount
+    && pg.totalImageCount === ng.totalImageCount
+    && pg.failedCount === ng.failedCount;
+});
 
 export function WorkflowActivityCard({
   batchGroups,
@@ -200,8 +214,6 @@ export function WorkflowActivityCard({
   onDismiss,
 }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
-  const hasActiveGroups = batchGroups.some((g) => g.processingCount > 0 || g.queuedCount > 0);
-  useVisibilityTick(1000, hasActiveGroups);
 
   const hasContent = batchGroups.length > 0 || completedGroups.length > 0 || failedGroups.length > 0;
   if (!hasContent) return null;
