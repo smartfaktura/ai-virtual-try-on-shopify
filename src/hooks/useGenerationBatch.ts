@@ -184,9 +184,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
     toast.info(`Splitting into ${chunks.length} generation batch${chunks.length > 1 ? 'es' : ''}...`);
 
     const batchId = crypto.randomUUID();
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const { data: session } = await supabase.auth.getSession();
-    const token = session?.session?.access_token;
+    const token = await getAuthToken();
 
     if (!token) {
       toast.error('Please sign in first');
@@ -198,66 +196,51 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
     const jobIds: string[] = [];
     let firstNewBalance: number | null = null;
 
-    // Enqueue chunks sequentially to avoid credit race conditions
+    // Enqueue chunks sequentially with pacing + retry
     for (let c = 0; c < chunks.length; c++) {
       const chunk = chunks[c];
       const chunkImageCount = chunk.length * angleMultiplier;
 
-      // Build per-chunk payload with only this chunk's variation indices
       const chunkPayload = {
         ...payload,
         selected_variations: chunk,
         batch_id: batchId,
       };
 
-      try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            jobType: 'workflow',
-            payload: chunkPayload,
-            imageCount: chunkImageCount,
-            quality,
-            hasModel: params.hasModel ?? false,
-            hasScene: params.hasScene ?? false,
-          }),
-        });
+      await paceDelay(c);
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+      const result = await enqueueWithRetry(
+        {
+          jobType: 'workflow',
+          payload: chunkPayload,
+          imageCount: chunkImageCount,
+          quality,
+          hasModel: params.hasModel ?? false,
+          hasScene: params.hasScene ?? false,
+          skipWake: true,
+        },
+        token,
+      );
 
-          if (response.status === 429) {
-            const msg = String(errorData.error || '');
-            if (msg.includes('concurrent')) {
-              toast.error(`Concurrent generation limit reached. ${c} of ${chunks.length} batches queued.`);
-            } else {
-              toast.error(errorData.message || 'Rate limit exceeded.');
-            }
-            break;
-          }
-
-          if (response.status === 402) {
-            toast.error(`Insufficient credits. ${c} of ${chunks.length} batches queued.`);
-            break;
-          }
-
-          toast.error(errorData.error || `Failed to enqueue batch ${c + 1}`);
-          break;
+      if (isEnqueueError(result)) {
+        if (result.type === 'insufficient_credits') {
+          toast.error(`Insufficient credits. ${c} of ${chunks.length} batches queued.`);
+        } else if (result.type === 'rate_limit') {
+          toast.error(`Rate limit reached. ${c} of ${chunks.length} batches queued.`);
+        } else {
+          toast.error(result.message || `Failed to enqueue batch ${c + 1}`);
         }
-
-        const result = await response.json();
-        jobIds.push(result.jobId);
-        if (firstNewBalance === null) firstNewBalance = result.newBalance;
-        params.onJobEnqueued?.(result.jobId);
-      } catch (err) {
-        console.error(`Batch ${c + 1} enqueue error:`, err);
-        toast.error(`Failed to enqueue batch ${c + 1}`);
         break;
       }
+
+      jobIds.push(result.jobId);
+      if (firstNewBalance === null) firstNewBalance = result.newBalance;
+      params.onJobEnqueued?.(result.jobId);
+    }
+
+    // Wake the queue once after all jobs are enqueued
+    if (jobIds.length > 0) {
+      sendWake(token);
     }
 
     if (jobIds.length === 0) {
