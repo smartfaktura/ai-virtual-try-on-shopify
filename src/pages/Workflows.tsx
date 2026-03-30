@@ -397,6 +397,9 @@ export default function Workflows() {
     });
   }, []);
 
+  // ── High-water mark for totalImageCount per batch key ──
+  const totalImageHWM = useRef<Map<string, number>>(new Map());
+
   // ── Batch grouping: merge all jobs first, then categorize ──
   const allMergedGroups = useMemo(() => {
     // Deduplicate by id — active jobs take priority over completed/failed
@@ -408,7 +411,29 @@ export default function Workflows() {
         deduped.push(job);
       }
     }
-    return groupJobsIntoBatches(deduped);
+    const groups = groupJobsIntoBatches(deduped);
+
+    // Apply high-water mark so totalImageCount never shrinks for active groups
+    const hwm = totalImageHWM.current;
+    const activeKeys = new Set<string>();
+    for (const g of groups) {
+      const isActive = g.processingCount > 0 || g.queuedCount > 0;
+      if (isActive) {
+        activeKeys.add(g.key);
+        const prev = hwm.get(g.key) ?? 0;
+        if (g.totalImageCount > prev) {
+          hwm.set(g.key, g.totalImageCount);
+        } else {
+          g.totalImageCount = prev;
+        }
+      }
+    }
+    // Clean up keys that are no longer active
+    for (const key of hwm.keys()) {
+      if (!activeKeys.has(key)) hwm.delete(key);
+    }
+
+    return groups;
   }, [activeJobs, recentlyCompletedJobs, recentlyFailedJobs]);
 
   const activeBatchGroups = allMergedGroups.filter(
