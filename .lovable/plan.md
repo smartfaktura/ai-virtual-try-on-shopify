@@ -1,20 +1,32 @@
 
 
-## Fix OTP Input Not Fitting on Mobile
+## Fix Email Sending + Mobile OTP Layout
 
-### Problem
-The 8-digit OTP input overflows horizontally on mobile. Each slot is hardcoded at `w-14 h-14` (56px). With 8 slots + gaps + separator, it needs ~500px but mobile screens are ~360–440px wide.
+### Issue 1: Auth Emails Not Sending
 
-### Fix
+**Root cause:** The `auth-email-hook` uses the old direct-send pattern (`@lovable.dev/email-js` + `callback_url`) and has `SENDER_DOMAIN = "vovv.ai"` (root domain). The verified sender domain is `notify.vovv.ai`. The email API rejects sends because no verified domain matches `vovv.ai`.
 
-**File: `src/components/ui/input-otp.tsx`** (line 36)
-- Change the slot size from fixed `h-14 w-14` to responsive: `h-10 w-10 sm:h-14 sm:w-14`
-- Reduce text size on mobile: `text-lg sm:text-2xl`
+**Fix:** Re-scaffold the auth email templates using the managed tool (auto-detects `notify.vovv.ai` as sender domain and upgrades to the queue-based pattern with retry safety). Then re-apply the existing VOVV.AI brand styling (Inter font, slate colors, `notifications@vovv.ai` as from address) and redeploy.
 
-**File: `src/pages/Auth.tsx`** (lines 371, 380)
-- Reduce gap on mobile: change `gap-2` to `gap-1 sm:gap-2` on both `InputOTPGroup` elements
+The from address will be `VOVV.AI <notifications@vovv.ai>` as requested.
 
-### Files to edit
-- `src/components/ui/input-otp.tsx` — Responsive slot sizing
-- `src/pages/Auth.tsx` — Tighter gaps on mobile
+### Issue 2: Mobile OTP Still Clipping
+
+The 8 OTP slots at `w-10` (40px) + gaps + separator dash still exceed ~360px viewports.
+
+**Fix:**
+- `src/components/ui/input-otp.tsx` — Reduce mobile slots to `h-9 w-9` (36px)
+- `src/pages/Auth.tsx` — Reduce separator padding from `px-2` to `px-1` on mobile
+
+### Steps
+1. Re-scaffold auth email templates (auto-fixes sender domain + queue upgrade)
+2. Apply VOVV.AI brand styling to all 6 templates (Inter font, slate-900 headings, slate-500 body text, slate-800 buttons, "notifications@vovv.ai" from address)
+3. Deploy `auth-email-hook`
+4. Reduce OTP slot size and separator padding for mobile
+
+### Files affected
+- `supabase/functions/auth-email-hook/index.ts` (re-scaffolded)
+- `supabase/functions/_shared/email-templates/*.tsx` (re-scaffolded + branded)
+- `src/components/ui/input-otp.tsx` — smaller mobile slots
+- `src/pages/Auth.tsx` — tighter separator
 
