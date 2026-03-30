@@ -1,40 +1,51 @@
 
 
-## Fix: Add Retry-with-Backoff to Workflow Batch Enqueue Loop
+## Fix: Prevent Single-Job Error Callback from Killing Multi-Product Batches
 
 ### Problem
-The workflow enqueue loop in `Generate.tsx` (around line 1401) fires many rapid `enqueue-generation` calls but has **no retry logic** for 429/rate-limit responses. It simply shows a toast error and moves on. The try-on enqueue loop already has proper retry-with-backoff (6 retries, exponential backoff with jitter) — the workflow loop is missing this.
+During multi-product workflow generation (Product Listing Set with multiple products/models/scenes), the `useGenerationQueue` hook's `onGenerationFailed` callback fires for individual job failures. This callback unconditionally:
+1. Shows a toast error ("Generation failed...")
+2. Resets `currentStep` to `'settings'` — destroying the progress UI
+3. Calls `resetQueue()` — clearing state
 
-This is separate from publishing. The backend changes (higher burst limits) deployed automatically, but the frontend code still doesn't retry when a 429 does occur.
+Meanwhile, the multi-product polling loop (line 1815) is designed to handle individual failures gracefully — it counts them, continues polling, and shows a summary at the end.
+
+The single-job completion watcher (line 1752) already has a guard: `if (multiProductJobIds.size > 0) return;`. But the `onGenerationFailed` callback at line 186 has **no such guard**, so any single job failure during a batch causes the entire UI to reset.
 
 ### Fix
 
-**Extract a shared `enqueueWithRetry` helper** and use it in both the workflow and try-on batch loops. This helper will:
-- Retry up to 6 times on 429/502/503 responses
-- Use exponential backoff with random jitter (same pattern as the existing try-on loop)
-- Only show a toast error on the final failure
-- Silently retry on transient rate limits
+**In `Generate.tsx`, guard the `onGenerationFailed` callback to skip when multi-product polling is active.**
+
+At line 186, wrap the callback body so it only fires when `multiProductJobIds.size === 0`:
+
+```tsx
+onGenerationFailed: (_jobId, _message, errorType) => {
+  // Multi-product batches handle failures in their own polling loop
+  if (multiProductJobIdsRef.current.size > 0) return;
+  
+  const friendlyMessages = { ... };
+  toast.error(...);
+  setCurrentStep('settings');
+  refreshBalance();
+  resetQueue();
+},
+```
+
+Since `onGenerationFailed` is passed as a stable option to the hook, we need a ref to track the current `multiProductJobIds` size (to avoid re-creating the callback and re-mounting the hook):
+
+```tsx
+const multiProductJobIdsRef = useRef(multiProductJobIds);
+useEffect(() => { multiProductJobIdsRef.current = multiProductJobIds; }, [multiProductJobIds]);
+```
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/Generate.tsx` | Replace the raw `fetch` call in the workflow enqueue loop (~line 1401) with the same retry-with-backoff pattern used in `enqueueTryOnForProduct`. Extract a reusable helper to avoid duplication. |
-
-### What changes specifically
-
-1. Create a local helper function `enqueueWithRetry(url, body, token, maxRetries=6)` that wraps the fetch call with:
-   - Retry on 429, 502, 503, or burst/concurrent error messages
-   - Exponential backoff: `2^attempt` seconds + random jitter
-   - Returns the result on success, `null` on final failure
-   - Only shows toast on non-retryable errors (402, unknown errors)
-
-2. Replace the workflow loop's raw fetch (lines ~1401-1415) to use this helper
-
-3. Simplify `enqueueTryOnForProduct` to also use the same helper (dedup)
+| `src/pages/Generate.tsx` | Add `multiProductJobIdsRef` ref; guard `onGenerationFailed` to skip during active batches |
 
 ### Impact
-- No more error toasts from transient 429s during batch workflow generation
-- Both workflow and try-on batch loops have identical resilience
-- If a 429 persists after 6 retries (~60s of backoff), it will show one error instead of spamming toasts
+- Individual job failures during batch generation no longer reset the entire UI
+- The multi-product polling loop continues to aggregate results and shows a summary at the end
+- Single-product generation error handling remains unchanged
 
