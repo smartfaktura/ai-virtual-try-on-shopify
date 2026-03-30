@@ -251,9 +251,9 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
               >
                 <div className="w-full aspect-square rounded-md overflow-hidden bg-muted">
                   <ShimmerImage
-                    src={getOptimizedUrl(p.image_url, { width: 200, quality: 70 })}
+                    src={getOptimizedUrl(p.image_url, { width: 300, quality: 75 })}
                     alt={p.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     aspectRatio="1/1"
                   />
                 </div>
