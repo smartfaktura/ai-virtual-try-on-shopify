@@ -71,7 +71,6 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
   const rawPct = hasMultipleImages ? Math.round((group.generatedImageCount / group.totalImageCount) * 100) : 0;
   const isProcessing = group.processingCount > 0;
   const startedAt = group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at;
-  const elapsed = elapsedLabel(startedAt);
 
   // Time-based floor: crawl to 15% max so bar never shows 0%
   const elapsedSec = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
