@@ -184,7 +184,7 @@ export function ProductCategoryShowcase() {
             All products look better here
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Fashion, beauty, food, home décor — our AI adapts to any product category and delivers studio-quality shots.
+            Fashion, beauty, food, home décor - our AI adapts to any product category and delivers studio-quality shots.
           </p>
         </div>
 
