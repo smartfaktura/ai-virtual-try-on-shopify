@@ -124,7 +124,7 @@ export function ProductSelectorChip({
                   className="flex flex-col items-center group"
                 >
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden group-hover:border-primary transition-colors bg-muted">
-                    <ShimmerImage src={getOptimizedUrl(sample.image_url, { quality: 60 })} alt={sample.title} className="w-full h-full object-contain bg-muted/30" />
+                    <ShimmerImage src={getOptimizedUrl(sample.image_url, { quality: 60 })} alt={sample.title} className="w-full h-full object-cover rounded-xl" />
                   </div>
                   <p className="text-[10px] font-medium text-foreground mt-1.5 text-center line-clamp-1">{sample.title}</p>
                 </button>

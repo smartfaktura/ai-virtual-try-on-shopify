@@ -127,10 +127,6 @@ function VideoComingSoon() {
 }
 
 export default function VideoGenerate() {
-  const { isAdmin } = useIsAdmin();
-
-  if (!isAdmin) return <VideoComingSoon />;
-
   return <VideoGenerateInner />;
 }
 
