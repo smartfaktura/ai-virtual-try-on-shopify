@@ -90,11 +90,11 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
     const poll = async () => {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const token = await getAuthToken() || SUPABASE_KEY;
+      let token = await getAuthToken() || SUPABASE_KEY;
 
       // Fetch all jobs in one request
       const idsFilter = jobIds.map(id => `"${id}"`).join(',');
-      const res = await fetch(
+      let res = await fetch(
         `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
         {
           headers: {
@@ -103,6 +103,24 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
           },
         }
       );
+
+      // Handle expired token — refresh and retry once
+      if (res.status === 401) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const freshToken = sessionData?.session?.access_token;
+        if (freshToken) {
+          token = freshToken;
+          res = await fetch(
+            `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
+            {
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${freshToken}`,
+              },
+            }
+          );
+        }
+      }
 
       if (!res.ok) return;
       const rows = await res.json();
