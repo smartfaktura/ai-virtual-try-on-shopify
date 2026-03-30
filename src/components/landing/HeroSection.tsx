@@ -240,9 +240,9 @@ export function HeroSection() {
               variant="outline"
               size="lg"
               className="rounded-full px-8 py-6 text-base font-semibold"
-              onClick={() => document.querySelector('#how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+              asChild
             >
-              See How It Works
+              <Link to="/discover">See Real Examples</Link>
             </Button>
           </div>
 
