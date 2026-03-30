@@ -233,7 +233,19 @@ export default function AnimateVideo() {
     }
   }, [analyzeImage]);
 
-  // Paste image support (CMD+V / Ctrl+V)
+  // Auto-load image from query param (e.g. from Library "Generate Video" button)
+  const queryImageConsumed = useRef(false);
+  useEffect(() => {
+    if (queryImageConsumed.current) return;
+    const paramUrl = searchParams.get('imageUrl');
+    if (paramUrl && !imageUrl) {
+      queryImageConsumed.current = true;
+      setSearchParams({}, { replace: true });
+      handleLibrarySelect(paramUrl);
+    }
+  }, [searchParams, imageUrl, handleLibrarySelect, setSearchParams]);
+
+
   useEffect(() => {
     if (imageUrl) return; // Only listen when no image is loaded
     const handlePaste = (e: ClipboardEvent) => {
