@@ -1,28 +1,22 @@
 
 
-## Cache-Busting Version Check — Implementation Plan
+## Fix: Spacing Between Cards on Mobile Freestyle
 
-### What This Does
-Every time we deploy, a tiny version number gets baked into the app. When a returning user opens the site, the app quietly checks if their version is current. If outdated, it does one hard refresh. A safety flag prevents infinite loops.
+### Problem
+On the mobile Freestyle page, the generated image cards and the "Recreating look from Discover" banner are too tightly packed. There are two spacing gaps:
 
-### Files
+1. **Between the banner area and the gallery** — no gap exists between the banner container (`space-y-2` div at line 924) and the `FreestyleGallery` that follows it.
+2. **Between gallery image cards** — the masonry grid uses `gap-2` (8px) both horizontally and vertically, which is too tight on mobile for visual comfort.
 
-**1. New: `src/lib/versionCheck.ts`**
-- Declare `__BUILD_VERSION__` global type
-- Export `checkAppVersion()` that fetches `/version.json?t=<now>`, compares its `v` field against `__BUILD_VERSION__`
-- On mismatch: set `sessionStorage.version_reloaded = "1"`, call `location.reload()`
-- On match or if already reloaded: clear the flag, exit silently
-- Wrap everything in try/catch — any failure = silent exit
+### Changes
 
-**2. Edit: `vite.config.ts`**
-- Add `define: { __BUILD_VERSION__: JSON.stringify(Date.now().toString()) }`
-- Add a small custom plugin (`generateVersionFile`) that writes `{ "v": "<timestamp>" }` to `public/version.json` during `buildStart`
-- In dev mode, skip the version file generation
+**File: `src/pages/Freestyle.tsx`**
+- Add `mb-2` to the banner container div (line 924) so there's consistent spacing before the gallery starts.
 
-**3. Edit: `src/App.tsx`**
-- Import `checkAppVersion` from `@/lib/versionCheck`
-- Add a `useEffect` at the top of the `App` component that calls `checkAppVersion()` once on mount
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+- Increase the masonry gap from `gap-2` to `gap-2.5` (line 665 outer div and line 667 column div) for slightly more breathing room between cards on all screens.
 
-**4. New: `src/vite-env.d.ts` update**
-- Add `declare const __BUILD_VERSION__: string;` global declaration (or add to existing file)
+### Impact
+- Two-line change affecting only spacing values.
+- No layout or functionality changes.
 
