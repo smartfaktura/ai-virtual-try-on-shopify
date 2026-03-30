@@ -128,6 +128,9 @@ serve(async (req) => {
       dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
 
       dispatchedCount++;
+
+      // Stagger dispatches to avoid thundering herd on AI gateway
+      await new Promise((r) => setTimeout(r, 500));
       console.log(`[process-queue] ⚡ Dispatched job ${jobId}, type=${jobType}, user=${userId}`);
     }
 
