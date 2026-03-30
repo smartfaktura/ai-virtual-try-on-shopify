@@ -38,9 +38,9 @@ serve(async (req) => {
     }
     const userId = user.id;
 
-    // Always trigger process-queue (it runs cleanup_stale_jobs first)
-    // This handles both queued jobs AND stuck processing jobs
-    const res = await fetch(`${supabaseUrl}/functions/v1/process-queue`, {
+    // Fire-and-forget: trigger process-queue without waiting for response
+    // This prevents timeout errors when the dispatcher is busy with the singleton lock
+    fetch(`${supabaseUrl}/functions/v1/process-queue`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${serviceRoleKey}`,
@@ -48,13 +48,14 @@ serve(async (req) => {
         "x-queue-internal": "true",
       },
       body: JSON.stringify({ trigger: "retry-queue", user_id: userId }),
-      signal: AbortSignal.timeout(5000),
+    }).catch((err) => {
+      console.warn(`[retry-queue] process-queue trigger failed (non-fatal):`, err);
     });
 
-    console.log(`[retry-queue] Triggered process-queue for user ${userId}, status=${res.status}`);
+    console.log(`[retry-queue] Fire-and-forget trigger for user ${userId}`);
 
     return new Response(
-      JSON.stringify({ triggered: true, cleanup_triggered: true, status: res.status }),
+      JSON.stringify({ triggered: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
