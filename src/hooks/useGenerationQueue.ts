@@ -311,7 +311,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
             };
             setActiveJob(prev => ({ ...syntheticJob, generationMeta: prev?.generationMeta }));
             handleTerminalJob(syntheticJob);
-            onCreditRefresh?.();
             return;
           }
 
