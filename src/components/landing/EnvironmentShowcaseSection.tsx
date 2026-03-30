@@ -27,13 +27,18 @@ const ROW_1: EnvironmentCard[] = [
 ];
 
 const ROW_2: EnvironmentCard[] = [
-  d('Night Drive Glam', `${SB}/1a9da6ea-a959-4aa2-a2b4-c3855f5c8532.png`),
+  d('Greenhouse Elegance', `${SB}/8accd42f-72de-482c-a0e2-5ac2f0162f74.jpg`),
   d('Sunlit Botanical Surface', `${SB}/d576a95a-5d0a-4768-b8b6-62c8f9a5d240.png`),
+  d('Frozen Aura', `${SB}/2f6bb14f-fe0b-4d06-9aa9-a318a8fd39fd.png`),
   d('Marble Console Vignette', `${SB}/84f7f8e7-6535-4a4c-8008-854f3906b5b5.png`),
+  d('Dynamic Water Splash', `${SB}/baebb27e-f66f-4968-95d1-0ce7e21a84e4.png`),
+  d('Frozen Product', `${SB}/6c8fd139-0a5b-4b27-a861-c5c7cb1adc78.png`),
+  d('Amber Glow Studio', `${SB}/91418be3-6c16-4573-b97b-8c757b37a792.png`),
   d('Prism Glow Showcase', `${SB}/5f8adc87-03b4-4238-827a-fd0ec79c4695.png`),
+  d('Urban Motion', `${SB}/4c1ee736-0e5e-475c-a5a2-06492f472c33.jpg`),
+  d('Stadium Seating Fashion', `${SB}/f5122391-5b70-4b6b-9d61-be96e27d376f.jpg`),
   d('Desert Horizon', `${SB}/9dca223b-3e30-4f21-8d3c-41cd5f790208.png`),
-  d('Golden Radiance Product', `${SB}/3f83f049-6e95-4df0-ac49-9d9740363acc.png`),
-  d('Desert Sunset', `${SB}/de8c3650-fe0b-43e3-b3c0-9eca5bded18c.png`),
+  d('Fisheye Portrait', `${SB}/0544388b-9cb9-4a2d-b101-c8c85640e67e.png`),
 ];
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { items: EnvironmentCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
