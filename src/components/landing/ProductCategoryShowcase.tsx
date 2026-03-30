@@ -21,6 +21,19 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 
   const nextIndex = (currentIndex + 1) % images.length;
 
+  // Preload next image using Image() object (handles cached + uncached)
+  useEffect(() => {
+    const img = new Image();
+    img.src = images[nextIndex];
+    if (img.complete && img.naturalWidth > 0) {
+      setNextReady(true);
+    } else {
+      img.onload = () => setNextReady(true);
+      img.onerror = () => setNextReady(true);
+    }
+    return () => { img.onload = null; img.onerror = null; };
+  }, [currentIndex, images, nextIndex]);
+
   // Advance only when the next image has loaded
   useEffect(() => {
     if (!nextReady) return;
@@ -31,11 +44,6 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
     }, cycleDuration);
     return () => clearTimeout(timer);
   }, [nextReady, nextIndex, cycleDuration]);
-
-  // On first mount, start the first cycle immediately
-  useEffect(() => {
-    setNextReady(false);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
@@ -68,24 +76,11 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         wrapperStyle={{ opacity: 1, zIndex: 1 }}
         className="w-full h-full object-cover"
       />
-
-      {/* Next image (hidden, preloading) */}
-      <ShimmerImage
-        key={`next-${nextIndex}`}
-        src={images[nextIndex]}
-        alt={`${label} AI-generated product shot`}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setNextReady(true)}
-        wrapperClassName="absolute inset-0"
-        wrapperStyle={{ opacity: 0, zIndex: 0 }}
-        className="w-full h-full object-cover"
-      />
     </div>
   );
 }
 
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
 
 const CATEGORIES: CategoryCardProps[] = [
   {
