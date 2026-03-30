@@ -1650,6 +1650,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
+      const batchId = crypto.randomUUID();
       const jobMap = new Map<string, string>();
       const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
@@ -1660,7 +1661,8 @@ export default function Generate() {
         for (const pose of posesToGenerate) {
           for (const ratioVal of ratiosToGen) {
             for (const framingVal of framingsToGen) {
-              const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal);
+              await paceDelay(jobMap.size);
+              const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal, batchId);
               if (result) {
                 const compositeKey = `${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
                 jobMap.set(compositeKey, result.jobId);
@@ -1669,7 +1671,7 @@ export default function Generate() {
                 injectActiveJob(queryClient, {
                   jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
                   workflow_slug: activeWorkflow?.slug, product_name: productName,
-                  job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                  job_type: 'tryon', quality, imageCount: parseInt(imageCount), batch_id: batchId,
                 });
               }
             }
@@ -1686,6 +1688,7 @@ export default function Generate() {
       setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+      sendWake(token);
     }
     } catch (err) {
       console.error('Try-on generation failed:', err);
