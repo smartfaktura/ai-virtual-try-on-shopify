@@ -337,7 +337,12 @@ export function HeroSection() {
                   key={i}
                   onClick={() => {
                     const el = scrollRefs.current[activeScene];
-                    if (el) el.scrollTo({ left: i * 165, behavior: 'smooth' });
+                    if (el) {
+                      const firstChild = el.firstElementChild as HTMLElement | null;
+                      const gap = parseFloat(getComputedStyle(el).gap) || 10;
+                      const itemWidth = firstChild ? firstChild.offsetWidth + gap : 165;
+                      el.scrollTo({ left: i * itemWidth, behavior: 'smooth' });
+                    }
                   }}
                   className={`rounded-full transition-all duration-200 ${
                     visibleDot === i
