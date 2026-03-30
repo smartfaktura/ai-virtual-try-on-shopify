@@ -45,7 +45,7 @@ function LazyVideo({ src, poster, className }: { src: string; poster: string; cl
   );
 }
 
-  const navigate = useNavigate();
+  export function StudioTeamSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
