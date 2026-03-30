@@ -316,7 +316,7 @@ export function HeroSection() {
                             loading={sceneIdx === 0 && idx < 3 ? 'eager' : 'lazy'}
                             fetchPriority={sceneIdx === 0 && idx < 2 ? 'high' : undefined}
                           />
-                          <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
+                          <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
                             {output.label}
                           </span>
                         </div>
@@ -413,7 +413,7 @@ export function HeroSection() {
                       style={{ opacity: scIdx === activeScene ? 1 : 0 }}
                     />
                   ))}
-                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm z-10">
+                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground z-10">
                     Your Upload
                   </span>
                 </div>

@@ -34,13 +34,27 @@ export function StudioTeamSection() {
     });
   };
 
-  // Frame-synced auto-scroll with lerped speed
+  // Frame-synced auto-scroll with lerped speed — pauses when off-screen
+  const sectionRef = useRef<HTMLElement>(null);
+  const isVisibleRef = useRef(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0 }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const tick = () => {
       speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.08;
 
       const el = scrollRef.current;
-      if (el && speedRef.current > 0.01) {
+      if (el && speedRef.current > 0.01 && isVisibleRef.current) {
         if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
           el.scrollTo({ left: 0 });
           updateScrollState();
