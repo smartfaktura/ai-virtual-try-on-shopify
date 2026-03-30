@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { CorrectionConfirmModal } from './CorrectionConfirmModal';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -74,13 +75,20 @@ export const VideoResultsPanel = React.forwardRef<HTMLDivElement, VideoResultsPa
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [confirmPreset, setConfirmPreset] = useState<QuickVariationPreset | null>(null);
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
       if (!videoUrl) return;
-      const a = document.createElement('a');
-      a.href = videoUrl;
-      a.download = `video-${Date.now()}.mp4`;
-      a.target = '_blank';
-      a.click();
+      try {
+        const res = await fetch(videoUrl);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `video-${Date.now()}.mp4`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch {
+        toast.error('Failed to download video');
+      }
     };
 
     const handleChipClick = (preset: QuickVariationPreset) => {
