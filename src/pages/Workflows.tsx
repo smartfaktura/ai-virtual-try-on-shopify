@@ -200,21 +200,59 @@ export default function Workflows() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('generation_jobs')
-        .select('id, workflow_id, created_at, results, requested_count, workflows(name)')
+        .select('id, workflow_id, product_id, created_at, results, requested_count, workflows(name)')
         .not('workflow_id', 'is', null)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(50);
       if (error) throw error;
 
-      return (data ?? []).map((j) => ({
-        id: j.id,
-        workflow_id: j.workflow_id,
-        workflow_name: (j.workflows as unknown as { name: string } | null)?.name ?? null,
-        created_at: j.created_at,
-        results: j.results,
-        requested_count: j.requested_count,
-      }));
+      const rows = data ?? [];
+      if (rows.length === 0) return [];
+
+      // Group jobs by (workflow_id, product_id) within 60s of each other
+      type RawRow = typeof rows[0];
+      interface GroupedJob {
+        id: string;
+        workflow_id: string | null;
+        workflow_name: string | null;
+        created_at: string;
+        results: unknown;
+        requested_count: number;
+      }
+
+      const groups: GroupedJob[] = [];
+
+      for (const row of rows) {
+        const rowTime = new Date(row.created_at).getTime();
+        const lastGroup = groups[groups.length - 1];
+
+        if (
+          lastGroup &&
+          lastGroup.workflow_id === row.workflow_id &&
+          row.product_id != null &&
+          // Check proximity to group anchor
+          Math.abs(new Date(lastGroup.created_at).getTime() - rowTime) <= 60_000
+        ) {
+          // Merge results
+          const existing = Array.isArray(lastGroup.results) ? lastGroup.results : [];
+          const incoming = Array.isArray(row.results) ? row.results : [];
+          lastGroup.results = [...existing, ...incoming];
+          lastGroup.requested_count += row.requested_count;
+          continue;
+        }
+
+        groups.push({
+          id: row.id,
+          workflow_id: row.workflow_id,
+          workflow_name: (row.workflows as unknown as { name: string } | null)?.name ?? null,
+          created_at: row.created_at,
+          results: row.results,
+          requested_count: row.requested_count,
+        });
+      }
+
+      return groups.slice(0, 8);
     },
     enabled: !!user,
     staleTime: 10_000,
