@@ -47,6 +47,12 @@ function pickTeamForGroup(groupKey: string): typeof TEAM_MEMBERS {
   ];
 }
 
+/** Count unique product names in a batch group */
+function uniqueProductCount(group: BatchGroup): number {
+  const names = new Set(group.jobs.map((j) => j.product_name).filter(Boolean));
+  return names.size;
+}
+
 function ActiveGroupCard({
   group,
   onCancelJob,
@@ -81,6 +87,13 @@ function ActiveGroupCard({
   const unitLabel = isStagingWorkflow ? 'styles' : 'images';
   const isProModel = group.job_type === 'tryon' || group.quality === 'high';
 
+  // Multi-product batch: show aggregate title instead of single product name
+  const productCount = uniqueProductCount(group);
+  const isMultiProductBatch = productCount > 1;
+  const titleSuffix = isMultiProductBatch
+    ? ` — ${productCount} products`
+    : group.product_name ? ` — ${group.product_name}` : '';
+
   return (
     <Card className="border-primary/20 bg-gradient-to-r from-primary/[0.04] to-primary/[0.08] overflow-hidden">
       <CardContent className="py-3 px-4 sm:py-4 sm:px-5 space-y-2.5">
@@ -112,7 +125,7 @@ function ActiveGroupCard({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">
                 {group.workflow_name ?? 'Workflow generation'}
-                {group.product_name ? ` — ${group.product_name}` : ''}
+                {titleSuffix}
               </p>
               <p className="text-xs text-muted-foreground">
                 {hasMultipleImages ? (
