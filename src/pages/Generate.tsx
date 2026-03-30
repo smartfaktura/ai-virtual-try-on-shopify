@@ -1083,6 +1083,7 @@ export default function Generate() {
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
+      sendWake(token);
       const resLabel = upscaleResolution === '4k' ? '4K' : '2K';
       toast.success(`Upscaling ${jobMap.size} image${jobMap.size > 1 ? 's' : ''} to ${resLabel}…`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
