@@ -10,7 +10,6 @@ import {
   Heading,
   Html,
   Preview,
-  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -24,27 +23,21 @@ export const MagicLinkEmail = ({
   confirmationUrl,
 }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
-    <Head>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    </Head>
-    <Preview>Your VOVV.AI login link</Preview>
+    <Head />
+    <Preview>Your login link for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
-          Click the button below to log in to VOVV.AI. This link will expire shortly.
+          Click the button below to log in to {siteName}. This link will expire
+          shortly.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Log In
         </Button>
-        <Text style={footerText}>
+        <Text style={footer}>
           If you didn't request this link, you can safely ignore this email.
         </Text>
-        <Section style={footerSection}>
-          <Text style={footerCopy}>&copy; 2026 VOVV.AI. All rights reserved.</Text>
-          <Text style={footerSub}>A product by 123Presets</Text>
-        </Section>
       </Container>
     </Body>
   </Html>
@@ -52,64 +45,26 @@ export const MagicLinkEmail = ({
 
 export default MagicLinkEmail
 
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-}
-const container = { padding: '40px 20px', maxWidth: '560px', margin: '0 auto' }
-const wordmark = {
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 700 as const,
-  fontSize: '20px',
-  letterSpacing: '-0.03em',
-  color: '#0f172a',
-  margin: '0 0 32px 0',
-}
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const container = { padding: '20px 25px' }
 const h1 = {
-  fontFamily: "'Inter', sans-serif",
-  fontSize: '24px',
-  fontWeight: 700 as const,
-  color: '#0f172a',
-  margin: '0 0 16px 0',
-  letterSpacing: '-0.02em',
+  fontSize: '22px',
+  fontWeight: 'bold' as const,
+  color: '#000000',
+  margin: '0 0 20px',
 }
 const text = {
-  fontFamily: "'Inter', sans-serif",
-  fontSize: '15px',
-  color: '#64748b',
-  lineHeight: '1.6',
-  margin: '0 0 24px 0',
+  fontSize: '14px',
+  color: '#55575d',
+  lineHeight: '1.5',
+  margin: '0 0 25px',
 }
 const button = {
-  backgroundColor: '#1e293b',
+  backgroundColor: '#000000',
   color: '#ffffff',
-  fontFamily: "'Inter', sans-serif",
   fontSize: '14px',
-  fontWeight: 600 as const,
   borderRadius: '8px',
-  padding: '14px 32px',
+  padding: '12px 20px',
   textDecoration: 'none',
-  letterSpacing: '-0.01em',
-  margin: '32px 0',
-  display: 'inline-block' as const,
 }
-const footerText = {
-  fontFamily: "'Inter', sans-serif",
-  fontSize: '13px',
-  color: '#64748b',
-  margin: '0 0 40px 0',
-}
-const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
-const footerCopy = {
-  fontFamily: "'Inter', sans-serif",
-  fontSize: '12px',
-  color: '#64748b',
-  margin: '16px 0 0 0',
-  lineHeight: '1.5',
-}
-const footerSub = {
-  fontFamily: "'Inter', sans-serif",
-  fontSize: '12px',
-  color: '#64748b',
-  margin: '4px 0 0 0',
-}
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
