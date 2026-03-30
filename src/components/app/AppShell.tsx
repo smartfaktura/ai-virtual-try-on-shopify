@@ -110,7 +110,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   const NavItemButton = ({ item }: { item: typeof navItems[0] }) => {
-    const isComingSoon = item.comingSoon && !isAdmin;
+    const isComingSoon = false;
     const isEarnCredits = item.path === '#earn-credits';
 
     const handleClick = () => {
