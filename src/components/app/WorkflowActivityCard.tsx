@@ -134,11 +134,11 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
               </p>
               <p className="text-xs text-muted-foreground">
                 {hasMultipleImages ? (
-                  <>{group.generatedImageCount}/{group.totalImageCount} {unitLabel} · {elapsed}</>
+                  <>{group.generatedImageCount}/{group.totalImageCount} {unitLabel} · <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 ) : isProcessing ? (
-                  <>Generating… {elapsed}</>
+                  <>Generating… <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 ) : (
-                  <>Queued · {elapsed}</>
+                  <>Queued · <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 )}
                 {isProcessing && (
                   <span className="hidden sm:inline text-muted-foreground/60">
