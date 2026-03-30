@@ -338,12 +338,14 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
 
                 <Button
                   variant="outline"
-                  disabled
+                  onClick={() => {
+                    navigate(`/app/video/animate?imageUrl=${encodeURIComponent(activeItem.imageUrl)}`);
+                    onClose();
+                  }}
                   className="w-full h-11 rounded-xl text-sm font-medium"
                 >
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
-                  <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Coming Soon</span>
                 </Button>
 
                 <Separator className="my-1" />

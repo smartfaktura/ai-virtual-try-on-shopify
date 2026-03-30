@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LucideIcon } from 'lucide-react';
