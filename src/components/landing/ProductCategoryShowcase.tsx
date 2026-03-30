@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -17,28 +17,68 @@ interface CategoryCardProps {
 function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const failedRef = useRef<Set<number>>(new Set());
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  const advance = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-    setProgressKey((k) => k + 1);
+  const getNextValid = useCallback((from: number) => {
+    for (let i = 1; i <= images.length; i++) {
+      const idx = (from + i) % images.length;
+      if (!failedRef.current.has(idx)) return idx;
+    }
+    return from; // all failed, stay put
   }, [images.length]);
 
+  const advance = useCallback(() => {
+    setCurrentIndex((prev) => {
+      const next = getNextValid(prev);
+      return next;
+    });
+    setProgressKey((k) => k + 1);
+  }, [getNextValid]);
+
+  const handleError = useCallback((idx: number) => {
+    failedRef.current.add(idx);
+    // If the currently visible image failed, advance immediately
+    setCurrentIndex((prev) => {
+      if (prev === idx) return getNextValid(prev);
+      return prev;
+    });
+  }, [getNextValid]);
+
+  // IntersectionObserver — only cycle when visible
   useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: '200px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     const timer = setInterval(advance, cycleDuration);
     return () => clearInterval(timer);
-  }, [advance, cycleDuration]);
+  }, [advance, cycleDuration, isVisible]);
+
+  const nextIndex = getNextValid(currentIndex);
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
+    <div ref={cardRef} className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-muted/40">
-        <div
-          key={progressKey}
-          className="h-full bg-primary/70"
-          style={{
-            animation: `progress-fill ${cycleDuration}ms linear forwards`,
-          }}
-        />
+        {isVisible && (
+          <div
+            key={progressKey}
+            className="h-full bg-primary/70"
+            style={{
+              animation: `progress-fill ${cycleDuration}ms linear forwards`,
+            }}
+          />
+        )}
       </div>
 
       {/* Category label */}
@@ -48,28 +88,37 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         </span>
       </div>
 
-      {/* All images stacked — only currentIndex is visible */}
-      {images.map((img, i) => (
-         <ShimmerImage
-           key={i}
-            src={img}
-            alt={`${label} AI-generated product shot`}
-            loading="lazy"
-            decoding="async"
-           wrapperClassName="absolute inset-0"
-           wrapperStyle={{
-             opacity: i === currentIndex ? 1 : 0,
-             transition: 'opacity 1.2s ease-in-out',
-           }}
-           className="w-full h-full object-cover"
-           onError={() => advance()}
-         />
-       ))}
+      {/* Current image */}
+      <ShimmerImage
+        key={currentIndex}
+        src={images[currentIndex]}
+        alt={`${label} AI-generated product shot`}
+        loading="lazy"
+        decoding="async"
+        wrapperClassName="absolute inset-0"
+        className="w-full h-full object-cover"
+        onError={() => handleError(currentIndex)}
+      />
+
+      {/* Preload next image (hidden) */}
+      {nextIndex !== currentIndex && (
+        <ShimmerImage
+          key={`pre-${nextIndex}`}
+          src={images[nextIndex]}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          wrapperClassName="absolute inset-0"
+          wrapperStyle={{ opacity: 0, pointerEvents: 'none' }}
+          className="w-full h-full object-cover"
+          onError={() => handleError(nextIndex)}
+        />
+      )}
     </div>
   );
 }
 
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
 
 const CATEGORIES: CategoryCardProps[] = [
   {
