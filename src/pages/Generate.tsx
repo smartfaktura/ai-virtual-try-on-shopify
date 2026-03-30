@@ -1039,11 +1039,12 @@ export default function Generate() {
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
 
-      for (const src of sources) {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
+      for (let i = 0; i < sources.length; i++) {
+        const src = sources[i];
+        await paceDelay(i);
+
+        const result = await enqueueWithRetry(
+          {
             jobType: 'upscale',
             payload: {
               imageUrl: src.imageUrl,
@@ -1054,18 +1055,18 @@ export default function Generate() {
             imageCount: 1,
             quality: 'standard',
             resolution: upscaleResolution,
-          }),
-        });
+            skipWake: true,
+          },
+          token,
+        );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          if (response.status === 402) { toast.error(errorData.error || 'Insufficient credits'); break; }
-          if (response.status === 429) { toast.error(errorData.message || errorData.error || 'Rate limited. Please wait.'); break; }
-          toast.error(errorData.error || `Failed to enqueue upscale for "${src.title}"`);
+        if (isEnqueueError(result)) {
+          if (result.type === 'insufficient_credits') toast.error(result.message);
+          else if (result.type === 'rate_limit') toast.error('Rate limited. Please wait.');
+          else toast.error(result.message || `Failed to enqueue upscale for "${src.title}"`);
           break;
         }
 
-        const result = await response.json();
         jobMap.set(src.sourceId, result.jobId);
         lastBalance = result.newBalance;
         injectActiveJob(queryClient, {
