@@ -88,6 +88,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  useEffect(() => { checkAppVersion(); }, []);
+
   return (
   <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
