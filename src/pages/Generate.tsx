@@ -4176,13 +4176,7 @@ export default function Generate() {
                 generatingProgress={generatingProgress}
                 activeJob={activeJob}
                 onCancel={cancelQueue}
-                totalExpectedImages={
-                  activeWorkflow?.uses_tryon
-                    ? multiProductCount * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
-                    : (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie)
-                      ? workflowImageCount * multiProductCount
-                      : productQueue.length * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount
-                }
+                totalExpectedImages={multiProductJobIds.size > 0 ? multiProductJobIds.size : undefined}
                 totalJobs={multiProductJobIds.size}
                 workflowName={activeWorkflow?.name}
               />
