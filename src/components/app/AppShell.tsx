@@ -231,13 +231,13 @@ export function AppShell({ children }: AppShellProps) {
               >
                 <div className={cn(
                   'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
-                  isEmpty ? 'bg-destructive/20' : 'bg-primary/20 hover:bg-primary/30'
+                  isEmpty ? 'bg-destructive/30' : 'bg-primary/20 hover:bg-primary/30'
                 )}>
-                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-destructive' : 'text-sidebar-foreground/70')} />
+                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-red-400' : 'text-sidebar-foreground/70')} />
                 </div>
                 <span className={cn(
                   'text-[10px] font-bold',
-                  isEmpty ? 'text-destructive' : 'text-sidebar-foreground/50'
+                  isEmpty ? 'text-red-400' : 'text-sidebar-foreground/50'
                 )}>{balance}</span>
               </button>
               <button
@@ -390,7 +390,7 @@ export function AppShell({ children }: AppShellProps) {
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
                 isEmpty
-                  ? 'bg-destructive/20 border-destructive/30 text-destructive'
+                  ? 'bg-destructive/30 border-destructive/40 text-red-400'
                   : isLow
                     ? 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 animate-pulse'
                     : 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 hover:bg-white/10'
