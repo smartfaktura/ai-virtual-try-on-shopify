@@ -1060,6 +1060,24 @@ export type Database = {
         }
         Relationships: []
       }
+      queue_dispatch_lock: {
+        Row: {
+          id: number
+          locked_at: string | null
+          locked_by: string | null
+        }
+        Insert: {
+          id?: number
+          locked_at?: string | null
+          locked_by?: string | null
+        }
+        Update: {
+          id?: number
+          locked_at?: string | null
+          locked_by?: string | null
+        }
+        Relationships: []
+      }
       saved_discover_items: {
         Row: {
           created_at: string
@@ -1568,9 +1586,14 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
       }
+      release_dispatch_lock: { Args: never; Returns: undefined }
       reset_plan_credits: {
         Args: { p_plan_credits: number; p_user_id: string }
         Returns: Json
+      }
+      try_acquire_dispatch_lock: {
+        Args: { p_locked_by?: string }
+        Returns: boolean
       }
     }
     Enums: {

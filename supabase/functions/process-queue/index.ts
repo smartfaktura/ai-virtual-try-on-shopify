@@ -61,12 +61,24 @@ serve(async (req) => {
   const startTime = Date.now();
   const MAX_RUNTIME_MS = 25_000; // 25 seconds — dispatcher is lightweight now
 
+  const MAX_CONCURRENT_JOBS = 20;
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
+
+    // Step 0: Acquire singleton dispatch lock — only one instance dispatches at a time
+    const { data: lockAcquired } = await supabase.rpc("try_acquire_dispatch_lock", { p_locked_by: "process-queue" });
+    if (!lockAcquired) {
+      console.log("[process-queue] Another dispatcher is active, skipping.");
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "another dispatcher active" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Step 1: Cleanup stale/timed-out jobs first
     const { data: cleanupResult } = await supabase.rpc("cleanup_stale_jobs");
@@ -78,6 +90,17 @@ serve(async (req) => {
 
     // Step 2: Loop — claim and dispatch jobs until time runs out
     while (Date.now() - startTime < MAX_RUNTIME_MS) {
+      // Check global concurrency cap before dispatching more
+      const { count: activeJobs } = await supabase
+        .from("generation_queue")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "processing");
+
+      if ((activeJobs || 0) >= MAX_CONCURRENT_JOBS) {
+        console.log(`[process-queue] Concurrency cap reached (${activeJobs}/${MAX_CONCURRENT_JOBS}), pausing dispatch.`);
+        break;
+      }
+
       // Claim next job
       const { data: claimResult, error: claimError } = await supabase.rpc("claim_next_job");
 
@@ -129,10 +152,13 @@ serve(async (req) => {
 
       dispatchedCount++;
 
-      // Stagger dispatches to avoid thundering herd on AI gateway
-      await new Promise((r) => setTimeout(r, 500));
+      // Stagger dispatches (1s) to avoid thundering herd on AI gateway
+      await new Promise((r) => setTimeout(r, 1000));
       console.log(`[process-queue] ⚡ Dispatched job ${jobId}, type=${jobType}, user=${userId}`);
     }
+
+    // Release the singleton lock so next invocation can dispatch
+    await supabase.rpc("release_dispatch_lock");
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     console.log(`[process-queue] Done. Dispatched ${dispatchedCount} jobs in ${elapsed}s`);
