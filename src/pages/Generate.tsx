@@ -1383,7 +1383,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
