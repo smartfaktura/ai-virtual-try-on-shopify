@@ -15,14 +15,17 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayIndex, setDisplayIndex] = useState(0);
+  const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
+  const [fadeIn, setFadeIn] = useState(false);
   const [progressKey, setProgressKey] = useState(0);
   const [nextReady, setNextReady] = useState(false);
 
-  const nextIndex = (currentIndex + 1) % images.length;
+  const nextIndex = (displayIndex + 1) % images.length;
 
-  // Preload next image using Image() object (handles cached + uncached)
+  // Preload next image using Image() object
   useEffect(() => {
+    setNextReady(false);
     const img = new Image();
     img.src = images[nextIndex];
     if (img.complete && img.naturalWidth > 0) {
@@ -32,18 +35,28 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       img.onerror = () => setNextReady(true);
     }
     return () => { img.onload = null; img.onerror = null; };
-  }, [currentIndex, images, nextIndex]);
+  }, [displayIndex, images, nextIndex]);
 
-  // Advance only when the next image has loaded
+  // Start crossfade when next image is ready
   useEffect(() => {
     if (!nextReady) return;
     const timer = setTimeout(() => {
-      setCurrentIndex(nextIndex);
-      setProgressKey((k) => k + 1);
-      setNextReady(false);
+      setIncomingIndex(nextIndex);
+      // Trigger fade on next frame so transition fires
+      requestAnimationFrame(() => setFadeIn(true));
     }, cycleDuration);
     return () => clearTimeout(timer);
   }, [nextReady, nextIndex, cycleDuration]);
+
+  // When crossfade completes, swap layers
+  const handleTransitionEnd = () => {
+    if (incomingIndex !== null) {
+      setDisplayIndex(incomingIndex);
+      setIncomingIndex(null);
+      setFadeIn(false);
+      setProgressKey((k) => k + 1);
+    }
+  };
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
@@ -65,17 +78,30 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         </span>
       </div>
 
-      {/* Current image (visible) */}
+      {/* Base layer — current image */}
       <ShimmerImage
-        key={`cur-${currentIndex}`}
-        src={images[currentIndex]}
+        src={images[displayIndex]}
         alt={`${label} AI-generated product shot`}
-        loading={currentIndex === 0 ? 'eager' : 'lazy'}
+        loading="eager"
         decoding="async"
         wrapperClassName="absolute inset-0"
-        wrapperStyle={{ opacity: 1, zIndex: 1 }}
+        wrapperStyle={{ zIndex: 1 }}
         className="w-full h-full object-cover"
       />
+
+      {/* Incoming layer — crossfades in on top */}
+      {incomingIndex !== null && (
+        <ShimmerImage
+          src={images[incomingIndex]}
+          alt={`${label} AI-generated product shot`}
+          loading="eager"
+          decoding="async"
+          wrapperClassName="absolute inset-0 transition-opacity duration-500"
+          wrapperStyle={{ zIndex: 2, opacity: fadeIn ? 1 : 0 }}
+          className="w-full h-full object-cover"
+          onTransitionEnd={handleTransitionEnd}
+        />
+      )}
     </div>
   );
 }
