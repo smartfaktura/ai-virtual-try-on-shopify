@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowRight, CreditCard, Shield, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { ArrowRight, CreditCard, Zap, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -13,7 +13,7 @@ const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
   { icon: Sparkles, text: '20 free credits' },
-  { icon: Shield, text: 'Cancel anytime' },
+  { icon: Zap, text: 'Start in seconds' },
 ];
 
 interface ProductShowcase {
