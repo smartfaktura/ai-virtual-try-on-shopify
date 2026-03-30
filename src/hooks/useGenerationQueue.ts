@@ -80,6 +80,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
 
+  // Stable ref for onCreditRefresh to avoid stale closures in polling chains
+  const onCreditRefreshRef = useRef(onCreditRefresh);
+  useEffect(() => { onCreditRefreshRef.current = onCreditRefresh; }, [onCreditRefresh]);
+
   // Single-flight polling refs
   const jobIdRef = useRef<string | null>(null);
   const pollVersionRef = useRef(0); // Incremented on each new poll session; stale responses are ignored
@@ -138,8 +142,8 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     }
 
     // Always refresh credits on any terminal state
-    onCreditRefresh?.();
-  }, [stopPolling, onContentBlocked, onGenerationFailed, onCreditRefresh]);
+    onCreditRefreshRef.current?.();
+  }, [stopPolling, onContentBlocked, onGenerationFailed]);
 
   const pollJobStatus = useCallback((jobId: string) => {
     // Start a new poll session — any in-flight responses from the old session are ignored
@@ -217,7 +221,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
               };
               setActiveJob(prev => ({ ...inferredJob, generationMeta: prev?.generationMeta }));
               handleTerminalJob(inferredJob);
-              onCreditRefresh?.();
               return;
             }
           }
@@ -308,7 +311,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
             };
             setActiveJob(prev => ({ ...syntheticJob, generationMeta: prev?.generationMeta }));
             handleTerminalJob(syntheticJob);
-            onCreditRefresh?.();
             return;
           }
 
@@ -354,7 +356,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
     // Start immediately
     runPoll();
-  }, [stopPolling, handleTerminalJob, user?.id, onCreditRefresh]);
+  }, [stopPolling, handleTerminalJob, user?.id]);
 
   // Restore in-progress job on mount (e.g. after page refresh)
   const hasRestoredRef = useRef(false);
@@ -517,12 +519,12 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       stopPolling();
       setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
       toast.info('Cancelled — credits returned ✨');
-      onCreditRefresh?.();
+      onCreditRefreshRef.current?.();
     } else {
       toast.warning('Could not cancel — generation may have already completed.');
       pollJobStatus(jobIdRef.current!);
     }
-  }, [activeJob, stopPolling, pollJobStatus, onCreditRefresh]);
+  }, [activeJob, stopPolling, pollJobStatus]);
 
   const reset = useCallback(() => {
     stopPolling();
