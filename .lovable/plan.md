@@ -1,26 +1,15 @@
 
 
-# Replace Hero Banner Image: Garden Editorial → Studio Lounge
+## Remove 3 Scenes from Environment Showcase
 
-## Steps
+**File:** `src/components/landing/EnvironmentShowcaseSection.tsx`
 
-1. **Upload image to Supabase Storage**
-   - Copy the uploaded file (`Virtual_Try-On_Set-da62019d.png`) into the `landing-assets` bucket under `hero/hero-croptop-studio-lounge.png`
-   - This keeps it consistent with the existing naming convention (`hero-croptop-{slug}.png`)
-   - The `landing-assets` bucket is already public, so `getOptimizedUrl` will handle quality optimization automatically
+Remove these 3 entries from `ROW_2` (lines 37-39):
+- `e('Garden Natural', 'pose-lifestyle-garden.jpg')`
+- `e('Studio Close-Up', 'pose-studio-closeup.jpg')`
+- `e('Studio Crossed Arms Male', 'pose-studio-arms-male.jpg')`
 
-2. **Update HeroSection.tsx (line 32)**
-   - Change filename: `hero-croptop-garden-editorial.png` → `hero-croptop-studio-lounge.png`
-   - Change label: `'Garden Editorial'` → `'Studio Lounge'`
+This leaves ROW_2 with 7 items (vs ROW_1's 10). The marquee still works fine with unequal row lengths.
 
-3. **Update ChannelShowcase.tsx (line 19)**
-   - Change the matching entry: id `'garden'` → `'studio-lounge'`, image path to `try-showcase/studio-lounge.png` (or keep existing if this is a different image), title to `'Studio Lounge'`, subtitle to something like `'Minimalist editorial shoot'`
-   - *Note*: This references a `try-showcase/` folder image which may be a different crop. Will check if the same image should replace it or if it should stay as-is.
-
-## Technical Details
-
-- Image served via `getLandingAssetUrl()` which resolves to the Supabase `landing-assets` public bucket
-- `getOptimizedUrl()` applies `quality=60` compression at render time
-- `ShimmerImage` handles lazy loading with shimmer placeholder
-- No database migration needed — this is a storage + code-only change
+**How scenes were chosen:** These were hand-picked when the section was built — a mix of freestyle generation outputs (the `d()` entries pointing to `freestyle-images` bucket) and built-in pose previews (the `e()` entries pointing to `landing-assets/poses/`). There's no automated selection logic. If you want to add different scenes later, you can tell me which ones to add or upload new images.
 
