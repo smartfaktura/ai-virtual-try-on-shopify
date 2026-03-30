@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Confirm your VOVV.AI account',
+  invite: "You've been invited to VOVV.AI",
+  magiclink: 'Your VOVV.AI login link',
+  recovery: 'Reset your VOVV.AI password',
+  email_change: 'Confirm your new VOVV.AI email',
+  reauthentication: 'Your VOVV.AI verification code',
 }
 
 // Template mapping
@@ -36,10 +36,10 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "vovvai"
+const SITE_NAME = "VOVV.AI"
 const SENDER_DOMAIN = "notify.vovv.ai"
 const ROOT_DOMAIN = "vovv.ai"
-const FROM_DOMAIN = "notify.vovv.ai" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "vovv.ai"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
