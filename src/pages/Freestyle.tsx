@@ -551,11 +551,22 @@ export default function Freestyle() {
     if (selectedProduct) {
       try {
         const rawUrl = selectedProduct.image_url;
-        productImageUrl = rawUrl.startsWith('data:')
-          ? await uploadImageToStorage(rawUrl, 'product')
-          : rawUrl.startsWith('/')
-            ? `${window.location.origin}${rawUrl}`
-            : rawUrl;
+        if (rawUrl.startsWith('data:')) {
+          productImageUrl = await uploadImageToStorage(rawUrl, 'product');
+        } else if (rawUrl.startsWith('/')) {
+          // Local sample image — convert to base64 then upload to storage
+          const resp = await fetch(rawUrl);
+          const blob = await resp.blob();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('Failed to read image'));
+            reader.readAsDataURL(blob);
+          });
+          productImageUrl = await uploadImageToStorage(base64, 'product');
+        } else {
+          productImageUrl = rawUrl;
+        }
       } catch (err) {
         console.error('Failed to upload product image:', err);
       }
@@ -676,7 +687,7 @@ export default function Freestyle() {
       sceneCategory: selectedScene?.category || undefined,
       promptOnly: selectedScene?.promptOnly || undefined,
       modelId: selectedModel?.modelId || undefined,
-      productId: selectedProduct?.id || undefined,
+      productId: selectedProduct?.id?.startsWith('sample_') ? null : selectedProduct?.id || undefined,
       imageRole: sourceImage ? imageRole : undefined,
       editIntent: sourceImage && imageRole === 'edit'
         ? (editIntent.length > 0 ? editIntent : ['enhance'])
