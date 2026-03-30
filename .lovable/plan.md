@@ -1,27 +1,49 @@
 
+Fix the confirmation email by refreshing both the template and the metadata that gets sent with it so it matches VOVV.AI instead of the current generic/plain version.
 
-## Fix: Auth Emails Not Arriving
+1. Update the signup confirmation email template
+- Redesign `supabase/functions/_shared/email-templates/signup.tsx` to match the app brand:
+  - use Inter-style font stack instead of Arial
+  - keep white email background, with VOVV.AI dark slate accents from the app
+  - add a clean branded header / badge so it feels like VOVV.AI, not a default system email
+  - present the 8-digit code as the primary action in a polished code block/card
+  - improve spacing, hierarchy, and footer copy
+- Rewrite the visible copy so it matches the auth flow:
+  - headline focused on confirming the account
+  - short explanatory text
+  - fallback verification link kept as secondary action
 
-### What's happening
-The email queue infrastructure works — the auth-email-hook receives signup events, enqueues them, and `process-email-queue` marks them as "sent." But the emails are not actually arriving in the inbox. The `email_send_log` shows `status: sent` for `ievute040@gmail.com`, meaning the email API accepted the request but the email is likely being rejected or lost because the hook was manually coded instead of properly scaffolded.
+2. Fix the subject line and preheader
+- Update the signup subject in `supabase/functions/auth-email-hook/index.ts` from the generic `Confirm your email` to a branded subject like `Your VOVV.AI verification code`
+- Update the signup preheader inside `signup.tsx` so inbox preview text clearly says the email contains the 8-digit code and why
 
-### Root cause
-The `auth-email-hook` was hand-written. Lovable's email system requires the hook to be created through the managed scaffolding process to ensure full compatibility with the sending pipeline (correct callback format, signature verification, and template rendering).
+3. Fix branding values coming from the auth email hook
+- Update the auth hook branding constants so the sender name/site name use the proper brand format (`VOVV.AI`), not the current lowercase `vovvai`
+- This ensures the From name, template text, and any preview rendering all use the correct brand
 
-### Plan
+4. Fix preview/sample data for the signup email
+- Add the signup `token` in the preview sample data inside `auth-email-hook/index.ts`
+- This makes the email preview show the real branded code layout instead of an incomplete preview
 
-1. **Re-scaffold auth email templates** using Lovable's managed tool — this replaces the manually written hook with one that's fully compatible with the email delivery pipeline. The domain `notify.vovv.ai` is already verified.
+5. Keep the existing behavior intact
+- Preserve the current 8-digit OTP flow
+- Preserve the fallback confirmation link
+- Do not change delivery logic or queue behavior; this is a branding/content upgrade for the confirmation email only
 
-2. **Re-apply VOVV.AI branding** to all 6 scaffolded templates:
-   - Brand colors (Slate-800 `#1f2d3d` buttons)
-   - VOVV.AI site name and copy
-   - OTP code display in the signup template (the 8-digit code feature you requested earlier)
+Files to update
+- `supabase/functions/_shared/email-templates/signup.tsx`
+- `supabase/functions/auth-email-hook/index.ts`
 
-3. **Deploy the updated hook**
-
-4. **Test** by triggering a new signup
-
-### Files affected
-- `supabase/functions/auth-email-hook/index.ts` (replaced by scaffold)
-- `supabase/functions/_shared/email-templates/*.tsx` (re-branded after scaffold)
-
+Technical details
+- Brand cues already present in the app:
+  - primary color: dark slate (`hsl(217 33% 17%)`)
+  - muted text: `hsl(215 16% 47%)`
+  - radius: `0.5rem`
+  - typography: Inter
+  - brand name shown in UI: `VOVV.AI`
+- Current problems I found:
+  - signup email uses very plain default styling
+  - subject line is generic
+  - preheader is generic
+  - sender/site name in the hook is lowercase `vovvai`
+  - signup preview sample is missing the token
