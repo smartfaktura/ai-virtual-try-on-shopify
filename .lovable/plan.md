@@ -1,55 +1,55 @@
 
 
-## Fix: Suppress User-Facing Errors from Queue Internals
+## Fix: Incorrect Progress Counts in Multi-Job Batch Generation
 
 ### Problem
-Two runtime errors are surfacing to users as scary error banners:
+The screenshot shows "41 of 8 images done" and "60 images" in the subtitle — three different numbers for the same batch. Two distinct bugs:
 
-1. **429 "Too many requests"** from `enqueue-generation` — the burst rate limit (60/min for pro) fires when batch workflows try to enqueue 10+ jobs rapidly within 60 seconds
-2. **500 "Signal timed out"** from `retry-queue` — it awaits `process-queue` with a 5-second timeout, but process-queue is busy (held by the singleton lock), so it times out and returns 500
+1. **Wrong total**: `totalExpectedImages` for `uses_tryon` workflows (including Selfie/UGC Set) uses `multiProductCount * tryOnSceneCount * tryOnModelCount * aspectRatioCount * framingCount` but **omits `selectedVariationIndices`** and `angleMultiplier`. This produces a much smaller number than the actual jobs created.
 
-### Root Causes & Fixes
+2. **Wrong completed count**: `completedCount` = `multiProductResults.size` counts completed *keys* in the result map, but the polling loop uses composite keys (`${productId}_${modelId}_${varIdx}_${ratio}_${framing}`), so `completedCount` can exceed `totalImages` when the total is wrong.
 
-**Fix 1: `retry-queue` — fire-and-forget, never return 500**
+3. **Estimation confusion**: The estimate line says "Est. ~1-2 min for 8 images" but the subtitle says "60 images" — the estimate uses the wrong `totalImages` value, making it look broken.
 
-The retry-queue function doesn't need the process-queue response. It should fire the request and immediately return 200. This eliminates the timeout error entirely.
+### Fix
 
-```ts
-// Before: awaits with 5s timeout → 500 on timeout
-const res = await fetch(..., { signal: AbortSignal.timeout(5000) });
+**1. Simplify `totalExpectedImages` — derive from actual job count**
 
-// After: fire-and-forget, always return 200
-fetch(...).catch(() => {});
-return Response(JSON.stringify({ triggered: true }), ...);
+Instead of re-computing the matrix formula (which is error-prone and duplicates logic), use `multiProductJobIds.size` as the single source of truth for total images. The job map already contains exactly one entry per expected image, since each job produces one image in the matrix workflows.
+
+In `Generate.tsx` (line 4179-4185), replace the complex formula:
+```tsx
+totalExpectedImages={multiProductJobIds.size}
 ```
 
-**Fix 2: `enqueue-generation` — increase burst limit for batch workflows**
+This is always correct because the job creation loop creates exactly one job per image in the matrix.
 
-The burst limits are too tight for batch workflows (e.g., 10 products × multiple models). Increase them so batch enqueueing doesn't hit the wall:
+**2. Guard completed count to never exceed total**
 
-| Plan | Current | New |
-|------|---------|-----|
-| enterprise | 100 | 200 |
-| pro | 60 | 120 |
-| growth | 40 | 80 |
-| starter | 20 | 40 |
-| free | 10 | 15 |
+In `MultiProductProgressBanner.tsx` (line 93-94), clamp `completedCount`:
+```tsx
+const safeCompleted = Math.min(completedCount, totalImages);
+```
 
-This is done in the `enqueue_generation` DB function via a migration.
+Use `safeCompleted` in the display string to prevent "41 of 8" even if there's a counting mismatch.
 
-**Fix 3: Client-side — suppress retry-queue errors from error reporting**
+**3. Fix the subtitle formula to match**
 
-The `useGenerationQueue` hook already uses `.catch(() => {})` on retry-queue calls, but the runtime error panel still picks them up. Add explicit error swallowing so these don't propagate.
+In `Generate.tsx` (line 4150), the subtitle already computes correctly for try-on. But for consistency, also use `multiProductJobIds.size` when available:
+```tsx
+// When jobs are already enqueued, use actual count
+const actualImageCount = multiProductJobIds.size > 0 ? multiProductJobIds.size : /* existing formula */;
+```
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/retry-queue/index.ts` | Fire-and-forget process-queue call, always return 200 |
-| **New migration** | Update `enqueue_generation` function with higher burst limits |
+| `src/pages/Generate.tsx` | Replace `totalExpectedImages` prop with `multiProductJobIds.size`; sync subtitle count |
+| `src/components/app/MultiProductProgressBanner.tsx` | Clamp `completedCount` to never exceed `totalImages` |
 
 ### Impact
-- Users will never see "Signal timed out" errors from retry-queue
-- Batch workflows (10-20 products) will enqueue without hitting burst limits
-- No functional behavior changes — retry-queue is a best-effort trigger, not a critical path
+- Progress will always show correct "X of Y images done" matching the actual number of queued jobs
+- Estimation will use the correct total for time calculations
+- No more impossible states like "41 of 8"
 
