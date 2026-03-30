@@ -51,7 +51,15 @@ function uniqueProductCount(group: BatchGroup): number {
   return names.size;
 }
 
-function ActiveGroupCard({
+interface WorkflowActivityCardProps {
+  batchGroups: BatchGroup[];
+  completedGroups?: BatchGroup[];
+  failedGroups?: BatchGroup[];
+  onCancelJob?: (jobId: string, creditsReserved: number) => void;
+  onDismiss?: (groupKey: string) => void;
+}
+
+const ActiveGroupCard = React.memo(function ActiveGroupCard({
   group,
   onCancelJob,
 }: {
