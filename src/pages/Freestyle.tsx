@@ -132,7 +132,7 @@ export default function Freestyle() {
 
 
   // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
-  const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
+  const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
 
   const handleReset = useCallback(() => {
