@@ -1,42 +1,30 @@
 
-Problem: the auth email flow is now failing after the hook receives the signup event. The sender domain is no longer the blocker.
 
-Do I know what the issue is? Yes.
+## Fix: Hero Carousel Dots Not Tracking Scroll
 
-What’s actually broken:
-- `auth-email-hook` is running and receiving signup events correctly.
-- It then calls `public.enqueue_email(...)` and fails with:
-  `PGRST202: Could not find the function public.enqueue_email(payload, queue_name) in the schema cache`
-- I also confirmed the queue-related email infrastructure is missing from the backend, so the hook was upgraded to the queue-based pattern before the required backend email queue setup existed.
+### Root Cause
 
-Plan:
-1. Restore the missing backend email infrastructure
-   - Set up the project’s email queue backend so the missing RPC and supporting tables are created.
-   - This should provision the queue wrapper used by `auth-email-hook`, plus the send log / suppression / unsubscribe infrastructure and the dispatcher that actually drains the queue.
+The mobile carousel container has `px-4` (16px padding) which offsets all scroll positions. The dot index calculation `Math.round(el.scrollLeft / itemWidth)` doesn't account for this padding, so the first item maps to index 0 only when scrollLeft is near 0, but subsequent items are off by the padding amount — causing dots to lag or not update correctly.
 
-2. Reconcile the auth email hook with the backend
-   - Keep the current sender settings:
-     - verified sender domain: `notify.vovv.ai`
-     - visible From address: `VOVV.AI <notifications@vovv.ai>`
-   - Re-deploy the auth email hook after backend setup so the live function and backend are aligned.
-   - If the scaffolded auth email setup is out of sync, re-scaffold the auth templates/hook and preserve the current VOVV branding.
+### Fix
 
-3. Harden the hook so failures are clearer
-   - Update `supabase/functions/auth-email-hook/index.ts` to check and log insert errors for `email_send_log` instead of silently ignoring them.
-   - Return a clearer infrastructure error if queue dependencies are missing again, so future failures are diagnosable immediately.
+**File: `src/components/landing/HeroSection.tsx`**
 
-4. Verify end-to-end
-   - Trigger signup / resend again.
-   - Confirm logs move from “Received auth event” to successful enqueue/dispatch instead of `PGRST202`.
-   - Confirm the confirmation email arrives and the resend action on `/auth` works.
+1. **`updateScrollState` function (line ~190)** — Subtract the container's left padding before calculating the dot index:
+   ```
+   const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+   const idx = Math.round((el.scrollLeft - padding) / itemWidth);
+   ```
+   Clamped to `[0, outputs.length - 1]` as before.
 
-Files / systems affected:
-- Backend email infrastructure (queue RPCs, send-log/suppression tables, dispatcher/cron)
-- `supabase/functions/auth-email-hook/index.ts`
-- Possibly the auth email scaffold if reconciliation is needed
-- No frontend Auth page change is required for the root fix
+2. **Dot click handler (line ~344)** — Add padding offset when scrolling to a specific dot:
+   ```
+   const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+   el.scrollTo({ left: i * itemWidth + padding, behavior: 'smooth' });
+   ```
 
-Technical notes:
-- The verified domain check passed for `notify.vovv.ai`.
-- The current issue is infrastructure mismatch, not DNS or sender naming.
-- The old conclusion about the sender domain was incomplete; the exact blocker now is the missing queue email backend required by the new auth hook.
+These two changes ensure the scroll-position-to-dot mapping and the dot-click-to-scroll-position mapping are both correct regardless of container padding.
+
+### Files
+- `src/components/landing/HeroSection.tsx` (2 small edits in existing functions)
+
