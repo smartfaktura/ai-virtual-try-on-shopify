@@ -1,49 +1,50 @@
 
-Fix the confirmation email by refreshing both the template and the metadata that gets sent with it so it matches VOVV.AI instead of the current generic/plain version.
 
-1. Update the signup confirmation email template
-- Redesign `supabase/functions/_shared/email-templates/signup.tsx` to match the app brand:
-  - use Inter-style font stack instead of Arial
-  - keep white email background, with VOVV.AI dark slate accents from the app
-  - add a clean branded header / badge so it feels like VOVV.AI, not a default system email
-  - present the 8-digit code as the primary action in a polished code block/card
-  - improve spacing, hierarchy, and footer copy
-- Rewrite the visible copy so it matches the auth flow:
-  - headline focused on confirming the account
-  - short explanatory text
-  - fallback verification link kept as secondary action
+## Fix: Slow /discover Loading in In-App Browsers (Instagram/Meta)
 
-2. Fix the subject line and preheader
-- Update the signup subject in `supabase/functions/auth-email-hook/index.ts` from the generic `Confirm your email` to a branded subject like `Your VOVV.AI verification code`
-- Update the signup preheader inside `signup.tsx` so inbox preview text clearly says the email contains the 8-digit code and why
+### Root causes
 
-3. Fix branding values coming from the auth email hook
-- Update the auth hook branding constants so the sender name/site name use the proper brand format (`VOVV.AI`), not the current lowercase `vovvai`
-- This ensures the From name, template text, and any preview rendering all use the correct brand
+In-app browsers (Instagram, Facebook) use a stripped-down WebView with fewer concurrent connections (~4-6 vs ~12 in Chrome), slower JS execution, and more aggressive resource throttling. The /discover page hits all of these limits:
 
-4. Fix preview/sample data for the signup email
-- Add the signup `token` in the preview sample data inside `auth-email-hook/index.ts`
-- This makes the email preview show the real branded code layout instead of an incomplete preview
+1. **30 images rendered immediately** — `INITIAL_RENDER_COUNT = 30`. Each triggers a network request, saturating the in-app browser's limited connection pool.
 
-5. Keep the existing behavior intact
-- Preserve the current 8-digit OTP flow
-- Preserve the fallback confirmation link
-- Do not change delivery logic or queue behavior; this is a branding/content upgrade for the confirmation email only
+2. **Full-size images downloaded** — `getOptimizedUrl(imageUrl, { quality: 60 })` compresses quality but never sets a `width`, so every card downloads the original-resolution image (often 1500px+). On a 390px mobile screen with 2 columns, each card is ~195px wide.
 
-Files to update
-- `supabase/functions/_shared/email-templates/signup.tsx`
-- `supabase/functions/auth-email-hook/index.ts`
+3. **ShimmerImage creates phantom image objects** — On mount, every ShimmerImage runs `new Image(); img.src = src` to check browser cache (line 38-43). With 30 cards, this creates 30 preload requests *before* the browser even evaluates `loading="lazy"`, defeating lazy loading entirely.
 
-Technical details
-- Brand cues already present in the app:
-  - primary color: dark slate (`hsl(217 33% 17%)`)
-  - muted text: `hsl(215 16% 47%)`
-  - radius: `0.5rem`
-  - typography: Inter
-  - brand name shown in UI: `VOVV.AI`
-- Current problems I found:
-  - signup email uses very plain default styling
-  - subject line is generic
-  - preheader is generic
-  - sender/site name in the hook is lowercase `vovvai`
-  - signup preview sample is missing the token
+4. **4 parallel API calls on mount** — `discover_presets`, `get_public_custom_scenes`, `get_hidden_scene_ids`, `get_public_featured_items` all fire simultaneously, competing with image requests.
+
+### Plan
+
+**1. Reduce initial render count on mobile**
+- In `PublicDiscover.tsx`, change `INITIAL_RENDER_COUNT` from 30 to a responsive value: 12 on mobile (`< 640px`), 20 on tablet, 30 on desktop.
+
+**2. Add width parameter to DiscoverCard image optimization**
+- In `DiscoverCard.tsx`, pass `width: 400` to `getOptimizedUrl()` for card images. This uses Supabase's image transformation to serve ~400px wide images instead of full-resolution, cutting download size by 60-80%.
+
+**3. Fix ShimmerImage eager preloading**
+- In `shimmer-image.tsx`, skip the `new Image()` cache probe when the component has `loading="lazy"`. Only run the eager check for `loading="eager"` or `fetchPriority="high"` images. This prevents 30 simultaneous preloads that bypass native lazy loading.
+
+**4. Reduce concurrent API calls**
+- In `PublicDiscover.tsx`, the hidden scenes and featured items queries don't need to fire until presets have loaded. Add `enabled: presets.length > 0` to defer them, reducing initial concurrent requests from 4 to 2.
+
+### Files to edit
+- `src/pages/PublicDiscover.tsx` — responsive initial count, deferred queries
+- `src/components/app/DiscoverCard.tsx` — add width to image optimization
+- `src/components/ui/shimmer-image.tsx` — skip eager cache check for lazy images
+
+### Technical detail
+
+```text
+Before (in-app browser timeline):
+  0ms   ─ 4 API calls + 30 image preloads (new Image()) ─ connection pool saturated
+  200ms ─ JS still parsing, images queued
+  2-5s  ─ images trickle in one by one
+
+After:
+  0ms   ─ 2 API calls only
+  100ms ─ 12 small (400px) images with native lazy loading
+  300ms ─ remaining 2 API calls fire
+  ~1s   ─ page visually complete
+```
+
