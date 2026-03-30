@@ -11,6 +11,7 @@ import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
 import { AppShellLoading } from '@/components/app/AppShellLoading';
+import { checkAppVersion } from '@/lib/versionCheck';
 import Landing from '@/pages/Landing';
 
 const TryShot = lazy(() => import('@/pages/TryShot'));
