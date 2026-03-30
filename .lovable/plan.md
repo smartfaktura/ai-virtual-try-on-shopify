@@ -1,37 +1,32 @@
 
 
-# Fix Stalled Crossfade Transitions
+# Fix "NEW" Badge Readability in Dark Mode
 
-## Root Cause
-`onTransitionEnd` is passed as a prop to `ShimmerImage`, which spreads it onto the inner `<img>` tag via `...rest`. But the opacity transition (`transition-opacity duration-500`) is applied to the **wrapper div** via `wrapperClassName`. The `<img>` never transitions opacity at the wrapper level, so `onTransitionEnd` never fires. The cycle stalls after the first crossfade.
+## Problem
+The "NEW" badge next to feature items (e.g., "Brand Models") uses `bg-primary/15 text-primary border-0`. In dark mode, `--primary` is a muted blue-grey (`210 17% 70%`), making the text nearly invisible against the low-opacity background.
 
-## Fix — `src/components/landing/ProductCategoryShowcase.tsx`
+## Fix
+Update the badge classes in both files to use higher-contrast styling that works in both light and dark modes:
 
-Wrap the incoming `ShimmerImage` in a plain `<div>` that owns both the transition classes and the `onTransitionEnd` handler:
+### Files to change:
+1. **`src/components/landing/LandingPricing.tsx`** (line ~137)
+2. **`src/components/app/PlanCard.tsx`** (line ~114)
 
-```tsx
-{incomingIndex !== null && (
-  <div
-    className="absolute inset-0 transition-opacity duration-500"
-    style={{ zIndex: 2, opacity: fadeIn ? 1 : 0 }}
-    onTransitionEnd={handleTransitionEnd}
-  >
-    <ShimmerImage
-      src={images[incomingIndex]}
-      alt={`${label} AI-generated product shot`}
-      loading="eager"
-      decoding="async"
-      wrapperClassName="absolute inset-0"
-      className="w-full h-full object-cover"
-    />
-  </div>
-)}
+### Change
+Replace:
+```
+bg-primary/15 text-primary border-0
+```
+With:
+```
+bg-primary/20 text-primary-foreground dark:bg-primary/30 dark:text-primary-foreground border border-primary/30
 ```
 
-This ensures:
-- The opacity transition lives on a real DOM element we control
-- `onTransitionEnd` fires reliably when the 500ms fade completes
-- `handleTransitionEnd` swaps `displayIndex`, resets state, and the next cycle begins
+Actually simpler — use the default Badge variant which already has good contrast (`bg-primary text-primary-foreground`), but scale it down:
 
-Single file change, ~10 lines replaced.
+```
+bg-primary text-primary-foreground text-[9px] px-1.5 py-0 leading-tight
+```
+
+This gives a solid, readable badge in both themes — matching the "CURRENT" badge style visible in the screenshot.
 
