@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,6 +11,16 @@ interface MobilePickerSheetProps {
 }
 
 export function MobilePickerSheet({ open, onOpenChange, title, children, minHeight = 'auto' }: MobilePickerSheetProps) {
+  const [pointerReady, setPointerReady] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => setPointerReady(true), 260);
+      return () => clearTimeout(timer);
+    }
+    setPointerReady(false);
+  }, [open]);
+
   if (!open) return null;
 
   return (
