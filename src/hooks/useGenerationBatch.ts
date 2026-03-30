@@ -176,7 +176,7 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
 
       if (allDone) {
         stopPolling();
-        onCreditRefresh?.();
+        onCreditRefreshRef.current?.();
       }
     };
 
