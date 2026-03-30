@@ -132,7 +132,7 @@ export default function Freestyle() {
 
 
   // First-time guide state — cached in localStorage for instant render, persisted per-user in DB
-  const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
+  const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
 
   const handleReset = useCallback(() => {
@@ -212,9 +212,8 @@ export default function Freestyle() {
       .then(({ data }) => {
         const dismissed = (data?.settings as Record<string, unknown>)?.freestyleGuideDismissed === true;
         if (dismissed) {
-          setShowGuide(false);
           localStorage.setItem('freestyle_guide_dismissed', 'true');
-        } else if (!localStorage.getItem('freestyle_guide_dismissed')) {
+        } else {
           setShowGuide(true);
         }
         setUserCategories((data?.product_categories as string[]) ?? []);
