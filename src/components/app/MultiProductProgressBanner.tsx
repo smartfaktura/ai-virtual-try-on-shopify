@@ -120,7 +120,7 @@ export function MultiProductProgressBanner({
           <>
             <Progress value={displayProgress} className="h-2" />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Est. ~{estLow === estHigh ? estLow : `${estLow}-${estHigh}`} {estUnit} for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
+              <span>{totalImages > 0 ? `Est. ~${estLow === estHigh ? estLow : `${estLow}-${estHigh}`} ${estUnit} for ${totalImages} image${totalImages !== 1 ? 's' : ''}` : 'Calculating estimate…'}</span>
               <span>{displayProgress}%</span>
             </div>
           </>
