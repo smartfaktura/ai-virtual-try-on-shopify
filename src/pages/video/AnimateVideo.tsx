@@ -50,6 +50,7 @@ const TIPS = [
 
 export default function AnimateVideo() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     pipelineStage, videoUrl, videoError, elapsedSeconds, videoStatus,
     isAnalyzing, isBuildingPrompt, isGenerating, isComplete,
