@@ -1,63 +1,51 @@
 
 
-## Fix: Unified Activity Card for Multi-Product Batch Generations
+## Fix: Avatar Crash / Flicker in Workflow Activity Cards
 
-### Problem
+### Root Cause
 
-When a user runs "Virtual Try-On Set" with 16 products × 5 combos = 80 images, the Workflows Activity section shows **16 separate cards** (one per product). This is because:
+The `WorkflowActivityCard` parent runs `useVisibilityTick(1000)` to update elapsed time labels every second. This re-renders **every** `ActiveGroupCard` child 1x/second. Each child also has its own `useVisibilityTick(3000)` for avatar cycling. The combination causes:
 
-1. The multi-product try-on enqueue loop (`Generate.tsx` line 1556) does **not set a `batch_id`** in the payload
-2. The grouping logic in `batchGrouping.ts` falls back to time-window grouping which groups by `workflow_id + product_name` — different products = different groups
-3. Same issue in the multi-product workflow path (line 1126) and multi-combo workflow path (line 1380)
+1. **CSS transition interruption** — the 500ms opacity crossfade between avatars gets reset on every 1s parent re-render, causing both avatars to flash simultaneously (the overlapping circles in the screenshot)
+2. **DOM remount spam** — `key={currentAgent.name}` on the agent status message (line 146) forces a full remount animation on every team change, but parent re-renders at 1s can cause intermediate states
 
-The user wants to see **one card**: "Virtual Try-On Set — 12 of 80 images done" with a single progress bar.
+When multiple batch groups are active (e.g., 5 separate workflow cards), this creates 5 cards × 1 re-render/sec = constant layout thrashing on the avatar stack.
 
 ### Plan
 
-#### 1. Generate a shared `batch_id` before each multi-job loop
+#### 1. Memoize `ActiveGroupCard` to block parent tick propagation
 
-In `Generate.tsx`, before each multi-product/multi-combo loop, generate a UUID `batchId` and include it in every enqueue payload. This affects 3 loops:
+Wrap `ActiveGroupCard` with `React.memo` and a custom comparator that only re-renders when the group data actually changes (job counts, statuses). The parent's 1s elapsed-time tick will no longer force all children to re-render.
 
-- **Multi-product try-on** (line 1552): Add `const batchId = crypto.randomUUID()` and pass `batch_id: batchId` in each `enqueueTryOnForProduct` call
-- **Multi-product workflow** (line 1126): Same pattern
-- **Multi-combo workflow** (line 1380): Same pattern
+**File**: `src/components/app/WorkflowActivityCard.tsx`
 
-#### 2. Update `enqueueTryOnForProduct` to accept and forward `batch_id`
+#### 2. Move elapsed time into its own ticking component
 
-Add an optional `batchId` parameter to the function signature (line 1438). Include it in the enqueue payload so the queue job has it stored.
+Extract the elapsed label (`3m 12s`) into a tiny `<ElapsedTimer startedAt={...} />` component that runs its own `useVisibilityTick(1000)`. This isolates the 1s re-render to just the text node, not the entire card with avatars.
 
-#### 3. Also refactor `enqueueTryOnForProduct` to use shared helper
+**File**: `src/components/app/WorkflowActivityCard.tsx`
 
-Replace the 60-line inline retry logic with `enqueueWithRetry` from `enqueueGeneration.ts`. This also fixes the remaining inconsistency where this function still uses raw `fetch` instead of the unified helper.
+#### 3. Remove the parent-level 1s tick
 
-#### 4. Update `injectActiveJob` calls to include `batch_id`
+The parent `useVisibilityTick(1000, hasActiveGroups)` at line 204 is now unnecessary since each card handles its own elapsed time. Remove it to eliminate the cascade re-render entirely.
 
-The optimistic job injection at line 1571 needs to pass `batch_id: batchId` so the UI immediately groups jobs correctly before the server data arrives.
+**File**: `src/components/app/WorkflowActivityCard.tsx`
 
-#### 5. Update `optimisticJobInjection.ts` to support `batch_id`
+#### 4. Stabilize avatar transition with will-change
 
-Ensure the `injectActiveJob` params accept and forward `batch_id`.
+Add `will-change: opacity` to the avatar stack elements so the browser composites the opacity transition on the GPU layer, preventing flicker during React re-renders.
 
-#### 6. Update `WorkflowActivityCard` to show product breakdown for large batches
+**File**: `src/components/app/WorkflowActivityCard.tsx` (avatar div, line 110)
 
-For batch groups with multiple products, show a summary header ("Virtual Try-On Set — 12/80 images") with a small expandable list of per-product progress underneath (optional, collapsed by default).
-
-### What this achieves
-
-- All 80 jobs from one generation session share the same `batch_id`
-- `batchGrouping.ts` already groups by `batch_id` first (line 71-113) — no changes needed there
-- Activity section shows **one card** with aggregate progress instead of 16 separate cards
-- The card title drops the product name and shows the workflow name + total progress
-
-### Files changed
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/Generate.tsx` | Generate `batch_id` before loops; pass to enqueue calls + optimistic injection; refactor `enqueueTryOnForProduct` to use shared helper |
-| `src/lib/optimisticJobInjection.ts` | Forward `batch_id` field |
-| `src/components/app/WorkflowActivityCard.tsx` | For multi-product batches, show aggregate title + optional per-product breakdown |
+| `src/components/app/WorkflowActivityCard.tsx` | Memoize `ActiveGroupCard`; extract `ElapsedTimer`; remove parent 1s tick; add `will-change: opacity` to avatar stack |
 
-### Timing impact
-
-None — no new delays. The `batch_id` is just a UUID string added to the existing payload.
+### Result
+- Parent no longer re-renders all children every second
+- Avatar crossfade runs smoothly without interruption
+- Elapsed time still updates every second but isolated to its own component
+- Works correctly with 1 or 20 simultaneous active groups
 
