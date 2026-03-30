@@ -1,43 +1,20 @@
 
 
-## Fix Zoomed-In Product Images in Start Workflow Modal
-
-### Problem
-In the product selection step (Step 2) of the StartWorkflowModal, product thumbnails use `object-cover` on a forced `aspect-square` container. This crops/zooms images that aren't square, making them look bad — especially compared to other parts of the app where images display properly.
+## Make Product Picker 3 Columns on Mobile
 
 ### Change
 
-**File: `src/components/app/StartWorkflowModal.tsx`** (lines 252-258)
+**File: `src/components/app/freestyle/ProductSelectorChip.tsx`** (line 164)
 
-Replace the forced square crop with `object-contain` so the full product image is visible, and use a slightly larger optimized width for better quality:
+Change the mobile grid from 2 columns to 3 columns:
 
-```typescript
+```
 // Before
-<div className="w-full aspect-square rounded-md overflow-hidden bg-muted">
-  <ShimmerImage
-    src={getOptimizedUrl(p.image_url, { width: 200, quality: 70 })}
-    alt={p.title}
-    className="w-full h-full object-cover"
-    aspectRatio="1/1"
-  />
-</div>
+isMobile ? "grid-cols-2" : "grid-cols-3"
 
 // After
-<div className="w-full aspect-square rounded-md overflow-hidden bg-muted">
-  <ShimmerImage
-    src={getOptimizedUrl(p.image_url, { width: 300, quality: 75 })}
-    alt={p.title}
-    className="w-full h-full object-contain"
-    aspectRatio="1/1"
-  />
-</div>
+"grid-cols-3"
 ```
 
-- `object-cover` → `object-contain`: shows the entire product without cropping
-- `width: 200, quality: 70` → `width: 300, quality: 75`: slightly higher resolution and quality to reduce compression artifacts in the modal
-
-### Impact
-- Single file, two-line change
-- Product images will display fully visible without aggressive cropping
-- Consistent with the optimized image quality used elsewhere in the app
+Since both mobile and desktop use 3 columns, simplify to just `"grid-cols-3"`.
 
