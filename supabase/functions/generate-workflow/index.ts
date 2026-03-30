@@ -553,7 +553,7 @@ async function generateImage(
   apiKey: string,
   aspectRatio?: string
 ): Promise<string | null> {
-  const maxRetries = 2;
+  const maxRetries = 3;
   const PER_IMAGE_TIMEOUT = 150_000; // 150s per image
 
   // Build content array: text prompt + all reference images
