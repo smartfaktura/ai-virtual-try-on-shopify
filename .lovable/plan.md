@@ -1,32 +1,37 @@
 
 
-# Fix Flashing Transitions in Category Showcase
+# Fix Stalled Crossfade Transitions
 
-## Problem
-The `ShimmerImage` uses `key={`cur-${currentIndex}`}` which forces React to unmount and remount the entire image element on every transition. This causes a flash — the old image disappears instantly, then the new one fades in from the shimmer placeholder.
+## Root Cause
+`onTransitionEnd` is passed as a prop to `ShimmerImage`, which spreads it onto the inner `<img>` tag via `...rest`. But the opacity transition (`transition-opacity duration-500`) is applied to the **wrapper div** via `wrapperClassName`. The `<img>` never transitions opacity at the wrapper level, so `onTransitionEnd` never fires. The cycle stalls after the first crossfade.
 
-## Solution
-Layer two `ShimmerImage` elements (current and next) and crossfade between them using CSS opacity transitions instead of React key-based remounting.
+## Fix — `src/components/landing/ProductCategoryShowcase.tsx`
 
-### Changes in `src/components/landing/ProductCategoryShowcase.tsx`
+Wrap the incoming `ShimmerImage` in a plain `<div>` that owns both the transition classes and the `onTransitionEnd` handler:
 
-**Replace the single keyed `ShimmerImage`** with two persistent layers:
-- **Bottom layer (z-index 1)**: shows the "previous" image (stays visible during fade)
-- **Top layer (z-index 2)**: the incoming image fades in via `opacity` transition
+```tsx
+{incomingIndex !== null && (
+  <div
+    className="absolute inset-0 transition-opacity duration-500"
+    style={{ zIndex: 2, opacity: fadeIn ? 1 : 0 }}
+    onTransitionEnd={handleTransitionEnd}
+  >
+    <ShimmerImage
+      src={images[incomingIndex]}
+      alt={`${label} AI-generated product shot`}
+      loading="eager"
+      decoding="async"
+      wrapperClassName="absolute inset-0"
+      className="w-full h-full object-cover"
+    />
+  </div>
+)}
+```
 
-**New state model**:
-- `displayIndex` — the currently visible (bottom) image
-- `incomingIndex` — the next image fading in on top
-- `fadeIn` — boolean toggled to trigger the CSS opacity transition
-- When the fade completes (`onTransitionEnd`), swap `displayIndex` to `incomingIndex` and prepare the next preload
+This ensures:
+- The opacity transition lives on a real DOM element we control
+- `onTransitionEnd` fires reliably when the 500ms fade completes
+- `handleTransitionEnd` swaps `displayIndex`, resets state, and the next cycle begins
 
-**Transition flow**:
-1. Preload next image via `Image()` object → sets `nextReady = true`
-2. Timer fires → set `incomingIndex` and `fadeIn = true`
-3. Top layer fades from `opacity-0` to `opacity-100` over 500ms
-4. `onTransitionEnd` → update `displayIndex`, reset `fadeIn`, advance to next
-
-**No `key` prop on either `ShimmerImage`** — images swap via `src` changes, not remounting. The shimmer inside `ShimmerImage` handles the brief load naturally for uncached images, while cached images appear instantly.
-
-This gives a smooth crossfade with zero flashing, matching the quality of the Environment Showcase marquee.
+Single file change, ~10 lines replaced.
 
