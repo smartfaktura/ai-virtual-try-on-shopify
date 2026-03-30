@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LucideIcon } from 'lucide-react';
@@ -49,6 +50,7 @@ const TIPS = [
 
 export default function AnimateVideo() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     pipelineStage, videoUrl, videoError, elapsedSeconds, videoStatus,
     isAnalyzing, isBuildingPrompt, isGenerating, isComplete,
@@ -231,7 +233,19 @@ export default function AnimateVideo() {
     }
   }, [analyzeImage]);
 
-  // Paste image support (CMD+V / Ctrl+V)
+  // Auto-load image from query param (e.g. from Library "Generate Video" button)
+  const queryImageConsumed = useRef(false);
+  useEffect(() => {
+    if (queryImageConsumed.current) return;
+    const paramUrl = searchParams.get('imageUrl');
+    if (paramUrl && !imageUrl) {
+      queryImageConsumed.current = true;
+      setSearchParams({}, { replace: true });
+      handleLibrarySelect(paramUrl);
+    }
+  }, [searchParams, imageUrl, handleLibrarySelect, setSearchParams]);
+
+
   useEffect(() => {
     if (imageUrl) return; // Only listen when no image is loaded
     const handlePaste = (e: ClipboardEvent) => {
