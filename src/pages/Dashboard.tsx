@@ -138,6 +138,7 @@ export default function Dashboard() {
       return count ?? 0;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch freestyle generation count (exclude Perspectives)
@@ -152,6 +153,7 @@ export default function Dashboard() {
       return count ?? 0;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch recent jobs (generation_jobs + Picture Perspectives from freestyle_generations)
@@ -267,7 +269,8 @@ export default function Dashboard() {
       const { data } = await supabase
         .from('generation_jobs')
         .select('workflow_slug, workflow_id, workflows(name, slug)')
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .limit(500);
       const counts: Record<string, { count: number; name: string; slug: string }> = {};
       (data || []).forEach(j => {
         const wf = j.workflows as any;
