@@ -161,7 +161,7 @@ export function ProductSelectorChip({
             </button>
           )}
 
-          <div className={cn("grid gap-2 max-h-64 overflow-y-auto pr-1", isMobile ? "grid-cols-2" : "grid-cols-3")}>
+          <div className={cn("grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1")}>
             {filtered.map(product => (
               <button
                 key={product.id}
