@@ -1,39 +1,22 @@
 
 
-## Final Edge Cases Found
+## Issue: Product Chip Tap Causes Instant Redirect on Mobile
 
-### Issue 1: Double credit refresh on hard timeout
+### Root Cause
 
-**File:** `src/hooks/useGenerationQueue.ts` lines 310-311
+When the user taps the Product chip on mobile and has **no products**, the `MobilePickerSheet` opens with empty-state content that includes a full-width `<Link to="/app/products">` button ("Add Your Own Product"). The sheet uses a CSS slide-up animation (`animate-in slide-in-from-bottom duration-200`), but the content is rendered at its **final DOM position immediately** — only the visual is animated. The original tap's touch event can propagate to the Link element before the animation visually completes, causing an instant navigation to `/app/products`.
 
-```typescript
-handleTerminalJob(syntheticJob);  // ← calls onCreditRefresh?.() internally (line 141)
-onCreditRefresh?.();              // ← calls it AGAIN
-```
+This is a classic touch-passthrough bug on mobile bottom sheets.
 
-`handleTerminalJob` already calls `onCreditRefresh?.()` at line 141 for all terminal states. The explicit call at line 311 is redundant and triggers two simultaneous balance fetches. Same pattern does NOT exist for normal completions (line 341 only calls `handleTerminalJob`), so this is specific to the hard-timeout path.
+### Fix
 
-**Fix:** Remove line 311 (`onCreditRefresh?.()`) — `handleTerminalJob` already handles it.
+Two changes:
 
----
+**1. `MobilePickerSheet.tsx` — add a touch guard during open animation**
 
-### Issue 2: Stale `onCreditRefresh` closure in `pollJobStatus`
+Add a brief `pointer-events: none` on the content area for the first 250ms after opening. Use a state + `useEffect` with `setTimeout` to flip `pointer-events` to `auto` after the animation completes. This prevents any touch passthrough on ALL picker sheets, not just the Product one.
 
-**File:** `src/hooks/useGenerationQueue.ts` line 357
+**2. `ProductSelectorChip.tsx` — replace Link with inline navigation**
 
-`pollJobStatus` is a `useCallback` with `onCreditRefresh` in its deps (line 357). When `pollJobStatus` is called, it creates a recursive `setTimeout` chain via `runPoll`. The `onCreditRefresh` reference captured at that moment stays frozen for the entire polling session — even if the callback identity changes later.
-
-This is mostly mitigated because `handleTerminalJob` (which also captures `onCreditRefresh`) is called at the end, so they're at least consistent. But it's fragile.
-
-**Fix:** Use an `onCreditRefreshRef` pattern (like the batch hook) and remove `onCreditRefresh` from `pollJobStatus` deps. This also stabilizes `pollJobStatus` identity, which stabilizes `enqueue` (line 487 depends on `pollJobStatus`).
-
----
-
-### Plan
-
-| File | Change |
-|------|--------|
-| `src/hooks/useGenerationQueue.ts` | 1. Add `onCreditRefreshRef` + sync effect. 2. Replace all direct `onCreditRefresh?.()` calls with `onCreditRefreshRef.current?.()` in `handleTerminalJob`, `pollJobStatus`, and `cancel`. 3. Remove `onCreditRefresh` from all `useCallback` dep arrays. 4. Remove redundant double-call at line 311. |
-
-This is a small, surgical change — swap 4-5 references from direct to ref, remove one redundant line, and clean up dep arrays.
+Change the "Add Your Own Product" `<Link>` in the empty state to a `<button>` that calls `useNavigate()` with a small guard, preventing accidental navigation. Also add `onTouchEnd={e => e.stopPropagation()}` as an additional safety measure.
 
