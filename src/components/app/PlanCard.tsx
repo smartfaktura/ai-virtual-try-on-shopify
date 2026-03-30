@@ -111,7 +111,7 @@ export function PlanCard({
                     <span className="inline-flex items-center gap-1.5">
                       {feature.text}
                       {feature.badge && (
-                        <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+                        <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
                           {feature.badge}
                         </Badge>
                       )}
