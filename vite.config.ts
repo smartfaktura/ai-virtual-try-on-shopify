@@ -1,10 +1,28 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
+
+const buildVersion = Date.now().toString();
+
+function versionFilePlugin(): Plugin {
+  return {
+    name: 'generate-version-file',
+    buildStart() {
+      fs.writeFileSync(
+        path.resolve(__dirname, 'public/version.json'),
+        JSON.stringify({ v: buildVersion })
+      );
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    __BUILD_VERSION__: JSON.stringify(buildVersion),
+  },
   server: {
     host: "::",
     port: 8080,
