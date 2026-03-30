@@ -471,7 +471,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         return null;
       }
 
-      const result: EnqueueResult = res;
+      const result = res as unknown as EnqueueResult;
 
       setActiveJob({
         id: result.jobId,
