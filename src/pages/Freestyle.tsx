@@ -90,7 +90,7 @@ export default function Freestyle() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
-  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
+  const [quality, setQuality] = useState<'standard' | 'high'>('high');
 
   // Auto-upgrade to Pro quality when model or scene is selected
   useEffect(() => {
