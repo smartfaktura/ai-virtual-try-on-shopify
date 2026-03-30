@@ -80,6 +80,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
 
+  // Stable ref for onCreditRefresh to avoid stale closures in polling chains
+  const onCreditRefreshRef = useRef(onCreditRefresh);
+  useEffect(() => { onCreditRefreshRef.current = onCreditRefresh; }, [onCreditRefresh]);
+
   // Single-flight polling refs
   const jobIdRef = useRef<string | null>(null);
   const pollVersionRef = useRef(0); // Incremented on each new poll session; stale responses are ignored
