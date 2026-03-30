@@ -85,7 +85,7 @@ export default function PublicFreestyle() {
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
-  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
+  const [quality, setQuality] = useState<'standard' | 'high'>('high');
   const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
