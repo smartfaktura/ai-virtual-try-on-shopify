@@ -1717,6 +1717,8 @@ export default function Generate() {
     if (!activeJob) return;
     // Multi-product uses its own polling, skip here
     if (multiProductJobIds.size > 0) return;
+    // When a batch is active, let the batch watcher handle aggregation
+    if (batchState) return;
     // Don't let stale activeJob overwrite results already on screen
     if (currentStep === 'results') return;
     if (activeJob.status === 'completed' && activeJob.result) {
