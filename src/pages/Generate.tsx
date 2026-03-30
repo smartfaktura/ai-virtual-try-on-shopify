@@ -148,6 +148,39 @@ import WorkflowSettingsPanel from '@/components/app/generate/WorkflowSettingsPan
 import TryOnSettingsPanel from '@/components/app/generate/TryOnSettingsPanel';
 type UserProduct = Tables<'user_products'>;
 
+/** Upload local sample images (paths starting with /) to storage so the backend gets a public URL */
+async function resolveProductImageUrl(url: string | null | undefined): Promise<string | null> {
+  if (!url) return null;
+  if (url.startsWith('/')) {
+    try {
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+      // Upload to generation-inputs bucket
+      const ext = url.split('.').pop() || 'png';
+      const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+      const fileName = `sample-products/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const byteString = atob(base64.split(',')[1]);
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      const file = new File([ab], fileName, { type: contentType });
+      const { data, error } = await supabase.storage.from('generation-inputs').upload(fileName, file, { contentType, upsert: false });
+      if (error) throw error;
+      const { data: publicData } = supabase.storage.from('generation-inputs').getPublicUrl(data.path);
+      return publicData.publicUrl;
+    } catch (err) {
+      console.error('[resolveProductImageUrl] Failed to upload sample image:', err);
+      return url; // fallback to original
+    }
+  }
+  return url;
+}
+
 const FLAT_LAY_AESTHETICS = [
   { id: 'minimal', label: 'Minimal', hint: 'clean, few props, whitespace' },
   { id: 'botanical', label: 'Botanical', hint: 'dried flowers, eucalyptus leaves, greenery accents' },
