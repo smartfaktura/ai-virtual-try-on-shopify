@@ -1130,6 +1130,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
+      const batchId = crypto.randomUUID();
       const needsModel = uiConfig?.show_model_picker && selectedModel;
       const modelsToGenerate = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
         ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
