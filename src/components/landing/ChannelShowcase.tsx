@@ -16,7 +16,7 @@ interface ShowcaseItem {
 }
 
 const ITEMS: ShowcaseItem[] = [
-  { id: 'garden', image: s('try-showcase/garden-editorial.png'), title: 'Garden Editorial', subtitle: 'Botanical lifestyle shoot' },
+  { id: 'studio-lounge', image: s('try-showcase/studio-lounge.png'), title: 'Studio Lounge', subtitle: 'Minimalist editorial shoot' },
   { id: 'tryon-1', image: s('try-showcase/virtual-tryon-1.png'), title: 'Basketball Court', subtitle: 'Sporty outdoor editorial' },
   { id: 'cafe', image: s('try-showcase/cafe-lifestyle.png'), title: 'Café Lifestyle', subtitle: 'Sun-drenched park editorial' },
   { id: 'golden', image: s('try-showcase/golden-hour.png'), title: 'Golden Hour', subtitle: 'Warm outdoor portrait' },

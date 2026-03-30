@@ -29,7 +29,7 @@ const showcases: ProductShowcase[] = [
       { img: h('hero-croptop-studio-lookbook.png'), label: 'Studio Lookbook' },
       { img: h('hero-croptop-golden-hour.png'), label: 'Golden Hour' },
       { img: h('hero-croptop-cafe-lifestyle.png'), label: 'Café Lifestyle' },
-      { img: h('hero-croptop-garden-editorial.png'), label: 'Garden Editorial' },
+      { img: h('hero-croptop-studio-lounge.png'), label: 'Studio Lounge' },
       { img: h('hero-croptop-basketball-court.png'), label: 'Basketball Court' },
       { img: h('hero-croptop-urban-edge.png'), label: 'Urban Edge' },
       { img: h('hero-croptop-pilates-studio.png'), label: 'Pilates Studio' },
