@@ -184,6 +184,8 @@ export default function Generate() {
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     jobTypes: ['workflow', 'tryon'],
     onGenerationFailed: (_jobId, _message, errorType) => {
+      // Multi-product batches handle failures in their own polling loop
+      if (multiProductJobIdsRef.current.size > 0) return;
       const friendlyMessages: Record<string, string> = {
         timeout: 'Generation timed out. Your credits have been refunded.',
         rate_limit: 'Too many generations at once. Please wait and try again.',
