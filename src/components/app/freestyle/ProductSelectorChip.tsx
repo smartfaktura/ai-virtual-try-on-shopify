@@ -133,14 +133,14 @@ export function ProductSelectorChip({
             </div>
           </div>
 
-          <Link
-            to="/app/products"
-            onClick={() => onOpenChange(false)}
+          <button
+            onTouchEnd={e => e.stopPropagation()}
+            onClick={() => { onOpenChange(false); navigate('/app/products'); }}
             className="flex items-center justify-center gap-1.5 w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Your Own Product
-          </Link>
+          </button>
         </div>
       ) : (
         <>
