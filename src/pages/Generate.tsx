@@ -1398,20 +1398,47 @@ export default function Generate() {
                   bodyType: modelProfile.bodyType, ageRange: modelProfile.ageRange, imageUrl: base64ModelImage,
                 };
               }
-              const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!modelProfile, hasScene: false }),
-              });
-              if (response.ok) {
-                const result = await response.json();
-                jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
-                lastBalance = result.newBalance;
-                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
-              } else {
-                const err = await response.json().catch(() => ({}));
-                if (response.status === 402) { toast.error('Insufficient credits'); break; }
-                toast.error(err.error || 'Failed to queue generation');
+              const maxRetries = 6;
+              let enqueueSuccess = false;
+              for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                  const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!modelProfile, hasScene: false, skipWake: true }),
+                  });
+                  if (response.ok) {
+                    const result = await response.json();
+                    jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
+                    lastBalance = result.newBalance;
+                    injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+                    enqueueSuccess = true;
+                    break;
+                  }
+                  const err = await response.json().catch(() => ({}));
+                  const errMsg = String(err.error || err.message || '');
+                  const isRateLimit = response.status === 429 || response.status === 502 || response.status === 503
+                    || errMsg.toLowerCase().includes('too many requests')
+                    || errMsg.toLowerCase().includes('burst')
+                    || errMsg.toLowerCase().includes('concurrent');
+
+                  if (isRateLimit && attempt < maxRetries - 1) {
+                    const retryAfter = err.retry_after_seconds ? Number(err.retry_after_seconds) : Math.pow(2, attempt + 1);
+                    const jitter = Math.random() * 1000;
+                    console.warn(`[enqueue-workflow] Rate limited, retry ${attempt + 1}/${maxRetries - 1} in ${retryAfter}s`);
+                    await new Promise(r => setTimeout(r, retryAfter * 1000 + jitter));
+                    continue;
+                  }
+                  if (response.status === 402) { toast.error('Insufficient credits'); break; }
+                  if (!isRateLimit) { toast.error(err.error || 'Failed to queue generation'); }
+                  break;
+                } catch (fetchErr) {
+                  if (attempt < maxRetries - 1) {
+                    await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+                    continue;
+                  }
+                  console.error('[enqueue-workflow] Network error:', fetchErr);
+                }
               }
             }
           }
@@ -1422,6 +1449,13 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+
+      // Wake the queue processor once after all jobs are enqueued
+      fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ wakeOnly: true }),
+      }).catch(() => {});
     }
     } catch (err) {
       console.error('Workflow generation failed:', err);
