@@ -1,15 +1,39 @@
 
 
-# Replace Video Hover Cards with Static Image Hover Cards
+# Migrate Showcase Images to Storage & Optimize
 
-## What changes
-Replace the `<video>` element in `TeamAvatarHoverCard` with a static optimized `<img>`, removing all video-related logic (refs, play/pause callbacks, `onCanPlay`). This eliminates video downloads on hover across all 5 usage sites: SidebarTeamAvatar, OnboardingChecklist, About page, FinalCTA, and the landing StudioTeamSection.
+## Summary
+Upload 11 local JPG files from `/public/images/showcase/` to the `landing-assets` Supabase Storage bucket under `showcase/`, then update `ProductCategoryShowcase.tsx` so every image uses the `s()` helper (which applies `getOptimizedUrl` with quality: 60). Finally, delete the local files from `/public/images/showcase/`.
 
-## File: `src/components/landing/TeamAvatarHoverCard.tsx`
-- Remove `useRef`, `useCallback` imports and all video refs/handlers (`videoRef`, `shouldPlayRef`, `handleOpenChange`, `handleCanPlay`)
-- Remove the `onOpenChange` prop from `<HoverCard>`
-- Replace the `<video>` element with a static `<img>` using `getOptimizedUrl(member.avatar, { width: 440, quality: 75 })` (440px = 220px card width x 2 for retina)
-- Keep the same `aspect-[4/5]` container, info section with name/role/description — visual layout stays identical
+## Steps
 
-The result is a lightweight image-only hover card. No changes needed in any consumer files since the component API (props) stays the same.
+### 1. Upload 11 images to storage
+Upload each file to `landing-assets/showcase/` bucket, keeping the same filename but converting extension to `.jpg` (or keeping as-is):
+- `fashion-activewear-track.jpg`
+- `fashion-leopard-sneakers.jpg`
+- `fashion-portrait-curls.jpg`
+- `fashion-white-dress-stadium.jpg`
+- `fashion-blonde-coat.jpg`
+- `beauty-perfume-ice.jpg`
+- `beauty-perfume-driftwood.jpg`
+- `beauty-perfume-splash.jpg`
+- `beauty-perfume-rocks.jpg`
+- `beauty-perfume-aloe.jpg`
+- `home-boucle-chair.jpg`
+
+### 2. Update `ProductCategoryShowcase.tsx`
+Replace all 11 direct `/images/showcase/...` paths with `s('filename.jpg')` calls, making every image go through the optimization pipeline. Example:
+
+```ts
+// Before
+'/images/showcase/fashion-activewear-track.jpg',
+// After
+s('fashion-activewear-track.jpg'),
+```
+
+### 3. Delete local files
+Remove the 11 JPGs from `/public/images/showcase/` to reduce bundle size. If the directory becomes empty, remove it entirely.
+
+## Result
+All 31 images in this section will be served from the CDN with on-the-fly quality optimization — consistent with the rest of the landing page.
 
