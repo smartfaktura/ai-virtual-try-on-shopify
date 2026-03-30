@@ -231,13 +231,13 @@ export function AppShell({ children }: AppShellProps) {
               >
                 <div className={cn(
                   'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
-                  isEmpty ? 'bg-destructive/20' : 'bg-primary/20 hover:bg-primary/30'
+                  isEmpty ? 'bg-destructive/30' : 'bg-primary/20 hover:bg-primary/30'
                 )}>
-                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-destructive' : 'text-sidebar-foreground/70')} />
+                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-red-400' : 'text-sidebar-foreground/70')} />
                 </div>
                 <span className={cn(
                   'text-[10px] font-bold',
-                  isEmpty ? 'text-destructive' : 'text-sidebar-foreground/50'
+                  isEmpty ? 'text-red-400' : 'text-sidebar-foreground/50'
                 )}>{balance}</span>
               </button>
               <button
