@@ -1,24 +1,34 @@
 
 
-# Connect "Generate Video" Button to Animate Video Page
+# Add "NEW" Badge to Brand Models + Ensure Video Generation in BuyCreditsModal
 
-## What Changes
+## Problem
+In the BuyCreditsModal (plans popup), line 386 renders features as plain text even when they have a badge object (e.g. `{ text: 'Brand Models', badge: 'NEW' }`). The badge is stripped because the code only renders `f.text`.
 
-### 1. AnimateVideo page: Accept image URL via query param (`src/pages/video/AnimateVideo.tsx`)
-- Add `useSearchParams` to read `?imageUrl=` param on mount
-- When param is present, call the existing `handleLibrarySelect` function with that URL (which already sets preview, triggers analysis, etc.)
-- Clear the param from URL after consuming it to keep URL clean
+## Changes
 
-### 2. LibraryDetailModal: Enable the "Generate Video" button (`src/components/app/LibraryDetailModal.tsx`)
-- Remove `disabled` from the Generate Video button
-- Remove the "Coming Soon" badge
-- Add `onClick` handler: `navigate(/app/video/animate?imageUrl=${encodeURIComponent(activeItem.imageUrl)})` then `onClose()`
-- Same pattern already used by "Edit Image" button
+### File: `src/components/app/BuyCreditsModal.tsx` (line 386)
 
-### 3. ImageLightbox: Wire up the "Generate Video" button if present
-- Check if the lightbox in `JobDetailModal` or `FreestyleGallery` also has a generate video path — but based on screenshots, the button is only in `LibraryDetailModal`, so this is the only file needing the onClick change.
+Replace the feature text rendering to handle badge objects, matching the pattern already used in `LandingPricing.tsx`:
 
-## Technical Detail
+```tsx
+// Before:
+<span className="text-[11px] text-muted-foreground leading-snug">{typeof f === 'string' ? f : f.text}</span>
 
-The `handleLibrarySelect` in AnimateVideo already handles setting the image preview, triggering AI analysis, and populating all settings — so we just need to call it with the URL from the query param. A `useEffect` watching the search param will trigger this on mount.
+// After:
+<span className="text-[11px] text-muted-foreground leading-snug">
+  {typeof f === 'string' ? f : (
+    <span className="inline-flex items-center gap-1.5">
+      {f.text}
+      {f.badge && (
+        <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary/15 text-primary border-0">
+          {f.badge}
+        </Badge>
+      )}
+    </span>
+  )}
+</span>
+```
+
+This is a single-line change. The data already has `Video Generation` on all plans and `{ text: 'Brand Models', badge: 'NEW' }` on Growth and Pro — no data changes needed.
 
