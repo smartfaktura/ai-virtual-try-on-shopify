@@ -51,7 +51,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
       {aspectRatioOverride ? (
         <div className="w-full overflow-hidden" style={{ aspectRatio: aspectRatioOverride }}>
           <ShimmerImage
-            src={getOptimizedUrl(imageUrl, { quality: 60 })}
+            src={optimizedUrl}
             alt={isScene ? item.data.name : item.data.title}
             className="w-full h-full object-cover block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
             loading="lazy"
