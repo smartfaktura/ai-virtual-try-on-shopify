@@ -38,13 +38,16 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   }, [getNextValid]);
 
   const handleError = useCallback((idx: number) => {
+    if (import.meta.env.DEV) {
+      console.warn(`[CategoryCard "${label}"] failed to load image #${idx}: ${images[idx]}`);
+    }
     failedRef.current.add(idx);
     // If the currently visible image failed, advance immediately
     setCurrentIndex((prev) => {
       if (prev === idx) return getNextValid(prev);
       return prev;
     });
-  }, [getNextValid]);
+  }, [getNextValid, label, images]);
 
   // IntersectionObserver — only cycle when visible
   useEffect(() => {
@@ -124,11 +127,11 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
     images: [
-      s('fashion-activewear-track.jpg'),
-      s('fashion-leopard-sneakers.jpg'),
-      s('fashion-portrait-curls.jpg'),
-      s('fashion-white-dress-stadium.jpg'),
-      s('fashion-blonde-coat.jpg'),
+      s('fashion-activewear-bright.jpg'),
+      s('fashion-blazer-golden.jpg'),
+      s('fashion-dress-botanical.jpg'),
+      s('fashion-streetwear-urban.jpg'),
+      s('fashion-cashmere-cafe.jpg'),
       s('fashion-camel-coat.png'),
       s('fashion-white-suit.png'),
       s('fashion-knit-loft.png'),
@@ -139,11 +142,11 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Beauty',
     images: [
-      s('beauty-perfume-ice.jpg'),
-      s('beauty-perfume-driftwood.jpg'),
-      s('beauty-perfume-splash.jpg'),
-      s('beauty-perfume-rocks.jpg'),
-      s('beauty-perfume-aloe.jpg'),
+      s('skincare-cream-botanical.jpg'),
+      s('skincare-oil-lifestyle.jpg'),
+      s('skincare-serum-morning.jpg'),
+      s('skincare-retinol-model.jpg'),
+      s('skincare-set-minimal.jpg'),
       s('skincare-serum-marble.png'),
       s('skincare-perfume-vanity.png'),
       s('skincare-serum-model.png'),
@@ -165,7 +168,7 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Home & Living',
     images: [
-      s('home-boucle-chair.jpg'),
+      s('home-candle-evening.jpg'),
       s('home-candle-evening.png'),
       s('home-vases-shelf.png'),
       s('home-lamp-evening.png'),
