@@ -34,9 +34,6 @@ const ROW_2: EnvironmentCard[] = [
   d('Desert Horizon', `${SB}/9dca223b-3e30-4f21-8d3c-41cd5f790208.png`),
   d('Golden Radiance Product', `${SB}/3f83f049-6e95-4df0-ac49-9d9740363acc.png`),
   d('Desert Sunset', `${SB}/de8c3650-fe0b-43e3-b3c0-9eca5bded18c.png`),
-  e('Garden Natural', 'pose-lifestyle-garden.jpg'),
-  e('Studio Close-Up', 'pose-studio-closeup.jpg'),
-  e('Studio Crossed Arms Male', 'pose-studio-arms-male.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 100 }: { items: EnvironmentCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
