@@ -1,40 +1,17 @@
 
 
-# Fix Broken Images in Product Category Showcase
+# Replace Video with Static Image in TeamAvatarHoverCard
 
-## Problem
-Fashion & Apparel and Beauty categories reference local paths like `/images/showcase/fashion-activewear-track.jpg` that don't exist in the project. These return 404, leaving the cards blank. Food & Drinks works because all its images use `s()` (Supabase storage). Home & Living starts with one broken local path but recovers when the timer cycles to the Supabase images.
+## What changes
+Replace the `<video>` element with a static `<img>` in the hover card, and remove all video-related logic (refs, play/pause handlers, canPlay callback).
 
-## Changes
+## File: `src/components/landing/TeamAvatarHoverCard.tsx`
 
-### File: `src/components/landing/ProductCategoryShowcase.tsx`
+- Remove `useRef`, `useCallback` imports (keep only what's needed)
+- Remove `videoRef`, `shouldPlayRef`, `handleOpenChange`, `handleCanPlay`
+- Remove `onOpenChange` from `<HoverCard>`
+- Replace the `<video>` tag with an `<img>` using `getOptimizedUrl(member.avatar, { quality: 75 })` — same poster image, just rendered directly
+- Keep the info section (name, badge, description) unchanged
 
-**1. Convert all local `/images/showcase/` paths to Supabase storage URLs using the `s()` helper**
-
-Replace every `/images/showcase/...` path with `s('...')`, matching the filename pattern already used for the working images. All these assets should already exist in the `landing-assets/showcase/` bucket since they were originally uploaded there.
-
-```ts
-// Before:
-'/images/showcase/fashion-activewear-track.jpg',
-// After:
-s('fashion-activewear-track.jpg'),
-```
-
-Apply to all 10 local paths across Fashion (5), Beauty (5), and Home (1).
-
-**2. Add error fallback in CategoryCard**
-
-If the current image errors out, auto-advance to the next image so the card never stays blank:
-
-```tsx
-<ShimmerImage
-  ...
-  onError={() => advance()}
-/>
-```
-
-This ensures that on slow connections, if any single image fails, the card skips to the next one rather than showing a blank shimmer indefinitely.
-
-## Files Changed
-- `src/components/landing/ProductCategoryShowcase.tsx`
+The hover card will show the optimized avatar image instead of loading and playing a video on every hover.
 
