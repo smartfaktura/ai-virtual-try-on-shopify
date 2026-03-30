@@ -219,6 +219,8 @@ export default function Workflows() {
         created_at: string;
         results: unknown;
         requested_count: number;
+        /** Tracks the timestamp of the most recently merged row (sliding window) */
+        lastMergedTime: number;
       }
 
       const groups: GroupedJob[] = [];
@@ -231,14 +233,15 @@ export default function Workflows() {
           lastGroup &&
           lastGroup.workflow_id === row.workflow_id &&
           row.product_id != null &&
-          // Check proximity to group anchor
-          Math.abs(new Date(lastGroup.created_at).getTime() - rowTime) <= 60_000
+          // Sliding window: compare against the last merged row, not the anchor
+          Math.abs(lastGroup.lastMergedTime - rowTime) <= 120_000
         ) {
           // Merge results
           const existing = Array.isArray(lastGroup.results) ? lastGroup.results : [];
           const incoming = Array.isArray(row.results) ? row.results : [];
           lastGroup.results = [...existing, ...incoming];
           lastGroup.requested_count += row.requested_count;
+          lastGroup.lastMergedTime = rowTime;
           continue;
         }
 
@@ -249,6 +252,7 @@ export default function Workflows() {
           created_at: row.created_at,
           results: row.results,
           requested_count: row.requested_count,
+          lastMergedTime: rowTime,
         });
       }
 
