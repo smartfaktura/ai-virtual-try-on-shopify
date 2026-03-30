@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, XCircle, CheckCircle2, Clock, X, Sparkles } from 'lucide-react';
@@ -11,20 +11,18 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { BatchGroup } from '@/lib/batchGrouping';
 
-interface WorkflowActivityCardProps {
-  batchGroups: BatchGroup[];
-  completedGroups?: BatchGroup[];
-  failedGroups?: BatchGroup[];
-  onCancelJob?: (jobId: string, creditsReserved: number) => void;
-  onDismiss?: (groupKey: string) => void;
-}
-
 function elapsedLabel(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return `${seconds}s`;
   const mins = Math.floor(seconds / 60);
   if (mins < 60) return `${mins}m ${seconds % 60}s`;
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+}
+
+/** Self-ticking elapsed timer — isolates 1s re-renders to just this text node */
+function ElapsedTimer({ startedAt, enabled }: { startedAt: string; enabled: boolean }) {
+  useVisibilityTick(1000, enabled);
+  return <>{elapsedLabel(startedAt)}</>;
 }
 
 function isStuck(dateStr: string | null): boolean {
