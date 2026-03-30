@@ -1,49 +1,31 @@
 
-Fix the confirmation email by refreshing both the template and the metadata that gets sent with it so it matches VOVV.AI instead of the current generic/plain version.
 
-1. Update the signup confirmation email template
-- Redesign `supabase/functions/_shared/email-templates/signup.tsx` to match the app brand:
-  - use Inter-style font stack instead of Arial
-  - keep white email background, with VOVV.AI dark slate accents from the app
-  - add a clean branded header / badge so it feels like VOVV.AI, not a default system email
-  - present the 8-digit code as the primary action in a polished code block/card
-  - improve spacing, hierarchy, and footer copy
-- Rewrite the visible copy so it matches the auth flow:
-  - headline focused on confirming the account
-  - short explanatory text
-  - fallback verification link kept as secondary action
+## Optimize Team Video Loading on Landing Page
 
-2. Fix the subject line and preheader
-- Update the signup subject in `supabase/functions/auth-email-hook/index.ts` from the generic `Confirm your email` to a branded subject like `Your VOVV.AI verification code`
-- Update the signup preheader inside `signup.tsx` so inbox preview text clearly says the email contains the 8-digit code and why
+### Problem
+All 10 team member videos (~10 MP4 files) begin downloading their metadata simultaneously as soon as the section enters the viewport. Since the carousel only shows ~4 cards at a time, 6+ videos are loading unnecessarily, competing for bandwidth and slowing visible content.
 
-3. Fix branding values coming from the auth email hook
-- Update the auth hook branding constants so the sender name/site name use the proper brand format (`VOVV.AI`), not the current lowercase `vovvai`
-- This ensures the From name, template text, and any preview rendering all use the correct brand
+### Optimizations
 
-4. Fix preview/sample data for the signup email
-- Add the signup `token` in the preview sample data inside `auth-email-hook/index.ts`
-- This makes the email preview show the real branded code layout instead of an incomplete preview
+**1. Defer video `src` until the card is scrolled into view**
+- Currently `LazyVideo` sets `src` immediately on mount — the IntersectionObserver only controls play/pause
+- Change: don't set the `src` attribute at all until the card's own IntersectionObserver fires; show the poster image until then
+- This means only the ~4 visible cards load video; the rest stay as lightweight poster images
 
-5. Keep the existing behavior intact
-- Preserve the current 8-digit OTP flow
-- Preserve the fallback confirmation link
-- Do not change delivery logic or queue behavior; this is a branding/content upgrade for the confirmation email only
+**2. Show poster image as a real `<img>` fallback layer**
+- Render the avatar image behind the video so the user sees content instantly
+- Once the video fires `canplay`, hide the image layer
+- Eliminates the blank/black flash while the video buffers
 
-Files to update
-- `supabase/functions/_shared/email-templates/signup.tsx`
-- `supabase/functions/auth-email-hook/index.ts`
+**3. Use `preload="none"` instead of `preload="metadata"`**
+- Since we're deferring the `src` anyway, when it does get set the browser should only start downloading when play is called
+- Combined with the IntersectionObserver play trigger, this minimizes wasted bandwidth
 
-Technical details
-- Brand cues already present in the app:
-  - primary color: dark slate (`hsl(217 33% 17%)`)
-  - muted text: `hsl(215 16% 47%)`
-  - radius: `0.5rem`
-  - typography: Inter
-  - brand name shown in UI: `VOVV.AI`
-- Current problems I found:
-  - signup email uses very plain default styling
-  - subject line is generic
-  - preheader is generic
-  - sender/site name in the hook is lowercase `vovvai`
-  - signup preview sample is missing the token
+### File
+- `src/components/landing/StudioTeamSection.tsx` — update `LazyVideo` component
+
+### Result
+- Initial section load: 0 video network requests (just 4 small poster JPGs)
+- As user scrolls through carousel: videos load on-demand, one or two at a time
+- Perceived load time drops significantly
+
