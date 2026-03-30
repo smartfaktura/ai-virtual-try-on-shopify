@@ -687,7 +687,7 @@ export default function Freestyle() {
       sceneCategory: selectedScene?.category || undefined,
       promptOnly: selectedScene?.promptOnly || undefined,
       modelId: selectedModel?.modelId || undefined,
-      productId: selectedProduct?.id || undefined,
+      productId: selectedProduct?.id?.startsWith('sample_') ? null : selectedProduct?.id || undefined,
       imageRole: sourceImage ? imageRole : undefined,
       editIntent: sourceImage && imageRole === 'edit'
         ? (editIntent.length > 0 ? editIntent : ['enhance'])
