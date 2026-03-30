@@ -1017,7 +1017,6 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
       // Gather source images — either from selected products or scratch upload
       const sources: Array<{ imageUrl: string; sourceType: 'generation' | 'freestyle'; sourceId: string; title: string }> = [];
