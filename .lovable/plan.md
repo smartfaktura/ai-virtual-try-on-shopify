@@ -1,39 +1,24 @@
 
 
-# Fix Slow/Stuck Loading on Auth Page
+# Connect "Generate Video" Button to Animate Video Page
 
-## Problem
-When visiting vovv.ai and clicking "Login", the Auth page renders `null` (blank screen) while `isLoading` is `true` (line 145: `if (isLoading || user) return null`). The AuthContext has a 10-second safety timeout, so if the Supabase session check is slow, users see a blank white page for up to 10 seconds.
+## What Changes
 
-## Solution
-Replace the `return null` guard with a proper loading skeleton/spinner on the Auth page, so users see immediate visual feedback instead of a blank screen.
+### 1. AnimateVideo page: Accept image URL via query param (`src/pages/video/AnimateVideo.tsx`)
+- Add `useSearchParams` to read `?imageUrl=` param on mount
+- When param is present, call the existing `handleLibrarySelect` function with that URL (which already sets preview, triggers analysis, etc.)
+- Clear the param from URL after consuming it to keep URL clean
 
-## File: `src/pages/Auth.tsx` (line 145)
+### 2. LibraryDetailModal: Enable the "Generate Video" button (`src/components/app/LibraryDetailModal.tsx`)
+- Remove `disabled` from the Generate Video button
+- Remove the "Coming Soon" badge
+- Add `onClick` handler: `navigate(/app/video/animate?imageUrl=${encodeURIComponent(activeItem.imageUrl)})` then `onClose()`
+- Same pattern already used by "Edit Image" button
 
-Replace:
-```tsx
-if (isLoading || user) return null;
-```
+### 3. ImageLightbox: Wire up the "Generate Video" button if present
+- Check if the lightbox in `JobDetailModal` or `FreestyleGallery` also has a generate video path — but based on screenshots, the button is only in `LibraryDetailModal`, so this is the only file needing the onClick change.
 
-With:
-```tsx
-if (isLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center animate-pulse">
-          <span className="text-primary-foreground font-bold text-sm">V</span>
-        </div>
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </div>
-    </div>
-  );
-}
+## Technical Detail
 
-if (user) return null;
-```
-
-This shows the branded "V" loading indicator (matching the ProtectedRoute loader) instead of a blank screen, and only hides the form once the user is confirmed logged in (at which point the `useEffect` redirect fires immediately anyway).
-
-Single file, ~10 lines changed.
+The `handleLibrarySelect` in AnimateVideo already handles setting the image preview, triggering AI analysis, and populating all settings — so we just need to call it with the URL from the query param. A `useEffect` watching the search param will trigger this on mount.
 
