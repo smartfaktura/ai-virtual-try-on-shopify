@@ -78,6 +78,14 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
   return Array.isArray(cats) && cats.includes(productCat);
 }
 
+function getResponsiveInitialCount() {
+  if (typeof window === 'undefined') return 30;
+  const w = window.innerWidth;
+  if (w < 640) return 12;
+  if (w < 1024) return 20;
+  return 30;
+}
+
 function useColumnCount() {
   const [count, setCount] = useState(() => {
     if (typeof window === 'undefined') return 4;
