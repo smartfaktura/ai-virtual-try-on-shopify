@@ -368,7 +368,7 @@ export default function Auth() {
               }}
               disabled={otpLoading}
             >
-              <InputOTPGroup className="gap-2">
+              <InputOTPGroup className="gap-1 sm:gap-2">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
                 <InputOTPSlot index={2} />
