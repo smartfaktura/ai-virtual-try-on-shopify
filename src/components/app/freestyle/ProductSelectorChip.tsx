@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePickerSheet } from './MobilePickerSheet';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -50,6 +50,7 @@ export function ProductSelectorChip({
 }: ProductSelectorChipProps) {
   const [search, setSearch] = useState('');
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const filtered = products.filter(p =>
     p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -132,14 +133,14 @@ export function ProductSelectorChip({
             </div>
           </div>
 
-          <Link
-            to="/app/products"
-            onClick={() => onOpenChange(false)}
+          <button
+            onTouchEnd={e => e.stopPropagation()}
+            onClick={() => { onOpenChange(false); navigate('/app/products'); }}
             className="flex items-center justify-center gap-1.5 w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Your Own Product
-          </Link>
+          </button>
         </div>
       ) : (
         <>
