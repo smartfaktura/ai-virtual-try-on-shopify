@@ -71,10 +71,11 @@ export function MultiProductProgressBanner({
   const totalJobCount = totalJobs || multiProductJobIds.size;
   const totalImages = totalExpectedImages || totalJobCount;
   const completedCount = Math.min(rawCompleted, totalImages);
-  const estimatePerImage = isProModel ? 45 : 8;
+  // Jobs run in parallel via the queue, so effective per-image time is much lower
+  const estimatePerImage = isProModel ? 12 : 4;
   const totalEstSeconds = Math.max(totalImages * estimatePerImage, 1);
-  const estLowSec = Math.round(totalEstSeconds * 0.7);
-  const estHighSec = Math.round(totalEstSeconds * 1.3);
+  const estLowSec = Math.round(totalEstSeconds * 0.8);
+  const estHighSec = Math.round(totalEstSeconds * 1.2);
   const useSeconds = estHighSec < 60;
   const estLow = useSeconds ? estLowSec : Math.max(1, Math.ceil(estLowSec / 60));
   const estHigh = useSeconds ? estHighSec : Math.max(estLow, Math.ceil(estHighSec / 60));
