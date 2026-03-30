@@ -110,6 +110,7 @@ export default function Dashboard() {
       return data;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch product count
@@ -356,8 +357,8 @@ export default function Dashboard() {
 
   const firstName = profile?.first_name || profile?.display_name || 'there';
 
-  // Credit usage progress (out of 300 monthly quota)
-  const creditUsageProgress = Math.round(((300 - balance) / 300) * 100);
+
+
 
   // --- RESOLVING STATE — neutral placeholder while we determine mode ---
   if (dashboardMode === 'resolving') {
