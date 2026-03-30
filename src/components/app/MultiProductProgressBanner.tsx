@@ -23,6 +23,8 @@ interface MultiProductProgressBannerProps {
   totalExpectedImages?: number;
   totalJobs?: number;
   workflowName?: string;
+  /** True for try-on or high-quality jobs that take 60-120s per image */
+  isProModel?: boolean;
 }
 
 function formatElapsed(seconds: number): string {
