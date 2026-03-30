@@ -50,6 +50,7 @@ export function ProductSelectorChip({
 }: ProductSelectorChipProps) {
   const [search, setSearch] = useState('');
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const filtered = products.filter(p =>
     p.title.toLowerCase().includes(search.toLowerCase()) ||
