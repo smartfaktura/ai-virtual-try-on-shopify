@@ -48,15 +48,21 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
     return () => clearTimeout(timer);
   }, [nextReady, nextIndex, cycleDuration]);
 
-  // When crossfade completes, swap layers
+  // When crossfade completes, swap base layer but keep top layer mounted
   const handleTransitionEnd = () => {
     if (incomingIndex !== null) {
       setDisplayIndex(incomingIndex);
-      setIncomingIndex(null);
-      setFadeIn(false);
       setProgressKey((k) => k + 1);
     }
   };
+
+  // Clear top layer on next render cycle after base has updated
+  useEffect(() => {
+    if (incomingIndex !== null && displayIndex === incomingIndex) {
+      setIncomingIndex(null);
+      setFadeIn(false);
+    }
+  }, [displayIndex, incomingIndex]);
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
