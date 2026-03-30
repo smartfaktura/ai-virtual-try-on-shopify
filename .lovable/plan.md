@@ -1,81 +1,55 @@
 
 
-## Fix: Global Dispatch Rate Limiting for Concurrent Users
+## Fix: Suppress User-Facing Errors from Queue Internals
 
 ### Problem
-Each `enqueue-generation` call triggers its own `process-queue` invocation. With 10 users generating simultaneously, 10 process-queue instances run in parallel. `SKIP LOCKED` prevents duplicate claims, but all instances dispatch jobs concurrently — overwhelming the AI gateway with ~100 simultaneous requests. The 500ms stagger only works within a single instance.
+Two runtime errors are surfacing to users as scary error banners:
 
-### Solution: Singleton Dispatcher + Global Concurrency Cap
+1. **429 "Too many requests"** from `enqueue-generation` — the burst rate limit (60/min for pro) fires when batch workflows try to enqueue 10+ jobs rapidly within 60 seconds
+2. **500 "Signal timed out"** from `retry-queue` — it awaits `process-queue` with a 5-second timeout, but process-queue is busy (held by the singleton lock), so it times out and returns 500
 
-**1. Add a `queue_dispatch_lock` table to enforce single-dispatcher**
+### Root Causes & Fixes
 
-A simple advisory lock pattern: only one process-queue instance dispatches at a time. Others exit early.
+**Fix 1: `retry-queue` — fire-and-forget, never return 500**
 
-```sql
--- New migration
-CREATE TABLE IF NOT EXISTS queue_dispatch_lock (
-  id int PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  locked_at timestamptz,
-  locked_by text
-);
-INSERT INTO queue_dispatch_lock (id) VALUES (1) ON CONFLICT DO NOTHING;
-```
-
-**2. Update `process-queue/index.ts` — try-lock before dispatching**
-
-At the start, attempt to acquire the lock with a short expiry (30s). If another instance holds it, return immediately (the active instance will process all queued jobs).
+The retry-queue function doesn't need the process-queue response. It should fire the request and immediately return 200. This eliminates the timeout error entirely.
 
 ```ts
-// Try to acquire singleton lock (expires after 30s for safety)
-const { data: lockAcquired } = await supabase.rpc('try_acquire_dispatch_lock');
-if (!lockAcquired) {
-  return new Response(JSON.stringify({ skipped: true, reason: 'another dispatcher active' }), ...);
-}
-// ... existing dispatch loop ...
-// Finally: release lock
-await supabase.rpc('release_dispatch_lock');
+// Before: awaits with 5s timeout → 500 on timeout
+const res = await fetch(..., { signal: AbortSignal.timeout(5000) });
+
+// After: fire-and-forget, always return 200
+fetch(...).catch(() => {});
+return Response(JSON.stringify({ triggered: true }), ...);
 ```
 
-**3. Add DB functions for lock management**
+**Fix 2: `enqueue-generation` — increase burst limit for batch workflows**
 
-```sql
-CREATE FUNCTION try_acquire_dispatch_lock() RETURNS boolean ...
--- Acquires if unlocked or lock expired (>30s ago)
+The burst limits are too tight for batch workflows (e.g., 10 products × multiple models). Increase them so batch enqueueing doesn't hit the wall:
 
-CREATE FUNCTION release_dispatch_lock() RETURNS void ...
--- Clears the lock
-```
+| Plan | Current | New |
+|------|---------|-----|
+| enterprise | 100 | 200 |
+| pro | 60 | 120 |
+| growth | 40 | 80 |
+| starter | 20 | 40 |
+| free | 10 | 15 |
 
-**4. Increase stagger from 500ms to 1000ms**
+This is done in the `enqueue_generation` DB function via a migration.
 
-With a single dispatcher, we can afford a longer stagger to smooth out AI gateway load across all users' jobs.
+**Fix 3: Client-side — suppress retry-queue errors from error reporting**
 
-**5. Add global concurrency cap**
-
-Before dispatching, check how many jobs are currently `processing`. If above a threshold (e.g., 20), pause dispatching and let running jobs finish first.
-
-```ts
-const { count: activeJobs } = await supabase
-  .from('generation_queue')
-  .select('*', { count: 'exact', head: true })
-  .eq('status', 'processing');
-
-if ((activeJobs || 0) >= MAX_CONCURRENT_JOBS) {
-  console.log('[process-queue] Concurrency cap reached, pausing dispatch');
-  break;
-}
-```
+The `useGenerationQueue` hook already uses `.catch(() => {})` on retry-queue calls, but the runtime error panel still picks them up. Add explicit error swallowing so these don't propagate.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| **New migration** | Create `queue_dispatch_lock` table + `try_acquire_dispatch_lock` / `release_dispatch_lock` functions |
-| `supabase/functions/process-queue/index.ts` | Add singleton lock, increase stagger to 1s, add concurrency cap (20 active jobs) |
+| `supabase/functions/retry-queue/index.ts` | Fire-and-forget process-queue call, always return 200 |
+| **New migration** | Update `enqueue_generation` function with higher burst limits |
 
 ### Impact
-- Only one dispatcher runs at a time — no parallel stampede
-- Global concurrency cap prevents AI gateway overload regardless of user count
-- Lock auto-expires after 30s so a crashed dispatcher won't block the queue permanently
-- No changes needed to enqueue or generation functions
+- Users will never see "Signal timed out" errors from retry-queue
+- Batch workflows (10-20 products) will enqueue without hitting burst limits
+- No functional behavior changes — retry-queue is a best-effort trigger, not a critical path
 
