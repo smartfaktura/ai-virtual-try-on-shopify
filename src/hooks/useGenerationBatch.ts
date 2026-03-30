@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
 
 const MAX_IMAGES_PER_JOB = 1;
@@ -23,6 +24,10 @@ export interface BatchState {
   aggregatedImages: string[];
   aggregatedLabels: string[];
   hasPartialFailure: boolean;
+}
+
+interface UseGenerationBatchOptions {
+  onCreditRefresh?: () => Promise<void> | void;
 }
 
 interface UseGenerationBatchReturn {
@@ -56,7 +61,8 @@ const INITIAL_BATCH_STATE: BatchState = {
   hasPartialFailure: false,
 };
 
-export function useGenerationBatch(): UseGenerationBatchReturn {
+export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGenerationBatchReturn {
+  const { onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [batchState, setBatchState] = useState<BatchState | null>(null);
   const [isBatching, setIsBatching] = useState(false);
@@ -84,11 +90,11 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
     const poll = async () => {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const token = await getAuthToken() || SUPABASE_KEY;
+      let token = await getAuthToken() || SUPABASE_KEY;
 
       // Fetch all jobs in one request
       const idsFilter = jobIds.map(id => `"${id}"`).join(',');
-      const res = await fetch(
+      let res = await fetch(
         `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
         {
           headers: {
@@ -97,6 +103,24 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
           },
         }
       );
+
+      // Handle expired token — refresh and retry once
+      if (res.status === 401) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const freshToken = sessionData?.session?.access_token;
+        if (freshToken) {
+          token = freshToken;
+          res = await fetch(
+            `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
+            {
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${freshToken}`,
+              },
+            }
+          );
+        }
+      }
 
       if (!res.ok) return;
       const rows = await res.json();
@@ -150,6 +174,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
 
       if (allDone) {
         stopPolling();
+        onCreditRefresh?.();
       }
     };
 

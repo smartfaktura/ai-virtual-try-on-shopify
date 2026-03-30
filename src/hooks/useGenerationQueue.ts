@@ -136,7 +136,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         }
       }
     }
-  }, [stopPolling, onContentBlocked, onGenerationFailed]);
+
+    // Always refresh credits on any terminal state
+    onCreditRefresh?.();
+  }, [stopPolling, onContentBlocked, onGenerationFailed, onCreditRefresh]);
 
   const pollJobStatus = useCallback((jobId: string) => {
     // Start a new poll session — any in-flight responses from the old session are ignored
@@ -322,34 +325,8 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
               body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
             }).catch(() => {});
 
-            // Self-heal: check if images already exist for this user after job started
-            try {
-              const imgRes = await fetch(
-                `${SUPABASE_URL}/rest/v1/freestyle_generations?user_id=eq.${user?.id}&created_at=gte.${job.started_at}&limit=1&select=id`,
-                {
-                  headers: {
-                    apikey: SUPABASE_KEY,
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-              if (sessionVersion !== pollVersionRef.current) return;
-              const imgRows = await imgRes.json();
-              if (Array.isArray(imgRows) && imgRows.length > 0) {
-                console.warn(`[queue] Job ${job.id} stuck but images already saved — force-completing`);
-                const syntheticJob: QueueJob = {
-                  ...job,
-                  status: 'completed',
-                  completed_at: new Date().toISOString(),
-                };
-                setActiveJob(prev => ({ ...syntheticJob, generationMeta: prev?.generationMeta }));
-                handleTerminalJob(syntheticJob);
-                onCreditRefresh?.();
-                return;
-              }
-            } catch (e) {
-              console.warn('[queue] Image check failed:', e);
-            }
+            // Self-heal removed: the 10-min hard timeout covers all job types reliably.
+            // The previous freestyle-only check didn't work for workflow/tryon/upscale jobs.
           }
         }
 
@@ -380,8 +357,13 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   }, [stopPolling, handleTerminalJob, user?.id, onCreditRefresh]);
 
   // Restore in-progress job on mount (e.g. after page refresh)
+  const hasRestoredRef = useRef(false);
+  const pollJobStatusRef = useRef(pollJobStatus);
+  pollJobStatusRef.current = pollJobStatus;
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
 
     const restoreActiveJob = async () => {
       if (jobIdRef.current) return;
@@ -417,11 +399,12 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         job_type: row.job_type,
       });
       jobIdRef.current = row.id;
-      pollJobStatus(row.id);
+      pollJobStatusRef.current(row.id);
     };
 
     restoreActiveJob();
-  }, [user, pollJobStatus]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const enqueue = useCallback(async (params: EnqueueParams, meta?: GenerationMeta): Promise<EnqueueResult | null> => {
     if (!user) {
