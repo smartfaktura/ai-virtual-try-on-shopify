@@ -105,7 +105,7 @@ export default function PublicFreestyle() {
     setSelectedScene(null);
     setAspectRatio('1:1');
     setCameraStyle('pro');
-    setQuality('standard');
+    setQuality('high');
     setFraming(null);
   }, []);
 
