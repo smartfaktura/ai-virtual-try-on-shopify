@@ -1399,7 +1399,7 @@ export default function Generate() {
           for (const framingVal of framingsToGenerate) {
             for (const varIdx of variationIndices) {
               const { remapped: remappedVar, extras: varExtras } = remapVariationIndices([varIdx]);
-              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: remappedVar, extra_variations: varExtras.length > 0 ? varExtras : undefined };
+              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: remappedVar, extra_variations: varExtras.length > 0 ? varExtras : undefined, batch_id: batchId };
               if (modelProfile && base64ModelImage) {
                 comboPayload.model = {
                   name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
@@ -1416,7 +1416,7 @@ export default function Generate() {
               if (!isEnqueueError(result)) {
                 jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
                 lastBalance = result.newBalance;
-                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1, batch_id: batchId });
               } else if (result.type === 'insufficient_credits') {
                 toast.error('Insufficient credits'); break;
               }
