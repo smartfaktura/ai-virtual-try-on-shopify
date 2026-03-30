@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -17,71 +17,28 @@ interface CategoryCardProps {
 function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const failedRef = useRef<Set<number>>(new Set());
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const getNextValid = useCallback((from: number) => {
-    for (let i = 1; i <= images.length; i++) {
-      const idx = (from + i) % images.length;
-      if (!failedRef.current.has(idx)) return idx;
-    }
-    return from; // all failed, stay put
-  }, [images.length]);
 
   const advance = useCallback(() => {
-    setCurrentIndex((prev) => {
-      const next = getNextValid(prev);
-      return next;
-    });
+    setCurrentIndex((prev) => (prev + 1) % images.length);
     setProgressKey((k) => k + 1);
-  }, [getNextValid]);
-
-  const handleError = useCallback((idx: number) => {
-    if (import.meta.env.DEV) {
-      console.warn(`[CategoryCard "${label}"] failed to load image #${idx}: ${images[idx]}`);
-    }
-    failedRef.current.add(idx);
-    // If the currently visible image failed, advance immediately
-    setCurrentIndex((prev) => {
-      if (prev === idx) return getNextValid(prev);
-      return prev;
-    });
-  }, [getNextValid, label, images]);
-
-  // IntersectionObserver — only cycle when visible
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { rootMargin: '200px' },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+  }, [images.length]);
 
   useEffect(() => {
-    if (!isVisible) return;
     const timer = setInterval(advance, cycleDuration);
     return () => clearInterval(timer);
-  }, [advance, cycleDuration, isVisible]);
-
-  const nextIndex = getNextValid(currentIndex);
+  }, [advance, cycleDuration]);
 
   return (
-    <div ref={cardRef} className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
+    <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-muted/40">
-        {isVisible && (
-          <div
-            key={progressKey}
-            className="h-full bg-primary/70"
-            style={{
-              animation: `progress-fill ${cycleDuration}ms linear forwards`,
-            }}
-          />
-        )}
+        <div
+          key={progressKey}
+          className="h-full bg-primary/70"
+          style={{
+            animation: `progress-fill ${cycleDuration}ms linear forwards`,
+          }}
+        />
       </div>
 
       {/* Category label */}
@@ -91,47 +48,37 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         </span>
       </div>
 
-      {/* Current image */}
-      <ShimmerImage
-        key={currentIndex}
-        src={images[currentIndex]}
-        alt={`${label} AI-generated product shot`}
-        loading="lazy"
-        decoding="async"
-        wrapperClassName="absolute inset-0"
-        className="w-full h-full object-cover"
-        onError={() => handleError(currentIndex)}
-      />
-
-      {/* Preload next image (hidden) */}
-      {nextIndex !== currentIndex && (
-        <ShimmerImage
-          key={`pre-${nextIndex}`}
-          src={images[nextIndex]}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          wrapperClassName="absolute inset-0"
-          wrapperStyle={{ opacity: 0, pointerEvents: 'none' }}
-          className="w-full h-full object-cover"
-          onError={() => handleError(nextIndex)}
-        />
-      )}
+      {/* All images stacked — only currentIndex is visible */}
+      {images.map((img, i) => (
+         <ShimmerImage
+           key={i}
+            src={img}
+            alt={`${label} AI-generated product shot`}
+            loading="lazy"
+            decoding="async"
+           wrapperClassName="absolute inset-0"
+           wrapperStyle={{
+             opacity: i === currentIndex ? 1 : 0,
+             transition: 'opacity 1.2s ease-in-out',
+           }}
+           className="w-full h-full object-cover"
+         />
+       ))}
     </div>
   );
 }
 
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
 
 const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
     images: [
-      s('fashion-activewear-bright.jpg'),
-      s('fashion-blazer-golden.jpg'),
-      s('fashion-dress-botanical.jpg'),
-      s('fashion-streetwear-urban.jpg'),
-      s('fashion-cashmere-cafe.jpg'),
+      '/images/showcase/fashion-activewear-track.jpg',
+      '/images/showcase/fashion-leopard-sneakers.jpg',
+      '/images/showcase/fashion-portrait-curls.jpg',
+      '/images/showcase/fashion-white-dress-stadium.jpg',
+      '/images/showcase/fashion-blonde-coat.jpg',
       s('fashion-camel-coat.png'),
       s('fashion-white-suit.png'),
       s('fashion-knit-loft.png'),
@@ -142,11 +89,11 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Beauty',
     images: [
-      s('skincare-cream-botanical.jpg'),
-      s('skincare-oil-lifestyle.jpg'),
-      s('skincare-serum-morning.jpg'),
-      s('skincare-retinol-model.jpg'),
-      s('skincare-set-minimal.jpg'),
+      '/images/showcase/beauty-perfume-ice.jpg',
+      '/images/showcase/beauty-perfume-driftwood.jpg',
+      '/images/showcase/beauty-perfume-splash.jpg',
+      '/images/showcase/beauty-perfume-rocks.jpg',
+      '/images/showcase/beauty-perfume-aloe.jpg',
       s('skincare-serum-marble.png'),
       s('skincare-perfume-vanity.png'),
       s('skincare-serum-model.png'),
@@ -168,7 +115,7 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Home & Living',
     images: [
-      s('home-candle-evening.jpg'),
+      '/images/showcase/home-boucle-chair.jpg',
       s('home-candle-evening.png'),
       s('home-vases-shelf.png'),
       s('home-lamp-evening.png'),
