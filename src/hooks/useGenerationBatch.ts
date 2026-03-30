@@ -84,8 +84,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
     const poll = async () => {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token || SUPABASE_KEY;
+      const token = await getAuthToken() || SUPABASE_KEY;
 
       // Fetch all jobs in one request
       const idsFilter = jobIds.map(id => `"${id}"`).join(',');
