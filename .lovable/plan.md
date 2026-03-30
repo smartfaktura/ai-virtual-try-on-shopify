@@ -1,37 +1,43 @@
 
 
-# Fix ProductCategoryShowcase for Slow Connections
+# Fix Zoomed Images & Stuck Carousel
 
 ## Problems
-1. All 29 images are rendered as `<img>` in the DOM simultaneously — browser fetches them all at once despite `loading="lazy"` (they're positioned `absolute inset-0` so the browser considers them visible)
-2. No `width` param in optimization — full-res images downloaded for ~280px cards
-3. Timer advances even if the next image hasn't loaded — shows shimmer mid-transition
-4. 29 throwaway `Image()` objects created on mount for cache checks
+1. **Zoomed-in images** — `width: 600` in the `s()` helper forces server-side resize, which combined with `object-cover` on 3:4 cards causes aggressive cropping. Project convention is quality-only compression.
+2. **Carousel stops cycling** — `ShimmerImage` detects cached images in its state initializer and skips the browser `onLoad` event. The parent's `onLoad` callback never fires for cached images, so `nextReady` stays `false` forever after the first cycle.
 
-## Solution
+## Fix
 
 ### File: `src/components/landing/ProductCategoryShowcase.tsx`
 
-**Progressive image loading** — only render the current image and preload the next one:
-- Keep only 2 `<ShimmerImage>` elements in the DOM at any time: `currentIndex` (visible) and `nextIndex` (hidden, preloading)
-- When the next image's `onLoad` fires, mark it as "ready"
-- Timer only advances if the next image is ready; otherwise it waits (prevents blank frames on slow connections)
-
-**Add width constraint** to the `s()` helper:
+**1. Remove width from `s()` helper** (line 88):
 ```ts
-const s = (path: string) => getOptimizedUrl(
-  getLandingAssetUrl(`showcase/${path}`),
-  { width: 600, quality: 60 }
-);
+// Before
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
+
+// After
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
 ```
-600px covers retina at the card's max ~280px width, cutting file sizes significantly.
 
-**Preload first image eagerly** — set `loading="eager"` on the first (index 0) image of each card so the initial frame appears fast.
+**2. Fix carousel cycling** — stop relying on `ShimmerImage`'s `onLoad` for cached images. Instead, use a plain `<img>` element (hidden, `opacity: 0`) for the preload, with a direct `onLoad` handler. Or simpler: use a standalone `Image()` object to preload the next URL and call `setNextReady(true)` when it completes (handles both cached and uncached cases):
 
-### Behavior on slow connections
-- Initial load: only 4 images (one per card) + 4 preloads for the next slides
-- Each card waits for its next image before transitioning — no blank frames
-- Total concurrent requests drops from 29 to ~8
+```ts
+// Replace the "advance" + "preload next" logic:
+useEffect(() => {
+  const img = new Image();
+  img.src = images[nextIndex];
+  if (img.complete) {
+    setNextReady(true);
+  } else {
+    img.onload = () => setNextReady(true);
+    img.onerror = () => setNextReady(true); // skip broken images
+  }
+  return () => { img.onload = null; img.onerror = null; };
+}, [currentIndex, images, nextIndex]);
+```
 
-### No changes needed in ShimmerImage or other files
+Remove the hidden `ShimmerImage` for the next image entirely — the `Image()` object handles preloading. Keep only the visible current image `ShimmerImage`.
+
+### No changes to `ShimmerImage` component
+The fix is isolated to `CategoryCard` in `ProductCategoryShowcase.tsx`.
 
