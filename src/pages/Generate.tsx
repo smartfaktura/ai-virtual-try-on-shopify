@@ -198,7 +198,7 @@ export default function Generate() {
       resetQueue();
     },
   });
-  const { startBatch, batchState, isBatching, resetBatch } = useGenerationBatch();
+  const { startBatch, batchState, isBatching, resetBatch } = useGenerationBatch({ onCreditRefresh: refreshBalance });
   const isFreeUser = plan === 'free';
   const { isAdmin } = useIsAdmin();
   const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
