@@ -89,7 +89,7 @@ export function EnvironmentShowcaseSection() {
             Every Environment. One Click.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Studio, lifestyle, editorial, streetwear — place your products in any setting instantly.
+            Studio, lifestyle, editorial, streetwear - place your products in any setting instantly.
           </p>
         </div>
       </div>

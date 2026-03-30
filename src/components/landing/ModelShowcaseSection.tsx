@@ -121,7 +121,7 @@ export function ModelShowcaseSection() {
             Professional Models. Every Look.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Diverse models across every body type, ethnicity, and age — ready for your next campaign.
+            Diverse models across every body type, ethnicity, and age - ready for your next campaign.
           </p>
         </div>
       </div>
