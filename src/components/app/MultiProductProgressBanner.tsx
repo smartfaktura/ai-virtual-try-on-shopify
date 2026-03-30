@@ -96,13 +96,15 @@ export function MultiProductProgressBanner({
       {/* Header with counts and elapsed */}
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
-          {completedCount > 0
-            ? `${completedCount} of ${totalImages} image${totalImages !== 1 ? 's' : ''} done`
-            : workflowName
-              ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${workflowName}...`
-              : totalProducts > 1
-                ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} products`
-                : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''}...`}
+          {totalImages === 0
+            ? 'Preparing batch…'
+            : completedCount > 0
+              ? `${completedCount} of ${totalImages} image${totalImages !== 1 ? 's' : ''} done`
+              : workflowName
+                ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${workflowName}...`
+                : totalProducts > 1
+                  ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} products`
+                  : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''}...`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
