@@ -1,35 +1,21 @@
 
+Root cause confirmed: the section is not failing because of loader logic now — it’s failing because several filenames in `ProductCategoryShowcase.tsx` do not exist in your `landing-assets/showcase` storage folder.  
+That’s why you only see “old” images: those are the first valid ones later in each array after the missing URLs fail.
 
-# Fix Category Showcase Image Loading
+Missing names currently referenced in code:
+- Fashion: `fashion-activewear-track.jpg`, `fashion-leopard-sneakers.jpg`, `fashion-portrait-curls.jpg`, `fashion-white-dress-stadium.jpg`, `fashion-blonde-coat.jpg`
+- Beauty: `beauty-perfume-ice.jpg`, `beauty-perfume-driftwood.jpg`, `beauty-perfume-splash.jpg`, `beauty-perfume-rocks.jpg`, `beauty-perfume-aloe.jpg`
+- Home: `home-boucle-chair.jpg`
 
-## Root Cause
+Implementation plan:
 
-The component renders **all 30 images simultaneously** (stacked with opacity toggling), even though only 4 are visible at once (1 per card). Every image goes through the `/render/image/` transformation endpoint which takes 8-17 seconds per request. This creates a bandwidth stampede — the browser's 6-connection-per-origin limit means images queue up and many haven't loaded by the time the user scrolls to the section, showing broken alt text.
+1) Update `src/components/landing/ProductCategoryShowcase.tsx` to replace all missing filenames with verified existing files from `showcase/` (same category style), so every URL resolves immediately.
 
-## Plan
+2) Keep the current optimized loading strategy (current + preload next, intersection-based cycling, failed-image skipping), since it is correct and already reducing request pressure.
 
-### File: `src/components/landing/ProductCategoryShowcase.tsx`
+3) Add a small dev-only warning in `handleError` that logs the exact failed URL and category label, so future bad filenames are spotted instantly during testing.
 
-**1. Render only the current + next image instead of all images stacked**
-
-Replace the `images.map()` that renders all images with opacity toggling. Instead, only mount 2 `ShimmerImage` elements: the current one (visible) and the next one (preloading, hidden). This drops simultaneous requests from 30 to 8.
-
-**2. Add `width: 600` to the `s()` helper call**
-
-The category cards are at most ~350px wide on desktop. Requesting full-resolution images through the render endpoint is wasteful. Adding `width: 600` (2x for retina) will dramatically reduce payload size and transformation time.
-
-```ts
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
-```
-
-**3. Track failed images and skip them permanently**
-
-Currently `onError` calls `advance()` which cycles to the next image — but the failed image stays in the array and will fail again on the next cycle. Add a `Set` of failed indices so broken images are permanently skipped.
-
-**4. Don't start cycling until the section is visible**
-
-Wrap the `setInterval` in an `IntersectionObserver` check so images only start loading and cycling when the user scrolls near the section, preventing the 8 preload requests from competing with above-fold content.
-
-## Files Changed
-- `src/components/landing/ProductCategoryShowcase.tsx`
-
+4) Validate end-to-end after patch:
+- No 404s for `.../storage/v1/render/image/public/landing-assets/showcase/...`
+- All 4 cards rotate through multiple images without getting stuck on the fallback/older subset.
+- Confirm both Preview and Published environments show the same behavior (to rule out stale cache mismatch).
