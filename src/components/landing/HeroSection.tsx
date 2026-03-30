@@ -341,8 +341,9 @@ export function HeroSection() {
                     if (el) {
                       const firstChild = el.firstElementChild as HTMLElement | null;
                       const gap = parseFloat(getComputedStyle(el).gap) || 10;
+                      const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
                       const itemWidth = firstChild ? firstChild.offsetWidth + gap : 165;
-                      el.scrollTo({ left: i * itemWidth, behavior: 'smooth' });
+                      el.scrollTo({ left: i * itemWidth + padding, behavior: 'smooth' });
                     }
                   }}
                   className={`rounded-full transition-all duration-200 ${
