@@ -921,7 +921,7 @@ export default function Freestyle() {
 
       {/* Scrollable content area */}
       <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
-        <div className="px-3 lg:px-1 space-y-2">
+        <div className="px-3 lg:px-1 space-y-2 mb-2">
           <LowCreditsBanner />
           {recreateSource && (
             <Alert className="border-primary/20 bg-primary/5 mb-2">
