@@ -93,7 +93,6 @@ const App = () => {
     <Toaster position="top-right" richColors closeButton />
     <AuthProvider>
       <AdminViewProvider>
-      <CreditProvider>
         <BrowserRouter>
           <ScrollToTop />
           <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
@@ -145,50 +144,53 @@ const App = () => {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />
 
-            {/* Protected app routes */}
+            {/* Protected app routes — CreditProvider scoped here */}
             <Route
               path="/app/*"
               element={
                 <ProtectedRoute>
-                  <AppShell>
-                    <Suspense fallback={<AppShellLoading />}>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/products" element={<Products />} />
-                      <Route path="/products/new" element={<AddProduct />} />
-                      <Route path="/products/:id/edit" element={<AddProduct />} />
-                      <Route path="/brand-profiles" element={<BrandProfiles />} />
-                      <Route path="/brand-profiles/new" element={<BrandProfileWizard />} />
-                      <Route path="/brand-profiles/:id/edit" element={<BrandProfileWizard />} />
-                      <Route path="/workflows" element={<Workflows />} />
-                      <Route path="/creative-drops" element={<CreativeDrops />} />
-                      <Route path="/generate" element={<Generate />} />
-                      <Route path="/generate/:workflowSlug" element={<Generate />} />
-                      <Route path="/library" element={<Jobs />} />
-                      <Route path="/library/:id" element={<Jobs />} />
-                      <Route path="/discover" element={<Discover />} />
-                      <Route path="/discover/:itemId" element={<Discover />} />
-                      <Route path="/templates" element={<Discover />} />
-                      <Route path="/templates/:id" element={<Templates />} />
-                      <Route path="/jobs" element={<Jobs />} />
-                      <Route path="/jobs/:id" element={<Jobs />} />
-                      <Route path="/video" element={<VideoHub />} />
-                      <Route path="/video/animate" element={<AnimateVideo />} />
-                      <Route path="/video/legacy" element={<VideoGenerate />} />
-                      <Route path="/freestyle" element={<Freestyle />} />
-                      <Route path="/perspectives" element={<Perspectives />} />
-                      <Route path="/models" element={<BrandModels />} />
-                      <Route path="/admin/models" element={<AdminModels />} />
-                      <Route path="/admin/scenes" element={<AdminScenes />} />
-                      <Route path="/admin/scene-upload" element={<AdminSceneUpload />} />
-                      <Route path="/admin/chat-sessions" element={<AdminChatSessions />} />
-                      <Route path="/admin/feedback" element={<AdminFeedback />} />
-                      <Route path="/admin/status" element={<AdminStatus />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    </Suspense>
-                  </AppShell>
+                  <CreditProvider>
+                    <AppShell>
+                      <Suspense fallback={<AppShellLoading />}>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/products/new" element={<AddProduct />} />
+                        <Route path="/products/:id/edit" element={<AddProduct />} />
+                        <Route path="/brand-profiles" element={<BrandProfiles />} />
+                        <Route path="/brand-profiles/new" element={<BrandProfileWizard />} />
+                        <Route path="/brand-profiles/:id/edit" element={<BrandProfileWizard />} />
+                        <Route path="/workflows" element={<Workflows />} />
+                        <Route path="/creative-drops" element={<CreativeDrops />} />
+                        <Route path="/generate" element={<Generate />} />
+                        <Route path="/generate/:workflowSlug" element={<Generate />} />
+                        <Route path="/library" element={<Jobs />} />
+                        <Route path="/library/:id" element={<Jobs />} />
+                        <Route path="/discover" element={<Discover />} />
+                        <Route path="/discover/:itemId" element={<Discover />} />
+                        <Route path="/templates" element={<Discover />} />
+                        <Route path="/templates/:id" element={<Templates />} />
+                        <Route path="/jobs" element={<Jobs />} />
+                        <Route path="/jobs/:id" element={<Jobs />} />
+                        <Route path="/video" element={<VideoHub />} />
+                        <Route path="/video/animate" element={<AnimateVideo />} />
+                        <Route path="/video/legacy" element={<VideoGenerate />} />
+                        <Route path="/freestyle" element={<Freestyle />} />
+                        <Route path="/perspectives" element={<Perspectives />} />
+                        <Route path="/models" element={<BrandModels />} />
+                        <Route path="/admin/models" element={<AdminModels />} />
+                        <Route path="/admin/scenes" element={<AdminScenes />} />
+                        <Route path="/admin/scene-upload" element={<AdminSceneUpload />} />
+                        <Route path="/admin/chat-sessions" element={<AdminChatSessions />} />
+                        <Route path="/admin/feedback" element={<AdminFeedback />} />
+                        <Route path="/admin/status" element={<AdminStatus />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      </Suspense>
+                    </AppShell>
+                    <BuyCreditsModal />
+                  </CreditProvider>
                 </ProtectedRoute>
               }
             />
@@ -196,9 +198,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
-          <BuyCreditsModal />
         </BrowserRouter>
-      </CreditProvider>
       </AdminViewProvider>
     </AuthProvider>
   </QueryClientProvider>

@@ -191,7 +191,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   useEffect(() => {
     if (!user) return;
     checkSubscription();
-    const interval = setInterval(checkSubscription, 60000); // every minute
+    const interval = setInterval(checkSubscription, 300000); // every 5 minutes
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
 
