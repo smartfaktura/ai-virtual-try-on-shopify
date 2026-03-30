@@ -68,6 +68,8 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
   const [isBatching, setIsBatching] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdsRef = useRef<string[]>([]);
+  const onCreditRefreshRef = useRef(onCreditRefresh);
+  useEffect(() => { onCreditRefreshRef.current = onCreditRefresh; }, [onCreditRefresh]);
 
   useEffect(() => {
     return () => {
