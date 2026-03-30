@@ -91,16 +91,20 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 
       {/* Incoming layer — crossfades in on top */}
       {incomingIndex !== null && (
-        <ShimmerImage
-          src={images[incomingIndex]}
-          alt={`${label} AI-generated product shot`}
-          loading="eager"
-          decoding="async"
-          wrapperClassName="absolute inset-0 transition-opacity duration-500"
-          wrapperStyle={{ zIndex: 2, opacity: fadeIn ? 1 : 0 }}
-          className="w-full h-full object-cover"
+        <div
+          className="absolute inset-0 transition-opacity duration-500"
+          style={{ zIndex: 2, opacity: fadeIn ? 1 : 0 }}
           onTransitionEnd={handleTransitionEnd}
-        />
+        >
+          <ShimmerImage
+            src={images[incomingIndex]}
+            alt={`${label} AI-generated product shot`}
+            loading="eager"
+            decoding="async"
+            wrapperClassName="absolute inset-0"
+            className="w-full h-full object-cover"
+          />
+        </div>
       )}
     </div>
   );
