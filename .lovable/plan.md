@@ -1,31 +1,34 @@
 
 
-## Optimize Team Video Loading on Landing Page
+## Fix: Category Card Image Transition Flashes on Mobile
 
-### Problem
-All 10 team member videos (~10 MP4 files) begin downloading their metadata simultaneously as soon as the section enters the viewport. Since the carousel only shows ~4 cards at a time, 6+ videos are loading unnecessarily, competing for bandwidth and slowing visible content.
+### Root cause
+When the crossfade transition ends, `handleTransitionEnd` simultaneously:
+1. Updates `displayIndex` to the new image
+2. Sets `incomingIndex = null` (removing the top layer)
+3. Sets `fadeIn = false`
 
-### Optimizations
+For 1-2 frames, the incoming layer is unmounted but the base `ShimmerImage` hasn't re-rendered with the new `src` yet — causing a visible flash/gap on mobile where rendering is slower.
 
-**1. Defer video `src` until the card is scrolled into view**
-- Currently `LazyVideo` sets `src` immediately on mount — the IntersectionObserver only controls play/pause
-- Change: don't set the `src` attribute at all until the card's own IntersectionObserver fires; show the poster image until then
-- This means only the ~4 visible cards load video; the rest stay as lightweight poster images
+### Fix
 
-**2. Show poster image as a real `<img>` fallback layer**
-- Render the avatar image behind the video so the user sees content instantly
-- Once the video fires `canplay`, hide the image layer
-- Eliminates the blank/black flash while the video buffers
+**File: `src/components/landing/ProductCategoryShowcase.tsx`**
 
-**3. Use `preload="none"` instead of `preload="metadata"`**
-- Since we're deferring the `src` anyway, when it does get set the browser should only start downloading when play is called
-- Combined with the IntersectionObserver play trigger, this minimizes wasted bandwidth
+Change the swap logic so the incoming layer stays visible until the base layer has updated:
 
-### File
-- `src/components/landing/StudioTeamSection.tsx` — update `LazyVideo` component
+1. In `handleTransitionEnd`, only update `displayIndex` — keep the incoming layer mounted at full opacity
+2. Use a `useEffect` watching `displayIndex` to clear `incomingIndex` and `fadeIn` on the **next render cycle**, after the base ShimmerImage has re-rendered with the new src
+3. This guarantees the top layer covers the base layer during the 1-2 frame gap where the base image swaps
 
-### Result
-- Initial section load: 0 video network requests (just 4 small poster JPGs)
-- As user scrolls through carousel: videos load on-demand, one or two at a time
-- Perceived load time drops significantly
+```text
+Before (single frame):
+  displayIndex = new  ←  base re-renders (may flash)
+  incomingIndex = null ← top layer removed instantly
+  
+After (two-phase):
+  Frame 1: displayIndex = new, incoming layer still visible at opacity 1
+  Frame 2: incomingIndex = null, base layer already showing new image underneath
+```
+
+This is a small change to the `handleTransitionEnd` callback and one new `useEffect` — no other files affected.
 
