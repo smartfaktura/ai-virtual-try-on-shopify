@@ -1056,7 +1056,7 @@ export default function Freestyle() {
       <div className="flex-shrink-0 relative z-20 -mt-4 lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
         {/* Desktop gradient fade */}
         <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
-        <div className={cn("px-0 sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20", isPromptCollapsed ? "pb-0" : "pb-0 sm:pb-6")}>
+        <div className={cn("px-0 sm:px-8 lg:pt-2 lg:pointer-events-none sm:pr-16 lg:pr-20", isPromptCollapsed ? "pb-2" : "pb-4 sm:pb-6")}>
           <div className="lg:max-w-2xl lg:mx-auto lg:pointer-events-auto relative z-20">
             {showSceneHint && selectedScene && (
               <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
