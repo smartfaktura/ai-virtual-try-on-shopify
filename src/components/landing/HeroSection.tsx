@@ -183,7 +183,7 @@ export function HeroSection() {
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    const itemWidth = 196;
+    const itemWidth = 165;
     const idx = Math.round(el.scrollLeft / itemWidth);
     setVisibleDot(Math.min(idx, current.outputs.length - 1));
   }, [activeScene, current.outputs.length]);
@@ -333,7 +333,7 @@ export function HeroSection() {
                   key={i}
                   onClick={() => {
                     const el = scrollRefs.current[activeScene];
-                    if (el) el.scrollTo({ left: i * 168, behavior: 'smooth' });
+                    if (el) el.scrollTo({ left: i * 165, behavior: 'smooth' });
                   }}
                   className={`rounded-full transition-all duration-200 ${
                     visibleDot === i
