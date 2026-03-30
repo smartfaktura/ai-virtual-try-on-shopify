@@ -196,7 +196,16 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
       </CardContent>
     </Card>
   );
-}
+}, (prev, next) => {
+  const pg = prev.group;
+  const ng = next.group;
+  return pg.key === ng.key
+    && pg.generatedImageCount === ng.generatedImageCount
+    && pg.processingCount === ng.processingCount
+    && pg.queuedCount === ng.queuedCount
+    && pg.totalImageCount === ng.totalImageCount
+    && pg.failedCount === ng.failedCount;
+});
 
 export function WorkflowActivityCard({
   batchGroups,
@@ -206,8 +215,6 @@ export function WorkflowActivityCard({
   onDismiss,
 }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
-  const hasActiveGroups = batchGroups.some((g) => g.processingCount > 0 || g.queuedCount > 0);
-  useVisibilityTick(1000, hasActiveGroups);
 
   const hasContent = batchGroups.length > 0 || completedGroups.length > 0 || failedGroups.length > 0;
   if (!hasContent) return null;
