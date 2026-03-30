@@ -279,6 +279,10 @@ export function WorkflowActivityCard({
         const refundedCredits = group.jobs
           .filter(j => j.status === 'failed')
           .reduce((sum, j) => sum + (j.credits_reserved ?? 0), 0);
+        const failedProductCount = uniqueProductCount(group);
+        const failedTitleSuffix = failedProductCount > 1
+          ? ` — ${failedProductCount} products`
+          : group.product_name ? ` — ${group.product_name}` : '';
         return (
           <Card key={group.key} className="border-destructive/20 bg-destructive/[0.04]">
             <CardContent className="py-3 px-4 sm:py-4 sm:px-5">
@@ -297,7 +301,7 @@ export function WorkflowActivityCard({
                    <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
                       {group.workflow_name ?? 'Workflow generation'}
-                      {group.product_name ? ` — ${group.product_name}` : ''}
+                      {failedTitleSuffix}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {group.completedCount > 0
