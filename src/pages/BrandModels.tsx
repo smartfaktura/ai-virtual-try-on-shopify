@@ -29,6 +29,7 @@ import {
 
 /* ── Plan gate upgrade prompt ── */
 function UpgradeHero() {
+  const { openBuyModal } = useCredits();
   return (
     <div className="flex flex-col items-center text-center py-20 px-4 max-w-2xl mx-auto gap-10">
       <div className="space-y-2">
