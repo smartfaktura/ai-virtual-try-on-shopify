@@ -61,7 +61,8 @@ const INITIAL_BATCH_STATE: BatchState = {
   hasPartialFailure: false,
 };
 
-export function useGenerationBatch(): UseGenerationBatchReturn {
+export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGenerationBatchReturn {
+  const { onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [batchState, setBatchState] = useState<BatchState | null>(null);
   const [isBatching, setIsBatching] = useState(false);
