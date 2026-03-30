@@ -35,8 +35,12 @@ export const ShimmerImage = forwardRef<HTMLImageElement, ShimmerImageProps>(
     forwardedRef,
   ) {
     // Eagerly check browser cache to avoid shimmer flash on remount
+    // Skip the probe for lazy images — it defeats native lazy loading by
+    // creating a phantom request for every off-screen image.
     const [loaded, setLoaded] = useState(() => {
       if (!src || typeof window === 'undefined') return false;
+      const isLazy = rest.loading === 'lazy' && fetchPriority !== 'high';
+      if (isLazy) return false;
       const img = new Image();
       img.src = src;
       return img.complete && img.naturalWidth > 0;

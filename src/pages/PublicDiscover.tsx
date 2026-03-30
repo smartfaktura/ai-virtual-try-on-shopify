@@ -78,6 +78,14 @@ function itemMatchesProductCategory(item: DiscoverItem, productCat: string): boo
   return Array.isArray(cats) && cats.includes(productCat);
 }
 
+function getResponsiveInitialCount() {
+  if (typeof window === 'undefined') return 30;
+  const w = window.innerWidth;
+  if (w < 640) return 12;
+  if (w < 1024) return 20;
+  return 30;
+}
+
 function useColumnCount() {
   const [count, setCount] = useState(() => {
     if (typeof window === 'undefined') return 4;
@@ -104,6 +112,7 @@ export default function PublicDiscover() {
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
+  const presetsLoaded = presets.length > 0;
   const { featuredMap, isFeatured } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { isSaved, toggleSave } = useSavedItems();
@@ -223,7 +232,7 @@ export default function PublicDiscover() {
   }, [filtered, featuredMap]);
 
   // Progressive rendering: render in batches for mobile perf
-  const INITIAL_RENDER_COUNT = 30;
+  const INITIAL_RENDER_COUNT = getResponsiveInitialCount();
   const LOAD_MORE_COUNT = 20;
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
   const sentinelRef = useRef<HTMLDivElement>(null);
