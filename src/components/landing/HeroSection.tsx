@@ -139,7 +139,8 @@ export function HeroSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mobileScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const desktopScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
@@ -149,7 +150,11 @@ export function HeroSection() {
   const visitedScenes = useRef(new Set([0]));
 
   const current = showcases[activeScene];
-  const activeScrollEl = scrollRefs.current[activeScene];
+
+  const getActiveScrollEl = useCallback(
+    () => (isMobile ? mobileScrollRefs.current[activeScene] : desktopScrollRefs.current[activeScene]),
+    [activeScene, isMobile]
+  );
 
   // Product image preload is handled by <link rel="preload"> in index.html
 
@@ -179,7 +184,7 @@ export function HeroSection() {
   }, []);
 
   const updateScrollState = useCallback(() => {
-    const el = scrollRefs.current[activeScene];
+    const el = getActiveScrollEl();
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
@@ -191,20 +196,20 @@ export function HeroSection() {
       const idx = Math.round((el.scrollLeft - padding) / itemWidth);
       setVisibleDot(Math.min(Math.max(idx, 0), current.outputs.length - 1));
     }
-  }, [activeScene, current.outputs.length]);
+  }, [current.outputs.length, getActiveScrollEl]);
 
   // Reset scroll when switching scenes
   useEffect(() => {
-    const el = scrollRefs.current[activeScene];
+    const el = getActiveScrollEl();
     if (el) {
       el.scrollTo({ left: 0 });
       setVisibleDot(0);
       requestAnimationFrame(updateScrollState);
     }
-  }, [activeScene, updateScrollState]);
+  }, [activeScene, getActiveScrollEl, updateScrollState]);
 
   const scroll = (direction: 'left' | 'right') => {
-    const el = scrollRefs.current[activeScene];
+    const el = getActiveScrollEl();
     if (!el) return;
     const amount = 220;
     el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
@@ -300,7 +305,7 @@ export function HeroSection() {
               {showcases.map((showcase, sceneIdx) => (
                 <div
                   key={sceneIdx}
-                  ref={el => { scrollRefs.current[sceneIdx] = el; }}
+                  ref={el => { mobileScrollRefs.current[sceneIdx] = el; }}
                   onScroll={sceneIdx === activeScene ? updateScrollState : undefined}
                   data-hero-carousel
                   className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory px-4"
@@ -337,7 +342,7 @@ export function HeroSection() {
                 <button
                   key={i}
                   onClick={() => {
-                    const el = scrollRefs.current[activeScene];
+                    const el = getActiveScrollEl();
                     if (el) {
                       const firstChild = el.firstElementChild as HTMLElement | null;
                       const gap = parseFloat(getComputedStyle(el).gap) || 10;
@@ -493,7 +498,7 @@ export function HeroSection() {
               {showcases.map((showcase, sceneIdx) => (
                 <div
                   key={sceneIdx}
-                  ref={el => { scrollRefs.current[sceneIdx] = el; }}
+                  ref={el => { desktopScrollRefs.current[sceneIdx] = el; }}
                   onScroll={sceneIdx === activeScene ? updateScrollState : undefined}
                   data-hero-carousel
                   className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
