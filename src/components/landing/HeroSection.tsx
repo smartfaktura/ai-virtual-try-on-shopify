@@ -213,7 +213,7 @@ export function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
-          <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight leading-[1.1] mb-6">
             Your AI Photography Team.
             <br />
             <span className="text-primary inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
