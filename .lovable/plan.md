@@ -1,25 +1,36 @@
 
 
-# Replace TryShot Showcase Images with Discover Feed Images
+# Fix: Product Listing Set showing only 1 image in results
 
-## What changes
-Replace the 6 hardcoded local showcase images (beauty, sneakers, electronics, etc.) on `/tryshot` with images dynamically pulled from the `discover_presets` table — the same source powering the Discover page.
+## Problem
+When generating multiple scenes in the Product Listing Set workflow, only 1 image appears in results despite multiple images being generated.
 
-## File: `src/pages/TryShot.tsx`
+**Root cause:** Two result watchers race against each other:
+1. **`activeJob` watcher** (line ~1716) — fires when ANY single job completes, immediately setting `generatedImages` to that one job's images and transitioning to the results step
+2. **`batchState` watcher** (line ~1739) — fires when ALL batch jobs are done, aggregating all images
 
-1. **Remove local image imports** (lines 7-12) — delete all `import showcaseX from ...` lines
-2. **Fetch discover presets** — add a query to load presets from `discover_presets` table (public/anon access is already enabled via RLS)
-3. **Replace `CATEGORIES` array** — instead of hardcoded categories with local images, derive showcase items from the fetched presets. Pick one image per category (or just the first N presets) to populate:
-   - The hero typewriter rotating images (`WORD_IMAGES`)
-   - The "Works with most products" grid (`CATEGORIES`)
-4. **Keep the typewriter words** — map each word to a matching discover preset by category (fashion, beauty, lifestyle, etc.). Fall back gracefully if a category has no preset.
-5. **Loading state** — show skeleton placeholders while presets load
+The `activeJob` watcher guards against `multiProductJobIds` but does NOT guard against an active batch (`batchState`). When `startBatch` creates multiple jobs, the `useGenerationQueue` hook's `restoreActiveJob` picks up one of them as `activeJob`. When that one job completes, the `activeJob` watcher fires first and shows only 1 image — before the batch watcher can aggregate all results.
 
-## Technical details
+## Fix
 
-- Use `supabase.from('discover_presets').select('*').limit(20)` with anon key (no auth needed — RLS allows anon SELECT)
-- Group presets by category, pick the first from each for the showcase grid
-- For the rotating hero image, select 6 presets that best match the rotating words
-- Delete the 6 local JPG files from `src/assets/tryshot/` to reduce bundle size
-- Images will load from the CDN via `image_url` field — same optimization as Discover page
+**File: `src/pages/Generate.tsx`** — line ~1717
+
+Add a guard to the `activeJob` completion watcher to skip when a batch is in progress:
+
+```tsx
+// Before (line 1717-1719):
+if (!activeJob) return;
+if (multiProductJobIds.size > 0) return;
+if (currentStep === 'results') return;
+
+// After:
+if (!activeJob) return;
+if (multiProductJobIds.size > 0) return;
+if (batchState) return;  // ← NEW: let the batch watcher handle aggregation
+if (currentStep === 'results') return;
+```
+
+This single line ensures that when a batch is active (multiple jobs for multiple scenes), the batch watcher handles result aggregation with all images instead of the single-job watcher short-circuiting with just 1 image.
+
+Add `batchState` to the dependency array of that `useEffect` as well.
 
