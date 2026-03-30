@@ -27,7 +27,7 @@ export const MagicLinkEmail = ({
     <Head>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </Head>
-    <Preview>Your login link - VOVV.AI</Preview>
+    <Preview>Your VOVV.AI login link</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={wordmark}>VOVV.AI</Text>

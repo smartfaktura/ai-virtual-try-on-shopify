@@ -4,6 +4,7 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -19,7 +20,7 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
-  token?: string
+  token: string
 }
 
 export const SignupEmail = ({
@@ -28,64 +29,48 @@ export const SignupEmail = ({
   recipient,
   confirmationUrl,
   token,
-}: SignupEmailProps) => {
-  const displayToken = token || ''
-
-  return (
-    <Html lang="en" dir="ltr">
-      <Head>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </Head>
-      <Preview>Your verification code is {displayToken} – VOVV.AI</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Text style={wordmark}>VOVV.AI</Text>
-          <Heading style={h1}>Verify your account</Heading>
-          <Text style={subtitle}>
-            Enter this code to confirm your email address ({recipient}):
-          </Text>
-
-          {displayToken && (
-            <Section style={codeBlock}>
-              <Text style={codeText}>{displayToken}</Text>
-            </Section>
-          )}
-
-          <Text style={codeHint}>This code expires in 10 minutes</Text>
-
-          <Text style={verifyText}>
-            or{' '}
-            <Link href={confirmationUrl} style={verifyLink}>
-              verify directly →
-            </Link>
-          </Text>
-
-          <Text style={disclaimer}>
-            If you didn't create an account on{' '}
-            <Link href={siteUrl} style={inlineLink}>VOVV.AI</Link>, you can safely ignore this email.
-          </Text>
-
-          <Section style={footer}>
-            <Text style={footerCopy}>&copy; 2026 VOVV.AI. All rights reserved.</Text>
-            <Text style={footerSub}>A product by 123Presets</Text>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  )
-}
+}: SignupEmailProps) => (
+  <Html lang="en" dir="ltr">
+    <Head>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    </Head>
+    <Preview>Confirm your VOVV.AI account</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Text style={wordmark}>VOVV.AI</Text>
+        <Heading style={h1}>Confirm your email</Heading>
+        <Text style={text}>
+          Thanks for signing up for{' '}
+          <Link href={siteUrl} style={link}>
+            <strong>VOVV.AI</strong>
+          </Link>
+          ! Please confirm your email address ({recipient}) by clicking the button below or entering the code.
+        </Text>
+        {token && <Text style={codeStyle}>{token}</Text>}
+        <Button style={button} href={confirmationUrl}>
+          Verify Email
+        </Button>
+        <Text style={footerText}>
+          If you didn't create an account, you can safely ignore this email.
+        </Text>
+        <Section style={footerSection}>
+          <Text style={footerCopy}>&copy; 2026 VOVV.AI. All rights reserved.</Text>
+          <Text style={footerSub}>A product by 123Presets</Text>
+        </Section>
+      </Container>
+    </Body>
+  </Html>
+)
 
 export default SignupEmail
 
-const fontStack = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-
 const main = {
   backgroundColor: '#ffffff',
-  fontFamily: fontStack,
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 }
 const container = { padding: '40px 20px', maxWidth: '560px', margin: '0 auto' }
 const wordmark = {
-  fontFamily: fontStack,
+  fontFamily: "'Inter', sans-serif",
   fontWeight: 700 as const,
   fontSize: '20px',
   letterSpacing: '-0.03em',
@@ -93,74 +78,58 @@ const wordmark = {
   margin: '0 0 32px 0',
 }
 const h1 = {
-  fontFamily: fontStack,
+  fontFamily: "'Inter', sans-serif",
   fontSize: '24px',
   fontWeight: 700 as const,
   color: '#0f172a',
-  margin: '0 0 6px 0',
+  margin: '0 0 16px 0',
   letterSpacing: '-0.02em',
 }
-const subtitle = {
-  fontFamily: fontStack,
-  fontSize: '14px',
+const text = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '15px',
   color: '#64748b',
-  lineHeight: '1.5',
+  lineHeight: '1.6',
   margin: '0 0 24px 0',
 }
-const codeBlock = {
-  backgroundColor: '#f8fafc',
-  border: '1px solid #e2e8f0',
-  borderRadius: '12px',
-  padding: '20px 0',
-  textAlign: 'center' as const,
-  margin: '0 0 8px 0',
-}
-const codeText = {
-  fontFamily: fontStack,
-  fontSize: '32px',
+const link = { color: 'inherit', textDecoration: 'underline' }
+const codeStyle = {
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: '28px',
   fontWeight: 700 as const,
   color: '#0f172a',
-  letterSpacing: '0.3em',
-  margin: '0',
-  lineHeight: '1',
+  letterSpacing: '0.15em',
+  margin: '0 0 24px 0',
 }
-const codeHint = {
-  fontFamily: fontStack,
-  fontSize: '12px',
-  color: '#64748b',
-  margin: '0 0 28px 0',
-  textAlign: 'center' as const,
+const button = {
+  backgroundColor: '#1e293b',
+  color: '#ffffff',
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '14px',
+  fontWeight: 600 as const,
+  borderRadius: '8px',
+  padding: '14px 32px',
+  textDecoration: 'none',
+  letterSpacing: '-0.01em',
+  margin: '0 0 32px 0',
+  display: 'inline-block' as const,
 }
-const verifyText = {
-  fontFamily: fontStack,
+const footerText = {
+  fontFamily: "'Inter', sans-serif",
   fontSize: '13px',
   color: '#64748b',
-  textAlign: 'center' as const,
-  margin: '0 0 36px 0',
-}
-const verifyLink = {
-  color: '#0f172a',
-  textDecoration: 'underline',
-  fontWeight: 500 as const,
-}
-const disclaimer = {
-  fontFamily: fontStack,
-  fontSize: '13px',
-  color: '#64748b',
-  lineHeight: '1.5',
   margin: '0 0 40px 0',
 }
-const inlineLink = { color: '#0f172a', textDecoration: 'underline' }
-const footer = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
-  fontFamily: fontStack,
+  fontFamily: "'Inter', sans-serif",
   fontSize: '12px',
   color: '#64748b',
   margin: '16px 0 0 0',
   lineHeight: '1.5',
 }
 const footerSub = {
-  fontFamily: fontStack,
+  fontFamily: "'Inter', sans-serif",
   fontSize: '12px',
   color: '#64748b',
   margin: '4px 0 0 0',

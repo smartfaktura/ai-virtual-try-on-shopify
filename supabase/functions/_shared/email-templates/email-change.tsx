@@ -32,17 +32,18 @@ export const EmailChangeEmail = ({
     <Head>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </Head>
-    <Preview>Confirm your email change - VOVV.AI</Preview>
+    <Preview>Confirm your new VOVV.AI email</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
-          You requested to change your email address from{' '}
+          You requested to change your email address for VOVV.AI from{' '}
           <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}
           to{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
         </Text>
+        <Text style={text}>Click the button below to confirm this change:</Text>
         <Button style={button} href={confirmationUrl}>
           Confirm Email Change
         </Button>
@@ -88,7 +89,7 @@ const text = {
   lineHeight: '1.6',
   margin: '0 0 24px 0',
 }
-const link = { color: '#0f172a', textDecoration: 'underline' }
+const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
   backgroundColor: '#1e293b',
   color: '#ffffff',

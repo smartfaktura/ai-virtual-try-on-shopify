@@ -374,8 +374,8 @@ export default function Auth() {
                 <InputOTPSlot index={2} />
                 <InputOTPSlot index={3} />
               </InputOTPGroup>
-              <div className="flex items-center px-2">
-                <span className="text-xl text-muted-foreground">-</span>
+              <div className="flex items-center px-1 sm:px-2">
+                <span className="text-lg sm:text-xl text-muted-foreground">-</span>
               </div>
               <InputOTPGroup className="gap-1 sm:gap-2">
                 <InputOTPSlot index={4} />

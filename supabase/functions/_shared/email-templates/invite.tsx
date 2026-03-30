@@ -30,15 +30,17 @@ export const InviteEmail = ({
     <Head>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </Head>
-    <Preview>You've been invited to join VOVV.AI</Preview>
+    <Preview>You've been invited to VOVV.AI</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
           You've been invited to join{' '}
-          <Link href={siteUrl} style={link}><strong>VOVV.AI</strong></Link>.
-          Click the button below to accept the invitation and create your account.
+          <Link href={siteUrl} style={link}>
+            <strong>VOVV.AI</strong>
+          </Link>
+          . Click the button below to accept the invitation and create your account.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Accept Invitation
@@ -85,7 +87,7 @@ const text = {
   lineHeight: '1.6',
   margin: '0 0 24px 0',
 }
-const link = { color: '#0f172a', textDecoration: 'underline' }
+const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
   backgroundColor: '#1e293b',
   color: '#ffffff',

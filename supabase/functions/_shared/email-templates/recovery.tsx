@@ -27,13 +27,13 @@ export const RecoveryEmail = ({
     <Head>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </Head>
-    <Preview>Reset your password - VOVV.AI</Preview>
+    <Preview>Reset your VOVV.AI password</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
-          We received a request to reset your password. Click the button below to choose a new one.
+          We received a request to reset your password for VOVV.AI. Click the button below to choose a new password.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Reset Password
@@ -90,7 +90,7 @@ const button = {
   padding: '14px 32px',
   textDecoration: 'none',
   letterSpacing: '-0.01em',
-  margin: '32px 0',
+  margin: '0 0 32px 0',
   display: 'inline-block' as const,
 }
 const footerText = {
@@ -99,10 +99,7 @@ const footerText = {
   color: '#64748b',
   margin: '0 0 40px 0',
 }
-const footerSection = {
-  borderTop: '1px solid #e7e5e4',
-  paddingTop: '16px',
-}
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: "'Inter', sans-serif",
   fontSize: '12px',
