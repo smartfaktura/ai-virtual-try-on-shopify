@@ -1130,6 +1130,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
+      const batchId = crypto.randomUUID();
       const needsModel = uiConfig?.show_model_picker && selectedModel;
       const modelsToGenerate = (isSelfieUgc || isMirrorSelfie) && selectedModels.size > 0
         ? Array.from(selectedModels).map(id => selectedModelMap.get(id)!).filter(Boolean)
@@ -1187,6 +1188,7 @@ export default function Generate() {
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
+            batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
             payload.model = {
@@ -1217,7 +1219,7 @@ export default function Generate() {
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
-              job_type: 'workflow', quality, imageCount: 1,
+              job_type: 'workflow', quality, imageCount: 1, batch_id: batchId,
             });
           } else if (result.type === 'insufficient_credits') {
             toast.error(result.message); break;
@@ -1383,6 +1385,7 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       
+      const batchId = crypto.randomUUID();
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
@@ -1396,7 +1399,7 @@ export default function Generate() {
           for (const framingVal of framingsToGenerate) {
             for (const varIdx of variationIndices) {
               const { remapped: remappedVar, extras: varExtras } = remapVariationIndices([varIdx]);
-              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: remappedVar, extra_variations: varExtras.length > 0 ? varExtras : undefined };
+              const comboPayload: Record<string, unknown> = { ...buildBasePayload(), aspectRatio: ratio, framing: framingVal || undefined, selected_variations: remappedVar, extra_variations: varExtras.length > 0 ? varExtras : undefined, batch_id: batchId };
               if (modelProfile && base64ModelImage) {
                 comboPayload.model = {
                   name: modelProfile.name, gender: modelProfile.gender, ethnicity: modelProfile.ethnicity,
@@ -1413,7 +1416,7 @@ export default function Generate() {
               if (!isEnqueueError(result)) {
                 jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
                 lastBalance = result.newBalance;
-                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1, batch_id: batchId });
               } else if (result.type === 'insufficient_credits') {
                 toast.error('Insufficient credits'); break;
               }
@@ -1435,8 +1438,8 @@ export default function Generate() {
     }
   };
 
-  // Helper: enqueue a single try-on job via direct fetch (used for multi-product upfront)
-  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose, modelOverride?: ModelProfile, ratioOverride?: AspectRatio, framingOverride?: FramingOption | null): Promise<{ jobId: string; newBalance: number } | null> => {
+  // Helper: enqueue a single try-on job via shared retry helper (used for multi-product upfront)
+  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose, modelOverride?: ModelProfile, ratioOverride?: AspectRatio, framingOverride?: FramingOption | null, batchId?: string): Promise<{ jobId: string; newBalance: number } | null> => {
     const pose = poseOverride || selectedPose;
     const model = modelOverride || selectedModel;
     if (!model || !pose) return null;
@@ -1454,70 +1457,43 @@ export default function Generate() {
     const effectiveRatio = ratioOverride || (selectedAspectRatios.size > 0 ? Array.from(selectedAspectRatios)[0] : aspectRatio);
     const effectiveFraming = framingOverride !== undefined ? framingOverride : (selectedFramings.has('auto') ? null : (selectedFramings.size > 0 ? Array.from(selectedFramings)[0] as FramingOption : framing));
 
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const maxRetries = 6;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            jobType: 'tryon',
-            payload: {
-              product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
-              model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage, originalImageUrl: model.previewUrl },
-              pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage, originalImageUrl: pose.previewUrl },
-              aspectRatio: effectiveRatio, imageCount: parseInt(imageCount),
-              framing: effectiveFraming || undefined,
-              workflow_id: activeWorkflow?.id || null,
-              workflow_name: activeWorkflow?.name || null,
-              workflow_slug: activeWorkflow?.slug || null,
-              product_id: userProducts.some(up => up.id === product.id) ? product.id : null,
-              product_name: product.title,
-              product_image_url: sourceImageUrl || product.images[0]?.url || null,
-              brand_profile_id: selectedBrandProfileId || null,
-            },
-            imageCount: parseInt(imageCount),
-            quality,
-            hasModel: true,
-            hasScene: true,
-            skipWake: true,
-          }),
-        });
+    const result = await enqueueWithRetry(
+      {
+        jobType: 'tryon',
+        payload: {
+          product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
+          model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64ModelImage, originalImageUrl: model.previewUrl },
+          pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage, originalImageUrl: pose.previewUrl },
+          aspectRatio: effectiveRatio, imageCount: parseInt(imageCount),
+          framing: effectiveFraming || undefined,
+          workflow_id: activeWorkflow?.id || null,
+          workflow_name: activeWorkflow?.name || null,
+          workflow_slug: activeWorkflow?.slug || null,
+          product_id: userProducts.some(up => up.id === product.id) ? product.id : null,
+          product_name: product.title,
+          product_image_url: sourceImageUrl || product.images[0]?.url || null,
+          brand_profile_id: selectedBrandProfileId || null,
+          batch_id: batchId || undefined,
+        },
+        imageCount: parseInt(imageCount),
+        quality,
+        hasModel: true,
+        hasScene: true,
+        skipWake: true,
+      },
+      token,
+    );
 
-        if (response.ok) return response.json();
-
-        const err = await response.json().catch(() => ({}));
-        const errMsg = String(err.error || err.message || '');
-        const isRateLimit = response.status === 429 || response.status === 502 || response.status === 503
-          || errMsg.toLowerCase().includes('too many requests')
-          || errMsg.toLowerCase().includes('burst')
-          || errMsg.toLowerCase().includes('concurrent');
-
-        if (isRateLimit && attempt < maxRetries - 1) {
-          const retryAfter = err.retry_after_seconds ? Number(err.retry_after_seconds) : Math.pow(2, attempt + 1);
-          const jitter = Math.random() * 1000;
-          console.warn(`[enqueue] Rate limited for "${product.title}", retry ${attempt + 1}/${maxRetries - 1} in ${retryAfter}s`);
-          await new Promise(r => setTimeout(r, retryAfter * 1000 + jitter));
-          continue;
-        }
-
-        if (response.status === 402 && !isRateLimit) {
-          toast.error(`Not enough credits for "${product.title}"`);
-        } else if (!isRateLimit) {
-          toast.error(err.error || `Failed to queue "${product.title}"`);
-        }
-        return null;
-      } catch (fetchErr) {
-        if (attempt < maxRetries - 1) {
-          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
-          continue;
-        }
-        console.error(`[enqueue] Network error for "${product.title}":`, fetchErr);
-        return null;
+    if (isEnqueueError(result)) {
+      if (result.type === 'insufficient_credits') {
+        toast.error(`Not enough credits for "${product.title}"`);
+      } else if (result.type !== 'rate_limit') {
+        toast.error(result.message || `Failed to queue "${product.title}"`);
       }
+      return null;
     }
-    return null;
+
+    return { jobId: result.jobId, newBalance: result.newBalance };
   };
 
   const handleTryOnConfirmGenerate = async () => {
@@ -1549,6 +1525,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
+      const batchId = crypto.randomUUID();
       const jobMap = new Map<string, string>();
       const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
@@ -1562,7 +1539,7 @@ export default function Generate() {
                 if (enqueueCount > 0) {
                   await new Promise(r => setTimeout(r, 300));
                 }
-                const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
+                const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal, batchId);
                 if (result) {
                   const compositeKey = `${product.id}::${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
                   jobMap.set(compositeKey, result.jobId);
@@ -1571,7 +1548,7 @@ export default function Generate() {
                   injectActiveJob(queryClient, {
                     jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
                     workflow_slug: activeWorkflow?.slug, product_name: product.title,
-                    job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                    job_type: 'tryon', quality, imageCount: parseInt(imageCount), batch_id: batchId,
                   });
                 }
                 enqueueCount++;
@@ -1673,6 +1650,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
+      const batchId = crypto.randomUUID();
       const jobMap = new Map<string, string>();
       const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
@@ -1683,7 +1661,8 @@ export default function Generate() {
         for (const pose of posesToGenerate) {
           for (const ratioVal of ratiosToGen) {
             for (const framingVal of framingsToGen) {
-              const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal);
+              await paceDelay(jobMap.size);
+              const result = await enqueueTryOnForProduct(product as Product, token, pose, model, ratioVal, framingVal, batchId);
               if (result) {
                 const compositeKey = `${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
                 jobMap.set(compositeKey, result.jobId);
@@ -1692,7 +1671,7 @@ export default function Generate() {
                 injectActiveJob(queryClient, {
                   jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
                   workflow_slug: activeWorkflow?.slug, product_name: productName,
-                  job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                  job_type: 'tryon', quality, imageCount: parseInt(imageCount), batch_id: batchId,
                 });
               }
             }
@@ -1709,6 +1688,7 @@ export default function Generate() {
       setJobMetadata(metaMap);
       setMultiProductJobIds(jobMap);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+      sendWake(token);
     }
     } catch (err) {
       console.error('Try-on generation failed:', err);
