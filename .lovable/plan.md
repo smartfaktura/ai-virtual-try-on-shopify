@@ -1,31 +1,45 @@
 
 
-## Fix Sample Product Images + Open Video to All Users
+## Fix Sample Products Failing During Generation
 
-### 1. Sample product images — fix quality, borders, and aspect ratio
+### Root Causes
 
-**File: `src/components/app/freestyle/ProductSelectorChip.tsx`** (line 127)
+1. **Database FK violation** — Sample products have string IDs like `sample_ring`. When generation completes, the edge function saves `product_id: 'sample_ring'` to `freestyle_generations`, which has a foreign key to `user_products.id` (UUID). This insert fails.
 
-Current: `object-contain bg-muted/30` — images float inside the container with whitespace and no fill.
+2. **Unreachable image URL** — The `window.location.origin` fix produces URLs like `https://id-preview--*.lovable.app/images/samples/sample-ring.png`. The AI provider (running on external servers) cannot reliably fetch from the Lovable preview domain.
 
-Change to: `object-cover` so images fill the 1:1 aspect-square container edge-to-edge. Also add `rounded-xl` to the image itself to match the container rounding. The `getOptimizedUrl` with `quality: 60` is already applied, so optimization is in place — but sample images are local files served as-is. Since they're small static assets this is acceptable.
+### Fix
 
-The grey border is from the `rounded-xl` container outline being visible against the `bg-muted` background. Fix by removing `bg-muted` from the container or ensuring the image covers it entirely with `object-cover`.
+**File: `src/pages/Freestyle.tsx`** (lines 550-562, 679)
 
-### 2. Open Video to all users
+- When a sample product is selected (ID starts with `sample_`), set `productId` to `null` in the queue payload so the FK constraint is satisfied.
+- For the product image URL: upload the local sample image to Supabase Storage first (using the existing `uploadImageToStorage` helper), so the AI provider gets a publicly accessible Supabase Storage URL instead of a preview-domain URL.
 
-Three locations gate video behind admin/coming-soon:
+```typescript
+// Around line 550-558: Replace the current product image URL logic
+if (selectedProduct) {
+  const rawUrl = selectedProduct.image_url;
+  if (rawUrl.startsWith('data:')) {
+    productImageUrl = await uploadImageToStorage(rawUrl, 'product');
+  } else if (rawUrl.startsWith('/')) {
+    // Local sample image — convert to base64 then upload to storage
+    const resp = await fetch(rawUrl);
+    const blob = await resp.blob();
+    const reader = new FileReader();
+    const base64 = await new Promise<string>((resolve) => {
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+    productImageUrl = await uploadImageToStorage(base64, 'product');
+  } else {
+    productImageUrl = rawUrl;
+  }
+}
 
-**File: `src/components/app/AppShell.tsx`** (line 54)
-- Remove `comingSoon: true` from the Video nav item so all users can click it.
-
-**File: `src/pages/VideoGenerate.tsx`** (lines 129-135)
-- Remove the `isAdmin` gate — render `VideoGenerateInner` for everyone, delete `VideoComingSoon` component.
-
-**File: `src/pages/VideoHub.tsx`** — The sub-workflow cards (Start & End, Ad Sequence, etc.) have `comingSoon` props. These are separate future workflows, so they stay as-is. Only the main Video nav entry and the legacy generate page need ungating.
+// Around line 679: Null out productId for samples
+productId: selectedProduct?.id?.startsWith('sample_') ? null : selectedProduct?.id || undefined,
+```
 
 ### Files to edit
-- `src/components/app/freestyle/ProductSelectorChip.tsx` — `object-cover` on sample images, clean container bg
-- `src/components/app/AppShell.tsx` — Remove `comingSoon: true` from Video nav
-- `src/pages/VideoGenerate.tsx` — Remove admin-only gate
+- `src/pages/Freestyle.tsx` — Upload local sample images to storage; null out sample product IDs
 
