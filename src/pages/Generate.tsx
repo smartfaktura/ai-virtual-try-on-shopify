@@ -1525,6 +1525,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
+      const batchId = crypto.randomUUID();
       const jobMap = new Map<string, string>();
       const metaMap = new Map<string, { productName: string; ratio: string; framing: string | null }>();
       let lastBalance: number | null = null;
@@ -1538,7 +1539,7 @@ export default function Generate() {
                 if (enqueueCount > 0) {
                   await new Promise(r => setTimeout(r, 300));
                 }
-                const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal);
+                const result = await enqueueTryOnForProduct(product, token, pose, model, ratioVal, framingVal, batchId);
                 if (result) {
                   const compositeKey = `${product.id}::${model.modelId}::${pose.poseId}::${ratioVal}::${framingVal}`;
                   jobMap.set(compositeKey, result.jobId);
@@ -1547,7 +1548,7 @@ export default function Generate() {
                   injectActiveJob(queryClient, {
                     jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
                     workflow_slug: activeWorkflow?.slug, product_name: product.title,
-                    job_type: 'tryon', quality, imageCount: parseInt(imageCount),
+                    job_type: 'tryon', quality, imageCount: parseInt(imageCount), batch_id: batchId,
                   });
                 }
                 enqueueCount++;
