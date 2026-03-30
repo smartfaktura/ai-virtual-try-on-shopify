@@ -177,11 +177,6 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
 
             {/* Metadata chips */}
             <div className="flex flex-wrap gap-2">
-              {video.model_name && (
-                <span className="px-2.5 py-1 rounded-md bg-muted/50 text-[11px] font-medium text-muted-foreground">
-                  {video.model_name}
-                </span>
-              )}
               <span className="px-2.5 py-1 rounded-md bg-muted/50 text-[11px] font-medium text-muted-foreground">
                 {video.duration}s
               </span>
