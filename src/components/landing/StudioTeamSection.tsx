@@ -9,37 +9,59 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 function LazyVideo({ src, poster, className }: { src: string; poster: string; className: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const video = videoRef.current;
-        if (!video) return;
         if (entry.isIntersecting) {
-          video.play().catch(() => {});
+          setShouldLoad(true);
+          const video = videoRef.current;
+          if (video && video.src) video.play().catch(() => {});
         } else {
-          video.pause();
+          const video = videoRef.current;
+          if (video) video.pause();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '200px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
+  // Auto-play once src is set and video enters view
+  useEffect(() => {
+    if (!shouldLoad) return;
+    const video = videoRef.current;
+    if (video) {
+      video.src = src;
+      video.load();
+    }
+  }, [shouldLoad, src]);
+
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full relative">
+      {/* Poster image shown instantly, hidden once video can play */}
+      <img
+        src={poster}
+        alt=""
+        className={`${className} absolute inset-0 ${videoReady ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        loading="lazy"
+      />
       <video
         ref={videoRef}
-        src={src}
-        poster={poster}
         muted
         loop
         playsInline
-        preload="metadata"
-        className={className}
+        preload="none"
+        onCanPlay={() => {
+          setVideoReady(true);
+          videoRef.current?.play().catch(() => {});
+        }}
+        className={`${className} ${videoReady ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
       />
     </div>
   );
