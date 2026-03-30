@@ -550,9 +550,12 @@ export default function Freestyle() {
     let productImageUrl: string | undefined;
     if (selectedProduct) {
       try {
-        productImageUrl = selectedProduct.image_url.startsWith('data:')
-          ? await uploadImageToStorage(selectedProduct.image_url, 'product')
-          : selectedProduct.image_url;
+        const rawUrl = selectedProduct.image_url;
+        productImageUrl = rawUrl.startsWith('data:')
+          ? await uploadImageToStorage(rawUrl, 'product')
+          : rawUrl.startsWith('/')
+            ? `${window.location.origin}${rawUrl}`
+            : rawUrl;
       } catch (err) {
         console.error('Failed to upload product image:', err);
       }
