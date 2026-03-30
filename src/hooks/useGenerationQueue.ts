@@ -519,12 +519,12 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       stopPolling();
       setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
       toast.info('Cancelled — credits returned ✨');
-      onCreditRefresh?.();
+      onCreditRefreshRef.current?.();
     } else {
       toast.warning('Could not cancel — generation may have already completed.');
       pollJobStatus(jobIdRef.current!);
     }
-  }, [activeJob, stopPolling, pollJobStatus, onCreditRefresh]);
+  }, [activeJob, stopPolling, pollJobStatus]);
 
   const reset = useCallback(() => {
     stopPolling();
