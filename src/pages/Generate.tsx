@@ -1385,6 +1385,7 @@ export default function Generate() {
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
       
+      const batchId = crypto.randomUUID();
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
