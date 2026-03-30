@@ -51,7 +51,7 @@ const navItems = [
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Discover', icon: Compass, path: '/app/discover' },
-  { label: 'Video', icon: Film, path: '/app/video', comingSoon: true },
+  { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
   { label: 'Brand Models', icon: Users, path: '/app/models' },
@@ -110,7 +110,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   const NavItemButton = ({ item }: { item: typeof navItems[0] }) => {
-    const isComingSoon = item.comingSoon && !isAdmin;
+    const isComingSoon = false;
     const isEarnCredits = item.path === '#earn-credits';
 
     const handleClick = () => {
