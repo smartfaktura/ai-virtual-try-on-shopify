@@ -112,7 +112,7 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
                 {team.map((member, i) => (
                   <Avatar
                     key={member.name}
-                    className={`w-10 h-10 absolute inset-0 transition-opacity duration-500 ${
+                    className={`w-10 h-10 absolute inset-0 transition-opacity duration-500 will-change-[opacity] ${
                       i === msgIdx % team.length ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
