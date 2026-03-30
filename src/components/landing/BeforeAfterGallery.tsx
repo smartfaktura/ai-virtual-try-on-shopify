@@ -63,6 +63,7 @@ export function BeforeAfterGallery() {
                 <ShimmerImage
                    src={comp.output}
                    alt={`${comp.label} visual`}
+                   loading="lazy"
                    className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-500"
                    aspectRatio="16/9"
                  />
@@ -71,6 +72,7 @@ export function BeforeAfterGallery() {
                    <ShimmerImage
                      src={comp.original}
                      alt="Original product"
+                     loading="lazy"
                      className="w-full h-full object-cover"
                      aspectRatio="1/1"
                    />

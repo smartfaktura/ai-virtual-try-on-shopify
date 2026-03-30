@@ -101,6 +101,7 @@ export function CreativeDropsSection() {
                    <ShimmerImage
                      src={whiteCropTop}
                      alt="Crop Top"
+                     loading="lazy"
                      className="w-full h-full object-cover object-top"
                      aspectRatio="1/1"
                    />
@@ -143,6 +144,7 @@ export function CreativeDropsSection() {
                            <ShimmerImage
                              src={thumb}
                              alt="Campaign visual"
+                             loading="lazy"
                              className="w-full h-28 object-cover object-top"
                              aspectRatio="4/3"
                            />
