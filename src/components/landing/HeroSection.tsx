@@ -183,9 +183,13 @@ export function HeroSection() {
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    const itemWidth = 165;
-    const idx = Math.round(el.scrollLeft / itemWidth);
-    setVisibleDot(Math.min(idx, current.outputs.length - 1));
+    const firstChild = el.firstElementChild as HTMLElement | null;
+    if (firstChild) {
+      const gap = parseFloat(getComputedStyle(el).gap) || 10;
+      const itemWidth = firstChild.offsetWidth + gap;
+      const idx = Math.round(el.scrollLeft / itemWidth);
+      setVisibleDot(Math.min(Math.max(idx, 0), current.outputs.length - 1));
+    }
   }, [activeScene, current.outputs.length]);
 
   // Reset scroll when switching scenes
