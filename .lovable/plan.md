@@ -1,22 +1,28 @@
 
 
-## Issue: Product Chip Tap Causes Instant Redirect on Mobile
+## Cache-Busting Version Check — Implementation Plan
 
-### Root Cause
+### What This Does
+Every time we deploy, a tiny version number gets baked into the app. When a returning user opens the site, the app quietly checks if their version is current. If outdated, it does one hard refresh. A safety flag prevents infinite loops.
 
-When the user taps the Product chip on mobile and has **no products**, the `MobilePickerSheet` opens with empty-state content that includes a full-width `<Link to="/app/products">` button ("Add Your Own Product"). The sheet uses a CSS slide-up animation (`animate-in slide-in-from-bottom duration-200`), but the content is rendered at its **final DOM position immediately** — only the visual is animated. The original tap's touch event can propagate to the Link element before the animation visually completes, causing an instant navigation to `/app/products`.
+### Files
 
-This is a classic touch-passthrough bug on mobile bottom sheets.
+**1. New: `src/lib/versionCheck.ts`**
+- Declare `__BUILD_VERSION__` global type
+- Export `checkAppVersion()` that fetches `/version.json?t=<now>`, compares its `v` field against `__BUILD_VERSION__`
+- On mismatch: set `sessionStorage.version_reloaded = "1"`, call `location.reload()`
+- On match or if already reloaded: clear the flag, exit silently
+- Wrap everything in try/catch — any failure = silent exit
 
-### Fix
+**2. Edit: `vite.config.ts`**
+- Add `define: { __BUILD_VERSION__: JSON.stringify(Date.now().toString()) }`
+- Add a small custom plugin (`generateVersionFile`) that writes `{ "v": "<timestamp>" }` to `public/version.json` during `buildStart`
+- In dev mode, skip the version file generation
 
-Two changes:
+**3. Edit: `src/App.tsx`**
+- Import `checkAppVersion` from `@/lib/versionCheck`
+- Add a `useEffect` at the top of the `App` component that calls `checkAppVersion()` once on mount
 
-**1. `MobilePickerSheet.tsx` — add a touch guard during open animation**
-
-Add a brief `pointer-events: none` on the content area for the first 250ms after opening. Use a state + `useEffect` with `setTimeout` to flip `pointer-events` to `auto` after the animation completes. This prevents any touch passthrough on ALL picker sheets, not just the Product one.
-
-**2. `ProductSelectorChip.tsx` — replace Link with inline navigation**
-
-Change the "Add Your Own Product" `<Link>` in the empty state to a `<button>` that calls `useNavigate()` with a small guard, preventing accidental navigation. Also add `onTouchEnd={e => e.stopPropagation()}` as an additional safety measure.
+**4. New: `src/vite-env.d.ts` update**
+- Add `declare const __BUILD_VERSION__: string;` global declaration (or add to existing file)
 
