@@ -1,43 +1,32 @@
 
 
-# Fix Zoomed Images & Stuck Carousel
+# Fix Flashing Transitions in Category Showcase
 
-## Problems
-1. **Zoomed-in images** — `width: 600` in the `s()` helper forces server-side resize, which combined with `object-cover` on 3:4 cards causes aggressive cropping. Project convention is quality-only compression.
-2. **Carousel stops cycling** — `ShimmerImage` detects cached images in its state initializer and skips the browser `onLoad` event. The parent's `onLoad` callback never fires for cached images, so `nextReady` stays `false` forever after the first cycle.
+## Problem
+The `ShimmerImage` uses `key={`cur-${currentIndex}`}` which forces React to unmount and remount the entire image element on every transition. This causes a flash — the old image disappears instantly, then the new one fades in from the shimmer placeholder.
 
-## Fix
+## Solution
+Layer two `ShimmerImage` elements (current and next) and crossfade between them using CSS opacity transitions instead of React key-based remounting.
 
-### File: `src/components/landing/ProductCategoryShowcase.tsx`
+### Changes in `src/components/landing/ProductCategoryShowcase.tsx`
 
-**1. Remove width from `s()` helper** (line 88):
-```ts
-// Before
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
+**Replace the single keyed `ShimmerImage`** with two persistent layers:
+- **Bottom layer (z-index 1)**: shows the "previous" image (stays visible during fade)
+- **Top layer (z-index 2)**: the incoming image fades in via `opacity` transition
 
-// After
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
-```
+**New state model**:
+- `displayIndex` — the currently visible (bottom) image
+- `incomingIndex` — the next image fading in on top
+- `fadeIn` — boolean toggled to trigger the CSS opacity transition
+- When the fade completes (`onTransitionEnd`), swap `displayIndex` to `incomingIndex` and prepare the next preload
 
-**2. Fix carousel cycling** — stop relying on `ShimmerImage`'s `onLoad` for cached images. Instead, use a plain `<img>` element (hidden, `opacity: 0`) for the preload, with a direct `onLoad` handler. Or simpler: use a standalone `Image()` object to preload the next URL and call `setNextReady(true)` when it completes (handles both cached and uncached cases):
+**Transition flow**:
+1. Preload next image via `Image()` object → sets `nextReady = true`
+2. Timer fires → set `incomingIndex` and `fadeIn = true`
+3. Top layer fades from `opacity-0` to `opacity-100` over 500ms
+4. `onTransitionEnd` → update `displayIndex`, reset `fadeIn`, advance to next
 
-```ts
-// Replace the "advance" + "preload next" logic:
-useEffect(() => {
-  const img = new Image();
-  img.src = images[nextIndex];
-  if (img.complete) {
-    setNextReady(true);
-  } else {
-    img.onload = () => setNextReady(true);
-    img.onerror = () => setNextReady(true); // skip broken images
-  }
-  return () => { img.onload = null; img.onerror = null; };
-}, [currentIndex, images, nextIndex]);
-```
+**No `key` prop on either `ShimmerImage`** — images swap via `src` changes, not remounting. The shimmer inside `ShimmerImage` handles the brief load naturally for uncached images, while cached images appear instantly.
 
-Remove the hidden `ShimmerImage` for the next image entirely — the `Image()` object handles preloading. Keep only the visible current image `ShimmerImage`.
-
-### No changes to `ShimmerImage` component
-The fix is isolated to `CategoryCard` in `ProductCategoryShowcase.tsx`.
+This gives a smooth crossfade with zero flashing, matching the quality of the Environment Showcase marquee.
 
