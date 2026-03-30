@@ -136,7 +136,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         }
       }
     }
-  }, [stopPolling, onContentBlocked, onGenerationFailed]);
+
+    // Always refresh credits on any terminal state
+    onCreditRefresh?.();
+  }, [stopPolling, onContentBlocked, onGenerationFailed, onCreditRefresh]);
 
   const pollJobStatus = useCallback((jobId: string) => {
     // Start a new poll session — any in-flight responses from the old session are ignored
