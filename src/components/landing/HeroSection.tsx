@@ -214,8 +214,8 @@ export function HeroSection() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
           <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight leading-[1.1] mb-6">
-            <span className="hidden sm:inline">Use Your AI Product Visual Team.</span>
-            <span className="sm:hidden">Use Your AI Visual Team.</span>
+            <span className="hidden sm:inline">Your AI Product Visual Team.</span>
+            <span className="sm:hidden">Your AI Visual Team.</span>
             <br />
             <span className="text-primary inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
               {typedText}
