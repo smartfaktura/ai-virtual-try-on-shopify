@@ -1,27 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useParams } from 'react-router-dom';
 import { ArrowUp, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-import showcaseBeauty from '@/assets/tryshot/showcase-beauty.jpg';
-import showcaseSneakers from '@/assets/tryshot/showcase-sneakers.jpg';
-import showcaseElectronics from '@/assets/tryshot/showcase-electronics.jpg';
-import showcaseSkincare from '@/assets/tryshot/showcase-skincare.jpg';
-import showcaseHome from '@/assets/tryshot/showcase-home.jpg';
-import showcaseJewelry from '@/assets/tryshot/showcase-jewelry.jpg';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 const ROTATING_WORDS = ['sneakers', 'skincare', 'furniture', 'fashion', 'electronics', 'jewelry'];
-const WORD_IMAGES = [showcaseSneakers, showcaseSkincare, showcaseHome, showcaseBeauty, showcaseElectronics, showcaseJewelry];
 
-const CATEGORIES = [
-  { label: 'Beauty', image: showcaseBeauty },
-  { label: 'Sneakers', image: showcaseSneakers },
-  { label: 'Electronics', image: showcaseElectronics },
-  { label: 'Skincare', image: showcaseSkincare },
-  { label: 'Home & Living', image: showcaseHome },
-  { label: 'Jewelry', image: showcaseJewelry },
-];
+/** Map each rotating word to discover_presets categories that best match */
+const WORD_CATEGORY_MAP: Record<string, string[]> = {
+  sneakers: ['footwear', 'sneakers', 'shoes', 'fashion'],
+  skincare: ['skincare', 'beauty', 'cosmetics'],
+  furniture: ['furniture', 'home', 'interior', 'lifestyle'],
+  fashion: ['fashion', 'clothing', 'apparel', 'lifestyle'],
+  electronics: ['electronics', 'tech', 'gadgets'],
+  jewelry: ['jewelry', 'accessories', 'luxury'],
+};
 
 type GenerationResult = {
   product_name: string;
@@ -40,6 +36,14 @@ const STEP_LABELS: Record<GenerationStep, string> = {
   error: 'Something went wrong',
 };
 
+type DiscoverPreset = {
+  id: string;
+  title: string;
+  image_url: string;
+  category: string;
+  discover_categories: string[];
+};
+
 export default function TryShot() {
   const { domain: routeDomain } = useParams<{ domain: string }>();
   const [url, setUrl] = useState(routeDomain || '');
@@ -51,6 +55,65 @@ export default function TryShot() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Fetch discover presets
+  const [presets, setPresets] = useState<DiscoverPreset[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('discover_presets')
+      .select('id, title, image_url, category, discover_categories')
+      .order('sort_order', { ascending: true })
+      .limit(40)
+      .then(({ data }) => {
+        setPresets(data ?? []);
+        setPresetsLoading(false);
+      });
+  }, []);
+
+  /** Pick the best preset image for a given rotating word */
+  const wordImages = useMemo(() => {
+    if (!presets.length) return ROTATING_WORDS.map(() => '');
+    return ROTATING_WORDS.map((word) => {
+      const cats = WORD_CATEGORY_MAP[word] || [];
+      // Try matching discover_categories first, then category field
+      const match = presets.find(
+        (p) =>
+          p.discover_categories?.some((dc) => cats.includes(dc.toLowerCase())) ||
+          cats.includes(p.category.toLowerCase())
+      );
+      // Fallback: just pick a preset by index
+      return match?.image_url || presets[ROTATING_WORDS.indexOf(word) % presets.length]?.image_url || '';
+    });
+  }, [presets]);
+
+  /** Grid categories derived from presets — pick up to 6 unique images */
+  const gridItems = useMemo(() => {
+    if (!presets.length) return [];
+    const labels = ['Beauty', 'Sneakers', 'Electronics', 'Skincare', 'Home & Living', 'Jewelry'];
+    const labelCats: Record<string, string[]> = {
+      Beauty: ['beauty', 'cosmetics', 'skincare'],
+      Sneakers: ['footwear', 'sneakers', 'shoes', 'fashion'],
+      Electronics: ['electronics', 'tech', 'gadgets'],
+      Skincare: ['skincare', 'beauty', 'cosmetics'],
+      'Home & Living': ['home', 'furniture', 'interior', 'lifestyle'],
+      Jewelry: ['jewelry', 'accessories', 'luxury'],
+    };
+    const used = new Set<string>();
+    return labels.map((label, idx) => {
+      const cats = labelCats[label] || [];
+      const match = presets.find(
+        (p) =>
+          !used.has(p.id) &&
+          (p.discover_categories?.some((dc) => cats.includes(dc.toLowerCase())) ||
+            cats.includes(p.category.toLowerCase()))
+      );
+      const chosen = match || presets.filter((p) => !used.has(p.id))[0];
+      if (chosen) used.add(chosen.id);
+      return { label, image: chosen?.image_url || '' };
+    });
+  }, [presets]);
 
   // Typewriter effect
   useEffect(() => {
@@ -79,7 +142,7 @@ export default function TryShot() {
     return () => clearTimeout(intervalRef.current);
   }, [displayWord, isDeleting, wordIndex]);
 
-  // Smooth progress bar — resets on word change, fills to 100%
+  // Smooth progress bar
   const cycleDuration = ROTATING_WORDS[wordIndex].length * 120 + 2000;
 
   useEffect(() => {
@@ -166,24 +229,29 @@ export default function TryShot() {
         {/* Hero showcase image — synced to typewriter word */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl ring-2 ring-primary/10">
-            {WORD_IMAGES.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt={`${ROTATING_WORDS[i]} product shot`}
-                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-                style={{ opacity: i === wordIndex ? 1 : 0 }}
-              />
-            ))}
+            {presetsLoading ? (
+              <Skeleton className="w-full h-full" />
+            ) : (
+              wordImages.map((img, i) => (
+                <ShimmerImage
+                  key={i}
+                  src={img}
+                  alt={`${ROTATING_WORDS[i]} product shot`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  wrapperClassName="absolute inset-0"
+                  style={{ opacity: i === wordIndex ? 1 : 0, transition: 'opacity 700ms ease-in-out' }}
+                />
+              ))
+            )}
             {/* Progress bar at bottom of image */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20 z-10">
               <div
                 key={wordIndex}
                 className="h-full bg-white/80 rounded-r-full"
-                  style={{
-                    width: `${progress}%`,
-                    transition: progress === 0 ? 'none' : `width ${cycleDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-                  }}
+                style={{
+                  width: `${progress}%`,
+                  transition: progress === 0 ? 'none' : `width ${cycleDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+                }}
               />
             </div>
           </div>
@@ -194,7 +262,7 @@ export default function TryShot() {
           Enter your online store URL to create AI product shots
         </p>
 
-        {/* URL Input — pill style with embedded submit */}
+        {/* URL Input */}
         <div className="max-w-lg mx-auto mb-3">
           <div className="relative flex items-center bg-secondary rounded-full border border-border overflow-hidden">
             <input
@@ -209,12 +277,12 @@ export default function TryShot() {
             <button
               onClick={handleGenerate}
               disabled={isLoading || !url.trim()}
-              className="flex-shrink-0 w-11 h-11 mr-1.5 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center"
+              className="flex-shrink-0 w-11 h-11 mr-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <ArrowUp className="w-4 h-4 text-white" />
+                <ArrowUp className="w-4 h-4" />
               )}
             </button>
           </div>
@@ -224,9 +292,7 @@ export default function TryShot() {
           Free · No sign-up required
         </p>
 
-        {error && (
-          <p className="text-sm text-destructive mt-2">{error}</p>
-        )}
+        {error && <p className="text-sm text-destructive mt-2">{error}</p>}
 
         {/* Progress */}
         {isLoading && (
@@ -252,16 +318,9 @@ export default function TryShot() {
             <h2 className="text-2xl font-bold">Your product shots</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {results.map((r, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl overflow-hidden bg-white border border-border"
-                >
+                <div key={i} className="rounded-2xl overflow-hidden bg-card border border-border">
                   <div className="aspect-square relative group">
-                    <img
-                      src={r.generated_image}
-                      alt={r.product_name}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={r.generated_image} alt={r.product_name} className="w-full h-full object-cover" />
                     <a
                       href={r.generated_image}
                       download
@@ -308,19 +367,24 @@ export default function TryShot() {
         </h2>
         <div className="w-12 h-0.5 bg-primary mx-auto mb-10" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {CATEGORIES.map((cat) => (
-            <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
-              <img
-                src={cat.image}
-                alt={cat.label}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <span className="absolute bottom-3 left-3 bg-primary text-white text-xs font-medium px-3 py-1 rounded-full">
-                {cat.label}
-              </span>
-            </div>
-          ))}
+          {presetsLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="rounded-2xl aspect-[3/4]" />
+              ))
+            : gridItems.map((cat) => (
+                <div key={cat.label} className="group relative rounded-2xl overflow-hidden aspect-[3/4]">
+                  <ShimmerImage
+                    src={cat.image}
+                    alt={cat.label}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    aspectRatio="3/4"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <span className="absolute bottom-3 left-3 bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
+                    {cat.label}
+                  </span>
+                </div>
+              ))}
         </div>
       </section>
 
