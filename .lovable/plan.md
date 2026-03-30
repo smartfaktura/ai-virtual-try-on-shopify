@@ -1,37 +1,39 @@
 
 
-## Remaining Edge Case: Stale/Missing `onCreditRefresh` in Batch Hook
+## Final Edge Cases Found
 
-### Finding
+### Issue 1: Double credit refresh on hard timeout
 
-**File: `src/pages/Generate.tsx` (line 201)**
-`useGenerationBatch()` is called without passing `{ onCreditRefresh }`. The credit refresh callback we just added to the batch hook is never wired up, so batch completions still won't refresh the credit balance.
+**File:** `src/hooks/useGenerationQueue.ts` lines 310-311
 
-**File: `src/hooks/useGenerationBatch.ts` (line 183)**
-`pollAllJobs` is a `useCallback` with deps `[stopPolling]`, but it references `onCreditRefresh` inside the closure. If the callback ever changes identity, `pollAllJobs` would hold a stale reference. This should use a ref pattern (like we did for `pollJobStatusRef`).
+```typescript
+handleTerminalJob(syntheticJob);  // ← calls onCreditRefresh?.() internally (line 141)
+onCreditRefresh?.();              // ← calls it AGAIN
+```
 
-### Everything Else — Confirmed Good
+`handleTerminalJob` already calls `onCreditRefresh?.()` at line 141 for all terminal states. The explicit call at line 311 is redundant and triggers two simultaneous balance fetches. Same pattern does NOT exist for normal completions (line 341 only calls `handleTerminalJob`), so this is specific to the hard-timeout path.
 
-- `hasRestoredRef` guard — works correctly, runs once
-- Token refresh on 401 in batch polling — works correctly
-- `handleTerminalJob` credit refresh — fires for all terminal states
-- Self-heal removal — clean, 10-min hard timeout covers all job types
-- `enqueueWithRetry` integration — correct error mapping, proper toast messages
-- Cancel flow — checks status, uses RPC, refreshes credits
-- Position query — cosmetic only, not a functional bug
+**Fix:** Remove line 311 (`onCreditRefresh?.()`) — `handleTerminalJob` already handles it.
+
+---
+
+### Issue 2: Stale `onCreditRefresh` closure in `pollJobStatus`
+
+**File:** `src/hooks/useGenerationQueue.ts` line 357
+
+`pollJobStatus` is a `useCallback` with `onCreditRefresh` in its deps (line 357). When `pollJobStatus` is called, it creates a recursive `setTimeout` chain via `runPoll`. The `onCreditRefresh` reference captured at that moment stays frozen for the entire polling session — even if the callback identity changes later.
+
+This is mostly mitigated because `handleTerminalJob` (which also captures `onCreditRefresh`) is called at the end, so they're at least consistent. But it's fragile.
+
+**Fix:** Use an `onCreditRefreshRef` pattern (like the batch hook) and remove `onCreditRefresh` from `pollJobStatus` deps. This also stabilizes `pollJobStatus` identity, which stabilizes `enqueue` (line 487 depends on `pollJobStatus`).
+
+---
 
 ### Plan
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGenerationBatch.ts` | Use a `onCreditRefreshRef` to avoid stale closure; add it to the `allDone` path |
-| `src/pages/Generate.tsx` | Pass `{ onCreditRefresh }` from credit context to `useGenerationBatch()` |
+| `src/hooks/useGenerationQueue.ts` | 1. Add `onCreditRefreshRef` + sync effect. 2. Replace all direct `onCreditRefresh?.()` calls with `onCreditRefreshRef.current?.()` in `handleTerminalJob`, `pollJobStatus`, and `cancel`. 3. Remove `onCreditRefresh` from all `useCallback` dep arrays. 4. Remove redundant double-call at line 311. |
 
-**File: `src/hooks/useGenerationBatch.ts`**
-1. Add `const onCreditRefreshRef = useRef(onCreditRefresh)` + keep it synced
-2. In `pollAllJobs`, reference `onCreditRefreshRef.current?.()` instead of `onCreditRefresh?.()`
-
-**File: `src/pages/Generate.tsx`**
-1. Find where `onCreditRefresh` / `refreshCredits` is available (from CreditContext or similar)
-2. Pass it: `useGenerationBatch({ onCreditRefresh: refreshCredits })`
+This is a small, surgical change — swap 4-5 references from direct to ref, remove one redundant line, and clean up dep arrays.
 
