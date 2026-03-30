@@ -1,46 +1,15 @@
 
 
-# Fix Landing Page Lag and Missing Sections
+# Replace Video Hover Cards with Static Image Hover Cards
 
-## Problems Found
+## What changes
+Replace the `<video>` element in `TeamAvatarHoverCard` with a static optimized `<img>`, removing all video-related logic (refs, play/pause callbacks, `onCanPlay`). This eliminates video downloads on hover across all 5 usage sites: SidebarTeamAvatar, OnboardingChecklist, About page, FinalCTA, and the landing StudioTeamSection.
 
-1. **Missing sections**: All below-fold sections share a single `<Suspense fallback={null}>` boundary. If any chunk loads slowly, all sections show nothing until every chunk resolves. The screenshot shows the footer loaded but middle sections are blank.
+## File: `src/components/landing/TeamAvatarHoverCard.tsx`
+- Remove `useRef`, `useCallback` imports and all video refs/handlers (`videoRef`, `shouldPlayRef`, `handleOpenChange`, `handleCanPlay`)
+- Remove the `onOpenChange` prop from `<HoverCard>`
+- Replace the `<video>` element with a static `<img>` using `getOptimizedUrl(member.avatar, { width: 440, quality: 75 })` (440px = 220px card width x 2 for retina)
+- Keep the same `aspect-[4/5]` container, info section with name/role/description — visual layout stays identical
 
-2. **Three concurrent `requestAnimationFrame` loops** run continuously regardless of scroll position:
-   - `StudioTeamSection` (auto-scroll carousel)
-   - `EnvironmentShowcaseSection` MarqueeRow x2 (JS-driven marquees)
-   
-   These consume CPU even when off-screen.
-
-3. **`backdrop-blur-sm` over animated content** in `ProductCategoryShowcase` (category labels, line 46) and `HeroSection` (upload badge, line 416; mobile labels, line 319). Each blur re-samples underlying pixels every frame during image crossfades.
-
-4. **Environment marquee uses JS rAF** while the identical Model marquee uses CSS `animation` (GPU-accelerated). The environment section should match the model section's approach.
-
-5. **4 independent `setInterval` timers** in `CategoryCard` cycling images at 6-8s, each triggering React re-renders with opacity transitions.
-
-## Plan
-
-### 1. Split Suspense boundaries (Landing.tsx)
-Wrap each lazy section in its own `<Suspense fallback={null}>` so they render independently as their chunks arrive, preventing one slow chunk from blocking all sections.
-
-### 2. Replace `backdrop-blur-sm` with `text-shadow` (3 files)
-- **ProductCategoryShowcase.tsx** line 46: Remove `backdrop-blur-sm` from category label, use `text-shadow` for readability over cycling images
-- **HeroSection.tsx** line 416: Remove `backdrop-blur-sm` from "Your Upload" badge
-- **HeroSection.tsx** line 319: Remove `backdrop-blur-sm` from mobile output labels
-
-### 3. Convert EnvironmentShowcaseSection marquee from JS rAF to CSS animation
-Replace the `useEffect` + `requestAnimationFrame` loop with a CSS `@keyframes marquee-left/right` animation (matching `ModelShowcaseSection`'s pattern). This moves work to the compositor thread and eliminates 2 rAF loops.
-
-### 4. Add IntersectionObserver pause to StudioTeamSection auto-scroll
-Only run the rAF auto-scroll loop when the section is visible in the viewport. When off-screen, pause the animation to free CPU.
-
-### 5. Use CSS transitions instead of interval-driven React state for CategoryCard image cycling
-Replace the `setInterval` + `useState` cycling with CSS-only `animation-delay` staggered opacity keyframes, removing 4 timers and their React re-renders.
-
-## Files Changed
-- `src/pages/Landing.tsx` — split Suspense boundaries
-- `src/components/landing/ProductCategoryShowcase.tsx` — remove backdrop-blur, optimize timers
-- `src/components/landing/HeroSection.tsx` — remove backdrop-blur
-- `src/components/landing/EnvironmentShowcaseSection.tsx` — CSS animation instead of rAF
-- `src/components/landing/StudioTeamSection.tsx` — visibility-gated rAF
+The result is a lightweight image-only hover card. No changes needed in any consumer files since the component API (props) stays the same.
 
