@@ -596,7 +596,8 @@ async function generateImage(
         if (response.status === 429) {
           console.warn(`AI Gateway 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
           if (attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+            const jitter = Math.random() * 3000;
+            await new Promise((r) => setTimeout(r, 3000 * (attempt + 1) + jitter));
             continue;
           }
           throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
