@@ -1,51 +1,60 @@
 
+Root cause confirmed: this is not related to the site being published or unpublished. The issue is in the client enqueue logic.
 
-## Fix: Prevent Single-Job Error Callback from Killing Multi-Product Batches
+What I found:
+- `src/pages/Generate.tsx` has multiple workflow enqueue paths.
+- Only one of them has partial retry logic.
+- The main multi-product workflow path still sends repeated `enqueue-generation` requests with no shared pacing and no single-batch wake pattern.
+- `src/hooks/useGenerationBatch.ts` also enqueues workflow jobs with no pacing/retry helper.
+- So when a workflow creates 10+ jobs, some paths still hit the backend too aggressively and can trigger rate-limit / failure / cancel cascades.
 
-### Problem
-During multi-product workflow generation (Product Listing Set with multiple products/models/scenes), the `useGenerationQueue` hook's `onGenerationFailed` callback fires for individual job failures. This callback unconditionally:
-1. Shows a toast error ("Generation failed...")
-2. Resets `currentStep` to `'settings'` — destroying the progress UI
-3. Calls `resetQueue()` — clearing state
+Plan
 
-Meanwhile, the multi-product polling loop (line 1815) is designed to handle individual failures gracefully — it counts them, continues polling, and shows a summary at the end.
+1. Create one shared enqueue helper for all multi-job flows
+- Add a small shared utility that:
+  - retries transient errors (`429`, `502`, `503`, network failures)
+  - uses exponential backoff + jitter
+  - enforces a minimum gap between requests (use the existing try-on pattern as the baseline, around 300ms)
+  - supports `skipWake: true` for batched requests
+  - returns structured failure info without spamming toasts mid-batch
 
-The single-job completion watcher (line 1752) already has a guard: `if (multiProductJobIds.size > 0) return;`. But the `onGenerationFailed` callback at line 186 has **no such guard**, so any single job failure during a batch causes the entire UI to reset.
+2. Apply it to every workflow-related multi-job path
+- Update the multi-product workflow path in `Generate.tsx` that currently uses raw `fetch`
+- Update the multi-combo workflow path in `Generate.tsx` so it also gets pacing, not just retry
+- Update `useGenerationBatch.ts` so chunked workflow batches use the same helper instead of raw `fetch`
+- Update multi-image upscale path too, since it follows the same burst-risk pattern
 
-### Fix
+3. Use one wake after the whole batch
+- For batched workflow requests, enqueue each job with `skipWake: true`
+- After the loop completes, send a single `wakeOnly: true` request
+- This prevents repeated queue wake-ups during large batches
 
-**In `Generate.tsx`, guard the `onGenerationFailed` callback to skip when multi-product polling is active.**
+4. Keep user feedback calm during batching
+- Do not show toast errors for intermediate retryable failures
+- Only show one final actionable toast if the batch truly cannot enqueue more jobs
+- Preserve the current progress UI instead of bouncing users back unnecessarily
 
-At line 186, wrap the callback body so it only fires when `multiProductJobIds.size === 0`:
+5. Add consistent pacing rules
+- Never use parallel enqueueing for workflow jobs
+- Keep explicit sequential enqueueing
+- Add the same timing guard across all workflow-style flows so “10+ jobs” behaves predictably everywhere
 
-```tsx
-onGenerationFailed: (_jobId, _message, errorType) => {
-  // Multi-product batches handle failures in their own polling loop
-  if (multiProductJobIdsRef.current.size > 0) return;
-  
-  const friendlyMessages = { ... };
-  toast.error(...);
-  setCurrentStep('settings');
-  refreshBalance();
-  resetQueue();
-},
-```
+Files to update
+- `src/pages/Generate.tsx`
+- `src/hooks/useGenerationBatch.ts`
+- likely a new shared utility file such as `src/lib/enqueueGeneration.ts`
 
-Since `onGenerationFailed` is passed as a stable option to the hook, we need a ref to track the current `multiProductJobIds` size (to avoid re-creating the callback and re-mounting the hook):
+Expected result
+- Workflow batches will enqueue more slowly but much more reliably
+- No burst of 10+ near-simultaneous requests
+- Fewer failed/cancelled jobs from rate-limit pressure
+- More consistent behavior across product workflow, chunked workflow batches, and other multi-job flows
 
-```tsx
-const multiProductJobIdsRef = useRef(multiProductJobIds);
-useEffect(() => { multiProductJobIdsRef.current = multiProductJobIds; }, [multiProductJobIds]);
-```
-
-### Files Changed
-
-| File | Change |
-|------|--------|
-| `src/pages/Generate.tsx` | Add `multiProductJobIdsRef` ref; guard `onGenerationFailed` to skip during active batches |
-
-### Impact
-- Individual job failures during batch generation no longer reset the entire UI
-- The multi-product polling loop continues to aggregate results and shows a summary at the end
-- Single-product generation error handling remains unchanged
-
+Technical note
+- The key bug is not the queue worker itself; it is that not all frontend workflow paths are using the same throttled enqueue strategy.
+- I would standardize all multi-job generation paths around:
+  - sequential enqueue
+  - ~300ms minimum spacing
+  - retry with backoff
+  - `skipWake` per job
+  - one final `wakeOnly` call
