@@ -356,7 +356,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
     // Start immediately
     runPoll();
-  }, [stopPolling, handleTerminalJob, user?.id, onCreditRefresh]);
+  }, [stopPolling, handleTerminalJob, user?.id]);
 
   // Restore in-progress job on mount (e.g. after page refresh)
   const hasRestoredRef = useRef(false);
