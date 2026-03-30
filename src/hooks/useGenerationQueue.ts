@@ -433,7 +433,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     stopPolling();
 
     try {
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
 
@@ -442,46 +441,37 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         return null;
       }
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          jobType: params.jobType,
-          payload: params.payload,
-          imageCount: params.imageCount,
-          quality: params.quality,
-          additionalProductCount: params.additionalProductCount || 0,
-          hasModel: meta?.hasModel || false,
-          hasScene: meta?.hasScene || false,
-        }),
-      });
+      const body = {
+        jobType: params.jobType,
+        payload: params.payload,
+        imageCount: params.imageCount,
+        quality: params.quality,
+        additionalProductCount: params.additionalProductCount || 0,
+        hasModel: meta?.hasModel || false,
+        hasScene: meta?.hasScene || false,
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+      const res = await enqueueWithRetry(body, token);
 
-        if (response.status === 429) {
-          const msg = String(errorData.error || '');
+      if (isEnqueueError(res)) {
+        if (res.type === 'rate_limit') {
+          const msg = res.message || '';
           if (msg.includes('concurrent')) {
-            toast.error(`You've reached the maximum concurrent generations (${errorData.max_concurrent || '?'}). Please wait for a current job to finish.`);
+            toast.error('You\'ve reached the maximum concurrent generations. Please wait for a current job to finish.');
           } else {
-            toast.error(errorData.message || 'Rate limit exceeded. Please wait and try again.');
+            toast.error('Rate limit exceeded. Please wait and try again.');
           }
-          return null;
+        } else if (res.type === 'insufficient_credits') {
+          toast.error(res.message || 'Insufficient credits');
+        } else if (res.type === 'network') {
+          toast.error('Connection issue — please check your network and try again.');
+        } else {
+          toast.error(res.message || 'Failed to start generation');
         }
-
-        if (response.status === 402) {
-          toast.error(errorData.error || 'Insufficient credits');
-          return null;
-        }
-
-        toast.error(errorData.error || 'Failed to start generation');
         return null;
       }
 
-      const result: EnqueueResult = await response.json();
+      const result: EnqueueResult = res;
 
       setActiveJob({
         id: result.jobId,
