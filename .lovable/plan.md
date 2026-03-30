@@ -1,31 +1,29 @@
 
 
-## Fix: Batch Grouping Window Too Narrow
+## Fix: Add Auto-Retry to Single-Job Enqueue
 
 ### Problem
 
-The grouping compares each row's timestamp to the **anchor** (first row in the group). Rows are sorted newest-first, so as we walk older rows the gap grows. A 16-product batch spans ~2-3 minutes of enqueue time, exceeding the 60-second window. Result: each job becomes its own group showing "1 imgs".
+The single-job `enqueue()` function in `useGenerationQueue.ts` has zero retry logic. If the edge function returns a transient error (502, 503, network timeout, cold start), the user sees "Failed to start generation" with no recourse. The batch path already uses `enqueueWithRetry` from `src/lib/enqueueGeneration.ts` which handles this — but the single-job path does a raw `fetch` with no retries.
 
 ### Fix
 
-**File: `src/pages/Workflows.tsx`** — Two changes:
+**File: `src/hooks/useGenerationQueue.ts`** — Replace the raw `fetch` call (lines 444-480) with the existing `enqueueWithRetry` utility, and handle its error result types gracefully with user-friendly toasts.
 
-1. **Track a `lastMergedTime` per group** instead of using the anchor's `created_at`. Each time a row merges into a group, update `lastMergedTime` to that row's timestamp. This creates a **sliding window** — each consecutive job only needs to be within 60s of the *previous* job, not the first one.
+Concrete changes:
 
-2. **Increase window to 120s** as safety margin for large batches where enqueue gaps between individual jobs may exceed 60s.
+1. **Import** `enqueueWithRetry`, `isEnqueueError`, and `getAuthToken` from `@/lib/enqueueGeneration`
+2. **Replace** the manual `fetch` + error handling block (lines 444-480) with a call to `enqueueWithRetry(body, token)`
+3. **Map error types** to appropriate toasts:
+   - `rate_limit` → existing concurrent/rate-limit message
+   - `insufficient_credits` → existing credits message  
+   - `network` → "Connection issue — please check your network and try again"
+   - `fatal` → generic error message
+4. **Remove** the outer `try/catch` around fetch since `enqueueWithRetry` never throws
 
-```text
-Before (anchor-based):  Job 1 (0s) ← Job 2 (30s) ✓ ← Job 3 (70s) ✗ NEW GROUP
-After (sliding window):  Job 1 (0s) ← Job 2 (30s) ✓ ← Job 3 (70s, 40s from Job 2) ✓
-```
-
-Concrete change in the grouping loop (~line 224-253):
-- Add `lastMergedTime` field to `GroupedJob` interface
-- On merge: update `lastGroup.lastMergedTime = rowTime`
-- Compare against `lastGroup.lastMergedTime` instead of `lastGroup.created_at`
-- Window: 120_000ms
+This means transient 502/503/timeout errors get up to 6 retries with exponential backoff automatically — the user never sees "Failed" for a cold-start issue.
 
 | File | Change |
 |------|--------|
-| `src/pages/Workflows.tsx` | Switch from anchor-based to sliding-window grouping; increase window to 120s |
+| `src/hooks/useGenerationQueue.ts` | Use `enqueueWithRetry` instead of raw fetch; map error types to friendly toasts |
 
