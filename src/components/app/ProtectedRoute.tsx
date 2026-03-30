@@ -15,6 +15,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Use cached result to skip DB query on subsequent navigations
+    const cached = sessionStorage.getItem(`onboarding_ok_${user.id}`);
+    if (cached === '1') {
+      setNeedsOnboarding(false);
+      setOnboardingChecked(true);
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {
@@ -26,11 +34,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (!cancelled) {
-          setNeedsOnboarding(data?.onboarding_completed === false);
+          const needs = data?.onboarding_completed === false;
+          setNeedsOnboarding(needs);
+          if (!needs) {
+            sessionStorage.setItem(`onboarding_ok_${user.id}`, '1');
+          }
         }
       } catch (err) {
         console.error('ProtectedRoute: profile check failed', err);
-        // Don't block the app — allow through
       } finally {
         if (!cancelled) {
           setOnboardingChecked(true);
