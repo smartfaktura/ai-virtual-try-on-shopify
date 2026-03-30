@@ -1449,6 +1449,13 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+
+      // Wake the queue processor once after all jobs are enqueued
+      fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ wakeOnly: true }),
+      }).catch(() => {});
     }
     } catch (err) {
       console.error('Workflow generation failed:', err);
