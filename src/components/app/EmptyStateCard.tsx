@@ -78,7 +78,7 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
     <Card>
       <CardContent className="py-10 flex flex-col items-center text-center space-y-4">
         {showCollage ? (
-          <div className="flex gap-2 -space-x-3">
+          <div className="flex -space-x-3">
             {[imgFashion, imgSkincare, imgFood].map((img, i) => (
               <div
                 key={i}
