@@ -26,6 +26,10 @@ export interface BatchState {
   hasPartialFailure: boolean;
 }
 
+interface UseGenerationBatchOptions {
+  onCreditRefresh?: () => Promise<void> | void;
+}
+
 interface UseGenerationBatchReturn {
   startBatch: (params: BatchParams) => Promise<boolean>;
   batchState: BatchState | null;
