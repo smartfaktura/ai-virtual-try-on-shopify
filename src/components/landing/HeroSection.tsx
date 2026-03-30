@@ -38,30 +38,30 @@ const showcases: ProductShowcase[] = [
     caption: 'Same top ∞ environments in under 2 minutes',
   },
   {
-    product: { img: '/images/hero/hero-product-ring-new.png', label: 'Ring', subtitle: '1 product photo' },
+    product: { img: h('hero-product-ring-new.png'), label: 'Ring', subtitle: '1 product photo' },
     outputs: [
-      { img: '/images/hero/hero-ring-fabric.png', label: 'Linen Close-Up' },
-      { img: '/images/hero/hero-ring-portrait.png', label: 'Model Portrait' },
-      { img: '/images/hero/hero-ring-hand.png', label: 'On the Hand' },
-      { img: '/images/hero/hero-ring-concrete.png', label: 'Concrete Block' },
-      { img: '/images/hero/hero-ring-eucalyptus.png', label: 'Stone & Eucalyptus' },
-      { img: '/images/hero/hero-ring-floating.png', label: 'Studio Floating' },
-      { img: '/images/hero/hero-ring-golden-light.png', label: 'Golden Light' },
-      { img: '/images/hero/hero-ring-ugc.png', label: 'Selfie / UGC' },
+      { img: h('hero-ring-fabric.png'), label: 'Linen Close-Up' },
+      { img: h('hero-ring-portrait.png'), label: 'Model Portrait' },
+      { img: h('hero-ring-hand.png'), label: 'On the Hand' },
+      { img: h('hero-ring-concrete.png'), label: 'Concrete Block' },
+      { img: h('hero-ring-eucalyptus.png'), label: 'Stone & Eucalyptus' },
+      { img: h('hero-ring-floating.png'), label: 'Studio Floating' },
+      { img: h('hero-ring-golden-light.png'), label: 'Golden Light' },
+      { img: h('hero-ring-ugc.png'), label: 'Selfie / UGC' },
     ],
     caption: 'Same ring ∞ scenes in under 2 minutes',
   },
   {
-    product: { img: '/images/hero/hero-product-headphones.png', label: 'Headphones', subtitle: '1 product photo' },
+    product: { img: h('hero-product-headphones.png'), label: 'Headphones', subtitle: '1 product photo' },
     outputs: [
-      { img: '/images/hero/hero-hp-desert.png', label: 'Desert Portrait' },
-      { img: '/images/hero/hero-hp-studio-seated.png', label: 'Studio Seated' },
-      { img: '/images/hero/hero-hp-elevator.png', label: 'Elevator Selfie' },
-      { img: '/images/hero/hero-hp-linen.png', label: 'Linen Editorial' },
-      { img: '/images/hero/hero-hp-cozy.png', label: 'Cozy Knit' },
-      { img: '/images/hero/hero-hp-pilates.png', label: 'Pilates Studio' },
-      { img: '/images/hero/hero-hp-white.png', label: 'White Studio' },
-      { img: '/images/hero/hero-hp-home.png', label: 'Home Lifestyle' },
+      { img: h('hero-hp-desert.png'), label: 'Desert Portrait' },
+      { img: h('hero-hp-studio-seated.png'), label: 'Studio Seated' },
+      { img: h('hero-hp-elevator.png'), label: 'Elevator Selfie' },
+      { img: h('hero-hp-linen.png'), label: 'Linen Editorial' },
+      { img: h('hero-hp-cozy.png'), label: 'Cozy Knit' },
+      { img: h('hero-hp-pilates.png'), label: 'Pilates Studio' },
+      { img: h('hero-hp-white.png'), label: 'White Studio' },
+      { img: h('hero-hp-home.png'), label: 'Home Lifestyle' },
     ],
     caption: 'Same headphones ∞ shots in under 2 minutes',
   },
@@ -222,7 +222,7 @@ export function HeroSection() {
             </span>
           </h1>
 
-          <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+          
 
           <p className="hidden sm:block text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
@@ -533,13 +533,6 @@ export function HeroSection() {
         </div>
       </div>
 
-      <style>{`
-        [data-hero-carousel]::-webkit-scrollbar { display: none; }
-        @keyframes pillPulse {
-          0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
-          50% { box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2); }
-        }
-      `}</style>
     </section>
   );
 }

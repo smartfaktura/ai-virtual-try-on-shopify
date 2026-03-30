@@ -82,7 +82,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
       <ShimmerImage
         src={images[displayIndex]}
         alt={`${label} AI-generated product shot`}
-        loading="eager"
+        loading="lazy"
         decoding="async"
         wrapperClassName="absolute inset-0"
         wrapperStyle={{ zIndex: 1 }}
@@ -174,12 +174,6 @@ export function ProductCategoryShowcase() {
   return (
     <section className="py-16 lg:py-24 bg-background">
       {/* Inline keyframes for progress bar */}
-      <style>{`
-        @keyframes progress-fill {
-          from { width: 0%; }
-          to { width: 100%; }
-        }
-      `}</style>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 lg:mb-16">
