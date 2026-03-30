@@ -59,7 +59,7 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
         </div>
       ) : (
         <ShimmerImage
-          src={getOptimizedUrl(imageUrl, { quality: 60 })}
+          src={optimizedUrl}
           alt={isScene ? item.data.name : item.data.title}
           className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
           loading="lazy"

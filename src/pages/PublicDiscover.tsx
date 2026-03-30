@@ -232,7 +232,7 @@ export default function PublicDiscover() {
   }, [filtered, featuredMap]);
 
   // Progressive rendering: render in batches for mobile perf
-  const INITIAL_RENDER_COUNT = 30;
+  const INITIAL_RENDER_COUNT = getResponsiveInitialCount();
   const LOAD_MORE_COUNT = 20;
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
   const sentinelRef = useRef<HTMLDivElement>(null);
