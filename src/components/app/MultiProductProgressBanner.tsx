@@ -44,6 +44,7 @@ export function MultiProductProgressBanner({
   totalExpectedImages,
   totalJobs,
   workflowName,
+  isProModel = false,
 }: MultiProductProgressBannerProps) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
