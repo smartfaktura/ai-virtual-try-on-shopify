@@ -72,6 +72,7 @@ import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
+import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
@@ -1016,7 +1017,6 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
       // Gather source images — either from selected products or scratch upload
       const sources: Array<{ imageUrl: string; sourceType: 'generation' | 'freestyle'; sourceId: string; title: string }> = [];
@@ -1038,11 +1038,12 @@ export default function Generate() {
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
 
-      for (const src of sources) {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
+      for (let i = 0; i < sources.length; i++) {
+        const src = sources[i];
+        await paceDelay(i);
+
+        const result = await enqueueWithRetry(
+          {
             jobType: 'upscale',
             payload: {
               imageUrl: src.imageUrl,
@@ -1053,18 +1054,18 @@ export default function Generate() {
             imageCount: 1,
             quality: 'standard',
             resolution: upscaleResolution,
-          }),
-        });
+            skipWake: true,
+          },
+          token,
+        );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          if (response.status === 402) { toast.error(errorData.error || 'Insufficient credits'); break; }
-          if (response.status === 429) { toast.error(errorData.message || errorData.error || 'Rate limited. Please wait.'); break; }
-          toast.error(errorData.error || `Failed to enqueue upscale for "${src.title}"`);
+        if (isEnqueueError(result)) {
+          if (result.type === 'insufficient_credits') toast.error(result.message);
+          else if (result.type === 'rate_limit') toast.error('Rate limited. Please wait.');
+          else toast.error(result.message || `Failed to enqueue upscale for "${src.title}"`);
           break;
         }
 
-        const result = await response.json();
         jobMap.set(src.sourceId, result.jobId);
         lastBalance = result.newBalance;
         injectActiveJob(queryClient, {
@@ -1081,6 +1082,7 @@ export default function Generate() {
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
+      sendWake(token);
       const resLabel = upscaleResolution === '4k' ? '4K' : '2K';
       toast.success(`Upscaling ${jobMap.size} image${jobMap.size > 1 ? 's' : ''} to ${resLabel}…`);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
@@ -1193,11 +1195,10 @@ export default function Generate() {
             };
           }
 
-          const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-          const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({
+          await paceDelay(jobMap.size);
+
+          const result = await enqueueWithRetry(
+            {
               jobType: 'workflow',
               payload,
               imageCount: angleMultiplier,
@@ -1205,11 +1206,12 @@ export default function Generate() {
               additionalProductCount: 0,
               hasModel: !!modelProfile,
               hasScene: false,
-            }),
-          });
+              skipWake: true,
+            },
+            token,
+          );
 
-          if (response.ok) {
-            const result = await response.json();
+          if (!isEnqueueError(result)) {
             jobMap.set(`${product.id}_${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
             injectActiveJob(queryClient, {
@@ -1217,9 +1219,8 @@ export default function Generate() {
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
               job_type: 'workflow', quality, imageCount: 1,
             });
-          } else {
-            const err = await response.json().catch(() => ({}));
-            toast.error(err.error || `Failed to queue "${product.title}"`);
+          } else if (result.type === 'insufficient_credits') {
+            toast.error(result.message); break;
           }
           } // end framingVal loop
          } // end ratioVal loop
@@ -1234,7 +1235,7 @@ export default function Generate() {
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      // silent — no toast noise for queuing
+      sendWake(token);
       return;
     }
 
@@ -1381,7 +1382,7 @@ export default function Generate() {
       const token = session?.session?.access_token;
       if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
 
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       const variationIndices = selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : [0];
@@ -1402,47 +1403,19 @@ export default function Generate() {
                   bodyType: modelProfile.bodyType, ageRange: modelProfile.ageRange, imageUrl: base64ModelImage,
                 };
               }
-              const maxRetries = 6;
-              let enqueueSuccess = false;
-              for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                  const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!modelProfile, hasScene: false, skipWake: true }),
-                  });
-                  if (response.ok) {
-                    const result = await response.json();
-                    jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
-                    lastBalance = result.newBalance;
-                    injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
-                    enqueueSuccess = true;
-                    break;
-                  }
-                  const err = await response.json().catch(() => ({}));
-                  const errMsg = String(err.error || err.message || '');
-                  const isRateLimit = response.status === 429 || response.status === 502 || response.status === 503
-                    || errMsg.toLowerCase().includes('too many requests')
-                    || errMsg.toLowerCase().includes('burst')
-                    || errMsg.toLowerCase().includes('concurrent');
+              await paceDelay(jobMap.size);
 
-                  if (isRateLimit && attempt < maxRetries - 1) {
-                    const retryAfter = err.retry_after_seconds ? Number(err.retry_after_seconds) : Math.pow(2, attempt + 1);
-                    const jitter = Math.random() * 1000;
-                    console.warn(`[enqueue-workflow] Rate limited, retry ${attempt + 1}/${maxRetries - 1} in ${retryAfter}s`);
-                    await new Promise(r => setTimeout(r, retryAfter * 1000 + jitter));
-                    continue;
-                  }
-                  if (response.status === 402) { toast.error('Insufficient credits'); break; }
-                  if (!isRateLimit) { toast.error(err.error || 'Failed to queue generation'); }
-                  break;
-                } catch (fetchErr) {
-                  if (attempt < maxRetries - 1) {
-                    await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
-                    continue;
-                  }
-                  console.error('[enqueue-workflow] Network error:', fetchErr);
-                }
+              const result = await enqueueWithRetry(
+                { jobType: 'workflow', payload: comboPayload, imageCount: angleMultiplier, quality: 'high', hasModel: !!modelProfile, hasScene: false, skipWake: true },
+                token,
+              );
+
+              if (!isEnqueueError(result)) {
+                jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
+                lastBalance = result.newBalance;
+                injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1 });
+              } else if (result.type === 'insufficient_credits') {
+                toast.error('Insufficient credits'); break;
               }
             }
           }
@@ -1453,13 +1426,7 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
       queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
-
-      // Wake the queue processor once after all jobs are enqueued
-      fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ wakeOnly: true }),
-      }).catch(() => {});
+      sendWake(token);
     }
     } catch (err) {
       console.error('Workflow generation failed:', err);

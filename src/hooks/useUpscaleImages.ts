@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/lib/brandedToast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
+import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
 
 export type UpscaleResolution = '2k' | '4k';
 
@@ -57,24 +57,19 @@ export function useUpscaleImages() {
     const jobIds: string[] = [];
 
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
+      const token = await getAuthToken();
       if (!token) {
         toast.error('Please sign in first');
         return [];
       }
 
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      // Enqueue each image as a separate upscale job with pacing + retry
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        await paceDelay(i);
 
-      // Enqueue each image as a separate upscale job
-      for (const item of items) {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
+        const result = await enqueueWithRetry(
+          {
             jobType: 'upscale',
             payload: {
               imageUrl: item.imageUrl,
@@ -85,31 +80,23 @@ export function useUpscaleImages() {
             imageCount: 1,
             quality: 'standard',
             resolution,
-          }),
-        });
+            skipWake: true,
+          },
+          token,
+        );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-
-          if (response.status === 402) {
-            toast.error(errorData.error || 'Insufficient credits');
-            break;
-          }
-          if (response.status === 429) {
-            toast.error(errorData.message || errorData.error || 'Rate limited. Please wait.');
-            break;
-          }
-
-          console.error('[upscale] Enqueue failed:', errorData);
-          toast.error(errorData.error || 'Failed to enqueue upscale');
+        if (isEnqueueError(result)) {
+          if (result.type === 'insufficient_credits') toast.error(result.message);
+          else if (result.type === 'rate_limit') toast.error('Rate limited. Please wait.');
+          else toast.error(result.message || 'Failed to enqueue upscale');
           break;
         }
 
-        const result = await response.json();
         jobIds.push(result.jobId);
       }
 
       if (jobIds.length > 0) {
+        sendWake(token);
         const resLabel = resolution === '4k' ? '4K' : '2K';
         toast.success(`Upscaling ${jobIds.length} image${jobIds.length > 1 ? 's' : ''} to ${resLabel}…`);
         refreshBalance();
