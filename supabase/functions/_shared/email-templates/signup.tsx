@@ -19,7 +19,6 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
-  token: string
 }
 
 export const SignupEmail = ({
@@ -27,14 +26,13 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   confirmationUrl,
-  token,
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code for {siteName}</Preview>
+    <Preview>Confirm your email for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Verify your email</Heading>
+        <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
           Thanks for signing up for{' '}
           <Link href={siteUrl} style={link}>
@@ -43,20 +41,15 @@ export const SignupEmail = ({
           !
         </Text>
         <Text style={text}>
-          Enter this code on the verification page to confirm your email (
+          Please confirm your email address (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ):
+          ) by clicking the button below:
         </Text>
-        <Text style={codeStyle}>{token}</Text>
-        <Text style={smallText}>
-          Or{' '}
-          <Link href={confirmationUrl} style={link}>
-            click here to verify automatically
-          </Link>
-          .
-        </Text>
+        <Button style={button} href={confirmationUrl}>
+          Verify Email
+        </Button>
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
@@ -82,18 +75,12 @@ const text = {
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '28px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  letterSpacing: '4px',
-  textAlign: 'center' as const,
-  margin: '0 0 30px',
-}
-const smallText = {
-  fontSize: '12px',
-  color: '#999999',
-  margin: '0 0 25px',
+const button = {
+  backgroundColor: '#000000',
+  color: '#ffffff',
+  fontSize: '14px',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
