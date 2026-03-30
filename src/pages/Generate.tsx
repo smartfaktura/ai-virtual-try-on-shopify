@@ -1194,11 +1194,10 @@ export default function Generate() {
             };
           }
 
-          const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-          const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({
+          await paceDelay(jobMap.size);
+
+          const result = await enqueueWithRetry(
+            {
               jobType: 'workflow',
               payload,
               imageCount: angleMultiplier,
@@ -1206,11 +1205,12 @@ export default function Generate() {
               additionalProductCount: 0,
               hasModel: !!modelProfile,
               hasScene: false,
-            }),
-          });
+              skipWake: true,
+            },
+            token,
+          );
 
-          if (response.ok) {
-            const result = await response.json();
+          if (!isEnqueueError(result)) {
             jobMap.set(`${product.id}_${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
             injectActiveJob(queryClient, {
@@ -1218,9 +1218,8 @@ export default function Generate() {
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
               job_type: 'workflow', quality, imageCount: 1,
             });
-          } else {
-            const err = await response.json().catch(() => ({}));
-            toast.error(err.error || `Failed to queue "${product.title}"`);
+          } else if (result.type === 'insufficient_credits') {
+            toast.error(result.message); break;
           }
           } // end framingVal loop
          } // end ratioVal loop
@@ -1235,7 +1234,7 @@ export default function Generate() {
       }
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
-      // silent — no toast noise for queuing
+      sendWake(token);
       return;
     }
 
