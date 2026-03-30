@@ -1,45 +1,20 @@
 
 
-## Fix Sample Products in Workflows (Generate.tsx)
+## Fix OTP Input Not Fitting on Mobile
 
 ### Problem
-In `Generate.tsx`, workflows already handle the `product_id` correctly (nulling it for samples via `userProducts.some()`). However, `product_image_url` in the payload still passes the raw local path (e.g. `/images/samples/sample-ring.png`). This URL is unreachable by the edge function and gets saved to `generation_jobs`, meaning:
-- The backend can't use it as a reference
-- Library thumbnails will be broken
-
-The actual product image used for AI generation (`product.imageUrl`) goes through `convertImageToBase64()`, so the AI provider receives valid data. The issue is only with `product_image_url` (metadata field).
+The 8-digit OTP input overflows horizontally on mobile. Each slot is hardcoded at `w-14 h-14` (56px). With 8 slots + gaps + separator, it needs ~500px but mobile screens are ~360–440px wide.
 
 ### Fix
 
-**File: `src/pages/Generate.tsx`**
+**File: `src/components/ui/input-otp.tsx`** (line 36)
+- Change the slot size from fixed `h-14 w-14` to responsive: `h-10 w-10 sm:h-14 sm:w-14`
+- Reduce text size on mobile: `text-lg sm:text-2xl`
 
-1. **Create a helper function** (near the top of the component) to upload local sample images to storage, similar to what was done in Freestyle:
-
-```typescript
-async function resolveProductImageUrl(url: string | null | undefined): Promise<string | null> {
-  if (!url) return null;
-  if (url.startsWith('/')) {
-    // Local sample image — upload to storage for a public URL
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    const base64 = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
-    return uploadImageToStorage(base64, 'product');
-  }
-  return url;
-}
-```
-
-2. **Replace raw `product.images[0]?.url` references** in payload `product_image_url` fields with `await resolveProductImageUrl(...)` at approximately 3 locations:
-   - Line ~1170: workflow generation path
-   - Line ~1474: try-on path
-   - Line ~1624: selfie/UGC path
-
-This ensures all workflow types upload sample images to storage before sending the URL to the backend.
+**File: `src/pages/Auth.tsx`** (lines 371, 380)
+- Reduce gap on mobile: change `gap-2` to `gap-1 sm:gap-2` on both `InputOTPGroup` elements
 
 ### Files to edit
-- `src/pages/Generate.tsx` — Add `resolveProductImageUrl` helper; update 3 payload locations to use it
+- `src/components/ui/input-otp.tsx` — Responsive slot sizing
+- `src/pages/Auth.tsx` — Tighter gaps on mobile
 
