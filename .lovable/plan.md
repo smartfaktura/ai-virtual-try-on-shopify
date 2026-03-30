@@ -1,92 +1,43 @@
 
 
-# Landing Page Performance Audit — Findings & Fixes
+# Remaining Home Page Fixes
 
-## Critical Issues
+## 1. Fix ref warning in FinalCTA / TeamAvatarHoverCard (BUG)
 
-### 1. `LandingPricing` calls `useCredits()` — crashes without CreditProvider (BUG)
-`LandingPricing` (line 4, 15) imports and calls `useCredits()`, but `CreditProvider` was moved inside `/app/*` routes. On the landing page, this component is lazy-loaded inside `<Suspense>` — when it mounts, `useCredits()` will throw because there's no provider. This is a **runtime crash** for the pricing section.
+Console shows: `Function components cannot be given refs. Did you mean to use React.forwardRef()?`
 
-**Fix**: Remove the `useCredits` dependency. For unauthenticated users, default `currentPlan` to `'free'` and `subscriptionStatus` to `'none'`. Use a try/catch or optional context pattern, or simply conditionally read credits only when `user` exists.
+**Root cause**: `HoverCardTrigger` uses `asChild` which passes a ref to its child. In `FinalCTA`, the child is a `<ShimmerImage>` — but `ShimmerImage` is already `forwardRef`. The actual problem is `TeamAvatarHoverCard` itself is a function component that doesn't forward refs, and it's being used inside contexts that attempt to assign refs.
 
----
+**Fix**: Wrap `TeamAvatarHoverCard` with `React.forwardRef` so `HoverCardTrigger asChild` can attach its ref properly.
 
-### 2. Hero images (showcase 2 & 3) bypass CDN optimization (HIGH impact)
-16 images for Ring and Headphones showcases are served as raw PNGs from `/images/hero/` — uncompressed, no CDN transform. These are likely 500KB-2MB each. Showcase 1 (Crop Top) correctly uses `getLandingAssetUrl()` + `getOptimizedUrl()`.
-
-**Fix**: Upload Ring and Headphones hero assets to the `landing-assets/hero/` storage bucket, then update paths in `HeroSection.tsx` lines 41-65 to use `h()` helper (which already calls `getLandingAssetUrl`).
+**File**: `src/components/landing/TeamAvatarHoverCard.tsx`
 
 ---
 
-### 3. `ProductCategoryShowcase` loads ALL category images eagerly (HIGH impact)
-Each `CategoryCard` has `loading="eager"` on its `ShimmerImage` (line 85). With 4 categories × 5-9 images each = ~30 images all marked eager. Plus the crossfade preload effect loads the next image immediately via `new Image()`. The first visible image per card should be eager; the rest should not preload until the card cycles.
+## 2. Preload font-weight 800 (font-extrabold) for hero h1
 
-**Fix**: Set `loading="lazy"` on the base `ShimmerImage`. The crossfade `new Image()` preload already handles the next frame — no need for `loading="eager"` on either layer.
+The font preload in `index.html` line 22 loads a single woff2 file that covers the Inter variable range, but the Google Fonts CSS (line 53) only requests weights `300;400;500;600`. The hero h1 uses `font-extrabold` (weight 800), which is not included — causing a FOUT/fallback for the most prominent text on the page.
 
----
+**Fix**: Update the Google Fonts request to include weight 800: `wght@300;400;500;600;800`.
 
-### 4. `StudioTeamSection` auto-plays 10 videos simultaneously (HIGH impact)
-Each team member card renders a `<video autoPlay muted loop playsInline preload="metadata">`. Even with `preload="metadata"`, 10 concurrent video elements create significant bandwidth and GPU overhead. The carousel only shows ~3-4 cards at a time.
-
-**Fix**: Use `IntersectionObserver` on each card to only set `autoPlay` / start playback when visible. Pause videos that scroll out of view.
+**File**: `index.html` — lines 22 and 53
 
 ---
 
-## Medium Issues
+## 3. `LandingNav` eagerly imports `useAuth` — pulls Supabase into critical path
 
-### 5. `SignupSlideUp` imports Supabase client on every landing page load (MEDIUM)
-Even though the popup only shows after 60% scroll, the component is eagerly rendered in `PageLayout` (used by `/try`) and directly on the landing page it's not present — but it imports `supabase` at the top level.
+`LandingNav` is NOT lazy-loaded (imported eagerly in `Landing.tsx` line 2). It imports `useAuth`, which imports `supabase` client, which imports `@supabase/supabase-js`. This adds the entire Supabase SDK to the critical render path.
 
-**Fix**: This only affects `/try` (PageLayout). Low priority — the supabase client is already loaded for AuthProvider anyway.
-
-### 6. Inline `<style>` tags rendered in component bodies (LOW)
-`HeroSection` (line 225, 536), `ProductCategoryShowcase` (line 177), and `HowItWorks` (line 104) inject `<style>` tags with keyframes directly in JSX. These are re-injected on every render and cause minor style recalc.
-
-**Fix**: Move all keyframe definitions to `index.css` or a shared CSS file.
-
-### 7. `ShimmerImage` eager cache check creates throwaway `Image()` on every mount (LOW)
-Line 39-43 of `shimmer-image.tsx` creates `new Image()` and sets `.src` on every component mount to check browser cache. For pages with 30+ ShimmerImage instances, this is 30+ synchronous Image object creations during render.
-
-**Fix**: This is an intentional tradeoff for shimmer-flash prevention. No change needed — impact is minimal per instance.
+**Impact**: Low-medium. The Supabase client is already initialized by `AuthProvider` in `App.tsx`, so the module is loaded regardless. No fix needed — just noting for awareness.
 
 ---
 
-## Minor / Cosmetic
-
-### 8. `font-weight: 700` (bold) not preloaded
-The font preload (index.html line 22) loads Inter wght range but only one specific file. The page uses `font-extrabold` (800) on h1 which may cause a brief FOIT/FOUT for bold text.
-
-### 9. Background blur on hero gradient
-Line 212: `blur-3xl` creates a large GPU-composited layer. Already optimized compared to `backdrop-blur`, just noting it.
-
----
-
-## Recommended Fix Priority
+## Summary
 
 | # | Fix | Impact | Effort |
 |---|-----|--------|--------|
-| 1 | Fix LandingPricing useCredits crash | Critical (bug) | Low |
-| 2 | Hero images → CDN (Ring + Headphones) | High | Medium (needs upload) |
-| 3 | CategoryCard images: remove `loading="eager"` | High | Low |
-| 4 | StudioTeam: pause off-screen videos | High | Medium |
-| 5 | Move inline keyframes to CSS | Low | Low |
+| 1 | Fix TeamAvatarHoverCard ref warning | Medium (console noise + potential hover bugs) | Low |
+| 2 | Add font-weight 800 to Google Fonts request | Medium (FOUT on hero heading) | Low |
 
-Fixes 1, 3, and 5 are pure code changes. Fix 2 requires uploading ~16 images to storage. Fix 4 requires adding IO-based video play/pause logic.
-
-### Technical detail for Fix 1
-```tsx
-// LandingPricing.tsx — safe fallback when outside CreditProvider
-const creditContext = useSafeCredits(); // or inline:
-let currentPlan = 'free';
-let subscriptionStatus: string = 'none';
-try {
-  const ctx = useCredits();
-  currentPlan = ctx.plan;
-  subscriptionStatus = ctx.subscriptionStatus;
-} catch {
-  // Outside CreditProvider — use defaults
-}
-```
-
-Or better: make `useCredits` return defaults when no provider exists (change context default value).
+Two files, two small changes. Everything else on the landing page is well-optimized.
 
