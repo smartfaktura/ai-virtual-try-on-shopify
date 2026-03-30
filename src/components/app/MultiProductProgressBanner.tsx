@@ -23,6 +23,8 @@ interface MultiProductProgressBannerProps {
   totalExpectedImages?: number;
   totalJobs?: number;
   workflowName?: string;
+  /** True for try-on or high-quality jobs that take 60-120s per image */
+  isProModel?: boolean;
 }
 
 function formatElapsed(seconds: number): string {
@@ -42,6 +44,7 @@ export function MultiProductProgressBanner({
   totalExpectedImages,
   totalJobs,
   workflowName,
+  isProModel = false,
 }: MultiProductProgressBannerProps) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
@@ -68,8 +71,8 @@ export function MultiProductProgressBanner({
   const totalJobCount = totalJobs || multiProductJobIds.size;
   const totalImages = totalExpectedImages || totalJobCount;
   const completedCount = Math.min(rawCompleted, totalImages);
-  const estimatePerImage = 8;
-  const totalEstSeconds = totalImages * estimatePerImage;
+  const estimatePerImage = isProModel ? 45 : 8;
+  const totalEstSeconds = Math.max(totalImages * estimatePerImage, 1);
   const estLowSec = Math.round(totalEstSeconds * 0.7);
   const estHighSec = Math.round(totalEstSeconds * 1.3);
   const useSeconds = estHighSec < 60;
@@ -78,11 +81,13 @@ export function MultiProductProgressBanner({
   const estUnit = useSeconds ? 'sec' : 'min';
 
   const ratio = elapsed / totalEstSeconds;
-  const overtimeMsg = ratio >= 2
-    ? 'Almost there — high-quality results take a little extra time…'
-    : ratio >= 1.3
-    ? 'Taking a bit longer than usual — still working on it…'
-    : null;
+  // Only show overtime messages after at least 30 seconds have passed
+  const overtimeMsg = elapsed < 30 ? null
+    : ratio >= 2
+      ? 'Almost there — high-quality results take a little extra time…'
+      : ratio >= 1.3
+        ? 'Taking a bit longer than usual — still working on it…'
+        : null;
 
   const currentMember = TEAM_MEMBERS[teamIndex];
 
@@ -91,13 +96,15 @@ export function MultiProductProgressBanner({
       {/* Header with counts and elapsed */}
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
-          {completedCount > 0
-            ? `${completedCount} of ${totalImages} image${totalImages !== 1 ? 's' : ''} done`
-            : workflowName
-              ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${workflowName}...`
-              : totalProducts > 1
-                ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} products`
-                : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''}...`}
+          {totalImages === 0
+            ? 'Preparing batch…'
+            : completedCount > 0
+              ? `${completedCount} of ${totalImages} image${totalImages !== 1 ? 's' : ''} done`
+              : workflowName
+                ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${workflowName}...`
+                : totalProducts > 1
+                  ? `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''} for ${totalProducts} products`
+                  : `Generating ${totalImages} image${totalImages !== 1 ? 's' : ''}...`}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />

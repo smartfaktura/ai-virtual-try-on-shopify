@@ -4164,6 +4164,7 @@ export default function Generate() {
                 totalExpectedImages={multiProductJobIds.size > 0 ? multiProductJobIds.size : undefined}
                 totalJobs={multiProductJobIds.size}
                 workflowName={activeWorkflow?.name}
+                isProModel={generationMode === 'virtual-try-on' || quality === 'high'}
               />
             )}
 

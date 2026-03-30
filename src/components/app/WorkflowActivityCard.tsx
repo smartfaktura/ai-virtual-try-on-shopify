@@ -140,9 +140,20 @@ const ActiveGroupCard = React.memo(function ActiveGroupCard({
                 ) : (
                   <>Queued · <ElapsedTimer startedAt={startedAt} enabled={true} /></>
                 )}
-                {isProcessing && (
+                {isProcessing && group.totalImageCount > 1 && (() => {
+                  const estPerImg = isProModel ? 90 : 22;
+                  const totalEstSec = group.totalImageCount * estPerImg;
+                  const lowMin = Math.max(1, Math.ceil((totalEstSec * 0.7) / 60));
+                  const highMin = Math.max(lowMin, Math.ceil((totalEstSec * 1.3) / 60));
+                  return (
+                    <span className="hidden sm:inline text-muted-foreground/60">
+                      {' '}· est. ~{lowMin === highMin ? lowMin : `${lowMin}-${highMin}`} min total
+                    </span>
+                  );
+                })()}
+                {isProcessing && group.totalImageCount <= 1 && (
                   <span className="hidden sm:inline text-muted-foreground/60">
-                    {' '}· est. ~{isProModel ? '60-120s' : '15-30s'}/{isStagingWorkflow ? 'style' : 'img'}
+                    {' '}· est. ~{isProModel ? '60-120s' : '15-30s'}
                   </span>
                 )}
               </p>
