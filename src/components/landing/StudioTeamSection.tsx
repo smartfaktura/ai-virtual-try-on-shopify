@@ -6,6 +6,45 @@ import { Badge } from '@/components/ui/badge';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
+function LazyVideo({ src, poster, className }: { src: string; poster: string; className: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const video = videoRef.current;
+        if (!video) return;
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="w-full h-full">
+      <video
+        ref={videoRef}
+        src={src}
+        poster={poster}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        className={className}
+      />
+    </div>
+  );
+}
+
 export function StudioTeamSection() {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -153,14 +192,9 @@ export function StudioTeamSection() {
                 {/* Character image card */}
                 <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 group-hover:-translate-y-1 transition-all duration-300">
                   {member.videoUrl ? (
-                    <video
+                    <LazyVideo
                       src={member.videoUrl}
                       poster={getOptimizedUrl(member.avatar, { quality: 60 })}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
