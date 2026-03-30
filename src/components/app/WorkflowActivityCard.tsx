@@ -220,6 +220,10 @@ export function WorkflowActivityCard({
         const totalImages = group.totalImageCount > 1 ? group.totalImageCount : group.totalCount;
         const team = pickTeamForGroup(group.key);
         const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
+        const completedProductCount = uniqueProductCount(group);
+        const completedTitleSuffix = completedProductCount > 1
+          ? ` — ${completedProductCount} products`
+          : group.product_name ? ` — ${group.product_name}` : '';
         return (
           <Card key={group.key} className="border-emerald-500/20 bg-emerald-500/[0.04]">
             <CardContent className="py-3 px-4 sm:py-4 sm:px-5">
@@ -238,7 +242,7 @@ export function WorkflowActivityCard({
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
                       {group.workflow_name ?? 'Workflow generation'}
-                      {group.product_name ? ` — ${group.product_name}` : ''}
+                      {completedTitleSuffix}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {totalImages > 1
