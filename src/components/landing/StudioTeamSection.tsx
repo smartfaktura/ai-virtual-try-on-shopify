@@ -34,13 +34,27 @@ export function StudioTeamSection() {
     });
   };
 
-  // Frame-synced auto-scroll with lerped speed
+  // Frame-synced auto-scroll with lerped speed — pauses when off-screen
+  const sectionRef = useRef<HTMLElement>(null);
+  const isVisibleRef = useRef(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0 }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const tick = () => {
       speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.08;
 
       const el = scrollRef.current;
-      if (el && speedRef.current > 0.01) {
+      if (el && speedRef.current > 0.01 && isVisibleRef.current) {
         if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
           el.scrollTo({ left: 0 });
           updateScrollState();
@@ -76,7 +90,7 @@ export function StudioTeamSection() {
   }, []);
 
   return (
-    <section id="team" className="py-20 sm:py-28 bg-muted/30">
+    <section ref={sectionRef} id="team" className="py-20 sm:py-28 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14 lg:mb-20">

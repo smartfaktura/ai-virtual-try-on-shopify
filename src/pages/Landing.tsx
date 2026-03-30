@@ -54,19 +54,16 @@ export default function Landing() {
       <LandingNav />
       <main>
         <HeroSection />
-        <Suspense fallback={null}>
-          <ProductCategoryShowcase />
-          <StudioTeamSection />
-          <HowItWorks />
-          <FreestyleShowcaseSection />
-          <ModelShowcaseSection />
-          <EnvironmentShowcaseSection />
-          <CreativeDropsSection />
-          
-          <LandingPricing />
-          <LandingFAQ />
-          <FinalCTA />
-        </Suspense>
+        <Suspense fallback={null}><ProductCategoryShowcase /></Suspense>
+        <Suspense fallback={null}><StudioTeamSection /></Suspense>
+        <Suspense fallback={null}><HowItWorks /></Suspense>
+        <Suspense fallback={null}><FreestyleShowcaseSection /></Suspense>
+        <Suspense fallback={null}><ModelShowcaseSection /></Suspense>
+        <Suspense fallback={null}><EnvironmentShowcaseSection /></Suspense>
+        <Suspense fallback={null}><CreativeDropsSection /></Suspense>
+        <Suspense fallback={null}><LandingPricing /></Suspense>
+        <Suspense fallback={null}><LandingFAQ /></Suspense>
+        <Suspense fallback={null}><FinalCTA /></Suspense>
       </main>
       <Suspense fallback={null}>
         <LandingFooter />
