@@ -186,8 +186,9 @@ export function HeroSection() {
     const firstChild = el.firstElementChild as HTMLElement | null;
     if (firstChild) {
       const gap = parseFloat(getComputedStyle(el).gap) || 10;
+      const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
       const itemWidth = firstChild.offsetWidth + gap;
-      const idx = Math.round(el.scrollLeft / itemWidth);
+      const idx = Math.round((el.scrollLeft - padding) / itemWidth);
       setVisibleDot(Math.min(Math.max(idx, 0), current.outputs.length - 1));
     }
   }, [activeScene, current.outputs.length]);
@@ -340,8 +341,9 @@ export function HeroSection() {
                     if (el) {
                       const firstChild = el.firstElementChild as HTMLElement | null;
                       const gap = parseFloat(getComputedStyle(el).gap) || 10;
+                      const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
                       const itemWidth = firstChild ? firstChild.offsetWidth + gap : 165;
-                      el.scrollTo({ left: i * itemWidth, behavior: 'smooth' });
+                      el.scrollTo({ left: i * itemWidth + padding, behavior: 'smooth' });
                     }
                   }}
                   className={`rounded-full transition-all duration-200 ${
