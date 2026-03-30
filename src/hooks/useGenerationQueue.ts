@@ -383,8 +383,13 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   }, [stopPolling, handleTerminalJob, user?.id, onCreditRefresh]);
 
   // Restore in-progress job on mount (e.g. after page refresh)
+  const hasRestoredRef = useRef(false);
+  const pollJobStatusRef = useRef(pollJobStatus);
+  pollJobStatusRef.current = pollJobStatus;
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
 
     const restoreActiveJob = async () => {
       if (jobIdRef.current) return;
@@ -420,11 +425,12 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         job_type: row.job_type,
       });
       jobIdRef.current = row.id;
-      pollJobStatus(row.id);
+      pollJobStatusRef.current(row.id);
     };
 
     restoreActiveJob();
-  }, [user, pollJobStatus]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const enqueue = useCallback(async (params: EnqueueParams, meta?: GenerationMeta): Promise<EnqueueResult | null> => {
     if (!user) {
