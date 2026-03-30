@@ -39,8 +39,6 @@ export const ShimmerImage = forwardRef<HTMLImageElement, ShimmerImageProps>(
     // creating a phantom request for every off-screen image.
     const [loaded, setLoaded] = useState(() => {
       if (!src || typeof window === 'undefined') return false;
-      const isLazy = rest.loading === 'lazy' && fetchPriority !== 'high';
-      if (isLazy) return false;
       const img = new Image();
       img.src = src;
       return img.complete && img.naturalWidth > 0;
