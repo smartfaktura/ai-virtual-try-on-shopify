@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import type { TeamMember } from '@/data/teamData';
@@ -10,7 +11,7 @@ interface TeamAvatarHoverCardProps {
   sideOffset?: number;
 }
 
-export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset = 8 }: TeamAvatarHoverCardProps) {
+export const TeamAvatarHoverCard = React.forwardRef<HTMLDivElement, TeamAvatarHoverCardProps>(function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset = 8 }, _ref) {
   return (
     <HoverCard openDelay={200} closeDelay={150}>
       <HoverCardTrigger asChild>
@@ -45,4 +46,4 @@ export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset
       </HoverCardContent>
     </HoverCard>
   );
-}
+});
