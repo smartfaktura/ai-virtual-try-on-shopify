@@ -1,22 +1,48 @@
 
 
-## Fix: Spacing Between Cards on Mobile Freestyle
+## Fix: Don't Show Freestyle Guide If Already Dismissed in DB
 
 ### Problem
-On the mobile Freestyle page, the generated image cards and the "Recreating look from Discover" banner are too tightly packed. There are two spacing gaps:
+When a user opens Freestyle in incognito (or clears browser data), `localStorage` has no `freestyle_guide_dismissed` key, so the guide shows again — even though the user already dismissed it and it's persisted in the database.
 
-1. **Between the banner area and the gallery** — no gap exists between the banner container (`space-y-2` div at line 924) and the `FreestyleGallery` that follows it.
-2. **Between gallery image cards** — the masonry grid uses `gap-2` (8px) both horizontally and vertically, which is too tight on mobile for visual comfort.
+### Root Cause
+The initial state defaults to showing the guide (`!localStorage.getItem(...)` → true), and the DB check only runs after mount. This causes a flash of the guide before the DB response arrives, and in incognito it shows fully because localStorage is empty.
 
-### Changes
+### Fix
 
 **File: `src/pages/Freestyle.tsx`**
-- Add `mb-2` to the banner container div (line 924) so there's consistent spacing before the gallery starts.
 
-**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
-- Increase the masonry gap from `gap-2` to `gap-2.5` (line 665 outer div and line 667 column div) for slightly more breathing room between cards on all screens.
+1. **Default `showGuide` to `false`** instead of `true` when localStorage has no value. This prevents the guide from flashing before the DB check completes.
 
-### Impact
-- Two-line change affecting only spacing values.
-- No layout or functionality changes.
+2. **Only show the guide after confirming the DB says it hasn't been dismissed.** In the existing `useEffect` (line 205-222), change the `else if` branch: if the DB does NOT have `freestyleGuideDismissed: true`, then set `showGuide(true)`. If the user has no profile row or is not logged in, the guide stays hidden.
+
+Change line 135:
+```typescript
+// Before
+const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
+
+// After
+const [showGuide, setShowGuide] = useState(false);
+```
+
+Change lines 213-219 in the profile fetch effect:
+```typescript
+// Before
+if (dismissed) {
+  setShowGuide(false);
+  localStorage.setItem('freestyle_guide_dismissed', 'true');
+} else if (!localStorage.getItem('freestyle_guide_dismissed')) {
+  setShowGuide(true);
+}
+
+// After
+if (dismissed) {
+  localStorage.setItem('freestyle_guide_dismissed', 'true');
+} else {
+  // DB says not dismissed — show guide (even if localStorage was cleared)
+  setShowGuide(true);
+}
+```
+
+This way: DB is the source of truth. localStorage is just a fast cache for subsequent visits. Incognito users who already dismissed won't see it again.
 
