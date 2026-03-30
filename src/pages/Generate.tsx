@@ -1736,7 +1736,7 @@ export default function Generate() {
       }
     }
     // Failed status is now handled by onGenerationFailed callback in useGenerationQueue
-  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size, currentStep]);
+  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size, batchState, currentStep]);
 
   // Watch batch completion (single-product only)
   useEffect(() => {
