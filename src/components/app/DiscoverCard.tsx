@@ -31,7 +31,8 @@ function getGenerationLabel(item: DiscoverItem): string {
 }
 
 export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, aspectRatioOverride }: DiscoverCardProps) {
-  const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
+  const rawImageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
+  const optimizedUrl = getOptimizedUrl(rawImageUrl, { quality: 60, width: 400 });
   const isScene = item.type === 'scene';
   const isPreset = item.type === 'preset';
 
