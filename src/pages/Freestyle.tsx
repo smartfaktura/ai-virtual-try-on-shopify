@@ -212,9 +212,8 @@ export default function Freestyle() {
       .then(({ data }) => {
         const dismissed = (data?.settings as Record<string, unknown>)?.freestyleGuideDismissed === true;
         if (dismissed) {
-          setShowGuide(false);
           localStorage.setItem('freestyle_guide_dismissed', 'true');
-        } else if (!localStorage.getItem('freestyle_guide_dismissed')) {
+        } else {
           setShowGuide(true);
         }
         setUserCategories((data?.product_categories as string[]) ?? []);
