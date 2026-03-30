@@ -62,6 +62,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
              transition: 'opacity 1.2s ease-in-out',
            }}
            className="w-full h-full object-cover"
+           onError={() => advance()}
          />
        ))}
     </div>
@@ -74,11 +75,11 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
     images: [
-      '/images/showcase/fashion-activewear-track.jpg',
-      '/images/showcase/fashion-leopard-sneakers.jpg',
-      '/images/showcase/fashion-portrait-curls.jpg',
-      '/images/showcase/fashion-white-dress-stadium.jpg',
-      '/images/showcase/fashion-blonde-coat.jpg',
+      s('fashion-activewear-track.jpg'),
+      s('fashion-leopard-sneakers.jpg'),
+      s('fashion-portrait-curls.jpg'),
+      s('fashion-white-dress-stadium.jpg'),
+      s('fashion-blonde-coat.jpg'),
       s('fashion-camel-coat.png'),
       s('fashion-white-suit.png'),
       s('fashion-knit-loft.png'),
@@ -89,11 +90,11 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Beauty',
     images: [
-      '/images/showcase/beauty-perfume-ice.jpg',
-      '/images/showcase/beauty-perfume-driftwood.jpg',
-      '/images/showcase/beauty-perfume-splash.jpg',
-      '/images/showcase/beauty-perfume-rocks.jpg',
-      '/images/showcase/beauty-perfume-aloe.jpg',
+      s('beauty-perfume-ice.jpg'),
+      s('beauty-perfume-driftwood.jpg'),
+      s('beauty-perfume-splash.jpg'),
+      s('beauty-perfume-rocks.jpg'),
+      s('beauty-perfume-aloe.jpg'),
       s('skincare-serum-marble.png'),
       s('skincare-perfume-vanity.png'),
       s('skincare-serum-model.png'),
@@ -115,7 +116,7 @@ const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Home & Living',
     images: [
-      '/images/showcase/home-boucle-chair.jpg',
+      s('home-boucle-chair.jpg'),
       s('home-candle-evening.png'),
       s('home-vases-shelf.png'),
       s('home-lamp-evening.png'),
