@@ -1,36 +1,34 @@
 
 
-# Fix: Product Listing Set showing only 1 image in results
+## Adjust Hero Banner Text (Responsive)
 
-## Problem
-When generating multiple scenes in the Product Listing Set workflow, only 1 image appears in results despite multiple images being generated.
+**File:** `src/components/landing/HeroSection.tsx`
 
-**Root cause:** Two result watchers race against each other:
-1. **`activeJob` watcher** (line ~1716) — fires when ANY single job completes, immediately setting `generatedImages` to that one job's images and transitioning to the results step
-2. **`batchState` watcher** (line ~1739) — fires when ALL batch jobs are done, aggregating all images
+### Changes
 
-The `activeJob` watcher guards against `multiProductJobIds` but does NOT guard against an active batch (`batchState`). When `startBatch` creates multiple jobs, the `useGenerationQueue` hook's `restoreActiveJob` picks up one of them as `activeJob`. When that one job completes, the `activeJob` watcher fires first and shows only 1 image — before the batch watcher can aggregate all results.
+**1. Main title (line 216-222)**
 
-## Fix
+Replace the static "Your AI Photography Team." with responsive variants:
+- Desktop: `Use Your AI Product Visual Team.`
+- Tablet (sm-md): `Use Your AI Visual Team.`  
+- Mobile: `Use Your AI Visual Team.`
 
-**File: `src/pages/Generate.tsx`** — line ~1717
-
-Add a guard to the `activeJob` completion watcher to skip when a batch is in progress:
+Use hidden/block utility classes to swap between the two versions. The typing lines remain untouched.
 
 ```tsx
-// Before (line 1717-1719):
-if (!activeJob) return;
-if (multiProductJobIds.size > 0) return;
-if (currentStep === 'results') return;
-
-// After:
-if (!activeJob) return;
-if (multiProductJobIds.size > 0) return;
-if (batchState) return;  // ← NEW: let the batch watcher handle aggregation
-if (currentStep === 'results') return;
+<h1 className="...">
+  <span className="hidden sm:inline">Use Your AI Product Visual Team.</span>
+  <span className="sm:hidden">Use Your AI Visual Team.</span>
+  <br />
+  <span className="text-primary ...">
+    {typedText}
+    <span className="..." />
+  </span>
+</h1>
 ```
 
-This single line ensures that when a batch is active (multiple jobs for multiple scenes), the batch watcher handles result aggregation with all images instead of the single-job watcher short-circuiting with just 1 image.
+**2. Subtitle (lines 227-232)**
 
-Add `batchState` to the dependency array of that `useEffect` as well.
+- Desktop/tablet (line 227-229): Change to `Upload a product photo and create high-quality visuals for ads, product listings, and campaigns in seconds.`
+- Mobile (line 230-232): Change to `Upload one product photo, get ∞ brand ready visuals in seconds.`
 
