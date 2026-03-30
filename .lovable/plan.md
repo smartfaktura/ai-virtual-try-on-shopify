@@ -1,40 +1,29 @@
 
 
-## Fix: Group Batch Workflow Jobs in Recent Creations
+## Fix: Estimate Line Shows "0 images" During Batch Preparation
 
 ### Problem
 
-Workflow batches are split into individual 1-image jobs for parallel processing. The "Recent Creations" query fetches the 5 most recent `generation_jobs` rows individually, so a 5-image try-on batch shows as 5 separate "Virtual Try-On Set" cards with "1 imgs" each, instead of 1 grouped card with 5 images and mini-thumbnails.
+When `totalImages` is 0 (jobs not yet enqueued), the header correctly shows "Preparing batch…" but the estimate line below the progress bar still renders `Est. ~1 sec for 0 images`. The subtitle text (e.g., "16 images") from the parent already tells users the expected count — the estimate line just needs to hide until jobs exist.
 
-### Root Cause
+### Fix
 
-The query at line 201 in `Workflows.tsx` uses `.limit(5)` on individual jobs. There's no `batch_id` column on `generation_jobs` — it only exists in the `generation_queue.payload` JSON. Jobs from the same batch share the same `workflow_id`, `product_id`, and are created within seconds of each other.
+**File: `src/components/app/MultiProductProgressBanner.tsx`**
 
-### Solution
+1. **Hide the estimate text when `totalImages === 0`**: Replace the estimate `<span>` with "Preparing…" or hide it entirely when no jobs are enqueued yet
+2. **Use `totalExpectedImages` fallback from subtitle**: When `totalImages` is 0 but the parent knows the expected count (from the subtitle "16 images"), pass it as a prop so estimates are accurate from the start
 
-Group completed `generation_jobs` by `workflow_id + product_id` within a 60-second time window (same pattern already used for Picture Perspectives grouping). This merges batch jobs into single cards with all their result images.
+Concrete change on **line 123**: wrap the estimate span so it only shows when `totalImages > 0`:
 
-### Changes
-
-**File: `src/pages/Workflows.tsx`**
-
-1. Increase the raw fetch limit from 5 → 50 to capture all jobs in recent batches
-2. After fetching, group rows by `(workflow_id, product_id)` where `created_at` timestamps are within 60 seconds of each other
-3. Merge each group's `results` arrays into a single `RecentJob` entry
-4. Slice to 8 grouped entries for display
-
-```text
-Before:  5 rows → 5 cards (1 img each)
-After:   50 rows → group by batch proximity → ~3-5 cards (multiple imgs each)
+```tsx
+<span>
+  {totalImages > 0
+    ? `Est. ~${estLow === estHigh ? estLow : `${estLow}-${estHigh}`} ${estUnit} for ${totalImages} image${totalImages !== 1 ? 's' : ''}`
+    : 'Calculating estimate…'}
+</span>
 ```
-
-**Grouping logic** (same pattern as the existing perspectives grouper at line 245):
-- Sort by `created_at` descending
-- Walk rows; if same `workflow_id + product_id` and within 60s of current group's timestamp → merge
-- Otherwise start a new group
-- Each group becomes one `RecentJob` with combined results
 
 | File | Change |
 |------|--------|
-| `src/pages/Workflows.tsx` | Group `generation_jobs` by batch proximity in the `workflow-recent-jobs` query; increase raw limit to 50; output grouped entries |
+| `src/components/app/MultiProductProgressBanner.tsx` | Show "Calculating estimate…" instead of "Est. ~1 sec for 0 images" when totalImages is 0 |
 
