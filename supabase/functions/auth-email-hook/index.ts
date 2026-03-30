@@ -17,7 +17,7 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
+  signup: 'Your VOVV.AI verification code',
   invite: "You've been invited",
   magiclink: 'Your login link',
   recovery: 'Reset your password',
@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "vovvai"
+const SITE_NAME = "VOVV.AI"
 const SENDER_DOMAIN = "notify.vovv.ai"
 const ROOT_DOMAIN = "vovv.ai"
 const FROM_DOMAIN = "notify.vovv.ai" // Domain shown in From address (may be root or sender subdomain)
@@ -54,6 +54,7 @@ const SAMPLE_DATA: Record<string, object> = {
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    token: '12345678',
   },
   magiclink: {
     siteName: SITE_NAME,
