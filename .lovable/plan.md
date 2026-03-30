@@ -1,30 +1,22 @@
 
 
-## Fix: Hero Carousel Dots Not Tracking Scroll
+## Fix: Signup Email to Show 8-Digit OTP Code
 
-### Root Cause
-
-The mobile carousel container has `px-4` (16px padding) which offsets all scroll positions. The dot index calculation `Math.round(el.scrollLeft / itemWidth)` doesn't account for this padding, so the first item maps to index 0 only when scrollLeft is near 0, but subsequent items are off by the padding amount — causing dots to lag or not update correctly.
+### Problem
+The signup email template currently shows a "Verify Email" button with a click-to-verify link. The Auth page expects an 8-digit OTP code. The auth-email-hook already passes `token` (the OTP code) to the template — the template just ignores it.
 
 ### Fix
 
-**File: `src/components/landing/HeroSection.tsx`**
+**File: `supabase/functions/_shared/email-templates/signup.tsx`**
 
-1. **`updateScrollState` function (line ~190)** — Subtract the container's left padding before calculating the dot index:
-   ```
-   const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
-   const idx = Math.round((el.scrollLeft - padding) / itemWidth);
-   ```
-   Clamped to `[0, outputs.length - 1]` as before.
+1. Add `token` to the `SignupEmailProps` interface
+2. Replace the "Verify Email" button with a large, styled OTP code display (similar to how `reauthentication.tsx` displays its code)
+3. Keep the confirmation link as a small fallback text link below ("Or click here to verify")
+4. Update the instructional text to say "Enter this code to verify your email"
 
-2. **Dot click handler (line ~344)** — Add padding offset when scrolling to a specific dot:
-   ```
-   const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
-   el.scrollTo({ left: i * itemWidth + padding, behavior: 'smooth' });
-   ```
-
-These two changes ensure the scroll-position-to-dot mapping and the dot-click-to-scroll-position mapping are both correct regardless of container padding.
+After editing, redeploy `auth-email-hook` edge function.
 
 ### Files
-- `src/components/landing/HeroSection.tsx` (2 small edits in existing functions)
+- `supabase/functions/_shared/email-templates/signup.tsx` (template update)
+- Deploy `auth-email-hook`
 
