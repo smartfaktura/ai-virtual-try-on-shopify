@@ -153,14 +153,9 @@ export function StudioTeamSection() {
                 {/* Character image card */}
                 <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 group-hover:-translate-y-1 transition-all duration-300">
                   {member.videoUrl ? (
-                    <video
+                    <LazyVideo
                       src={member.videoUrl}
                       poster={getOptimizedUrl(member.avatar, { quality: 60 })}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
