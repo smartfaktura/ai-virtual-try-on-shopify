@@ -17,16 +17,25 @@ interface CategoryCardProps {
 function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
+  const [nextReady, setNextReady] = useState(false);
 
-  const advance = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-    setProgressKey((k) => k + 1);
-  }, [images.length]);
+  const nextIndex = (currentIndex + 1) % images.length;
 
+  // Advance only when the next image has loaded
   useEffect(() => {
-    const timer = setInterval(advance, cycleDuration);
-    return () => clearInterval(timer);
-  }, [advance, cycleDuration]);
+    if (!nextReady) return;
+    const timer = setTimeout(() => {
+      setCurrentIndex(nextIndex);
+      setProgressKey((k) => k + 1);
+      setNextReady(false);
+    }, cycleDuration);
+    return () => clearTimeout(timer);
+  }, [nextReady, nextIndex, cycleDuration]);
+
+  // On first mount, start the first cycle immediately
+  useEffect(() => {
+    setNextReady(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
@@ -48,27 +57,35 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         </span>
       </div>
 
-      {/* All images stacked — only currentIndex is visible */}
-      {images.map((img, i) => (
-         <ShimmerImage
-           key={i}
-            src={img}
-            alt={`${label} AI-generated product shot`}
-            loading="lazy"
-            decoding="async"
-           wrapperClassName="absolute inset-0"
-           wrapperStyle={{
-             opacity: i === currentIndex ? 1 : 0,
-             transition: 'opacity 1.2s ease-in-out',
-           }}
-           className="w-full h-full object-cover"
-         />
-       ))}
+      {/* Current image (visible) */}
+      <ShimmerImage
+        key={`cur-${currentIndex}`}
+        src={images[currentIndex]}
+        alt={`${label} AI-generated product shot`}
+        loading={currentIndex === 0 ? 'eager' : 'lazy'}
+        decoding="async"
+        wrapperClassName="absolute inset-0"
+        wrapperStyle={{ opacity: 1, zIndex: 1 }}
+        className="w-full h-full object-cover"
+      />
+
+      {/* Next image (hidden, preloading) */}
+      <ShimmerImage
+        key={`next-${nextIndex}`}
+        src={images[nextIndex]}
+        alt={`${label} AI-generated product shot`}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setNextReady(true)}
+        wrapperClassName="absolute inset-0"
+        wrapperStyle={{ opacity: 0, zIndex: 0 }}
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 }
 
-const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { quality: 60 });
+const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(`showcase/${path}`), { width: 600, quality: 60 });
 
 const CATEGORIES: CategoryCardProps[] = [
   {
