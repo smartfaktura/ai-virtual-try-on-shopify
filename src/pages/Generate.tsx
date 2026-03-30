@@ -1188,6 +1188,7 @@ export default function Generate() {
             quality, aspectRatio: ratioVal,
             framing: framingVal || undefined,
             ugc_mood: isSelfieUgc ? ugcMood : undefined,
+            batch_id: batchId,
           };
           if (modelProfile && base64ModelImage) {
             payload.model = {
@@ -1218,7 +1219,7 @@ export default function Generate() {
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
-              job_type: 'workflow', quality, imageCount: 1,
+              job_type: 'workflow', quality, imageCount: 1, batch_id: batchId,
             });
           } else if (result.type === 'insufficient_credits') {
             toast.error(result.message); break;
