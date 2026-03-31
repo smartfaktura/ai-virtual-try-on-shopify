@@ -776,7 +776,7 @@ No. A Brand Profile defines the *style* â€” lighting, background, composition â€
     category: 'AI Photography',
     excerpt: 'From fashion editorials to fragrance close-ups, these 12 AI-generated product images are indistinguishable from traditional studio photography. See exactly how they were made.',
     tags: ['AI product photography examples', 'AI fashion photography', 'AI generated product images', 'product photography gallery', 'AI beauty photography', 'AI jewelry photography'],
-    coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/4c820f7b-25ae-47b7-96c1-0d2973928276.png',
+    coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/blog/ai-photography-examples-banner.jpg',
     content: `
 ## AI product photography has crossed the uncanny valley
 

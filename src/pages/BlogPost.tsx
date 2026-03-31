@@ -10,6 +10,7 @@ import { getBlogPostBySlug, getRelatedPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, Clock, ArrowLeft, Sparkles, Quote, Lightbulb, BookOpen } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { Components } from 'react-markdown';
 
 function extractHeadings(markdown: string): { id: string; text: string }[] {
@@ -123,6 +124,15 @@ export default function BlogPost() {
       <a href={href} className="blog-link" target={href?.startsWith('http') ? '_blank' : undefined} rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}>
         {children}
       </a>
+    ),
+    img: ({ src, alt }) => (
+      <ShimmerImage
+        src={getOptimizedUrl(src, { width: 720, quality: 75 })}
+        alt={alt || ''}
+        className="w-full h-auto rounded-xl my-6"
+        loading="lazy"
+        decoding="async"
+      />
     ),
   };
 
