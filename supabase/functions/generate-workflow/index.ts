@@ -542,8 +542,8 @@ function getAspectRatioForVariation(
 
 function getModelForQuality(quality: string): string {
   return quality === "high"
-    ? "google/gemini-3-pro-image-preview"
-    : "google/gemini-3.1-flash-image-preview";
+    ? "gemini-3-pro-image-preview"
+    : "gemini-3.1-flash-image-preview";
 }
 
 // ── Seedream ARK image generation (fallback for product-only workflows) ────────
