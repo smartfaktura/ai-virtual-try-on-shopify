@@ -215,10 +215,9 @@ serve(async (req) => {
         for (let i = 0; i < binaryStr.length; i++) {
           bytes[i] = binaryStr.charCodeAt(i);
         }
-        const ext = "png";
-        const contentType = "image/png";
+        const fmt = detectImageFormat(bytes);
 
-        const storagePath = `discover/${Date.now()}-${img.title.toLowerCase().replace(/\s+/g, "-")}.${ext}`;
+        const storagePath = `discover/${Date.now()}-${img.title.toLowerCase().replace(/\s+/g, "-")}.${fmt.ext}`;
 
         const { error: uploadError } = await adminClient.storage
           .from("freestyle-images")
