@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, LayoutTemplate } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,20 +91,35 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon }: W
 
   const features = featureMap[workflow.name] ?? [];
 
+  if (comingSoon) {
+    return (
+      <div
+        id={id}
+        className="relative flex flex-col items-start gap-4 rounded-xl border border-dashed border-border/60 bg-card/80 p-6 opacity-75"
+      >
+        <Badge variant="outline" className="absolute top-4 right-4 text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground">
+          <LayoutTemplate className="h-5 w-5" />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-semibold text-foreground">{workflow.name}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{workflow.description}</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-auto pt-2">
+          {['Bulk generation', 'Matrix mode', 'Multi-product'].map((tag) => (
+            <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{tag}</span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Card
       id={id}
       ref={ref}
-      className={cn(
-        "group overflow-hidden border transition-shadow duration-300",
-        comingSoon ? "opacity-75 border-dashed border-border/60 bg-card/80" : "hover:shadow-lg"
-      )}
+      className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300"
     >
-      {comingSoon && (
-        <div className="flex justify-end px-4 pt-3">
-          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
-        </div>
-      )}
       <div
         className={`flex flex-col lg:flex-row ${reversed ? 'lg:flex-row-reverse' : ''}`}
       >
@@ -144,18 +159,16 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon }: W
             </ul>
           )}
 
-          {!comingSoon && (
-            <div className="pt-2">
-              <Button
-                size="lg"
-                className="rounded-full font-semibold gap-2 h-11 px-8"
-                onClick={onSelect}
-              >
-                Create Set
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          <div className="pt-2">
+            <Button
+              size="lg"
+              className="rounded-full font-semibold gap-2 h-11 px-8"
+              onClick={onSelect}
+            >
+              Create Set
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
