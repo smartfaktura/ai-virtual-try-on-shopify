@@ -61,11 +61,11 @@ async function generateSingleImage(
   const messageContent: any[] = [{ type: "text", text: prompt }];
   if (referenceContent) messageContent.push(...referenceContent);
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-pro-image-preview",
+      model: "gemini-3-pro-image-preview",
       messages: [{ role: "user", content: messageContent }],
       modalities: ["image", "text"],
     }),
@@ -189,8 +189,8 @@ serve(async (req) => {
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     let metadata: any;
     let generatePrompt: string;
@@ -202,11 +202,11 @@ serve(async (req) => {
       if (!imageUrl) throw new Error("imageUrl is required");
 
       console.log("Analyzing reference image...");
-      const analyzeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const analyzeRes = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gemini-2.5-flash",
           messages: [{
             role: "user",
             content: [

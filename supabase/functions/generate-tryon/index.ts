@@ -389,7 +389,7 @@ async function generateImage(
   aspectRatio: string,
   sceneImageUrl?: string
 ): Promise<string | null> {
-  return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "google/gemini-3-pro-image-preview", sceneImageUrl);
+  return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "gemini-3-pro-image-preview", sceneImageUrl);
 }
 
 async function generateImageWithModel(
@@ -426,7 +426,7 @@ async function generateImageWithModel(
       }
 
       const response = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         {
           method: "POST",
           headers: {
@@ -640,7 +640,7 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
@@ -741,7 +741,7 @@ serve(async (req) => {
         // Fallback tier 2: if Seedream also failed, try Flash as last resort
         if (base64Url === null) {
           console.warn(`Seedream returned null — falling back to gemini-3.1-flash-image-preview for image ${i + 1}`);
-          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
+          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "gemini-3.1-flash-image-preview", body.pose.imageUrl);
         }
 
         if (base64Url) {

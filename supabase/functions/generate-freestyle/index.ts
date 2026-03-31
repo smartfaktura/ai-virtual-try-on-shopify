@@ -340,8 +340,8 @@ type ProviderResult = {
 
 // ── Provider registry — change model IDs here for version upgrades ───────
 const PROVIDERS = {
-  "nanobanana-flash": { gateway: "lovable" as const, model: "google/gemini-3.1-flash-image-preview" },
-  "nanobanana-pro":   { gateway: "lovable" as const, model: "google/gemini-3-pro-image-preview" },
+  "nanobanana-flash": { gateway: "gemini-direct" as const, model: "gemini-3.1-flash-image-preview" },
+  "nanobanana-pro":   { gateway: "gemini-direct" as const, model: "gemini-3-pro-image-preview" },
   "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-251128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
 } as const;
 
@@ -689,7 +689,7 @@ async function generateImage(
 
   try {
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
         method: "POST",
         headers: {
@@ -1091,7 +1091,7 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
@@ -1227,8 +1227,8 @@ serve(async (req) => {
     // isEditMode already declared above
     const providerOverride = ((body as Record<string, unknown>).providerOverride as string) || null;
     const aiModel = (forceProModel || isPerspective || hasModelImage || body.quality === "high" || isEditMode)
-      ? "google/gemini-3-pro-image-preview"
-      : "google/gemini-3.1-flash-image-preview";
+      ? "gemini-3-pro-image-preview"
+      : "gemini-3.1-flash-image-preview";
     const ARK_API_KEY = Deno.env.get("BYTEPLUS_ARK_API_KEY");
     const useSeedream = providerOverride === "seedream-4.5" && !!ARK_API_KEY && body.imageRole !== 'edit';
     if (body.imageRole === 'edit' && providerOverride === "seedream-4.5") {

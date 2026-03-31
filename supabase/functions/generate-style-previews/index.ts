@@ -107,8 +107,8 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     // Parse body - process a single index or batch of 3
     let batchSize = 3;
@@ -149,14 +149,14 @@ serve(async (req) => {
 
       console.log(`[${idx + 1}/${variations.length}] Generating: ${v.label}...`);
 
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-pro-image-preview",
+          model: "gemini-3-pro-image-preview",
           messages: [{ role: "user", content: prompt }],
           modalities: ["image", "text"],
         }),

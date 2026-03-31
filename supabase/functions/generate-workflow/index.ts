@@ -542,8 +542,8 @@ function getAspectRatioForVariation(
 
 function getModelForQuality(quality: string): string {
   return quality === "high"
-    ? "google/gemini-3-pro-image-preview"
-    : "google/gemini-3.1-flash-image-preview";
+    ? "gemini-3-pro-image-preview"
+    : "gemini-3.1-flash-image-preview";
 }
 
 // ── Seedream ARK image generation (fallback for product-only workflows) ────────
@@ -644,7 +644,7 @@ async function generateImage(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         {
           method: "POST",
           headers: {
@@ -890,7 +890,7 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
@@ -994,12 +994,12 @@ serve(async (req) => {
       body.quality || config.fixed_settings.quality || "standard";
     let model = getModelForQuality(quality);
     // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
-    if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
+    if (body.model?.imageUrl) model = "gemini-3-pro-image-preview";
     // Force Pro model for interior design (architectural preservation needs highest fidelity)
     const isInterior = (config.ui_config as Record<string, unknown>)?.show_room_type_picker === true;
-    if (isInterior) model = "google/gemini-3-pro-image-preview";
+    if (isInterior) model = "gemini-3-pro-image-preview";
     // Force Pro model for multi-product flat lay (multiple reference images need highest fidelity)
-    if (body.additional_products?.length) model = "google/gemini-3-pro-image-preview";
+    if (body.additional_products?.length) model = "gemini-3-pro-image-preview";
 
     // Inject interior design fields into the product object so buildVariationPrompt can access them
     const productWithExtras = {
@@ -1132,7 +1132,7 @@ serve(async (req) => {
             imageUrl = await generateImage(
               prompt,
               referenceImages,
-              "google/gemini-3.1-flash-image-preview",
+              "gemini-3.1-flash-image-preview",
               LOVABLE_API_KEY,
               aspectRatio
             );

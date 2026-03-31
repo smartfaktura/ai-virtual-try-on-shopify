@@ -104,7 +104,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const lovableApiKey = Deno.env.get("GEMINI_API_KEY")!;
 
     // Verify user
     const userClient = createClient(supabaseUrl, supabaseAnon, {
@@ -162,7 +162,7 @@ serve(async (req) => {
         console.log(`[DISCOVER-IMG] Generating: ${img.title}`);
 
         const aiResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
           {
             method: "POST",
             headers: {
@@ -170,7 +170,7 @@ serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-pro-image-preview",
+              model: "gemini-3-pro-image-preview",
               messages: [{ role: "user", content: img.prompt }],
               modalities: ["image", "text"],
             }),
