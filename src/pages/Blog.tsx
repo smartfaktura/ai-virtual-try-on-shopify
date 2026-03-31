@@ -40,7 +40,7 @@ export default function Blog() {
       name: 'VOVV AI',
       url: SITE_URL,
     },
-    blogPost: blogPosts.map((p) => ({
+    blogPost: sorted.map((p) => ({
       '@type': 'BlogPosting',
       headline: p.title,
       datePublished: p.publishDate,
