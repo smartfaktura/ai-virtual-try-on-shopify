@@ -1,100 +1,52 @@
 
-Goal: rebuild Catalog Shot Set into a clear, fast, separate workflow with this exact order:
-1) Products → 2) Poses → 3) Models → 4) Backgrounds → 5) Style Shots (Extra tab) → 6) Review & Generate.
 
-Why it currently feels broken (from code + data):
-- Only 2 models appear because Catalog currently loads only `custom_models + user_models`; your account has 0 active custom + 2 user models.
-- Product thumbnails look “not showing” because many uploads have large transparent/empty canvas; current square thumbnail + fit mode makes the bag tiny.
-- “Visual Style” is overloaded (poses + backgrounds + per-shot edit in one page), so flow is confusing.
-- Shot styler is partially broken: it filters `pose_` / `scene_` IDs, but catalog IDs are `catalogPose_*` / `catalogBg_*`.
-- Shot overrides are collected but not actually applied in generation loop.
+# Fix Catalog Product Selection — Match Workflow Pattern
 
-Implementation plan (updated to your requested flow)
+## Problem
+The catalog product step uses `ProductMultiSelect` (shared component with checkboxes, category enforcement logic, and `object-contain` thumbnails). This looks different from the workflow product grid which has a cleaner, more visual card-based layout with grid/list toggle, shimmer images, circular check indicators, "Add New" card, and load-more pagination.
 
-1) Rebuild step architecture in `CatalogGenerate`
-- Replace current 3-step flow with 6-step flow:
-  - Step 1: Products
-  - Step 2: Poses
-  - Step 3: Models
-  - Step 4: Main Background(s)
-  - Step 5: Style Shots (Extra tab)
-  - Step 6: Review
-- Add strict step gating so user always understands what comes next.
-- Update intro text to explain this exact sequence.
+## Solution
+Rewrite `CatalogStepProducts.tsx` to replicate the exact product selection pattern from `Generate.tsx` (lines 2919–3103), adapted for multi-select catalog use.
 
-2) Fix model source so full library appears (not only 2)
-- In Catalog only, compose models from:
-  - built-in library (`mockModels`)
-  - + custom models
-  - + user models
-- Deduplicate and sort with existing model sort hook.
-- In model step, separate sections:
-  - “Library Models” (main)
-  - “My Models” (secondary)
-- Keep catalog separate from other workflows for scenes/backgrounds (no shared scene imports).
+### Changes to `src/components/app/catalog/CatalogStepProducts.tsx`
 
-3) Fix product thumbnail visibility and selection UX
-- Create catalog-specific product card/grid (do not rely only on shared compact card behavior):
-  - larger portrait thumbnail area
-  - checker/neutral backdrop for transparent PNGs
-  - image fallback chain: `image_url` → first valid `product_images[]`
-  - `onError` fallback to next image
-- Keep loading fast by selecting only needed columns and optimized thumbnail URLs.
+Remove `ProductMultiSelect` import entirely. Build inline product grid matching the workflow pattern:
 
-4) Split Pose step and Background step (as requested)
-- Step 2 = only poses.
-- Step 4 = only main background(s).
-- Keep catalog-only data from `src/data/catalogPoses.ts` (no cross-workflow scenes).
-- Keep visual cards simple and understandable (clear selected count + max).
+- **Toolbar**: Search input + Select All / Clear buttons + Grid/List view toggle (using `LayoutGrid` / `List` icons)
+- **Selection badge**: `"{n} selected (max 50)"`
+- **Grid view** (`grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3`):
+  - Each card: `ShimmerImage` with `aspect-square object-cover`, circular check indicator (top-left, appears on hover or when selected), title + product type below
+  - "Add New" dashed card at the end (opens `AddProductModal`)
+  - Load more button when products exceed page size (22 per page)
+- **List view**: Compact rows with 40×40 thumbnail, title, type, circular check
+- **Empty state**: Package icon + "No products yet" + "Add Products" button
+- **Data source**: Query `user_products` directly (already done in `CatalogGenerate.tsx`), pass raw `userProducts` data instead of the mapped `Product[]`
 
-5) Build “Style Shots” step with “Extra” tab (combo-level editing)
-- Step 5 shows full Product × Model combo matrix.
-- Add tabs:
-  - Overrides (pose/background/framing/custom instruction per combo)
-  - Extra Items (per combo)
-- Extra Items support:
-  - text item (e.g. “beige hat”, “gold chain”, “mini bag”)
-  - optional reference image from product library (for better fidelity)
-  - placement hint (head/hand/shoulder/body/scene)
-- Fix ID prefix logic in `CatalogShotStyler` so dropdowns populate for catalog IDs.
+### Changes to `src/pages/CatalogGenerate.tsx`
 
-6) Make generation actually use style overrides + extras
-- Update `useCatalogGenerate` to apply per-combo override before queueing each job.
-- Pass `customPrompt`, `framing`, and `extraItems` in payload.
-- Update `generate-tryon` function to inject:
-  - per-shot custom prompt
-  - accessory/extra-item directives
-  - optional extra reference images in model input parts.
-- This makes Style Shots tab functional, not cosmetic.
+- Pass the raw `userProducts` array (with `image_url` field) to `CatalogStepProducts` instead of the mapped `Product[]` type
+- Or keep the mapped type but ensure `image_url` is available for `ShimmerImage`
+- Add `AddProductModal` state + render
+- Add `visibleProductCount` state + `PRODUCTS_PER_PAGE` constant
 
-7) Performance and clarity improvements
-- Remove heavy work from early steps (don’t load everything at once).
-- Lazy-render steps (models/backgrounds/style matrix only when user reaches them).
-- Keep AI preview generation optional/manual (not automatic burst requests).
-- Add compact “current selection summary” sticky bar across steps.
+### Dependencies
+- Import `ShimmerImage` from `@/components/ui/shimmer-image`
+- Import `getOptimizedUrl` from `@/lib/imageOptimization`
+- Import `AddProductModal` from `@/components/app/AddProductModal`
+- Import `cn` from `@/lib/utils`
+- Import `LayoutGrid`, `List`, `Check`, `Package` from lucide
 
-Files to update/create
-- Update: `src/pages/CatalogGenerate.tsx`
-- Create: `src/components/app/catalog/CatalogStepProducts.tsx`
-- Create: `src/components/app/catalog/CatalogStepPoses.tsx`
-- Create: `src/components/app/catalog/CatalogStepModels.tsx`
-- Create: `src/components/app/catalog/CatalogStepBackgrounds.tsx`
-- Create: `src/components/app/catalog/CatalogStepStyleShots.tsx`
-- Update: `src/components/app/catalog/CatalogShotStyler.tsx`
-- Update: `src/components/app/catalog/CatalogStepReview.tsx`
-- Update: `src/hooks/useCatalogGenerate.ts`
-- Update: `supabase/functions/generate-tryon/index.ts`
-- Optional small helper create/update: catalog product thumbnail card component.
+### Key visual details copied from workflow
+- Circular check: `w-5 h-5 rounded-full border-2` with primary fill when selected, transparent on hover when not
+- Card border: `border-2 border-transparent` → `border-primary ring-2 ring-primary/30` when selected
+- Image: `object-cover` (not `object-contain`) with `ShimmerImage` for loading shimmer
+- Title: `text-[10px] font-medium line-clamp-2`
+- Product type: `text-[9px] text-muted-foreground`
 
-Technical details (important)
-- No DB migration required for this pass (style extras can be payload-only).
-- Catalog remains isolated from shared scene workflows.
-- “Extra item” generation is best-effort AI styling; adding image references improves consistency.
-- We will keep credit math transparent in Review based on actual matrix size.
+## Files
 
-Acceptance criteria
-- You can see full model library (not just 2).
-- Product cards show clearly (no “invisible/tiny” look).
-- Flow is exactly: Products → Poses → Models → Backgrounds → Style Shots (Extra tab) → Review.
-- Style Shots changes materially affect generated output.
-- Background selection is its own dedicated step.
+| Action | File |
+|--------|------|
+| Rewrite | `src/components/app/catalog/CatalogStepProducts.tsx` |
+| Update | `src/pages/CatalogGenerate.tsx` (add AddProductModal, visibleProductCount state, pass image_url) |
+
