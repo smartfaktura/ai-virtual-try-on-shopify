@@ -145,32 +145,23 @@ export function useCatalogGenerate() {
       for (const model of models) {
         const base64Model = await convertImageToBase64(model.previewUrl);
         const comboKey = `${product.id}_${model.modelId}`;
-        const override = shotOverrides?.get(comboKey);
         const extras = extraItems?.get(comboKey) || [];
 
-        // Build extra items prompt fragment
         const extraPrompt = extras.length > 0
           ? extras.map(e => `also wearing/holding ${e.productTitle}`).join(', ')
           : '';
 
         for (const poseId of poseIds) {
-          // Use override pose if set, otherwise default
-          const effectivePoseId = override?.poseId || poseId;
-          const pose = poseMap.get(effectivePoseId);
+          const pose = poseMap.get(poseId);
           if (!pose) continue;
 
           for (const bgId of backgroundIds) {
-            const effectiveBgId = override?.backgroundId || bgId;
-            const bg = poseMap.get(effectiveBgId);
+            const bg = poseMap.get(bgId);
             if (!bg) continue;
 
             const base64Scene = bg.previewUrl ? await convertImageToBase64(bg.previewUrl) : undefined;
 
-            // Build custom prompt combining override + extras
-            const customParts: string[] = [];
-            if (override?.customPrompt) customParts.push(override.customPrompt);
-            if (extraPrompt) customParts.push(extraPrompt);
-            const customPrompt = customParts.length > 0 ? customParts.join('. ') : undefined;
+            const customPrompt = extraPrompt || undefined;
 
             await paceDelay(enqueueCount);
 
