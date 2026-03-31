@@ -7,6 +7,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Detect actual image format from magic bytes ──────────────────────────
+function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: 'jpg', contentType: 'image/jpeg' };
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57 && bytes[9] === 0x45) return { ext: 'webp', contentType: 'image/webp' };
+  return { ext: 'png', contentType: 'image/png' };
+}
+
 const TONE_DESCRIPTIONS: Record<string, string> = {
   luxury: "premium, sophisticated, elegant with refined details",
   clean: "minimalist, uncluttered, modern and professional",
@@ -1194,22 +1201,21 @@ serve(async (req) => {
             if (imageUrl.startsWith("data:")) {
               try {
                 const [meta, base64Data] = imageUrl.split(",");
-                const ext = "png";
-
                 const binaryString = atob(base64Data);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let k = 0; k < binaryString.length; k++) {
                   bytes[k] = binaryString.charCodeAt(k);
                 }
 
+                const fmt = detectImageFormat(bytes);
                 const userId = body.user_id || "anonymous";
                 const jobId = body.job_id || crypto.randomUUID();
-                const storagePath = `${userId}/${jobId}/${i}-${a}.${ext}`;
+                const storagePath = `${userId}/${jobId}/${i}-${a}.${fmt.ext}`;
 
                 const { error: uploadError } = await supabase.storage
                   .from("workflow-previews")
                   .upload(storagePath, bytes, {
-                    contentType: "image/png",
+                    contentType: fmt.contentType,
                     cacheControl: "3600",
                   });
 
