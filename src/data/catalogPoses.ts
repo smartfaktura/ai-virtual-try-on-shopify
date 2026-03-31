@@ -87,11 +87,11 @@ export interface CatalogMood {
 
 export const CATALOG_MOODS: CatalogMood[] = [
   { id: 'any', name: 'Any Expression', previewUrl: '', promptHint: '' },
-  { id: 'joyful', name: 'Joyful', previewUrl: moodRadiant, promptHint: 'genuinely joyful smiling expression' },
+  { id: 'joyful', name: 'Joyful', previewUrl: moodJoyful, promptHint: 'genuinely joyful smiling expression' },
   { id: 'radiant', name: 'Radiant', previewUrl: moodRadiant, promptHint: 'radiant glowing warm expression' },
-  { id: 'neutral', name: 'Neutral', previewUrl: moodRadiant, promptHint: 'calm neutral expression' },
-  { id: 'unapologetic', name: 'Unapologetic', previewUrl: moodRadiant, promptHint: 'strong unapologetic fierce expression' },
-  { id: 'confident', name: 'Confident', previewUrl: moodRadiant, promptHint: 'confident self-assured expression' },
+  { id: 'neutral', name: 'Neutral', previewUrl: moodNeutral, promptHint: 'calm neutral expression' },
+  { id: 'unapologetic', name: 'Unapologetic', previewUrl: moodUnapologetic, promptHint: 'strong unapologetic fierce expression' },
+  { id: 'confident', name: 'Confident', previewUrl: moodConfident, promptHint: 'confident self-assured expression' },
 ];
 
 /** Combined array for lookup by ID */
