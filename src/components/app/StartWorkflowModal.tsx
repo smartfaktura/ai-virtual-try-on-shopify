@@ -44,16 +44,6 @@ const WORKFLOW_OPTIONS = [
     sampleName: 'Ice Roller',
     sampleImage: '/images/samples/sample-ice-roller.png',
   },
-  {
-    name: 'Catalog Shot Set',
-    displayName: 'Catalog Shot Set',
-    slug: 'catalog-shot-set',
-    subtitle: 'Bulk catalog photography at scale',
-    sampleId: '',
-    sampleName: '',
-    sampleImage: '',
-    directRoute: '/app/catalog',
-  },
 ];
 
 type Step = 'workflow' | 'product' | 'upload';
