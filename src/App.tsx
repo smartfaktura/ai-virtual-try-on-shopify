@@ -180,6 +180,7 @@ const App = () => {
                         <Route path="/video/animate" element={<AnimateVideo />} />
                         <Route path="/video/legacy" element={<VideoGenerate />} />
                         <Route path="/freestyle" element={<Freestyle />} />
+                        <Route path="/catalog" element={<CatalogGenerate />} />
                         <Route path="/perspectives" element={<Perspectives />} />
                         <Route path="/models" element={<BrandModels />} />
                         <Route path="/admin/models" element={<AdminModels />} />

@@ -80,7 +80,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
           const isSelected = selectedIds.has(product.id);
           const productCategory = detectProductCategory(product);
           const isIncompatible = enforceSameCategory && dominantCategory && productCategory && productCategory !== dominantCategory && !isSelected;
-          const isDisabled = isIncompatible || (!isSelected && selectedIds.size >= MAX_PRODUCTS_PER_BATCH);
+          const isDisabled = isIncompatible || (!isSelected && selectedIds.size >= effectiveMax);
           return (
             <div key={product.id} onClick={() => !isDisabled && handleToggle(product.id)}
               className={`relative rounded-lg border-2 p-2 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''} ${isIncompatible ? 'grayscale' : ''}`}>

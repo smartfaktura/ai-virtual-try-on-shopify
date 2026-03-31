@@ -101,7 +101,9 @@ export default function CatalogGenerate() {
       <PageHeader
         title="Catalog Shot Set"
         subtitle="Generate consistent product photography across your entire catalog"
-      />
+      >
+        <div />
+      </PageHeader>
 
       {/* Stepper */}
       <div className="flex items-center gap-2">
