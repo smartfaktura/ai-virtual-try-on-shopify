@@ -238,6 +238,8 @@ export default function CatalogGenerate() {
         <CatalogStepPoses
           selectedPoseIds={selectedPoseIds}
           onTogglePose={handlePoseToggle}
+          selectedMood={selectedMood}
+          onMoodChange={setSelectedMood}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
           canProceed={canStep2}
