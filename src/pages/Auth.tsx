@@ -306,12 +306,12 @@ export default function Auth() {
       if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
         toast.info('Email already sent. Check your inbox and spam folder, or wait a few minutes.');
       } else {
-        toast.error('Could not resend email. Please try again.');
+      toast.error('Could not resend email. Please try again.');
       }
     } else {
       toast.success('New code sent! Check your inbox.');
     }
-    setResendTimer(30);
+    setResendTimer(60);
   };
 
   const handleResendMagicLink = async () => {
