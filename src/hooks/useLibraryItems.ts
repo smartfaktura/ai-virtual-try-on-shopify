@@ -141,7 +141,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         function resolveScene(sceneId: string | null): { name?: string; imageUrl?: string } {
           if (!sceneId) return {};
           if (sceneId.startsWith('custom-')) {
-            const cs = customScenesMap.get(sceneId.replace('custom-', ''));
+            const cs = customScenesMap.get(sceneId.replace('custom-', '')) as { name: string; image_url: string } | undefined;
             return cs ? { name: cs.name, imageUrl: cs.image_url } : {};
           }
           const mock = mockTryOnPoses.find(p => p.poseId === sceneId);

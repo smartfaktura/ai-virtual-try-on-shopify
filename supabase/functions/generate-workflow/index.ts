@@ -879,7 +879,7 @@ serve(async (req) => {
     && authHeaderRaw === `Bearer ${serviceRoleKey}`;
 
   const FUNCTION_START = Date.now();
-  const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+  const MAX_WALL_CLOCK_MS = 270_000; // 270s — leave 30s buffer before platform kills at 300s
 
   try {
     // SECURITY: Only allow internal queue calls — reject direct access

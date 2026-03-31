@@ -795,10 +795,10 @@ function buildContentArray(
 // Wall-clock budget enforced: primary gets max 75s, fallbacks use remaining budget.
 // No Pro→Flash auto-downgrade. Terminal failures stop immediately.
 
-const PRIMARY_ATTEMPT_TIMEOUT_MS = 75_000;    // 75s max for first attempt (was 120s) — leaves 60s+ for fallback
-const WALL_CLOCK_BUDGET_MS = 140_000;         // 140s total budget — 10s safety before platform kills at ~150s
-const MIN_ATTEMPT_BUDGET_MS = 15_000;         // 15s minimum for a fallback attempt (was 25s)
-const SAFETY_DEADLINE_MS = 135_000;           // 135s — graceful abort point before platform kill
+const PRIMARY_ATTEMPT_TIMEOUT_MS = 100_000;   // 100s max for first attempt — gives Nano Banana Pro enough time
+const WALL_CLOCK_BUDGET_MS = 270_000;         // 270s total budget — 30s safety before platform kills at 300s
+const MIN_ATTEMPT_BUDGET_MS = 15_000;         // 15s minimum for a fallback attempt
+const SAFETY_DEADLINE_MS = 265_000;           // 265s — graceful abort point before platform kill
 
 interface FallbackOpts {
   primaryProvider: "nanobanana" | "seedream";

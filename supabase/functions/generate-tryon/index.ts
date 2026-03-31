@@ -704,7 +704,7 @@ serve(async (req) => {
     const errors: string[] = [];
 
     const FUNCTION_START = Date.now();
-    const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+    const MAX_WALL_CLOCK_MS = 270_000; // 270s — leave 30s buffer before platform kills at 300s
 
     for (let i = 0; i < imageCount; i++) {
       // Wall-clock safety: break early if approaching platform kill
