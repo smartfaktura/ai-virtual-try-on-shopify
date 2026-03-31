@@ -445,7 +445,7 @@ async function generateImageWithModel(
             max_tokens: 8192,
             image_config: { aspect_ratio: aspectRatio, image_size: '2K' },
           }),
-          signal: AbortSignal.timeout(75_000), // 75s primary timeout
+          signal: AbortSignal.timeout(100_000), // 100s primary timeout — gives Nano Banana Pro enough time
         }
       );
 
@@ -704,7 +704,7 @@ serve(async (req) => {
     const errors: string[] = [];
 
     const FUNCTION_START = Date.now();
-    const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+    const MAX_WALL_CLOCK_MS = 270_000; // 270s — leave 30s buffer before platform kills at 300s
 
     for (let i = 0; i < imageCount; i++) {
       // Wall-clock safety: break early if approaching platform kill

@@ -628,7 +628,7 @@ async function generateImage(
   aspectRatio?: string
 ): Promise<string | null> {
   const maxRetries = 1; // 2 attempts total (primary + 1 retry)
-  const PER_IMAGE_TIMEOUT = 75_000; // 75s per image — leaves room for Seedream fallback
+  const PER_IMAGE_TIMEOUT = 100_000; // 100s per image — gives Nano Banana Pro enough time
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
@@ -879,7 +879,7 @@ serve(async (req) => {
     && authHeaderRaw === `Bearer ${serviceRoleKey}`;
 
   const FUNCTION_START = Date.now();
-  const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+  const MAX_WALL_CLOCK_MS = 270_000; // 270s — leave 30s buffer before platform kills at 300s
 
   try {
     // SECURITY: Only allow internal queue calls — reject direct access

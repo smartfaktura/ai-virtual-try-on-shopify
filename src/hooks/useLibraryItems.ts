@@ -131,7 +131,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         function resolveModel(modelId: string | null): { name?: string; imageUrl?: string } {
           if (!modelId) return {};
           if (modelId.startsWith('custom-')) {
-            const cm = customModelsMap.get(modelId.replace('custom-', ''));
+            const cm = customModelsMap.get(modelId.replace('custom-', '')) as { name: string; image_url: string } | undefined;
             return cm ? { name: cm.name, imageUrl: cm.image_url } : {};
           }
           const mock = mockModels.find(m => m.modelId === modelId);
@@ -141,7 +141,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         function resolveScene(sceneId: string | null): { name?: string; imageUrl?: string } {
           if (!sceneId) return {};
           if (sceneId.startsWith('custom-')) {
-            const cs = customScenesMap.get(sceneId.replace('custom-', ''));
+            const cs = customScenesMap.get(sceneId.replace('custom-', '')) as { name: string; image_url: string } | undefined;
             return cs ? { name: cs.name, imageUrl: cs.image_url } : {};
           }
           const mock = mockTryOnPoses.find(p => p.poseId === sceneId);
