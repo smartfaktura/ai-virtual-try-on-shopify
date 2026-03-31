@@ -724,6 +724,7 @@ async function generateImage(
       }
       let errorText = "";
       try { errorText = await response.text(); } catch (_) { /* ignore */ }
+      console.error(`[nanobanana] ${model} HTTP ${response.status}: ${errorText.slice(0, 500)}`);
       return { ok: false, failureType: "server_error", retryable: true, statusCode: response.status, provider: "nanobanana", model, durationMs, rawError: errorText.slice(0, 200) };
     }
 
