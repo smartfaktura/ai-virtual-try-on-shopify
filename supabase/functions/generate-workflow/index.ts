@@ -1132,7 +1132,7 @@ serve(async (req) => {
             imageUrl = await generateImage(
               prompt,
               referenceImages,
-              "google/gemini-3.1-flash-image-preview",
+              "gemini-3.1-flash-image-preview",
               LOVABLE_API_KEY,
               aspectRatio
             );
