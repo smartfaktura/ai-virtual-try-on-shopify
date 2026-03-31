@@ -330,7 +330,7 @@ export default function CatalogGenerate() {
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
           batchState={batchState}
-          onOpenBuyModal={() => setBuyModalOpen(true)}
+          onOpenBuyModal={openBuyModal}
         />
       )}
 
