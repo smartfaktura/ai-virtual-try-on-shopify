@@ -26,6 +26,7 @@ export default function Workflows() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isRealAdmin } = useIsAdmin();
   const prevActiveCountRef = useRef(0);
   const isMobile = useIsMobile();
 
