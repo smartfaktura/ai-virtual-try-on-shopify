@@ -32,7 +32,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
     if (!product) return;
     const newSelection = new Set(selectedIds);
     if (newSelection.has(productId)) { newSelection.delete(productId); }
-    else if (newSelection.size < MAX_PRODUCTS_PER_BATCH) {
+    else if (newSelection.size < effectiveMax) {
       if (enforceSameCategory && dominantCategory) {
         const productCategory = detectProductCategory(product);
         if (productCategory && productCategory !== dominantCategory) return;
