@@ -703,7 +703,16 @@ serve(async (req) => {
     const images: string[] = [];
     const errors: string[] = [];
 
+    const FUNCTION_START = Date.now();
+    const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+
     for (let i = 0; i < imageCount; i++) {
+      // Wall-clock safety: break early if approaching platform kill
+      if (Date.now() - FUNCTION_START > MAX_WALL_CLOCK_MS - 5000) {
+        console.warn(`[generate-tryon] Wall-clock limit approaching (${Math.round((Date.now() - FUNCTION_START) / 1000)}s), breaking after ${images.length}/${imageCount} images`);
+        break;
+      }
+
       try {
         const variationPrompt =
           i === 0
