@@ -599,9 +599,7 @@ async function downloadAndUploadToStorage(
   const response = await fetch(hostedUrl);
   if (!response.ok) throw new Error(`Failed to download image: ${response.status}`);
   const blob = await response.blob();
-  const mimeType = blob.type || "image/png";
-  const ext = mimeType.includes("jpeg") ? "jpg" : "png";
-  const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const fileName = `${userId}/${crypto.randomUUID()}.png`;
   const arrayBuf = await blob.arrayBuffer();
   const bytes = new Uint8Array(arrayBuf);
 
