@@ -19,7 +19,8 @@ interface ProductMultiSelectProps {
   maxProducts?: number;
 }
 
-export function ProductMultiSelect({ products, selectedIds, onSelectionChange, searchQuery, onSearchChange, enforceSameCategory = true }: ProductMultiSelectProps) {
+export function ProductMultiSelect({ products, selectedIds, onSelectionChange, searchQuery, onSearchChange, enforceSameCategory = true, maxProducts }: ProductMultiSelectProps) {
+  const effectiveMax = maxProducts ?? MAX_PRODUCTS_PER_BATCH;
   const filteredProducts = products.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.vendor.toLowerCase().includes(searchQuery.toLowerCase()));
   const selectedProducts = products.filter(p => selectedIds.has(p.id));
   const dominantCategory = selectedProducts.length > 0 ? detectProductCategory(selectedProducts[0]) : null;
