@@ -95,8 +95,16 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon }: W
     <Card
       id={id}
       ref={ref}
-      className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300"
+      className={cn(
+        "group overflow-hidden border transition-shadow duration-300",
+        comingSoon ? "opacity-75 border-dashed border-border/60 bg-card/80" : "hover:shadow-lg"
+      )}
     >
+      {comingSoon && (
+        <div className="flex justify-end px-4 pt-3">
+          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
+        </div>
+      )}
       <div
         className={`flex flex-col lg:flex-row ${reversed ? 'lg:flex-row-reverse' : ''}`}
       >
