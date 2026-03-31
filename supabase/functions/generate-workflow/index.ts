@@ -692,7 +692,8 @@ async function generateImage(
           await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
           continue;
         }
-        throw new Error(`AI Gateway error: ${response.status}`);
+        console.error(`[generate-workflow] All retries exhausted for gateway error ${response.status}, returning null for fallback`);
+        return null;
       }
 
       let data: Record<string, unknown>;

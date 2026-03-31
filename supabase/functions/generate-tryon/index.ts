@@ -464,7 +464,8 @@ async function generateImageWithModel(
         const errorText = await response.text();
         console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
         if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000 * (attempt + 1))); continue; }
-        throw new Error(`AI Gateway error: ${response.status}`);
+        console.error(`[generate-tryon] All retries exhausted for gateway error ${response.status}, returning null for fallback`);
+        return null;
       }
 
       let data: Record<string, unknown>;
