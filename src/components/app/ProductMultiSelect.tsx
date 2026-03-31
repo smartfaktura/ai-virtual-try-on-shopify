@@ -16,6 +16,7 @@ interface ProductMultiSelectProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   enforceSameCategory?: boolean;
+  maxProducts?: number;
 }
 
 export function ProductMultiSelect({ products, selectedIds, onSelectionChange, searchQuery, onSearchChange, enforceSameCategory = true }: ProductMultiSelectProps) {
