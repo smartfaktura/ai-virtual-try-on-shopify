@@ -24,8 +24,6 @@ export function CatalogStepStyle({
   selectedBackgroundIds, onToggleBackground,
   onBack, onNext, canProceed,
 }: CatalogStepStyleProps) {
-  const [stylerOpen, setStylerOpen] = useState(false);
-  const [stylerKey, setStylerKey] = useState<string | null>(null);
 
   const groupedPoses = useMemo(() => {
     const map = new Map<string, TryOnPose[]>();
