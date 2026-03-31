@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
-import { useCustomScenes } from '@/hooks/useCustomScenes';
+
 import { useCredits } from '@/contexts/CreditContext';
 import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
 import { PageHeader } from '@/components/app/PageHeader';
@@ -13,7 +13,7 @@ import { CatalogStepProductsModels } from '@/components/app/catalog/CatalogStepP
 import { CatalogStepStyle } from '@/components/app/catalog/CatalogStepStyle';
 import { CatalogStepReview } from '@/components/app/catalog/CatalogStepReview';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
-import { mockTryOnPoses } from '@/data/mockData';
+import { allCatalogItems } from '@/data/catalogPoses';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Package, Palette, Sparkles, Check } from 'lucide-react';
@@ -80,10 +80,8 @@ export default function CatalogGenerate() {
   // Fetch models
   const { asProfiles: systemModels } = useCustomModels();
   const { asProfiles: userModels } = useUserModels();
-  const { asPoses: customScenes } = useCustomScenes();
-
   const allModels = useMemo(() => [...systemModels, ...userModels], [systemModels, userModels]);
-  const allPoses = useMemo(() => [...mockTryOnPoses, ...customScenes], [customScenes]);
+  const allPoses = useMemo(() => allCatalogItems, []);
 
   const handleModelToggle = (modelId: string) => {
     setSelectedModelIds(prev => {
