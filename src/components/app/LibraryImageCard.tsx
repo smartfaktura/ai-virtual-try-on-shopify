@@ -117,7 +117,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
         alt={item.label}
         className="w-full h-full object-cover block group-hover:scale-[1.03] transition-all duration-500"
         loading="lazy"
-        aspectRatio={item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : '3/4'}
+        aspectRatio={item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : item.aspectRatio === '4:5' ? '4/5' : item.aspectRatio === '5:4' ? '5/4' : '3/4'}
       />
 
       {/* Upscaling overlay */}

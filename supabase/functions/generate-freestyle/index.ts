@@ -357,8 +357,8 @@ function seedreamAspectRatio(appRatio: string): string {
     "9:16": "9:16",
     "4:3": "4:3",
     "3:4": "3:4",
-    "4:5": "3:4",
-    "5:4": "4:3",
+    "4:5": "4:5",
+    "5:4": "5:4",
     "3:2": "3:2",
     "2:3": "2:3",
     "21:9": "21:9",
@@ -531,7 +531,7 @@ function buildSeedreamRoleDirective(roleImages: SeedreamRoleImage[]): string {
         lines.push(`- Image ${idx} is the PRODUCT: CRITICAL — replicate this item EXACTLY as shown. Match precise shape, silhouette, color, and overall appearance. This is a specific real product that must be instantly recognizable.`);
         break;
       case "scene":
-        lines.push(`- Image ${idx} is the BACKGROUND/SCENE: use for environment, lighting, and atmosphere only. Do not take person or product features from this image.`);
+        lines.push(`- Image ${idx} is the BACKGROUND/SCENE: IMPORTANT — recreate this specific environment, setting, and atmosphere in the final image. Match the location type, lighting conditions, color palette, and spatial composition from this scene reference. Do not take person or product features from this image.`);
         break;
       default:
         lines.push(`- Image ${idx} is a REFERENCE: use for style/mood inspiration.`);
@@ -570,10 +570,11 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
     }
   }
 
+  // Put scene FIRST so Seedream treats it as primary style/environment reference
   const orderedRoleImages = [
+    ...roleImages.filter(i => i.role === "scene"),
     ...roleImages.filter(i => i.role === "product"),
     ...roleImages.filter(i => i.role === "model"),
-    ...roleImages.filter(i => i.role === "scene"),
     ...roleImages.filter(i => i.role === "other"),
   ];
 

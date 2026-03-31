@@ -298,8 +298,8 @@ function seedreamSizeForRatio(_aspectRatio: string): string {
 function seedreamAspectRatio(appRatio: string): string {
   const map: Record<string, string> = {
     "1:1": "1:1", "16:9": "16:9", "9:16": "9:16",
-    "4:3": "4:3", "3:4": "3:4", "4:5": "3:4",
-    "5:4": "4:3", "3:2": "3:2", "2:3": "2:3", "21:9": "21:9",
+    "4:3": "4:3", "3:4": "3:4", "4:5": "4:5",
+    "5:4": "5:4", "3:2": "3:2", "2:3": "2:3", "21:9": "21:9",
   };
   return map[appRatio] || "1:1";
 }
