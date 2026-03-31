@@ -3,10 +3,8 @@ import { catalogPoses, catalogBackgrounds, CATALOG_POSE_CATEGORIES, CATALOG_BG_C
 import { CatalogPoseCard } from './CatalogPoseCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Move, Image, Wand2 } from 'lucide-react';
-import type { TryOnPose, Product, ModelProfile } from '@/types';
-import type { ShotOverride } from './CatalogShotStyler';
-import { CatalogShotStyler } from './CatalogShotStyler';
+import { ChevronLeft, ChevronRight, Move, Image } from 'lucide-react';
+import type { TryOnPose } from '@/types';
 
 const MAX_POSES = 6;
 const MAX_BACKGROUNDS = 6;
