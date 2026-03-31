@@ -1162,7 +1162,7 @@ serve(async (req) => {
                 const { error: uploadError } = await supabase.storage
                   .from("workflow-previews")
                   .upload(storagePath, bytes, {
-                    contentType: mimeType,
+                    contentType: "image/png",
                     cacheControl: "3600",
                   });
 

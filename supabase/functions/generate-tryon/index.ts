@@ -274,7 +274,7 @@ async function uploadBase64ToStorage(
   const { error } = await supabase.storage
     .from("tryon-images")
     .upload(fileName, bytes, {
-      contentType: mimeType,
+      contentType: "image/png",
       upsert: false,
     });
 
