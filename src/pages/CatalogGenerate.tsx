@@ -219,15 +219,14 @@ export default function CatalogGenerate() {
       {/* Step Content */}
       {step === 1 && (
         <CatalogStepProducts
-          products={products}
+          products={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
           productsLoading={productsLoading}
           selectedProductIds={selectedProductIds}
           onProductSelectionChange={setSelectedProductIds}
-          productSearch={productSearch}
-          onProductSearchChange={setProductSearch}
           maxProducts={CATALOG_MAX_PRODUCTS}
           onNext={() => setStep(2)}
           canProceed={canStep1}
+          onAddProduct={() => setShowAddProduct(true)}
         />
       )}
 
