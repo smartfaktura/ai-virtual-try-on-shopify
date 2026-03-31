@@ -467,7 +467,14 @@ async function generateImageWithModel(
         throw new Error(`AI Gateway error: ${response.status}`);
       }
 
-      const data = await response.json();
+      let data: Record<string, unknown>;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error(`[generate-tryon] JSON parse failed (attempt ${attempt + 1}):`, jsonErr);
+        if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+        return null;
+      }
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (!imageUrl) {
@@ -476,11 +483,13 @@ async function generateImageWithModel(
         return null;
       }
 
-      return imageUrl;
+      return imageUrl as string;
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "status" in error) throw error;
-      console.error(`Generation attempt ${attempt + 1} failed:`, error);
+      const isTimeout = error instanceof DOMException && error.name === 'TimeoutError';
+      console.error(`[generate-tryon] Attempt ${attempt + 1} failed${isTimeout ? ' (timeout)' : ''}:`, error);
       if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000 * (attempt + 1))); continue; }
+      if (isTimeout) return null; // Return null on timeout to trigger fallback instead of throwing
       throw error;
     }
   }
