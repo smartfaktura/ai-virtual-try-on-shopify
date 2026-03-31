@@ -117,7 +117,7 @@ export default function Auth() {
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(30);
+  const [resendTimer, setResendTimer] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [marketingOptIn, setMarketingOptIn] = useState(true);
@@ -132,7 +132,7 @@ export default function Auth() {
   // Resend countdown timer
   useEffect(() => {
     if (!signupComplete && !magicLinkSent) return;
-    setResendTimer(30);
+    setResendTimer(60);
     const interval = setInterval(() => {
       setResendTimer((prev) => {
         if (prev <= 1) { clearInterval(interval); return 0; }
@@ -212,7 +212,7 @@ export default function Auth() {
             },
           }).catch(() => {});
         }
-        await supabase.auth.resend({ type: 'signup', email });
+        // Signup already sends a confirmation email — do NOT resend here
         setSignupComplete(true);
       } else {
         if (data?.user?.id) {
@@ -306,12 +306,12 @@ export default function Auth() {
       if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
         toast.info('Email already sent. Check your inbox and spam folder, or wait a few minutes.');
       } else {
-        toast.error('Could not resend email. Please try again.');
+      toast.error('Could not resend email. Please try again.');
       }
     } else {
       toast.success('New code sent! Check your inbox.');
     }
-    setResendTimer(30);
+    setResendTimer(60);
   };
 
   const handleResendMagicLink = async () => {
@@ -329,7 +329,7 @@ export default function Auth() {
         toast.error('Could not resend link. Please try again.');
       }
     } else {
-      setResendTimer(30);
+      setResendTimer(60);
       toast.success('New link sent! Check your inbox.');
     }
   };
