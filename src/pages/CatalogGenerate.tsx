@@ -293,8 +293,6 @@ export default function CatalogGenerate() {
           selectedProductIds={selectedProductIds}
           models={allModels}
           selectedModelIds={selectedModelIds}
-          shotOverrides={shotOverrides}
-          onShotOverridesChange={setShotOverrides}
           extraItems={extraItems}
           onExtraItemsChange={setExtraItems}
           onBack={() => setStep(5)}

@@ -177,7 +177,6 @@ export function useCatalogGenerate() {
                   imageCount: 1,
                   batch_id: batchId,
                   catalog_mode: true,
-                  ...(override?.framing && { framing: override.framing }),
                   ...(customPrompt && { custom_prompt: customPrompt }),
                   ...(extras.length > 0 && { extra_items: extras }),
                 },
