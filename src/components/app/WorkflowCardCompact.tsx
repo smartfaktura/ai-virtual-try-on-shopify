@@ -90,9 +90,14 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       ref={ref}
       className={cn(
         "group overflow-hidden transition-shadow duration-300 flex flex-col",
-        modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
+        comingSoon ? "opacity-75 border-dashed border-border/60 bg-card/80" : modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
+      {comingSoon && (
+        <div className="flex justify-end px-3 pt-2">
+          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
+        </div>
+      )}
       {/* Thumbnail */}
       <div className={cn(
         "relative w-full overflow-hidden",
