@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { catalogPoses, catalogBackgrounds, CATALOG_POSE_CATEGORIES, CATALOG_BG_CATEGORIES, CATALOG_CATEGORY_LABELS } from '@/data/catalogPoses';
 import { CatalogPoseCard } from './CatalogPoseCard';
 import { Button } from '@/components/ui/button';
