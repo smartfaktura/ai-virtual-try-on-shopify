@@ -409,7 +409,7 @@ async function generateImageWithModel(
       const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
         {
           type: "text",
-          text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
+          text: `OUTPUT ASPECT RATIO: ${aspectRatio}. Generate at high resolution (2K).\n\n${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
         },
         { type: "text", text: "[PRODUCT IMAGE]:" },
         { type: "image_url", image_url: { url: productImageUrl } },
@@ -443,7 +443,6 @@ async function generateImageWithModel(
             ],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            image_config: { aspect_ratio: aspectRatio, image_size: '2K' },
           }),
           signal: AbortSignal.timeout(100_000), // 100s primary timeout — gives Nano Banana Pro enough time
         }

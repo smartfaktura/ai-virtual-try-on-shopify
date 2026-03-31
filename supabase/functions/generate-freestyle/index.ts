@@ -688,6 +688,17 @@ async function generateImage(
   const attemptStart = performance.now();
 
   try {
+    // Prepend aspect ratio + quality hint to content (since image_config is not supported on this endpoint)
+    const enrichedContent = [...content];
+    const arHint = aspectRatio ? `OUTPUT ASPECT RATIO: ${aspectRatio}. ` : '';
+    const qualityHint = quality === 'high' ? 'Generate at high resolution (2K). ' : '';
+    const hint = arHint + qualityHint;
+    if (hint && enrichedContent.length > 0 && enrichedContent[0].type === 'text') {
+      enrichedContent[0] = { type: 'text', text: hint + enrichedContent[0].text };
+    } else if (hint) {
+      enrichedContent.unshift({ type: 'text', text: hint });
+    }
+
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
@@ -698,13 +709,9 @@ async function generateImage(
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: "user", content }],
+          messages: [{ role: "user", content: enrichedContent }],
           modalities: ["image", "text"],
           max_tokens: 8192,
-          image_config: {
-            ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
-            image_size: quality === 'high' ? '2K' : '1K',
-          },
         }),
         signal: AbortSignal.timeout(timeoutMs),
       }
