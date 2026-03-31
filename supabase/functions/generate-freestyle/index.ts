@@ -340,8 +340,8 @@ type ProviderResult = {
 
 // ── Provider registry — change model IDs here for version upgrades ───────
 const PROVIDERS = {
-  "nanobanana-flash": { gateway: "lovable" as const, model: "google/gemini-3.1-flash-image-preview" },
-  "nanobanana-pro":   { gateway: "lovable" as const, model: "google/gemini-3-pro-image-preview" },
+  "nanobanana-flash": { gateway: "gemini-direct" as const, model: "gemini-3.1-flash-image-preview" },
+  "nanobanana-pro":   { gateway: "gemini-direct" as const, model: "gemini-3-pro-image-preview" },
   "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-251128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
 } as const;
 
