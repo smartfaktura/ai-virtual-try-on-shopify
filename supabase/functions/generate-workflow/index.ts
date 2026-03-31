@@ -546,6 +546,80 @@ function getModelForQuality(quality: string): string {
     : "google/gemini-3.1-flash-image-preview";
 }
 
+// ── Seedream ARK image generation (fallback for product-only workflows) ────────
+function seedreamAspectRatio(appRatio: string): string {
+  const map: Record<string, string> = {
+    "1:1": "1:1", "16:9": "16:9", "9:16": "9:16",
+    "4:3": "4:3", "3:4": "3:4", "4:5": "3:4",
+    "5:4": "4:3", "3:2": "3:2", "2:3": "2:3", "21:9": "21:9",
+  };
+  return map[appRatio] || "1:1";
+}
+
+const SEEDREAM_MODERATION_CODES = [1301, 1302, 1303, 1304, 1305, 1024];
+
+async function generateImageSeedream(
+  prompt: string,
+  imageUrls: string[],
+  model: string,
+  apiKey: string,
+  aspectRatio = "1:1",
+): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
+  const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
+  const seedreamRatio = seedreamAspectRatio(aspectRatio);
+  const timeoutMs = 90_000;
+
+  try {
+    const body: Record<string, unknown> = {
+      model, prompt, size: "2K",
+      aspect_ratio: seedreamRatio,
+      response_format: "url",
+      watermark: false,
+      sequential_image_generation: "disabled",
+    };
+    if (imageUrls.length === 1) {
+      body.image = imageUrls[0];
+    } else if (imageUrls.length > 1) {
+      body.image = imageUrls;
+    }
+
+    const response = await fetch(ARK_BASE, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!response.ok) {
+      let errorText = "";
+      try { errorText = await response.text(); } catch (_) { /* ignore */ }
+      try {
+        const errJson = JSON.parse(errorText);
+        const errCode = errJson?.error?.code || errJson?.code;
+        if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
+          return { ok: false, error: `Content moderated: ${errJson?.error?.message || errJson?.message}` };
+        }
+      } catch (_) { /* not JSON */ }
+      return { ok: false, error: `ARK API error ${response.status}: ${errorText.slice(0, 200)}` };
+    }
+
+    const data = await response.json();
+    const respCode = data?.error?.code || data?.code;
+    if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
+      return { ok: false, error: `Content moderated: ${data?.error?.message || data?.message}` };
+    }
+
+    const imageUrl = data?.data?.[0]?.url;
+    if (!imageUrl) {
+      return { ok: false, error: "No URL in Seedream response" };
+    }
+    return { ok: true, imageUrl };
+  } catch (error: unknown) {
+    const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+    return { ok: false, error: isTimeout ? "Seedream request timed out (90s)" : (error instanceof Error ? error.message : "Unknown error") };
+  }
+}
+
 async function generateImage(
   prompt: string,
   referenceImages: Array<{ url: string; label: string }>,
@@ -553,8 +627,8 @@ async function generateImage(
   apiKey: string,
   aspectRatio?: string
 ): Promise<string | null> {
-  const maxRetries = 3;
-  const PER_IMAGE_TIMEOUT = 150_000; // 150s per image
+  const maxRetries = 1; // 2 attempts total (primary + 1 retry)
+  const PER_IMAGE_TIMEOUT = 75_000; // 75s per image — leaves room for Seedream fallback
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
@@ -621,7 +695,14 @@ async function generateImage(
         throw new Error(`AI Gateway error: ${response.status}`);
       }
 
-      const data = await response.json();
+      let data: Record<string, unknown>;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error(`[generate-workflow] JSON parse failed (attempt ${attempt + 1}):`, jsonErr);
+        if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+        return null;
+      }
       const imageUrl =
         data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
@@ -652,6 +733,7 @@ async function generateImage(
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
         continue;
       }
+      if (isTimeout) return null; // Return null on timeout to trigger Seedream fallback
       throw error;
     }
   }
@@ -1016,13 +1098,31 @@ serve(async (req) => {
             console.log(`[generate-workflow] Adding scene reference image for "${variation.label}"`);
           }
 
-          const imageUrl = await generateImage(
+          let imageUrl = await generateImage(
             prompt,
             referenceImages,
             model,
             LOVABLE_API_KEY,
             aspectRatio
           );
+
+          // Seedream fallback: only for product-only (no model reference — Seedream can't preserve identity)
+          if (imageUrl === null && !body.model?.imageUrl) {
+            const arkApiKey = Deno.env.get("BYTEPLUS_ARK_API_KEY");
+            if (arkApiKey) {
+              console.warn(`[generate-workflow] Gemini returned null — falling back to Seedream 4.5 for "${variation.label}"`);
+              const refImageUrls = referenceImages.map(r => r.url);
+              const seedreamResult = await generateImageSeedream(
+                prompt, refImageUrls, "seedream-4-5-251128", arkApiKey, aspectRatio || "1:1"
+              );
+              if (seedreamResult.ok && seedreamResult.imageUrl) {
+                imageUrl = seedreamResult.imageUrl;
+                console.log(`[generate-workflow] Seedream fallback succeeded for "${variation.label}"`);
+              } else {
+                console.warn(`[generate-workflow] Seedream fallback failed:`, seedreamResult.error);
+              }
+            }
+          }
 
           if (imageUrl) {
             // Upload base64 to storage to avoid bloating the database
@@ -1086,7 +1186,7 @@ serve(async (req) => {
                     // Persist images so cleanup_stale_jobs can recover partial results
                     images: images.map((img) => img.url),
                   },
-                  timeout_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+                  timeout_at: new Date(Date.now() + 3 * 60 * 1000).toISOString(), // 3 min heartbeat
                 }).eq("id", body.job_id);
               } catch (progressErr) {
                 console.warn("[generate-workflow] Progress update failed:", progressErr);

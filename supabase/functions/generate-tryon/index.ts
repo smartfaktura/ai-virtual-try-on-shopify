@@ -446,6 +446,7 @@ async function generateImageWithModel(
             max_tokens: 8192,
             image_config: { aspect_ratio: aspectRatio, image_size: '2K', output_format: 'png' },
           }),
+          signal: AbortSignal.timeout(75_000), // 75s primary timeout
         }
       );
 
@@ -466,7 +467,14 @@ async function generateImageWithModel(
         throw new Error(`AI Gateway error: ${response.status}`);
       }
 
-      const data = await response.json();
+      let data: Record<string, unknown>;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error(`[generate-tryon] JSON parse failed (attempt ${attempt + 1}):`, jsonErr);
+        if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+        return null;
+      }
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (!imageUrl) {
@@ -475,11 +483,13 @@ async function generateImageWithModel(
         return null;
       }
 
-      return imageUrl;
+      return imageUrl as string;
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "status" in error) throw error;
-      console.error(`Generation attempt ${attempt + 1} failed:`, error);
+      const isTimeout = error instanceof DOMException && error.name === 'TimeoutError';
+      console.error(`[generate-tryon] Attempt ${attempt + 1} failed${isTimeout ? ' (timeout)' : ''}:`, error);
       if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000 * (attempt + 1))); continue; }
+      if (isTimeout) return null; // Return null on timeout to trigger fallback instead of throwing
       throw error;
     }
   }
@@ -693,7 +703,16 @@ serve(async (req) => {
     const images: string[] = [];
     const errors: string[] = [];
 
+    const FUNCTION_START = Date.now();
+    const MAX_WALL_CLOCK_MS = 140_000; // 140s — leave 10s buffer before platform kills us
+
     for (let i = 0; i < imageCount; i++) {
+      // Wall-clock safety: break early if approaching platform kill
+      if (Date.now() - FUNCTION_START > MAX_WALL_CLOCK_MS - 5000) {
+        console.warn(`[generate-tryon] Wall-clock limit approaching (${Math.round((Date.now() - FUNCTION_START) / 1000)}s), breaking after ${images.length}/${imageCount} images`);
+        break;
+      }
+
       try {
         const variationPrompt =
           i === 0
@@ -729,6 +748,23 @@ serve(async (req) => {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
           console.log(`Generated and uploaded image ${i + 1}/${imageCount}`);
+
+          // Write progress heartbeat so cleanup_stale_jobs knows we're alive
+          if (isQueueInternal && body.job_id) {
+            try {
+              const progressSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+              await progressSupabase.from("generation_queue").update({
+                result: {
+                  generatedCount: images.length,
+                  requestedCount: imageCount,
+                  images: images,
+                },
+                timeout_at: new Date(Date.now() + 3 * 60 * 1000).toISOString(), // 3 min heartbeat
+              }).eq("id", body.job_id);
+            } catch (progressErr) {
+              console.warn("[generate-tryon] Progress update failed:", progressErr);
+            }
+          }
         } else {
           errors.push(`Image ${i + 1} failed to generate`);
         }
