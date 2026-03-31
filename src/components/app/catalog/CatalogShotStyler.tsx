@@ -29,8 +29,9 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
   const [customPrompt, setCustomPrompt] = useState(currentOverride?.customPrompt || '');
   const [framing, setFraming] = useState(currentOverride?.framing || '');
 
-  const poses = allPoses.filter(p => p.poseId.startsWith('pose_'));
-  const backgrounds = allPoses.filter(p => p.poseId.startsWith('scene_'));
+  // Filter by catalog-specific prefixes
+  const poses = allPoses.filter(p => p.poseId.startsWith('catalogPose_'));
+  const backgrounds = allPoses.filter(p => p.poseId.startsWith('catalogBg_'));
 
   const handleSave = () => {
     const override: ShotOverride = {};
@@ -39,7 +40,6 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
     if (customPrompt.trim()) override.customPrompt = customPrompt.trim();
     if (framing) override.framing = framing;
     
-    // If nothing is set, treat as no override
     if (Object.keys(override).length === 0) {
       onSave(null);
     } else {
@@ -50,8 +50,6 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
   const handleClear = () => {
     onSave(null);
   };
-
-  const [productId, modelId] = comboKey.split('_');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
