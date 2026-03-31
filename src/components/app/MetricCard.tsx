@@ -117,8 +117,6 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
     </div>
   );
 
-  const isMobile = useIsMobile();
-
   if (!tooltip || isMobile) return cardContent;
 
   return (
