@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useMemo } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { BlogMarkdownImage } from '@/components/app/BlogMarkdownImage';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/constants';
