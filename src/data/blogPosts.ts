@@ -766,7 +766,6 @@ Most brands complete their initial Brand Profile in 15–30 minutes. Expect 2–
 No. A Brand Profile defines the *style* — lighting, background, composition — but the AI introduces natural variation within those constraints. Each product image looks fresh and unique while maintaining your brand's visual signature. Think of it like a talented photographer following a creative brief: consistent, but never robotic.
 `,
   },
-  },
   {
     slug: 'ai-product-photography-examples-gallery',
     title: '12 AI-Generated Product Photography Examples That Look 100% Real',
