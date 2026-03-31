@@ -656,7 +656,7 @@ async function uploadBase64ToStorage(
   const { error } = await supabase.storage
     .from("freestyle-images")
     .upload(fileName, bytes, {
-      contentType: mimeType,
+      contentType: "image/png",
       upsert: false,
     });
 
