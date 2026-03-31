@@ -13,7 +13,7 @@ import { CatalogStepProductsModels } from '@/components/app/catalog/CatalogStepP
 import { CatalogStepStyle } from '@/components/app/catalog/CatalogStepStyle';
 import { CatalogStepReview } from '@/components/app/catalog/CatalogStepReview';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
-import { mockTryOnPoses } from '@/data/mockData';
+import { allCatalogItems } from '@/data/catalogPoses';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Package, Palette, Sparkles, Check } from 'lucide-react';
