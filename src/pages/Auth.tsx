@@ -132,7 +132,7 @@ export default function Auth() {
   // Resend countdown timer
   useEffect(() => {
     if (!signupComplete && !magicLinkSent) return;
-    setResendTimer(30);
+    setResendTimer(60);
     const interval = setInterval(() => {
       setResendTimer((prev) => {
         if (prev <= 1) { clearInterval(interval); return 0; }
