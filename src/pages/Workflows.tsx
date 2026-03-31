@@ -561,6 +561,7 @@ export default function Workflows() {
               workflow={workflow}
               onSelect={() => handleCreateVisualSet(workflow)}
               reversed={index % 2 !== 0}
+              comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
             />
           ))}
           <WorkflowRequestBanner />
