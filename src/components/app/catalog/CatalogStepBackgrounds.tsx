@@ -12,6 +12,8 @@ interface CatalogStepBackgroundsProps {
   selectedBackgroundIds: Set<string>;
   onToggleBackground: (bgId: string) => void;
   onBack: () => void;
+  onNext?: () => void;
+  canProceed?: boolean;
 }
 
 const BG_CATEGORY_ORDER: PoseCategory[] = [
