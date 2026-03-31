@@ -111,6 +111,12 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   };
 
   const handleSelectWorkflow = (wf: typeof WORKFLOW_OPTIONS[0]) => {
+    if ('directRoute' in wf && wf.directRoute) {
+      onOpenChange(false);
+      navigate(wf.directRoute as string);
+      reset();
+      return;
+    }
     setSelectedWorkflow(wf);
     setSelectedProductId(null);
     setStep('product');
