@@ -131,7 +131,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         function resolveModel(modelId: string | null): { name?: string; imageUrl?: string } {
           if (!modelId) return {};
           if (modelId.startsWith('custom-')) {
-            const cm = customModelsMap.get(modelId.replace('custom-', ''));
+            const cm = customModelsMap.get(modelId.replace('custom-', '')) as { name: string; image_url: string } | undefined;
             return cm ? { name: cm.name, imageUrl: cm.image_url } : {};
           }
           const mock = mockModels.find(m => m.modelId === modelId);
