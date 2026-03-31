@@ -211,10 +211,6 @@ export function GlobalGenerationBar() {
                   </Avatar>
                 ))}
               </div>
-              {/* Spinning ring on primary avatar */}
-              {processingJobs > 0 && (
-                <span className="absolute -inset-0.5 rounded-full border-2 border-transparent border-t-primary animate-spin pointer-events-none" />
-              )}
             </div>
           ) : visibleCompleted.length > 0 ? (
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 shrink-0">
