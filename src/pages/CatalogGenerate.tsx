@@ -315,6 +315,12 @@ export default function CatalogGenerate() {
           modelCount={selectedModelIds.size}
           poseCount={selectedPoseIds.size}
           backgroundCount={selectedBackgroundIds.size}
+          step={step}
+          totalSteps={5}
+          stepLabel={['Products', 'Poses', 'Models', 'Backgrounds', 'Style'][step] || 'Review'}
+          onBack={() => setStep(Math.max(1, step - 1))}
+          onNext={() => setStep(Math.min(6, step + 1))}
+          canProceed={step === 1 ? canStep1 : step === 2 ? canStep2 : step === 3 ? canStep3 : step === 4 ? canStep4 : true}
         />
       )}
 
