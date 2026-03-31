@@ -392,6 +392,39 @@ async function generateImage(
   return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "gemini-3-pro-image-preview", sceneImageUrl);
 }
 
+// ── Helper: Convert URL to native Gemini inlineData part ────────────
+async function urlToInlineDataPart(url: string): Promise<Record<string, unknown>> {
+  if (url.startsWith("data:")) {
+    const match = url.match(/^data:(image\/\w+);base64,(.+)$/s);
+    if (match) return { inlineData: { mimeType: match[1], data: match[2] } };
+  }
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch image for inlineData: ${resp.status}`);
+  const buf = await resp.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const b64 = btoa(binary);
+  const contentType = resp.headers.get("content-type") || "image/png";
+  const mimeType = contentType.split(";")[0].trim();
+  return { inlineData: { mimeType, data: b64 } };
+}
+
+function extractImageFromGeminiResponse(data: Record<string, unknown>): string | null {
+  const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+  if (!candidates?.length) return null;
+  const parts = (candidates[0].content as Record<string, unknown>)?.parts as Array<Record<string, unknown>> | undefined;
+  if (!parts) return null;
+  for (const part of parts) {
+    const inlineData = part.inlineData as { mimeType: string; data: string } | undefined;
+    if (inlineData?.data) return `data:${inlineData.mimeType};base64,${inlineData.data}`;
+  }
+  return null;
+}
+
 async function generateImageWithModel(
   prompt: string,
   productImageUrl: string,
@@ -409,7 +442,7 @@ async function generateImageWithModel(
       const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
         {
           type: "text",
-          text: `OUTPUT ASPECT RATIO: ${aspectRatio}. Generate at high resolution (2K).\n\n${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
+          text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
         },
         { type: "text", text: "[PRODUCT IMAGE]:" },
         { type: "image_url", image_url: { url: productImageUrl } },
@@ -425,24 +458,38 @@ async function generateImageWithModel(
         );
       }
 
+      // Convert to native Gemini parts
+      const nativeParts: Record<string, unknown>[] = [];
+      for (const item of contentParts) {
+        if (item.type === 'text') {
+          nativeParts.push({ text: item.text });
+        } else if (item.type === 'image_url') {
+          const url = (item as any).image_url?.url as string;
+          if (url) {
+            const part = await urlToInlineDataPart(url);
+            nativeParts.push(part);
+          }
+        }
+      }
+
+      const generationConfig: Record<string, unknown> = {
+        responseModalities: ["IMAGE", "TEXT"],
+      };
+      if (aspectRatio) {
+        generationConfig.imageConfig = { aspectRatio };
+      }
+
       const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${apiKey}`,
+            "x-goog-api-key": apiKey,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: aiModel,
-            messages: [
-              {
-                role: "user",
-                content: contentParts,
-              },
-            ],
-            modalities: ["image", "text"],
-            max_tokens: 8192,
+            contents: [{ role: "user", parts: nativeParts }],
+            generationConfig,
           }),
           signal: AbortSignal.timeout(100_000), // 100s primary timeout — gives Nano Banana Pro enough time
         }
@@ -474,7 +521,7 @@ async function generateImageWithModel(
         if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000)); continue; }
         return null;
       }
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      const imageUrl = extractImageFromGeminiResponse(data);
 
       if (!imageUrl) {
         console.error("No image in response:", JSON.stringify(data).slice(0, 500));

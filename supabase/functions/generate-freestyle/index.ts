@@ -673,6 +673,47 @@ async function uploadBase64ToStorage(
   return urlData.publicUrl;
 }
 
+// ── Helper: Convert URL to native Gemini inlineData part ────────────
+async function urlToInlineDataPart(url: string): Promise<Record<string, unknown>> {
+  // If it's already a data URI, extract base64
+  if (url.startsWith("data:")) {
+    const match = url.match(/^data:(image\/\w+);base64,(.+)$/s);
+    if (match) {
+      return { inlineData: { mimeType: match[1], data: match[2] } };
+    }
+  }
+  // Fetch the URL and convert to base64
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch image for inlineData: ${resp.status}`);
+  const buf = await resp.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  // chunk-based btoa to avoid stack overflow on large images
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const b64 = btoa(binary);
+  const contentType = resp.headers.get("content-type") || "image/png";
+  const mimeType = contentType.split(";")[0].trim();
+  return { inlineData: { mimeType, data: b64 } };
+}
+
+// ── Helper: Extract image data URI from native Gemini response ────────────
+function extractImageFromGeminiResponse(data: Record<string, unknown>): string | null {
+  const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+  if (!candidates?.length) return null;
+  const parts = (candidates[0].content as Record<string, unknown>)?.parts as Array<Record<string, unknown>> | undefined;
+  if (!parts) return null;
+  for (const part of parts) {
+    const inlineData = part.inlineData as { mimeType: string; data: string } | undefined;
+    if (inlineData?.data) {
+      return `data:${inlineData.mimeType};base64,${inlineData.data}`;
+    }
+  }
+  return null;
+}
+
 /** Single-attempt Nano Banana generation — returns normalized ProviderResult */
 async function generateImage(
   content: ContentItem[],
@@ -688,30 +729,40 @@ async function generateImage(
   const attemptStart = performance.now();
 
   try {
-    // Prepend aspect ratio + quality hint to content (since image_config is not supported on this endpoint)
-    const enrichedContent = [...content];
-    const arHint = aspectRatio ? `OUTPUT ASPECT RATIO: ${aspectRatio}. ` : '';
-    const qualityHint = quality === 'high' ? 'Generate at high resolution (2K). ' : '';
-    const hint = arHint + qualityHint;
-    if (hint && enrichedContent.length > 0 && enrichedContent[0].type === 'text') {
-      enrichedContent[0] = { type: 'text', text: hint + enrichedContent[0].text };
-    } else if (hint) {
-      enrichedContent.unshift({ type: 'text', text: hint });
+    // Convert OpenAI-style content parts to native Gemini parts
+    const nativeParts: Record<string, unknown>[] = [];
+    for (const item of content) {
+      if (item.type === 'text') {
+        nativeParts.push({ text: item.text });
+      } else if (item.type === 'image_url') {
+        const url = (item as any).image_url?.url as string;
+        if (url) {
+          const part = await urlToInlineDataPart(url);
+          nativeParts.push(part);
+        }
+      }
     }
 
+    // Build generationConfig with imageConfig
+    const generationConfig: Record<string, unknown> = {
+      responseModalities: ["IMAGE", "TEXT"],
+    };
+    const imageConfig: Record<string, string> = {};
+    if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
+    if (quality === 'high') imageConfig.imageSize = "2048";
+    if (Object.keys(imageConfig).length > 0) generationConfig.imageConfig = imageConfig;
+
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "x-goog-api-key": apiKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: enrichedContent }],
-          modalities: ["image", "text"],
-          max_tokens: 8192,
+          contents: [{ role: "user", parts: nativeParts }],
+          generationConfig,
         }),
         signal: AbortSignal.timeout(timeoutMs),
       }
@@ -736,13 +787,14 @@ async function generateImage(
     }
 
     const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const imageUrl = extractImageFromGeminiResponse(data);
 
     if (!imageUrl) {
       if (isContentBlocked(data)) {
         const reason = extractBlockReason(data);
         return { ok: false, failureType: "unsafe_block", blocked: true, blockReason: reason, retryable: false, statusCode: 200, provider: "nanobanana", model, durationMs };
       }
+      console.error("[nanobanana] No image in native response:", JSON.stringify(data).slice(0, 500));
       return { ok: false, failureType: "no_image_returned", retryable: true, statusCode: 200, provider: "nanobanana", model, durationMs, rawError: "No image in response" };
     }
 
