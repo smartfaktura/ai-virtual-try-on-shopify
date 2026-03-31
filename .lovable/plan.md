@@ -1,62 +1,73 @@
 
 
-# Risk Assessment & Migration Plan: Switch to Native Gemini API
+# Fix: Switch to Native Gemini generateContent Endpoint
 
-## How serious is this change?
+## Problem
+The OpenAI-compatible endpoint (`/v1beta/openai/chat/completions`) returns `HTTP 400: "Unhandled generated data mime type: image/jpeg"`. Google's compatibility layer cannot serialize generated images back into the OpenAI response format. This is a fundamental limitation of this endpoint — not a parameter issue.
 
-**Risk level: Medium** — The change is well-understood and well-documented, but it touches your core money-making functions (image generation). Here's the honest breakdown:
+## Solution
+Switch to the native Gemini `generateContent` endpoint which returns generated images directly as base64 in `inlineData`.
 
-### What's safe
-- The fix is the **same pattern** across all affected functions — not unique logic per file
-- Your **fallback system to Seedream still works** — if anything goes wrong, images still generate (just via Seedream, like they do now)
-- The Google native API is well-documented and confirmed working with `imageConfig`, `aspectRatio`, and `imageSize`
-- Only **4 lines change per function** (URL, auth header, request body structure, response parsing)
+## Changes per function
 
-### What could go wrong
-- A typo in the new request/response format could break the primary Gemini path (but Seedream fallback catches it)
-- If `GEMINI_API_KEY` doesn't have access to the native `generateContent` endpoint (unlikely but possible)
-- Response parsing mismatch (native returns `candidates[0].content.parts[].inlineData` instead of `choices[0].message.images[0]`)
+Each affected function gets the same transformation:
 
-### Worst case scenario
-- Gemini direct still fails → Seedream fallback kicks in → **exactly what happens today**. No worse than current state.
-
-## Backup
-
-You already have a built-in backup — Lovable's version history. You can revert to the current working state at any time by clicking the revert button below any previous chat message, or using the History tab.
-
-## What changes (4 functions)
-
-Each function gets the same 4-part change:
-
-1. **URL**: `/v1beta/openai/chat/completions` → `/v1beta/models/{model}:generateContent`
-2. **Auth**: `Authorization: Bearer {key}` → `x-goog-api-key: {key}` header
-3. **Request body**: OpenAI format → Native Gemini format:
-```text
-OLD:
-  { model, messages: [...], modalities: ["image","text"], image_config: {...} }
-
-NEW:
-  { contents: [{ parts: [...] }], generationConfig: { responseModalities: ["IMAGE","TEXT"], imageConfig: { aspectRatio, imageSize } } }
+### 1. URL
 ```
-4. **Response parsing**: `choices[0].message.images[0].image_url.url` → `candidates[0].content.parts[].inlineData.data`
+OLD: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+NEW: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+```
 
-### Files affected
-- `supabase/functions/generate-freestyle/index.ts` — `generateImage()` function (lines 690-750)
-- `supabase/functions/generate-workflow/index.ts` — image generation call (lines 646-668)
-- `supabase/functions/generate-tryon/index.ts` — image generation call (lines 428-450)
-- `supabase/functions/generate-workflow-preview/index.ts` — image generation call (lines 78-107)
+### 2. Auth header
+```
+OLD: Authorization: Bearer {key}
+NEW: x-goog-api-key: {key}
+```
 
-### NOT affected
-- Seedream fallback logic (untouched)
-- Text analysis functions (stay on Lovable AI gateway)
-- All other preview functions that use Lovable AI gateway
-- Frontend code (no changes)
-- Database (no changes)
+### 3. Request body
+```
+OLD: { model, messages: [{role:"user", content:[...]}], modalities:["image","text"], max_tokens:8192 }
 
-## Deployment plan (safe rollout)
-1. Update `generate-freestyle` first (has the best error logging already)
-2. Deploy and test one generation
-3. Check logs — confirm `nanobanana → ok` instead of `server_error`
-4. If successful, update the other 3 functions
-5. If it fails, revert via history — Seedream fallback keeps everything working meanwhile
+NEW: { contents: [{ role:"user", parts: [...] }],
+       generationConfig: { responseModalities:["IMAGE","TEXT"],
+                           imageConfig: { aspectRatio:"3:4" } } }
+```
+
+Content parts mapping:
+- `{type:"text", text:"..."}` → `{text:"..."}`  
+- `{type:"image_url", image_url:{url:"data:image/...;base64,XXX"}}` → `{inlineData:{mimeType:"image/png", data:"XXX"}}`
+- For URL-based images: fetch and convert to base64 first
+
+### 4. Response parsing
+```
+OLD: data.choices[0].message.images[0].image_url.url  (already a data: URI)
+NEW: candidates[0].content.parts[] → find part with inlineData → construct "data:{mimeType};base64,{data}"
+```
+
+## Files affected
+
+1. **`generate-freestyle/index.ts`** — `generateImage()` function (lines 690-757)
+   - Transform URL, headers, body, response parsing
+   - Remove the aspect ratio hint prepending (move back to `imageConfig`)
+   - Handle URL-to-base64 conversion for input images
+
+2. **`generate-workflow/index.ts`** — image generation call
+   - Same pattern
+
+3. **`generate-tryon/index.ts`** — image generation call  
+   - Same pattern, also has image inputs
+
+4. **`generate-workflow-preview/index.ts`** — image generation call
+   - Same pattern
+
+## Input image handling
+The native endpoint requires `inlineData` (base64) instead of URL references. For image inputs currently passed as URLs:
+- Fetch the image URL → read as ArrayBuffer → convert to base64
+- Add a helper function `urlToBase64Part()` shared across the affected code
+
+## Rollout
+1. Update `generate-freestyle` first (best logging)
+2. Test one generation, confirm `nanobanana → ok`
+3. Update remaining 3 functions
+4. Seedream fallback remains untouched as safety net
 
