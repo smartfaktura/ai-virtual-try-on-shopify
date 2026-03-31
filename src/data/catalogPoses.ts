@@ -1,23 +1,34 @@
 import type { TryOnPose, PoseCategory } from '@/types';
 
-/* ─── Catalog-specific poses ─── */
+// Pose preview imports
+import poseFrontRelaxed from '@/assets/catalog/pose_front_relaxed.png';
+import poseFrontHandsHips from '@/assets/catalog/pose_front_hands_hips.png';
+import poseFrontOneHandHip from '@/assets/catalog/pose_front_one_hand_hip.jpg';
+import poseFrontArmsCrossed from '@/assets/catalog/pose_front_arms_crossed.jpg';
+import poseFrontWalking from '@/assets/catalog/pose_front_walking.png';
+import poseThreeQuarter from '@/assets/catalog/pose_three_quarter.png';
+import poseSideProfile from '@/assets/catalog/pose_side_profile.jpg';
+import poseBackView from '@/assets/catalog/pose_back_view.png';
+import moodRadiant from '@/assets/catalog/mood_radiant.jpg';
+
+/* ─── Studio-only catalog poses ─── */
 export const catalogPoses: TryOnPose[] = [
-  // Studio
-  { poseId: 'catalogPose_studio_front', name: 'Studio Front', description: 'Straight-on front-facing studio pose', category: 'studio' as PoseCategory, previewUrl: '', promptHint: 'Fashion model standing front-facing, arms relaxed at sides, white studio background, professional e-commerce photography, full body' },
-  { poseId: 'catalogPose_studio_side', name: 'Studio Side', description: 'Classic side profile studio pose', category: 'studio' as PoseCategory, previewUrl: '', promptHint: 'Fashion model standing in side profile pose, white studio background, professional lighting, full body shot' },
-  { poseId: 'catalogPose_three_quarter', name: 'Three-Quarter', description: 'Three-quarter angled pose', category: 'studio' as PoseCategory, previewUrl: '', promptHint: 'Fashion model in three-quarter angle pose, slight turn, white studio background, professional e-commerce photo, full body' },
-  { poseId: 'catalogPose_back_view', name: 'Back View', description: 'Back-facing studio pose', category: 'studio' as PoseCategory, previewUrl: '', promptHint: 'Fashion model seen from behind, back view pose, white studio background, professional photography, full body' },
+  // Front
+  { poseId: 'catalogPose_front_relaxed', name: 'Front Relaxed', description: 'Arms relaxed at sides, front-facing', category: 'front' as PoseCategory, previewUrl: poseFrontRelaxed, promptHint: 'Fashion model standing front-facing, arms relaxed at sides, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_front_hands_hips', name: 'Hands on Hips', description: 'Both hands on hips, front-facing', category: 'front' as PoseCategory, previewUrl: poseFrontHandsHips, promptHint: 'Fashion model standing front-facing with both hands on hips, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_front_one_hand_hip', name: 'One Hand on Hip', description: 'One hand on hip, front-facing', category: 'front' as PoseCategory, previewUrl: poseFrontOneHandHip, promptHint: 'Fashion model standing front-facing with one hand on hip, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_front_arms_crossed', name: 'Arms Crossed', description: 'Arms crossed, front-facing', category: 'front' as PoseCategory, previewUrl: poseFrontArmsCrossed, promptHint: 'Fashion model standing front-facing with arms crossed, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_front_walking', name: 'Walking', description: 'Mid-stride walking pose', category: 'front' as PoseCategory, previewUrl: poseFrontWalking, promptHint: 'Fashion model walking naturally mid-stride, white studio background, professional e-commerce photography, full body' },
 
-  // Lifestyle
-  { poseId: 'catalogPose_walking', name: 'Walking', description: 'Natural mid-stride walking pose', category: 'lifestyle' as PoseCategory, previewUrl: '', promptHint: 'Fashion model walking naturally mid-stride, confident movement, white studio background, professional photography, full body' },
-  { poseId: 'catalogPose_seated', name: 'Seated', description: 'Relaxed seated pose on stool', category: 'lifestyle' as PoseCategory, previewUrl: '', promptHint: 'Fashion model seated on a minimal stool, relaxed posture, white studio background, professional photography, full body' },
-  { poseId: 'catalogPose_leaning', name: 'Leaning', description: 'Casual leaning pose', category: 'lifestyle' as PoseCategory, previewUrl: '', promptHint: 'Fashion model leaning casually to one side, relaxed and confident, white studio background, professional photography, full body' },
+  // Angled
+  { poseId: 'catalogPose_three_quarter', name: 'Three-Quarter', description: 'Three-quarter angled turn', category: 'angled' as PoseCategory, previewUrl: poseThreeQuarter, promptHint: 'Fashion model in three-quarter turn pose, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_side_profile', name: 'Side Profile', description: 'Classic side profile', category: 'angled' as PoseCategory, previewUrl: poseSideProfile, promptHint: 'Fashion model in side profile pose, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_back_view', name: 'Back View', description: 'Back-facing pose', category: 'angled' as PoseCategory, previewUrl: poseBackView, promptHint: 'Fashion model seen from behind, back view, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_over_shoulder', name: 'Over-the-Shoulder', description: 'Looking back over shoulder', category: 'angled' as PoseCategory, previewUrl: poseThreeQuarter, promptHint: 'Fashion model looking back over shoulder, white studio background, professional e-commerce photography, full body' },
 
-  // Editorial
-  { poseId: 'catalogPose_editorial_power', name: 'Power Pose', description: 'Strong editorial power stance', category: 'editorial' as PoseCategory, previewUrl: '', promptHint: 'Fashion model in editorial power stance, hands on hips, confident expression, white studio background, professional photography, full body' },
-  { poseId: 'catalogPose_over_shoulder', name: 'Over-the-Shoulder', description: 'Looking back over shoulder', category: 'editorial' as PoseCategory, previewUrl: '', promptHint: 'Fashion model looking back over their shoulder, editorial style, white studio background, professional photography, full body' },
-  { poseId: 'catalogPose_closeup', name: 'Close-Up', description: 'Upper body close-up shot', category: 'editorial' as PoseCategory, previewUrl: '', promptHint: 'Fashion model upper body close-up, detail shot showing garment neckline and shoulders, white studio background, professional photography' },
-  { poseId: 'catalogPose_dynamic', name: 'Dynamic Motion', description: 'Movement captured mid-action', category: 'editorial' as PoseCategory, previewUrl: '', promptHint: 'Fashion model in dynamic motion, fabric flowing naturally, mid-action editorial style, white studio background, professional photography, full body' },
+  // Detail
+  { poseId: 'catalogPose_seated', name: 'Seated', description: 'Relaxed seated pose', category: 'detail' as PoseCategory, previewUrl: poseFrontRelaxed, promptHint: 'Fashion model seated casually on a minimal stool, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_closeup', name: 'Close-Up', description: 'Upper body detail shot', category: 'detail' as PoseCategory, previewUrl: poseFrontHandsHips, promptHint: 'Fashion model upper body close-up, detail shot, white studio background, professional e-commerce photography' },
 ];
 
 /* ─── Catalog-specific backgrounds ─── */
@@ -44,13 +55,13 @@ export const catalogBackgrounds: TryOnPose[] = [
 ];
 
 /* ─── Category metadata ─── */
-export const CATALOG_POSE_CATEGORIES: string[] = ['studio', 'lifestyle', 'editorial'];
+export const CATALOG_POSE_CATEGORIES: string[] = ['front', 'angled', 'detail'];
 export const CATALOG_BG_CATEGORIES: string[] = ['clean-studio', 'surface', 'botanical', 'outdoor', 'living-space', 'retail'];
 
 export const CATALOG_CATEGORY_LABELS: Record<string, string> = {
-  studio: 'Studio',
-  lifestyle: 'Lifestyle',
-  editorial: 'Editorial',
+  front: 'Front',
+  angled: 'Side & Angled',
+  detail: 'Detail',
   'clean-studio': 'Clean Studio',
   surface: 'Surface',
   botanical: 'Botanical',
@@ -58,6 +69,23 @@ export const CATALOG_CATEGORY_LABELS: Record<string, string> = {
   'living-space': 'Living Space',
   retail: 'Retail',
 };
+
+/* ─── Mood / Expression selector ─── */
+export interface CatalogMood {
+  id: string;
+  name: string;
+  previewUrl: string;
+  promptHint: string;
+}
+
+export const CATALOG_MOODS: CatalogMood[] = [
+  { id: 'any', name: 'Any Expression', previewUrl: '', promptHint: '' },
+  { id: 'joyful', name: 'Joyful', previewUrl: moodRadiant, promptHint: 'genuinely joyful smiling expression' },
+  { id: 'radiant', name: 'Radiant', previewUrl: moodRadiant, promptHint: 'radiant glowing warm expression' },
+  { id: 'neutral', name: 'Neutral', previewUrl: moodRadiant, promptHint: 'calm neutral expression' },
+  { id: 'unapologetic', name: 'Unapologetic', previewUrl: moodRadiant, promptHint: 'strong unapologetic fierce expression' },
+  { id: 'confident', name: 'Confident', previewUrl: moodRadiant, promptHint: 'confident self-assured expression' },
+];
 
 /** Combined array for lookup by ID */
 export const allCatalogItems = [...catalogPoses, ...catalogBackgrounds];
