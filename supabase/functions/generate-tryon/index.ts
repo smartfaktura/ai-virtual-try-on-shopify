@@ -376,10 +376,12 @@ async function generateImageSeedream(
 /** Fetch an image URL and convert to base64 data URL for storage upload */
 async function fetchImageAsBase64(url: string): Promise<string> {
   const resp = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  const contentType = resp.headers.get("content-type") || "image/jpeg";
+  const mime = contentType.split(";")[0].trim();
   const buf = new Uint8Array(await resp.arrayBuffer());
   let binary = "";
   for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
-  return `data:image/png;base64,${btoa(binary)}`;
+  return `data:${mime};base64,${btoa(binary)}`;
 }
 
 async function generateImage(
