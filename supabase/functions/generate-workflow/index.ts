@@ -628,7 +628,7 @@ async function generateImage(
   aspectRatio?: string
 ): Promise<string | null> {
   const maxRetries = 1; // 2 attempts total (primary + 1 retry)
-  const PER_IMAGE_TIMEOUT = 75_000; // 75s per image — leaves room for Seedream fallback
+  const PER_IMAGE_TIMEOUT = 100_000; // 100s per image — gives Nano Banana Pro enough time
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
