@@ -24,10 +24,10 @@ interface CatalogShotStylerProps {
 }
 
 export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverride, allPoses, onSave }: CatalogShotStylerProps) {
-  const [poseId, setPoseId] = useState(currentOverride?.poseId || '');
-  const [backgroundId, setBackgroundId] = useState(currentOverride?.backgroundId || '');
+  const [poseId, setPoseId] = useState(currentOverride?.poseId || '__default');
+  const [backgroundId, setBackgroundId] = useState(currentOverride?.backgroundId || '__default');
   const [customPrompt, setCustomPrompt] = useState(currentOverride?.customPrompt || '');
-  const [framing, setFraming] = useState(currentOverride?.framing || '');
+  const [framing, setFraming] = useState(currentOverride?.framing || '__default');
 
   // Filter by catalog-specific prefixes
   const poses = allPoses.filter(p => p.poseId.startsWith('catalogPose_'));
@@ -35,10 +35,10 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
 
   const handleSave = () => {
     const override: ShotOverride = {};
-    if (poseId) override.poseId = poseId;
-    if (backgroundId) override.backgroundId = backgroundId;
+    if (poseId && poseId !== '__default') override.poseId = poseId;
+    if (backgroundId && backgroundId !== '__default') override.backgroundId = backgroundId;
     if (customPrompt.trim()) override.customPrompt = customPrompt.trim();
-    if (framing) override.framing = framing;
+    if (framing && framing !== '__default') override.framing = framing;
     
     if (Object.keys(override).length === 0) {
       onSave(null);
@@ -66,7 +66,7 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
                 <SelectValue placeholder="Use default pose" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Use default</SelectItem>
+                <SelectItem value="__default">Use default</SelectItem>
                 {poses.map(p => (
                   <SelectItem key={p.poseId} value={p.poseId}>{p.name}</SelectItem>
                 ))}
@@ -81,7 +81,7 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
                 <SelectValue placeholder="Use default background" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Use default</SelectItem>
+                <SelectItem value="__default">Use default</SelectItem>
                 {backgrounds.map(b => (
                   <SelectItem key={b.poseId} value={b.poseId}>{b.name}</SelectItem>
                 ))}
@@ -96,7 +96,7 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
                 <SelectValue placeholder="Use default framing" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Default</SelectItem>
+                <SelectItem value="__default">Default</SelectItem>
                 <SelectItem value="full_body">Full Body</SelectItem>
                 <SelectItem value="upper_body">Upper Body</SelectItem>
                 <SelectItem value="close_up">Close Up</SelectItem>

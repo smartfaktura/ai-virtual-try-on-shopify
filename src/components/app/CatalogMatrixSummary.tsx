@@ -30,7 +30,7 @@ export function CatalogMatrixSummary({
   if (productCount === 0 && modelCount === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-3xl">
+    <div className="fixed bottom-4 z-30 w-[calc(100%-2rem)] max-w-3xl" style={{ left: 'calc(var(--sidebar-width, 16rem) + (100% - var(--sidebar-width, 16rem)) / 2)', transform: 'translateX(-50%)' }}>
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-xl">
         {/* Back button */}
         <Button variant="outline" size="sm" onClick={onBack} className="gap-1 shrink-0">
