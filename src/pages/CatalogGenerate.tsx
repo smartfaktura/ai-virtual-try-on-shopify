@@ -64,7 +64,6 @@ export default function CatalogGenerate() {
   const [selectedBackgroundIds, setSelectedBackgroundIds] = useState<Set<string>>(new Set());
 
   // Step 6 state
-  const [shotOverrides, setShotOverrides] = useState<Map<string, ShotOverride>>(new Map());
   const [extraItems, setExtraItems] = useState<Map<string, ExtraItem[]>>(new Map());
 
   // Generation
