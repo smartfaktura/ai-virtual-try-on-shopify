@@ -332,7 +332,7 @@ export default function CatalogGenerate() {
           backgroundCount={selectedBackgroundIds.size}
           step={step}
           totalSteps={6}
-          stepLabel={STEP_NEXT_LABELS[step] || 'Review'}
+          stepLabel={STEP_NEXT_LABELS[step] ?? 'Review'}
           onBack={() => setStep(Math.max(1, step - 1))}
           onNext={() => setStep(Math.min(7, step + 1))}
           canProceed={canProceedCurrent}

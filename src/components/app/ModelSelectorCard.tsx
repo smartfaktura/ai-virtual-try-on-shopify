@@ -36,15 +36,8 @@ export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = f
           </div>
         </div>
       )}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
-        <div className="space-y-1 sm:space-y-1.5">
-          <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
-          <div className="flex flex-wrap gap-0.5 sm:gap-1">
-            <Badge variant="secondary" className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-white/25 text-white border-0 backdrop-blur-sm">{bodyTypeLabels[model.bodyType]}</Badge>
-            <Badge variant="secondary" className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-white/25 text-white border-0 backdrop-blur-sm hidden sm:inline-flex">{model.ethnicity}</Badge>
-          </div>
-          <p className="text-white/70 text-[8px] sm:text-[10px] capitalize hidden sm:inline">{model.ageRange.replace('-', ' ')}</p>
-        </div>
+      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
+        <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
       </div>
     </div>
   );
