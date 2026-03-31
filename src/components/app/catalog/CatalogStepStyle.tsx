@@ -22,8 +22,6 @@ interface CatalogStepStyleProps {
 export function CatalogStepStyle({
   selectedPoseIds, onTogglePose,
   selectedBackgroundIds, onToggleBackground,
-  products, selectedProductIds, models, selectedModelIds,
-  shotOverrides, onShotOverridesChange,
   onBack, onNext, canProceed,
 }: CatalogStepStyleProps) {
   const [stylerOpen, setStylerOpen] = useState(false);
