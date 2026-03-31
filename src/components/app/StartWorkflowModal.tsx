@@ -195,8 +195,10 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     }
   };
 
+  const visibleOptions = WORKFLOW_OPTIONS.filter(wf => isRealAdmin || wf.slug !== 'catalog-shot-set');
+
   // Mock Workflow objects for the animated cards
-  const WORKFLOW_CARDS: Workflow[] = WORKFLOW_OPTIONS.map((wf) => ({
+  const WORKFLOW_CARDS: Workflow[] = visibleOptions.map((wf) => ({
     id: wf.slug,
     name: wf.slug === 'product-listing-set' ? 'Product Listing Set'
       : wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
