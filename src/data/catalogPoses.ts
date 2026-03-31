@@ -28,6 +28,13 @@ import moodNeutral from '@/assets/catalog/mood_neutral_v2.jpg';
 import moodUnapologetic from '@/assets/catalog/mood_unapologetic_v2.jpg';
 import moodConfident from '@/assets/catalog/mood_confident_v2.jpg';
 
+// Background preview imports
+import bgWhite from '@/assets/catalog/bg_white.jpg';
+import bgLightGray from '@/assets/catalog/bg_light_gray.jpg';
+import bgWarmBeige from '@/assets/catalog/bg_warm_beige.jpg';
+import bgConcrete from '@/assets/catalog/bg_concrete.jpg';
+import bgSageGreen from '@/assets/catalog/bg_sage_green.jpg';
+
 /* ─── Studio-only catalog poses ─── */
 export const catalogPoses: TryOnPose[] = [
   // Front (5)
@@ -52,43 +59,24 @@ export const catalogPoses: TryOnPose[] = [
   { poseId: 'catalogPose_back_detail', name: 'Back Detail', description: 'Back neckline & collar detail', category: 'detail' as PoseCategory, previewUrl: poseBackDetail, promptHint: 'Close-up of back neckline and collar on model, white studio background, fashion detail photography' },
 ];
 
-/* ─── Catalog-specific backgrounds ─── */
+/* ─── Clean studio backgrounds only ─── */
 export const catalogBackgrounds: TryOnPose[] = [
-  // Clean Studio
-  { poseId: 'catalogBg_white_seamless', name: 'White Seamless', description: 'Pure white seamless studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: '', promptHint: 'Pure white seamless studio photography backdrop, clean infinity cove, professional studio lighting, no objects or people' },
-  { poseId: 'catalogBg_gray_gradient', name: 'Gray Gradient', description: 'Soft gray gradient backdrop', category: 'clean-studio' as PoseCategory, previewUrl: '', promptHint: 'Soft gray gradient studio photography backdrop, subtle vignette, professional lighting, clean and minimal, no objects or people' },
-  { poseId: 'catalogBg_warm_beige', name: 'Warm Beige', description: 'Warm beige studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: '', promptHint: 'Warm beige toned studio photography backdrop, neutral tones, soft lighting, elegant and clean, no objects or people' },
-
-  // Surface
-  { poseId: 'catalogBg_marble', name: 'Marble Surface', description: 'White marble background', category: 'surface' as PoseCategory, previewUrl: '', promptHint: 'White Carrara marble surface background for product photography, clean veining pattern, soft top-down lighting, no objects' },
-  { poseId: 'catalogBg_concrete', name: 'Raw Concrete', description: 'Industrial concrete backdrop', category: 'surface' as PoseCategory, previewUrl: '', promptHint: 'Raw concrete textured wall background, industrial minimal aesthetic, even lighting, no objects or people' },
-  { poseId: 'catalogBg_wood_grain', name: 'Light Wood', description: 'Natural light wood surface', category: 'surface' as PoseCategory, previewUrl: '', promptHint: 'Natural light oak wood surface background, clean grain pattern, warm soft lighting, suitable for product photography, no objects' },
-
-  // Outdoor & Environment
-  { poseId: 'catalogBg_botanical', name: 'Botanical Garden', description: 'Lush green botanical setting', category: 'botanical' as PoseCategory, previewUrl: '', promptHint: 'Lush green botanical garden background, tropical foliage, soft natural light filtering through leaves, no people, blurred bokeh' },
-  { poseId: 'catalogBg_urban', name: 'Urban Street', description: 'Clean urban streetscape', category: 'outdoor' as PoseCategory, previewUrl: '', promptHint: 'Clean modern urban street background, minimalist architecture, soft daylight, shallow depth of field, no people, muted tones' },
-  { poseId: 'catalogBg_golden_hour', name: 'Golden Hour', description: 'Warm sunset golden hour light', category: 'outdoor' as PoseCategory, previewUrl: '', promptHint: 'Golden hour warm sunset background, beautiful warm light, soft bokeh, outdoor setting, no people, ethereal atmosphere' },
-
-  // Interior
-  { poseId: 'catalogBg_living_room', name: 'Modern Living Room', description: 'Contemporary living room interior', category: 'living-space' as PoseCategory, previewUrl: '', promptHint: 'Modern contemporary living room interior background, designer furniture, natural light from large windows, no people, editorial interior style' },
-  { poseId: 'catalogBg_loft', name: 'Industrial Loft', description: 'Open loft space with exposed brick', category: 'living-space' as PoseCategory, previewUrl: '', promptHint: 'Industrial loft space with exposed brick walls, large windows, warm lighting, open floor plan, no people, editorial interior' },
-  { poseId: 'catalogBg_boutique', name: 'Boutique Store', description: 'High-end retail environment', category: 'retail' as PoseCategory, previewUrl: '', promptHint: 'High-end fashion boutique retail interior, minimalist shelving, luxury materials, soft ambient lighting, no people' },
+  { poseId: 'catalogBg_white_seamless', name: 'White Seamless', description: 'Pure white seamless studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgWhite, promptHint: 'Pure white seamless studio photography backdrop, clean infinity cove, professional studio lighting, no objects or people' },
+  { poseId: 'catalogBg_gray_gradient', name: 'Light Gray', description: 'Soft light gray backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgLightGray, promptHint: 'Soft light gray studio photography backdrop, subtle vignette, professional lighting, clean and minimal, no objects or people' },
+  { poseId: 'catalogBg_warm_beige', name: 'Warm Beige', description: 'Warm beige studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgWarmBeige, promptHint: 'Warm beige toned studio photography backdrop, neutral tones, soft lighting, elegant and clean, no objects or people' },
+  { poseId: 'catalogBg_concrete', name: 'Concrete', description: 'Industrial concrete backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgConcrete, promptHint: 'Raw concrete textured wall background, industrial minimal aesthetic, even lighting, no objects or people' },
+  { poseId: 'catalogBg_sage_green', name: 'Sage Green', description: 'Sage green studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgSageGreen, promptHint: 'Sage green colored studio photography backdrop, soft muted green, professional lighting, clean and minimal, no objects or people' },
 ];
 
 /* ─── Category metadata ─── */
 export const CATALOG_POSE_CATEGORIES: string[] = ['front', 'angled', 'detail'];
-export const CATALOG_BG_CATEGORIES: string[] = ['clean-studio', 'surface', 'botanical', 'outdoor', 'living-space', 'retail'];
+export const CATALOG_BG_CATEGORIES: string[] = ['clean-studio'];
 
 export const CATALOG_CATEGORY_LABELS: Record<string, string> = {
   front: 'Front',
   angled: 'Side & Angled',
   detail: 'Detail',
   'clean-studio': 'Clean Studio',
-  surface: 'Surface',
-  botanical: 'Botanical',
-  outdoor: 'Outdoor',
-  'living-space': 'Living Space',
-  retail: 'Retail',
 };
 
 /* ─── Mood / Expression selector ─── */

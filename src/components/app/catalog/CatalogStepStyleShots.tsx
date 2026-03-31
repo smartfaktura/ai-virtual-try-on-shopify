@@ -131,13 +131,14 @@ export function CatalogStepStyleShots({
                         <td key={m.modelId} className="p-2 text-center">
                           <button
                             onClick={() => openStyler(p.id, m.modelId)}
+                            title={hasOverride ? 'Edit override' : 'Customize this combo'}
                             className={`w-8 h-8 rounded-md border transition-all text-[10px] font-medium ${
                               hasOverride
                                 ? 'border-primary bg-primary/10 text-primary'
-                                : 'border-border bg-card text-muted-foreground hover:border-primary/50'
+                                : 'border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted'
                             }`}
                           >
-                            {hasOverride ? '✓' : '+'}
+                            {hasOverride ? '✓' : '✎'}
                           </button>
                         </td>
                       );
