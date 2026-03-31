@@ -766,6 +766,145 @@ Most brands complete their initial Brand Profile in 15–30 minutes. Expect 2–
 No. A Brand Profile defines the *style* — lighting, background, composition — but the AI introduces natural variation within those constraints. Each product image looks fresh and unique while maintaining your brand's visual signature. Think of it like a talented photographer following a creative brief: consistent, but never robotic.
 `,
   },
+  {
+    slug: 'ai-product-photography-examples-gallery',
+    title: '12 AI-Generated Product Photography Examples That Look 100% Real',
+    metaDescription: 'See 12 stunning AI-generated product photography examples across fashion, beauty, fragrances, jewelry & sports. Discover how brands create studio-quality images with AI.',
+    publishDate: '2026-03-31',
+    author: 'VOVV AI Team',
+    readTime: '7 min read',
+    category: 'AI Photography',
+    excerpt: 'From fashion editorials to fragrance close-ups, these 12 AI-generated product images are indistinguishable from traditional studio photography. See exactly how they were made.',
+    tags: ['AI product photography examples', 'AI fashion photography', 'AI generated product images', 'product photography gallery', 'AI beauty photography', 'AI jewelry photography'],
+    coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/4c820f7b-25ae-47b7-96c1-0d2973928276.png',
+    content: `
+## AI product photography has crossed the uncanny valley
+
+Two years ago, AI-generated product images had a tell — plastic-looking skin, warped fingers, inconsistent lighting. That era is over.
+
+Today's AI photography tools produce images that professional photographers genuinely can't distinguish from real studio shots. The 12 examples below are all **100% AI-generated** using [VOVV's Freestyle generator](/freestyle) — no camera, no studio, no post-production.
+
+> **Every image on this page was created in under 60 seconds.** Click any image to recreate it with your own product on our [Discover feed](/discover).
+
+---
+
+## Fashion & Apparel
+
+### Studio Chair Pose
+
+![AI-generated fashion model sitting on a studio chair in professional lighting](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/4c820f7b-25ae-47b7-96c1-0d2973928276.png)
+
+A classic editorial setup: model Zara on a studio chair with soft directional lighting. This is the kind of shot that typically requires a full studio rental, lighting rig, and a stylist. With AI, it took one click.
+
+### The Gaze of Blue
+
+![AI fashion photography with model in gradient blue studio setting](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d5923329-9f7b-44b8-bdea-94102f136dad.png)
+
+Gradient blue studio backgrounds are trending across fashion e-commerce. This AI-generated shot nails the contemporary aesthetic — cool tones, sharp focus on the garment, and natural skin texture.
+
+### Blue & White Sporty Chic
+
+![AI-generated sporty fashion photography against geometric blue wall](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d821ea74-ad16-431a-965f-26f6e6d61f03.jpg)
+
+Athletic wear shot against a geometric blue wall. The scene — *Geometric Blue Wall* — adds depth and context without distracting from the clothing. Perfect for activewear and streetwear brands.
+
+### Effortless Chic
+
+![AI virtual try-on result showing model in natural light loft setting](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/tryon-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cc6c2947-7f3f-483f-ad2d-b25068a7da16.png)
+
+This image was created using VOVV's [Virtual Try-On](/features/virtual-try-on) feature — upload your garment, pick a model, and the AI dresses them naturally. The loft setting with natural light sells the lifestyle.
+
+---
+
+## Beauty & Skincare
+
+### Nature's Essence Peppermint Shampoo
+
+![AI product photography of shampoo bottle in natural woodland setting](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/7ac5aa48-f0f3-478b-b089-bea325a464f2.png)
+
+Product placement in a natural woodland scene — the *Natural Woodscape* background complements the organic branding. No location scout needed; the AI generates the entire environment around your product.
+
+### Radiant Natural Beauty
+
+![AI beauty photography showing natural skin glow and soft lighting](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/006fd44a-889c-4c90-8d4a-ec1923acd27c.png)
+
+For skincare and beauty brands, this kind of "lit from within" shot is the gold standard. Notice the natural skin texture and soft catchlights in the eyes — hallmarks of high-end beauty photography that the AI replicates perfectly.
+
+---
+
+## Fragrances & Luxury
+
+### BYREDO Gypsy Water on Ice
+
+![AI-generated luxury fragrance photography with frozen surface product placement](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1d76735b-f3d4-4e94-b76d-b65de6c4cbc1.png)
+
+A fragrance bottle on a frozen surface — the *Frozen Surface Product* scene creates a premium, editorial feel that matches the brand's minimalist luxury aesthetic. This type of conceptual product shot usually requires a specialized still-life photographer.
+
+---
+
+## Jewelry & Accessories
+
+### Diamond Hoop Earrings
+
+![AI jewelry photography with diamond earrings on gradient backdrop](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b018adc4-2af5-4ae3-885e-40f3a18bfe54.png)
+
+Jewelry is one of the hardest categories for AI — reflections, facets, and metallic sheen all need to be perfect. The *Gradient Backdrop Elegance* scene handles it beautifully, with the soft gradient drawing focus to the diamonds.
+
+### Sunkissed Glamour
+
+![AI accessory photography with model wearing sunglasses in golden light](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/a804af9e-f6a1-4ff7-81aa-74a299f5307b.png)
+
+Golden-hour lighting with accessories — this kind of aspirational lifestyle shot drives engagement on social platforms. The warm tones and confident pose make it equally effective for Instagram, product pages, or advertising.
+
+---
+
+## Sports & Lifestyle
+
+### Sitting Pretty on the Rim
+
+![AI sports photography showing model sitting on basketball hoop against sky](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/e2efe4c5-fd1f-46bb-9235-727839605874.jpg)
+
+An impossible shot made possible by AI — a model perched on a basketball rim against a vivid sky. The *Hoop Dream Sky* scene creates the kind of attention-grabbing visual that stops scrolling. Traditional photography would need a crane, safety equipment, and a brave model.
+
+### Stadium Chic
+
+![AI fashion photography with model Freya in stadium seating setting](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/639d813e-482e-43a0-9b9d-9ece13ae33cf.jpg)
+
+Model Freya in a *Stadium Seating Fashion* scene — the bold colors and geometric lines of stadium seating create a striking background for sportswear and fashion. No stadium rental required.
+
+---
+
+## How these images were made
+
+Every image above was generated using VOVV's AI tools:
+
+1. **[Freestyle Generator](/freestyle)** — Type a prompt or pick a scene, and the AI generates studio-quality images in seconds
+2. **[Virtual Try-On](/features/virtual-try-on)** — Upload your garment and the AI dresses a model naturally
+3. **[Brand Profiles](/features/brand-profiles)** — Lock in your brand's lighting, composition, and color palette so every generation stays on-brand
+
+Want to recreate any of these shots with your own product? Browse the full collection on our [Discover page](/discover) and click "Recreate this" on any image.
+
+---
+
+## Frequently Asked Questions
+
+### Can I recreate these images with my own product?
+
+Yes. Every image on the [Discover page](/discover) has a "Recreate this" button. Click it, upload your product photo, and the AI generates the same scene with your product.
+
+### Are AI-generated images royalty-free?
+
+All images you generate on VOVV are yours to use commercially — product listings, social media, advertising, websites. No licensing fees, no usage restrictions.
+
+### Do I need a professional product photo to start?
+
+No. A clear smartphone photo on a plain background works well. The AI handles the rest — background removal, lighting, model placement, and scene composition.
+
+### How much does it cost?
+
+VOVV offers [flexible plans](/pricing) starting with free credits. Most images cost 1–3 credits depending on quality settings. A single image replaces what used to cost $200–$500 in traditional photography.
+`,
+  },
 ];
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
