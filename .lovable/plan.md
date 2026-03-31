@@ -1,59 +1,100 @@
 
+Goal: rebuild Catalog Shot Set into a clear, fast, separate workflow with this exact order:
+1) Products → 2) Poses → 3) Models → 4) Backgrounds → 5) Style Shots (Extra tab) → 6) Review & Generate.
 
-# Fix Catalog: Broken Previews, Bad Layout, Confusing UX
+Why it currently feels broken (from code + data):
+- Only 2 models appear because Catalog currently loads only `custom_models + user_models`; your account has 0 active custom + 2 user models.
+- Product thumbnails look “not showing” because many uploads have large transparent/empty canvas; current square thumbnail + fit mode makes the bag tiny.
+- “Visual Style” is overloaded (poses + backgrounds + per-shot edit in one page), so flow is confusing.
+- Shot styler is partially broken: it filters `pose_` / `scene_` IDs, but catalog IDs are `catalogPose_*` / `catalogBg_*`.
+- Shot overrides are collected but not actually applied in generation loop.
 
-## Root Causes
+Implementation plan (updated to your requested flow)
 
-1. **All 23 AI preview requests fire simultaneously on mount** → all hit 429 rate limit → all pose/background cards show broken images (empty `previewUrl: ''` + failed AI generation)
-2. **PoseSelectorCard** renders broken `<img>` when `previewUrl` is empty string — shows alt text over gray gradient (the broken cards in screenshot)
-3. **ProductMultiSelect** uses `object-cover` on square aspect ratio — crops product images badly
-4. **CatalogStepReview** still imports `mockTryOnPoses` from shared data
-5. **No guidance** on what the workflow does or how to use it
+1) Rebuild step architecture in `CatalogGenerate`
+- Replace current 3-step flow with 6-step flow:
+  - Step 1: Products
+  - Step 2: Poses
+  - Step 3: Models
+  - Step 4: Main Background(s)
+  - Step 5: Style Shots (Extra tab)
+  - Step 6: Review
+- Add strict step gating so user always understands what comes next.
+- Update intro text to explain this exact sequence.
 
-## Fix Plan
+2) Fix model source so full library appears (not only 2)
+- In Catalog only, compose models from:
+  - built-in library (`mockModels`)
+  - + custom models
+  - + user models
+- Deduplicate and sort with existing model sort hook.
+- In model step, separate sections:
+  - “Library Models” (main)
+  - “My Models” (secondary)
+- Keep catalog separate from other workflows for scenes/backgrounds (no shared scene imports).
 
-### 1. Replace AI auto-generation with static gradient placeholders + manual "Generate" button
-**`src/components/app/catalog/CatalogStepStyle.tsx`**
-- Remove the `useEffect` that fires all 23 preview requests on mount
-- Remove `useCatalogPreviews` import entirely for now
-- Instead, render pose/background cards with **colored gradient placeholders** (no broken images) — each category gets a distinct gradient color
-- Add a single "Generate AI Previews" button that triggers sequential generation (one at a time with 2s delay) — optional, not auto
+3) Fix product thumbnail visibility and selection UX
+- Create catalog-specific product card/grid (do not rely only on shared compact card behavior):
+  - larger portrait thumbnail area
+  - checker/neutral backdrop for transparent PNGs
+  - image fallback chain: `image_url` → first valid `product_images[]`
+  - `onError` fallback to next image
+- Keep loading fast by selecting only needed columns and optimized thumbnail URLs.
 
-### 2. Create a catalog-specific card component (not PoseSelectorCard)
-**New: `src/components/app/catalog/CatalogPoseCard.tsx`**
-- Simple card with: gradient background matching category color, pose name, short description, selection state
-- When `previewUrl` exists and is non-empty, show the image; otherwise show the styled gradient placeholder with an icon
-- Much simpler than the shared PoseSelectorCard which assumes valid images
-- Compact size suitable for horizontal scroll galleries
+4) Split Pose step and Background step (as requested)
+- Step 2 = only poses.
+- Step 4 = only main background(s).
+- Keep catalog-only data from `src/data/catalogPoses.ts` (no cross-workflow scenes).
+- Keep visual cards simple and understandable (clear selected count + max).
 
-### 3. Fix product image display
-**`src/components/app/catalog/CatalogStepProductsModels.tsx`**
-- Override the product grid to use `object-contain` with a light background instead of `object-cover` that crops products
-- Since we're using `ProductMultiSelect` (shared component), wrap it and pass a custom className or build a simpler inline product grid for catalog that uses `object-contain`
+5) Build “Style Shots” step with “Extra” tab (combo-level editing)
+- Step 5 shows full Product × Model combo matrix.
+- Add tabs:
+  - Overrides (pose/background/framing/custom instruction per combo)
+  - Extra Items (per combo)
+- Extra Items support:
+  - text item (e.g. “beige hat”, “gold chain”, “mini bag”)
+  - optional reference image from product library (for better fidelity)
+  - placement hint (head/hand/shoulder/body/scene)
+- Fix ID prefix logic in `CatalogShotStyler` so dropdowns populate for catalog IDs.
 
-### 4. Fix CatalogStepReview import
-**`src/components/app/catalog/CatalogStepReview.tsx`**
-- Remove `import { mockTryOnPoses } from '@/data/mockData'` (line 2) — it's unused
+6) Make generation actually use style overrides + extras
+- Update `useCatalogGenerate` to apply per-combo override before queueing each job.
+- Pass `customPrompt`, `framing`, and `extraItems` in payload.
+- Update `generate-tryon` function to inject:
+  - per-shot custom prompt
+  - accessory/extra-item directives
+  - optional extra reference images in model input parts.
+- This makes Style Shots tab functional, not cosmetic.
 
-### 5. Add sequential preview generation with backoff
-**`src/hooks/useCatalogPreviews.ts`**
-- Add a queue-based approach: generate previews one at a time with 3s delay between requests
-- Add retry with exponential backoff on 429
-- Add a `generateAll` method that queues all items sequentially
-- Track overall progress (e.g. "Generating preview 3 of 23...")
+7) Performance and clarity improvements
+- Remove heavy work from early steps (don’t load everything at once).
+- Lazy-render steps (models/backgrounds/style matrix only when user reaches them).
+- Keep AI preview generation optional/manual (not automatic burst requests).
+- Add compact “current selection summary” sticky bar across steps.
 
-### 6. Improve UX with intro text and clearer step labels
-**`src/pages/CatalogGenerate.tsx`**
-- Add a brief intro section explaining the workflow: "Select products, choose models, pick poses & backgrounds, then generate your entire catalog in one batch"
+Files to update/create
+- Update: `src/pages/CatalogGenerate.tsx`
+- Create: `src/components/app/catalog/CatalogStepProducts.tsx`
+- Create: `src/components/app/catalog/CatalogStepPoses.tsx`
+- Create: `src/components/app/catalog/CatalogStepModels.tsx`
+- Create: `src/components/app/catalog/CatalogStepBackgrounds.tsx`
+- Create: `src/components/app/catalog/CatalogStepStyleShots.tsx`
+- Update: `src/components/app/catalog/CatalogShotStyler.tsx`
+- Update: `src/components/app/catalog/CatalogStepReview.tsx`
+- Update: `src/hooks/useCatalogGenerate.ts`
+- Update: `supabase/functions/generate-tryon/index.ts`
+- Optional small helper create/update: catalog product thumbnail card component.
 
-## Files summary
+Technical details (important)
+- No DB migration required for this pass (style extras can be payload-only).
+- Catalog remains isolated from shared scene workflows.
+- “Extra item” generation is best-effort AI styling; adding image references improves consistency.
+- We will keep credit math transparent in Review based on actual matrix size.
 
-| Action | File |
-|--------|------|
-| Create | `src/components/app/catalog/CatalogPoseCard.tsx` — gradient placeholder card |
-| Update | `src/components/app/catalog/CatalogStepStyle.tsx` — remove auto-generation, use CatalogPoseCard, add manual generate button |
-| Update | `src/components/app/catalog/CatalogStepProductsModels.tsx` — fix product image cropping |
-| Update | `src/components/app/catalog/CatalogStepReview.tsx` — remove mockTryOnPoses import |
-| Update | `src/hooks/useCatalogPreviews.ts` — sequential queue with backoff |
-| Update | `src/pages/CatalogGenerate.tsx` — add intro guidance |
-
+Acceptance criteria
+- You can see full model library (not just 2).
+- Product cards show clearly (no “invisible/tiny” look).
+- Flow is exactly: Products → Poses → Models → Backgrounds → Style Shots (Extra tab) → Review.
+- Style Shots changes materially affect generated output.
+- Background selection is its own dedicated step.
