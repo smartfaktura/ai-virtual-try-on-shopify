@@ -458,9 +458,12 @@ export default function Workflows() {
     recentJobs.length > 0;
 
   const handleCreateVisualSet = (workflow: Workflow) => {
-    // Picture Perspectives uses its standalone single-page layout
     if (workflow.name === 'Picture Perspectives') {
       navigate('/app/perspectives');
+      return;
+    }
+    if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set') {
+      navigate('/app/catalog');
       return;
     }
     navigate(workflow.slug ? `/app/generate/${workflow.slug}` : `/app/workflows`);

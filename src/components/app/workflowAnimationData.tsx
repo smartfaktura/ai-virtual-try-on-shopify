@@ -219,4 +219,21 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
+  'Catalog Shot Set': {
+    mode: 'carousel',
+    background: tryonShowcase1,
+    objectPosition: 'center',
+    backgrounds: [tryonShowcase1, tryonShowcase2, showcase1, showcase2, tryonShowcase3, showcase3],
+    elements: [
+      {
+        type: 'badge', label: 'Bulk Generation', icon: <Layers className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Matrix Mode', icon: <Star className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+    ],
+  },
+
 };

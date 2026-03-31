@@ -44,6 +44,16 @@ const WORKFLOW_OPTIONS = [
     sampleName: 'Ice Roller',
     sampleImage: '/images/samples/sample-ice-roller.png',
   },
+  {
+    name: 'Catalog Shot Set',
+    displayName: 'Catalog Shot Set',
+    slug: 'catalog-shot-set',
+    subtitle: 'Bulk catalog photography at scale',
+    sampleId: '',
+    sampleName: '',
+    sampleImage: '',
+    directRoute: '/app/catalog',
+  },
 ];
 
 type Step = 'workflow' | 'product' | 'upload';
@@ -101,6 +111,12 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
   };
 
   const handleSelectWorkflow = (wf: typeof WORKFLOW_OPTIONS[0]) => {
+    if ('directRoute' in wf && wf.directRoute) {
+      onOpenChange(false);
+      navigate(wf.directRoute as string);
+      reset();
+      return;
+    }
     setSelectedWorkflow(wf);
     setSelectedProductId(null);
     setStep('product');
@@ -182,7 +198,8 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     id: wf.slug,
     name: wf.slug === 'product-listing-set' ? 'Product Listing Set'
       : wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
-      : 'Selfie / UGC Set',
+      : wf.slug === 'selfie-ugc-set' ? 'Selfie / UGC Set'
+      : 'Catalog Shot Set',
     slug: wf.slug,
     description: wf.subtitle,
     default_image_count: 4,
@@ -203,7 +220,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
       <div className={cn(
         isMobile
           ? "flex flex-col gap-3"
-          : "grid grid-cols-3 gap-3"
+          : "grid grid-cols-2 lg:grid-cols-4 gap-3"
       )}>
         {WORKFLOW_CARDS.map((wf, i) => (
           <WorkflowCardCompact
