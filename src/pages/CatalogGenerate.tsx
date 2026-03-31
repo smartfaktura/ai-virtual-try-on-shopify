@@ -91,6 +91,9 @@ export default function CatalogGenerate() {
     ],
     tags: p.tags || [],
     description: p.description || '',
+    status: 'active' as const,
+    createdAt: p.created_at || '',
+    updatedAt: p.updated_at || '',
   })), [userProducts]);
 
   // Models: full library + custom + user
