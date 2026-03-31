@@ -796,12 +796,13 @@ function buildContentArray(
 
 // ── Centralized Freestyle Fallback Executor ──────────────────────────────
 // 3-attempt chain: primary → other provider → final rescue on primary
-// Wall-clock budget enforced: primary gets max 120s, fallbacks use remaining budget.
+// Wall-clock budget enforced: primary gets max 75s, fallbacks use remaining budget.
 // No Pro→Flash auto-downgrade. Terminal failures stop immediately.
 
-const PRIMARY_ATTEMPT_TIMEOUT_MS = 120_000;   // 120s max for first attempt
-const WALL_CLOCK_BUDGET_MS = 145_000;         // 145s total budget (edge fn limit ~150s)
-const MIN_ATTEMPT_BUDGET_MS = 25_000;         // skip fallback if <25s remaining
+const PRIMARY_ATTEMPT_TIMEOUT_MS = 75_000;    // 75s max for first attempt (was 120s) — leaves 60s+ for fallback
+const WALL_CLOCK_BUDGET_MS = 140_000;         // 140s total budget — 10s safety before platform kills at ~150s
+const MIN_ATTEMPT_BUDGET_MS = 15_000;         // 15s minimum for a fallback attempt (was 25s)
+const SAFETY_DEADLINE_MS = 135_000;           // 135s — graceful abort point before platform kill
 
 interface FallbackOpts {
   primaryProvider: "nanobanana" | "seedream";
@@ -1273,13 +1274,14 @@ serve(async (req) => {
       hasArkKey: !!ARK_API_KEY,
     });
 
-    // Extend timeout_at for queue jobs
+    // Extend timeout_at for queue jobs — 3min so cleanup_stale_jobs catches
+    // platform-killed functions quickly instead of waiting 10 min
     if (isQueueInternal && body.job_id) {
       try {
         await supabase.from('generation_queue')
-          .update({ timeout_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() })
+          .update({ timeout_at: new Date(Date.now() + 3 * 60 * 1000).toISOString() })
           .eq('id', body.job_id);
-        console.log(`[generate-freestyle] Extended timeout_at to 10min for job ${body.job_id}`);
+        console.log(`[generate-freestyle] Extended timeout_at to 3min for job ${body.job_id}`);
       } catch (e) {
         console.warn(`[generate-freestyle] Failed to extend timeout_at:`, e);
       }
@@ -1296,6 +1298,13 @@ serve(async (req) => {
       : "";
 
     for (let i = 0; i < effectiveImageCount; i++) {
+      // Layer 4: Safety deadline — abort gracefully before platform kills us
+      const elapsedSinceStart = performance.now() - requestStartTime;
+      if (elapsedSinceStart > SAFETY_DEADLINE_MS) {
+        console.warn(`[generate-freestyle] SAFETY DEADLINE reached (${(elapsedSinceStart / 1000).toFixed(1)}s) before image ${i + 1} — aborting loop gracefully`);
+        errors.push(`Safety deadline reached at ${(elapsedSinceStart / 1000).toFixed(0)}s — skipped image ${i + 1}`);
+        break;
+      }
       const variationSuffix =
         i === 0
           ? batchConsistency
