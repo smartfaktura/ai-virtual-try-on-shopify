@@ -18,9 +18,14 @@ export default function Blog() {
     return cats;
   }, []);
 
+  const sorted = useMemo(
+    () => [...blogPosts].sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()),
+    []
+  );
+
   const filtered = activeCategory
-    ? blogPosts.filter((p) => p.category === activeCategory)
-    : blogPosts;
+    ? sorted.filter((p) => p.category === activeCategory)
+    : sorted;
 
   const [featured, ...rest] = filtered;
 
@@ -35,7 +40,7 @@ export default function Blog() {
       name: 'VOVV AI',
       url: SITE_URL,
     },
-    blogPost: blogPosts.map((p) => ({
+    blogPost: sorted.map((p) => ({
       '@type': 'BlogPosting',
       headline: p.title,
       datePublished: p.publishDate,
