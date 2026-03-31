@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft, ChevronRight, Wand2, Plus, X, ShoppingBag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Wand2, Plus, X, Settings2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CatalogShotStyler } from './CatalogShotStyler';
 import { catalogPoses, catalogBackgrounds } from '@/data/catalogPoses';
-import type { Product, ModelProfile, TryOnPose } from '@/types';
+import type { Product, ModelProfile } from '@/types';
 import type { ShotOverride } from './CatalogShotStyler';
 
 export interface ExtraItem {
-  label: string;
-  placement: 'head' | 'hand' | 'shoulder' | 'body' | 'scene';
+  productId: string;
+  productTitle: string;
+  productImage?: string;
 }
 
 interface CatalogStepStyleShotsProps {
@@ -27,13 +27,44 @@ interface CatalogStepStyleShotsProps {
   onNext: () => void;
 }
 
-const PLACEMENT_OPTIONS = [
-  { value: 'head' as const, label: 'Head' },
-  { value: 'hand' as const, label: 'Hand' },
-  { value: 'shoulder' as const, label: 'Shoulder' },
-  { value: 'body' as const, label: 'Body' },
-  { value: 'scene' as const, label: 'Scene' },
-];
+function ProductPickerPopover({
+  products,
+  excludeIds,
+  onSelect,
+  trigger,
+}: {
+  products: Product[];
+  excludeIds: string[];
+  onSelect: (product: Product) => void;
+  trigger: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const available = products.filter(p => !excludeIds.includes(p.id));
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent className="w-64 p-2 max-h-60 overflow-y-auto" align="start">
+        {available.length === 0 ? (
+          <p className="text-xs text-muted-foreground p-2">No more products available</p>
+        ) : (
+          available.map(p => (
+            <button
+              key={p.id}
+              onClick={() => { onSelect(p); setOpen(false); }}
+              className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted transition-colors"
+            >
+              <div className="w-7 h-7 rounded bg-muted overflow-hidden flex-shrink-0">
+                <img src={p.images[0]?.url} alt={p.title} className="w-full h-full object-contain" loading="lazy" />
+              </div>
+              <span className="truncate">{p.title}</span>
+            </button>
+          ))
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function CatalogStepStyleShots({
   products, selectedProductIds, models, selectedModelIds,
@@ -43,199 +74,178 @@ export function CatalogStepStyleShots({
 }: CatalogStepStyleShotsProps) {
   const [stylerOpen, setStylerOpen] = useState(false);
   const [stylerKey, setStylerKey] = useState<string | null>(null);
-  const [newItemLabel, setNewItemLabel] = useState('');
-  const [newItemPlacement, setNewItemPlacement] = useState<ExtraItem['placement']>('hand');
-  const [activeComboForExtra, setActiveComboForExtra] = useState<string | null>(null);
 
   const selectedProducts = useMemo(() => products.filter(p => selectedProductIds.has(p.id)), [products, selectedProductIds]);
   const selectedModels = useMemo(() => models.filter(m => selectedModelIds.has(m.modelId)), [models, selectedModelIds]);
-
   const allPoses = useMemo(() => [...catalogPoses, ...catalogBackgrounds], []);
 
-  const openStyler = (productId: string, modelId: string) => {
-    setStylerKey(`${productId}_${modelId}`);
-    setStylerOpen(true);
+  // Global extras applied to all combos
+  const [globalExtras, setGlobalExtras] = useState<ExtraItem[]>([]);
+
+  const combos = useMemo(() =>
+    selectedProducts.flatMap(p => selectedModels.map(m => ({ product: p, model: m, key: `${p.id}_${m.modelId}` }))),
+    [selectedProducts, selectedModels]
+  );
+
+  const addGlobalExtra = (product: Product) => {
+    if (globalExtras.some(e => e.productId === product.id)) return;
+    const item: ExtraItem = { productId: product.id, productTitle: product.title, productImage: product.images[0]?.url };
+    const next = [...globalExtras, item];
+    setGlobalExtras(next);
+    // Apply to all combos
+    const nextMap = new Map(extraItems);
+    for (const combo of combos) {
+      const list = nextMap.get(combo.key) || [];
+      if (!list.some(e => e.productId === product.id)) {
+        nextMap.set(combo.key, [...list, item]);
+      }
+    }
+    onExtraItemsChange(nextMap);
   };
 
-  const addExtraItem = (comboKey: string) => {
-    if (!newItemLabel.trim()) return;
-    const next = new Map(extraItems);
-    const list = next.get(comboKey) || [];
-    list.push({ label: newItemLabel.trim(), placement: newItemPlacement });
-    next.set(comboKey, list);
-    onExtraItemsChange(next);
-    setNewItemLabel('');
+  const removeGlobalExtra = (productId: string) => {
+    setGlobalExtras(prev => prev.filter(e => e.productId !== productId));
+    // Remove from all combos
+    const nextMap = new Map(extraItems);
+    for (const combo of combos) {
+      const list = nextMap.get(combo.key) || [];
+      const filtered = list.filter(e => e.productId !== productId);
+      if (filtered.length === 0) nextMap.delete(combo.key);
+      else nextMap.set(combo.key, filtered);
+    }
+    onExtraItemsChange(nextMap);
   };
 
-  const removeExtraItem = (comboKey: string, index: number) => {
-    const next = new Map(extraItems);
-    const list = [...(next.get(comboKey) || [])];
-    list.splice(index, 1);
-    if (list.length === 0) next.delete(comboKey);
-    else next.set(comboKey, list);
-    onExtraItemsChange(next);
+  const addExtraToCombo = (comboKey: string, product: Product) => {
+    const nextMap = new Map(extraItems);
+    const list = nextMap.get(comboKey) || [];
+    if (list.some(e => e.productId === product.id)) return;
+    nextMap.set(comboKey, [...list, { productId: product.id, productTitle: product.title, productImage: product.images[0]?.url }]);
+    onExtraItemsChange(nextMap);
   };
 
-  const comboCount = selectedProducts.length * selectedModels.length;
-  const overrideCount = shotOverrides.size;
+  const removeExtraFromCombo = (comboKey: string, productId: string) => {
+    const nextMap = new Map(extraItems);
+    const list = (nextMap.get(comboKey) || []).filter(e => e.productId !== productId);
+    if (list.length === 0) nextMap.delete(comboKey);
+    else nextMap.set(comboKey, list);
+    onExtraItemsChange(nextMap);
+    // Also remove from global if it was global
+    setGlobalExtras(prev => prev.filter(e => e.productId !== productId));
+  };
+
+  const globalExcludeIds = globalExtras.map(e => e.productId);
   const extraCount = Array.from(extraItems.values()).reduce((sum, list) => sum + list.length, 0);
 
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center gap-2">
         <Wand2 className="w-4 h-4 text-muted-foreground" />
         <h3 className="font-semibold text-sm">Style Shots</h3>
-        <Badge variant="secondary" className="text-[10px]">{comboCount} combos</Badge>
-        {overrideCount > 0 && <Badge variant="default" className="text-[10px]">{overrideCount} overrides</Badge>}
+        <Badge variant="secondary" className="text-[10px]">{combos.length} combos</Badge>
         {extraCount > 0 && <Badge variant="outline" className="text-[10px]">{extraCount} extras</Badge>}
       </div>
       <p className="text-xs text-muted-foreground">
-        Optionally customize individual product × model combinations. Override pose, background, framing, or add extra items like accessories.
+        Add extra products (accessories, props) to your shots. Use "Apply to All" or customize per combo.
       </p>
 
-      <Tabs defaultValue="overrides">
-        <TabsList>
-          <TabsTrigger value="overrides">Overrides</TabsTrigger>
-          <TabsTrigger value="extras">Extra Items</TabsTrigger>
-        </TabsList>
+      {/* Apply to All */}
+      <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium">Apply to all shots</span>
+          <ProductPickerPopover
+            products={products}
+            excludeIds={globalExcludeIds}
+            onSelect={addGlobalExtra}
+            trigger={
+              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
+                <Plus className="w-3 h-3" /> Add product to all
+              </Button>
+            }
+          />
+        </div>
+        {globalExtras.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {globalExtras.map(item => (
+              <Badge key={item.productId} variant="secondary" className="text-[10px] gap-1 pr-1">
+                {item.productImage && (
+                  <img src={item.productImage} alt="" className="w-3.5 h-3.5 rounded object-contain" />
+                )}
+                {item.productTitle}
+                <button onClick={() => removeGlobalExtra(item.productId)} className="ml-0.5 hover:text-destructive">
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
 
-        <TabsContent value="overrides">
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="min-w-full text-xs">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="p-2 text-left font-medium text-muted-foreground">Product \ Model</th>
-                  {selectedModels.map(m => (
-                    <th key={m.modelId} className="p-2 text-center font-medium text-muted-foreground">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-muted mx-auto mb-1">
-                        <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover" />
-                      </div>
-                      <span className="truncate block max-w-[60px]">{m.name}</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {selectedProducts.map(p => (
-                  <tr key={p.id} className="border-b border-border last:border-0">
-                    <td className="p-2 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded bg-muted overflow-hidden flex-shrink-0">
-                        <img src={p.images[0]?.url} alt={p.title} className="w-full h-full object-contain" />
-                      </div>
-                      <span className="truncate max-w-[100px]">{p.title}</span>
-                    </td>
-                    {selectedModels.map(m => {
-                      const key = `${p.id}_${m.modelId}`;
-                      const hasOverride = shotOverrides.has(key);
-                      return (
-                        <td key={m.modelId} className="p-2 text-center">
-                          <button
-                            onClick={() => openStyler(p.id, m.modelId)}
-                            title={hasOverride ? 'Edit override' : 'Customize this combo'}
-                            className={`w-8 h-8 rounded-md border transition-all text-[10px] font-medium ${
-                              hasOverride
-                                ? 'border-primary bg-primary/10 text-primary'
-                                : 'border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted'
-                            }`}
-                          >
-                            {hasOverride ? '✓' : '✎'}
-                          </button>
-                        </td>
-                      );
-                    })}
-                  </tr>
+      {/* Combo List */}
+      <div className="space-y-1.5">
+        {combos.map(({ product, model, key }) => {
+          const items = extraItems.get(key) || [];
+          const hasOverride = shotOverrides.has(key);
+          const comboExcludeIds = [product.id, ...items.map(e => e.productId)];
+
+          return (
+            <div key={key} className="rounded-lg border border-border p-3 flex flex-col gap-2">
+              {/* Product × Model row */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded bg-muted overflow-hidden flex-shrink-0">
+                  <img src={product.images[0]?.url} alt={product.title} className="w-full h-full object-contain" loading="lazy" />
+                </div>
+                <span className="text-xs font-medium truncate max-w-[120px]">{product.title}</span>
+                <span className="text-muted-foreground/50 text-xs">×</span>
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                  <img src={model.previewUrl} alt={model.name} className="w-full h-full object-cover" loading="lazy" />
+                </div>
+                <span className="text-xs text-muted-foreground truncate max-w-[80px]">{model.name}</span>
+
+                <div className="ml-auto flex items-center gap-1">
+                  <button
+                    onClick={() => { setStylerKey(key); setStylerOpen(true); }}
+                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border transition-colors ${
+                      hasOverride
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    <Settings2 className="w-3 h-3" />
+                    {hasOverride ? 'Customized' : 'Customize'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Extras row */}
+              <div className="flex items-center gap-1.5 flex-wrap pl-10">
+                {items.map(item => (
+                  <Badge key={item.productId} variant="secondary" className="text-[10px] gap-1 pr-1">
+                    {item.productImage && (
+                      <img src={item.productImage} alt="" className="w-3.5 h-3.5 rounded object-contain" />
+                    )}
+                    {item.productTitle}
+                    <button onClick={() => removeExtraFromCombo(key, item.productId)} className="ml-0.5 hover:text-destructive">
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </Badge>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="extras">
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Add accessories or props to specific product × model combos (e.g. "beige hat", "gold chain", "mini bag").
-            </p>
-
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="min-w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="p-2 text-left font-medium text-muted-foreground">Combo</th>
-                    <th className="p-2 text-left font-medium text-muted-foreground">Extra Items</th>
-                    <th className="p-2 text-center font-medium text-muted-foreground w-48">Add</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedProducts.flatMap(p =>
-                    selectedModels.map(m => {
-                      const key = `${p.id}_${m.modelId}`;
-                      const items = extraItems.get(key) || [];
-                      const isActive = activeComboForExtra === key;
-                      return (
-                        <tr key={key} className="border-b border-border last:border-0">
-                          <td className="p-2">
-                            <span className="text-muted-foreground">{p.title}</span>
-                            <span className="text-muted-foreground/60 mx-1">×</span>
-                            <span className="text-muted-foreground">{m.name}</span>
-                          </td>
-                          <td className="p-2">
-                            <div className="flex flex-wrap gap-1">
-                              {items.map((item, i) => (
-                                <Badge key={i} variant="secondary" className="text-[10px] gap-1">
-                                  <ShoppingBag className="w-2.5 h-2.5" />
-                                  {item.label} ({item.placement})
-                                  <button onClick={() => removeExtraItem(key, i)} className="ml-0.5 hover:text-destructive">
-                                    <X className="w-2.5 h-2.5" />
-                                  </button>
-                                </Badge>
-                              ))}
-                              {items.length === 0 && <span className="text-muted-foreground/50">—</span>}
-                            </div>
-                          </td>
-                          <td className="p-2">
-                            {isActive ? (
-                              <div className="flex items-center gap-1">
-                                <Input
-                                  value={newItemLabel}
-                                  onChange={e => setNewItemLabel(e.target.value)}
-                                  placeholder="e.g. beige hat"
-                                  className="h-7 text-[11px] w-24"
-                                  onKeyDown={e => e.key === 'Enter' && addExtraItem(key)}
-                                />
-                                <select
-                                  value={newItemPlacement}
-                                  onChange={e => setNewItemPlacement(e.target.value as ExtraItem['placement'])}
-                                  className="h-7 text-[11px] rounded border border-border bg-background px-1"
-                                >
-                                  {PLACEMENT_OPTIONS.map(o => (
-                                    <option key={o.value} value={o.value}>{o.label}</option>
-                                  ))}
-                                </select>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => addExtraItem(key)}>
-                                  <Plus className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-[10px] gap-1"
-                                onClick={() => { setActiveComboForExtra(key); setNewItemLabel(''); }}
-                              >
-                                <Plus className="w-3 h-3" /> Add
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                <ProductPickerPopover
+                  products={products}
+                  excludeIds={comboExcludeIds}
+                  onSelect={(p) => addExtraToCombo(key, p)}
+                  trigger={
+                    <Button size="sm" variant="ghost" className="h-6 text-[10px] gap-1 px-2">
+                      <Plus className="w-3 h-3" /> Add
+                    </Button>
+                  }
+                />
+              </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          );
+        })}
+      </div>
 
       {/* Shot Styler Dialog */}
       {stylerKey && (
