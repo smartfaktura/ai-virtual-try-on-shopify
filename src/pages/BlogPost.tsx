@@ -125,6 +125,16 @@ export default function BlogPost() {
         {children}
       </a>
     ),
+    img: ({ src, alt }) => (
+      <ShimmerImage
+        src={getOptimizedUrl(src, { width: 720, quality: 75 })}
+        alt={alt || ''}
+        className="w-full h-auto rounded-xl my-6"
+        loading="lazy"
+        decoding="async"
+        fallbackSrc={src}
+      />
+    ),
   };
 
   const articleJsonLd = {
