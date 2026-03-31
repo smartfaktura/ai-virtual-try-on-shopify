@@ -1,9 +1,10 @@
-import blogImgAiPhotography from '@/assets/blog/ai-product-photography.jpg';
-import blogImgVirtualTryOn from '@/assets/blog/virtual-try-on.jpg';
-import blogImgVisualStrategy from '@/assets/blog/visual-content-strategy.jpg';
-import blogImgDiversity from '@/assets/blog/diverse-representation.jpg';
-import blogImgAutomated from '@/assets/blog/automated-listings.jpg';
-import blogImgBrandConsistency from '@/assets/blog/brand-consistency.jpg';
+const BLOG_BANNER_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/blog';
+const blogImgAiPhotography = `${BLOG_BANNER_BASE}/blog-ecommerce.jpg`;
+const blogImgVirtualTryOn = `${BLOG_BANNER_BASE}/blog-virtual-tryon.jpg`;
+const blogImgVisualStrategy = `${BLOG_BANNER_BASE}/blog-visual-strategy.jpg`;
+const blogImgDiversity = `${BLOG_BANNER_BASE}/blog-diversity.jpg`;
+const blogImgAutomated = `${BLOG_BANNER_BASE}/blog-automated.jpg`;
+const blogImgBrandConsistency = `${BLOG_BANNER_BASE}/blog-brand-consistency.jpg`;
 
 export interface BlogPost {
   slug: string;
