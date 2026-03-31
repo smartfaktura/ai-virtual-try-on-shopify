@@ -31,9 +31,11 @@ import moodConfident from '@/assets/catalog/mood_confident_v2.jpg';
 // Background preview imports
 import bgWhite from '@/assets/catalog/bg_white.jpg';
 import bgLightGray from '@/assets/catalog/bg_light_gray.jpg';
-import bgWarmBeige from '@/assets/catalog/bg_warm_beige.jpg';
 import bgConcrete from '@/assets/catalog/bg_concrete.jpg';
-import bgSageGreen from '@/assets/catalog/bg_sage_green.jpg';
+import bgIvory from '@/assets/catalog/bg_ivory.jpg';
+import bgCharcoal from '@/assets/catalog/bg_charcoal.jpg';
+import bgStone from '@/assets/catalog/bg_stone.jpg';
+import bgCream from '@/assets/catalog/bg_cream.jpg';
 
 /* ─── Studio-only catalog poses ─── */
 export const catalogPoses: TryOnPose[] = [
