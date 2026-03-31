@@ -125,7 +125,7 @@ export function useCatalogGenerate() {
   const startGeneration = useCallback(async (params: CatalogGenerateParams): Promise<boolean> => {
     if (!user) { toast.error('Sign in to generate'); return false; }
 
-    const { products, models, poseIds, backgroundIds, allPoses, shotOverrides, extraItems } = params;
+    const { products, models, poseIds, backgroundIds, allPoses, extraItems } = params;
     const poseMap = new Map(allPoses.map(p => [p.poseId, p]));
 
     const token = await getAuthToken();
