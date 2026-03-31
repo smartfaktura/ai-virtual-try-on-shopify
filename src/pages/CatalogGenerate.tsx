@@ -313,6 +313,7 @@ export default function CatalogGenerate() {
       )}
 
       <BuyCreditsModal />
+      <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct} />
     </div>
   );
 }
