@@ -9,7 +9,14 @@ import poseFrontWalking from '@/assets/catalog/pose_front_walking.png';
 import poseThreeQuarter from '@/assets/catalog/pose_three_quarter.png';
 import poseSideProfile from '@/assets/catalog/pose_side_profile.jpg';
 import poseBackView from '@/assets/catalog/pose_back_view.png';
+import poseOverShoulder from '@/assets/catalog/pose_over_shoulder.png';
+import poseSeated from '@/assets/catalog/pose_seated.png';
+import poseCloseup from '@/assets/catalog/pose_closeup.png';
 import moodRadiant from '@/assets/catalog/mood_radiant.jpg';
+import moodJoyful from '@/assets/catalog/mood_joyful.jpg';
+import moodNeutral from '@/assets/catalog/mood_neutral.jpg';
+import moodUnapologetic from '@/assets/catalog/mood_unapologetic.jpg';
+import moodConfident from '@/assets/catalog/mood_confident.jpg';
 
 /* ─── Studio-only catalog poses ─── */
 export const catalogPoses: TryOnPose[] = [
