@@ -748,6 +748,23 @@ serve(async (req) => {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
           console.log(`Generated and uploaded image ${i + 1}/${imageCount}`);
+
+          // Write progress heartbeat so cleanup_stale_jobs knows we're alive
+          if (isQueueInternal && body.job_id) {
+            try {
+              const progressSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+              await progressSupabase.from("generation_queue").update({
+                result: {
+                  generatedCount: images.length,
+                  requestedCount: imageCount,
+                  images: images,
+                },
+                timeout_at: new Date(Date.now() + 3 * 60 * 1000).toISOString(), // 3 min heartbeat
+              }).eq("id", body.job_id);
+            } catch (progressErr) {
+              console.warn("[generate-tryon] Progress update failed:", progressErr);
+            }
+          }
         } else {
           errors.push(`Image ${i + 1} failed to generate`);
         }

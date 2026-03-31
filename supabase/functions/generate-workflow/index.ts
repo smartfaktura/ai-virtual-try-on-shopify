@@ -1093,7 +1093,7 @@ serve(async (req) => {
                     // Persist images so cleanup_stale_jobs can recover partial results
                     images: images.map((img) => img.url),
                   },
-                  timeout_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+                  timeout_at: new Date(Date.now() + 3 * 60 * 1000).toISOString(), // 3 min heartbeat
                 }).eq("id", body.job_id);
               } catch (progressErr) {
                 console.warn("[generate-workflow] Progress update failed:", progressErr);
