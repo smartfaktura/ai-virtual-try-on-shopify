@@ -696,9 +696,6 @@ async function generateImage(
         imageConfig: {
           ...(aspectRatio ? { aspectRatio } : {}),
           imageSize: "2K",
-          personGeneration: "ALLOW_ALL",
-          numberOfImages: 1,
-          outputOptions: { mimeType: "image/png" },
         },
       };
 

@@ -744,11 +744,7 @@ async function generateImage(
     }
 
     // Build generationConfig with imageConfig
-    const imageConfig: Record<string, unknown> = {
-      personGeneration: "ALLOW_ALL",
-      outputOptions: { mimeType: "image/png" },
-      numberOfImages: 1,
-    };
+    const imageConfig: Record<string, unknown> = {};
     if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
     imageConfig.imageSize = quality === 'high' ? "2K" : "1K";
     const generationConfig: Record<string, unknown> = {
