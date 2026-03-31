@@ -749,7 +749,7 @@ async function generateImage(
     };
     const imageConfig: Record<string, string> = {};
     if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
-    if (quality === 'high') imageConfig.imageSize = "2048";
+    if (quality === 'high') imageConfig.imageSize = "2K";
     if (Object.keys(imageConfig).length > 0) generationConfig.imageConfig = imageConfig;
 
     const response = await fetch(
