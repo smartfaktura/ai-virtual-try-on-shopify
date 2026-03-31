@@ -50,7 +50,7 @@ const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
-  { label: 'Catalog', icon: LayoutTemplate, path: '/app/catalog' },
+  
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Discover', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
