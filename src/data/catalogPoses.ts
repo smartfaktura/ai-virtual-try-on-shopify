@@ -31,11 +31,11 @@ export const catalogPoses: TryOnPose[] = [
   { poseId: 'catalogPose_three_quarter', name: 'Three-Quarter', description: 'Three-quarter angled turn', category: 'angled' as PoseCategory, previewUrl: poseThreeQuarter, promptHint: 'Fashion model in three-quarter turn pose, white studio background, professional e-commerce photography, full body' },
   { poseId: 'catalogPose_side_profile', name: 'Side Profile', description: 'Classic side profile', category: 'angled' as PoseCategory, previewUrl: poseSideProfile, promptHint: 'Fashion model in side profile pose, white studio background, professional e-commerce photography, full body' },
   { poseId: 'catalogPose_back_view', name: 'Back View', description: 'Back-facing pose', category: 'angled' as PoseCategory, previewUrl: poseBackView, promptHint: 'Fashion model seen from behind, back view, white studio background, professional e-commerce photography, full body' },
-  { poseId: 'catalogPose_over_shoulder', name: 'Over-the-Shoulder', description: 'Looking back over shoulder', category: 'angled' as PoseCategory, previewUrl: poseThreeQuarter, promptHint: 'Fashion model looking back over shoulder, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_over_shoulder', name: 'Over-the-Shoulder', description: 'Looking back over shoulder', category: 'angled' as PoseCategory, previewUrl: poseOverShoulder, promptHint: 'Fashion model looking back over shoulder, white studio background, professional e-commerce photography, full body' },
 
   // Detail
-  { poseId: 'catalogPose_seated', name: 'Seated', description: 'Relaxed seated pose', category: 'detail' as PoseCategory, previewUrl: poseFrontRelaxed, promptHint: 'Fashion model seated casually on a minimal stool, white studio background, professional e-commerce photography, full body' },
-  { poseId: 'catalogPose_closeup', name: 'Close-Up', description: 'Upper body detail shot', category: 'detail' as PoseCategory, previewUrl: poseFrontHandsHips, promptHint: 'Fashion model upper body close-up, detail shot, white studio background, professional e-commerce photography' },
+  { poseId: 'catalogPose_seated', name: 'Seated', description: 'Relaxed seated pose', category: 'detail' as PoseCategory, previewUrl: poseSeated, promptHint: 'Fashion model seated casually on a minimal stool, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_closeup', name: 'Close-Up', description: 'Upper body detail shot', category: 'detail' as PoseCategory, previewUrl: poseCloseup, promptHint: 'Fashion model upper body close-up, detail shot, white studio background, professional e-commerce photography' },
 ];
 
 /* ─── Catalog-specific backgrounds ─── */
