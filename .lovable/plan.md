@@ -1,32 +1,46 @@
 
+## Diagnosis (what’s actually wrong)
 
-# Improve Style Shots UI/UX
+I re-checked the auth logs and email logs: this is **not** an email infrastructure outage.  
+The main failure is **rate limiting on signup email sends** (`429 over_email_send_rate_limit`).
 
-## Issues Identified
-1. **No search** in product picker popover — hard to find products in large catalogs
-2. **Tiny product thumbnails** (7px/8px) — hard to see what you're selecting
-3. **Product names truncated** too aggressively (max-w-[120px])
-4. **"+ Add" button** too small and easy to miss
-5. **No visual feedback** when extras are added — no count per combo
-6. **No skip hint** — user may not realize this step is optional
-7. **Combo cards look flat** — no visual hierarchy between product/model and extras
-8. **"Apply to All" section** doesn't stand out enough
+Why this happens in code:
+- In `src/pages/Auth.tsx`, after a successful signup, the app immediately calls a second send (`auth.resend`) right away.
+- So one signup can trigger duplicate email-send attempts, and repeated retries quickly hit the auth email rate limit.
+- Once rate-limited, users see “not sending” behavior even when the system is otherwise healthy.
 
-## Changes — Single File
+## Implementation plan
 
-**`src/components/app/catalog/CatalogStepStyleShots.tsx`**
+1. **Remove duplicate send on signup**
+   - Edit `src/pages/Auth.tsx`.
+   - Keep the initial signup email send from signup itself.
+   - Remove the immediate extra resend call right after signup success.
 
-1. **Add search to ProductPickerPopover**: Add an `Input` field at top of popover that filters products by title. Wider popover (w-72), larger thumbnails (w-9 h-9).
+2. **Strengthen resend UX to avoid rate-limit loops**
+   - Keep resend only on explicit user action.
+   - Increase resend cooldown (current 30s is too short for this flow).
+   - Disable resend action until cooldown ends.
 
-2. **Better combo cards**: Increase product thumbnail to 10×10, model avatar to 9×9. Remove aggressive truncation (use max-w-[180px]). Show extras count badge on each card.
+3. **Make rate-limit messaging clear and consistent**
+   - Normalize rate-limit handling in one helper in `Auth.tsx` (signup, magic link, resend, reset).
+   - Show explicit message like: “Email was already sent recently. Please wait a few minutes and check spam/promotions.”
 
-3. **Bigger "+ Add" button**: Make it `h-8` with clearer styling — `variant="secondary"` with dashed border look, text "Add product".
+4. **Prevent accidental rapid re-submits**
+   - While request is in-flight, lock the relevant action buttons.
+   - Ensure users cannot fire multiple signup/resend calls by double-clicking.
 
-4. **Optional step hint**: Add a subtle note below the description: "This step is optional — skip if no extras needed."
+5. **Validation after change**
+   - Test signup once with a fresh email → expect one confirmation send path.
+   - Test resend before cooldown → blocked by UI.
+   - Test resend after cooldown → allowed.
+   - Confirm auth logs no longer show immediate duplicate send pattern from a single signup action.
 
-5. **"Apply to All" visual uplift**: Add a subtle gradient/accent left border to make it stand out as a special action area.
+## Technical details (files)
 
-6. **Empty state per combo**: When no extras added, show light italic text "No extras" instead of just the Add button floating alone.
+- **Update:** `src/pages/Auth.tsx`
+  - Remove post-signup immediate resend call.
+  - Add unified rate-limit error parser.
+  - Increase resend cooldown and tighten button disabled states.
+  - Improve user-facing error/cooldown text.
 
-7. **Combo counter in header**: Show "X of Y combos have extras" for progress awareness.
-
+- **No backend function changes needed** for this fix (auth-email-hook/queue are behaving as expected).
