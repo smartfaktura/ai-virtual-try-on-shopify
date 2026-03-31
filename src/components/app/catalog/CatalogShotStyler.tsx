@@ -81,7 +81,7 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
                 <SelectValue placeholder="Use default background" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Use default</SelectItem>
+                <SelectItem value="__default">Use default</SelectItem>
                 {backgrounds.map(b => (
                   <SelectItem key={b.poseId} value={b.poseId}>{b.name}</SelectItem>
                 ))}
