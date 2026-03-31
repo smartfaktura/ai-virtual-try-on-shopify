@@ -9,7 +9,14 @@ import poseFrontWalking from '@/assets/catalog/pose_front_walking.png';
 import poseThreeQuarter from '@/assets/catalog/pose_three_quarter.png';
 import poseSideProfile from '@/assets/catalog/pose_side_profile.jpg';
 import poseBackView from '@/assets/catalog/pose_back_view.png';
+import poseOverShoulder from '@/assets/catalog/pose_over_shoulder.png';
+import poseSeated from '@/assets/catalog/pose_seated.png';
+import poseCloseup from '@/assets/catalog/pose_closeup.png';
 import moodRadiant from '@/assets/catalog/mood_radiant.jpg';
+import moodJoyful from '@/assets/catalog/mood_joyful.jpg';
+import moodNeutral from '@/assets/catalog/mood_neutral.jpg';
+import moodUnapologetic from '@/assets/catalog/mood_unapologetic.jpg';
+import moodConfident from '@/assets/catalog/mood_confident.jpg';
 
 /* ─── Studio-only catalog poses ─── */
 export const catalogPoses: TryOnPose[] = [
@@ -24,11 +31,11 @@ export const catalogPoses: TryOnPose[] = [
   { poseId: 'catalogPose_three_quarter', name: 'Three-Quarter', description: 'Three-quarter angled turn', category: 'angled' as PoseCategory, previewUrl: poseThreeQuarter, promptHint: 'Fashion model in three-quarter turn pose, white studio background, professional e-commerce photography, full body' },
   { poseId: 'catalogPose_side_profile', name: 'Side Profile', description: 'Classic side profile', category: 'angled' as PoseCategory, previewUrl: poseSideProfile, promptHint: 'Fashion model in side profile pose, white studio background, professional e-commerce photography, full body' },
   { poseId: 'catalogPose_back_view', name: 'Back View', description: 'Back-facing pose', category: 'angled' as PoseCategory, previewUrl: poseBackView, promptHint: 'Fashion model seen from behind, back view, white studio background, professional e-commerce photography, full body' },
-  { poseId: 'catalogPose_over_shoulder', name: 'Over-the-Shoulder', description: 'Looking back over shoulder', category: 'angled' as PoseCategory, previewUrl: poseThreeQuarter, promptHint: 'Fashion model looking back over shoulder, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_over_shoulder', name: 'Over-the-Shoulder', description: 'Looking back over shoulder', category: 'angled' as PoseCategory, previewUrl: poseOverShoulder, promptHint: 'Fashion model looking back over shoulder, white studio background, professional e-commerce photography, full body' },
 
   // Detail
-  { poseId: 'catalogPose_seated', name: 'Seated', description: 'Relaxed seated pose', category: 'detail' as PoseCategory, previewUrl: poseFrontRelaxed, promptHint: 'Fashion model seated casually on a minimal stool, white studio background, professional e-commerce photography, full body' },
-  { poseId: 'catalogPose_closeup', name: 'Close-Up', description: 'Upper body detail shot', category: 'detail' as PoseCategory, previewUrl: poseFrontHandsHips, promptHint: 'Fashion model upper body close-up, detail shot, white studio background, professional e-commerce photography' },
+  { poseId: 'catalogPose_seated', name: 'Seated', description: 'Relaxed seated pose', category: 'detail' as PoseCategory, previewUrl: poseSeated, promptHint: 'Fashion model seated casually on a minimal stool, white studio background, professional e-commerce photography, full body' },
+  { poseId: 'catalogPose_closeup', name: 'Close-Up', description: 'Upper body detail shot', category: 'detail' as PoseCategory, previewUrl: poseCloseup, promptHint: 'Fashion model upper body close-up, detail shot, white studio background, professional e-commerce photography' },
 ];
 
 /* ─── Catalog-specific backgrounds ─── */
@@ -80,11 +87,11 @@ export interface CatalogMood {
 
 export const CATALOG_MOODS: CatalogMood[] = [
   { id: 'any', name: 'Any Expression', previewUrl: '', promptHint: '' },
-  { id: 'joyful', name: 'Joyful', previewUrl: moodRadiant, promptHint: 'genuinely joyful smiling expression' },
+  { id: 'joyful', name: 'Joyful', previewUrl: moodJoyful, promptHint: 'genuinely joyful smiling expression' },
   { id: 'radiant', name: 'Radiant', previewUrl: moodRadiant, promptHint: 'radiant glowing warm expression' },
-  { id: 'neutral', name: 'Neutral', previewUrl: moodRadiant, promptHint: 'calm neutral expression' },
-  { id: 'unapologetic', name: 'Unapologetic', previewUrl: moodRadiant, promptHint: 'strong unapologetic fierce expression' },
-  { id: 'confident', name: 'Confident', previewUrl: moodRadiant, promptHint: 'confident self-assured expression' },
+  { id: 'neutral', name: 'Neutral', previewUrl: moodNeutral, promptHint: 'calm neutral expression' },
+  { id: 'unapologetic', name: 'Unapologetic', previewUrl: moodUnapologetic, promptHint: 'strong unapologetic fierce expression' },
+  { id: 'confident', name: 'Confident', previewUrl: moodConfident, promptHint: 'confident self-assured expression' },
 ];
 
 /** Combined array for lookup by ID */
