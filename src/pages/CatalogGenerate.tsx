@@ -64,32 +64,34 @@ export default function CatalogGenerate() {
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
-  // Fetch products
-  const { data: products = [], isLoading: productsLoading } = useQuery({
+  // Fetch products (raw rows for product step, mapped for generation)
+  const { data: userProducts = [], isLoading: productsLoading } = useQuery({
     queryKey: ['user-products', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_products')
-        .select('*, product_images(*)')
+        .select('id, title, image_url, product_type, tags, description, product_images(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        vendor: p.product_type || '',
-        productType: p.product_type || '',
-        images: [
-          { url: p.image_url },
-          ...(p.product_images || [])
-            .sort((a: any, b: any) => a.position - b.position)
-            .map((img: any) => ({ url: img.image_url })),
-        ],
-        tags: p.tags || [],
-        description: p.description || '',
-      })) as Product[];
+      return data ?? [];
     },
     enabled: !!user,
   });
+
+  const products: Product[] = useMemo(() => userProducts.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    vendor: p.product_type || '',
+    productType: p.product_type || '',
+    images: [
+      { url: p.image_url },
+      ...(p.product_images || [])
+        .sort((a: any, b: any) => a.position - b.position)
+        .map((img: any) => ({ url: img.image_url })),
+    ],
+    tags: p.tags || [],
+    description: p.description || '',
+  })), [userProducts]);
 
   // Models: full library + custom + user
   const { asProfiles: customModels } = useCustomModels();
