@@ -6,7 +6,6 @@ import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } f
 import { convertImageToBase64 } from '@/lib/imageUtils';
 
 import type { Product, ModelProfile, TryOnPose } from '@/types';
-import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
 import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
 
 const CREDITS_PER_IMAGE = 6;

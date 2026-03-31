@@ -22,7 +22,6 @@ import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { Package, Move, Smile, Users, Image, Wand2, Sparkles, Check } from 'lucide-react';
 import type { Product, ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
-import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
 import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
 
 const CATALOG_MAX_PRODUCTS = 50;

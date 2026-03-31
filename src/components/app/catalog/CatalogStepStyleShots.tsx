@@ -1,12 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Wand2, Plus, X, Settings2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Wand2, Plus, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CatalogShotStyler } from './CatalogShotStyler';
-import { catalogPoses, catalogBackgrounds } from '@/data/catalogPoses';
 import type { Product, ModelProfile } from '@/types';
-import type { ShotOverride } from './CatalogShotStyler';
 
 export interface ExtraItem {
   productId: string;
@@ -19,8 +16,6 @@ interface CatalogStepStyleShotsProps {
   selectedProductIds: Set<string>;
   models: ModelProfile[];
   selectedModelIds: Set<string>;
-  shotOverrides: Map<string, ShotOverride>;
-  onShotOverridesChange: (overrides: Map<string, ShotOverride>) => void;
   extraItems: Map<string, ExtraItem[]>;
   onExtraItemsChange: (extras: Map<string, ExtraItem[]>) => void;
   onBack: () => void;
@@ -68,18 +63,12 @@ function ProductPickerPopover({
 
 export function CatalogStepStyleShots({
   products, selectedProductIds, models, selectedModelIds,
-  shotOverrides, onShotOverridesChange,
   extraItems, onExtraItemsChange,
   onBack, onNext,
 }: CatalogStepStyleShotsProps) {
-  const [stylerOpen, setStylerOpen] = useState(false);
-  const [stylerKey, setStylerKey] = useState<string | null>(null);
-
   const selectedProducts = useMemo(() => products.filter(p => selectedProductIds.has(p.id)), [products, selectedProductIds]);
   const selectedModels = useMemo(() => models.filter(m => selectedModelIds.has(m.modelId)), [models, selectedModelIds]);
-  const allPoses = useMemo(() => [...catalogPoses, ...catalogBackgrounds], []);
 
-  // Global extras applied to all combos
   const [globalExtras, setGlobalExtras] = useState<ExtraItem[]>([]);
 
   const combos = useMemo(() =>
@@ -92,7 +81,6 @@ export function CatalogStepStyleShots({
     const item: ExtraItem = { productId: product.id, productTitle: product.title, productImage: product.images[0]?.url };
     const next = [...globalExtras, item];
     setGlobalExtras(next);
-    // Apply to all combos
     const nextMap = new Map(extraItems);
     for (const combo of combos) {
       const list = nextMap.get(combo.key) || [];
@@ -105,7 +93,6 @@ export function CatalogStepStyleShots({
 
   const removeGlobalExtra = (productId: string) => {
     setGlobalExtras(prev => prev.filter(e => e.productId !== productId));
-    // Remove from all combos
     const nextMap = new Map(extraItems);
     for (const combo of combos) {
       const list = nextMap.get(combo.key) || [];
@@ -130,7 +117,6 @@ export function CatalogStepStyleShots({
     if (list.length === 0) nextMap.delete(comboKey);
     else nextMap.set(comboKey, list);
     onExtraItemsChange(nextMap);
-    // Also remove from global if it was global
     setGlobalExtras(prev => prev.filter(e => e.productId !== productId));
   };
 
@@ -147,7 +133,7 @@ export function CatalogStepStyleShots({
         {extraCount > 0 && <Badge variant="outline" className="text-[10px]">{extraCount} extras</Badge>}
       </div>
       <p className="text-xs text-muted-foreground">
-        Add extra products (accessories, props) to your shots. Use "Apply to All" or customize per combo.
+        Add extra products (accessories, props) to your shots. Use "Apply to All" or add per combo.
       </p>
 
       {/* Apply to All */}
@@ -159,8 +145,8 @@ export function CatalogStepStyleShots({
             excludeIds={globalExcludeIds}
             onSelect={addGlobalExtra}
             trigger={
-              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
-                <Plus className="w-3 h-3" /> Add product to all
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                <Plus className="w-3.5 h-3.5" /> Add product to all
               </Button>
             }
           />
@@ -186,7 +172,6 @@ export function CatalogStepStyleShots({
       <div className="space-y-1.5">
         {combos.map(({ product, model, key }) => {
           const items = extraItems.get(key) || [];
-          const hasOverride = shotOverrides.has(key);
           const comboExcludeIds = [product.id, ...items.map(e => e.productId)];
 
           return (
@@ -202,20 +187,6 @@ export function CatalogStepStyleShots({
                   <img src={model.previewUrl} alt={model.name} className="w-full h-full object-cover" loading="lazy" />
                 </div>
                 <span className="text-xs text-muted-foreground truncate max-w-[80px]">{model.name}</span>
-
-                <div className="ml-auto flex items-center gap-1">
-                  <button
-                    onClick={() => { setStylerKey(key); setStylerOpen(true); }}
-                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border transition-colors ${
-                      hasOverride
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/50'
-                    }`}
-                  >
-                    <Settings2 className="w-3 h-3" />
-                    {hasOverride ? 'Customized' : 'Customize'}
-                  </button>
-                </div>
               </div>
 
               {/* Extras row */}
@@ -236,8 +207,8 @@ export function CatalogStepStyleShots({
                   excludeIds={comboExcludeIds}
                   onSelect={(p) => addExtraToCombo(key, p)}
                   trigger={
-                    <Button size="sm" variant="ghost" className="h-6 text-[10px] gap-1 px-2">
-                      <Plus className="w-3 h-3" /> Add
+                    <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 px-2.5">
+                      <Plus className="w-3.5 h-3.5" /> Add
                     </Button>
                   }
                 />
@@ -246,24 +217,6 @@ export function CatalogStepStyleShots({
           );
         })}
       </div>
-
-      {/* Shot Styler Dialog */}
-      {stylerKey && (
-        <CatalogShotStyler
-          open={stylerOpen}
-          onOpenChange={setStylerOpen}
-          comboKey={stylerKey}
-          currentOverride={shotOverrides.get(stylerKey)}
-          allPoses={allPoses}
-          onSave={(override) => {
-            const next = new Map(shotOverrides);
-            if (override) next.set(stylerKey, override);
-            else next.delete(stylerKey);
-            onShotOverridesChange(next);
-            setStylerOpen(false);
-          }}
-        />
-      )}
 
       <div className="flex justify-between pt-2">
         <Button variant="outline" onClick={onBack} className="gap-2">
