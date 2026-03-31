@@ -66,7 +66,7 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
                 <SelectValue placeholder="Use default pose" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Use default</SelectItem>
+                <SelectItem value="__default">Use default</SelectItem>
                 {poses.map(p => (
                   <SelectItem key={p.poseId} value={p.poseId}>{p.name}</SelectItem>
                 ))}
