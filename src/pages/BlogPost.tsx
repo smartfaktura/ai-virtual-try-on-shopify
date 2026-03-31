@@ -129,7 +129,7 @@ export default function BlogPost() {
       <ShimmerImage
         src={getOptimizedUrl(src, { width: 720, quality: 75 })}
         alt={alt || ''}
-        className="w-full h-auto rounded-xl my-6"
+        className="max-w-full max-h-[500px] w-auto h-auto mx-auto rounded-xl my-6 object-contain"
         loading="lazy"
         decoding="async"
       />
