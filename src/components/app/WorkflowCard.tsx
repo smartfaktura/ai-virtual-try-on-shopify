@@ -2,12 +2,14 @@ import { useRef, useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { cn } from '@/lib/utils';
 
 const imgFallback = getLandingAssetUrl('templates/universal-clean.jpg');
 
@@ -16,6 +18,7 @@ interface WorkflowRowProps {
   onSelect: () => void;
   reversed?: boolean;
   id?: string;
+  comingSoon?: boolean;
 }
 
 const featureMap: Record<string, string[]> = {
@@ -70,7 +73,7 @@ const featureMap: Record<string, string[]> = {
   ],
 };
 
-export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowProps) {
+export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon }: WorkflowRowProps) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -92,8 +95,16 @@ export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowPr
     <Card
       id={id}
       ref={ref}
-      className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300"
+      className={cn(
+        "group overflow-hidden border transition-shadow duration-300",
+        comingSoon ? "opacity-75 border-dashed border-border/60 bg-card/80" : "hover:shadow-lg"
+      )}
     >
+      {comingSoon && (
+        <div className="flex justify-end px-4 pt-3">
+          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
+        </div>
+      )}
       <div
         className={`flex flex-col lg:flex-row ${reversed ? 'lg:flex-row-reverse' : ''}`}
       >
@@ -133,16 +144,18 @@ export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowPr
             </ul>
           )}
 
-          <div className="pt-2">
-            <Button
-              size="lg"
-              className="rounded-full font-semibold gap-2 h-11 px-8"
-              onClick={onSelect}
-            >
-              Create Set
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {!comingSoon && (
+            <div className="pt-2">
+              <Button
+                size="lg"
+                className="rounded-full font-semibold gap-2 h-11 px-8"
+                onClick={onSelect}
+              >
+                Create Set
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>

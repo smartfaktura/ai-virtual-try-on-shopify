@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
@@ -21,9 +22,10 @@ interface Props {
   mobileRow?: boolean;
   displayName?: string;
   subtitle?: string;
+  comingSoon?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
@@ -88,9 +90,14 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       ref={ref}
       className={cn(
         "group overflow-hidden transition-shadow duration-300 flex flex-col",
-        modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
+        comingSoon ? "opacity-75 border-dashed border-border/60 bg-card/80" : modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
+      {comingSoon && (
+        <div className="flex justify-end px-3 pt-2">
+          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground border-border/60">Coming Soon</Badge>
+        </div>
+      )}
       {/* Thumbnail */}
       <div className={cn(
         "relative w-full overflow-hidden",
@@ -126,19 +133,21 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           </p>
         )}
 
-        <div className="pt-1 mt-auto">
-          <Button
-            size="sm"
-            className={cn(
-              "rounded-full font-semibold gap-1 w-full",
-              modalCompact ? "h-8 px-4 text-xs" : mobileCompact ? "h-8 px-3 text-xs" : "h-8 px-5"
-            )}
-            onClick={onSelect}
-          >
-            {mobileCompact ? 'Start' : 'Start Creating'}
-            <ArrowRight className="w-3 h-3" />
-          </Button>
-        </div>
+        {!comingSoon && (
+          <div className="pt-1 mt-auto">
+            <Button
+              size="sm"
+              className={cn(
+                "rounded-full font-semibold gap-1 w-full",
+                modalCompact ? "h-8 px-4 text-xs" : mobileCompact ? "h-8 px-3 text-xs" : "h-8 px-5"
+              )}
+              onClick={onSelect}
+            >
+              {mobileCompact ? 'Start' : 'Start Creating'}
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </div>
+        )}
       </div>
     </Card>
   );
