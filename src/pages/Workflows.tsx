@@ -232,7 +232,6 @@ export default function Workflows() {
         if (
           lastGroup &&
           lastGroup.workflow_id === row.workflow_id &&
-          row.product_id != null &&
           // Sliding window: compare against the last merged row, not the anchor
           Math.abs(lastGroup.lastMergedTime - rowTime) <= 120_000
         ) {
