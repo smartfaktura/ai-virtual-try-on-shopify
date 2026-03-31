@@ -92,7 +92,15 @@ export default function BlogPost() {
       </div>
     ),
     p: ({ children }) => {
-      const text = String(children);
+      // Unwrap image-only paragraphs to avoid <div> inside <p>
+      const childArray = Array.isArray(children) ? children : [children];
+      const hasImage = childArray.some(
+        (child: any) => child?.type === 'img' || child?.props?.node?.tagName === 'img'
+      );
+      if (hasImage) {
+        return <div className="my-6">{children}</div>;
+      }
+
       // Key takeaway detection
       if (typeof children === 'object' && Array.isArray(children)) {
         const first = children[0];
@@ -110,29 +118,8 @@ export default function BlogPost() {
       }
       return <p>{children}</p>;
     },
-    strong: ({ children }) => {
-      const text = String(children);
-      if (text.toLowerCase().startsWith('key takeaway')) {
-        return <strong className="blog-strong-takeaway">{children}</strong>;
-      }
-      return <strong>{children}</strong>;
-    },
-    code: ({ children }) => (
-      <code className="blog-inline-code">{children}</code>
-    ),
-    a: ({ href, children }) => (
-      <a href={href} className="blog-link" target={href?.startsWith('http') ? '_blank' : undefined} rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}>
-        {children}
-      </a>
-    ),
     img: ({ src, alt }) => (
-      <ShimmerImage
-        src={getOptimizedUrl(src, { width: 720, quality: 75 })}
-        alt={alt || ''}
-        className="max-w-full max-h-[500px] w-auto h-auto mx-auto rounded-xl my-6 object-contain"
-        loading="lazy"
-        decoding="async"
-      />
+      <BlogMarkdownImage src={src} alt={alt || ''} />
     ),
   };
 
