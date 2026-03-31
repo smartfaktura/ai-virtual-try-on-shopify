@@ -280,7 +280,7 @@ export default function Auth() {
   };
 
   const handleVerifyOtp = async (code: string) => {
-    if (code.length !== 8) return;
+    if (code.length !== 6) return;
     setOtpLoading(true);
     const { error } = await supabase.auth.verifyOtp({
       email,
@@ -356,34 +356,32 @@ export default function Auth() {
       {options.showOtp && (
         <div className="w-full max-w-sm space-y-5">
           <p className="text-sm text-muted-foreground">
-           Enter the 8-digit code from your email, or click the link to activate your account.
+           Enter the 6-digit code from your email, or click the link to activate your account.
           </p>
           <div className="flex justify-center">
-            <InputOTP
-              maxLength={8}
-              value={otpCode}
-              onChange={(val) => {
-                setOtpCode(val);
-                if (val.length === 8) handleVerifyOtp(val);
-              }}
-              disabled={otpLoading}
-            >
-              <InputOTPGroup className="gap-1 sm:gap-2">
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-              </InputOTPGroup>
-              <div className="flex items-center px-1 sm:px-2">
-                <span className="text-lg sm:text-xl text-muted-foreground">-</span>
-              </div>
-              <InputOTPGroup className="gap-1 sm:gap-2">
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-                <InputOTPSlot index={6} />
-                <InputOTPSlot index={7} />
-              </InputOTPGroup>
-            </InputOTP>
+             <InputOTP
+               maxLength={6}
+               value={otpCode}
+               onChange={(val) => {
+                 setOtpCode(val);
+                 if (val.length === 6) handleVerifyOtp(val);
+               }}
+               disabled={otpLoading}
+             >
+               <InputOTPGroup className="gap-1 sm:gap-2">
+                 <InputOTPSlot index={0} />
+                 <InputOTPSlot index={1} />
+                 <InputOTPSlot index={2} />
+               </InputOTPGroup>
+               <div className="flex items-center px-1 sm:px-2">
+                 <span className="text-lg sm:text-xl text-muted-foreground">-</span>
+               </div>
+               <InputOTPGroup className="gap-1 sm:gap-2">
+                 <InputOTPSlot index={3} />
+                 <InputOTPSlot index={4} />
+                 <InputOTPSlot index={5} />
+               </InputOTPGroup>
+             </InputOTP>
           </div>
           {otpLoading && (
             <p className="text-sm text-muted-foreground">Verifying...</p>
