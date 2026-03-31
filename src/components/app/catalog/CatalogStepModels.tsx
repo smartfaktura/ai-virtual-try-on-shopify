@@ -60,7 +60,7 @@ export function CatalogStepModels({
       {/* Library Models */}
       <div className="space-y-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 max-h-[500px] overflow-y-auto rounded-xl border border-border p-2">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 rounded-xl border border-border p-2">
           {filteredLibrary.map(model => (
             <ModelSelectorCard
               key={model.modelId}
