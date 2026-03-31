@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
 import { convertImageToBase64 } from '@/lib/imageUtils';
-import { mockTryOnPoses } from '@/data/mockData';
+
 import type { Product, ModelProfile, TryOnPose } from '@/types';
 import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
 

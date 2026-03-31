@@ -80,10 +80,8 @@ export default function CatalogGenerate() {
   // Fetch models
   const { asProfiles: systemModels } = useCustomModels();
   const { asProfiles: userModels } = useUserModels();
-  const { asPoses: customScenes } = useCustomScenes();
-
   const allModels = useMemo(() => [...systemModels, ...userModels], [systemModels, userModels]);
-  const allPoses = useMemo(() => [...mockTryOnPoses, ...customScenes], [customScenes]);
+  const allPoses = useMemo(() => allCatalogItems, []);
 
   const handleModelToggle = (modelId: string) => {
     setSelectedModelIds(prev => {
