@@ -570,10 +570,11 @@ function convertContentToSeedreamInput(content: ContentItem[]): { prompt: string
     }
   }
 
+  // Put scene FIRST so Seedream treats it as primary style/environment reference
   const orderedRoleImages = [
+    ...roleImages.filter(i => i.role === "scene"),
     ...roleImages.filter(i => i.role === "product"),
     ...roleImages.filter(i => i.role === "model"),
-    ...roleImages.filter(i => i.role === "scene"),
     ...roleImages.filter(i => i.role === "other"),
   ];
 
