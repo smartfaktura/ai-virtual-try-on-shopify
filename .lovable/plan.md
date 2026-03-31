@@ -1,46 +1,61 @@
 
 
-## New Blog Post: "AI-Generated Product Photography Examples: 12 Stunning Use Cases"
+## Replace Blog Cover Images with Discover Triptych Banners
 
 ### What
-Add a new SEO-focused blog post showcasing 12 featured Discover images across multiple categories (fashion, beauty, fragrances, jewelry, sports, lifestyle). Each image links back to the Discover feed, driving organic traffic into the app.
+Replace all 6 blog post cover images (currently local assets in `src/assets/blog/`) with combined 3-image triptych banners created from Discover preset images, matching each blog post's theme.
 
-### Why
-- Rich, real image content improves crawlability and image search rankings
-- Internal links to `/discover`, `/freestyle`, and feature pages boost site authority
-- Showcases real platform output as social proof
+### Image selections per blog post
 
-### File changes
+**1. AI Product Photography for E-commerce** (`ai-product-photography-for-ecommerce`)
+- Radiant and captivating (commercial)
+- Nature
 
-**`src/data/blogPosts.ts`**
-- Add a new blog post entry to the `blogPosts` array with slug `ai-product-photography-examples-gallery`
-- No cover image import needed — the cover will be one of the Discover image URLs directly
-- Markdown content will embed ~10 featured Discover images using standard `![alt](url)` syntax with descriptive alt text for SEO
-- Content structured around category sections: Fashion & Apparel, Beauty & Skincare, Fragrances & Luxury, Jewelry & Accessories, Sports & Lifestyle
-- Each section includes 2-3 images with context about how they were generated
-- Internal links to `/features/virtual-try-on`, `/features/brand-profiles`, `/freestyle`, `/discover`
-- SEO tags targeting: "AI product photography examples", "AI fashion photography", "AI generated product images"
 
-**`public/sitemap.xml`**
-- Add entry for `/blog/ai-product-photography-examples-gallery`
+<lov-tool-use id="thinking-546b07d5-6b94-4e64-8341-b0d7edfb6b10" name="lov-think" data="Let me continue with the plan from where I left off." duration="0.443183">
+</lov-tool-use>
+<lov-plan>
 
-### Blog post outline
+## Replace Blog Cover Images with Discover Triptych Banners
 
-```text
-Title: "12 AI-Generated Product Photography Examples That Look 100% Real"
-Slug: ai-product-photography-examples-gallery
+### What
+Replace all 6 blog post cover images (currently local `src/assets/blog/*.jpg`) with combined 3-image horizontal triptych banners built from Discover preset images. Each banner combines 3 thematically relevant images side-by-side. The 7th blog post already uses Discover images — no change needed there.
 
-Sections:
-1. Intro — AI photography has crossed the uncanny valley
-2. Fashion & Apparel (Studio Chair Pose, The Gaze of Blue, Blue & White Sporty Chic)
-3. Beauty & Skincare (Nature's Essence Shampoo, Radiant Natural Beauty)
-4. Fragrances & Luxury (BYREDO Gypsy Water on Ice, Aquatic Reflection)
-5. Jewelry & Accessories (Diamond Hoop Earrings, Sunkissed Glamour)
-6. Sports & Lifestyle (Sitting Pretty on the Rim, Stadium Chic)
-7. How these images were made (link to Freestyle + Discover)
-8. FAQ (Can I recreate these? Are they royalty-free? etc.)
-```
+### Banner image selections (3 per blog post)
 
-### Image sources
-All images are existing Supabase storage URLs from the featured `discover_presets` — no new assets needed. They'll be embedded as standard markdown images with SEO-optimized alt text.
+**1. AI Product Photography for E-commerce**
+- Studio Chair Pose (fashion) + BYREDO Gypsy Water on Ice (fragrances) + Sanctuary Armchair (home)
+- Mix of fashion, product, and lifestyle = broad e-commerce appeal
+
+**2. Virtual Try-On Technology**
+- Effortless Chic (try-on result) + Cozy Morning Activewear (try-on) + The Gaze of Blue (fashion)
+- All fashion/on-model shots showing the try-on concept
+
+**3. E-commerce Visual Content Strategy**
+- Fisheye Fashion Editorial + Sky Product Portrait + Nordic Allure in Amber Spotlight
+- Diverse visual styles showing content variety
+
+**4. AI Model Photography & Diverse Representation**
+- Minimalist Studio Fashion + Gradient Blue Studio + Radiant and captivating
+- Different models/styles showing diversity
+
+**5. Automated Product Listing Images**
+- Medik8 Crystal Retinal 6 (beauty product) + Rustic Kitchen (product editorial) + Lumière Skin Serum in Hand (beauty)
+- Product-focused shots showing catalog variety
+
+**6. Brand Consistency with AI**
+- Clean Studio Look + Sculpted in Comfort + Pilates Studio Glow
+- Consistent studio aesthetic showing brand cohesion
+
+### Technical approach
+
+1. **Generate 6 banners** using a Python script (Pillow) — download 3 images each, center-crop to equal panels, combine side-by-side with thin white gaps into a 16:9 banner (1440×810)
+2. **Upload all 6** to Supabase storage under `freestyle-images/blog/`
+3. **Update `src/data/blogPosts.ts`**:
+   - Remove the 6 local image imports (lines 1-6)
+   - Replace each post's `coverImage` with the Supabase storage URL
+4. **Delete `src/assets/blog/` directory** — no longer needed (reduces bundle size)
+
+### Files changed
+- `src/data/blogPosts.ts` — remove local imports, update all 6 coverImage URLs to Supabase storage triptych banners
 
