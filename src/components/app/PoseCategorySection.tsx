@@ -33,7 +33,7 @@ const categoryInfo: Record<string, { title: string; recommendation: string }> = 
 };
 
 export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender }: PoseCategorySectionProps) {
-  const info = categoryInfo[category];
+  const info = categoryInfo[category] ?? { title: category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' '), recommendation: '' };
   if (poses.length === 0) return null;
 
   const isMultiSelect = !!selectedPoseIds;
