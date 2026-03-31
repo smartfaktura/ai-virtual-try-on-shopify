@@ -144,16 +144,18 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon }: W
             </ul>
           )}
 
-          <div className="pt-2">
-            <Button
-              size="lg"
-              className="rounded-full font-semibold gap-2 h-11 px-8"
-              onClick={onSelect}
-            >
-              Create Set
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {!comingSoon && (
+            <div className="pt-2">
+              <Button
+                size="lg"
+                className="rounded-full font-semibold gap-2 h-11 px-8"
+                onClick={onSelect}
+              >
+                Create Set
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>
