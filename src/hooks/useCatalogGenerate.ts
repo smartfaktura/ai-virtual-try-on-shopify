@@ -7,8 +7,9 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 
 import type { Product, ModelProfile, TryOnPose } from '@/types';
 import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
+import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
 
-const CREDITS_PER_IMAGE = 6; // tryon cost
+const CREDITS_PER_IMAGE = 6;
 
 export interface CatalogJob {
   jobId: string;
@@ -30,14 +31,6 @@ export interface CatalogBatchState {
   aggregatedImages: string[];
 }
 
-interface UseCatalogGenerateReturn {
-  startGeneration: (params: CatalogGenerateParams) => Promise<boolean>;
-  batchState: CatalogBatchState | null;
-  isGenerating: boolean;
-  resetBatch: () => void;
-  totalCreditsNeeded: number;
-}
-
 export interface CatalogGenerateParams {
   products: Product[];
   models: ModelProfile[];
@@ -45,9 +38,10 @@ export interface CatalogGenerateParams {
   backgroundIds: string[];
   allPoses: TryOnPose[];
   shotOverrides?: Map<string, ShotOverride>;
+  extraItems?: Map<string, ExtraItem[]>;
 }
 
-export function useCatalogGenerate(): UseCatalogGenerateReturn {
+export function useCatalogGenerate() {
   const { user } = useAuth();
   const [batchState, setBatchState] = useState<CatalogBatchState | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -133,7 +127,7 @@ export function useCatalogGenerate(): UseCatalogGenerateReturn {
   const startGeneration = useCallback(async (params: CatalogGenerateParams): Promise<boolean> => {
     if (!user) { toast.error('Sign in to generate'); return false; }
 
-    const { products, models, poseIds, backgroundIds, allPoses } = params;
+    const { products, models, poseIds, backgroundIds, allPoses, shotOverrides, extraItems } = params;
     const poseMap = new Map(allPoses.map(p => [p.poseId, p]));
 
     const token = await getAuthToken();
@@ -142,29 +136,43 @@ export function useCatalogGenerate(): UseCatalogGenerateReturn {
     setIsGenerating(true);
     const batchId = crypto.randomUUID();
     const jobs: CatalogJob[] = [];
-    let lastBalance: number | null = null;
     let enqueueCount = 0;
 
     for (const product of products) {
       const sourceImageUrl = product.images[0]?.url;
       if (!sourceImageUrl) continue;
 
-      // Convert product image to base64 once per product
       const base64Product = await convertImageToBase64(sourceImageUrl);
 
       for (const model of models) {
         const base64Model = await convertImageToBase64(model.previewUrl);
+        const comboKey = `${product.id}_${model.modelId}`;
+        const override = shotOverrides?.get(comboKey);
+        const extras = extraItems?.get(comboKey) || [];
+
+        // Build extra items prompt fragment
+        const extraPrompt = extras.length > 0
+          ? extras.map(e => `wearing/holding ${e.label} on ${e.placement}`).join(', ')
+          : '';
 
         for (const poseId of poseIds) {
-          const pose = poseMap.get(poseId);
+          // Use override pose if set, otherwise default
+          const effectivePoseId = override?.poseId || poseId;
+          const pose = poseMap.get(effectivePoseId);
           if (!pose) continue;
 
           for (const bgId of backgroundIds) {
-            const bg = poseMap.get(bgId);
+            const effectiveBgId = override?.backgroundId || bgId;
+            const bg = poseMap.get(effectiveBgId);
             if (!bg) continue;
 
-            // Convert scene image
             const base64Scene = bg.previewUrl ? await convertImageToBase64(bg.previewUrl) : undefined;
+
+            // Build custom prompt combining override + extras
+            const customParts: string[] = [];
+            if (override?.customPrompt) customParts.push(override.customPrompt);
+            if (extraPrompt) customParts.push(extraPrompt);
+            const customPrompt = customParts.length > 0 ? customParts.join('. ') : undefined;
 
             await paceDelay(enqueueCount);
 
@@ -180,6 +188,9 @@ export function useCatalogGenerate(): UseCatalogGenerateReturn {
                   imageCount: 1,
                   batch_id: batchId,
                   catalog_mode: true,
+                  ...(override?.framing && { framing: override.framing }),
+                  ...(customPrompt && { custom_prompt: customPrompt }),
+                  ...(extras.length > 0 && { extra_items: extras }),
                 },
                 imageCount: 1,
                 quality: 'standard',
@@ -200,7 +211,6 @@ export function useCatalogGenerate(): UseCatalogGenerateReturn {
                 poseName: pose.name,
                 bgName: bg.name,
               });
-              lastBalance = result.newBalance;
             } else if (result.type === 'insufficient_credits') {
               toast.error(`Insufficient credits after ${jobs.length} jobs queued`);
               break;
@@ -242,7 +252,7 @@ export function useCatalogGenerate(): UseCatalogGenerateReturn {
     jobsRef.current = [];
   }, [stopPolling]);
 
-  const totalCreditsNeeded = 0; // Calculated externally
+  const totalCreditsNeeded = 0;
 
   return { startGeneration, batchState, isGenerating, resetBatch, totalCreditsNeeded };
 }
