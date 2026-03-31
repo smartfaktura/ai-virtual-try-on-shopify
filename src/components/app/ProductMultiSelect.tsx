@@ -47,7 +47,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
     if (enforceSameCategory && dominantCategory) {
       productsToSelect = filteredProducts.filter(p => { const cat = detectProductCategory(p); return cat === dominantCategory || cat === null; });
     }
-    onSelectionChange(new Set(productsToSelect.slice(0, MAX_PRODUCTS_PER_BATCH).map(p => p.id)));
+    onSelectionChange(new Set(productsToSelect.slice(0, effectiveMax).map(p => p.id)));
   };
 
   const getCategoryBadgeText = () => {
