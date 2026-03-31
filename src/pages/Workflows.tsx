@@ -18,6 +18,7 @@ import { groupJobsIntoBatches } from '@/lib/batchGrouping';
 import type { ActiveJob } from '@/lib/batchGrouping';
 import type { Workflow } from '@/types/workflow';
 import { WorkflowRequestBanner } from '@/components/app/WorkflowRequestBanner';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 export type { Workflow } from '@/types/workflow';
 
@@ -25,6 +26,7 @@ export default function Workflows() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isRealAdmin } = useIsAdmin();
   const prevActiveCountRef = useRef(0);
   const isMobile = useIsMobile();
 
@@ -57,7 +59,9 @@ export default function Workflows() {
         .select('*')
         .order('sort_order');
       if (error) throw error;
-      return data as unknown as Workflow[];
+      return (data as unknown as Workflow[]).filter(
+        w => isRealAdmin || w.slug !== 'catalog-shot-set'
+      );
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,

@@ -46,11 +46,11 @@ const prefetchRoute = (path: string) => {
   if (fn) { prefetched.add(path); fn(); }
 };
 
-const navItems = [
+const allNavItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
-  { label: 'Catalog', icon: LayoutTemplate, path: '/app/catalog' },
+  { label: 'Catalog', icon: LayoutTemplate, path: '/app/catalog', adminOnly: true },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Discover', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
@@ -74,6 +74,7 @@ export function AppShell({ children }: AppShellProps) {
   const { isAdmin, isRealAdmin } = useIsAdmin();
   const { isAdminView, toggleAdminView } = useAdminView();
   const { balance, isLow, isEmpty, openBuyModal } = useCredits();
+  const navItems = allNavItems.filter(item => !item.adminOnly || isRealAdmin);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
