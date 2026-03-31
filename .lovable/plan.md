@@ -1,79 +1,48 @@
 
 
-# Redesign Catalog Poses Step — Studio-Only Poses + Mood Selector + AI-Generated Previews
+# Fix Catalog Poses Step — Regenerate Images + Improve Floating Bar
 
-## What Changes
+## Issues
 
-The reference image shows a clean two-column layout: **Poses grid** (left, grouped by category like "Front") + **Mood selector** (right sidebar). All poses are studio poses with real preview images of a supermodel on a bright white background with shadows.
+1. **Seated and Close-Up poses** use recycled images from other poses (Front Relaxed / Hands on Hips) — they need dedicated AI-generated images showing actual seated and close-up compositions
+2. **Mood/expression images** all use the same `mood_radiant.jpg` — need distinct images per expression (joyful, neutral, unapologetic, confident)
+3. **Floating summary bar** (`CatalogMatrixSummary`) shows only counts and credits but has no action buttons — needs Back/Next navigation buttons
 
-### 1. Redefine pose data in `catalogPoses.ts`
+## Plan
 
-Remove lifestyle and editorial categories. Replace with ~11 studio-only poses matching real e-commerce photography (similar to reference image):
+### 1. Regenerate missing pose and mood images
 
-**Front category** (~5-6 poses):
-- Front Relaxed (arms at sides)
-- Front Hands on Hips
-- Front One Hand on Hip
-- Front Arms Crossed
-- Front Walking
+Use `google/gemini-3.1-flash-image-preview` to generate:
+- `pose_seated.png` — "Professional e-commerce photograph of a beautiful female supermodel wearing a plain white t-shirt and blue jeans, seated casually on a minimal white stool, bright white studio background with soft natural shadows, clean minimalist photography, 85mm lens"
+- `pose_closeup.png` — "Professional e-commerce photograph of a beautiful female supermodel wearing a plain white t-shirt, upper body close-up detail shot from waist up, bright white studio background, clean minimalist photography, 85mm lens"
+- `pose_over_shoulder.png` — "Professional e-commerce photograph of a beautiful female supermodel wearing a plain white t-shirt and blue jeans, looking back over shoulder, bright white studio background with soft natural shadows, full body, clean minimalist photography, 85mm lens"
+- `mood_joyful.jpg` — headshot with genuinely joyful expression
+- `mood_neutral.jpg` — headshot with calm neutral expression  
+- `mood_unapologetic.jpg` — headshot with strong fierce expression
+- `mood_confident.jpg` — headshot with confident self-assured expression
 
-**Side / Angled category** (~3-4 poses):
-- Three-Quarter Turn
-- Side Profile
-- Back View
-- Over-the-Shoulder Look
+Save to `src/assets/catalog/`, update imports in `catalogPoses.ts` so each mood has a unique preview.
 
-**Seated / Detail** (~2 poses):
-- Seated Casual
-- Close-Up / Upper Body
+### 2. Update `catalogPoses.ts`
 
-Update `CATALOG_POSE_CATEGORIES` to just `['front', 'angled', 'detail']`.
+- Add new imports for all generated images
+- Update `catalogPoses` array: change `previewUrl` for Seated (was reusing `poseFrontRelaxed`), Close-Up (was reusing `poseFrontHandsHips`), and Over-the-Shoulder (was reusing `poseThreeQuarter`)
+- Update `CATALOG_MOODS` array: give each mood its own unique `previewUrl` instead of all pointing to `moodRadiant`
 
-### 2. Add Mood/Expression selector
+### 3. Improve `CatalogMatrixSummary` floating bar
 
-Add a `CATALOG_MOODS` array with options:
-- `{ id: 'any', name: 'Any expression', icon: Ban }` (default, selected by default)
-- `{ id: 'joyful', name: 'Joyful' }`
-- `{ id: 'radiant', name: 'Radiant' }`
-- `{ id: 'neutral', name: 'Neutral' }`
-- `{ id: 'unapologetic', name: 'Unapologetic' }`
-- `{ id: 'confident', name: 'Confident' }`
+Add navigation context and action buttons:
+- Accept new props: `step`, `totalSteps`, `onBack`, `onNext`, `canProceed`, `stepLabel`
+- Add a "Back" outline button (left side) and "Next: [step name]" primary button (right side) alongside the image/credit summary
+- On the final step, show "Generate" button instead of "Next"
+- Pass these props from `CatalogGenerate.tsx`
 
-### 3. Generate AI preview images for poses and moods
-
-Use the Lovable AI Gateway (Nano Banana 2 — `google/gemini-3.1-flash-image-preview`) to generate:
-- ~11 pose preview images: female supermodel in white t-shirt and blue jeans, bright white studio background with natural shadows, full body, professional e-commerce photography
-- ~5 mood preview images: close-up headshot of same model with each expression
-
-Images will be generated via script, uploaded to Supabase storage (`catalog-previews` bucket), and URLs hardcoded into the pose/mood data.
-
-### 4. Rebuild `CatalogStepPoses.tsx` layout
-
-Two-column layout matching reference:
-- **Left (wide)**: Header "Select expression and poses" with Back/Next buttons top-right. Below: "Poses" label + "you can select multiple poses" hint. Grid of pose cards grouped by category (5 columns), using `ShimmerImage` with actual preview URLs.
-- **Right sidebar**: "Select a mood" panel. "Mood" label. Grid of mood cards (2 columns). First card = "Any expression" with a ⊘ icon. Others show AI-generated headshot previews.
-
-### 5. Wire mood state into `CatalogGenerate.tsx`
-
-- Add `selectedMood` state (string, default `'any'`)
-- Pass to `CatalogStepPoses` and forward to generation payload
-- Mood gets injected into prompt as expression directive (e.g., "joyful smiling expression")
-
-## Files to modify/create
+### Files to modify
 
 | Action | File |
 |--------|------|
-| Update | `src/data/catalogPoses.ts` — studio-only poses, new categories, add moods array |
-| Rewrite | `src/components/app/catalog/CatalogStepPoses.tsx` — two-column layout with mood sidebar |
-| Update | `src/pages/CatalogGenerate.tsx` — add `selectedMood` state, pass to poses step and generation |
-| Script | Generate ~16 AI images via `lovable_ai.py`, upload to storage bucket, get public URLs |
-| Update | `src/hooks/useCatalogGenerate.ts` — inject mood into generation prompt |
-
-## Image generation plan
-
-Run a script that generates each pose/mood image one by one using `google/gemini-3.1-flash-image-preview`:
-- Pose prompts: "Professional e-commerce photograph of a beautiful female supermodel wearing a plain white t-shirt and blue jeans, [pose description], bright white studio background with soft natural shadows on the floor, full body shot, clean minimalist photography, 85mm lens"
-- Mood prompts: "Professional headshot portrait of a beautiful female supermodel, [expression] facial expression, white background, shoulders up, clean beauty photography"
-
-Save to `/tmp/`, upload to `catalog-previews` bucket, hardcode resulting URLs.
+| Generate | 7 new images via AI script → `src/assets/catalog/` |
+| Update | `src/data/catalogPoses.ts` — new imports, unique preview URLs |
+| Update | `src/components/app/CatalogMatrixSummary.tsx` — add nav buttons |
+| Update | `src/pages/CatalogGenerate.tsx` — pass step/nav props to summary bar |
 
