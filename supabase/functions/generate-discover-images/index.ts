@@ -208,9 +208,8 @@ serve(async (req) => {
         for (let i = 0; i < binaryStr.length; i++) {
           bytes[i] = binaryStr.charCodeAt(i);
         }
-        const mimeMatch = imageUrl.match(/data:(image\/[^;]+)/);
-        const contentType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-        const ext = contentType === "image/png" ? "png" : "jpg";
+        const ext = "png";
+        const contentType = "image/png";
 
         const storagePath = `discover/${Date.now()}-${img.title.toLowerCase().replace(/\s+/g, "-")}.${ext}`;
 

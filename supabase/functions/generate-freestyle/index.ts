@@ -599,16 +599,14 @@ async function downloadAndUploadToStorage(
   const response = await fetch(hostedUrl);
   if (!response.ok) throw new Error(`Failed to download image: ${response.status}`);
   const blob = await response.blob();
-  const mimeType = blob.type || "image/png";
-  const ext = mimeType.includes("jpeg") ? "jpg" : "png";
-  const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const fileName = `${userId}/${crypto.randomUUID()}.png`;
   const arrayBuf = await blob.arrayBuffer();
   const bytes = new Uint8Array(arrayBuf);
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
   const { error } = await supabase.storage
     .from("freestyle-images")
-    .upload(fileName, bytes, { contentType: mimeType, upsert: false });
+    .upload(fileName, bytes, { contentType: "image/png", upsert: false });
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
   const { data: urlData } = supabase.storage.from("freestyle-images").getPublicUrl(fileName);
   return urlData.publicUrl;
@@ -649,10 +647,7 @@ async function uploadBase64ToStorage(
     bytes[i] = binaryStr.charCodeAt(i);
   }
 
-  const mimeMatch = base64Url.match(/^data:(image\/[^;]+);/);
-  const mimeType = mimeMatch?.[1] || "image/png";
-  const ext = mimeType === "image/jpeg" ? "jpg" : "png";
-  const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const fileName = `${userId}/${crypto.randomUUID()}.png`;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
@@ -661,7 +656,7 @@ async function uploadBase64ToStorage(
   const { error } = await supabase.storage
     .from("freestyle-images")
     .upload(fileName, bytes, {
-      contentType: mimeType,
+      contentType: "image/png",
       upsert: false,
     });
 
