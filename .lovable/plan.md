@@ -1,74 +1,48 @@
 
-The issue is not your publish step.
 
-What I found:
-- Your codebase is updated to use the direct Gemini endpoint:
-  `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`
-- The updated files also use `GEMINI_API_KEY`
-- The code no longer contains `google/gemini-...` model strings in the edited generation functions
+# Investigation Results: Last Generation Used Seedream (Not Gemini Direct)
 
-But the runtime logs still show the old behavior:
-- `generate-freestyle` last run logged:
-  `provider=nanobanana/google/gemini-3-pro-image-preview`
-- `generate-workflow` latest runs logged:
-  `using google/gemini-3-pro-image-preview`
+## What Happened
 
-That means the backend function version currently running is older than the code shown in the repo, or the backend deploy for those functions did not complete successfully.
+The latest generation (job `4757b466`) shows the **new code IS deployed** — the model string is `gemini-3-pro-image-preview` (no `google/` prefix), confirming the direct Gemini API code is live.
 
-Why this happens:
-- Frontend publish and backend function deployment are separate
-- Publishing updates the site UI
-- Backend function changes deploy automatically
-- If backend deploy fails or gets stuck, the published site can still call the previous backend version
+However, the direct Gemini API call **failed instantly** (0.0s) with `server_error`, so the fallback chain kicked in and used Seedream instead:
 
-Most likely cause:
-1. The function code change exists in the repo
-2. The backend runtime is still serving a previous deployed bundle
-3. So your recent generations still hit the old Lovable AI path
-
-What I would implement next to fix it:
-1. Re-deploy the affected backend functions explicitly:
-   - `generate-freestyle`
-   - `generate-workflow`
-   - `generate-workflow-preview`
-   - any other migrated image-generation functions
-2. Check deployment logs/errors for those functions right after redeploy
-3. Trigger one fresh generation
-4. Verify runtime logs show:
-   - `gemini-3-pro-image-preview`
-   - not `google/gemini-3-pro-image-preview`
-   - and no old `provider=nanobanana/google/...` strings
-5. If deploy still fails, inspect edge-runtime compatibility issues:
-   - lockfile problems
-   - import resolution issues
-   - syntax/runtime errors during function bundle build
-
-Technical details:
 ```text
-Expected after successful backend deploy:
-  generate-workflow log:
-    using gemini-3-pro-image-preview
-
-  generate-freestyle log:
-    provider=nanobanana/gemini-3-pro-image-preview
-    or equivalent direct-model log without "google/"
-
-Actual now:
-  generate-workflow:
-    using google/gemini-3-pro-image-preview
-
-  generate-freestyle:
-    provider=nanobanana/google/gemini-3-pro-image-preview
+Attempt 1: nanobanana/gemini-3-pro-image-preview → server_error (0.0s)
+Fallback:  nanobanana → seedream
+Attempt 2: seedream/seedream-4-5-251128 → ok (14.7s)
 ```
 
-Conclusion:
-- Your app is published
-- The new backend code is not what is currently executing
-- So this is a backend deployment mismatch, not a user publishing mistake
+## Root Cause
 
-Concrete next implementation plan:
-1. Inspect deployment state/errors for the migrated backend functions
-2. Re-deploy only the image-generation functions
-3. Run a fresh generation test
-4. Confirm logs switched from `google/gemini-...` to plain `gemini-...`
-5. If still stale, isolate the exact function failing deployment and fix its bundle/runtime issue
+The `generateImage()` function calls `generativelanguage.googleapis.com` with the `GEMINI_API_KEY`, but the error response body is **not logged** — only the failure type (`server_error`) is recorded. The 0.0s duration means Google's API rejected the request immediately, which typically means:
+- The API key may be invalid or misconfigured for the image generation endpoint
+- The `image_config` parameter (aspect_ratio, image_size) may not be supported by the direct API
+- A permission/quota issue on the Google Cloud project
+
+## Plan
+
+### Step 1: Add error logging to the Gemini direct call
+In `generateImage()` (line ~725-727), the raw error text IS captured but never printed. Add a `console.error` so we can see the actual Google API error:
+
+```typescript
+// Line 725-727: after capturing errorText
+console.error(`[nanobanana] ${model} HTTP ${response.status}: ${errorText.slice(0, 500)}`);
+```
+
+### Step 2: Redeploy generate-freestyle
+Deploy the updated function so the next failed attempt logs the actual error from Google.
+
+### Step 3: Trigger a test generation
+Run one freestyle generation to see the actual error message, then fix accordingly.
+
+**Likely fixes depending on the error:**
+- If 400 Bad Request: the `image_config` field may need to be removed or renamed for the direct API
+- If 401/403: the `GEMINI_API_KEY` needs to be verified/regenerated
+- If quota error: the Google Cloud project needs image generation API enabled
+
+## Technical Details
+
+The function at `supabase/functions/generate-freestyle/index.ts` line 690-728 makes the direct API call. The error path captures `errorText` but only returns it in the result object — it's never logged to console. The fallback orchestrator (line 889) only logs `result=server_error` without the raw error details.
+
