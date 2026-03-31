@@ -44,6 +44,7 @@ export interface CatalogGenerateParams {
   poseIds: string[];
   backgroundIds: string[];
   allPoses: TryOnPose[];
+  shotOverrides?: Map<string, ShotOverride>;
 }
 
 export function useCatalogGenerate(): UseCatalogGenerateReturn {
