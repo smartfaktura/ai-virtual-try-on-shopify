@@ -3,7 +3,7 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { PoseCategorySection } from '@/components/app/PoseCategorySection';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 const CATALOG_MAX_BACKGROUNDS = 6;

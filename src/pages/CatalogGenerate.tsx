@@ -345,7 +345,7 @@ export default function CatalogGenerate() {
         />
       )}
 
-      <BuyCreditsModal open={buyModalOpen} onOpenChange={setBuyModalOpen} />
+      <BuyCreditsModal />
     </div>
   );
 }
