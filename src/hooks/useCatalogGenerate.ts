@@ -36,7 +36,6 @@ export interface CatalogGenerateParams {
   poseIds: string[];
   backgroundIds: string[];
   allPoses: TryOnPose[];
-  shotOverrides?: Map<string, ShotOverride>;
   extraItems?: Map<string, ExtraItem[]>;
 }
 
