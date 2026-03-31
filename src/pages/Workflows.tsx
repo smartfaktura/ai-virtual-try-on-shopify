@@ -59,7 +59,9 @@ export default function Workflows() {
         .select('*')
         .order('sort_order');
       if (error) throw error;
-      return data as unknown as Workflow[];
+      return (data as unknown as Workflow[]).filter(
+        w => isRealAdmin || w.slug !== 'catalog-shot-set'
+      );
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,

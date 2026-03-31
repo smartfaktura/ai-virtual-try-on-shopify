@@ -67,6 +67,7 @@ interface StartWorkflowModalProps {
 export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isRealAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const [step, setStep] = useState<Step>('workflow');
   const [selectedWorkflow, setSelectedWorkflow] = useState<typeof WORKFLOW_OPTIONS[0] | null>(null);
