@@ -211,10 +211,6 @@ export function GlobalGenerationBar() {
                   </Avatar>
                 ))}
               </div>
-              {/* Spinning ring on primary avatar */}
-              {processingJobs > 0 && (
-                <span className="absolute -inset-0.5 rounded-full border-2 border-transparent border-t-primary animate-spin pointer-events-none" />
-              )}
             </div>
           ) : visibleCompleted.length > 0 ? (
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 shrink-0">
@@ -259,9 +255,6 @@ export function GlobalGenerationBar() {
                         <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                           <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{member.name[0]}</AvatarFallback>
                         </Avatar>
-                        {isProcessing && (
-                          <span className="absolute -inset-0.5 rounded-full border-[1.5px] border-transparent border-t-primary animate-spin pointer-events-none" />
-                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate text-foreground">
