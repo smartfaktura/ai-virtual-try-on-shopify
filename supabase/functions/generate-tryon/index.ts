@@ -446,6 +446,7 @@ async function generateImageWithModel(
             max_tokens: 8192,
             image_config: { aspect_ratio: aspectRatio, image_size: '2K', output_format: 'png' },
           }),
+          signal: AbortSignal.timeout(75_000), // 75s primary timeout
         }
       );
 
