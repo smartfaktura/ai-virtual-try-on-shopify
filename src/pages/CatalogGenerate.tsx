@@ -8,6 +8,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogMatrixSummary } from '@/components/app/CatalogMatrixSummary';
+import { AddProductModal } from '@/components/app/AddProductModal';
 import { CatalogStepProducts } from '@/components/app/catalog/CatalogStepProducts';
 import { CatalogStepPoses } from '@/components/app/catalog/CatalogStepPoses';
 import { CatalogStepModels } from '@/components/app/catalog/CatalogStepModels';
