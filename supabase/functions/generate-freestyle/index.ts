@@ -744,13 +744,18 @@ async function generateImage(
     }
 
     // Build generationConfig with imageConfig
+    const imageConfig: Record<string, unknown> = {
+      personGeneration: "ALLOW_ALL",
+      outputOptions: { mimeType: "image/png" },
+      numberOfImages: 1,
+    };
+    if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
+    imageConfig.imageSize = quality === 'high' ? "2K" : "1K";
     const generationConfig: Record<string, unknown> = {
       responseModalities: ["IMAGE", "TEXT"],
+      temperature: 1.0,
+      imageConfig,
     };
-    const imageConfig: Record<string, string> = {};
-    if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
-    if (quality === 'high') imageConfig.imageSize = "2K";
-    if (Object.keys(imageConfig).length > 0) generationConfig.imageConfig = imageConfig;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,

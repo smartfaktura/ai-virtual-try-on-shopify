@@ -474,10 +474,15 @@ async function generateImageWithModel(
 
       const generationConfig: Record<string, unknown> = {
         responseModalities: ["IMAGE", "TEXT"],
+        temperature: 1.0,
+        imageConfig: {
+          ...(aspectRatio ? { aspectRatio } : {}),
+          imageSize: "2K",
+          personGeneration: "ALLOW_ALL",
+          numberOfImages: 1,
+          outputOptions: { mimeType: "image/png" },
+        },
       };
-      if (aspectRatio) {
-        generationConfig.imageConfig = { aspectRatio };
-      }
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent`,
