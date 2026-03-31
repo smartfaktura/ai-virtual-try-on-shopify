@@ -1,17 +1,27 @@
 
 
-## Revert Output Format to PNG
+## Remove Spinning Ring from GlobalGenerationBar
 
-The JPEG switch was made in the last edit. Reverting both lines back to `'png'`.
+The "bug-like" rotating element is the animated border ring overlaid on the avatar stack in the compact pill. Two instances to remove:
 
-### Changes
+### Changes in `src/components/app/GlobalGenerationBar.tsx`
 
-#### File 1: `supabase/functions/generate-tryon/index.ts`
-- Line 449: Change `output_format: 'jpeg'` → `output_format: 'png'`
+1. **Line 214-217** — Remove the spinning ring on the compact pill (the one visible in your screenshot):
+   ```
+   {/* Spinning ring on primary avatar */}
+   {processingJobs > 0 && (
+     <span className="absolute -inset-0.5 rounded-full border-2 border-transparent border-t-primary animate-spin pointer-events-none" />
+   )}
+   ```
+   Delete these 4 lines entirely.
 
-#### File 2: `supabase/functions/generate-workflow/index.ts`
-- Line 663: Change `output_format: 'jpeg'` → `output_format: 'png'`
+2. **Line 262-264** — Remove the spinning ring on individual avatars in the expanded detail list:
+   ```
+   {isProcessing && (
+     <span className="absolute -inset-0.5 rounded-full border-[1.5px] border-transparent border-t-primary animate-spin pointer-events-none" />
+   )}
+   ```
+   Delete these 3 lines entirely.
 
-### Note on File Size
-The 20MB issue was caused by something else (not the format). PNG at 2K is lossless and will produce large files for photographic content — but since other generation paths (freestyle, Seedream) already output PNG at similar sizes without issue, this is consistent behavior. If the 20MB problem recurs, we can investigate the specific Selfie/UGC pipeline separately.
+The "Processing" badge and progress bar remain as loading indicators — only the spinning border effect is removed.
 
