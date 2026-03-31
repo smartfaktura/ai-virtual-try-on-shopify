@@ -1274,13 +1274,14 @@ serve(async (req) => {
       hasArkKey: !!ARK_API_KEY,
     });
 
-    // Extend timeout_at for queue jobs
+    // Extend timeout_at for queue jobs — 3min so cleanup_stale_jobs catches
+    // platform-killed functions quickly instead of waiting 10 min
     if (isQueueInternal && body.job_id) {
       try {
         await supabase.from('generation_queue')
-          .update({ timeout_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() })
+          .update({ timeout_at: new Date(Date.now() + 3 * 60 * 1000).toISOString() })
           .eq('id', body.job_id);
-        console.log(`[generate-freestyle] Extended timeout_at to 10min for job ${body.job_id}`);
+        console.log(`[generate-freestyle] Extended timeout_at to 3min for job ${body.job_id}`);
       } catch (e) {
         console.warn(`[generate-freestyle] Failed to extend timeout_at:`, e);
       }
