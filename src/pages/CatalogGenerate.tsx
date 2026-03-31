@@ -47,6 +47,7 @@ export default function CatalogGenerate() {
 
   // Step 2 state
   const [selectedPoseIds, setSelectedPoseIds] = useState<Set<string>>(new Set());
+  const [selectedMood, setSelectedMood] = useState('any');
 
   // Step 3 state
   const [selectedModelIds, setSelectedModelIds] = useState<Set<string>>(new Set());
