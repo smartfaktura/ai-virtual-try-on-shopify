@@ -1,79 +1,56 @@
 
 
-## Increase All Timeout Limits Across the Generation Pipeline
+## Switch Image Generation to Direct Gemini API
 
-### Current Timeout Map
+The `GEMINI_API_KEY` is already configured. This is a straightforward URL + key + model-name swap across image generation edge functions.
 
-```text
-Layer                              Current Value     Issue
-─────────────────────────────────  ────────────────  ─────────────────────────────
-DB: claim_next_job timeout_at      3 minutes         Too tight — cleanup_stale_jobs
-                                                     may kill jobs still running
+### What Changes
 
-FREESTYLE:
-  PRIMARY_ATTEMPT_TIMEOUT_MS       75s               Too short for Nano Banana Pro
-  WALL_CLOCK_BUDGET_MS             140s              OK but tight with longer primary
-  SAFETY_DEADLINE_MS               135s              OK
-  MIN_ATTEMPT_BUDGET_MS            15s               OK
-  Seedream per-call timeout        90s               OK
-  Nano Banana Pro default          120s              Overridden by PRIMARY to 75s
-
-WORKFLOW:
-  PER_IMAGE_TIMEOUT (Gemini)       75s               Same issue
-  MAX_WALL_CLOCK_MS                140s              OK
-  Seedream per-call timeout        90s               OK
-
-TRY-ON:
-  Gemini per-attempt timeout       75s               Same issue
-  MAX_WALL_CLOCK_MS                140s              OK
-  Seedream per-call timeout        90s               OK
-
-CLIENT:
-  useGenerationQueue HARD_TIMEOUT  10 min            OK — no change needed
+Every Gemini image generation call currently uses:
+```
+URL:   https://ai.gateway.lovable.dev/v1/chat/completions
+Key:   LOVABLE_API_KEY
+Model: google/gemini-3-pro-image-preview  (or google/gemini-3.1-flash-image-preview)
 ```
 
-### Proposed Changes
-
-| Location | Current | New | Rationale |
-|----------|---------|-----|-----------|
-| **DB function `claim_next_job`** | `timeout_at = 3 min` | `timeout_at = 5 min` | Give the full fallback chain time to complete before `cleanup_stale_jobs` kills the job |
-| **freestyle `PRIMARY_ATTEMPT_TIMEOUT_MS`** | 75s | 100s | Nano Banana Pro needs 80-100s for complex prompts |
-| **freestyle `WALL_CLOCK_BUDGET_MS`** | 140s | 270s | With 100s primary + 90s Seedream fallback, 140s is too tight. 270s gives both providers full time |
-| **freestyle `SAFETY_DEADLINE_MS`** | 135s | 265s | 5s before wall clock budget |
-| **workflow `PER_IMAGE_TIMEOUT`** | 75s | 100s | Same Nano Banana Pro issue |
-| **workflow `MAX_WALL_CLOCK_MS`** | 140s | 270s | Match freestyle budget |
-| **tryon Gemini timeout** | 75s | 100s | Same fix |
-| **tryon `MAX_WALL_CLOCK_MS`** | 140s | 270s | Match freestyle budget |
-
-### Why 270s for WALL_CLOCK?
-
-```text
-100s (Nano Banana Pro primary)
-+ 5s  (overhead / logging)
-+ 90s (Seedream fallback)  
-+ 10s (upload + DB writes)
-= 205s needed minimum
-
-270s gives comfortable buffer.
-Platform hard-kill is at 300s for edge functions.
+Will become:
+```
+URL:   https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+Key:   GEMINI_API_KEY
+Model: gemini-3-pro-image-preview  (or gemini-3.1-flash-image-preview)
 ```
 
-### Files to Change
+### Files to Update (Image Generation — swap to direct Gemini)
 
-1. **DB migration** — Update `claim_next_job` function: change `timeout_at` from `interval '3 minutes'` to `interval '5 minutes'`
+| File | What changes |
+|------|-------------|
+| `generate-freestyle/index.ts` | `generateImage()` function URL/key, PROVIDERS registry model names, main handler `LOVABLE_API_KEY` → `GEMINI_API_KEY` for image calls |
+| `generate-workflow/index.ts` | `generateWithGemini()` URL/key, `getModelForQuality()` model names |
+| `generate-tryon/index.ts` | `generateImageWithModel()` URL/key, model name in `generateWithGeminiPro()` |
+| `upscale-image/index.ts` | AI call URL/key |
+| `generate-user-model/index.ts` | `generateSingleImage()` URL/key, analysis call stays on Lovable |
+| `generate-scene-previews/index.ts` | AI call URL/key, model name |
+| `generate-asset-previews/index.ts` | AI call URL/key, model name |
+| `generate-style-previews/index.ts` | AI call URL/key, model name |
+| `generate-discover-images/index.ts` | AI call URL/key, model name |
+| `try-website-shot/index.ts` | Image generation call only (text extraction stays on Lovable) |
 
-2. **`supabase/functions/generate-freestyle/index.ts`** (~line 798-800)
-   - `PRIMARY_ATTEMPT_TIMEOUT_MS`: 75000 → 100000
-   - `WALL_CLOCK_BUDGET_MS`: 140000 → 270000
-   - `SAFETY_DEADLINE_MS`: 135000 → 265000
+### Files That Stay on Lovable AI (text-only, cheap)
 
-3. **`supabase/functions/generate-workflow/index.ts`** (~line 631, 882)
-   - `PER_IMAGE_TIMEOUT`: 75000 → 100000
-   - `MAX_WALL_CLOCK_MS`: 140000 → 270000
+- `analyze-product-image` — text analysis
+- `classify-scene` — text classification
+- `describe-image` — text description
+- `describe-discover-metadata` — text metadata
+- `studio-chat` — streaming chat
+- `create-model-from-image` — text analysis
+- `create-scene-from-image` — text analysis
+- `analyze-video-input` — text analysis
 
-4. **`supabase/functions/generate-tryon/index.ts`** (~line 448, 707)
-   - Gemini `AbortSignal.timeout`: 75000 → 100000
-   - `MAX_WALL_CLOCK_MS`: 140000 → 270000
+### Also: Add Response Logging
 
-5. **`src/hooks/useLibraryItems.ts`** — Fix the existing TypeScript build errors (`.name` / `.image_url` on `unknown` type) with proper type casting
+When Gemini returns no image, log the first 500 chars of the response body so we can debug the "10 second no_image" issue going forward.
+
+### Risk
+
+Low — Google's direct endpoint uses the same OpenAI-compatible format. The `image_config` and response path (`choices[0].message.images[0].image_url.url`) should work identically. If the response structure differs, we'll see it immediately in the new logging.
 
