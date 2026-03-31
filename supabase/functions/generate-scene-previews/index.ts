@@ -6,6 +6,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Detect actual image format from magic bytes ──────────────────────────
+function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: 'jpg', contentType: 'image/jpeg' };
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57 && bytes[9] === 0x45) return { ext: 'webp', contentType: 'image/webp' };
+  return { ext: 'png', contentType: 'image/png' };
+}
+
 const MASTER_SUFFIX = "luxury brand campaign style, clean modern composition, premium minimal aesthetic, soft natural but controlled studio lighting, diffused key light with subtle directional shadows, high dynamic range, realistic materials and textures, sharp product focus with shallow depth of field (85mm lens look), professional color grading, cinematic but natural tones, elegant negative space, perfectly balanced framing, hyper-detailed packaging texture, realistic reflections and soft highlights, global skincare / wellness / lifestyle advertising quality, photorealistic, 8k resolution, magazine editorial quality, refined, sophisticated, premium brand identity";
 
 // Diverse supermodel descriptors — cycled per scene index
