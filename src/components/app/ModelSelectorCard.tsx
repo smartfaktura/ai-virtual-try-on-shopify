@@ -1,4 +1,5 @@
 import type { ModelProfile } from '@/types';
+import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
