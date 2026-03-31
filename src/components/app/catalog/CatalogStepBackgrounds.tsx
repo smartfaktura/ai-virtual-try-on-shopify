@@ -3,7 +3,7 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { PoseCategorySection } from '@/components/app/PoseCategorySection';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 const CATALOG_MAX_BACKGROUNDS = 6;
@@ -12,6 +12,8 @@ interface CatalogStepBackgroundsProps {
   selectedBackgroundIds: Set<string>;
   onToggleBackground: (bgId: string) => void;
   onBack: () => void;
+  onNext?: () => void;
+  canProceed?: boolean;
 }
 
 const BG_CATEGORY_ORDER: PoseCategory[] = [
@@ -19,7 +21,7 @@ const BG_CATEGORY_ORDER: PoseCategory[] = [
   'bathroom', 'botanical', 'outdoor',
 ];
 
-export function CatalogStepBackgrounds({ selectedBackgroundIds, onToggleBackground, onBack }: CatalogStepBackgroundsProps) {
+export function CatalogStepBackgrounds({ selectedBackgroundIds, onToggleBackground, onBack, onNext, canProceed }: CatalogStepBackgroundsProps) {
   const { asPoses: customScenes } = useCustomScenes();
 
   const backgrounds = useMemo(() => {
@@ -83,10 +85,17 @@ export function CatalogStepBackgrounds({ selectedBackgroundIds, onToggleBackgrou
           <ChevronLeft className="w-4 h-4" />
           Back
         </Button>
-        <Button disabled className="gap-2">
-          <Sparkles className="w-4 h-4" />
-          Generate Catalog
-        </Button>
+        {onNext ? (
+          <Button onClick={onNext} disabled={!canProceed} className="gap-2">
+            Next: Review
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button disabled className="gap-2">
+            <Sparkles className="w-4 h-4" />
+            Generate Catalog
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useCredits } from '@/contexts/CreditContext';
+import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
 import { PageHeader } from '@/components/app/PageHeader';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
@@ -11,16 +14,20 @@ import { ModelFilterBar } from '@/components/app/ModelFilterBar';
 import { CatalogMatrixSummary } from '@/components/app/CatalogMatrixSummary';
 import { CatalogStepPoses } from '@/components/app/catalog/CatalogStepPoses';
 import { CatalogStepBackgrounds } from '@/components/app/catalog/CatalogStepBackgrounds';
+import { CatalogStepReview } from '@/components/app/catalog/CatalogStepReview';
+import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
+import { mockTryOnPoses } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Package, Users, Move, Image } from 'lucide-react';
-import type { Product, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
+import { ChevronLeft, ChevronRight, Package, Users, Move, Image, Sparkles } from 'lucide-react';
+import type { Product, ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
 
 const CATALOG_MAX_PRODUCTS = 50;
 const CATALOG_MAX_MODELS = 5;
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
+  const { balance, refreshBalance, openBuyModal } = useCredits();
   const [step, setStep] = useState(1);
 
   // Product selection state
@@ -36,6 +43,9 @@ export default function CatalogGenerate() {
   // Pose & Background selection state
   const [selectedPoseIds, setSelectedPoseIds] = useState<Set<string>>(new Set());
   const [selectedBackgroundIds, setSelectedBackgroundIds] = useState<Set<string>>(new Set());
+
+  // Generation
+  const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
   // Fetch products
   const { data: products = [], isLoading: productsLoading } = useQuery({
@@ -67,8 +77,12 @@ export default function CatalogGenerate() {
   // Fetch models
   const { asProfiles: systemModels } = useCustomModels();
   const { asProfiles: userModels } = useUserModels();
+  const { asPoses: customScenes } = useCustomScenes();
 
   const allModels = useMemo(() => [...systemModels, ...userModels], [systemModels, userModels]);
+
+  // All poses (for review step lookup)
+  const allPoses = useMemo(() => [...mockTryOnPoses, ...customScenes], [customScenes]);
 
   const filteredModels = useMemo(() => {
     return allModels.filter((m) => {
@@ -109,12 +123,14 @@ export default function CatalogGenerate() {
   const canProceedStep1 = selectedProductIds.size >= 1;
   const canProceedStep2 = selectedModelIds.size >= 1;
   const canProceedStep3 = selectedPoseIds.size >= 1;
+  const canProceedStep4 = selectedBackgroundIds.size >= 1;
 
   const steps = [
     { number: 1, label: 'Products', icon: Package },
     { number: 2, label: 'Models', icon: Users },
     { number: 3, label: 'Poses', icon: Move },
     { number: 4, label: 'Backgrounds', icon: Image },
+    { number: 5, label: 'Review', icon: Sparkles },
   ];
 
   const canNavigateTo = (stepNum: number) => {
@@ -122,6 +138,7 @@ export default function CatalogGenerate() {
     if (stepNum === 2) return canProceedStep1;
     if (stepNum === 3) return canProceedStep1 && canProceedStep2;
     if (stepNum === 4) return canProceedStep1 && canProceedStep2 && canProceedStep3;
+    if (stepNum === 5) return canProceedStep1 && canProceedStep2 && canProceedStep3 && canProceedStep4;
     return false;
   };
 
@@ -130,7 +147,23 @@ export default function CatalogGenerate() {
     selectedModelIds.size,
     selectedPoseIds.size,
     selectedBackgroundIds.size,
+    0,
   ];
+
+  const handleGenerate = async () => {
+    const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
+    const selectedModelsArr = allModels.filter(m => selectedModelIds.has(m.modelId));
+
+    await startGeneration({
+      products: selectedProducts,
+      models: selectedModelsArr,
+      poseIds: Array.from(selectedPoseIds),
+      backgroundIds: Array.from(selectedBackgroundIds),
+      allPoses,
+    });
+
+    refreshBalance();
+  };
 
   return (
     <div className="space-y-6 pb-32">
@@ -277,16 +310,41 @@ export default function CatalogGenerate() {
           selectedBackgroundIds={selectedBackgroundIds}
           onToggleBackground={handleBackgroundToggle}
           onBack={() => setStep(3)}
+          onNext={() => setStep(5)}
+          canProceed={canProceedStep4}
+        />
+      )}
+
+      {/* Step 5: Review & Generate */}
+      {step === 5 && (
+        <CatalogStepReview
+          products={products}
+          selectedProductIds={selectedProductIds}
+          models={allModels}
+          selectedModelIds={selectedModelIds}
+          selectedPoseIds={selectedPoseIds}
+          selectedBackgroundIds={selectedBackgroundIds}
+          allPoses={allPoses}
+          balance={balance}
+          onBack={() => setStep(4)}
+          onGenerate={handleGenerate}
+          isGenerating={isGenerating}
+          batchState={batchState}
+          onOpenBuyModal={openBuyModal}
         />
       )}
 
       {/* Sticky summary bar */}
-      <CatalogMatrixSummary
-        productCount={selectedProductIds.size}
-        modelCount={selectedModelIds.size}
-        poseCount={selectedPoseIds.size}
-        backgroundCount={selectedBackgroundIds.size}
-      />
+      {step < 5 && (
+        <CatalogMatrixSummary
+          productCount={selectedProductIds.size}
+          modelCount={selectedModelIds.size}
+          poseCount={selectedPoseIds.size}
+          backgroundCount={selectedBackgroundIds.size}
+        />
+      )}
+
+      <BuyCreditsModal />
     </div>
   );
 }
