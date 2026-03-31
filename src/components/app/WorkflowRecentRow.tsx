@@ -105,7 +105,7 @@ function ThumbnailCard({ job, signedUrl, allSignedUrls, onSelect }: { job: Recen
           {/* Count badge only for single-image jobs */}
           {!hasMultiple && (
             <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
-              {Array.isArray(job.results) ? (job.results as unknown[]).length : job.requested_count} imgs
+              {(() => { const count = Array.isArray(job.results) ? (job.results as unknown[]).length : job.requested_count; return `${count} ${count === 1 ? 'img' : 'imgs'}`; })()}
             </span>
           )}
         </div>
