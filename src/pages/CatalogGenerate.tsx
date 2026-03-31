@@ -145,6 +145,13 @@ export default function CatalogGenerate() {
         <div />
       </PageHeader>
 
+      {/* Intro guidance */}
+      <div className="rounded-xl border border-border bg-muted/30 p-4">
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">How it works:</strong> Select your products and models → pick poses &amp; backgrounds → review your matrix → generate your entire catalog in one batch. Each combination produces one image.
+        </p>
+      </div>
+
       {/* Minimal 3-step breadcrumb */}
       <div className="flex items-center gap-1">
         {STEPS.map((s, i) => {
