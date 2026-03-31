@@ -1,51 +1,45 @@
 
 
-## Fix Mirror Selfie Set Image Quality (Low Resolution / Small File Size)
+## Fix Mirror Selfie Set Resolution — Add Missing `max_tokens`
+
+### Problem
+Mirror Selfie Set generates 1024×1024 images. Freestyle generates proper 2K images. Both use the same AI model and `image_size: '2K'`.
 
 ### Root Cause
+The `generate-workflow` function is missing `max_tokens: 8192` in its API request body. Freestyle includes it:
 
-The `generate-workflow` edge function sends `output_format: 'png'` in `image_config`, but the Lovable AI gateway returns JPEG anyway (confirmed by storage logs: all files saved as `.jpg`). The `output_format` param is silently ignored.
-
-The real issue is likely that the gateway is returning lower-resolution images. Comparing the two functions:
-
-**Freestyle** (working well):
+**Freestyle** (2K output):
 ```js
-image_config: {
-  aspect_ratio: aspectRatio,
-  image_size: '2K',       // no output_format
-}
+modalities: ["image", "text"],
+max_tokens: 8192,                          // ← present
+image_config: { aspect_ratio, image_size: '2K' }
 ```
 
-**Workflow** (low quality):
+**Workflow** (1024 output):
 ```js
-image_config: {
-  aspect_ratio: aspectRatio,
-  image_size: '2K',
-  output_format: 'png',   // ← unsupported param, may confuse gateway
-}
+modalities: ["image", "text"],
+                                            // ← max_tokens MISSING
+image_config: { aspect_ratio, image_size: '2K' }
 ```
 
-The unsupported `output_format: 'png'` parameter may be causing the gateway to fall back to default/lower resolution settings. Freestyle doesn't send this parameter and produces better results.
+Without `max_tokens: 8192`, the gateway defaults to a lower token budget, which caps the image resolution at 1024×1024 regardless of the `image_size` setting.
 
 ### Fix
 
-**File: `supabase/functions/generate-workflow/index.ts` (line 663)**
+**File: `supabase/functions/generate-workflow/index.ts` (line 662)**
 
-Remove `output_format: 'png'` from the `image_config` to match the freestyle function's working config:
+Add `max_tokens: 8192` to the request body:
 
 ```js
-// Before
-image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K', output_format: 'png' },
+// Before (line 662-663)
+modalities: ["image", "text"],
+image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
 
-// After  
+// After
+modalities: ["image", "text"],
+max_tokens: 8192,
 image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
 ```
 
-This aligns the workflow API call with the freestyle function that already produces good quality images with the same Pro model.
-
-### Technical Details
-
-- The `generate-workflow` function already correctly uses `google/gemini-3-pro-image-preview` for Mirror Selfie Set (forced at line 996 when model reference is present, also forced by `quality: 'high'` from the workflow config)
-- Storage upload logic (lines 1143-1182) correctly handles both base64 and hosted URLs — no changes needed there
-- One file changed: `supabase/functions/generate-workflow/index.ts`
+One line added, one file changed.
 
