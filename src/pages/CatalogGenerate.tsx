@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
-import { useCustomScenes } from '@/hooks/useCustomScenes';
+
 import { useCredits } from '@/contexts/CreditContext';
 import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
 import { PageHeader } from '@/components/app/PageHeader';
