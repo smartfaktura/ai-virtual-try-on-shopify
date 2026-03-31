@@ -16,7 +16,6 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify user
     const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
@@ -39,7 +38,6 @@ serve(async (req) => {
       .createSignedUrl(storagePath, 60);
 
     if (existing?.signedUrl) {
-      // File exists, return public URL
       const { data: publicUrl } = supabaseAdmin.storage
         .from("catalog-previews")
         .getPublicUrl(storagePath);
@@ -48,10 +46,10 @@ serve(async (req) => {
       });
     }
 
-    // Generate via Gemini direct API (matching project pattern)
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured" }), {
+    // Generate via Lovable AI Gateway
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -60,35 +58,44 @@ serve(async (req) => {
       ? `Generate a professional product photography background scene: ${description}. Clean, high quality, no products or people visible, suitable as a backdrop for e-commerce product photography. OUTPUT ASPECT RATIO: 4:5. OUTPUT RESOLUTION: 768x960.`
       : `Generate a professional fashion model reference photo: ${description}. White studio background, full body shot, professional e-commerce photography style, clean and minimal. OUTPUT ASPECT RATIO: 4:5. OUTPUT RESOLUTION: 768x960.`;
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${GEMINI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gemini-3.1-flash-image-preview",
-          messages: [{ role: "user", content: prompt }],
-          modalities: ["image", "text"],
-        }),
-      }
-    );
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3.1-flash-image-preview",
+        messages: [{ role: "user", content: prompt }],
+        modalities: ["image", "text"],
+      }),
+    });
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error("Gemini error:", geminiRes.status, errText.slice(0, 500));
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      console.error("AI gateway error:", aiRes.status, errText.slice(0, 500));
+
+      if (aiRes.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (aiRes.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return new Response(JSON.stringify({ error: "AI generation failed" }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const geminiData = await geminiRes.json();
-    const imageUrl = geminiData?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const aiData = await aiRes.json();
+    const imageUrl = aiData?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageUrl) {
-      console.error("No image in response:", JSON.stringify(geminiData).slice(0, 500));
+      console.error("No image in response:", JSON.stringify(aiData).slice(0, 500));
       return new Response(JSON.stringify({ error: "No image generated" }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
