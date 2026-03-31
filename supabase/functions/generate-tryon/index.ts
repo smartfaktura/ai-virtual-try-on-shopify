@@ -392,6 +392,39 @@ async function generateImage(
   return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "gemini-3-pro-image-preview", sceneImageUrl);
 }
 
+// ── Helper: Convert URL to native Gemini inlineData part ────────────
+async function urlToInlineDataPart(url: string): Promise<Record<string, unknown>> {
+  if (url.startsWith("data:")) {
+    const match = url.match(/^data:(image\/\w+);base64,(.+)$/s);
+    if (match) return { inlineData: { mimeType: match[1], data: match[2] } };
+  }
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch image for inlineData: ${resp.status}`);
+  const buf = await resp.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const b64 = btoa(binary);
+  const contentType = resp.headers.get("content-type") || "image/png";
+  const mimeType = contentType.split(";")[0].trim();
+  return { inlineData: { mimeType, data: b64 } };
+}
+
+function extractImageFromGeminiResponse(data: Record<string, unknown>): string | null {
+  const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+  if (!candidates?.length) return null;
+  const parts = (candidates[0].content as Record<string, unknown>)?.parts as Array<Record<string, unknown>> | undefined;
+  if (!parts) return null;
+  for (const part of parts) {
+    const inlineData = part.inlineData as { mimeType: string; data: string } | undefined;
+    if (inlineData?.data) return `data:${inlineData.mimeType};base64,${inlineData.data}`;
+  }
+  return null;
+}
+
 async function generateImageWithModel(
   prompt: string,
   productImageUrl: string,
