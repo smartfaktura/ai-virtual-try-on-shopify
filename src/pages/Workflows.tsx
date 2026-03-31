@@ -18,6 +18,7 @@ import { groupJobsIntoBatches } from '@/lib/batchGrouping';
 import type { ActiveJob } from '@/lib/batchGrouping';
 import type { Workflow } from '@/types/workflow';
 import { WorkflowRequestBanner } from '@/components/app/WorkflowRequestBanner';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 export type { Workflow } from '@/types/workflow';
 

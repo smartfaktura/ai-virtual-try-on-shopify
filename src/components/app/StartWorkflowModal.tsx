@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import type { Workflow } from '@/types/workflow';
 
 const WORKFLOW_OPTIONS = [
