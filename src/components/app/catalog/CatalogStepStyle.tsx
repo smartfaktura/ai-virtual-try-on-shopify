@@ -14,12 +14,6 @@ interface CatalogStepStyleProps {
   onTogglePose: (id: string) => void;
   selectedBackgroundIds: Set<string>;
   onToggleBackground: (id: string) => void;
-  products: Product[];
-  selectedProductIds: Set<string>;
-  models: ModelProfile[];
-  selectedModelIds: Set<string>;
-  shotOverrides: Map<string, ShotOverride>;
-  onShotOverridesChange: (overrides: Map<string, ShotOverride>) => void;
   onBack: () => void;
   onNext: () => void;
   canProceed: boolean;
