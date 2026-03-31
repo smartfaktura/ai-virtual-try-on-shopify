@@ -796,12 +796,13 @@ function buildContentArray(
 
 // ── Centralized Freestyle Fallback Executor ──────────────────────────────
 // 3-attempt chain: primary → other provider → final rescue on primary
-// Wall-clock budget enforced: primary gets max 120s, fallbacks use remaining budget.
+// Wall-clock budget enforced: primary gets max 75s, fallbacks use remaining budget.
 // No Pro→Flash auto-downgrade. Terminal failures stop immediately.
 
-const PRIMARY_ATTEMPT_TIMEOUT_MS = 120_000;   // 120s max for first attempt
-const WALL_CLOCK_BUDGET_MS = 145_000;         // 145s total budget (edge fn limit ~150s)
-const MIN_ATTEMPT_BUDGET_MS = 25_000;         // skip fallback if <25s remaining
+const PRIMARY_ATTEMPT_TIMEOUT_MS = 75_000;    // 75s max for first attempt (was 120s) — leaves 60s+ for fallback
+const WALL_CLOCK_BUDGET_MS = 140_000;         // 140s total budget — 10s safety before platform kills at ~150s
+const MIN_ATTEMPT_BUDGET_MS = 15_000;         // 15s minimum for a fallback attempt (was 25s)
+const SAFETY_DEADLINE_MS = 135_000;           // 135s — graceful abort point before platform kill
 
 interface FallbackOpts {
   primaryProvider: "nanobanana" | "seedream";
