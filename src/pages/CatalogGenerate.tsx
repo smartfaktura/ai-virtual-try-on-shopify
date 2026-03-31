@@ -8,6 +8,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogMatrixSummary } from '@/components/app/CatalogMatrixSummary';
+import { AddProductModal } from '@/components/app/AddProductModal';
 import { CatalogStepProducts } from '@/components/app/catalog/CatalogStepProducts';
 import { CatalogStepPoses } from '@/components/app/catalog/CatalogStepPoses';
 import { CatalogStepModels } from '@/components/app/catalog/CatalogStepModels';
@@ -42,7 +43,7 @@ export default function CatalogGenerate() {
 
   // Step 1 state
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
-  const [productSearch, setProductSearch] = useState('');
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   // Step 2 state
   const [selectedPoseIds, setSelectedPoseIds] = useState<Set<string>>(new Set());
@@ -63,32 +64,37 @@ export default function CatalogGenerate() {
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
-  // Fetch products
-  const { data: products = [], isLoading: productsLoading } = useQuery({
+  // Fetch products (raw rows for product step, mapped for generation)
+  const { data: userProducts = [], isLoading: productsLoading } = useQuery({
     queryKey: ['user-products', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_products')
-        .select('*, product_images(*)')
+        .select('id, title, image_url, product_type, tags, description, product_images(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        vendor: p.product_type || '',
-        productType: p.product_type || '',
-        images: [
-          { url: p.image_url },
-          ...(p.product_images || [])
-            .sort((a: any, b: any) => a.position - b.position)
-            .map((img: any) => ({ url: img.image_url })),
-        ],
-        tags: p.tags || [],
-        description: p.description || '',
-      })) as Product[];
+      return data ?? [];
     },
     enabled: !!user,
   });
+
+  const products: Product[] = useMemo(() => userProducts.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    vendor: p.product_type || '',
+    productType: p.product_type || '',
+    images: [
+      { url: p.image_url },
+      ...(p.product_images || [])
+        .sort((a: any, b: any) => a.position - b.position)
+        .map((img: any) => ({ url: img.image_url })),
+    ],
+    tags: p.tags || [],
+    description: p.description || '',
+    status: 'active' as const,
+    createdAt: p.created_at || '',
+    updatedAt: p.updated_at || '',
+  })), [userProducts]);
 
   // Models: full library + custom + user
   const { asProfiles: customModels } = useCustomModels();
@@ -216,15 +222,14 @@ export default function CatalogGenerate() {
       {/* Step Content */}
       {step === 1 && (
         <CatalogStepProducts
-          products={products}
+          products={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
           productsLoading={productsLoading}
           selectedProductIds={selectedProductIds}
           onProductSelectionChange={setSelectedProductIds}
-          productSearch={productSearch}
-          onProductSearchChange={setProductSearch}
           maxProducts={CATALOG_MAX_PRODUCTS}
           onNext={() => setStep(2)}
           canProceed={canStep1}
+          onAddProduct={() => setShowAddProduct(true)}
         />
       )}
 
@@ -311,6 +316,7 @@ export default function CatalogGenerate() {
       )}
 
       <BuyCreditsModal />
+      <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct} onProductAdded={() => setShowAddProduct(false)} />
     </div>
   );
 }
