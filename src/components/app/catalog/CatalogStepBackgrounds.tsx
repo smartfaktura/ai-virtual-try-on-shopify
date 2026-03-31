@@ -85,10 +85,17 @@ export function CatalogStepBackgrounds({ selectedBackgroundIds, onToggleBackgrou
           <ChevronLeft className="w-4 h-4" />
           Back
         </Button>
-        <Button disabled className="gap-2">
-          <Sparkles className="w-4 h-4" />
-          Generate Catalog
-        </Button>
+        {onNext ? (
+          <Button onClick={onNext} disabled={!canProceed} className="gap-2">
+            Next: Review
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button disabled className="gap-2">
+            <Sparkles className="w-4 h-4" />
+            Generate Catalog
+          </Button>
+        )}
       </div>
     </div>
   );
