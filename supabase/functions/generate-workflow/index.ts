@@ -1098,13 +1098,31 @@ serve(async (req) => {
             console.log(`[generate-workflow] Adding scene reference image for "${variation.label}"`);
           }
 
-          const imageUrl = await generateImage(
+          let imageUrl = await generateImage(
             prompt,
             referenceImages,
             model,
             LOVABLE_API_KEY,
             aspectRatio
           );
+
+          // Seedream fallback: only for product-only (no model reference — Seedream can't preserve identity)
+          if (imageUrl === null && !body.model?.imageUrl) {
+            const arkApiKey = Deno.env.get("BYTEPLUS_ARK_API_KEY");
+            if (arkApiKey) {
+              console.warn(`[generate-workflow] Gemini returned null — falling back to Seedream 4.5 for "${variation.label}"`);
+              const refImageUrls = referenceImages.map(r => r.url);
+              const seedreamResult = await generateImageSeedream(
+                prompt, refImageUrls, "seedream-4-5-251128", arkApiKey, aspectRatio || "1:1"
+              );
+              if (seedreamResult.ok && seedreamResult.imageUrl) {
+                imageUrl = seedreamResult.imageUrl;
+                console.log(`[generate-workflow] Seedream fallback succeeded for "${variation.label}"`);
+              } else {
+                console.warn(`[generate-workflow] Seedream fallback failed:`, seedreamResult.error);
+              }
+            }
+          }
 
           if (imageUrl) {
             // Upload base64 to storage to avoid bloating the database
