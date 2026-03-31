@@ -1298,6 +1298,13 @@ serve(async (req) => {
       : "";
 
     for (let i = 0; i < effectiveImageCount; i++) {
+      // Layer 4: Safety deadline — abort gracefully before platform kills us
+      const elapsedSinceStart = performance.now() - requestStartTime;
+      if (elapsedSinceStart > SAFETY_DEADLINE_MS) {
+        console.warn(`[generate-freestyle] SAFETY DEADLINE reached (${(elapsedSinceStart / 1000).toFixed(1)}s) before image ${i + 1} — aborting loop gracefully`);
+        errors.push(`Safety deadline reached at ${(elapsedSinceStart / 1000).toFixed(0)}s — skipped image ${i + 1}`);
+        break;
+      }
       const variationSuffix =
         i === 0
           ? batchConsistency
