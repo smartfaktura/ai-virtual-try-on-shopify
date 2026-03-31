@@ -1,30 +1,68 @@
 
 
-# Fix: Invalid `imageSize` Value Causing Gemini INVALID_ARGUMENT
+# Enhance Gemini Native API Parameters for Realistic High-Resolution Output
 
-## Problem Found
-The logs show `HTTP 400: INVALID_ARGUMENT` from the native Gemini `generateContent` endpoint. The root cause is on **line 752** of `generate-freestyle/index.ts`:
+## Current State
+All four generation functions only pass `responseModalities`, `aspectRatio`, and (freestyle only) `imageSize`. Several important parameters are missing.
 
+## Parameters to Add
+
+Based on the native Gemini `generateContent` API documentation:
+
+### 1. `personGeneration: "ALLOW_ALL"` (inside `imageConfig`)
+Currently unset → defaults to `ALLOW_ADULT`. Setting `ALLOW_ALL` ensures consistent rendering of people across all ages, important for fashion/product photography.
+
+### 2. `outputOptions: { mimeType: "image/png" }` (inside `imageConfig`)
+Currently unset → API defaults to JPEG. Your upload code saves as PNG anyway, but the source data is JPEG-compressed. Requesting PNG from Gemini gives lossless quality at the source.
+
+### 3. `imageSize` defaults for all functions
+- **Freestyle**: Already has `"2K"` for high quality, but no default for standard → add `"1K"` as baseline
+- **Workflow / Try-On / Preview**: No `imageSize` at all → add `"2K"` for workflow/tryon (these are final deliverables), `"1K"` for preview
+
+### 4. `temperature: 1.0` (inside `generationConfig`)
+Google's recommended default for image generation. Explicitly setting it ensures consistent photorealistic output across API versions.
+
+### 5. `numberOfImages: 1` (inside `imageConfig`)
+Explicitly set to avoid any API default changes. The native API supports `1-4` images per call.
+
+## Files to Update
+
+### `generate-freestyle/index.ts` (~line 747-753)
 ```typescript
-if (quality === 'high') imageConfig.imageSize = "2048";  // WRONG
+const imageConfig: Record<string, unknown> = {
+  personGeneration: "ALLOW_ALL",
+  outputOptions: { mimeType: "image/png" },
+};
+if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
+imageConfig.imageSize = quality === 'high' ? "2K" : "1K";
+
+const generationConfig: Record<string, unknown> = {
+  responseModalities: ["IMAGE", "TEXT"],
+  temperature: 1.0,
+  imageConfig,
+};
 ```
 
-Google's API expects string values `"1K"`, `"2K"`, or `"4K"` — not pixel numbers like `"2048"`. Since your test generation used `quality: "high"`, this invalid value triggers the 400 error every time, causing the fallback to Seedream.
-
-## Fix
-One line change in `generate-freestyle/index.ts`:
-
+### `generate-workflow/index.ts` (~line 693-698)
 ```typescript
-// Line 752: change "2048" to "2K"
-if (quality === 'high') imageConfig.imageSize = "2K";
+const generationConfig: Record<string, unknown> = {
+  responseModalities: ["IMAGE", "TEXT"],
+  temperature: 1.0,
+  imageConfig: {
+    ...(aspectRatio ? { aspectRatio } : {}),
+    imageSize: "2K",
+    personGeneration: "ALLOW_ALL",
+    outputOptions: { mimeType: "image/png" },
+  },
+};
 ```
 
-## Other functions
-- `generate-workflow` and `generate-tryon` only pass `aspectRatio` in their `imageConfig` — no `imageSize` issue. They should work already for standard quality generations.
-- `generate-workflow-preview` has a hardcoded `aspectRatio: "3:4"` — also fine.
+### `generate-tryon/index.ts` (~line 475-480)
+Same pattern as workflow — `imageSize: "2K"`, `personGeneration: "ALLOW_ALL"`, PNG output.
 
-## After fix
-- Redeploy `generate-freestyle`
-- Test a high-quality generation
-- Confirm logs show `nanobanana/gemini-3-pro-image-preview → ok`
+### `generate-workflow-preview/index.ts`
+Lower priority — keep `imageSize: "1K"` since previews don't need full resolution. Still add `personGeneration` and PNG output.
+
+## Risk
+Low. These are all documented, additive parameters. If a parameter is unsupported by the model version, the API ignores it gracefully. Seedream fallback remains untouched.
 
