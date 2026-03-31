@@ -6,6 +6,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Detect actual image format from magic bytes ──────────────────────────
+function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: 'jpg', contentType: 'image/jpeg' };
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57 && bytes[9] === 0x45) return { ext: 'webp', contentType: 'image/webp' };
+  return { ext: 'png', contentType: 'image/png' };
+}
+
 function buildPromptFromDescription(d: any): string {
   const genderWord = d.gender || "Female";
   const ageVal = d.age || 28;
