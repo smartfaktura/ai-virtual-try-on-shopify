@@ -31,6 +31,7 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, loading, onClick, progress, progressColor, action, description, popoverAlign }: MetricCardProps) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -115,8 +116,6 @@ export function MetricCard({ title, value, suffix, icon: Icon, tooltip, trend, l
       </div>
     </div>
   );
-
-  const isMobile = useIsMobile();
 
   if (!tooltip || isMobile) return cardContent;
 
