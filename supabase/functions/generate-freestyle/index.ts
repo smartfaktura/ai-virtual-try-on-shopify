@@ -607,14 +607,15 @@ async function downloadAndUploadToStorage(
   const response = await fetch(hostedUrl);
   if (!response.ok) throw new Error(`Failed to download image: ${response.status}`);
   const blob = await response.blob();
-  const fileName = `${userId}/${crypto.randomUUID()}.png`;
   const arrayBuf = await blob.arrayBuffer();
   const bytes = new Uint8Array(arrayBuf);
+  const fmt = detectImageFormat(bytes);
+  const fileName = `${userId}/${crypto.randomUUID()}.${fmt.ext}`;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
   const { error } = await supabase.storage
     .from("freestyle-images")
-    .upload(fileName, bytes, { contentType: "image/png", upsert: false });
+    .upload(fileName, bytes, { contentType: fmt.contentType, upsert: false });
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
   const { data: urlData } = supabase.storage.from("freestyle-images").getPublicUrl(fileName);
   return urlData.publicUrl;
