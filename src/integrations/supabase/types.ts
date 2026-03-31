@@ -908,6 +908,7 @@ export type Database = {
           payload: Json
           priority_score: number
           result: Json | null
+          retry_count: number
           started_at: string | null
           status: string
           timeout_at: string | null
@@ -925,6 +926,7 @@ export type Database = {
           payload: Json
           priority_score?: number
           result?: Json | null
+          retry_count?: number
           started_at?: string | null
           status?: string
           timeout_at?: string | null
@@ -942,6 +944,7 @@ export type Database = {
           payload?: Json
           priority_score?: number
           result?: Json | null
+          retry_count?: number
           started_at?: string | null
           status?: string
           timeout_at?: string | null
