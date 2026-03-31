@@ -1,45 +1,33 @@
 
 
-## Fix Mirror Selfie Set Resolution — Add Missing `max_tokens`
+## Force PNG Output Across All Generation Functions
 
 ### Problem
-Mirror Selfie Set generates 1024×1024 images. Freestyle generates proper 2K images. Both use the same AI model and `image_size: '2K'`.
-
-### Root Cause
-The `generate-workflow` function is missing `max_tokens: 8192` in its API request body. Freestyle includes it:
-
-**Freestyle** (2K output):
-```js
-modalities: ["image", "text"],
-max_tokens: 8192,                          // ← present
-image_config: { aspect_ratio, image_size: '2K' }
-```
-
-**Workflow** (1024 output):
-```js
-modalities: ["image", "text"],
-                                            // ← max_tokens MISSING
-image_config: { aspect_ratio, image_size: '2K' }
-```
-
-Without `max_tokens: 8192`, the gateway defaults to a lower token budget, which caps the image resolution at 1024×1024 regardless of the `image_size` setting.
+The AI gateway (Gemini Pro) now returns `image/jpeg` base64 data. Our upload code dynamically detects the MIME type and saves accordingly — so images are being stored as `.jpg` instead of `.png`, losing quality.
 
 ### Fix
+Force all image uploads to use `.png` extension and `image/png` content type, regardless of what the gateway returns. The raw pixel data is the same — we just store it as PNG (lossless) instead of JPEG (lossy).
 
-**File: `supabase/functions/generate-workflow/index.ts` (line 662)**
+### Files to Change (4 locations across 3 files)
 
-Add `max_tokens: 8192` to the request body:
+**1. `supabase/functions/generate-freestyle/index.ts`**
+- **Line ~602-604** (blob upload path): Replace dynamic ext detection with hardcoded `.png` and `image/png`
+- **Line ~652-655** (base64 upload path): Same fix — force `.png`
 
+**2. `supabase/functions/generate-workflow/index.ts`**
+- **Line ~1150-1152**: Force `.png` instead of detecting JPEG
+
+**3. `supabase/functions/generate-tryon/index.ts`**
+- **Line ~268-271**: Force `.png` instead of detecting JPEG
+
+Each location changes from:
 ```js
-// Before (line 662-663)
-modalities: ["image", "text"],
-image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
-
-// After
-modalities: ["image", "text"],
-max_tokens: 8192,
-image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
+const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
 ```
-
-One line added, one file changed.
+To:
+```js
+const fileName = `${userId}/${crypto.randomUUID()}.png`;
+```
+And forces `contentType: "image/png"` in the upload call.
 
