@@ -85,7 +85,6 @@ export function CatalogPoseCard({
           : 'bg-black/20',
       )}>
         <p className="text-white text-[11px] font-semibold leading-tight truncate">{name}</p>
-        <p className="text-white/60 text-[9px] leading-tight truncate">{description}</p>
       </div>
     </button>
   );

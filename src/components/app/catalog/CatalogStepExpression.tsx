@@ -52,26 +52,30 @@ export function CatalogStepExpression({
               )}
             >
               {isAny ? (
-                <div className="aspect-square bg-muted flex items-center justify-center">
+                <div className="aspect-[3/4] bg-muted flex items-center justify-center">
                   <div className="text-center space-y-2">
                     <Ban className="w-8 h-8 text-muted-foreground mx-auto" />
                     <span className="text-xs text-muted-foreground">AI decides</span>
                   </div>
                 </div>
               ) : mood.previewUrl ? (
-                <ShimmerImage
-                  src={mood.previewUrl}
-                  alt={mood.name}
-                  className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
-                  aspectRatio="1/1"
-                />
+                <div className="relative">
+                  <ShimmerImage
+                    src={mood.previewUrl}
+                    alt={mood.name}
+                    className="w-full aspect-[3/4] object-cover transition-transform duration-500 group-hover:scale-105"
+                    aspectRatio="3/4"
+                  />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+                    <p className="text-white text-sm font-bold tracking-wide">{mood.name}</p>
+                  </div>
+                </div>
               ) : (
-                <div className="aspect-square bg-muted" />
+                <div className="aspect-[3/4] bg-muted" />
               )}
 
-              <div className="px-3 py-2.5">
-                <p className="text-sm font-semibold leading-tight">{mood.name}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{mood.description}</p>
+              <div className="px-3 py-2">
+                <p className="text-[11px] text-muted-foreground leading-tight">{mood.description}</p>
               </div>
 
               {isSelected && (

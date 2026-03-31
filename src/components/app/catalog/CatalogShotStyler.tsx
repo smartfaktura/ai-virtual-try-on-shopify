@@ -96,7 +96,7 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
                 <SelectValue placeholder="Use default framing" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Default</SelectItem>
+                <SelectItem value="__default">Default</SelectItem>
                 <SelectItem value="full_body">Full Body</SelectItem>
                 <SelectItem value="upper_body">Upper Body</SelectItem>
                 <SelectItem value="close_up">Close Up</SelectItem>
