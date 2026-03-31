@@ -1,82 +1,72 @@
 
 
-## Fix: Bulletproof generate-tryon and generate-workflow — Seedream Fallback + JSON Safety
+## Fix: 502/503 Errors Bypass Seedream Fallback — Both Tryon and Workflow
 
-### Root Cause of "Unexpected end of JSON input"
+### Root Cause Found
 
-Both `generate-tryon` (line 469) and `generate-workflow` (line 624) do bare `response.json()` after Gemini returns HTTP 200. When Gemini's response is truncated (the 502 "JSON error injected into SSE stream" we see in logs), the body is incomplete JSON — `response.json()` throws `SyntaxError: Unexpected end of JSON input`. Neither function catches this, so it bubbles up as a fatal error.
+The DB shows the **exact failures from ~52 min ago**:
+- 5 jobs failed with **"Unexpected end of JSON input"** 
+- 2 jobs failed with **"AI Gateway error: 502"**
+- 2 jobs failed with **"AI Gateway error: 503"**
+- 1 job **"Timed out after 5 minutes"** (old cleanup timer)
+- ALL have `retry_count: 0` — auto-retry never triggered
 
-### Critical Issues Found
+The JSON safety fix (try/catch around `response.json()`) is deployed and correctly returns `null` to trigger Seedream fallback. **But there's a critical remaining bug:**
+
+### The Bug: 502/503 Throws Instead of Returning Null
 
 ```text
-generate-tryon:
-  1. NO timeout on Gemini call (line 429) — no AbortSignal at all
-  2. response.json() unprotected (line 469) — "Unexpected end of JSON input"
-  3. No wall-clock safety deadline — platform can hard-kill
-  4. No heartbeat/progress updates — cleanup can't save partial results
-  5. Seedream fallback exists but primary has no timeout guard
-
-generate-workflow:
-  1. PER_IMAGE_TIMEOUT = 150_000 (150s!) — equals platform kill limit
-  2. maxRetries = 3 with 150s timeout — could burn 450s theoretically
-  3. response.json() unprotected (line 624) — same JSON crash
-  4. NO Seedream fallback — if Gemini fails, no backup provider
-  5. Wall-clock guard exists (140s) but per-image timeout too generous
+Line 467 (tryon) / Line 695 (workflow):
+  throw new Error(`AI Gateway error: ${response.status}`);
 ```
+
+For 502/503 responses, after retries are exhausted, the function **throws an error**. This throw propagates to the outer catch (line 782/tryon), which pushes to the `errors` array. The Seedream fallback (line 725) **only checks `if (base64Url === null)`** — a thrown error skips right past it.
+
+```text
+Timeline of a 502 failure:
+  generateImageWithModel() → HTTP 502 → throw new Error("AI Gateway error: 502")
+  ↓ (thrown — never returns null)
+  catch block at line 771 → errors.push("Image 1: AI Gateway error: 502")
+  ↓ (Seedream fallback on line 725 is NEVER reached)
+  → User sees error
+```
+
+### The Fix
+
+**Change line 467 (tryon) and line 695 (workflow)**: For 502/503 gateway errors, `return null` instead of `throw`, so the Seedream fallback chain triggers.
+
+Keep `throw` only for 429 (rate limit) and 402 (payment) — those are intentional user-facing errors that should NOT fallback.
+
+### Also Fix: `claim_next_job` Still Sets 5-Minute Timeout
+
+The DB function `claim_next_job` sets `timeout_at = now() + interval '5 minutes'`. The edge function overrides to 3 min on heartbeat, but if it crashes before the first heartbeat, cleanup waits the full 5 min. Change to 3 min in the DB function.
 
 ### Changes
 
 #### File 1: `supabase/functions/generate-tryon/index.ts`
+- Line 467: Change `throw new Error(...)` to `return null` for non-429/402 errors (502, 503, 500, etc.)
 
-**A. Add timeout + JSON safety to generateImageWithModel (line 429-476)**
-- Add `AbortSignal.timeout(75_000)` to the fetch call (75s primary)
-- Wrap `response.json()` in try/catch — if JSON parsing fails, log and return null (triggers fallback)
+#### File 2: `supabase/functions/generate-workflow/index.ts`  
+- Line 695: Same change — `return null` instead of `throw` for gateway errors
 
-**B. Add Seedream fallback with timeout to generateImage (line 385)**
-- Primary Gemini Pro gets 75s timeout
-- If null → Seedream gets 90s (already implemented at line 706, just needs the primary timeout to actually trigger it)
-- If Seedream fails → Flash gets remaining time
+#### Migration: Update `claim_next_job`
+- Change `timeout_at = now() + interval '5 minutes'` to `now() + interval '3 minutes'`
 
-**C. Add wall-clock safety + heartbeat (main loop, line 696)**
-- Add `FUNCTION_START = Date.now()` and `MAX_WALL_CLOCK_MS = 140_000`
-- Before each image in loop: check wall clock, break if > 135s
-- After each successful upload: write progress heartbeat to generation_queue (like workflow does)
-- Override `timeout_at` to 3 minutes on first iteration
-
-**D. Reduce timeout_at heartbeat to 3 min**
-- When writing heartbeat, set `timeout_at = now + 3min` instead of default 5min
-
-#### File 2: `supabase/functions/generate-workflow/index.ts`
-
-**A. Fix per-image timeout (line 557)**
-- Change `PER_IMAGE_TIMEOUT` from `150_000` to `75_000` (75s)
-- Reduce `maxRetries` from 3 to 1 (2 attempts total — primary + 1 retry)
-
-**B. Add Seedream fallback to generateImage (line 549)**
-- After all Gemini retries return null, try Seedream 4.5 as backup
-- Only for product-only generations (no model reference — Seedream can't do identity preservation)
-- Seedream gets 90s timeout
-
-**C. Wrap response.json() safely (line 624)**
-- Try/catch around `response.json()` — if it throws "Unexpected end of JSON", log and retry/return null
-
-**D. Reduce heartbeat timeout_at (line 1089)**
-- Change `5 * 60 * 1000` to `3 * 60 * 1000` — match the freestyle fix
-
-### Files Changed
-1. `supabase/functions/generate-tryon/index.ts` — timeout, JSON safety, wall-clock, heartbeat
-2. `supabase/functions/generate-workflow/index.ts` — timeout reduction, Seedream fallback, JSON safety, heartbeat fix
-
-### Timeline After Fix
+### After Fix
 
 ```text
-generate-tryon:
-  0s ── Gemini Pro (75s timeout) ── fail? ── Seedream (90s) ── fail? ── Flash
-  Wall-clock safety at 135s, heartbeat every image, 3min timeout_at
-
-generate-workflow:
-  0s ── Gemini (75s timeout, 1 retry) ── fail? ── Seedream (product-only)
-  Wall-clock safety at 140s (already exists), 3min timeout_at
-  "Unexpected end of JSON" → caught → retry, not crash
+502/503 failure flow:
+  generateImageWithModel() → HTTP 502 → return null
+  ↓
+  base64Url === null → Seedream 4.5 fallback (90s)
+  ↓ (if Seedream fails)
+  base64Url === null → Flash fallback
+  ↓
+  User gets image (or partial success with refund)
 ```
+
+### Files Changed
+1. `supabase/functions/generate-tryon/index.ts` — return null on 502/503
+2. `supabase/functions/generate-workflow/index.ts` — return null on 502/503
+3. DB migration — `claim_next_job` timeout 5min → 3min
 
