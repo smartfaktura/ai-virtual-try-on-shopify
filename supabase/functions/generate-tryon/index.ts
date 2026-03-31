@@ -389,7 +389,7 @@ async function generateImage(
   aspectRatio: string,
   sceneImageUrl?: string
 ): Promise<string | null> {
-  return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "google/gemini-3-pro-image-preview", sceneImageUrl);
+  return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "gemini-3-pro-image-preview", sceneImageUrl);
 }
 
 async function generateImageWithModel(
