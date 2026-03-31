@@ -167,7 +167,6 @@ export default function CatalogGenerate() {
       poseIds: Array.from(selectedPoseIds),
       backgroundIds: Array.from(selectedBackgroundIds),
       allPoses,
-      shotOverrides,
       extraItems,
     });
 
