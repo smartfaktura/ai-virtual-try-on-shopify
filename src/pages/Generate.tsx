@@ -4220,6 +4220,23 @@ export default function Generate() {
                   </span>
                 </div>
                 <Progress value={doneCount / batchState.totalJobs * 100} className="h-2" />
+                {(() => {
+                  const estimatePerImage = quality === 'high' ? 12 : 4;
+                  const totalEstSeconds = Math.max(batchState.totalJobs * estimatePerImage, 1);
+                  const estLowSec = Math.round(totalEstSeconds * 0.8);
+                  const estHighSec = Math.round(totalEstSeconds * 1.2);
+                  const useSeconds = estHighSec < 60;
+                  const estLow = useSeconds ? estLowSec : Math.max(1, Math.ceil(estLowSec / 60));
+                  const estHigh = useSeconds ? estHighSec : Math.max(estLow, Math.ceil(estHighSec / 60));
+                  const estUnit = useSeconds ? 'sec' : 'min';
+                  const pct = Math.round(doneCount / batchState.totalJobs * 100);
+                  return (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Est. ~{estLow === estHigh ? estLow : `${estLow}-${estHigh}`} {estUnit} for {batchState.totalJobs} {variationLabel}{batchState.totalJobs !== 1 ? 's' : ''}</span>
+                      <span>{pct}%</span>
+                    </div>
+                  );
+                })()}
                 {/* Per-variation status chips */}
                 {isVariationWorkflow && sortedIndices.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
