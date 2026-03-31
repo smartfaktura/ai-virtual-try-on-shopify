@@ -280,7 +280,7 @@ export default function Auth() {
   };
 
   const handleVerifyOtp = async (code: string) => {
-    if (code.length !== 8) return;
+    if (code.length !== 6) return;
     setOtpLoading(true);
     const { error } = await supabase.auth.verifyOtp({
       email,
