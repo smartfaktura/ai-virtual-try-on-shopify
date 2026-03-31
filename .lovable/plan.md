@@ -1,48 +1,43 @@
 
 
-# Phase 2: Catalog Generate Page — Product + Model Selection UI
+# Phase 3: Pose + Background Selection Steps
 
 ## What gets built
-A new standalone page at `/app/catalog` with a step-based UI for selecting products and models. This is the foundation UI that Phase 3 (poses/backgrounds) and Phase 4 (batch enqueue) will build on.
+Add Steps 3 (Poses) and 4 (Backgrounds) to the CatalogGenerate page, with multi-select grids and live matrix/credit calculation.
 
-## Files to create
+## Approach
+Reuse the existing `mockTryOnPoses` data which already contains both **fashion poses** (poseId `pose_*`, categories: studio/lifestyle/editorial/streetwear) and **product scenes/backgrounds** (poseId `scene_*`, categories: clean-studio/surface/flat-lay/etc.). Split them into two lists:
+- **Poses** = entries where `poseId` starts with `pose_` (fashion model poses)
+- **Backgrounds** = entries where `poseId` starts with `scene_` (product environment scenes)
 
-### 1. `src/pages/CatalogGenerate.tsx` (~400 lines)
-New page component with stepper layout:
-- **Step 1 — Products**: Reuses `ProductMultiSelect` component (already supports multi-select with search, category filtering). Remove the `enforceSameCategory` constraint since catalog shots span categories. Raise `MAX_PRODUCTS_PER_BATCH` or use a local override (catalog allows 50+).
-- **Step 2 — Models**: Grid of `ModelSelectorCard` components with `ModelFilterBar` for gender/body/age filtering. Supports multi-select (1-5 models). Combines system models (`useCustomModels`) + user models (`useUserModels`) like the existing Generate page does.
-- Running counter: "X products × Y models = Z combinations"
-- Next/Back navigation between steps
-- Products fetched from `user_products` table via existing query pattern
-
-### 2. `src/components/app/CatalogMatrixSummary.tsx` (~60 lines)
-Compact summary bar showing:
-- Selected counts per dimension (products, models, and placeholders for poses/backgrounds coming in Phase 3)
-- Total images calculation: `products × models × poses × backgrounds`
-- Credit estimate: `total × 4`
-- Rendered as a sticky bottom bar or inline card
+This avoids creating new data — we reuse the existing 30 poses and 30+ scenes with their preview images and prompt hints.
 
 ## Files to modify
 
-### 3. `src/App.tsx`
-- Add lazy import: `const CatalogGenerate = lazy(() => import('@/pages/CatalogGenerate'));`
-- Add route inside `/app/*` Routes: `<Route path="/catalog" element={<CatalogGenerate />} />`
+### 1. `src/pages/CatalogGenerate.tsx`
+- Add state: `selectedPoseIds: Set<string>`, `selectedBackgroundIds: Set<string>` (max 6 each)
+- Add Steps 3 and 4 to the stepper array (icons: `Move`, `Image`)
+- **Step 3 — Poses**: Filter `mockTryOnPoses` to `pose_*` entries, group by category, render using existing `PoseCategorySection` + `PoseSelectorCard` with multi-select (pass `selectedPoseIds` set). Show selection order numbers on cards.
+- **Step 4 — Backgrounds**: Filter `mockTryOnPoses` to `scene_*` entries, group by category, render same `PoseCategorySection` + `PoseSelectorCard` pattern with multi-select.
+- Update stepper navigation: Step 2 "Continue to Poses", Step 3 "Continue to Backgrounds", Step 4 shows a disabled "Generate" button (Phase 4)
+- Pass `poseCount` and `backgroundCount` to `CatalogMatrixSummary`
+- Also merge in custom scenes from `useCustomScenes` hook (user-uploaded scenes from DB)
 
-### 4. `src/components/app/AppShell.tsx`
-- Add nav item to `navItems` array: `{ label: 'Catalog', icon: LayoutTemplate, path: '/app/catalog' }`
-- Add to `prefetchMap`: `'/app/catalog': () => { import('@/pages/CatalogGenerate'); }`
+### 2. `src/components/app/PoseCategorySection.tsx`
+- Already supports `selectedPoseIds` (multi-select Set) and `selectionIndex` — no changes needed.
 
-## Key design decisions
-- **No category enforcement**: Unlike existing batch generation, catalog workflow allows mixed product categories (fashion + accessories + electronics in one batch)
-- **Model multi-select**: Up to 5 models, both system (custom_models) and user-created (user_models)
-- **Stepper pattern**: Simple numbered steps with Next/Back, not tabs — matches the linear flow of the catalog setup
-- **Products query**: Direct Supabase query on `user_products` table, same as existing pages
+### 3. `src/components/app/PoseSelectorCard.tsx`
+- Already supports `selectionIndex` prop — no changes needed.
+
+## Key decisions
+- **Max 6 poses, max 6 backgrounds** — keeps matrix manageable (50 products × 5 models × 6 poses × 6 backgrounds = 9000 max, but typical use is ~2-3 each)
+- **Reuse existing pose/scene data** — no new data files, just filter by poseId prefix
+- **Category grouping** — poses grouped by studio/lifestyle/editorial/streetwear; backgrounds grouped by clean-studio/surface/botanical/etc.
 
 ## Test checkpoint
-Navigate to `/app/catalog`, verify:
-1. Sidebar shows "Catalog" link
-2. Product multi-select loads user's products with search
-3. Model selection with filters works
-4. Running counter updates as selections change
-5. Can navigate between Step 1 and Step 2
+1. Navigate to `/app/catalog`, select products → models → verify Steps 3 and 4 appear
+2. Multi-select poses with selection order numbers
+3. Multi-select backgrounds with selection order numbers  
+4. Matrix summary updates live: "20 × 2 × 3 × 2 = 240 images (960 credits)"
+5. Can navigate back and forth between all 4 steps
 
