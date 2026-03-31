@@ -132,7 +132,6 @@ export default function BlogPost() {
         className="w-full h-auto rounded-xl my-6"
         loading="lazy"
         decoding="async"
-        fallbackSrc={src}
       />
     ),
   };
