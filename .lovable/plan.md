@@ -1,88 +1,50 @@
 
 
-# Catalog Rewrite: Fix Crash + UX Overhaul + AI-Generated Previews + Shot Styling
+# Catalog: Dedicated Poses & Backgrounds (Separate from Other Workflows)
 
-## Problems identified
+## Problem
+The catalog workflow currently imports `mockTryOnPoses` and `useCustomScenes` — these are shared across Try-On, Freestyle, and other workflows. The user wants the catalog to have its **own dedicated pose and background data**, generated via AI (Lovable gateway with `google/gemini-3.1-flash-image-preview`).
 
-1. **Runtime crash**: `PoseCategorySection` crashes when `category` has no entry in `categoryInfo` — `info` is undefined, accessing `info.title` throws
-2. **Bad UX**: Too many steps, dense grids, no visual hierarchy — feels like a data table not a creative tool
-3. **No AI-generated previews**: Pose and background cards use static mock images — user wants AI-generated white-studio reference images via Nano Banana Pro 2
-4. **No per-shot styling**: No way to customize a specific product+model combination (e.g. "this dress on this model in this specific style")
+## What changes
 
-## Plan
+### 1. New dedicated catalog data file: `src/data/catalogPoses.ts`
+Define catalog-specific pose and background entries with their own IDs, names, categories, and prompt descriptions. These are **not** shared with Try-On or Freestyle:
+- **Poses** (~12): Studio Front, Studio Side, Walking, Seated, Over-the-Shoulder, Three-Quarter, Close-Up, etc. — each with a `promptHint` for AI generation
+- **Backgrounds** (~12): White Seamless, Gray Gradient, Marble Surface, Botanical Garden, Urban Street, Living Room, etc. — each with a `promptHint`
+- All entries use `catalogPose_` and `catalogBg_` prefixes to avoid ID collisions
 
-### 1. Fix the crash (immediate)
+### 2. Fix edge function: `supabase/functions/generate-catalog-preview/index.ts`
+- Switch from direct `GEMINI_API_KEY` to `LOVABLE_API_KEY` + Lovable AI gateway (`https://ai.gateway.lovable.dev/v1/chat/completions`)
+- Use model `google/gemini-3.1-flash-image-preview`
+- Fix image extraction from response (Lovable gateway may return images differently than direct Gemini API)
 
-**`src/components/app/PoseCategorySection.tsx`** — Add fallback when `categoryInfo[category]` is undefined:
-```typescript
-const info = categoryInfo[category] ?? { title: category, recommendation: '' };
-```
+### 3. Update `src/components/app/catalog/CatalogStepStyle.tsx`
+- Remove imports of `mockTryOnPoses` and `useCustomScenes`
+- Import new `catalogPoses` and `catalogBackgrounds` from `src/data/catalogPoses.ts`
+- Keep the same UI structure (category-grouped horizontal scroll galleries)
+- Wire up `useCatalogPreviews` to auto-generate AI previews for each catalog item on mount
 
-### 2. Simplify the stepper layout
+### 4. Update `src/pages/CatalogGenerate.tsx`
+- Remove `mockTryOnPoses` import and any references to shared pose data
+- Import catalog-specific data for passing to the review step's `allPoses` prop
 
-**`src/pages/CatalogGenerate.tsx`** — Complete rewrite with cleaner UX:
-- Reduce from 5 steps to **3 steps**: (1) Products + Models, (2) Style (poses, backgrounds, per-shot customization), (3) Review
-- Replace the button stepper with a minimal progress bar / breadcrumb
-- Step 1: Side-by-side layout — products on left, models on right (compact thumbnails, not full cards)
-- Step 2: Visual style builder — horizontal scrolling pose gallery + background gallery with large preview cards
-- Step 3: Review with matrix summary (keep existing)
+### 5. Update `src/hooks/useCatalogGenerate.ts`
+- Update `allPoses` to use catalog-specific data instead of shared `mockTryOnPoses`
 
-### 3. AI-generated pose & background preview images
-
-**New: `src/hooks/useCatalogPreviews.ts`** — Hook that generates preview reference images on-demand:
-- Uses Lovable AI gateway (`google/gemini-3.1-flash-image-preview` = Nano Banana 2) via an edge function
-- When user enters Step 2, generates preview thumbnails for each pose category (e.g. "fashion model in studio front pose, white studio background, full body")
-- Caches generated previews in Supabase Storage (`catalog-previews` bucket) keyed by pose name hash
-- Falls back to existing `previewUrl` from mockData if AI generation fails or while loading
-
-**New: `supabase/functions/generate-catalog-preview/index.ts`** — Edge function that:
-- Accepts pose/background description + style hints
-- Calls Lovable AI gateway with `modalities: ["image", "text"]`
-- Uploads result to `catalog-previews` storage bucket
-- Returns public URL
-- Rate-limited to prevent abuse (max 20 previews per session)
-
-**DB migration**: Create `catalog-previews` storage bucket with public read access
-
-### 4. Per-shot styling ("Style one specific shot")
-
-**New: `src/components/app/catalog/CatalogShotStyler.tsx`** — Modal/drawer that lets user:
-- Pick a specific product+model combination from the matrix
-- Override the default pose, background, aspect ratio, or framing for that specific combo
-- Add a custom prompt instruction (e.g. "make it look more luxury", "add motion blur")
-- These overrides are passed as `shot_overrides` to the generation hook
-
-**`src/hooks/useCatalogGenerate.ts`** — Accept optional `shotOverrides: Map<string, ShotOverride>` where key is `productId_modelId` and value contains custom pose/bg/prompt overrides. When iterating the matrix, check for overrides before using defaults.
-
-### 5. Updated component structure
-
-**`src/components/app/catalog/CatalogStepProductsModels.tsx`** — Merged Step 1:
-- Two-column layout: product grid (left) + model grid (right)
-- Compact thumbnail cards with checkboxes
-- Running counter at bottom
-
-**`src/components/app/catalog/CatalogStepStyle.tsx`** — New Step 2:
-- Horizontal scrolling pose cards with AI-generated previews (large, visual)
-- Horizontal scrolling background cards with AI-generated previews
-- "Customize Shot" button per product×model cell in a mini-matrix preview
-- Framing selector (full-body, half-body, close-up)
-
-**Keep existing**: `CatalogStepReview.tsx` (Step 3), `CatalogMatrixSummary.tsx` (sticky bar)
-
-### Files summary
+## Files summary
 
 | Action | File |
 |--------|------|
-| Fix | `src/components/app/PoseCategorySection.tsx` — null-safe `categoryInfo` lookup |
-| Rewrite | `src/pages/CatalogGenerate.tsx` — 3-step flow |
-| Create | `src/components/app/catalog/CatalogStepProductsModels.tsx` |
-| Create | `src/components/app/catalog/CatalogStepStyle.tsx` |
-| Create | `src/components/app/catalog/CatalogShotStyler.tsx` |
-| Create | `src/hooks/useCatalogPreviews.ts` |
-| Create | `supabase/functions/generate-catalog-preview/index.ts` |
-| Update | `src/hooks/useCatalogGenerate.ts` — shot overrides support |
-| Update | `src/components/app/catalog/CatalogStepReview.tsx` — show overrides |
-| Delete | `src/components/app/catalog/CatalogStepPoses.tsx` (merged into Style step) |
-| Delete | `src/components/app/catalog/CatalogStepBackgrounds.tsx` (merged into Style step) |
-| Migration | Create `catalog-previews` storage bucket |
+| Create | `src/data/catalogPoses.ts` — dedicated pose + background definitions |
+| Rewrite | `supabase/functions/generate-catalog-preview/index.ts` — use Lovable gateway |
+| Update | `src/components/app/catalog/CatalogStepStyle.tsx` — use catalog data only |
+| Update | `src/pages/CatalogGenerate.tsx` — remove shared data imports |
+| Update | `src/hooks/useCatalogGenerate.ts` — use catalog-specific poses |
+
+## Technical details
+- Lovable AI gateway URL: `https://ai.gateway.lovable.dev/v1/chat/completions`
+- Model: `google/gemini-3.1-flash-image-preview`
+- Auth: `LOVABLE_API_KEY` (already available in edge function env)
+- Previews cached in `catalog-previews` storage bucket (already created)
+- No DB migration needed
 
