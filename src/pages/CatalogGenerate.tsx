@@ -47,6 +47,7 @@ export default function CatalogGenerate() {
 
   // Step 2 state
   const [selectedPoseIds, setSelectedPoseIds] = useState<Set<string>>(new Set());
+  const [selectedMood, setSelectedMood] = useState('any');
 
   // Step 3 state
   const [selectedModelIds, setSelectedModelIds] = useState<Set<string>>(new Set());
@@ -237,6 +238,8 @@ export default function CatalogGenerate() {
         <CatalogStepPoses
           selectedPoseIds={selectedPoseIds}
           onTogglePose={handlePoseToggle}
+          selectedMood={selectedMood}
+          onMoodChange={setSelectedMood}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
           canProceed={canStep2}
