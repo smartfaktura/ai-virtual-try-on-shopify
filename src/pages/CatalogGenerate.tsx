@@ -27,9 +27,8 @@ const CATALOG_MAX_MODELS = 5;
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
-  const { balance, refreshBalance } = useCredits();
+  const { balance, refreshBalance, openBuyModal } = useCredits();
   const [step, setStep] = useState(1);
-  const [buyModalOpen, setBuyModalOpen] = useState(false);
 
   // Product selection state
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
