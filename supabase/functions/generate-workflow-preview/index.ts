@@ -87,9 +87,6 @@ serve(async (req) => {
           imageConfig: {
             aspectRatio: "3:4",
             imageSize: "1K",
-            personGeneration: "ALLOW_ALL",
-            numberOfImages: 1,
-            outputOptions: { mimeType: "image/png" },
           },
         },
       }),
