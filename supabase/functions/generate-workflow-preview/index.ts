@@ -72,17 +72,19 @@ serve(async (req) => {
 
     console.log(`Generating preview for "${workflow.name}" with prompt: ${prompt.substring(0, 100)}...`);
 
-    // Generate image via AI gateway
-    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    // Generate image via native Gemini API
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-goog-api-key": LOVABLE_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gemini-3.1-flash-image-preview",
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseModalities: ["IMAGE", "TEXT"],
+          imageConfig: { aspectRatio: "3:4" },
+        },
       }),
     });
 
@@ -107,7 +109,20 @@ serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    const imageDataUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    // Extract image from native Gemini response
+    let imageDataUrl: string | null = null;
+    const candidates = aiData.candidates;
+    if (candidates?.length) {
+      const parts = candidates[0]?.content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData?.data) {
+            imageDataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+      }
+    }
 
     if (!imageDataUrl) {
       throw new Error("No image returned from AI gateway");

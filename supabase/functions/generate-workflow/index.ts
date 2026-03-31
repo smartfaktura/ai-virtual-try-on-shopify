@@ -632,7 +632,7 @@ async function generateImage(
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
-    { type: "text", text: aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n${prompt}` : prompt },
+    { type: "text", text: prompt },
   ];
   for (const img of referenceImages) {
     contentParts.push({
@@ -643,24 +643,38 @@ async function generateImage(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      // Convert to native Gemini parts
+      const nativeParts: Record<string, unknown>[] = [];
+      for (const item of contentParts) {
+        if (item.type === 'text') {
+          nativeParts.push({ text: item.text });
+        } else if (item.type === 'image_url') {
+          const url = (item as any).image_url?.url as string;
+          if (url) {
+            const part = await urlToInlineDataPart(url);
+            nativeParts.push(part);
+          }
+        }
+      }
+
+      const generationConfig: Record<string, unknown> = {
+        responseModalities: ["IMAGE", "TEXT"],
+      };
+      if (aspectRatio) {
+        generationConfig.imageConfig = { aspectRatio };
+      }
+
       const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${apiKey}`,
+            "x-goog-api-key": apiKey,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: aiModel,
-            messages: [
-              {
-                role: "user",
-                content: contentParts,
-              },
-            ],
-            modalities: ["image", "text"],
-            max_tokens: 8192,
+            contents: [{ role: "user", parts: nativeParts }],
+            generationConfig,
           }),
           signal: AbortSignal.timeout(PER_IMAGE_TIMEOUT),
         }
@@ -704,8 +718,7 @@ async function generateImage(
         if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000)); continue; }
         return null;
       }
-      const imageUrl =
-        data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      const imageUrl = extractImageFromGeminiResponse(data);
 
       if (!imageUrl) {
         console.error(
