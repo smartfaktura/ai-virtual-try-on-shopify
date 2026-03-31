@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
@@ -21,9 +22,10 @@ interface Props {
   mobileRow?: boolean;
   displayName?: string;
   subtitle?: string;
+  comingSoon?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
