@@ -356,7 +356,7 @@ export default function Auth() {
       {options.showOtp && (
         <div className="w-full max-w-sm space-y-5">
           <p className="text-sm text-muted-foreground">
-           Enter the 8-digit code from your email, or click the link to activate your account.
+           Enter the 6-digit code from your email, or click the link to activate your account.
           </p>
           <div className="flex justify-center">
             <InputOTP
