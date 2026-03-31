@@ -1,46 +1,50 @@
 
-## Diagnosis (what’s actually wrong)
 
-I re-checked the auth logs and email logs: this is **not** an email infrastructure outage.  
-The main failure is **rate limiting on signup email sends** (`429 over_email_send_rate_limit`).
+# Redesign Style Shots — Clean, Scannable Combo List
 
-Why this happens in code:
-- In `src/pages/Auth.tsx`, after a successful signup, the app immediately calls a second send (`auth.resend`) right away.
-- So one signup can trigger duplicate email-send attempts, and repeated retries quickly hit the auth email rate limit.
-- Once rate-limited, users see “not sending” behavior even when the system is otherwise healthy.
+## Problems identified
 
-## Implementation plan
+1. **Two-line combo cards** — product×model on line 1, extras on line 2 with wasteful `pl-12` indent. Doubles vertical space for no reason.
+2. **No numbering** — 40 combos with no index makes it impossible to track position.
+3. **No grouping** — same product repeated 4× (once per model) with identical thumbnail. Should group by product.
+4. **No search/filter** on the combo list itself — painful at 40 combos.
+5. **"No extras" text on every card** — visual noise repeated 40 times.
+6. **No collapse** — can't minimize combos you don't need extras on.
+7. **Extras row always visible** even when empty — wastes space.
 
-1. **Remove duplicate send on signup**
-   - Edit `src/pages/Auth.tsx`.
-   - Keep the initial signup email send from signup itself.
-   - Remove the immediate extra resend call right after signup success.
+## Redesign approach
 
-2. **Strengthen resend UX to avoid rate-limit loops**
-   - Keep resend only on explicit user action.
-   - Increase resend cooldown (current 30s is too short for this flow).
-   - Disable resend action until cooldown ends.
+### Group by product, show models as sub-rows
 
-3. **Make rate-limit messaging clear and consistent**
-   - Normalize rate-limit handling in one helper in `Auth.tsx` (signup, magic link, resend, reset).
-   - Show explicit message like: “Email was already sent recently. Please wait a few minutes and check spam/promotions.”
+Instead of 40 flat cards, group into **10 product sections** each containing 4 model rows. Each product section is a collapsible card with the product thumbnail and title as the header.
 
-4. **Prevent accidental rapid re-submits**
-   - While request is in-flight, lock the relevant action buttons.
-   - Ensure users cannot fire multiple signup/resend calls by double-clicking.
+```text
+┌─────────────────────────────────────────────┐
+│ 1. Chocolate Brown Suede Shoulder Bag   [+] │
+│    ├─ Freya          [+ Add extra]          │
+│    ├─ Zara           [+ Add extra]          │
+│    ├─ Anders         [+ Add extra]          │
+│    └─ Sienna         [+ Add extra]          │
+├─────────────────────────────────────────────┤
+│ 2. Classic White Sneakers               [+] │
+│    ├─ Freya          [+ Add extra]          │
+│    ...                                      │
+└─────────────────────────────────────────────┘
+```
 
-5. **Validation after change**
-   - Test signup once with a fresh email → expect one confirmation send path.
-   - Test resend before cooldown → blocked by UI.
-   - Test resend after cooldown → allowed.
-   - Confirm auth logs no longer show immediate duplicate send pattern from a single signup action.
+### Specific changes
 
-## Technical details (files)
+1. **Numbered product groups** — each product gets `#1`, `#2`, etc. as a clear index.
+2. **Single-line model rows** — model avatar + name + extras badges + Add button, all on one compact line. No second "extras row".
+3. **Collapsible groups** — product groups start expanded but can be collapsed. Shows extras count in header when collapsed.
+4. **Search bar** at the top of the combo list to filter products by name.
+5. **Remove "No extras" text** — the Add button alone is sufficient. Only show extras badges when they exist.
+6. **Compact density** — model rows use `py-1.5` instead of full card padding.
+7. **Product-level "Add to all models"** button in each product header — adds an extra to all 4 model combos for that product at once.
 
-- **Update:** `src/pages/Auth.tsx`
-  - Remove post-signup immediate resend call.
-  - Add unified rate-limit error parser.
-  - Increase resend cooldown and tighten button disabled states.
-  - Improve user-facing error/cooldown text.
+## Files to modify
 
-- **No backend function changes needed** for this fix (auth-email-hook/queue are behaving as expected).
+| Action | File |
+|--------|------|
+| Update | `src/components/app/catalog/CatalogStepStyleShots.tsx` — full layout redesign |
+
