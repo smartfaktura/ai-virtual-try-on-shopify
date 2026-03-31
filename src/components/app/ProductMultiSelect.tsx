@@ -73,7 +73,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
       <div className="flex gap-2 items-center">
         <Badge variant={selectedIds.size >= 2 ? 'default' : 'secondary'}>{selectedIds.size} selected</Badge>
         {getCategoryBadgeText() && <Badge variant={isCategoryMismatch ? 'destructive' : 'secondary'}>{getCategoryBadgeText()}</Badge>}
-        <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS_PER_BATCH})</span>
+        <span className="text-xs text-muted-foreground">(max {effectiveMax})</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[400px] overflow-y-auto p-1">
         {filteredProducts.map(product => {
