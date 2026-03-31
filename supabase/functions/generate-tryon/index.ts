@@ -443,7 +443,6 @@ async function generateImageWithModel(
             ],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            image_config: { aspect_ratio: aspectRatio, image_size: '2K' },
           }),
           signal: AbortSignal.timeout(100_000), // 100s primary timeout — gives Nano Banana Pro enough time
         }

@@ -661,7 +661,6 @@ async function generateImage(
             ],
             modalities: ["image", "text"],
             max_tokens: 8192,
-            image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
           }),
           signal: AbortSignal.timeout(PER_IMAGE_TIMEOUT),
         }
