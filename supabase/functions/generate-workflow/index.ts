@@ -1125,6 +1125,21 @@ serve(async (req) => {
             }
           }
 
+          // Flash fallback: last resort for product-only if Seedream also failed
+          if (imageUrl === null && !body.model?.imageUrl) {
+            console.warn(`[generate-workflow] Seedream also failed — trying Flash fallback for "${variation.label}"`);
+            imageUrl = await generateImage(
+              prompt,
+              referenceImages,
+              "google/gemini-3.1-flash-image-preview",
+              LOVABLE_API_KEY,
+              aspectRatio
+            );
+            if (imageUrl) {
+              console.log(`[generate-workflow] Flash fallback succeeded for "${variation.label}"`);
+            }
+          }
+
           if (imageUrl) {
             // Upload base64 to storage to avoid bloating the database
             let finalUrl = imageUrl;
