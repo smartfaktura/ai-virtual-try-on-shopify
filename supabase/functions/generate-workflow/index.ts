@@ -546,6 +546,80 @@ function getModelForQuality(quality: string): string {
     : "google/gemini-3.1-flash-image-preview";
 }
 
+// ── Seedream ARK image generation (fallback for product-only workflows) ────────
+function seedreamAspectRatio(appRatio: string): string {
+  const map: Record<string, string> = {
+    "1:1": "1:1", "16:9": "16:9", "9:16": "9:16",
+    "4:3": "4:3", "3:4": "3:4", "4:5": "3:4",
+    "5:4": "4:3", "3:2": "3:2", "2:3": "2:3", "21:9": "21:9",
+  };
+  return map[appRatio] || "1:1";
+}
+
+const SEEDREAM_MODERATION_CODES = [1301, 1302, 1303, 1304, 1305, 1024];
+
+async function generateImageSeedream(
+  prompt: string,
+  imageUrls: string[],
+  model: string,
+  apiKey: string,
+  aspectRatio = "1:1",
+): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
+  const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
+  const seedreamRatio = seedreamAspectRatio(aspectRatio);
+  const timeoutMs = 90_000;
+
+  try {
+    const body: Record<string, unknown> = {
+      model, prompt, size: "2K",
+      aspect_ratio: seedreamRatio,
+      response_format: "url",
+      watermark: false,
+      sequential_image_generation: "disabled",
+    };
+    if (imageUrls.length === 1) {
+      body.image = imageUrls[0];
+    } else if (imageUrls.length > 1) {
+      body.image = imageUrls;
+    }
+
+    const response = await fetch(ARK_BASE, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!response.ok) {
+      let errorText = "";
+      try { errorText = await response.text(); } catch (_) { /* ignore */ }
+      try {
+        const errJson = JSON.parse(errorText);
+        const errCode = errJson?.error?.code || errJson?.code;
+        if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
+          return { ok: false, error: `Content moderated: ${errJson?.error?.message || errJson?.message}` };
+        }
+      } catch (_) { /* not JSON */ }
+      return { ok: false, error: `ARK API error ${response.status}: ${errorText.slice(0, 200)}` };
+    }
+
+    const data = await response.json();
+    const respCode = data?.error?.code || data?.code;
+    if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
+      return { ok: false, error: `Content moderated: ${data?.error?.message || data?.message}` };
+    }
+
+    const imageUrl = data?.data?.[0]?.url;
+    if (!imageUrl) {
+      return { ok: false, error: "No URL in Seedream response" };
+    }
+    return { ok: true, imageUrl };
+  } catch (error: unknown) {
+    const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+    return { ok: false, error: isTimeout ? "Seedream request timed out (90s)" : (error instanceof Error ? error.message : "Unknown error") };
+  }
+}
+
 async function generateImage(
   prompt: string,
   referenceImages: Array<{ url: string; label: string }>,
