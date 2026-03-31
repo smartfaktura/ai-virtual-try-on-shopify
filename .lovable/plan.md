@@ -1,49 +1,56 @@
 
 
-# Fix Expression Step, Model Cards, Background Previews & Style Shots
+# Fix Catalog Page: Floating Bar, Images, Backgrounds & Style Shots Error
 
-## Issues Found
+## Issues to Fix
 
-1. **Expression step says "Next: Models"** in the header button but the floating bar says "Next: Backgrounds" — the floating bar uses `STEP_NEXT_LABELS[step]` which is index-based (step=3 → index 3 → "Backgrounds"). The header button is hardcoded "Next: Models" which is correct. Fix: `STEP_NEXT_LABELS` array is off — index 0 maps to step 1, so for step 3 (Expression) it reads index 3 = "Backgrounds" instead of index 2 = "Models".
-2. **Expression cards** have text below but images are too large relative to text, making descriptions hard to see. Also all moods show different-looking models — they should use same model for consistency.
-3. **Model cards** show too much detail (body type badges, ethnicity, age) — user wants name only.
-4. **Backgrounds** have no preview images (all `previewUrl: ''`) — need AI-generated clean studio backgrounds. User wants only clean studio colors (white, grey, beige, concrete, plus a few more). Remove surface/botanical/outdoor/living-space/retail categories.
-5. **Style Shots "+" button** — clicking it calls `openStyler()` which opens a `CatalogShotStyler` dialog, but if the dialog component has issues it may error silently. Need to make the "+" button purpose clearer with a tooltip/label.
+1. **Floating bar not centered** — uses `left-1/2` which centers on viewport; should center within the main content area (offset by sidebar)
+2. **Detail pose images** — Seated and Close-Up are misplaced in Detail section; images show inconsistent models and anatomical errors
+3. **Expression images** — look like corporate headshots, not natural; no text labels visible on the images; different models used; need "Neutral" as default selection
+4. **Background images** — look like photos of actual studios with equipment visible; remove Sage Green and Warm Beige; regenerate Concrete; add more subtle tones; remove description subtitles
+5. **Style Shots crash** — `CatalogShotStyler` uses `<SelectItem value="">` which crashes Radix Select (empty string not allowed)
+6. **Image optimization** — pose/mood/background images load at full resolution
 
 ## Plan
 
-### 1. Fix floating bar step label mismatch
-In `CatalogGenerate.tsx`, the `STEP_NEXT_LABELS` array maps by index but is accessed as `STEP_NEXT_LABELS[step]` where step is 1-based. Fix the array or access pattern so step 3 (Expression) shows "Models".
+### 1. Fix floating bar centering
+In `CatalogMatrixSummary.tsx`, use the `--sidebar-offset` CSS variable to center within the content area instead of viewport center.
+Change from `left-1/2 -translate-x-1/2` to use `left: calc((100% + var(--sidebar-offset)) / 2)` and translate, or simpler: position it inside the content flow using a portal-like sticky approach. Simplest fix: use `left: calc(var(--sidebar-offset, 264px) + (100% - var(--sidebar-offset, 264px)) / 2)` with `-translate-x-1/2`.
 
-### 2. Simplify Model cards — name only
-In `ModelSelectorCard.tsx`, remove body type badges, ethnicity badge, and age text from the overlay. Keep only the model name.
+### 2. Fix CatalogShotStyler crash
+In `CatalogShotStyler.tsx`, the three `<SelectItem value="">Use default</SelectItem>` lines crash because Radix Select doesn't allow empty string values. Change to `value="__default"` and handle the mapping in state/save logic.
 
-### 3. Replace backgrounds with clean studio only + generate previews
-Update `catalogPoses.ts`:
-- Remove surface, botanical, outdoor, living-space, retail backgrounds
-- Keep/expand clean studio: White, Light Gray, Warm Beige, Concrete Gray, Blush Pink, Sage Green, Soft Blue
-- Update `CATALOG_BG_CATEGORIES` to just `['clean-studio']`
+### 3. Regenerate Detail pose images (5)
+Use `google/gemini-3.1-flash-image-preview` to generate 5 consistent detail images with the SAME model (young woman, white t-shirt, blue jeans), sharp and clean:
+- Seated, Close-Up, Fabric Detail, Accessory Detail, Back Detail
 
-Generate 7 background preview images using `google/gemini-3.1-flash-image-preview`:
-- Each: "Empty photography studio with [COLOR] seamless paper backdrop, no model, no objects, professional studio lighting, clean and minimal, wide shot"
-- Colors: pure white, light gray, warm beige, raw concrete, soft blush pink, sage green, soft powder blue
+### 4. Regenerate Expression images (5)
+Generate 5 expression headshots with same consistent model, natural look (not corporate). Each will have the expression name overlaid as text in the component.
 
-### 4. Regenerate expression images with same model
-Generate 5 new mood images with stronger consistency prompts using `google/gemini-3.1-flash-image-preview`:
-- "Professional headshot photograph of a young Caucasian woman with brown hair pulled back in a low bun, minimal natural makeup, [EXPRESSION], clean pure white background, shoulders visible, soft studio lighting, ultra-realistic, Canon EOS R5 85mm f/1.4"
+### 5. Update Expression component
+- Set default `selectedMood` to `'neutral'` in `CatalogGenerate.tsx`
+- Add expression name as black text overlay on each card
+- Make text more visible below images
 
-### 5. Fix Style Shots "+" clarity
-- Change the "+" button to show a tooltip or label "Customize" on hover
-- Ensure clicking it properly opens the styler dialog without errors
+### 6. Update Backgrounds
+- Remove Sage Green and Warm Beige entries
+- Regenerate Concrete background (clean, no studio equipment visible)  
+- Add 3-4 more subtle backgrounds: Ivory, Charcoal, Stone, Cream
+- Remove description subtitles from `CatalogPoseCard` for backgrounds (or simplify to name-only)
+- Generate 5-6 new clean gradient/solid color background images
 
-### Files to modify
+### 7. Image optimization
+Add `loading="lazy"` and size constraints to pose/mood/bg card images. Use smaller rendered sizes via CSS.
+
+## Files to modify
 
 | Action | File |
 |--------|------|
-| Generate | 7 background images + 5 mood images → `src/assets/catalog/` |
-| Update | `src/data/catalogPoses.ts` — clean-studio-only backgrounds with preview URLs, new mood imports |
-| Update | `src/pages/CatalogGenerate.tsx` — fix `STEP_NEXT_LABELS` indexing |
-| Update | `src/components/app/ModelSelectorCard.tsx` — name only, remove badges |
-| Update | `src/components/app/catalog/CatalogStepStyleShots.tsx` — clearer "+" button with tooltip |
-| Update | `src/components/app/catalog/CatalogStepExpression.tsx` — fix header button label |
+| Generate | ~15 new images (5 detail poses, 5 moods, 5-6 backgrounds) |
+| Update | `src/components/app/CatalogMatrixSummary.tsx` — center within content area |
+| Update | `src/components/app/catalog/CatalogShotStyler.tsx` — fix empty SelectItem value |
+| Update | `src/data/catalogPoses.ts` — new imports, remove/add backgrounds, update mood images |
+| Update | `src/components/app/catalog/CatalogStepExpression.tsx` — text labels, layout |
+| Update | `src/components/app/catalog/CatalogPoseCard.tsx` — remove descriptions for backgrounds, add lazy loading |
+| Update | `src/pages/CatalogGenerate.tsx` — default mood to 'neutral' |
 
