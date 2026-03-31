@@ -61,11 +61,11 @@ async function generateSingleImage(
   const messageContent: any[] = [{ type: "text", text: prompt }];
   if (referenceContent) messageContent.push(...referenceContent);
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-pro-image-preview",
+      model: "gemini-3-pro-image-preview",
       messages: [{ role: "user", content: messageContent }],
       modalities: ["image", "text"],
     }),
