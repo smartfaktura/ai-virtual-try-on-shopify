@@ -21,7 +21,7 @@ const BG_CATEGORY_ORDER: PoseCategory[] = [
   'bathroom', 'botanical', 'outdoor',
 ];
 
-export function CatalogStepBackgrounds({ selectedBackgroundIds, onToggleBackground, onBack }: CatalogStepBackgroundsProps) {
+export function CatalogStepBackgrounds({ selectedBackgroundIds, onToggleBackground, onBack, onNext, canProceed }: CatalogStepBackgroundsProps) {
   const { asPoses: customScenes } = useCustomScenes();
 
   const backgrounds = useMemo(() => {
