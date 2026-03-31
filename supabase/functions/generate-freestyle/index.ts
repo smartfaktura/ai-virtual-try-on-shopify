@@ -606,7 +606,7 @@ async function downloadAndUploadToStorage(
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
   const { error } = await supabase.storage
     .from("freestyle-images")
-    .upload(fileName, bytes, { contentType: mimeType, upsert: false });
+    .upload(fileName, bytes, { contentType: "image/png", upsert: false });
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
   const { data: urlData } = supabase.storage.from("freestyle-images").getPublicUrl(fileName);
   return urlData.publicUrl;
