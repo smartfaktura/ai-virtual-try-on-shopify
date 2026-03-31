@@ -621,7 +621,14 @@ async function generateImage(
         throw new Error(`AI Gateway error: ${response.status}`);
       }
 
-      const data = await response.json();
+      let data: Record<string, unknown>;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error(`[generate-workflow] JSON parse failed (attempt ${attempt + 1}):`, jsonErr);
+        if (attempt < maxRetries) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+        return null;
+      }
       const imageUrl =
         data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
