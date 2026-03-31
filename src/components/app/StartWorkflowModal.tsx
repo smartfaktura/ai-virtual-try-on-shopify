@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
-import { useIsAdmin } from '@/hooks/useIsAdmin';
 import type { Workflow } from '@/types/workflow';
 
 const WORKFLOW_OPTIONS = [
@@ -67,7 +66,6 @@ interface StartWorkflowModalProps {
 export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isRealAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const [step, setStep] = useState<Step>('workflow');
   const [selectedWorkflow, setSelectedWorkflow] = useState<typeof WORKFLOW_OPTIONS[0] | null>(null);
@@ -195,10 +193,8 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     }
   };
 
-  const visibleOptions = WORKFLOW_OPTIONS.filter(wf => isRealAdmin || wf.slug !== 'catalog-shot-set');
-
   // Mock Workflow objects for the animated cards
-  const WORKFLOW_CARDS: Workflow[] = visibleOptions.map((wf) => ({
+  const WORKFLOW_CARDS: Workflow[] = WORKFLOW_OPTIONS.map((wf) => ({
     id: wf.slug,
     name: wf.slug === 'product-listing-set' ? 'Product Listing Set'
       : wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
@@ -230,9 +226,9 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           <WorkflowCardCompact
             key={wf.slug}
             workflow={wf}
-            displayName={visibleOptions[i].displayName}
-            subtitle={visibleOptions[i].subtitle}
-            onSelect={() => handleSelectWorkflow(visibleOptions[i])}
+            displayName={WORKFLOW_OPTIONS[i].displayName}
+            subtitle={WORKFLOW_OPTIONS[i].subtitle}
+            onSelect={() => handleSelectWorkflow(WORKFLOW_OPTIONS[i])}
             modalCompact
             mobileRow={isMobile}
           />
