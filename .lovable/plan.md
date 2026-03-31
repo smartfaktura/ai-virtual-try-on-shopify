@@ -1,48 +1,62 @@
 
 
-# Investigation Results: Last Generation Used Seedream (Not Gemini Direct)
+# Risk Assessment & Migration Plan: Switch to Native Gemini API
 
-## What Happened
+## How serious is this change?
 
-The latest generation (job `4757b466`) shows the **new code IS deployed** — the model string is `gemini-3-pro-image-preview` (no `google/` prefix), confirming the direct Gemini API code is live.
+**Risk level: Medium** — The change is well-understood and well-documented, but it touches your core money-making functions (image generation). Here's the honest breakdown:
 
-However, the direct Gemini API call **failed instantly** (0.0s) with `server_error`, so the fallback chain kicked in and used Seedream instead:
+### What's safe
+- The fix is the **same pattern** across all affected functions — not unique logic per file
+- Your **fallback system to Seedream still works** — if anything goes wrong, images still generate (just via Seedream, like they do now)
+- The Google native API is well-documented and confirmed working with `imageConfig`, `aspectRatio`, and `imageSize`
+- Only **4 lines change per function** (URL, auth header, request body structure, response parsing)
 
+### What could go wrong
+- A typo in the new request/response format could break the primary Gemini path (but Seedream fallback catches it)
+- If `GEMINI_API_KEY` doesn't have access to the native `generateContent` endpoint (unlikely but possible)
+- Response parsing mismatch (native returns `candidates[0].content.parts[].inlineData` instead of `choices[0].message.images[0]`)
+
+### Worst case scenario
+- Gemini direct still fails → Seedream fallback kicks in → **exactly what happens today**. No worse than current state.
+
+## Backup
+
+You already have a built-in backup — Lovable's version history. You can revert to the current working state at any time by clicking the revert button below any previous chat message, or using the History tab.
+
+## What changes (4 functions)
+
+Each function gets the same 4-part change:
+
+1. **URL**: `/v1beta/openai/chat/completions` → `/v1beta/models/{model}:generateContent`
+2. **Auth**: `Authorization: Bearer {key}` → `x-goog-api-key: {key}` header
+3. **Request body**: OpenAI format → Native Gemini format:
 ```text
-Attempt 1: nanobanana/gemini-3-pro-image-preview → server_error (0.0s)
-Fallback:  nanobanana → seedream
-Attempt 2: seedream/seedream-4-5-251128 → ok (14.7s)
+OLD:
+  { model, messages: [...], modalities: ["image","text"], image_config: {...} }
+
+NEW:
+  { contents: [{ parts: [...] }], generationConfig: { responseModalities: ["IMAGE","TEXT"], imageConfig: { aspectRatio, imageSize } } }
 ```
+4. **Response parsing**: `choices[0].message.images[0].image_url.url` → `candidates[0].content.parts[].inlineData.data`
 
-## Root Cause
+### Files affected
+- `supabase/functions/generate-freestyle/index.ts` — `generateImage()` function (lines 690-750)
+- `supabase/functions/generate-workflow/index.ts` — image generation call (lines 646-668)
+- `supabase/functions/generate-tryon/index.ts` — image generation call (lines 428-450)
+- `supabase/functions/generate-workflow-preview/index.ts` — image generation call (lines 78-107)
 
-The `generateImage()` function calls `generativelanguage.googleapis.com` with the `GEMINI_API_KEY`, but the error response body is **not logged** — only the failure type (`server_error`) is recorded. The 0.0s duration means Google's API rejected the request immediately, which typically means:
-- The API key may be invalid or misconfigured for the image generation endpoint
-- The `image_config` parameter (aspect_ratio, image_size) may not be supported by the direct API
-- A permission/quota issue on the Google Cloud project
+### NOT affected
+- Seedream fallback logic (untouched)
+- Text analysis functions (stay on Lovable AI gateway)
+- All other preview functions that use Lovable AI gateway
+- Frontend code (no changes)
+- Database (no changes)
 
-## Plan
-
-### Step 1: Add error logging to the Gemini direct call
-In `generateImage()` (line ~725-727), the raw error text IS captured but never printed. Add a `console.error` so we can see the actual Google API error:
-
-```typescript
-// Line 725-727: after capturing errorText
-console.error(`[nanobanana] ${model} HTTP ${response.status}: ${errorText.slice(0, 500)}`);
-```
-
-### Step 2: Redeploy generate-freestyle
-Deploy the updated function so the next failed attempt logs the actual error from Google.
-
-### Step 3: Trigger a test generation
-Run one freestyle generation to see the actual error message, then fix accordingly.
-
-**Likely fixes depending on the error:**
-- If 400 Bad Request: the `image_config` field may need to be removed or renamed for the direct API
-- If 401/403: the `GEMINI_API_KEY` needs to be verified/regenerated
-- If quota error: the Google Cloud project needs image generation API enabled
-
-## Technical Details
-
-The function at `supabase/functions/generate-freestyle/index.ts` line 690-728 makes the direct API call. The error path captures `errorText` but only returns it in the result object — it's never logged to console. The fallback orchestrator (line 889) only logs `result=server_error` without the raw error details.
+## Deployment plan (safe rollout)
+1. Update `generate-freestyle` first (has the best error logging already)
+2. Deploy and test one generation
+3. Check logs — confirm `nanobanana → ok` instead of `server_error`
+4. If successful, update the other 3 functions
+5. If it fails, revert via history — Seedream fallback keeps everything working meanwhile
 
