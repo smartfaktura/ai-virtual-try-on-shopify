@@ -1,38 +1,18 @@
 
 
-## Complete Favicon System (revised)
+## Fix: React Hooks Violation in MetricCard.tsx
 
-Keep all existing files (`favicon.ico`, `favicon.png`) untouched. Only add new assets and update references.
+### Problem
+`useIsMobile()` on line 119 is called after an early return on line 48 (`if (loading) return ...`). When the component renders with `loading=true`, React sees fewer hooks than on subsequent renders, causing the crash: "Rendered more hooks than during the previous render."
 
-### 1. Copy uploaded files into `public/`
-- `svgfavicon.svg` → `public/favicon.svg`
-- `512_x_512_px.png` → `public/icon-512.png`
-- `192_x_192_px.png` → `public/icon-192.png`
-- `180x180.png` → `public/apple-touch-icon.png`
+This crashes the entire `/app/admin/status` page (and any other page using `MetricCard` with a loading state), which is why you see "Something went wrong."
 
-### 2. Update `index.html` favicon links
-Replace current icon links with:
-```html
-<link rel="icon" href="/favicon.ico" sizes="48x48">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-```
+### Fix
+Move `useIsMobile()` to the top of the component, before any conditional returns. All hooks must be called unconditionally on every render.
 
-### 3. Update `public/site.webmanifest`
-```json
-"icons": [
-  { "src": "/favicon.png", "sizes": "32x32", "type": "image/png" },
-  { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-  { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-]
-```
+**File: `src/components/app/MetricCard.tsx`**
+- Move `const isMobile = useIsMobile();` from line 119 to line 34 (before the `loading` early return)
+- Remove line 119
 
-### What stays
-- `public/favicon.ico` — untouched
-- `public/favicon.png` — untouched, still referenced for 32x32
-
-### What's added
-- 4 new files in `public/`
-- Updated references in `index.html` and `site.webmanifest`
+This is a one-line move that fixes the crash.
 
