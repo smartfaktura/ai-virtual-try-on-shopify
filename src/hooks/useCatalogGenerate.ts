@@ -6,6 +6,7 @@ import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } f
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses } from '@/data/mockData';
 import type { Product, ModelProfile, TryOnPose } from '@/types';
+import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
 
 const CREDITS_PER_IMAGE = 6; // tryon cost
 
