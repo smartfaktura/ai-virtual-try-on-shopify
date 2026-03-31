@@ -117,7 +117,7 @@ export default function Auth() {
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(30);
+  const [resendTimer, setResendTimer] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [marketingOptIn, setMarketingOptIn] = useState(true);
