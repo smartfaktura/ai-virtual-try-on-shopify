@@ -1,13 +1,12 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { catalogPoses, catalogBackgrounds, CATALOG_POSE_CATEGORIES, CATALOG_BG_CATEGORIES, CATALOG_CATEGORY_LABELS } from '@/data/catalogPoses';
-import { PoseSelectorCard } from '@/components/app/PoseSelectorCard';
+import { CatalogPoseCard } from './CatalogPoseCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Move, Image, Wand2, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Move, Image, Wand2 } from 'lucide-react';
 import type { TryOnPose, Product, ModelProfile } from '@/types';
 import type { ShotOverride } from './CatalogShotStyler';
 import { CatalogShotStyler } from './CatalogShotStyler';
-import { useCatalogPreviews } from '@/hooks/useCatalogPreviews';
 
 const MAX_POSES = 6;
 const MAX_BACKGROUNDS = 6;
@@ -35,11 +34,9 @@ export function CatalogStepStyle({
   shotOverrides, onShotOverridesChange,
   onBack, onNext, canProceed,
 }: CatalogStepStyleProps) {
-  const { generatePreview, getPreview } = useCatalogPreviews();
   const [stylerOpen, setStylerOpen] = useState(false);
   const [stylerKey, setStylerKey] = useState<string | null>(null);
 
-  // Group poses by category
   const groupedPoses = useMemo(() => {
     const map = new Map<string, TryOnPose[]>();
     for (const pose of catalogPoses) {
@@ -50,7 +47,6 @@ export function CatalogStepStyle({
     return map;
   }, []);
 
-  // Group backgrounds by category
   const groupedBgs = useMemo(() => {
     const map = new Map<string, TryOnPose[]>();
     for (const bg of catalogBackgrounds) {
@@ -59,21 +55,6 @@ export function CatalogStepStyle({
       map.set(bg.category, list);
     }
     return map;
-  }, []);
-
-  // Trigger AI preview generation on mount
-  useEffect(() => {
-    catalogPoses.forEach(pose => {
-      if (pose.promptHint) {
-        generatePreview(pose.promptHint, pose.poseId, 'pose');
-      }
-    });
-    catalogBackgrounds.forEach(bg => {
-      if (bg.promptHint) {
-        generatePreview(bg.promptHint, bg.poseId, 'background');
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePoseSelect = (pose: TryOnPose) => {
@@ -88,14 +69,6 @@ export function CatalogStepStyle({
     }
   };
 
-  // Build pose cards with AI preview URLs
-  const poseWithPreview = (pose: TryOnPose): TryOnPose => {
-    const preview = getPreview(pose.poseId);
-    if (preview?.url) return { ...pose, previewUrl: preview.url };
-    return pose;
-  };
-
-  // Selected products & models for shot styler
   const selectedProducts = useMemo(() => products.filter(p => selectedProductIds.has(p.id)), [products, selectedProductIds]);
   const selectedModels = useMemo(() => models.filter(m => selectedModelIds.has(m.modelId)), [models, selectedModelIds]);
 
@@ -125,25 +98,19 @@ export function CatalogStepStyle({
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {CATALOG_CATEGORY_LABELS[cat] || cat}
                 </span>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-                  {catPoses.map(pose => {
-                    const preview = getPreview(pose.poseId);
-                    const enriched = poseWithPreview(pose);
-                    return (
-                      <div key={pose.poseId} className="flex-shrink-0 w-[120px] sm:w-[140px] relative">
-                        <PoseSelectorCard
-                          pose={enriched}
-                          isSelected={selectedPoseIds.has(pose.poseId)}
-                          onSelect={() => handlePoseSelect(pose)}
-                        />
-                        {preview?.loading && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-lg">
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                  {catPoses.map(pose => (
+                    <CatalogPoseCard
+                      key={pose.poseId}
+                      id={pose.poseId}
+                      name={pose.name}
+                      description={pose.description}
+                      category={pose.category}
+                      previewUrl={pose.previewUrl}
+                      isSelected={selectedPoseIds.has(pose.poseId)}
+                      onSelect={() => handlePoseSelect(pose)}
+                    />
+                  ))}
                 </div>
               </div>
             );
@@ -168,25 +135,19 @@ export function CatalogStepStyle({
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {CATALOG_CATEGORY_LABELS[cat] || cat}
                 </span>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-                  {catBgs.map(bg => {
-                    const preview = getPreview(bg.poseId);
-                    const enriched = poseWithPreview(bg);
-                    return (
-                      <div key={bg.poseId} className="flex-shrink-0 w-[120px] sm:w-[140px] relative">
-                        <PoseSelectorCard
-                          pose={enriched}
-                          isSelected={selectedBackgroundIds.has(bg.poseId)}
-                          onSelect={() => handleBgSelect(bg)}
-                        />
-                        {preview?.loading && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-lg">
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                  {catBgs.map(bg => (
+                    <CatalogPoseCard
+                      key={bg.poseId}
+                      id={bg.poseId}
+                      name={bg.name}
+                      description={bg.description}
+                      category={bg.category}
+                      previewUrl={bg.previewUrl}
+                      isSelected={selectedBackgroundIds.has(bg.poseId)}
+                      onSelect={() => handleBgSelect(bg)}
+                    />
+                  ))}
                 </div>
               </div>
             );
@@ -226,7 +187,7 @@ export function CatalogStepStyle({
                   <tr key={p.id} className="border-b border-border last:border-0">
                     <td className="p-2 flex items-center gap-2">
                       <div className="w-8 h-8 rounded bg-muted overflow-hidden flex-shrink-0">
-                        <img src={p.images[0]?.url} alt={p.title} className="w-full h-full object-cover" />
+                        <img src={p.images[0]?.url} alt={p.title} className="w-full h-full object-contain" />
                       </div>
                       <span className="truncate max-w-[100px]">{p.title}</span>
                     </td>
