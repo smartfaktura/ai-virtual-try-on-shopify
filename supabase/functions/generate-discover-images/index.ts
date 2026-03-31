@@ -221,7 +221,7 @@ serve(async (req) => {
 
         const { error: uploadError } = await adminClient.storage
           .from("freestyle-images")
-          .upload(storagePath, bytes, { contentType, upsert: true });
+          .upload(storagePath, bytes, { contentType: fmt.contentType, upsert: true });
 
         if (uploadError) {
           results.push({

@@ -7,6 +7,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Detect actual image format from magic bytes ──────────────────────────
+function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: 'jpg', contentType: 'image/jpeg' };
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57 && bytes[9] === 0x45) return { ext: 'webp', contentType: 'image/webp' };
+  return { ext: 'png', contentType: 'image/png' };
+}
+
 const workflowPrompts: Record<string, string> = {
   "Virtual Try-On Set":
     "Ultra high resolution editorial fashion photography. A female model wearing a stylish cream knit outfit standing in a soft-lit professional studio. Full body shot, 3:4 portrait orientation, shallow depth of field, warm neutral tones, clean background. Magazine-quality fashion editorial.",

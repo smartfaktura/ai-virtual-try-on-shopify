@@ -98,11 +98,12 @@ async function uploadBase64Image(
 ): Promise<string> {
   const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
   const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-  const fileName = `${userId}/model-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.png`;
+  const fmt = detectImageFormat(imageBytes);
+  const fileName = `${userId}/model-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fmt.ext}`;
 
   const { error } = await supabaseAdmin.storage
     .from("scratch-uploads")
-    .upload(fileName, imageBytes, { contentType: "image/png", upsert: false });
+    .upload(fileName, imageBytes, { contentType: fmt.contentType, upsert: false });
 
   if (error) throw new Error("Failed to upload generated image");
 

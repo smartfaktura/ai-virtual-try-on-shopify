@@ -187,12 +187,13 @@ serve(async (req) => {
     console.log(`[upscale-worker] Job ${jobId}: Topaz output ${outputSizeKB}KB (source was ${sourceSizeKB}KB)`);
 
     // 4. Upload to storage
-    const storagePath = `upscaled/${userId}/${crypto.randomUUID()}-${resolution}.png`;
+    const fmt = detectImageFormat(processedBytes);
+    const storagePath = `upscaled/${userId}/${crypto.randomUUID()}-${resolution}.${fmt.ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("freestyle-images")
       .upload(storagePath, processedBytes, {
-        contentType: "image/png",
+        contentType: fmt.contentType,
         upsert: true,
       });
 

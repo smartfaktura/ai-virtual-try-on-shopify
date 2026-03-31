@@ -283,11 +283,12 @@ serve(async (req) => {
       const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
       const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-      const storagePath = `${workflow_id}/scene-${i}.png`;
+      const fmt = detectImageFormat(imageBytes);
+      const storagePath = `${workflow_id}/scene-${i}.${fmt.ext}`;
       const { error: uploadError } = await supabase.storage
         .from("workflow-previews")
         .upload(storagePath, imageBytes, {
-          contentType: "image/png",
+          contentType: fmt.contentType,
           upsert: true,
         });
 

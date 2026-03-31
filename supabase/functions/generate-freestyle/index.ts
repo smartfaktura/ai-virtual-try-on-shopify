@@ -656,7 +656,8 @@ async function uploadBase64ToStorage(
     bytes[i] = binaryStr.charCodeAt(i);
   }
 
-  const fileName = `${userId}/${crypto.randomUUID()}.png`;
+  const fmt = detectImageFormat(bytes);
+  const fileName = `${userId}/${crypto.randomUUID()}.${fmt.ext}`;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
@@ -665,7 +666,7 @@ async function uploadBase64ToStorage(
   const { error } = await supabase.storage
     .from("freestyle-images")
     .upload(fileName, bytes, {
-      contentType: "image/png",
+      contentType: fmt.contentType,
       upsert: false,
     });
 

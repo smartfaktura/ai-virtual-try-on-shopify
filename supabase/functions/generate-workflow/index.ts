@@ -1201,22 +1201,21 @@ serve(async (req) => {
             if (imageUrl.startsWith("data:")) {
               try {
                 const [meta, base64Data] = imageUrl.split(",");
-                const ext = "png";
-
                 const binaryString = atob(base64Data);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let k = 0; k < binaryString.length; k++) {
                   bytes[k] = binaryString.charCodeAt(k);
                 }
 
+                const fmt = detectImageFormat(bytes);
                 const userId = body.user_id || "anonymous";
                 const jobId = body.job_id || crypto.randomUUID();
-                const storagePath = `${userId}/${jobId}/${i}-${a}.${ext}`;
+                const storagePath = `${userId}/${jobId}/${i}-${a}.${fmt.ext}`;
 
                 const { error: uploadError } = await supabase.storage
                   .from("workflow-previews")
                   .upload(storagePath, bytes, {
-                    contentType: "image/png",
+                    contentType: fmt.contentType,
                     cacheControl: "3600",
                   });
 
