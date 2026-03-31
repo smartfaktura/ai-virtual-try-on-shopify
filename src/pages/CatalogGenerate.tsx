@@ -43,7 +43,7 @@ export default function CatalogGenerate() {
 
   // Step 1 state
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
-  const [productSearch, setProductSearch] = useState('');
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   // Step 2 state
   const [selectedPoseIds, setSelectedPoseIds] = useState<Set<string>>(new Set());
