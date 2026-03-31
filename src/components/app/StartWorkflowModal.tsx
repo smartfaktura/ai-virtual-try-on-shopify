@@ -210,7 +210,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
       <div className={cn(
         isMobile
           ? "flex flex-col gap-3"
-          : "grid grid-cols-2 lg:grid-cols-4 gap-3"
+          : "grid grid-cols-3 gap-3"
       )}>
         {WORKFLOW_CARDS.map((wf, i) => (
           <WorkflowCardCompact
