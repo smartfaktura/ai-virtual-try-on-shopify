@@ -98,7 +98,7 @@ export default function BlogPost() {
         (child: any) => child?.type === 'img' || child?.props?.node?.tagName === 'img'
       );
       if (hasImage) {
-        return <div className="my-6">{children}</div>;
+        return <>{children}</>;
       }
 
       // Key takeaway detection
