@@ -136,16 +136,15 @@ serve(async (req) => {
     const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
     const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
 
-    // Determine file extension from data URL
-    const mimeMatch = imageDataUrl.match(/^data:image\/(\w+);/);
-    const ext = mimeMatch ? mimeMatch[1] : "png";
-    const fileName = `${workflow_id}_${Date.now()}.${ext}`;
+    // Detect actual format from magic bytes (more reliable than data URL mime)
+    const fmt = detectImageFormat(imageBytes);
+    const fileName = `${workflow_id}_${Date.now()}.${fmt.ext}`;
 
     // Upload to storage bucket
     const { error: uploadErr } = await supabase.storage
       .from("workflow-previews")
       .upload(fileName, imageBytes, {
-        contentType: `image/${ext}`,
+        contentType: fmt.contentType,
         upsert: true,
       });
 
