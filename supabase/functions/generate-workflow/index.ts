@@ -1147,9 +1147,7 @@ serve(async (req) => {
             if (imageUrl.startsWith("data:")) {
               try {
                 const [meta, base64Data] = imageUrl.split(",");
-                const mimeMatch = meta.match(/^data:(.*?);/);
-                const mimeType = mimeMatch?.[1] || "image/png";
-                const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+                const ext = "png";
 
                 const binaryString = atob(base64Data);
                 const bytes = new Uint8Array(binaryString.length);
