@@ -1,68 +1,49 @@
 
 
-# Fix Catalog Poses: Separate Mood Step, Add Poses, Regenerate Expressions
+# Fix Expression Step, Model Cards, Background Previews & Style Shots
 
-## Changes
+## Issues Found
 
-### 1. Move Mood/Expression to its own step
-Currently mood is a sidebar inside the Poses step — bad UX. Move it to a new **Step 3: Expression** between Poses and Models.
+1. **Expression step says "Next: Models"** in the header button but the floating bar says "Next: Backgrounds" — the floating bar uses `STEP_NEXT_LABELS[step]` which is index-based (step=3 → index 3 → "Backgrounds"). The header button is hardcoded "Next: Models" which is correct. Fix: `STEP_NEXT_LABELS` array is off — index 0 maps to step 1, so for step 3 (Expression) it reads index 3 = "Backgrounds" instead of index 2 = "Models".
+2. **Expression cards** have text below but images are too large relative to text, making descriptions hard to see. Also all moods show different-looking models — they should use same model for consistency.
+3. **Model cards** show too much detail (body type badges, ethnicity, age) — user wants name only.
+4. **Backgrounds** have no preview images (all `previewUrl: ''`) — need AI-generated clean studio backgrounds. User wants only clean studio colors (white, grey, beige, concrete, plus a few more). Remove surface/botanical/outdoor/living-space/retail categories.
+5. **Style Shots "+" button** — clicking it calls `openStyler()` which opens a `CatalogShotStyler` dialog, but if the dialog component has issues it may error silently. Need to make the "+" button purpose clearer with a tooltip/label.
 
-- Update `STEPS` array: Products → Poses → Expression → Models → Backgrounds → Style Shots → Review (7 steps)
-- Add new icon (e.g. `Smile`) for Expression step
-- Create `CatalogStepExpression.tsx` — clean grid of mood cards (3 columns), bigger cards, proper labels
-- Remove mood props from `CatalogStepPoses` — it becomes poses-only (full width grid)
-- Wire `selectedMood` / `onMoodChange` to the new Expression step
-- Adjust all step numbers in `CatalogGenerate.tsx` (Models becomes 4, Backgrounds 5, etc.)
+## Plan
 
-### 2. Add more poses to reach 5-5-5
+### 1. Fix floating bar step label mismatch
+In `CatalogGenerate.tsx`, the `STEP_NEXT_LABELS` array maps by index but is accessed as `STEP_NEXT_LABELS[step]` where step is 1-based. Fix the array or access pattern so step 3 (Expression) shows "Models".
 
-Currently: 5 Front, 4 Angled, 2 Detail = 11 total. Need 5-5-5 = 15.
+### 2. Simplify Model cards — name only
+In `ModelSelectorCard.tsx`, remove body type badges, ethnicity badge, and age text from the overlay. Keep only the model name.
 
-**Angled — add 1 more:**
-- "Leaning" (model leaning against invisible wall, angled)
+### 3. Replace backgrounds with clean studio only + generate previews
+Update `catalogPoses.ts`:
+- Remove surface, botanical, outdoor, living-space, retail backgrounds
+- Keep/expand clean studio: White, Light Gray, Warm Beige, Concrete Gray, Blush Pink, Sage Green, Soft Blue
+- Update `CATALOG_BG_CATEGORIES` to just `['clean-studio']`
 
-**Detail — add 3 more:**
-- "Fabric Detail" (close-up of fabric/texture on garment)
-- "Accessory Detail" (hands/wrist detail shot)
-- "Back Detail" (back neckline/collar detail)
+Generate 7 background preview images using `google/gemini-3.1-flash-image-preview`:
+- Each: "Empty photography studio with [COLOR] seamless paper backdrop, no model, no objects, professional studio lighting, clean and minimal, wide shot"
+- Colors: pure white, light gray, warm beige, raw concrete, soft blush pink, sage green, soft powder blue
 
-Generate 4 new pose preview images via AI.
+### 4. Regenerate expression images with same model
+Generate 5 new mood images with stronger consistency prompts using `google/gemini-3.1-flash-image-preview`:
+- "Professional headshot photograph of a young Caucasian woman with brown hair pulled back in a low bun, minimal natural makeup, [EXPRESSION], clean pure white background, shoulders visible, soft studio lighting, ultra-realistic, Canon EOS R5 85mm f/1.4"
 
-### 3. Regenerate all 5 mood expression images
+### 5. Fix Style Shots "+" clarity
+- Change the "+" button to show a tooltip or label "Customize" on hover
+- Ensure clicking it properly opens the styler dialog without errors
 
-Current ones look unnatural/inconsistent. Regenerate with better prompts emphasizing:
-- Same model consistency (young woman, natural makeup, hair pulled back)
-- Ultra-realistic photography, not AI-looking
-- Clean white background, shoulders-up framing
-- Each expression clearly distinct and natural
-
-Generate 5 new mood images (joyful, radiant, neutral, unapologetic, confident).
-
-### 4. Clean up Poses step UI (now full-width)
-
-With mood removed, the poses grid gets full width. Use 5-column grid consistently for all categories. Remove the right sidebar. Cleaner header.
-
-## Files to modify/create
+### Files to modify
 
 | Action | File |
 |--------|------|
-| Generate | 4 new pose images + 5 new mood images via AI script |
-| Create | `src/components/app/catalog/CatalogStepExpression.tsx` |
-| Update | `src/components/app/catalog/CatalogStepPoses.tsx` — remove mood, full-width |
-| Update | `src/data/catalogPoses.ts` — add 4 new poses, update mood image imports |
-| Update | `src/pages/CatalogGenerate.tsx` — 7 steps, new Expression step, renumber |
-
-## Image generation
-
-9 images total using `google/gemini-3.1-flash-image-preview`:
-
-**Poses (4):**
-- `pose_leaning.png` — "Professional e-commerce photo, female supermodel in white t-shirt and blue jeans, leaning casually against invisible wall at an angle, bright white studio, natural shadows, 85mm lens, full body"
-- `pose_fabric_detail.png` — "Professional macro close-up of white cotton t-shirt fabric texture on a model, bright white studio, detail fashion photography"
-- `pose_accessory_detail.png` — "Professional close-up of model's hands and wrists wearing a white t-shirt, bright white studio background, fashion detail photography"
-- `pose_back_detail.png` — "Professional close-up of back neckline and collar of white t-shirt on female model, bright white studio, fashion detail photography"
-
-**Moods (5) — regenerate all with consistent look:**
-- Each: "Ultra-realistic professional headshot portrait photograph of a beautiful 25-year-old female model with natural makeup and hair pulled back, [EXPRESSION], clean white background, shoulders visible, soft studio lighting, shot on Canon R5 85mm f/1.4, no retouching artifacts"
-- Expressions: genuinely happy warm smile / glowing radiant soft smile / calm composed neutral face / intense fierce determined look / confident self-assured subtle smile
+| Generate | 7 background images + 5 mood images → `src/assets/catalog/` |
+| Update | `src/data/catalogPoses.ts` — clean-studio-only backgrounds with preview URLs, new mood imports |
+| Update | `src/pages/CatalogGenerate.tsx` — fix `STEP_NEXT_LABELS` indexing |
+| Update | `src/components/app/ModelSelectorCard.tsx` — name only, remove badges |
+| Update | `src/components/app/catalog/CatalogStepStyleShots.tsx` — clearer "+" button with tooltip |
+| Update | `src/components/app/catalog/CatalogStepExpression.tsx` — fix header button label |
 
