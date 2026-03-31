@@ -63,11 +63,13 @@ export const catalogPoses: TryOnPose[] = [
 
 /* ─── Clean studio backgrounds only ─── */
 export const catalogBackgrounds: TryOnPose[] = [
-  { poseId: 'catalogBg_white_seamless', name: 'White Seamless', description: 'Pure white seamless studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgWhite, promptHint: 'Pure white seamless studio photography backdrop, clean infinity cove, professional studio lighting, no objects or people' },
-  { poseId: 'catalogBg_gray_gradient', name: 'Light Gray', description: 'Soft light gray backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgLightGray, promptHint: 'Soft light gray studio photography backdrop, subtle vignette, professional lighting, clean and minimal, no objects or people' },
-  { poseId: 'catalogBg_warm_beige', name: 'Warm Beige', description: 'Warm beige studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgWarmBeige, promptHint: 'Warm beige toned studio photography backdrop, neutral tones, soft lighting, elegant and clean, no objects or people' },
+  { poseId: 'catalogBg_white_seamless', name: 'White', description: 'Pure white seamless backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgWhite, promptHint: 'Pure white seamless studio photography backdrop, clean infinity cove, professional studio lighting, no objects or people' },
+  { poseId: 'catalogBg_light_gray', name: 'Light Gray', description: 'Soft light gray backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgLightGray, promptHint: 'Soft light gray studio photography backdrop, subtle vignette, professional lighting, clean and minimal, no objects or people' },
+  { poseId: 'catalogBg_ivory', name: 'Ivory', description: 'Warm ivory off-white backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgIvory, promptHint: 'Soft ivory off-white studio photography backdrop, warm subtle tone, professional lighting, clean and minimal, no objects or people' },
+  { poseId: 'catalogBg_cream', name: 'Cream', description: 'Soft cream backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgCream, promptHint: 'Cream colored studio photography backdrop, soft warm white, professional lighting, clean and minimal, no objects or people' },
+  { poseId: 'catalogBg_stone', name: 'Stone', description: 'Warm stone beige-gray backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgStone, promptHint: 'Warm stone beige-gray studio photography backdrop, subtle natural tone, professional lighting, clean and minimal, no objects or people' },
   { poseId: 'catalogBg_concrete', name: 'Concrete', description: 'Industrial concrete backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgConcrete, promptHint: 'Raw concrete textured wall background, industrial minimal aesthetic, even lighting, no objects or people' },
-  { poseId: 'catalogBg_sage_green', name: 'Sage Green', description: 'Sage green studio backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgSageGreen, promptHint: 'Sage green colored studio photography backdrop, soft muted green, professional lighting, clean and minimal, no objects or people' },
+  { poseId: 'catalogBg_charcoal', name: 'Charcoal', description: 'Dark charcoal backdrop', category: 'clean-studio' as PoseCategory, previewUrl: bgCharcoal, promptHint: 'Charcoal dark gray studio photography backdrop, deep matte tone, professional lighting, clean and minimal, no objects or people' },
 ];
 
 /* ─── Category metadata ─── */
