@@ -242,14 +242,14 @@ serve(async (req) => {
 
       console.log(`Generating preview ${i + 1}/${variations.length}: ${v.label} (batch ${generatedCount + 1}/${batch_size})`);
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-pro-image-preview",
+          model: "gemini-3-pro-image-preview",
           messages: [
             {
               role: "user",

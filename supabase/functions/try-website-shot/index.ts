@@ -202,16 +202,19 @@ Style: Studio lighting, minimalist white/light grey background, professional pro
 soft shadows, high-end commercial look. The product should be the clear hero of the image.
 Make it look like a professional product shot you'd see on a luxury retail website.`;
 
+        const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+        if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
+
         const genResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${GEMINI_API_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash-image",
+              model: "gemini-2.5-flash-image",
               messages: [
                 {
                   role: "user",

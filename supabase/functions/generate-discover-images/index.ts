@@ -162,7 +162,7 @@ serve(async (req) => {
         console.log(`[DISCOVER-IMG] Generating: ${img.title}`);
 
         const aiResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
           {
             method: "POST",
             headers: {
@@ -170,7 +170,7 @@ serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-pro-image-preview",
+              model: "gemini-3-pro-image-preview",
               messages: [{ role: "user", content: img.prompt }],
               modalities: ["image", "text"],
             }),
