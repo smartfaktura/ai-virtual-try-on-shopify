@@ -38,7 +38,7 @@ const STEPS = [
   { number: 7, label: 'Review', icon: Sparkles },
 ];
 
-const STEP_NEXT_LABELS = ['Poses', 'Expression', 'Models', 'Backgrounds', 'Style Shots', 'Review', 'Review'];
+const STEP_NEXT_LABELS: Record<number, string> = { 1: 'Poses', 2: 'Expression', 3: 'Models', 4: 'Backgrounds', 5: 'Style Shots', 6: 'Review' };
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
