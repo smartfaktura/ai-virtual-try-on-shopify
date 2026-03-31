@@ -6,7 +6,6 @@ import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } f
 import { convertImageToBase64 } from '@/lib/imageUtils';
 
 import type { Product, ModelProfile, TryOnPose } from '@/types';
-import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
 import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
 
 const CREDITS_PER_IMAGE = 6;
@@ -37,7 +36,6 @@ export interface CatalogGenerateParams {
   poseIds: string[];
   backgroundIds: string[];
   allPoses: TryOnPose[];
-  shotOverrides?: Map<string, ShotOverride>;
   extraItems?: Map<string, ExtraItem[]>;
 }
 
@@ -127,7 +125,7 @@ export function useCatalogGenerate() {
   const startGeneration = useCallback(async (params: CatalogGenerateParams): Promise<boolean> => {
     if (!user) { toast.error('Sign in to generate'); return false; }
 
-    const { products, models, poseIds, backgroundIds, allPoses, shotOverrides, extraItems } = params;
+    const { products, models, poseIds, backgroundIds, allPoses, extraItems } = params;
     const poseMap = new Map(allPoses.map(p => [p.poseId, p]));
 
     const token = await getAuthToken();
@@ -147,32 +145,23 @@ export function useCatalogGenerate() {
       for (const model of models) {
         const base64Model = await convertImageToBase64(model.previewUrl);
         const comboKey = `${product.id}_${model.modelId}`;
-        const override = shotOverrides?.get(comboKey);
         const extras = extraItems?.get(comboKey) || [];
 
-        // Build extra items prompt fragment
         const extraPrompt = extras.length > 0
           ? extras.map(e => `also wearing/holding ${e.productTitle}`).join(', ')
           : '';
 
         for (const poseId of poseIds) {
-          // Use override pose if set, otherwise default
-          const effectivePoseId = override?.poseId || poseId;
-          const pose = poseMap.get(effectivePoseId);
+          const pose = poseMap.get(poseId);
           if (!pose) continue;
 
           for (const bgId of backgroundIds) {
-            const effectiveBgId = override?.backgroundId || bgId;
-            const bg = poseMap.get(effectiveBgId);
+            const bg = poseMap.get(bgId);
             if (!bg) continue;
 
             const base64Scene = bg.previewUrl ? await convertImageToBase64(bg.previewUrl) : undefined;
 
-            // Build custom prompt combining override + extras
-            const customParts: string[] = [];
-            if (override?.customPrompt) customParts.push(override.customPrompt);
-            if (extraPrompt) customParts.push(extraPrompt);
-            const customPrompt = customParts.length > 0 ? customParts.join('. ') : undefined;
+            const customPrompt = extraPrompt || undefined;
 
             await paceDelay(enqueueCount);
 
@@ -188,7 +177,6 @@ export function useCatalogGenerate() {
                   imageCount: 1,
                   batch_id: batchId,
                   catalog_mode: true,
-                  ...(override?.framing && { framing: override.framing }),
                   ...(customPrompt && { custom_prompt: customPrompt }),
                   ...(extras.length > 0 && { extra_items: extras }),
                 },

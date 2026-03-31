@@ -22,7 +22,6 @@ import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { Package, Move, Smile, Users, Image, Wand2, Sparkles, Check } from 'lucide-react';
 import type { Product, ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
-import type { ShotOverride } from '@/components/app/catalog/CatalogShotStyler';
 import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
 
 const CATALOG_MAX_PRODUCTS = 50;
@@ -65,7 +64,6 @@ export default function CatalogGenerate() {
   const [selectedBackgroundIds, setSelectedBackgroundIds] = useState<Set<string>>(new Set());
 
   // Step 6 state
-  const [shotOverrides, setShotOverrides] = useState<Map<string, ShotOverride>>(new Map());
   const [extraItems, setExtraItems] = useState<Map<string, ExtraItem[]>>(new Map());
 
   // Generation
@@ -169,7 +167,6 @@ export default function CatalogGenerate() {
       poseIds: Array.from(selectedPoseIds),
       backgroundIds: Array.from(selectedBackgroundIds),
       allPoses,
-      shotOverrides,
       extraItems,
     });
 
@@ -296,8 +293,6 @@ export default function CatalogGenerate() {
           selectedProductIds={selectedProductIds}
           models={allModels}
           selectedModelIds={selectedModelIds}
-          shotOverrides={shotOverrides}
-          onShotOverridesChange={setShotOverrides}
           extraItems={extraItems}
           onExtraItemsChange={setExtraItems}
           onBack={() => setStep(5)}
