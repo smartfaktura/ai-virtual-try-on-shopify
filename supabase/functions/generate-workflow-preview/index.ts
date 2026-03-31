@@ -83,7 +83,14 @@ serve(async (req) => {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
           responseModalities: ["IMAGE", "TEXT"],
-          imageConfig: { aspectRatio: "3:4" },
+          temperature: 1.0,
+          imageConfig: {
+            aspectRatio: "3:4",
+            imageSize: "1K",
+            personGeneration: "ALLOW_ALL",
+            numberOfImages: 1,
+            outputOptions: { mimeType: "image/png" },
+          },
         },
       }),
     });
