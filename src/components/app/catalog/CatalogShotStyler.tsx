@@ -24,10 +24,10 @@ interface CatalogShotStylerProps {
 }
 
 export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverride, allPoses, onSave }: CatalogShotStylerProps) {
-  const [poseId, setPoseId] = useState(currentOverride?.poseId || '');
-  const [backgroundId, setBackgroundId] = useState(currentOverride?.backgroundId || '');
+  const [poseId, setPoseId] = useState(currentOverride?.poseId || '__default');
+  const [backgroundId, setBackgroundId] = useState(currentOverride?.backgroundId || '__default');
   const [customPrompt, setCustomPrompt] = useState(currentOverride?.customPrompt || '');
-  const [framing, setFraming] = useState(currentOverride?.framing || '');
+  const [framing, setFraming] = useState(currentOverride?.framing || '__default');
 
   // Filter by catalog-specific prefixes
   const poses = allPoses.filter(p => p.poseId.startsWith('catalogPose_'));
