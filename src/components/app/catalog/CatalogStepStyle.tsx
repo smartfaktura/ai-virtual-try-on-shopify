@@ -57,15 +57,6 @@ export function CatalogStepStyle({
     }
   };
 
-  const selectedProducts = useMemo(() => products.filter(p => selectedProductIds.has(p.id)), [products, selectedProductIds]);
-  const selectedModels = useMemo(() => models.filter(m => selectedModelIds.has(m.modelId)), [models, selectedModelIds]);
-
-  const openStyler = (productId: string, modelId: string) => {
-    setStylerKey(`${productId}_${modelId}`);
-    setStylerOpen(true);
-  };
-
-  const allPoses = useMemo(() => [...catalogPoses, ...catalogBackgrounds], []);
 
   return (
     <div className="space-y-6">
