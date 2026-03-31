@@ -16,9 +16,11 @@ interface ProductMultiSelectProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   enforceSameCategory?: boolean;
+  maxProducts?: number;
 }
 
-export function ProductMultiSelect({ products, selectedIds, onSelectionChange, searchQuery, onSearchChange, enforceSameCategory = true }: ProductMultiSelectProps) {
+export function ProductMultiSelect({ products, selectedIds, onSelectionChange, searchQuery, onSearchChange, enforceSameCategory = true, maxProducts }: ProductMultiSelectProps) {
+  const effectiveMax = maxProducts ?? MAX_PRODUCTS_PER_BATCH;
   const filteredProducts = products.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.vendor.toLowerCase().includes(searchQuery.toLowerCase()));
   const selectedProducts = products.filter(p => selectedIds.has(p.id));
   const dominantCategory = selectedProducts.length > 0 ? detectProductCategory(selectedProducts[0]) : null;
@@ -30,7 +32,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
     if (!product) return;
     const newSelection = new Set(selectedIds);
     if (newSelection.has(productId)) { newSelection.delete(productId); }
-    else if (newSelection.size < MAX_PRODUCTS_PER_BATCH) {
+    else if (newSelection.size < effectiveMax) {
       if (enforceSameCategory && dominantCategory) {
         const productCategory = detectProductCategory(product);
         if (productCategory && productCategory !== dominantCategory) return;
@@ -45,7 +47,7 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
     if (enforceSameCategory && dominantCategory) {
       productsToSelect = filteredProducts.filter(p => { const cat = detectProductCategory(p); return cat === dominantCategory || cat === null; });
     }
-    onSelectionChange(new Set(productsToSelect.slice(0, MAX_PRODUCTS_PER_BATCH).map(p => p.id)));
+    onSelectionChange(new Set(productsToSelect.slice(0, effectiveMax).map(p => p.id)));
   };
 
   const getCategoryBadgeText = () => {
@@ -71,14 +73,14 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
       <div className="flex gap-2 items-center">
         <Badge variant={selectedIds.size >= 2 ? 'default' : 'secondary'}>{selectedIds.size} selected</Badge>
         {getCategoryBadgeText() && <Badge variant={isCategoryMismatch ? 'destructive' : 'secondary'}>{getCategoryBadgeText()}</Badge>}
-        <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS_PER_BATCH})</span>
+        <span className="text-xs text-muted-foreground">(max {effectiveMax})</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[400px] overflow-y-auto p-1">
         {filteredProducts.map(product => {
           const isSelected = selectedIds.has(product.id);
           const productCategory = detectProductCategory(product);
           const isIncompatible = enforceSameCategory && dominantCategory && productCategory && productCategory !== dominantCategory && !isSelected;
-          const isDisabled = isIncompatible || (!isSelected && selectedIds.size >= MAX_PRODUCTS_PER_BATCH);
+          const isDisabled = isIncompatible || (!isSelected && selectedIds.size >= effectiveMax);
           return (
             <div key={product.id} onClick={() => !isDisabled && handleToggle(product.id)}
               className={`relative rounded-lg border-2 p-2 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''} ${isIncompatible ? 'grayscale' : ''}`}>

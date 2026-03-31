@@ -37,6 +37,7 @@ const prefetchMap: Record<string, () => void> = {
   '/app/video': () => { import('@/pages/VideoHub'); },
   '/app/models': () => { import('@/pages/BrandModels'); },
   '/app/brand-profiles': () => { import('@/pages/BrandProfiles'); },
+  '/app/catalog': () => { import('@/pages/CatalogGenerate'); },
 };
 const prefetched = new Set<string>();
 const prefetchRoute = (path: string) => {
@@ -49,6 +50,7 @@ const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
+  { label: 'Catalog', icon: LayoutTemplate, path: '/app/catalog' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Discover', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
