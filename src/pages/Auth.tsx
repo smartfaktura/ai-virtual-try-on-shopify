@@ -212,7 +212,7 @@ export default function Auth() {
             },
           }).catch(() => {});
         }
-        await supabase.auth.resend({ type: 'signup', email });
+        // Signup already sends a confirmation email — do NOT resend here
         setSignupComplete(true);
       } else {
         if (data?.user?.id) {
