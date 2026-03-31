@@ -35,10 +35,10 @@ export function CatalogShotStyler({ open, onOpenChange, comboKey, currentOverrid
 
   const handleSave = () => {
     const override: ShotOverride = {};
-    if (poseId) override.poseId = poseId;
-    if (backgroundId) override.backgroundId = backgroundId;
+    if (poseId && poseId !== '__default') override.poseId = poseId;
+    if (backgroundId && backgroundId !== '__default') override.backgroundId = backgroundId;
     if (customPrompt.trim()) override.customPrompt = customPrompt.trim();
-    if (framing) override.framing = framing;
+    if (framing && framing !== '__default') override.framing = framing;
     
     if (Object.keys(override).length === 0) {
       onSave(null);
