@@ -152,7 +152,7 @@ export function useCatalogGenerate() {
 
         // Build extra items prompt fragment
         const extraPrompt = extras.length > 0
-          ? extras.map(e => `wearing/holding ${e.label} on ${e.placement}`).join(', ')
+          ? extras.map(e => `also wearing/holding ${e.productTitle}`).join(', ')
           : '';
 
         for (const poseId of poseIds) {
