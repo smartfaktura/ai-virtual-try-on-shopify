@@ -1,27 +1,51 @@
 
 
-## Add Time Estimate to Batch Progress View
+## Fix Mirror Selfie Set Image Quality (Low Resolution / Small File Size)
 
-The batch progress section (Product Listing Set with 9 variations) is missing the time estimate because it only shows "X of Y done · Z images ready" — the estimate only appears inside `QueuePositionIndicator`, which requires `activeJob` to be non-null. When jobs are queued but none are processing yet, `activeJob` is null so no estimate appears.
+### Root Cause
+
+The `generate-workflow` edge function sends `output_format: 'png'` in `image_config`, but the Lovable AI gateway returns JPEG anyway (confirmed by storage logs: all files saved as `.jpg`). The `output_format` param is silently ignored.
+
+The real issue is likely that the gateway is returning lower-resolution images. Comparing the two functions:
+
+**Freestyle** (working well):
+```js
+image_config: {
+  aspect_ratio: aspectRatio,
+  image_size: '2K',       // no output_format
+}
+```
+
+**Workflow** (low quality):
+```js
+image_config: {
+  aspect_ratio: aspectRatio,
+  image_size: '2K',
+  output_format: 'png',   // ← unsupported param, may confuse gateway
+}
+```
+
+The unsupported `output_format: 'png'` parameter may be causing the gateway to fall back to default/lower resolution settings. Freestyle doesn't send this parameter and produces better results.
 
 ### Fix
 
-**File: `src/pages/Generate.tsx` (~line 4221-4222)**
+**File: `supabase/functions/generate-workflow/index.ts` (line 663)**
 
-Add a time estimate line below the progress bar, similar to `MultiProductProgressBanner`. Calculate based on total jobs × per-job estimate (12s for Pro/high quality, 4s for standard since jobs run in parallel).
+Remove `output_format: 'png'` from the `image_config` to match the freestyle function's working config:
 
+```js
+// Before
+image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K', output_format: 'png' },
+
+// After  
+image_config: { ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}), image_size: '2K' },
 ```
-// After the Progress bar (line 4222), add:
-<div className="flex items-center justify-between text-xs text-muted-foreground">
-  <span>Est. ~{lowEst}-{highEst} {unit} for {totalJobs} {variationLabel}s</span>
-  <span>{Math.round(doneCount / totalJobs * 100)}%</span>
-</div>
-```
 
-The estimate calculation:
-- `estimatePerImage = (quality === 'high') ? 12 : 4`
-- `totalEstSeconds = batchState.totalJobs * estimatePerImage`
-- Format as seconds if < 60s, otherwise minutes (matching MultiProductProgressBanner logic)
+This aligns the workflow API call with the freestyle function that already produces good quality images with the same Pro model.
 
-This ensures the batch progress view always shows a time estimate, regardless of whether `activeJob` is available.
+### Technical Details
+
+- The `generate-workflow` function already correctly uses `google/gemini-3-pro-image-preview` for Mirror Selfie Set (forced at line 996 when model reference is present, also forced by `quality: 'high'` from the workflow config)
+- Storage upload logic (lines 1143-1182) correctly handles both base64 and hosted URLs — no changes needed there
+- One file changed: `supabase/functions/generate-workflow/index.ts`
 
