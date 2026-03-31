@@ -553,8 +553,8 @@ async function generateImage(
   apiKey: string,
   aspectRatio?: string
 ): Promise<string | null> {
-  const maxRetries = 3;
-  const PER_IMAGE_TIMEOUT = 150_000; // 150s per image
+  const maxRetries = 1; // 2 attempts total (primary + 1 retry)
+  const PER_IMAGE_TIMEOUT = 75_000; // 75s per image — leaves room for Seedream fallback
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
