@@ -994,12 +994,12 @@ serve(async (req) => {
       body.quality || config.fixed_settings.quality || "standard";
     let model = getModelForQuality(quality);
     // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
-    if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
+    if (body.model?.imageUrl) model = "gemini-3-pro-image-preview";
     // Force Pro model for interior design (architectural preservation needs highest fidelity)
     const isInterior = (config.ui_config as Record<string, unknown>)?.show_room_type_picker === true;
-    if (isInterior) model = "google/gemini-3-pro-image-preview";
+    if (isInterior) model = "gemini-3-pro-image-preview";
     // Force Pro model for multi-product flat lay (multiple reference images need highest fidelity)
-    if (body.additional_products?.length) model = "google/gemini-3-pro-image-preview";
+    if (body.additional_products?.length) model = "gemini-3-pro-image-preview";
 
     // Inject interior design fields into the product object so buildVariationPrompt can access them
     const productWithExtras = {

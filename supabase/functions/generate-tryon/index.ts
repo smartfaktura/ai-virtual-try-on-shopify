@@ -741,7 +741,7 @@ serve(async (req) => {
         // Fallback tier 2: if Seedream also failed, try Flash as last resort
         if (base64Url === null) {
           console.warn(`Seedream returned null — falling back to gemini-3.1-flash-image-preview for image ${i + 1}`);
-          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
+          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "gemini-3.1-flash-image-preview", body.pose.imageUrl);
         }
 
         if (base64Url) {
