@@ -659,6 +659,7 @@ async function generateImage(
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
         continue;
       }
+      if (isTimeout) return null; // Return null on timeout to trigger Seedream fallback
       throw error;
     }
   }
