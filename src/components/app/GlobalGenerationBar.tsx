@@ -255,9 +255,6 @@ export function GlobalGenerationBar() {
                         <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
                           <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{member.name[0]}</AvatarFallback>
                         </Avatar>
-                        {isProcessing && (
-                          <span className="absolute -inset-0.5 rounded-full border-[1.5px] border-transparent border-t-primary animate-spin pointer-events-none" />
-                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate text-foreground">
