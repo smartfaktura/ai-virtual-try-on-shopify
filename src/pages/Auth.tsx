@@ -329,7 +329,7 @@ export default function Auth() {
         toast.error('Could not resend link. Please try again.');
       }
     } else {
-      setResendTimer(30);
+      setResendTimer(60);
       toast.success('New link sent! Check your inbox.');
     }
   };
