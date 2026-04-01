@@ -525,19 +525,21 @@ export default function CatalogGenerate() {
             if (!url) return;
             // Find the job that produced this image for a descriptive filename
             let filename = `catalog-${i + 1}.jpg`;
+            let found = false;
             let imgIdx = 0;
             for (const j of batchState.jobs) {
+              if (found) break;
               if (j.status === 'completed') {
                 for (const imgUrl of j.images) {
-                    if (imgIdx === i) {
+                  if (imgIdx === i) {
                     const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
                     const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
                     filename = `${safeName}_${safeShot}.jpg`;
+                    found = true;
                     break;
                   }
                   imgIdx++;
                 }
-                if (filename !== `catalog-${i + 1}.jpg`) break;
               }
             }
             fetch(url).then(r => r.blob()).then(blob => {

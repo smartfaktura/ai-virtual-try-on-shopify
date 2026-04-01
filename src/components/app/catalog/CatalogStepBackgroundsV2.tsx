@@ -1,7 +1,10 @@
 import { BACKGROUNDS } from '@/lib/catalogEngine';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const POPULAR_BACKGROUND = 'studio_white';
 
 interface CatalogStepBackgroundsV2Props {
   selectedBackgroundId: string | null;
@@ -46,6 +49,15 @@ export function CatalogStepBackgroundsV2({
               {isSelected && (
                 <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-sm">
                   <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                </div>
+              )}
+
+              {/* Popular badge */}
+              {bg.id === POPULAR_BACKGROUND && !isSelected && (
+                <div className="absolute top-2.5 left-2.5">
+                  <Badge variant="secondary" className="text-[9px] gap-1 shadow-sm">
+                    <Star className="w-2.5 h-2.5" /> Popular
+                  </Badge>
                 </div>
               )}
 

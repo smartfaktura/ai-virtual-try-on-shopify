@@ -65,7 +65,7 @@ export function CatalogStepShots({
       <TooltipProvider delayDuration={200}>
         {onModelShots.length > 0 && (
           <Collapsible open={onModelOpen} onOpenChange={setOnModelOpen}>
-            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-1 group">
+            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-1 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg">
               <Camera className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">On-Model</span>
               <Badge variant="secondary" className="text-[9px] mr-1">{onModelShots.length}</Badge>
@@ -89,7 +89,7 @@ export function CatalogStepShots({
 
         {productOnlyShots.length > 0 && (
           <Collapsible open={productOnlyOpen} onOpenChange={setProductOnlyOpen}>
-            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-1 group">
+            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-1 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg">
               <Layers className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">Product-Only</span>
               <Badge variant="secondary" className="text-[9px] mr-1">{productOnlyShots.length}</Badge>

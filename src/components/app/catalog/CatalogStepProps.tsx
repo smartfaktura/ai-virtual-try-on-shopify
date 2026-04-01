@@ -357,7 +357,7 @@ export function CatalogStepProps({
                                     className="inline-flex items-center gap-1 text-[9px] bg-primary/10 text-primary rounded-md pl-0.5 pr-1.5 py-0.5 font-medium"
                                   >
                                     <div className="w-4 h-4 rounded overflow-hidden bg-muted flex-shrink-0">
-                                      <img src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
+                                      <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
                                     </div>
                                     {p.title.length > 12 ? p.title.slice(0, 10) + '…' : p.title}
                                     <button
