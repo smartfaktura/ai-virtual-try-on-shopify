@@ -978,9 +978,8 @@ export default function Generate() {
         nextMap.delete(model.modelId);
       } else {
         if (isFreeUser && next.size >= 1) {
-          // Free users: replace single selection
-          next.clear();
-          nextMap.clear();
+          toast.info('Free plan allows 1 model per generation. Upgrade for more.');
+          return prev;
         }
         next.add(model.modelId);
         nextMap.set(model.modelId, model);
