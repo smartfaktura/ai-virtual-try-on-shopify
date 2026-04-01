@@ -605,6 +605,7 @@ export default function CatalogGenerate() {
             productOnlyMode={productOnlyMode}
             backgroundId={selectedBackgroundId}
             selectedShots={selectedShots}
+            selectedPropCount={selectedPropIds.size}
             totalImages={totalImages}
             totalCredits={totalCredits}
             currentStep={step}
