@@ -65,11 +65,13 @@ async function classifyScene(imageBase64: string, token: string): Promise<SceneM
 // Perspective category detection
 // ---------------------------------------------------------------------------
 
-type PerspectiveCategory = 'macro' | 'angle' | 'context';
+type PerspectiveCategory = 'macro' | 'angle' | 'context' | 'top_down';
 
 function detectCategory(label: string): PerspectiveCategory {
   const l = label.toLowerCase();
+  if (l.includes('super macro') || l.includes('texture')) return 'macro';
   if (l.includes('close') || l.includes('macro')) return 'macro';
+  if (l.includes('top-down') || l.includes('top down') || l.includes('flat lay') || l.includes('overhead') || l.includes('bird')) return 'top_down';
   if (l.includes('wide') || l.includes('environment')) return 'context';
   return 'angle';
 }
@@ -95,6 +97,15 @@ function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string):
 - The human skin/body visible in frame must match the source image exactly — same skin tone, same body area.
 - Lighting: Raking light at 15–30° to reveal material texture. Skin should look natural, not over-smoothed.`;
 
+    case 'top_down':
+      return `PHOTOGRAPHY DNA — TOP-DOWN / FLAT LAY (ON-MODEL):
+- Lens: 50mm at f/8, camera mounted directly overhead at exact 90° perpendicular to the ground plane.
+- The model is lying down or the camera is positioned directly above looking straight down at the model and product.
+- Framing: Full product and relevant body area visible from above. Show the top silhouette and how the product sits on/against the body.
+- Lighting: Soft even overhead light with minimal shadows — dual strip softboxes flanking the camera from above.
+- The model's body, skin tone, and styling must match the source image exactly.
+- DO NOT tilt the camera — maintain perfectly perpendicular overhead angle.`;
+
     case 'context':
       return `PHOTOGRAPHY DNA — WIDE/ENVIRONMENT (ON-MODEL):
 - Lens: 35mm at f/5.6, natural perspective.
@@ -107,15 +118,20 @@ function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string):
 
     default: {
       const isBack = label.toLowerCase().includes('back');
-      const sideNote = label.toLowerCase().includes('left')
-        ? 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
-        : label.toLowerCase().includes('right')
-          ? 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
+      const l = label.toLowerCase();
+      const sideNote = l.includes('left')
+        ? l.includes('45')
+          ? 'Camera positioned at 45° to the model\'s front-left. Both the front face and left side of the body/garment are visible, creating a three-quarter view with natural depth.'
+          : 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
+        : l.includes('right')
+          ? l.includes('45')
+            ? 'Camera positioned at 45° to the model\'s front-right. Both the front face and right side of the body/garment are visible, creating a three-quarter view with natural depth.'
+            : 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
           : '';
 
       return `PHOTOGRAPHY DNA — ON-MODEL ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring both the model and product are tack-sharp.
-- Camera height: At the model's torso midpoint — straight-on, not looking down or up.
+- Camera height: At the model's torso midpoint — straight-on, not looking down or up.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic hero angle.' : ''}
 - Framing: Model fills 70–80% of the frame. Same body coverage as the source (full body, upper body, etc.).
 - The model rotates naturally to present the requested angle — the camera moves around the model.
 ${isBack ? '- Back-specific: Model\'s back is facing camera. Show rear construction of garment, back panel, any visible labels, the way fabric falls across the back and shoulders. The model\'s head may be slightly turned or facing away.' : ''}
@@ -137,6 +153,15 @@ function getProductOnlyPhotographyDNA(category: PerspectiveCategory, label: stri
 - Depth: Visible micro-texture — individual thread counts on fabric, leather pore structure, metal brushing direction, paint flake edges.
 - DO NOT smooth textures. Preserve every imperfection visible in the source.`;
 
+    case 'top_down':
+      return `PHOTOGRAPHY DNA — TOP-DOWN / FLAT LAY:
+- Lens: 50mm at f/8, camera mounted directly overhead at exact 90° perpendicular to the surface.
+- Framing: Product centered in frame, showing the full top silhouette. Reveal top-facing design elements — logos, closures, top panels, zippers, clasps.
+- Lighting: Soft even overhead light with minimal shadows — dual strip softboxes flanking the camera from above. No harsh directional shadows that obscure top details.
+- Surface: Same surface/background as the source image. The product rests naturally on its base.
+- DO NOT tilt the camera — maintain perfectly perpendicular overhead angle.
+- DO NOT add props unless the source image contained them.`;
+
     case 'context':
       return `PHOTOGRAPHY DNA — WIDE/ENVIRONMENT:
 - Lens: 35mm at f/5.6, natural perspective with slight wide-angle depth.
@@ -148,15 +173,20 @@ function getProductOnlyPhotographyDNA(category: PerspectiveCategory, label: stri
 
     default: {
       const isBack = label.toLowerCase().includes('back');
-      const sideNote = label.toLowerCase().includes('left')
-        ? 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
-        : label.toLowerCase().includes('right')
-          ? 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
+      const l = label.toLowerCase();
+      const sideNote = l.includes('left')
+        ? l.includes('45')
+          ? 'Camera positioned at 45° to the product\'s front-left. Both the front face and left side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
+          : 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
+        : l.includes('right')
+          ? l.includes('45')
+            ? 'Camera positioned at 45° to the product\'s front-right. Both the front face and right side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
+            : 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
           : '';
 
       return `PHOTOGRAPHY DNA — PRODUCT ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring the entire product is tack-sharp from nearest edge to farthest.
-- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.
+- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic e-commerce hero angle.' : ''}
 - Framing: Product fills 70–80% of the frame with consistent margins on all sides. Match the exact same scale as a front-facing hero shot.
 ${isBack ? '- Back-specific: Show all rear construction details — back panel seams, interior lining edge, care labels if visible, rear pocket construction, heel counter on shoes. If the product has a label or tag on the back, it must be legible.' : ''}
 ${sideNote ? `- Side-specific: ${sideNote}` : ''}
@@ -175,6 +205,11 @@ function getEnvironmentRules(category: PerspectiveCategory, mode: SceneMode): st
     return mode === 'on-model'
       ? `ENVIRONMENT — PRESERVE SOURCE CONTEXT (ON-MODEL): Maintain the same environmental style, mood, and setting from the source image. If the source shows a street, interior, studio, or outdoor scene, stay in that EXACT same type of environment with consistent materials, tones, and props. The model interacts naturally with the space. Maintain the same lighting direction and color temperature as the source. The model + product must remain the clear visual hero.`
       : `ENVIRONMENT — PRESERVE SOURCE CONTEXT: Maintain the same environmental style, mood, and setting from the source image. If the source has a specific background (street, studio, interior, outdoor), stay in that EXACT same type of environment with consistent materials, tones, and surface. Do NOT introduce a new or different background. Maintain the same lighting direction and color temperature as the source. The product must remain the clear visual hero.`;
+  }
+  if (category === 'top_down') {
+    return mode === 'on-model'
+      ? `ENVIRONMENT — TOP-DOWN SURFACE (ON-MODEL): The surface beneath the model and product must match the source image — same floor, same fabric, same material. The camera looks straight down. Lighting is even and overhead to minimize shadows. Maintain the same color temperature and tonal palette as the source.`
+      : `ENVIRONMENT — TOP-DOWN SURFACE: The surface beneath the product must match the source image exactly — same material, color, and texture. The camera looks straight down at 90°. Lighting is even and overhead. Do NOT introduce a new surface or background. Maintain the same color temperature as the source.`;
   }
   return mode === 'on-model'
     ? `ENVIRONMENT — MATCH SOURCE EXACTLY (ON-MODEL): Match the EXACT background, surface, and environment from [PRODUCT IMAGE]. Same backdrop color/texture, same surface material, same lighting setup. Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. The lighting direction, color temperature (5500K daylight), and background must be identical to the source image. The model stands/poses on the same surface as in the source.`
