@@ -195,7 +195,7 @@ export function useVideoProject() {
         prompt: builtPrompt.prompt,
         duration: params.duration,
         aspectRatio: params.aspectRatio,
-        mode: 'std',
+        mode: 'pro',
         negativePrompt: builtPrompt.negative_prompt,
         cfgScale: builtPrompt.cfg_scale,
         withAudio: params.audioMode === 'ambient',

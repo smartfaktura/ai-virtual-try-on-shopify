@@ -108,7 +108,7 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     const prompt = (body.prompt as string) || "";
     const duration = (body.duration as string) || "5";
     const modelName = (body.model_name as string) || "kling-v3";
-    const mode = (body.mode as string) || "std";
+    const mode = (body.mode as string) || "pro";
     const aspectRatio = (body.aspect_ratio as string) || "16:9";
     const negativePrompt = body.negative_prompt as string | undefined;
     const cfgScale = body.cfg_scale as number | undefined;
