@@ -116,13 +116,13 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
           >
             Recreate this <ArrowRight className="w-3 h-3" />
           </button>
-        ) : (
+        ) : !hidePrompt ? (
           <div className="text-center">
             <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">
               {isPreset ? item.data.prompt : item.data.name}
             </p>
           </div>
-        )}
+        ) : null}
 
         {/* Product chip or scene label for items without thumbnails */}
         {productName && !productThumb && (
