@@ -563,6 +563,17 @@ export default function CatalogGenerate() {
           )}
 
           {step === 6 && (
+            <CatalogStepProps
+              allProducts={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
+              heroProductIds={selectedProductIds}
+              selectedPropIds={selectedPropIds}
+              onPropSelectionChange={setSelectedPropIds}
+              onBack={() => setStep(5)}
+              onNext={() => setStep(7)}
+            />
+          )}
+
+          {step === 7 && (
             <CatalogStepReviewV2
               products={products.filter(p => selectedProductIds.has(p.id))}
               models={allModels.filter(m => selectedModelIds.has(m.modelId))}
@@ -570,11 +581,15 @@ export default function CatalogGenerate() {
               fashionStyleId={fashionStyle}
               backgroundId={selectedBackgroundId}
               selectedShots={selectedShots}
+              stylingProps={Array.from(selectedPropIds).map(id => {
+                const p = products.find(pr => pr.id === id);
+                return p ? { id: p.id, title: p.title, imageUrl: p.images[0]?.url || '' } : null;
+              }).filter(Boolean) as { id: string; title: string; imageUrl: string }[]}
               totalImages={totalImages}
               totalCredits={totalCredits}
               balance={balance}
               isGenerating={isGenerating}
-              onBack={() => setStep(5)}
+              onBack={() => setStep(6)}
               onGenerate={handleGenerate}
               onOpenBuyModal={openBuyModal}
             />
