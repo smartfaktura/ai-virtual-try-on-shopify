@@ -28,8 +28,11 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { Package, Palette, Users, Image, Camera, Gem, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
+import { downloadDropAsZip } from '@/lib/dropDownload';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Package, Palette, Users, Image, Camera, Gem, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock, Download, LayoutList } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
