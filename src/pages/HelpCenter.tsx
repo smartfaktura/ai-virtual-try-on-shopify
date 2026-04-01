@@ -77,8 +77,8 @@ const faqCategories = [
         a: 'Yes! Workflows support batch generation for multiple products at once. Select your products, choose a workflow, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Workflows activity section.',
       },
       {
-        q: 'What are Creative Drops?',
-        a: 'Creative Drops are automated, recurring visual runs. Choose your products, select your Workflows, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+        q: 'What is the Content Calendar?',
+        a: 'The Content Calendar automates recurring visual runs. Choose your products, select your Templates, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
       },
       {
         q: 'Can I upscale my images?',

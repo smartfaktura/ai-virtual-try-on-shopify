@@ -402,7 +402,7 @@ export function GlobalGenerationBar() {
                   const hasFreestyle = visibleActive.some((g) => g.job_type === 'freestyle');
                   const hasVideo = visibleActive.some((g) => g.job_type === 'video');
                   const targetPath = hasCreativeDrop ? '/app/creative-drops' : hasUpscale ? '/app/library' : hasVideo ? '/app/video/animate' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
-                  const targetLabel = hasCreativeDrop ? 'View in Creative Drops' : hasUpscale ? 'View in Library' : hasVideo ? 'View in Animate' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
+                  const targetLabel = hasCreativeDrop ? 'View in Content Calendar' : hasUpscale ? 'View in Library' : hasVideo ? 'View in Animate' : hasFreestyle ? 'View in Freestyle' : 'View in Templates';
                   return (
                     <Button
                       size="sm"

@@ -290,7 +290,7 @@ export function HowItWorks() {
                 <h3 className="text-2xl font-bold text-foreground">Get a Visual Set</h3>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                Receive 6–20 brand-ready images in seconds. Same product, endless scenes. Or schedule Creative Drops and get fresh visuals every month, automatically.
+                Receive 6–20 brand-ready images in seconds. Same product, endless scenes. Or schedule your Content Calendar and get fresh visuals every month, automatically.
               </p>
             </div>
 

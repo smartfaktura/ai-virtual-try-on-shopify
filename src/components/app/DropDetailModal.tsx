@@ -243,7 +243,7 @@ export function DropDetailModal({ open, onClose, drop }: DropDetailModalProps) {
             {/* Source + title */}
             <div className="space-y-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                Creative Drop
+                Content Calendar
               </p>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">
                 {title}

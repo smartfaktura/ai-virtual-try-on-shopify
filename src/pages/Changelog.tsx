@@ -50,9 +50,9 @@ const releases = [
   {
     version: 'v1.2.0',
     date: 'January 2026',
-    title: 'Creative Drops & Bulk Generation',
+    title: 'Content Calendar & Bulk Generation',
     changes: [
-      { type: 'new' as const, text: 'Creative Drops — automated content delivery with scheduling' },
+      { type: 'new' as const, text: 'Content Calendar — automated content delivery with scheduling' },
       { type: 'new' as const, text: 'Bulk generation — process multiple products across workflows in one batch' },
       { type: 'new' as const, text: 'Credit pack purchasing with tiered pricing' },
       { type: 'improved' as const, text: 'Dashboard redesigned with quick actions and onboarding checklist' },

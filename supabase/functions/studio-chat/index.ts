@@ -103,7 +103,7 @@ The platform has two main ways to create images:
 
 **Freestyle** (/app/freestyle) — Open-ended AI generation with full creative control via text prompts.
 
-**Creative Drops** (/app/creative-drops) — Scheduled automatic content generation batches.
+**Content Calendar** (/app/creative-drops) — Scheduled automatic content generation batches.
 
 **Picture Perspectives** (/app/perspectives) — Generate multi-angle views of any product from a single source image. Creates front, back, left-side, right-side, close-up, and detail shots. Perfect for marketplace listings (Amazon, Etsy, Shopify) that need multiple angles. Works with both product-only and on-model images.
 - CTA: [[Generate Perspectives|/app/perspectives]]
@@ -125,7 +125,7 @@ Available routes and when to use them:
 - [[Set Up Brand Profile|/app/brand-profiles]] — when talking about brand consistency or suggesting they define their brand
 - [[Upload Products|/app/products]] — when they need to add products first before generating
 - [[Add New Product|/app/products/new]] — when they want to upload a specific product right now
-- [[Creative Drops|/app/creative-drops]] — when suggesting automated scheduled content creation
+- [[Content Calendar|/app/creative-drops]] — when suggesting automated scheduled content creation
 - [[View Library|/app/library]] — when suggesting they review their generated images
 - [[Browse Discover|/app/discover]] — when suggesting inspiration or community presets
 - [[Generate Video|/app/video]] — when suggesting they turn images into video content
@@ -165,7 +165,7 @@ SUBSCRIPTION PLANS:
 - **Free**: 20 credits (~4 images), all templates, 1 brand profile, 1 product, 0 video credits
 - **Starter** ($39/mo): 500 credits (~100 images), 2 video credits, Virtual Try-On, 3 brand profiles, 10 products
 - **Growth** ($79/mo, most popular): 1,500 credits (~300 images), 5 video credits, priority queue, 10 brand profiles, 100 products
-- **Pro** ($179/mo): 4,500 credits (~900 images), 15 video credits, Creative Drops, unlimited brand profiles & products
+- **Pro** ($179/mo): 4,500 credits (~900 images), 15 video credits, Content Calendar, unlimited brand profiles & products
 - **Enterprise**: Custom pricing, unlimited everything, dedicated account manager
 - Annual billing saves ~17% on all paid plans
 
@@ -223,7 +223,7 @@ function buildSystemPrompt(pageUrl?: string): string {
     '/app/workflows': 'Templates page — they are browsing available templates.',
     '/app/freestyle': 'Freestyle generation — they are creating images with custom prompts.',
     '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
-    '/app/creative-drops': 'Creative Drops — they are managing scheduled content generation.',
+    '/app/creative-drops': 'Content Calendar — they are managing scheduled content generation.',
     '/app/products': 'Products page — they are managing their product catalog.',
     '/app/products/new': 'Add Product page — they are uploading a new product.',
     '/app/library': 'Library — they are reviewing their generated images.',

@@ -20,7 +20,7 @@ const PAGE_CHIPS: Record<string, string[]> = {
   '/app/workflows': ['Which workflow fits my product?', 'Try-on vs Product Listing?', 'How much does it cost?'],
   '/app/freestyle': ['Help me write a prompt', 'What quality should I pick?', 'Tips for better results'],
   '/app/perspectives': ['How do perspectives work?', 'Best source image tips?', 'How many credits per angle?'],
-  '/app/creative-drops': ['How do Creative Drops work?', 'Set up my first drop', 'How much does a drop cost?'],
+  '/app/creative-drops': ['How does the Content Calendar work?', 'Set up my first drop', 'How much does a drop cost?'],
   '/app/products': ['How do I upload products?', 'Can I import from Shopify?', 'Upload from my phone'],
   '/app/library': ['How do I upscale?', 'Can I generate video from this?', 'Submit to Discover'],
   '/app/discover': ['How do I use a preset?', 'What are featured items?', 'Save to my collection'],

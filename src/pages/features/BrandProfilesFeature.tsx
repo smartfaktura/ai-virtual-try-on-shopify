@@ -15,7 +15,7 @@ const benefits = [
   {
     icon: BookmarkCheck,
     title: 'Reusable Presets',
-    description: 'Create once, use forever. Apply your Brand Profile to any workflow, Creative Drop, or freestyle generation.',
+    description: 'Create once, use forever. Apply your Brand Profile to any template, Content Calendar, or freestyle generation.',
   },
   {
     icon: Users2,
@@ -33,7 +33,7 @@ const steps = [
   {
     number: '02',
     title: 'Attach to Workflows',
-    description: 'Link your Brand Profile to any workflow or Creative Drop. The AI incorporates your guidelines into every generation.',
+    description: 'Link your Brand Profile to any template or Content Calendar. The AI incorporates your guidelines into every generation.',
   },
   {
     number: '03',

@@ -158,7 +158,7 @@ export default function AdminStatus() {
           <MetricCard title="Products" value={platformStats?.total_products ?? '—'} icon={Package} loading={platformLoading} />
           <MetricCard title="Videos" value={platformStats?.total_videos ?? '—'} icon={Video} loading={platformLoading} />
           <MetricCard title="Brand Profiles" value={platformStats?.total_brand_profiles ?? '—'} icon={Palette} loading={platformLoading} />
-          <MetricCard title="Creative Drops" value={platformStats?.total_drops ?? '—'} icon={Sparkles} loading={platformLoading} />
+          <MetricCard title="Content Calendar" value={platformStats?.total_drops ?? '—'} icon={Sparkles} loading={platformLoading} />
         </div>
       </div>
 
