@@ -96,36 +96,7 @@ function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<s
   return scored.slice(0, count).map(s => s.preset);
 }
 
-function EcommerceImageFrame({
-  src,
-  alt,
-  loading = 'lazy',
-}: {
-  src: string;
-  alt: string;
-  loading?: 'eager' | 'lazy';
-}) {
-  return (
-    <div className="relative isolate h-full w-full overflow-hidden bg-muted">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 scale-110 bg-cover bg-center opacity-40 blur-2xl"
-        style={{ backgroundImage: `url(${src})` }}
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/5 to-background/10"
-      />
-      <ShimmerImage
-        src={src}
-        alt={alt}
-        wrapperClassName="relative z-10 h-full w-full"
-        className="h-full w-full scale-[0.84] object-cover object-center"
-        loading={loading}
-      />
-    </div>
-  );
-}
+/* EcommerceImageFrame removed – using simple ShimmerImage + object-cover */
 
 /* ─── COMPONENT ─── */
 
