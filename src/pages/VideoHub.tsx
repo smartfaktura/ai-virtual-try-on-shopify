@@ -106,7 +106,7 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           />
         )}
         <img
-          src={getOptimizedUrl(video.source_image_url, { width: 400, quality: 50 })}
+          src={getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 })}
           alt=""
           loading="lazy"
           decoding="async"
