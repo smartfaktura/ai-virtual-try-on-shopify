@@ -422,7 +422,7 @@ export default function Generate() {
   const [imageCount, setImageCount] = useState<'1' | '2' | '3' | '4'>('1');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [selectedAspectRatios, setSelectedAspectRatios] = useState<Set<AspectRatio>>(new Set());
-  const [quality, setQuality] = useState<ImageQuality>('standard');
+  const [quality, setQuality] = useState<ImageQuality>('high');
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [selectedFramings, setSelectedFramings] = useState<Set<string>>(new Set(['auto']));
 
@@ -978,9 +978,8 @@ export default function Generate() {
         nextMap.delete(model.modelId);
       } else {
         if (isFreeUser && next.size >= 1) {
-          // Free users: replace single selection
-          next.clear();
-          nextMap.clear();
+          toast.info('Free plan allows 1 model per generation. Upgrade for more.');
+          return prev;
         }
         next.add(model.modelId);
         nextMap.set(model.modelId, model);
@@ -3618,7 +3617,7 @@ export default function Generate() {
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                  {filteredModels.map(model => (
                    <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModels.has(model.modelId)} onSelect={() => handleSelectModel(model)} />
                  ))}
