@@ -24,6 +24,7 @@ interface CatalogStepReviewV2Props {
   fashionStyleId: FashionStyleId | null;
   backgroundId: string | null;
   selectedShots: Set<CatalogShotId>;
+  stylingProps: PropItem[];
   totalImages: number;
   totalCredits: number;
   balance: number;
