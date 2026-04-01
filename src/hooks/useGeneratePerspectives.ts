@@ -153,6 +153,15 @@ function getProductOnlyPhotographyDNA(category: PerspectiveCategory, label: stri
 - Depth: Visible micro-texture — individual thread counts on fabric, leather pore structure, metal brushing direction, paint flake edges.
 - DO NOT smooth textures. Preserve every imperfection visible in the source.`;
 
+    case 'top_down':
+      return `PHOTOGRAPHY DNA — TOP-DOWN / FLAT LAY:
+- Lens: 50mm at f/8, camera mounted directly overhead at exact 90° perpendicular to the surface.
+- Framing: Product centered in frame, showing the full top silhouette. Reveal top-facing design elements — logos, closures, top panels, zippers, clasps.
+- Lighting: Soft even overhead light with minimal shadows — dual strip softboxes flanking the camera from above. No harsh directional shadows that obscure top details.
+- Surface: Same surface/background as the source image. The product rests naturally on its base.
+- DO NOT tilt the camera — maintain perfectly perpendicular overhead angle.
+- DO NOT add props unless the source image contained them.`;
+
     case 'context':
       return `PHOTOGRAPHY DNA — WIDE/ENVIRONMENT:
 - Lens: 35mm at f/5.6, natural perspective with slight wide-angle depth.
@@ -164,15 +173,20 @@ function getProductOnlyPhotographyDNA(category: PerspectiveCategory, label: stri
 
     default: {
       const isBack = label.toLowerCase().includes('back');
-      const sideNote = label.toLowerCase().includes('left')
-        ? 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
-        : label.toLowerCase().includes('right')
-          ? 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
+      const l = label.toLowerCase();
+      const sideNote = l.includes('left')
+        ? l.includes('45')
+          ? 'Camera positioned at 45° to the product\'s front-left. Both the front face and left side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
+          : 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
+        : l.includes('right')
+          ? l.includes('45')
+            ? 'Camera positioned at 45° to the product\'s front-right. Both the front face and right side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
+            : 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
           : '';
 
       return `PHOTOGRAPHY DNA — PRODUCT ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring the entire product is tack-sharp from nearest edge to farthest.
-- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.
+- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic e-commerce hero angle.' : ''}
 - Framing: Product fills 70–80% of the frame with consistent margins on all sides. Match the exact same scale as a front-facing hero shot.
 ${isBack ? '- Back-specific: Show all rear construction details — back panel seams, interior lining edge, care labels if visible, rear pocket construction, heel counter on shoes. If the product has a label or tag on the back, it must be legible.' : ''}
 ${sideNote ? `- Side-specific: ${sideNote}` : ''}
