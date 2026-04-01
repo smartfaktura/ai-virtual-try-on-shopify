@@ -473,7 +473,7 @@ export function CatalogStepProducts({
             {/* Mini thumbnails — hide on small screens */}
             <div className="hidden sm:flex -space-x-2">
               {selectedProducts.slice(0, 5).map(p => (
-                <img
+                <ShimmerImage
                   key={p.id}
                   src={getOptimizedUrl(p.image_url, { quality: 40 })}
                   alt={p.title}
