@@ -1,33 +1,23 @@
 
 
-# 3 Changes: Model Grid 6-per-row, Free User Model Toast, Default High Quality
+# Improve Image Size Selector UX
 
-## 1. Model grid: 6 columns per row
+## Problem
+The "Select at least 1" warning text is small, uses only `text-destructive` (red text), and blends into the layout — easy to miss. The overall Image Size section needs better visual hierarchy and clearer validation feedback.
 
-**Current**: `grid-cols-2 sm:grid-cols-3 md:grid-cols-4` in Generate.tsx (line 3621) and `grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8` in CatalogStepModels.tsx
+## Changes — `src/components/app/AspectRatioPreview.tsx`
 
-**New**: `grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6` in Generate.tsx — gives 6 on desktop, scales down nicely on mobile.
+### 1. Make "Select at least 1" more prominent
+- Replace the small red text with a visible inline alert/badge style: add a background (`bg-destructive/10`), padding, rounded corners, and an `AlertCircle` icon so it stands out
+- Move it below the grid (instead of floating right of the header) so users see it after scanning the options
 
-CatalogStepModels already shows 6+ so no change needed there.
+### 2. Improve selected/unselected contrast
+- Selected state: stronger ring (`ring-2 ring-primary`) and darker background (`bg-primary/10`)
+- Unselected state: lighter border (`border-border/60`) to make the difference more obvious
+- Add a small checkmark icon overlay on selected cards
 
-### Files
-- `src/pages/Generate.tsx` line 3621 — update grid classes
+### 3. Better header
+- Add a subtle helper text below "Image Size" like `"Tap to select one or more sizes"` in muted text
 
-## 2. Free user model toast (like scene toast)
-
-**Current** (Generate.tsx ~line 980): Free users silently replace the single model selection with no feedback.
-
-**New**: Show `toast.info("Free plan allows 1 model per generation. Upgrade for more.")` and return `prev` (block, don't replace) — exactly like the scene handler at line 1016-1018.
-
-### Files
-- `src/pages/Generate.tsx` lines 980-984 — replace silent swap with toast + return
-
-## 3. Default quality to `'high'`
-
-**Current**: `useState<ImageQuality>('standard')` in Generate.tsx line 425
-
-**New**: `useState<ImageQuality>('high')`
-
-### Files
-- `src/pages/Generate.tsx` line 425 — change default from `'standard'` to `'high'`
+These same improvements apply to both `AspectRatioMultiSelector` and `AspectRatioSelector` components in the same file. Single file change.
 
