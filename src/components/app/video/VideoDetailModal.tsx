@@ -185,6 +185,42 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
               </span>
             </div>
 
+            {/* Settings metadata */}
+            {(() => {
+              const s = video.settings_json || {};
+              const entries: [string, string][] = [
+                ['Camera Motion', video.camera_type || (s.cameraMotion as string) || ''],
+                ['Style', (s.category as string) || ''],
+                ['Scene Type', (s.sceneType as string) || ''],
+                ['Motion Goal', (s.motionGoalId as string) || ''],
+                ['Subject Motion', (s.subjectMotion as string) || ''],
+                ['Realism', (s.realismLevel as string) || ''],
+                ['Loop Style', (s.loopStyle as string) || ''],
+                ['Audio', (s.audioMode as string) || ''],
+                ['Model', video.model_name || ''],
+              ].filter(([, v]) => v && v !== 'silent');
+
+              if (entries.length === 0) return null;
+
+              const fmt = (v: string) => v.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+              return (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                    Settings
+                  </p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {entries.map(([label, value]) => (
+                      <div key={label} className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground/50 font-medium">{label}</span>
+                        <span className="text-xs text-muted-foreground truncate">{fmt(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Actions */}
             <div className="space-y-2.5 pt-2">
               {isComplete && (
