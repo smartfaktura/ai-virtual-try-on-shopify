@@ -506,13 +506,32 @@ export default function AnimateVideo() {
             {/* Left: Dominant Upload Card */}
             <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Upload your product image</h2>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {bulkMode ? 'Upload your product images' : 'Upload your product image'}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  We'll detect category, scene type, and recommended motion automatically.
+                  {bulkMode
+                    ? 'Select up to 10 images — first image is analyzed to configure settings for all.'
+                    : "We'll detect category, scene type, and recommended motion automatically."}
                 </p>
               </div>
 
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple={bulkMode}
+                onChange={(e) => {
+                  if (bulkMode) {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length > 0) handleBulkAddFiles(files);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  } else {
+                    handleFileSelect(e);
+                  }
+                }}
+                className="hidden"
+              />
 
               <button
                 onClick={() => fileInputRef.current?.click()}
