@@ -106,12 +106,15 @@ export function StudioChat() {
 
   const showChips = messages.length === 0;
 
+  const isCatalogPage = location.pathname.startsWith('/app/catalog');
+
   return (
     <>
       {/* Chat Panel */}
       <div
         className={cn(
-          'fixed bottom-20 left-4 lg:left-[var(--sidebar-offset)] z-40 w-[360px] sm:w-[380px] bg-popover border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out',
+          'fixed bottom-20 z-40 w-[360px] sm:w-[380px] bg-popover border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out',
+          isCatalogPage ? 'right-4' : 'left-4 lg:left-[var(--sidebar-offset)]',
           isOpen
             ? 'opacity-100 translate-y-0 pointer-events-auto h-[500px]'
             : 'opacity-0 translate-y-4 pointer-events-none h-0'
