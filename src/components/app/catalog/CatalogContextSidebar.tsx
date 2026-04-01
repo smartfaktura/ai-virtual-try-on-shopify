@@ -30,6 +30,7 @@ interface CatalogContextSidebarProps {
   totalImages: number;
   totalCredits: number;
   currentStep: number;
+  balance?: number;
 }
 
 export function CatalogContextSidebar({
