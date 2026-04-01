@@ -5,7 +5,7 @@ import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
 import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, type CSSProperties } from 'react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { downloadVideosAsZip } from '@/lib/dropDownload';
@@ -21,12 +21,37 @@ interface RecentVideoCardProps {
   onToggleSelect: () => void;
 }
 
+function getMediaFrameStyle(aspectRatio: string | null | undefined): CSSProperties {
+  if (!aspectRatio || !aspectRatio.includes(':')) {
+    return { width: '100%', height: '100%' };
+  }
+
+  const [width, height] = aspectRatio.split(':').map(Number);
+  if (!width || !height) {
+    return { width: '100%', height: '100%' };
+  }
+
+  const normalizedAspectRatio = `${width} / ${height}`;
+  const cardRatio = 3 / 4;
+  const mediaRatio = width / height;
+
+  return mediaRatio >= cardRatio
+    ? { width: '100%', aspectRatio: normalizedAspectRatio }
+    : { height: '100%', aspectRatio: normalizedAspectRatio };
+}
+
 function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const isComplete = video.status === 'complete' && video.video_url;
   const [hovering, setHovering] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
+  const thumbnailUrl = getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 });
+  const displayAspectRatio =
+    typeof video.settings_json?.aspectRatio === 'string'
+      ? video.settings_json.aspectRatio
+      : video.aspect_ratio;
+  const mediaFrameStyle = getMediaFrameStyle(displayAspectRatio);
 
   useEffect(() => {
     return () => {
@@ -91,27 +116,40 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           </div>
         )}
 
-        {hovering && isComplete && !selectMode && (
-          <video
-            ref={videoRef}
-            src={video.video_url!}
-            poster={getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 })}
-            loop
-            muted
-            playsInline
-            preload="none"
-            onCanPlay={() => setCanPlay(true)}
-            className="absolute inset-0 w-full h-full object-cover bg-transparent"
-            style={{ visibility: isPlaying ? 'visible' : 'hidden' }}
-          />
-        )}
         <img
-          src={getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 })}
+          src={thumbnailUrl}
           alt=""
+          aria-hidden="true"
           loading="lazy"
           decoding="async"
-          className={`w-full h-full object-cover ${isPlaying ? 'invisible' : 'visible'}`}
+          className="absolute inset-0 w-full h-full object-cover scale-105 blur-xl opacity-25"
         />
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative max-h-full max-w-full overflow-hidden" style={mediaFrameStyle}>
+            {hovering && isComplete && !selectMode && (
+              <video
+                ref={videoRef}
+                src={video.video_url!}
+                poster={thumbnailUrl}
+                loop
+                muted
+                playsInline
+                preload="none"
+                onCanPlay={() => setCanPlay(true)}
+                className="absolute inset-0 h-full w-full object-contain bg-transparent"
+                style={{ visibility: isPlaying ? 'visible' : 'hidden' }}
+              />
+            )}
+            <img
+              src={thumbnailUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className={`absolute inset-0 h-full w-full object-contain ${isPlaying ? 'invisible' : 'visible'}`}
+            />
+          </div>
+        </div>
 
         {showStatusBadge && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900 animate-pulse">
