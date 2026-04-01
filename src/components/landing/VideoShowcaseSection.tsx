@@ -34,8 +34,8 @@ export function VideoShowcaseSection() {
         ))}
       </div>
 
-      <div className="flex justify-center mt-10">
-        <Button asChild size="lg" className="gap-2">
+      <div className="flex justify-center mt-14">
+        <Button asChild size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25">
           <Link to="/app/video">
             Start Creating Videos <ArrowRight className="w-4 h-4" />
           </Link>
