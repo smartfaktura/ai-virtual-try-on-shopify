@@ -10,6 +10,9 @@ import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
 import { detectProductCategory } from '@/lib/catalogEngine';
 import { PageHeader } from '@/components/app/PageHeader';
 import { AddProductModal } from '@/components/app/AddProductModal';
+import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
+import { CatalogContextSidebar } from '@/components/app/catalog/CatalogContextSidebar';
+import { CatalogTeamStrip } from '@/components/app/catalog/CatalogTeamStrip';
 import { CatalogStepProducts } from '@/components/app/catalog/CatalogStepProducts';
 import { CatalogStepFashionStyle } from '@/components/app/catalog/CatalogStepFashionStyle';
 import { CatalogStepModelsV2 } from '@/components/app/catalog/CatalogStepModelsV2';
@@ -89,7 +92,7 @@ export default function CatalogGenerate() {
   // Keep ref in sync
   useEffect(() => { generationStartedAtRef.current = generationStartedAt; }, [generationStartedAt]);
 
-  // Timer effect — only depends on allDone and hasBatch
+  // Timer effect
   useEffect(() => {
     if (hasBatch && !allDone && generationStartedAtRef.current) {
       timerRef.current = setInterval(() => {
@@ -131,7 +134,7 @@ export default function CatalogGenerate() {
   const libraryModels = useMemo(() => [...mockModels, ...customModels.filter(m => !mockModels.some(mm => mm.modelId === m.modelId))], [customModels]);
   const allModels = useMemo(() => [...libraryModels, ...userModelProfiles], [libraryModels, userModelProfiles]);
 
-  // Detect primary category from first selected product
+  // Detect primary category
   const primaryCategory: ProductCategory = useMemo(() => {
     const firstId = Array.from(selectedProductIds)[0];
     const p = products.find(pr => pr.id === firstId);
@@ -142,7 +145,7 @@ export default function CatalogGenerate() {
   const hasModel = selectedModelIds.size > 0 && !productOnlyMode;
   const modelCount = productOnlyMode ? 0 : selectedModelIds.size;
 
-  // Credits — Products × max(1, Models) × Shots × 4
+  // Credits
   const totalImages = selectedProductIds.size * Math.max(1, modelCount) * selectedShots.size;
   const totalCredits = totalImages * CREDITS_PER_IMAGE;
 
@@ -258,7 +261,17 @@ export default function CatalogGenerate() {
     return Math.ceil(avgTime * remaining);
   }, [batchState, elapsedSeconds]);
 
-  // Show preparing state when isGenerating but no batchState yet
+  // Sidebar data
+  const sidebarProducts = useMemo(() => 
+    userProducts.filter(p => selectedProductIds.has(p.id)).map(p => ({ id: p.id, title: p.title, image_url: p.image_url })),
+    [userProducts, selectedProductIds]
+  );
+  const sidebarModels = useMemo(() => 
+    allModels.filter(m => selectedModelIds.has(m.modelId)).map(m => ({ modelId: m.modelId, name: m.name, previewUrl: m.previewUrl })),
+    [allModels, selectedModelIds]
+  );
+
+  // Show preparing state
   if (isGenerating && !batchState) {
     return (
       <div className="space-y-6 pb-32">
@@ -289,9 +302,8 @@ export default function CatalogGenerate() {
         <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
 
         {batchState.allDone ? (
-          /* ── Completion State ── */
           <div className="space-y-6">
-            <div className="rounded-lg border border-border bg-card p-8 text-center space-y-4">
+            <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-7 h-7 text-primary" />
               </div>
@@ -337,7 +349,7 @@ export default function CatalogGenerate() {
             )}
 
             {batchState.failedJobs > 0 && (
-              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 space-y-2">
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-destructive">
                   <AlertTriangle className="w-4 h-4" />
                   {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed
@@ -353,9 +365,8 @@ export default function CatalogGenerate() {
             )}
           </div>
         ) : (
-          /* ── In-Progress State ── */
           <div className="space-y-6">
-            <div className="rounded-lg border border-border bg-card p-8 text-center space-y-4">
+            <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
               <div className="relative mx-auto w-12 h-12">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Camera className="w-5 h-5 text-primary" />
@@ -378,7 +389,6 @@ export default function CatalogGenerate() {
               <p className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">VOVV.AI</p>
             </div>
 
-            {/* Per-product progress */}
             {(() => {
               const productMap = new Map<string, { name: string; total: number; done: number; failed: number }>();
               for (const j of batchState.jobs) {
@@ -451,132 +461,126 @@ export default function CatalogGenerate() {
 
   return (
     <div className="space-y-6 pb-32">
-      <PageHeader title="Catalog Studio" subtitle="Generate consistent product photography across your entire catalog"><div /></PageHeader>
-
-      {/* Minimal stepper */}
-      <div className="flex items-center justify-center gap-0 py-3">
-        {STEPS.map((s, i) => {
-          const isActive = step === s.number;
-          const isDone = step > s.number;
-          const canClick = canNavigateTo(s.number);
-          return (
-            <div key={s.number} className="flex items-center">
-              <button
-                onClick={() => canClick && setStep(s.number)}
-                disabled={!canClick}
-                className="flex flex-col items-center gap-1 group"
-              >
-                <div className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all border',
-                  isActive && 'bg-primary text-primary-foreground border-primary',
-                  isDone && !isActive && 'bg-primary/10 text-primary border-primary/20 cursor-pointer',
-                  !isActive && !isDone && canClick && 'bg-card text-muted-foreground border-border cursor-pointer hover:border-primary/30',
-                  !isActive && !isDone && !canClick && 'bg-muted text-muted-foreground/30 border-border/40',
-                )}>
-                  {isDone ? <Check className="w-3.5 h-3.5" /> : s.number}
-                </div>
-                <span className={cn(
-                  'text-[10px] font-medium transition-colors',
-                  isActive ? 'text-primary' : isDone ? 'text-primary/60' : 'text-muted-foreground/60',
-                )}>
-                  {s.label}
-                </span>
-              </button>
-              {i < STEPS.length - 1 && (
-                <div className={cn(
-                  'w-8 sm:w-14 h-px mx-1 -mt-4',
-                  isDone ? 'bg-primary/30' : 'bg-border',
-                )} />
-              )}
-            </div>
-          );
-        })}
+      {/* Header with team strip */}
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader title="Catalog Studio" subtitle="Generate consistent product photography across your entire catalog"><div /></PageHeader>
+        <div className="hidden md:block pt-1">
+          <CatalogTeamStrip />
+        </div>
       </div>
 
-      {/* Step Content */}
-      {step === 1 && (
-        <CatalogStepProducts
-          products={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
-          productsLoading={productsLoading}
-          selectedProductIds={selectedProductIds}
-          onProductSelectionChange={setSelectedProductIds}
-          maxProducts={CATALOG_MAX_PRODUCTS}
-          onNext={() => setStep(2)}
-          canProceed={canStep1}
-          onAddProduct={() => setShowAddProduct(true)}
-        />
-      )}
+      {/* Stepper */}
+      <CatalogStepper
+        steps={STEPS}
+        currentStep={step}
+        canNavigateTo={canNavigateTo}
+        onStepClick={setStep}
+      />
 
-      {step === 2 && (
-        <CatalogStepFashionStyle
-          selectedStyle={fashionStyle}
-          onStyleChange={setFashionStyle}
-          onBack={() => setStep(1)}
-          onNext={() => setStep(3)}
-          canProceed={canStep2}
-        />
-      )}
+      {/* Main content with sidebar */}
+      <div className="flex gap-6">
+        {/* Step content */}
+        <div className="flex-1 min-w-0">
+          {step === 1 && (
+            <CatalogStepProducts
+              products={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
+              productsLoading={productsLoading}
+              selectedProductIds={selectedProductIds}
+              onProductSelectionChange={setSelectedProductIds}
+              maxProducts={CATALOG_MAX_PRODUCTS}
+              onNext={() => setStep(2)}
+              canProceed={canStep1}
+              onAddProduct={() => setShowAddProduct(true)}
+            />
+          )}
 
-      {step === 3 && (
-        <CatalogStepModelsV2
-          libraryModels={libraryModels}
-          userModels={userModelProfiles}
-          selectedModelIds={selectedModelIds}
-          productOnlyMode={productOnlyMode}
-          onModelToggle={handleModelToggle}
-          onProductOnlyToggle={handleProductOnlyToggle}
-          onBack={() => setStep(2)}
-          onNext={() => setStep(4)}
-          canProceed={canStep3}
-        />
-      )}
+          {step === 2 && (
+            <CatalogStepFashionStyle
+              selectedStyle={fashionStyle}
+              onStyleChange={setFashionStyle}
+              onBack={() => setStep(1)}
+              onNext={() => setStep(3)}
+              canProceed={canStep2}
+            />
+          )}
 
-      {step === 4 && (
-        <CatalogStepBackgroundsV2
-          selectedBackgroundId={selectedBackgroundId}
-          onBackgroundChange={setSelectedBackgroundId}
-          onBack={() => setStep(3)}
-          onNext={() => setStep(5)}
-          canProceed={canStep4}
-        />
-      )}
+          {step === 3 && (
+            <CatalogStepModelsV2
+              libraryModels={libraryModels}
+              userModels={userModelProfiles}
+              selectedModelIds={selectedModelIds}
+              productOnlyMode={productOnlyMode}
+              onModelToggle={handleModelToggle}
+              onProductOnlyToggle={handleProductOnlyToggle}
+              onBack={() => setStep(2)}
+              onNext={() => setStep(4)}
+              canProceed={canStep3}
+            />
+          )}
 
-      {step === 5 && (
-        <CatalogStepShots
-          productCategory={primaryCategory}
-          hasModel={hasModel}
-          selectedShots={selectedShots}
-          onToggleShot={handleShotToggle}
-          onBack={() => setStep(4)}
-          onNext={() => setStep(6)}
-          canProceed={canStep5}
-          totalImages={totalImages}
-          totalCredits={totalCredits}
-          balance={balance}
-          onOpenBuyModal={openBuyModal}
-          onPreselectRecommended={handlePreselectRecommended}
-          productCount={selectedProductIds.size}
-          modelCount={modelCount}
-        />
-      )}
+          {step === 4 && (
+            <CatalogStepBackgroundsV2
+              selectedBackgroundId={selectedBackgroundId}
+              onBackgroundChange={setSelectedBackgroundId}
+              onBack={() => setStep(3)}
+              onNext={() => setStep(5)}
+              canProceed={canStep4}
+            />
+          )}
 
-      {step === 6 && (
-        <CatalogStepReviewV2
-          products={products.filter(p => selectedProductIds.has(p.id))}
-          models={allModels.filter(m => selectedModelIds.has(m.modelId))}
-          productOnlyMode={productOnlyMode}
-          fashionStyleId={fashionStyle}
-          backgroundId={selectedBackgroundId}
-          selectedShots={selectedShots}
-          totalImages={totalImages}
-          totalCredits={totalCredits}
-          balance={balance}
-          isGenerating={isGenerating}
-          onBack={() => setStep(5)}
-          onGenerate={handleGenerate}
-          onOpenBuyModal={openBuyModal}
-        />
-      )}
+          {step === 5 && (
+            <CatalogStepShots
+              productCategory={primaryCategory}
+              hasModel={hasModel}
+              selectedShots={selectedShots}
+              onToggleShot={handleShotToggle}
+              onBack={() => setStep(4)}
+              onNext={() => setStep(6)}
+              canProceed={canStep5}
+              totalImages={totalImages}
+              totalCredits={totalCredits}
+              balance={balance}
+              onOpenBuyModal={openBuyModal}
+              onPreselectRecommended={handlePreselectRecommended}
+              productCount={selectedProductIds.size}
+              modelCount={modelCount}
+            />
+          )}
+
+          {step === 6 && (
+            <CatalogStepReviewV2
+              products={products.filter(p => selectedProductIds.has(p.id))}
+              models={allModels.filter(m => selectedModelIds.has(m.modelId))}
+              productOnlyMode={productOnlyMode}
+              fashionStyleId={fashionStyle}
+              backgroundId={selectedBackgroundId}
+              selectedShots={selectedShots}
+              totalImages={totalImages}
+              totalCredits={totalCredits}
+              balance={balance}
+              isGenerating={isGenerating}
+              onBack={() => setStep(5)}
+              onGenerate={handleGenerate}
+              onOpenBuyModal={openBuyModal}
+            />
+          )}
+        </div>
+
+        {/* Context sidebar — hidden on mobile */}
+        <div className="hidden lg:block w-64 flex-shrink-0">
+          <CatalogContextSidebar
+            selectedProducts={sidebarProducts}
+            fashionStyleId={fashionStyle}
+            models={sidebarModels}
+            productOnlyMode={productOnlyMode}
+            backgroundId={selectedBackgroundId}
+            selectedShots={selectedShots}
+            totalImages={totalImages}
+            totalCredits={totalCredits}
+            currentStep={step}
+          />
+        </div>
+      </div>
 
       <BuyCreditsModal />
       <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct} onProductAdded={() => setShowAddProduct(false)} />

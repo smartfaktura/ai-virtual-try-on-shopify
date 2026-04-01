@@ -21,7 +21,7 @@ export function CatalogStepBackgroundsV2({
         <p className="text-sm text-muted-foreground mt-1">Choose one studio background for your entire set.</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {BACKGROUNDS.map(bg => {
           const isSelected = selectedBackgroundId === bg.id;
           return (
@@ -29,28 +29,31 @@ export function CatalogStepBackgroundsV2({
               key={bg.id}
               onClick={() => onBackgroundChange(bg.id)}
               className={cn(
-                'relative rounded-lg border overflow-hidden transition-all',
+                'relative rounded-xl overflow-hidden transition-all duration-150 group',
                 isSelected
-                  ? 'border-primary ring-1 ring-primary/30'
-                  : 'border-border hover:border-primary/30',
+                  ? 'ring-2 ring-primary shadow-md'
+                  : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm',
               )}
             >
+              {/* Full-bleed color swatch */}
               <div
                 className="aspect-[4/3] w-full"
                 style={{ backgroundColor: bg.hex }}
               />
 
+              {/* Selected checkmark */}
               {isSelected && (
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                  <Check className="w-3 h-3 text-primary-foreground" />
+                <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
               )}
 
-              <div className="px-3 py-2 bg-card">
-                <p className="text-xs font-medium text-foreground">{bg.label}</p>
+              {/* Label overlay */}
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-3 py-2.5">
+                <p className="text-xs font-medium text-white">{bg.label}</p>
                 <div className="flex items-center justify-between mt-0.5">
-                  <p className="text-[10px] text-muted-foreground">{bg.shadowStyle} shadows</p>
-                  <span className="text-[9px] font-mono text-muted-foreground/70">{bg.hex}</span>
+                  <p className="text-[10px] text-white/70">{bg.shadowStyle} shadows</p>
+                  <span className="text-[9px] font-mono text-white/50">{bg.hex}</span>
                 </div>
               </div>
             </button>

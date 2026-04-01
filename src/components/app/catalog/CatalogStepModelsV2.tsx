@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChevronLeft, ChevronRight, UserX, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ModelProfile } from '@/types';
@@ -21,6 +23,18 @@ export function CatalogStepModelsV2({
   libraryModels, userModels, selectedModelIds, productOnlyMode, onModelToggle, onProductOnlyToggle,
   onBack, onNext, canProceed,
 }: CatalogStepModelsV2Props) {
+  const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
+
+  const filteredLibrary = useMemo(() => {
+    if (genderFilter === 'all') return libraryModels;
+    return libraryModels.filter(m => m.gender === genderFilter);
+  }, [libraryModels, genderFilter]);
+
+  const filteredUser = useMemo(() => {
+    if (genderFilter === 'all') return userModels;
+    return userModels.filter(m => m.gender === genderFilter);
+  }, [userModels, genderFilter]);
+
   const selectionLabel = productOnlyMode
     ? 'Product Only'
     : selectedModelIds.size === 0
@@ -29,64 +43,79 @@ export function CatalogStepModelsV2({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-base font-semibold text-foreground">Select Models</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pick one or more models — each multiplies your shot count. Or choose product-only.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-semibold text-foreground">Select Models</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Pick one or more models — each multiplies your shot count. Or choose product-only.
+          </p>
+        </div>
         {selectedModelIds.size > 0 && !productOnlyMode && (
-          <Badge variant="default" className="mt-2 text-[10px]">{selectionLabel}</Badge>
+          <Badge variant="default" className="text-[10px] flex-shrink-0">{selectionLabel}</Badge>
         )}
       </div>
 
-      {/* No Model card */}
+      {/* Product Only toggle */}
       <button
         onClick={onProductOnlyToggle}
         className={cn(
-          'w-full rounded-lg border p-4 text-left transition-all flex items-center gap-3',
+          'w-full rounded-xl border p-4 text-left transition-all duration-150 flex items-center gap-4',
           productOnlyMode
-            ? 'border-primary bg-primary/5'
-            : 'border-border hover:border-primary/30 bg-card',
+            ? 'border-primary ring-2 ring-primary/20 bg-card'
+            : 'border-border hover:border-primary/30 bg-card hover:shadow-sm',
         )}
       >
         <div className={cn(
-          'w-9 h-9 rounded-full flex items-center justify-center',
+          'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
           productOnlyMode ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
         )}>
           <UserX className="w-4 h-4" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium">No Model — Product Only</p>
+          <p className="text-sm font-medium text-foreground">No Model — Product Only</p>
           <p className="text-[11px] text-muted-foreground">Packshots, flat lays, and product-focused images</p>
         </div>
         {productOnlyMode && (
-          <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-            <Check className="w-2.5 h-2.5 text-primary-foreground" />
+          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+            <Check className="w-3 h-3 text-primary-foreground" />
           </div>
         )}
       </button>
 
-      {/* Library Models */}
-      <div className="space-y-2">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
-          {libraryModels.map(model => (
-            <ModelSelectorCard
-              key={model.modelId}
-              model={model}
-              isSelected={selectedModelIds.has(model.modelId)}
-              onSelect={() => onModelToggle(model.modelId)}
-            />
-          ))}
-        </div>
+      {/* Gender filter */}
+      <div className="flex items-center justify-between">
+        <Tabs value={genderFilter} onValueChange={(v) => setGenderFilter(v as any)}>
+          <TabsList className="h-8">
+            <TabsTrigger value="all" className="text-[11px] px-3 h-6">All</TabsTrigger>
+            <TabsTrigger value="female" className="text-[11px] px-3 h-6">Women</TabsTrigger>
+            <TabsTrigger value="male" className="text-[11px] px-3 h-6">Men</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
+      {/* Library Models */}
+      {filteredLibrary.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+            {filteredLibrary.map(model => (
+              <ModelSelectorCard
+                key={model.modelId}
+                model={model}
+                isSelected={selectedModelIds.has(model.modelId)}
+                onSelect={() => onModelToggle(model.modelId)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* User Models */}
-      {userModels.length > 0 && (
+      {filteredUser.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">My Models</span>
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
-            {userModels.map(model => (
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+            {filteredUser.map(model => (
               <ModelSelectorCard
                 key={model.modelId}
                 model={model}

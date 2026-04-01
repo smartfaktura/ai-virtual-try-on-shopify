@@ -1,8 +1,19 @@
 import { FASHION_STYLES } from '@/lib/catalogEngine';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FashionStyleId } from '@/types/catalog';
+
+const STYLE_MOODS: Record<FashionStyleId, string[]> = {
+  minimal_studio: ['hsl(0 0% 95%)', 'hsl(0 0% 85%)', 'hsl(0 0% 75%)'],
+  premium_neutral: ['hsl(35 20% 90%)', 'hsl(30 15% 80%)', 'hsl(25 12% 65%)'],
+  editorial_clean: ['hsl(220 15% 92%)', 'hsl(215 10% 80%)', 'hsl(210 8% 60%)'],
+  streetwear_clean: ['hsl(0 0% 20%)', 'hsl(0 0% 40%)', 'hsl(0 0% 65%)'],
+  luxury_soft: ['hsl(40 30% 92%)', 'hsl(35 25% 82%)', 'hsl(30 20% 70%)'],
+};
+
+const RECOMMENDED_STYLE: FashionStyleId = 'premium_neutral';
 
 interface CatalogStepFashionStyleProps {
   selectedStyle: FashionStyleId | null;
@@ -25,25 +36,45 @@ export function CatalogStepFashionStyle({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {FASHION_STYLES.map(style => {
           const isSelected = selectedStyle === style.id;
+          const isRecommended = style.id === RECOMMENDED_STYLE;
+          const moods = STYLE_MOODS[style.id] || ['hsl(0 0% 90%)', 'hsl(0 0% 80%)', 'hsl(0 0% 70%)'];
+
           return (
             <button
               key={style.id}
               onClick={() => onStyleChange(style.id)}
               className={cn(
-                'relative rounded-lg border p-5 text-left transition-all',
+                'relative rounded-xl border overflow-hidden text-left transition-all duration-150 group',
                 isSelected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/30 bg-card',
+                  ? 'border-primary ring-2 ring-primary/20 bg-card'
+                  : 'border-border hover:border-primary/30 bg-card hover:shadow-sm',
               )}
             >
-              {isSelected && (
-                <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                  <Check className="w-3 h-3 text-primary-foreground" />
+              {/* Color mood strip */}
+              <div className="h-2 flex">
+                {moods.map((color, i) => (
+                  <div key={i} className="flex-1" style={{ backgroundColor: color }} />
+                ))}
+              </div>
+
+              <div className="p-4 space-y-2">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{style.label}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{style.description}</p>
+                  </div>
+                  {isSelected && (
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-2">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  )}
                 </div>
-              )}
-              <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-foreground">{style.label}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{style.description}</p>
+
+                {isRecommended && !isSelected && (
+                  <Badge variant="secondary" className="text-[9px] gap-1">
+                    <Star className="w-2.5 h-2.5" /> Popular
+                  </Badge>
+                )}
               </div>
             </button>
           );
@@ -55,7 +86,7 @@ export function CatalogStepFashionStyle({
           <ChevronLeft className="w-4 h-4" /> Back
         </Button>
         <Button onClick={onNext} disabled={!canProceed} className="gap-2">
-          Next: Model <ChevronRight className="w-4 h-4" />
+          Next: Models <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
     </div>
