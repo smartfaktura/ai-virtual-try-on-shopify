@@ -100,7 +100,7 @@ const benefits = [
   {
     icon: Zap,
     title: 'No Prompts Needed',
-    description: 'Select a workflow and your product — our AI handles the rest. No writing prompts, no guessing parameters.',
+    description: 'Select a template and your product — our AI handles the rest. No writing prompts, no guessing parameters.',
   },
   {
     icon: Layers,
