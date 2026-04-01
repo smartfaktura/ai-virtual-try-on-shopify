@@ -82,6 +82,7 @@ export default function CatalogGenerate() {
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Elapsed time tracking
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
