@@ -825,7 +825,7 @@ export function buildProductLookLock(
   detectedCategory: ProductCategory,
 ): ProductLookLock {
   const heroSlot = getHeroSlot(detectedCategory);
-  const wardrobe = resolveSupportWardrobe(heroSlot, session.fashionStyle, session.modelAudience);
+  const wardrobe = resolveSupportWardrobe(heroSlot, session.fashionStyle, session.modelAudience, detectedCategory);
   const wardrobePrompt = buildSupportWardrobePrompt(wardrobe, detectedCategory);
   const anchorShotId = getAnchorShotId(detectedCategory, !!session.modelId);
 
