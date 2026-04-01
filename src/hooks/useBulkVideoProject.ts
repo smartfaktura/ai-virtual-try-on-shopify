@@ -66,11 +66,15 @@ export function useBulkVideoProject() {
 
         updateItem(img.id, 'generating');
 
+        // Merge per-image overrides with shared params
+        const overrides = perImageParams?.get(img.id) || {};
+        const mergedParams = { ...params, ...overrides };
+
         // Run pipeline — this enqueues a job, doesn't wait for completion
         await videoProject.runAnimatePipeline({
           imageUrl: img.url,
-          ...params,
-          userPrompt: params.userPrompt || undefined,
+          ...mergedParams,
+          userPrompt: mergedParams.userPrompt || undefined,
         });
 
         // Mark as queued (the actual generation happens async in the queue)

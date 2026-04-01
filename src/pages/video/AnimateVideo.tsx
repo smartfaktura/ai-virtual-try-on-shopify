@@ -363,11 +363,14 @@ export default function AnimateVideo() {
         return;
       }
 
+      const sharedParams = { category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
+          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+          aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined };
+
       runBulkAnimatePipeline(
         readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
-        { category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
-          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
-          aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined }
+        sharedParams,
+        customizePerImage ? perImageSettings : undefined
       );
       return;
     }
