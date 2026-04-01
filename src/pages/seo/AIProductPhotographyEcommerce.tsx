@@ -264,6 +264,7 @@ export default function AIProductPhotographyEcommerce() {
                     item={{ type: 'preset', data: img }}
                     onClick={() => setSelectedItem({ type: 'preset', data: img })}
                     hideLabels
+                    hidePrompt
                   />
                 </div>
               ))}
