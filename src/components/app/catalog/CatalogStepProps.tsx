@@ -274,7 +274,7 @@ export function CatalogStepProps({
               {totalWithProps > 0 && (
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[10px]">{totalWithProps}/{combos.length} shots have props</Badge>
-                  <button onClick={handleClearAll} className="text-[10px] text-muted-foreground hover:text-foreground underline">Clear all</button>
+                  <button onClick={handleClearAll} className="text-[10px] text-muted-foreground hover:text-foreground underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Clear all</button>
                 </div>
               )}
             </div>
