@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getShotDefinition } from '@/lib/catalogEngine';
 import { cn } from '@/lib/utils';
@@ -121,7 +121,7 @@ function PropPickerModal({
                     key={p.id}
                     onClick={() => toggleItem(p.id)}
                     className={cn(
-                      'relative rounded-lg border p-2 text-left transition-all hover:shadow-sm',
+                      'relative rounded-lg border p-2 text-left transition-all hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                       checked ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'border-border hover:border-foreground/20',
                     )}
                   >
@@ -274,7 +274,7 @@ export function CatalogStepProps({
               {totalWithProps > 0 && (
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[10px]">{totalWithProps}/{combos.length} shots have props</Badge>
-                  <button onClick={handleClearAll} className="text-[10px] text-muted-foreground hover:text-foreground underline">Clear all</button>
+                  <button onClick={handleClearAll} className="text-[10px] text-muted-foreground hover:text-foreground underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Clear all</button>
                 </div>
               )}
             </div>
@@ -361,8 +361,9 @@ export function CatalogStepProps({
                                     </div>
                                     {p.title.length > 12 ? p.title.slice(0, 10) + '…' : p.title}
                                     <button
+                                      aria-label="Remove prop"
                                       onClick={() => handleRemoveProp(combo.key, p.id)}
-                                      className="hover:text-destructive transition-colors ml-0.5"
+                                      className="hover:text-destructive transition-colors ml-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                       <X className="w-2.5 h-2.5" />
                                     </button>

@@ -485,6 +485,7 @@ export default function CatalogGenerate() {
                           {info.done}/{info.total}
                           {info.failed > 0 && <span className="text-destructive"> · {info.failed} failed</span>}
                         </p>
+                        <Progress value={Math.round(((info.done + info.failed) / info.total) * 100)} className="h-1 mt-1" />
                       </div>
                       <Badge variant={info.done === info.total ? 'default' : 'secondary'} className="text-[10px]">
                         {info.done === info.total ? 'Done' : `${Math.round((info.done / info.total) * 100)}%`}
