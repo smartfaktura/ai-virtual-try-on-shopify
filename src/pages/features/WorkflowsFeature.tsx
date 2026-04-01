@@ -100,7 +100,7 @@ const benefits = [
   {
     icon: Zap,
     title: 'No Prompts Needed',
-    description: 'Select a workflow and your product — our AI handles the rest. No writing prompts, no guessing parameters.',
+    description: 'Select a template and your product — our AI handles the rest. No writing prompts, no guessing parameters.',
   },
   {
     icon: Layers,
@@ -110,7 +110,7 @@ const benefits = [
   {
     icon: Palette,
     title: 'Brand-Consistent Output',
-    description: 'Pair workflows with Brand Profiles to ensure every image matches your visual identity automatically.',
+    description: 'Pair templates with Brand Profiles to ensure every image matches your visual identity automatically.',
   },
 ];
 
@@ -122,8 +122,8 @@ const steps = [
   },
   {
     number: '02',
-    title: 'Pick a Workflow',
-    description: 'Choose from curated workflows like "On-Model Editorial", "Lifestyle Scene", or "Social Media Pack". Each one is a complete visual pipeline.',
+    title: 'Pick a Template',
+    description: 'Choose from curated templates like "On-Model Editorial", "Lifestyle Scene", or "Social Media Pack". Each one is a complete visual pipeline.',
   },
   {
     number: '03',
@@ -212,19 +212,19 @@ export default function WorkflowsFeature() {
 
   return (
     <PageLayout>
-      <SEOHead title="AI Photography Workflows — VOVV AI" description="Six purpose-built AI photography workflows: Virtual Try-On, Product Listing, Flat Lay, Mirror Selfie, UGC, and Interior Staging. Professional results in 60 seconds." canonical={`${SITE_URL}/features/workflows`} />
+      <SEOHead title="AI Photography Templates — VOVV AI" description="Six purpose-built AI photography templates: Virtual Try-On, Product Listing, Flat Lay, Mirror Selfie, UGC, and Interior Staging. Professional results in 60 seconds." canonical={`${SITE_URL}/features/workflows`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Settings2 className="w-4 h-4" />
-            Workflows
+            Templates
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6">
             6 Visual Pipelines.<br />One Upload. Zero Prompts.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            From on-model editorial to flat lays, UGC selfies to interior staging — each workflow is a complete creative pipeline that turns a single product image into dozens of studio-quality visuals.
+            From on-model editorial to flat lays, UGC selfies to interior staging — each template is a complete creative pipeline that turns a single product image into dozens of studio-quality visuals.
           </p>
           <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
             Start Free — No Credit Card
@@ -255,7 +255,7 @@ export default function WorkflowsFeature() {
       {/* Benefits */}
       <section className="py-20 bg-muted/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Why Workflows?</h2>
+          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Why Templates?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {benefits.map((b) => (
               <Card key={b.title} className="bg-card border-border">
@@ -295,7 +295,7 @@ export default function WorkflowsFeature() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-4">Stop Scheduling Photoshoots. Start Generating.</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Sign up free and run your first workflow in under 2 minutes. Upload one image, pick a workflow, get studio-quality results. No credit card required.
+            Sign up free and run your first template in under 2 minutes. Upload one image, pick a template, get studio-quality results. No credit card required.
           </p>
           <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
             Get Started Free

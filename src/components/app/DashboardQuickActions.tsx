@@ -4,7 +4,7 @@ import { Upload, Sparkles, Layers, Palette } from 'lucide-react';
 const ACTIONS = [
   { label: 'Upload Product', icon: Upload, path: '/app/products' },
   { label: 'Generate Images', icon: Sparkles, path: '/app/freestyle' },
-  { label: 'Browse Workflows', icon: Layers, path: '/app/workflows' },
+  { label: 'Browse Templates', icon: Layers, path: '/app/workflows' },
   { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
 ];
 

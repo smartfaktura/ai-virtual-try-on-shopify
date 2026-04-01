@@ -19,7 +19,7 @@ import type { Workflow } from '@/types/workflow';
 const WORKFLOW_OPTIONS = [
   {
     name: 'Product Editorial',
-    displayName: 'Product Editorial Workflow',
+    displayName: 'Product Editorial',
     slug: 'product-listing-set',
     subtitle: 'Turn your product into a campaign',
     sampleId: 'sample_listing_ring',
@@ -28,7 +28,7 @@ const WORKFLOW_OPTIONS = [
   },
   {
     name: 'Virtual Try-On',
-    displayName: 'Virtual Try-On Workflow',
+    displayName: 'Virtual Try-On',
     slug: 'virtual-try-on-set',
     subtitle: 'See your product on real people',
     sampleId: 'sample_tryon_crop_top',
@@ -37,7 +37,7 @@ const WORKFLOW_OPTIONS = [
   },
   {
     name: 'UGC / Selfie',
-    displayName: 'UGC / Selfie Workflow',
+    displayName: 'UGC / Selfie',
     slug: 'selfie-ugc-set',
     subtitle: 'Create content that feels real & social',
     sampleId: 'sample_ugc_ice_roller',
@@ -232,7 +232,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
           className="text-xs text-muted-foreground gap-1.5"
           onClick={() => { onOpenChange(false); navigate('/app/workflows'); }}
         >
-          Browse all workflows <ArrowRight className="w-3 h-3" />
+          Browse all templates <ArrowRight className="w-3 h-3" />
         </Button>
       </div>
     </div>

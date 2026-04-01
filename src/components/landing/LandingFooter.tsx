@@ -3,7 +3,7 @@ import { Instagram, Facebook } from 'lucide-react';
 
 const footerLinks = {
   Product: [
-    { label: 'Workflows', to: '/features/workflows' },
+    { label: 'Templates', to: '/features/workflows' },
     { label: 'Pricing', to: '/pricing' },
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
     { label: 'Creative Drops', to: '/features/creative-drops' },

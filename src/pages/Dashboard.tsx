@@ -394,7 +394,7 @@ export default function Dashboard() {
               <span><strong className="text-foreground">{balance}</strong> credits available</span>
             </div>
             <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => setStartModalOpen(true)}>
-              Start with a Workflow
+              Start with a Template
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -428,13 +428,13 @@ export default function Dashboard() {
                 <Layers className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground">Workflows</h3>
+                <h3 className="text-lg font-bold text-foreground">Templates</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Pick a ready-made workflow — Try-On, Product Listing, UGC, Flat Lay — and get a complete visual set in one click.
+                  Pick a ready-made template — Try-On, Product Listing, UGC, Flat Lay — and get a complete visual set in one click.
                 </p>
               </div>
               <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
-                Browse Workflows
+                Browse Templates
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -459,7 +459,7 @@ export default function Dashboard() {
         {/* Explore Workflows — compact animated cards */}
         {workflows.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Templates</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[...workflows].sort((a, b) => {
                 const order: Record<string, number> = {
@@ -601,13 +601,13 @@ export default function Dashboard() {
               <Layers className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground">Workflows</h3>
+              <h3 className="text-lg font-bold text-foreground">Templates</h3>
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                Outcome-driven visual sets — Try-On, Product Listing, UGC, Flat Lay. Pick a workflow and get a complete set.
+                Outcome-driven visual sets — Try-On, Product Listing, UGC, Flat Lay. Pick a template and get a complete set.
               </p>
             </div>
             <Button className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
-              Browse Workflows
+              Browse Templates
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
@@ -662,7 +662,7 @@ export default function Dashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Source</TableHead>
-                    <TableHead>Workflow</TableHead>
+                    <TableHead>Template</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Credits</TableHead>
                     <TableHead>Created</TableHead>

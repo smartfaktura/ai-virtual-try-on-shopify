@@ -39,7 +39,7 @@ const steps = [
     description: 'Product Photos or Virtual Try-On - your choice.',
     icon: Sparkles,
     path: '/app/workflows',
-    cta: 'Go to Workflows',
+    cta: 'Go to Templates',
     memberName: 'Kenji',
   },
   {

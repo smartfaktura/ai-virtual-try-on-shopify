@@ -50,7 +50,7 @@ const drops = [
 
 const bullets = [
   'Choose your products once',
-  'Pick your visual workflows',
+  'Pick your visual templates',
   'Fresh visuals arrive every month',
 ];
 

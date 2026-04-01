@@ -51,7 +51,7 @@ const features = [
     label: 'Auto Drops',
     headline: 'Schedule once. Fresh visuals arrive on autopilot.',
     description:
-      'Recurring Creative Drops tied to your catalog. Assign workflows and brand profiles \u2014 new assets generated weekly or monthly.',
+      'Recurring Creative Drops tied to your catalog. Assign templates and brand profiles \u2014 new assets generated weekly or monthly.',
     image: f('features/feature-auto-drops.jpg'),
   },
   {
