@@ -1250,10 +1250,16 @@ export default function AnimateVideo() {
                   <div className="flex gap-2">
                     {ASPECT_RATIOS.map((ar) => (
                       <button key={ar.value} onClick={() => setAspectRatio(ar.value)}
-                        className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
+                        className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border transition-colors',
                           aspectRatio === ar.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
                         )}>
-                        {ar.label}
+                        <span className={cn('rounded-[2px] border', ar.iconW, ar.iconH,
+                          aspectRatio === ar.value ? 'border-primary-foreground bg-primary-foreground/20' : 'border-current bg-current/10'
+                        )} />
+                        <span className="flex flex-col items-start leading-none">
+                          <span className="font-medium">{ar.label}</span>
+                          <span className="text-[10px] opacity-70">{ar.desc}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
