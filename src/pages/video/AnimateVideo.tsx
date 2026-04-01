@@ -489,6 +489,15 @@ export default function AnimateVideo() {
         <div />
       </PageHeader>
 
+      <LibraryPickerModal
+        open={libraryPickerOpen}
+        onOpenChange={setLibraryPickerOpen}
+        onSelect={handleLibrarySelect}
+        multiSelect={bulkMode}
+        onMultiSelect={handleBulkLibrarySelect}
+        maxSelect={Math.max(1, 10 - bulkImages.length)}
+      />
+
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
       {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
         <>
