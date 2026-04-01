@@ -295,7 +295,7 @@ export default function WorkflowsFeature() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-4">Stop Scheduling Photoshoots. Start Generating.</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Sign up free and run your first workflow in under 2 minutes. Upload one image, pick a workflow, get studio-quality results. No credit card required.
+            Sign up free and run your first template in under 2 minutes. Upload one image, pick a template, get studio-quality results. No credit card required.
           </p>
           <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
             Get Started Free

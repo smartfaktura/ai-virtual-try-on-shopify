@@ -220,7 +220,7 @@ function buildSystemPrompt(pageUrl?: string): string {
 
   const pageContextMap: Record<string, string> = {
     '/app/': 'Dashboard — they can see their overview, recent creations, and quick actions.',
-    '/app/workflows': 'Workflows page — they are browsing available workflow templates.',
+    '/app/workflows': 'Templates page — they are browsing available templates.',
     '/app/freestyle': 'Freestyle generation — they are creating images with custom prompts.',
     '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
     '/app/creative-drops': 'Creative Drops — they are managing scheduled content generation.',
