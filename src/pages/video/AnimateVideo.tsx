@@ -495,35 +495,44 @@ export default function AnimateVideo() {
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
       {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
         <>
-          {/* Bulk mode toggle for paid users */}
-          {isPaidUser && (
-            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
-              <div className="flex items-center gap-2">
-                <Images className="h-4 w-4 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Batch Mode</p>
-                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
+          {/* Batch Mode toggle — paid vs free */}
+          <div className={cn(
+            'flex items-center justify-between rounded-xl border p-3 transition-colors',
+            isPaidUser ? 'border-border bg-card' : 'border-border/60 bg-muted/20'
+          )}>
+            <div className="flex items-center gap-3">
+              {isPaidUser ? (
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Images className="h-4 w-4 text-primary" />
                 </div>
+              ) : (
+                <img
+                  src={getOptimizedUrl(TEAM_MEMBERS.find(m => m.name === 'Sophia')?.avatar || '', { quality: 60 })}
+                  alt="Sophia"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-background shrink-0"
+                />
+              )}
+              <div>
+                <p className="text-sm font-medium text-foreground">Batch Mode</p>
+                {isPaidUser ? (
+                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Upgrade to any paid plan to animate multiple images at once
+                  </p>
+                )}
               </div>
-              <Switch checked={bulkMode} onCheckedChange={setBulkMode} />
             </div>
-          )}
-          {/* Category Chips Row */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">Works across ecommerce categories</p>
-            <div className="flex flex-wrap gap-1">
-              {PRODUCT_CATEGORIES.map((c) => {
-                const Icon = CATEGORY_ICON_MAP[c.icon];
-                return (
-                  <span
-                    key={c.id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border border-border/50 bg-muted/20 text-muted-foreground/70 hover:bg-muted/40 transition-colors"
-                  >
-                    {Icon && <Icon className="h-2.5 w-2.5" />}
-                    {c.label}
-                  </span>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              {!isPaidUser && (
+                <button
+                  onClick={() => navigate('/app/settings')}
+                  className="text-[10px] font-semibold text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md transition-colors"
+                >
+                  Upgrade
+                </button>
+              )}
+              <Switch checked={bulkMode} onCheckedChange={setBulkMode} disabled={!isPaidUser} />
             </div>
           </div>
 
