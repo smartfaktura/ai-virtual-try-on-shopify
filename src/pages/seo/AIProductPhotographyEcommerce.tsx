@@ -415,6 +415,7 @@ export default function AIProductPhotographyEcommerce() {
                     <DiscoverCard
                       item={{ type: 'preset', data: img }}
                       onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                      hidePrompt
                     />
                   </div>
                 ))}
