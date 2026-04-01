@@ -16,7 +16,7 @@ export function VideoShowcaseSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1 px-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1 px-1 sm:px-2 lg:px-4">
         {videos.map((src, i) => (
           <div
             key={i}
