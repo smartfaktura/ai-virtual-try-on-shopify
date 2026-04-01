@@ -11,14 +11,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { PublicDiscoverDetailModal } from '@/components/app/PublicDiscoverDetailModal';
+import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SITE_URL } from '@/lib/constants';
 import {
   ArrowRight, Upload, Palette, Download, Zap, Camera, ShoppingBag,
   Image as ImageIcon, Mail, Store, LayoutGrid, CheckCircle2, X,
-  Sparkles, RefreshCw, Layers, Eye, Shield
+  Sparkles, RefreshCw, Layers, Eye, Shield, Quote, Clock, TrendingUp
 } from 'lucide-react';
 
-/* ─── useInView hook (matches HowItWorks) ─── */
+/* ─── useInView hook ─── */
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -39,6 +42,31 @@ function useInView(threshold = 0.15) {
 const baseTransition = 'transition-all duration-700 ease-out';
 const hidden = 'opacity-0 translate-y-8';
 const visible = 'opacity-100 translate-y-0';
+
+/* ─── Team avatar row (reusable) ─── */
+
+function TeamAvatarRow({ label = 'Your studio team is ready' }: { label?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center justify-center">
+        {TEAM_MEMBERS.map((member, i) => (
+          <TeamAvatarHoverCard key={member.name} member={member} side="bottom">
+            <ShimmerImage
+              src={getOptimizedUrl(member.avatar, { quality: 60 })}
+              alt={member.name}
+              className="w-10 h-10 rounded-full border-2 border-background object-cover transition-transform duration-200 hover:scale-110 hover:z-10 relative cursor-pointer"
+              wrapperClassName="w-10 h-10 rounded-full"
+              wrapperStyle={{ marginLeft: i === 0 ? 0 : '-0.6rem' }}
+              aspectRatio="1/1"
+              loading="lazy"
+            />
+          </TeamAvatarHoverCard>
+        ))}
+      </div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+    </div>
+  );
+}
 
 /* ─── PAGE CONFIG ─── */
 
@@ -83,14 +111,13 @@ function pickByCategory(presets: DiscoverPreset[], category: string, count = 1, 
 }
 
 function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<string> = new Set()): DiscoverPreset[] {
-  // Prefer presets with product context (ecommerce-relevant), deprioritize model-only beauty shots
   const scored = presets
     .filter(p => !exclude.has(p.id))
     .map(p => {
       let score = 0;
       if (p.product_name || p.product_image_url) score += 3;
       if (p.is_featured) score += 2;
-      if (!p.model_name) score += 1; // pure product shots rank higher for ecommerce
+      if (!p.model_name) score += 1;
       return { preset: p, score };
     })
     .sort((a, b) => b.score - a.score);
@@ -161,7 +188,6 @@ export default function AIProductPhotographyEcommerce() {
 
       {/* ── 1. HERO ── */}
       <section className="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-28">
-        {/* Background effects */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/8 rounded-full blur-3xl opacity-30" />
 
@@ -185,7 +211,7 @@ export default function AIProductPhotographyEcommerce() {
                 <Link to="/discover">See Real Examples</Link>
               </Button>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-6">
+            <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
               {[
                 { icon: Shield, text: 'No credit card required' },
                 { icon: Sparkles, text: '20 free credits' },
@@ -197,42 +223,62 @@ export default function AIProductPhotographyEcommerce() {
                 </div>
               ))}
             </div>
+
+            {/* Team avatars social proof */}
+            <TeamAvatarRow />
           </div>
 
-          {/* Hero visual grid */}
+          {/* Hero visual grid — staggered reveal */}
           {heroImages.length > 0 && (
             <div className="columns-2 md:columns-3 gap-3 md:gap-4 max-w-4xl mx-auto [&>div]:mb-3 md:[&>div]:mb-4">
-              {heroImages.map((img) => (
-                <DiscoverCard
+              {heroImages.map((img, index) => (
+                <div
                   key={img.id}
-                  item={{ type: 'preset', data: img }}
-                  onClick={() => setSelectedItem({ type: 'preset', data: img })}
-                  hideLabels
-                />
+                  className="animate-scale-in will-change-transform"
+                  style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'both' }}
+                >
+                  <DiscoverCard
+                    item={{ type: 'preset', data: img }}
+                    onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                    hideLabels
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* ── 2. PROOF BAR ── */}
+      {/* ── 2. PROOF BAR — Metrics + Testimonial ── */}
       <div ref={proof.ref} className={`${baseTransition} ${proof.inView ? visible : hidden}`}>
-        <section className="py-14 bg-muted/20">
+        <section className="py-14 border-y border-border bg-muted/30">
           <div className="container mx-auto px-4 max-w-5xl">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
               {[
-                { icon: ImageIcon, text: 'One photo → multiple visuals' },
-                { icon: Store, text: 'Stores, ads, email, marketplaces' },
-                { icon: Zap, text: 'Faster than photoshoots' },
-                { icon: Layers, text: 'More scalable than editing' },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex flex-col items-center gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-primary" />
+                { icon: ImageIcon, value: '50,000+', label: 'Visuals generated' },
+                { icon: Clock, value: '12s', label: 'Avg. delivery time' },
+                { icon: TrendingUp, value: '2,000+', label: 'Brands trust VOVV.AI' },
+                { icon: Layers, value: '∞', label: 'Visual styles' },
+              ].map(({ icon: Icon, value, label }) => (
+                <div key={label} className="text-center">
+                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 mb-3">
+                    <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <p className="text-sm font-medium text-foreground">{text}</p>
+                  <p className="text-2xl sm:text-3xl font-semibold text-foreground">{value}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Testimonial */}
+            <div className="max-w-xl mx-auto text-center">
+              <Quote className="w-5 h-5 text-primary/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground italic leading-relaxed">
+                "We replaced 3 monthly photoshoots. Our ad creative is fresher than ever."
+              </p>
+              <p className="text-xs font-medium text-foreground mt-2">
+                — E-commerce brand, Growth plan
+              </p>
             </div>
           </div>
         </section>
@@ -263,13 +309,20 @@ export default function AIProductPhotographyEcommerce() {
                 return (
                   <TabsContent key={tab.id} value={tab.id}>
                     <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-muted">
+                      <div className="relative rounded-2xl overflow-hidden border border-border shadow-md bg-gradient-to-br from-muted to-muted/50 group">
                         {img ? (
-                          <DiscoverCard
-                            item={{ type: 'preset', data: img }}
-                            onClick={() => setSelectedItem({ type: 'preset', data: img })}
-                            hideLabels
-                          />
+                          <>
+                            <DiscoverCard
+                              item={{ type: 'preset', data: img }}
+                              onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                              hideLabels
+                            />
+                            <div className="absolute inset-0 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                              <span className="text-xs font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
+                                Click to explore
+                              </span>
+                            </div>
+                          </>
                         ) : (
                           <div className="w-full aspect-[4/3] flex items-center justify-center text-muted-foreground">
                             <Camera className="h-12 w-12" />
@@ -292,7 +345,7 @@ export default function AIProductPhotographyEcommerce() {
         </section>
       </div>
 
-      {/* ── 4. WHY ECOMMERCE BRANDS ── */}
+      {/* ── 4. WHY ECOMMERCE BRANDS — Staggered cards ── */}
       <div ref={why.ref} className={`${baseTransition} ${why.inView ? visible : hidden}`}>
         <section className="py-20 sm:py-28 bg-muted/20">
           <div className="container mx-auto px-4 max-w-6xl">
@@ -305,8 +358,12 @@ export default function AIProductPhotographyEcommerce() {
                 { icon: Zap, title: 'Move Faster Than Photoshoots', desc: 'Launch campaigns, update product pages, and test creatives without waiting on production.' },
                 { icon: RefreshCw, title: 'Scale Without Bottlenecks', desc: 'Generate multiple visual outputs without designing each asset one by one.' },
                 { icon: Eye, title: 'Stay Visually Consistent', desc: 'Create cohesive images for storefronts, ads, social, and email from a single source.' },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="rounded-2xl border border-border bg-card p-6 space-y-3 shadow-sm hover:shadow-md transition-shadow duration-150">
+              ].map(({ icon: Icon, title, desc }, index) => (
+                <div
+                  key={title}
+                  className={`rounded-2xl border border-border bg-card p-6 space-y-3 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 will-change-transform ${why.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                >
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
@@ -319,7 +376,7 @@ export default function AIProductPhotographyEcommerce() {
         </section>
       </div>
 
-      {/* ── 5. COMPARISON ── */}
+      {/* ── 5. COMPARISON — Stronger visual contrast ── */}
       <div ref={compare.ref} className={`${baseTransition} ${compare.inView ? visible : hidden}`}>
         <section className="py-20 sm:py-28 bg-background">
           <div className="container mx-auto px-4 max-w-5xl">
@@ -327,7 +384,8 @@ export default function AIProductPhotographyEcommerce() {
               Faster Than Photoshoots. More Scalable Than Editing.
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="rounded-2xl border border-border bg-card p-8 space-y-5">
+              {/* Traditional — red-tinted left border */}
+              <div className="rounded-2xl border border-border bg-card p-8 space-y-5 border-l-4 border-l-destructive/50">
                 <h3 className="text-lg font-semibold text-foreground">Traditional Photography</h3>
                 {[
                   'Expensive per-shoot cost',
@@ -343,7 +401,8 @@ export default function AIProductPhotographyEcommerce() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-8 space-y-5">
+              {/* VOVV — primary-tinted left border + glow */}
+              <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-8 space-y-5 border-l-4 border-l-primary shadow-lg shadow-primary/10">
                 <h3 className="text-lg font-semibold text-foreground">VOVV.ai</h3>
                 {[
                   'Start from one existing product photo',
@@ -364,7 +423,7 @@ export default function AIProductPhotographyEcommerce() {
         </section>
       </div>
 
-      {/* ── 6. SHOPIFY SECTION ── */}
+      {/* ── 6. SHOPIFY SECTION — With team avatars ── */}
       <div ref={shopify.ref} className={`${baseTransition} ${shopify.inView ? visible : hidden}`}>
         <section className="relative py-20 sm:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-primary/10" />
@@ -391,6 +450,12 @@ export default function AIProductPhotographyEcommerce() {
                 </div>
               ))}
             </div>
+
+            {/* Team avatars */}
+            <div className="mb-10">
+              <TeamAvatarRow label="Your creative team handles it" />
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button asChild size="lg" className="rounded-full px-8 shadow-lg shadow-primary/25">
                 <Link to="/auth">Start Creating <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -417,12 +482,17 @@ export default function AIProductPhotographyEcommerce() {
             </div>
             {showcaseImages.length > 0 && (
               <div className="columns-2 md:columns-3 lg:columns-4 gap-3 mb-12 [&>div]:mb-3">
-                {showcaseImages.map(img => (
-                  <DiscoverCard
+                {showcaseImages.map((img, index) => (
+                  <div
                     key={img.id}
-                    item={{ type: 'preset', data: img }}
-                    onClick={() => setSelectedItem({ type: 'preset', data: img })}
-                  />
+                    className={`will-change-transform transition-all duration-500 ${showcase.inView ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                    style={{ transitionDelay: `${index * 60}ms` }}
+                  >
+                    <DiscoverCard
+                      item={{ type: 'preset', data: img }}
+                      onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -435,22 +505,29 @@ export default function AIProductPhotographyEcommerce() {
         </section>
       </div>
 
-      {/* ── 8. HOW IT WORKS ── */}
+      {/* ── 8. HOW IT WORKS — Connected steps ── */}
       <div ref={howIt.ref} className={`${baseTransition} ${howIt.inView ? visible : hidden}`}>
         <section className="py-20 sm:py-28 bg-muted/20">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-center mb-14">
               How It Works
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {/* Horizontal connector line — desktop only */}
+              <div className="hidden lg:block absolute top-7 left-[12.5%] right-[12.5%] h-px bg-border" />
+
               {[
                 { icon: Upload, step: '01', title: 'Upload a Product Photo', desc: 'Start with a single product image from your existing catalog.' },
                 { icon: Palette, step: '02', title: 'Choose a Direction', desc: 'Select a visual style, scene, or use case for your ecommerce needs.' },
                 { icon: Camera, step: '03', title: 'Generate Visuals', desc: 'Create ecommerce-ready product images in seconds with AI.' },
                 { icon: Download, step: '04', title: 'Export & Use', desc: 'Download and use across your store, ads, email, or marketplace.' },
-              ].map(({ icon: Icon, step, title, desc }) => (
-                <div key={step} className="text-center space-y-4">
-                  <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+              ].map(({ icon: Icon, step, title, desc }, index) => (
+                <div
+                  key={step}
+                  className={`relative text-center space-y-4 transition-all duration-500 ${howIt.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                  style={{ transitionDelay: `${index * 120}ms` }}
+                >
+                  <div className="relative mx-auto h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center z-10">
                     <Icon className="h-7 w-7 text-primary" />
                   </div>
                   <span className="inline-block text-xs font-semibold text-primary tracking-widest">{step}</span>
@@ -480,8 +557,12 @@ export default function AIProductPhotographyEcommerce() {
                 { icon: Sparkles, title: 'Product Launches', desc: 'Launch with a full visual library before your first sale.' },
                 { icon: RefreshCw, title: 'Seasonal Campaigns', desc: 'Refresh visuals for holidays and seasonal promotions quickly.' },
                 { icon: Eye, title: 'Creative Testing', desc: 'Test multiple visual concepts to find what performs best.' },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="rounded-2xl border border-border bg-card p-5 space-y-2 shadow-sm hover:shadow-md transition-shadow duration-150">
+              ].map(({ icon: Icon, title, desc }, index) => (
+                <div
+                  key={title}
+                  className={`rounded-2xl border border-border bg-card p-5 space-y-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 will-change-transform ${useCases.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                  style={{ transitionDelay: `${index * 60}ms` }}
+                >
                   <Icon className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold text-sm text-foreground">{title}</h3>
                   <p className="text-xs text-muted-foreground">{desc}</p>
@@ -543,7 +624,7 @@ export default function AIProductPhotographyEcommerce() {
         </section>
       </div>
 
-      {/* ── 12. FINAL CTA ── */}
+      {/* ── 12. FINAL CTA — With team avatars + hover cards ── */}
       <section className="relative py-20 sm:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-primary/10" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-primary/8 rounded-full blur-3xl opacity-40" />
@@ -580,10 +661,15 @@ export default function AIProductPhotographyEcommerce() {
               Cancel anytime
             </div>
           </div>
+
+          {/* Team avatars */}
+          <div className="mt-10">
+            <TeamAvatarRow />
+          </div>
         </div>
       </section>
 
-      {/* Detail modal – same as /discover */}
+      {/* Detail modal */}
       <PublicDiscoverDetailModal
         item={selectedItem}
         open={!!selectedItem}
