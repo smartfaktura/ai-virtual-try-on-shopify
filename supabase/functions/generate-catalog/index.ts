@@ -240,7 +240,7 @@ async function completeQueueJob(
               jobType: "catalog",
               errorMessage: errors.join("; "),
               displayName: profile.display_name,
-              workflowName: "Catalog Shot Set",
+              workflowName: "Catalog Studio",
               productName: (payload.product_name as string) || undefined,
             },
           }),
