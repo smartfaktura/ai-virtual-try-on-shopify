@@ -71,7 +71,7 @@ export default function CreativeDropsFeature() {
       {/* Benefits */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Why Creative Drops?</h2>
+          <h2 className="text-2xl font-bold text-foreground text-center mb-10">Why Content Calendar?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {benefits.map((b) => (
               <Card key={b.title} className="bg-card border-border">
