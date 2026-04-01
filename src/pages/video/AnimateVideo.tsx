@@ -1050,17 +1050,8 @@ export default function AnimateVideo() {
                 </Alert>
               )}
 
-              {/* Bulk image grid (shown after analysis when bulk mode is on) */}
-              {bulkMode && isPaidUser && (
-                <BulkImageGrid
-                  images={bulkImages}
-                  maxImages={10}
-                  onAddFiles={handleBulkAddFiles}
-                  onRemoveImage={handleBulkRemoveImage}
-                  disabled={isBulkRunning}
-                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
-                />
-              )}
+
+
 
               {/* Generate */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
