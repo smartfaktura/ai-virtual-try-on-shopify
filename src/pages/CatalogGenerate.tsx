@@ -190,7 +190,8 @@ export default function CatalogGenerate() {
   const canStep3 = modelExplicitlyChosen;
   const canStep4 = selectedBackgroundId !== null;
   const canStep5 = selectedShots.size >= 1;
-  const canStep6 = canStep5;
+  const canStep6 = canStep5; // props step is always passable (optional)
+  const canStep7 = canStep6;
 
   const canNavigateTo = (s: number) => {
     if (s <= step) return true;
@@ -199,6 +200,7 @@ export default function CatalogGenerate() {
     if (s === 4) return canStep1 && canStep2 && canStep3;
     if (s === 5) return canStep1 && canStep2 && canStep3 && canStep4;
     if (s === 6) return canStep1 && canStep2 && canStep3 && canStep4 && canStep5;
+    if (s === 7) return canStep1 && canStep2 && canStep3 && canStep4 && canStep5;
     return false;
   };
 
