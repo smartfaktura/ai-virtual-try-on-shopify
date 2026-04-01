@@ -179,7 +179,16 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           source_image_url: await toSignedUrl(v.source_image_url),
         }))
       );
-      setHistory(signedHistory);
+
+      // Deduplicate by kling_task_id (keep first = newest due to ORDER BY desc)
+      const seen = new Set<string>();
+      const deduped = signedHistory.filter(v => {
+        if (!v.kling_task_id) return true;
+        if (seen.has(v.kling_task_id)) return false;
+        seen.add(v.kling_task_id);
+        return true;
+      });
+      setHistory(deduped);
     } catch (err) {
       console.error('[useGenerateVideo] History fetch error:', err);
     } finally {
@@ -213,9 +222,16 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     const interval = setInterval(() => {
       fetchHistory();
       recoverStuckVideos();
-    }, 15000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [history, fetchHistory, recoverStuckVideos]);
+
+  // Refresh history on window focus
+  useEffect(() => {
+    const onFocus = () => fetchHistory();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchHistory]);
 
   const reset = useCallback(() => {
     queue.reset();
