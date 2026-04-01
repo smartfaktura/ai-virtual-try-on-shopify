@@ -409,18 +409,28 @@ export default function CatalogGenerate() {
             </div>
 
             {(() => {
-              const productMap = new Map<string, { name: string; total: number; done: number; failed: number }>();
+              const productMap = new Map<string, { name: string; imageUrl: string; total: number; done: number; failed: number }>();
               for (const j of batchState.jobs) {
-                const existing = productMap.get(j.productId) || { name: j.productName, total: 0, done: 0, failed: 0 };
+                const existing = productMap.get(j.productId) || { name: j.productName, imageUrl: '', total: 0, done: 0, failed: 0 };
                 existing.total++;
                 if (j.status === 'completed') existing.done++;
                 if (j.status === 'failed') existing.failed++;
+                // Try to find product image
+                if (!existing.imageUrl) {
+                  const prod = products.find(p => p.id === j.productId);
+                  if (prod?.images[0]?.url) existing.imageUrl = prod.images[0].url;
+                }
                 productMap.set(j.productId, existing);
               }
               return (
                 <div className="space-y-1.5">
                   {Array.from(productMap.entries()).map(([pid, info]) => (
                     <div key={pid} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                      {info.imageUrl && (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <ShimmerImage src={info.imageUrl} alt={info.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{info.name}</p>
                         <p className="text-[11px] text-muted-foreground">
