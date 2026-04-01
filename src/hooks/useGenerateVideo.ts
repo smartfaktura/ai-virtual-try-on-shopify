@@ -53,6 +53,7 @@ interface UseGenerateVideoResult {
   history: GeneratedVideo[];
   isLoadingHistory: boolean;
   refreshHistory: () => void;
+  removeFromHistory: (id: string) => void;
   loadMore: () => void;
   hasMore: boolean;
   totalCount: number;
@@ -447,6 +448,10 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     history,
     isLoadingHistory,
     refreshHistory: fetchHistory,
+    removeFromHistory: (id: string) => {
+      setHistory(prev => prev.filter(v => v.id !== id));
+      setTotalCount(prev => Math.max(0, prev - 1));
+    },
     loadMore,
     hasMore,
     totalCount,
