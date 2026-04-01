@@ -40,7 +40,7 @@ interface CatalogStepReviewV2Props {
 function SectionEditButton({ onClick }: { onClick?: () => void }) {
   if (!onClick) return null;
   return (
-    <button onClick={onClick} className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5 transition-colors ml-auto">
+    <button onClick={onClick} className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5 transition-colors ml-auto rounded focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
       <Pencil className="w-2.5 h-2.5" /> Edit
     </button>
   );
@@ -126,7 +126,7 @@ export function CatalogStepReviewV2({
                 <div key={m.modelId} className="flex-shrink-0 w-12">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-muted ring-1 ring-border">
                     {m.previewUrl ? (
-                      <img src={getOptimizedUrl(m.previewUrl, { quality: 50 })} alt={m.name} className="w-full h-full object-cover" />
+                      <ShimmerImage src={getOptimizedUrl(m.previewUrl, { quality: 50 })} alt={m.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-muted" />
                     )}

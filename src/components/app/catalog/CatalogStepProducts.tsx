@@ -239,7 +239,7 @@ export function CatalogStepProducts({
                     <button
                       onClick={() => setViewMode('grid')}
                       className={cn(
-                        'p-1.5 rounded-md transition-all duration-200',
+                        'p-1.5 rounded-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                         viewMode === 'grid'
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -250,7 +250,7 @@ export function CatalogStepProducts({
                     <button
                       onClick={() => setViewMode('list')}
                       className={cn(
-                        'p-1.5 rounded-md transition-all duration-200',
+                        'p-1.5 rounded-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                         viewMode === 'list'
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -284,7 +284,7 @@ export function CatalogStepProducts({
                           onClick={() => toggleProduct(up.id)}
                           disabled={isDisabled}
                           className={cn(
-                            'group relative flex flex-col rounded-2xl bg-card border overflow-hidden transition-all duration-200 text-left',
+                            'group relative flex flex-col rounded-2xl bg-card border overflow-hidden transition-all duration-200 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                             isSelected
                               ? 'ring-2 ring-primary border-primary/30 shadow-md shadow-primary/10'
                               : 'border-border hover:shadow-lg hover:-translate-y-0.5',
@@ -374,7 +374,7 @@ export function CatalogStepProducts({
                           onClick={() => toggleProduct(up.id)}
                           disabled={isDisabled}
                           className={cn(
-                            'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left',
+                            'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                             isSelected
                               ? 'bg-primary/5 border border-primary/20'
                               : cn('border border-transparent hover:bg-muted/40', idx % 2 === 1 && 'bg-muted/20'),
@@ -473,7 +473,7 @@ export function CatalogStepProducts({
             {/* Mini thumbnails — hide on small screens */}
             <div className="hidden sm:flex -space-x-2">
               {selectedProducts.slice(0, 5).map(p => (
-                <img
+                <ShimmerImage
                   key={p.id}
                   src={getOptimizedUrl(p.image_url, { quality: 40 })}
                   alt={p.title}
