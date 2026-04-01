@@ -1,7 +1,10 @@
 import { BACKGROUNDS } from '@/lib/catalogEngine';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const POPULAR_BACKGROUND = 'studio_white';
 
 interface CatalogStepBackgroundsV2Props {
   selectedBackgroundId: string | null;
