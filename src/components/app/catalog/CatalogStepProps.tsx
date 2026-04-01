@@ -389,17 +389,12 @@ export function CatalogStepProps({
           <Button variant="outline" onClick={onBack} className="gap-2">
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
-          <div className="flex items-center gap-3">
-            {totalWithProps === 0 && (
-              <button onClick={onNext} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                <SkipForward className="w-3.5 h-3.5" /> Skip — no props
-              </button>
+          <Button onClick={onNext} className="gap-2">
+            {totalWithProps > 0 ? `Next (${totalWithProps} shots with props)` : (
+              <><SkipForward className="w-3.5 h-3.5" /> Skip: No Props</>
             )}
-            <Button onClick={onNext} className="gap-2">
-              {totalWithProps > 0 ? `Next (${totalWithProps} shots with props)` : 'Next'}
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+            <ArrowRight className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Prop Picker Modal */}

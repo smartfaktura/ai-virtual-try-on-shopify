@@ -406,6 +406,13 @@ export default function CatalogGenerate() {
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">VOVV.AI</p>
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+                if (confirm('Cancel the remaining generations? Completed images will be kept.')) {
+                  resetBatch();
+                }
+              }}>
+                Cancel
+              </Button>
             </div>
 
             {(() => {

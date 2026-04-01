@@ -144,14 +144,15 @@ export function CatalogStepReviewV2({
             <div className="flex items-center gap-2">
               <Palette className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-medium text-foreground">{style?.label || '—'}</span>
+              <SectionEditButton onClick={onStepClick ? () => onStepClick(2) : undefined} />
             </div>
             {bg && (
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: bg.hex }} />
                 <span className="text-xs font-medium text-foreground">{bg.label}</span>
+                <SectionEditButton onClick={onStepClick ? () => onStepClick(4) : undefined} />
               </div>
             )}
-            <SectionEditButton onClick={onStepClick ? () => onStepClick(2) : undefined} />
           </div>
         </div>
 
