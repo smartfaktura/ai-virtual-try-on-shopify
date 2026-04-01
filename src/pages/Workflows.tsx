@@ -471,8 +471,8 @@ export default function Workflows() {
 
   return (
     <PageHeader
-      title="Workflows"
-      subtitle="Choose a workflow and generate brand-ready visuals instantly."
+      title="Templates"
+      subtitle="Choose a template and generate brand-ready visuals instantly."
       actions={
         <ToggleGroup type="single" value={effectiveLayout} onValueChange={handleLayoutChange} className="gap-0.5">
           <ToggleGroupItem value="rows" aria-label="Row layout" className="h-7 w-7 p-0">
