@@ -1128,6 +1128,7 @@ export default function AnimateVideo() {
                 onLoopStyleChange={setLoopStyle}
                 onMotionIntensityChange={setMotionIntensity}
                 multiSelect={isPaidUser}
+                isPaidUser={isPaidUser}
                 selectedCameraMotions={selectedCameraMotions}
                 onMultiCameraMotionChange={(ids) => { setSelectedCameraMotions(ids); setCameraMotion(ids[0]); }}
               />
