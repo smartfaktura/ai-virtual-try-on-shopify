@@ -570,8 +570,16 @@ export default function CatalogGenerate() {
             <CatalogStepProps
               allProducts={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
               heroProductIds={selectedProductIds}
-              selectedPropIds={selectedPropIds}
-              onPropSelectionChange={setSelectedPropIds}
+              heroProducts={products.filter(p => selectedProductIds.has(p.id)).map(p => ({
+                id: p.id, title: p.title, imageUrl: p.images[0]?.url || '',
+              }))}
+              models={allModels.filter(m => selectedModelIds.has(m.modelId)).map(m => ({
+                id: m.modelId, name: m.name, previewUrl: m.previewUrl,
+              }))}
+              productOnlyMode={productOnlyMode}
+              selectedShots={selectedShots}
+              propAssignments={propAssignments}
+              onPropAssignmentsChange={setPropAssignments}
               onBack={() => setStep(5)}
               onNext={() => setStep(7)}
             />
