@@ -174,8 +174,8 @@ export function CatalogStepProps({
   const combos: GenerationCombo[] = useMemo(() => {
     const shots = Array.from(selectedShots).map(id => {
       const def = getShotDefinition(id);
-      return def ? { id, label: def.label, previewUrl: def.previewUrl } : null;
-    }).filter(Boolean) as { id: CatalogShotId; label: string; previewUrl?: string }[];
+      return def ? { id, label: def.label } : null;
+    }).filter(Boolean) as { id: CatalogShotId; label: string }[];
 
     const modelEntries = productOnlyMode || models.length === 0
       ? [null]
