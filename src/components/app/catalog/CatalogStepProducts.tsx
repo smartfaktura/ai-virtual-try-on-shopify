@@ -239,7 +239,7 @@ export function CatalogStepProducts({
                     <button
                       onClick={() => setViewMode('grid')}
                       className={cn(
-                        'p-1.5 rounded-md transition-all duration-200',
+                        'p-1.5 rounded-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                         viewMode === 'grid'
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -250,7 +250,7 @@ export function CatalogStepProducts({
                     <button
                       onClick={() => setViewMode('list')}
                       className={cn(
-                        'p-1.5 rounded-md transition-all duration-200',
+                        'p-1.5 rounded-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                         viewMode === 'list'
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
