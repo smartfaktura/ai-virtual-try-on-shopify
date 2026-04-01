@@ -56,6 +56,15 @@ export function CatalogStepReviewV2({
   const shots = useMemo(() => Array.from(selectedShots).map(id => getShotDefinition(id)).filter(Boolean), [selectedShots]);
   const hasEnoughCredits = balance >= totalCredits;
   const [clicked, setClicked] = useState(false);
+  const prevGenerating = useRef(isGenerating);
+
+  // Reset clicked when generation finishes (success or failure)
+  useEffect(() => {
+    if (prevGenerating.current && !isGenerating) {
+      setClicked(false);
+    }
+    prevGenerating.current = isGenerating;
+  }, [isGenerating]);
 
   const handleGenerateClick = () => {
     if (clicked || isGenerating) return;
