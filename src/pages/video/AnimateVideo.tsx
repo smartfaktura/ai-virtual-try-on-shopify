@@ -1,13 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images, Lock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { LucideIcon } from 'lucide-react';
-
-const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
-  Shirt, Sparkles, Flower2, Gem, Watch, Lamp,
-  UtensilsCrossed, Smartphone, Dumbbell, Pill,
-};
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -501,35 +495,44 @@ export default function AnimateVideo() {
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
       {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
         <>
-          {/* Bulk mode toggle for paid users */}
-          {isPaidUser && (
-            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
-              <div className="flex items-center gap-2">
-                <Images className="h-4 w-4 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Batch Mode</p>
-                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
+          {/* Batch Mode toggle — paid vs free */}
+          <div className={cn(
+            'flex items-center justify-between rounded-xl border p-3 transition-colors',
+            isPaidUser ? 'border-border bg-card' : 'border-border/60 bg-muted/20'
+          )}>
+            <div className="flex items-center gap-3">
+              {isPaidUser ? (
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Images className="h-4 w-4 text-primary" />
                 </div>
+              ) : (
+                <img
+                  src={getOptimizedUrl(TEAM_MEMBERS.find(m => m.name === 'Sophia')?.avatar || '', { quality: 60 })}
+                  alt="Sophia"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-background shrink-0"
+                />
+              )}
+              <div>
+                <p className="text-sm font-medium text-foreground">Batch Mode</p>
+                {isPaidUser ? (
+                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Upgrade to any paid plan to animate multiple images at once
+                  </p>
+                )}
               </div>
-              <Switch checked={bulkMode} onCheckedChange={setBulkMode} />
             </div>
-          )}
-          {/* Category Chips Row */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">Works across ecommerce categories</p>
-            <div className="flex flex-wrap gap-1">
-              {PRODUCT_CATEGORIES.map((c) => {
-                const Icon = CATEGORY_ICON_MAP[c.icon];
-                return (
-                  <span
-                    key={c.id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border border-border/50 bg-muted/20 text-muted-foreground/70 hover:bg-muted/40 transition-colors"
-                  >
-                    {Icon && <Icon className="h-2.5 w-2.5" />}
-                    {c.label}
-                  </span>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              {!isPaidUser && (
+                <button
+                  onClick={() => navigate('/app/settings')}
+                  className="text-[10px] font-semibold text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md transition-colors"
+                >
+                  Upgrade
+                </button>
+              )}
+              <Switch checked={bulkMode} onCheckedChange={setBulkMode} disabled={!isPaidUser} />
             </div>
           </div>
 
@@ -565,28 +568,44 @@ export default function AnimateVideo() {
                 className="hidden"
               />
 
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="w-full flex-1 min-h-[200px] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-primary/[0.02] to-muted/5 hover:from-primary/[0.05] hover:to-muted/10 group"
-              >
-                {isUploading ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
-                    <span className="text-sm text-muted-foreground">Uploading...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 group-hover:scale-105 transition-all duration-300">
-                      <Upload className="h-6 w-6 text-primary" />
+              {/* Show BulkImageGrid when batch images exist */}
+              {bulkMode && bulkImages.length > 0 ? (
+                <div className="flex-1 space-y-3">
+                  <BulkImageGrid
+                    images={bulkImages}
+                    maxImages={10}
+                    onAddFiles={handleBulkAddFiles}
+                    onRemoveImage={handleBulkRemoveImage}
+                    disabled={isBulkRunning}
+                    onPickFromLibrary={() => setLibraryPickerOpen(true)}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-full flex-1 min-h-[200px] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-primary/[0.02] to-muted/5 hover:from-primary/[0.05] hover:to-muted/10 group"
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+                      <span className="text-sm text-muted-foreground">Uploading...</span>
                     </div>
-                    <div className="text-center space-y-1">
-                      <span className="text-sm font-medium text-foreground">Drop image here or click to browse</span>
-                      <p className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 20 MB</p>
-                    </div>
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <>
+                      <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 group-hover:scale-105 transition-all duration-300">
+                        <Upload className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="text-center space-y-1">
+                        <span className="text-sm font-medium text-foreground">
+                          {bulkMode ? 'Drop images here or click to browse' : 'Drop image here or click to browse'}
+                        </span>
+                        <p className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 20 MB</p>
+                      </div>
+                    </>
+                  )}
+                </button>
+              )}
 
               {/* Secondary input methods */}
               <div className="flex items-center gap-2 pt-1">
@@ -598,7 +617,7 @@ export default function AnimateVideo() {
                   disabled={isUploading}
                 >
                   <Upload className="h-3 w-3" />
-                  Upload image
+                  {bulkMode ? 'Upload images' : 'Upload image'}
                 </Button>
                 <Button
                   variant="outline"
@@ -610,16 +629,18 @@ export default function AnimateVideo() {
                   <FolderOpen className="h-3 w-3" />
                   Choose from Library
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
-                  disabled={isUploading}
-                  onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
-                >
-                  <ClipboardPaste className="h-3 w-3" />
-                  Paste (⌘V)
-                </Button>
+                {!bulkMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
+                    disabled={isUploading}
+                    onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
+                  >
+                    <ClipboardPaste className="h-3 w-3" />
+                    Paste (⌘V)
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -688,19 +709,34 @@ export default function AnimateVideo() {
           {/* Hide small upload preview during analysis — it's shown large in the analysis grid */}
           {!showAnalysisUI && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Upload Image</label>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-xs">
-                <img src={imagePreview!} alt="Upload" className="w-full rounded-xl object-cover" />
-                <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
-                  <X className="h-4 w-4" />
-                </button>
-                {isUploading && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <Progress value={uploadProgress} className="h-1" />
+              <label className="text-sm font-medium text-foreground">
+                {bulkMode ? `Images (${bulkImages.length})` : 'Upload Image'}
+              </label>
+              {bulkMode && isPaidUser ? (
+                <BulkImageGrid
+                  images={bulkImages}
+                  maxImages={10}
+                  onAddFiles={handleBulkAddFiles}
+                  onRemoveImage={handleBulkRemoveImage}
+                  disabled={isBulkRunning}
+                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
+                />
+              ) : (
+                <>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                  <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-xs">
+                    <img src={imagePreview!} alt="Upload" className="w-full rounded-xl object-cover" />
+                    <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
+                      <X className="h-4 w-4" />
+                    </button>
+                    {isUploading && (
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <Progress value={uploadProgress} className="h-1" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           )}
 
@@ -1014,17 +1050,8 @@ export default function AnimateVideo() {
                 </Alert>
               )}
 
-              {/* Bulk image grid (shown after analysis when bulk mode is on) */}
-              {bulkMode && isPaidUser && (
-                <BulkImageGrid
-                  images={bulkImages}
-                  maxImages={10}
-                  onAddFiles={handleBulkAddFiles}
-                  onRemoveImage={handleBulkRemoveImage}
-                  disabled={isBulkRunning}
-                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
-                />
-              )}
+
+
 
               {/* Generate */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
