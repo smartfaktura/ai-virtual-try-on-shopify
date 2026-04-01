@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images, Lock } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images, Lock, Settings2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
@@ -20,7 +20,7 @@ import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/v
 import { BulkImageGrid, type BulkImage } from '@/components/app/video/BulkImageGrid';
 import { BulkProgressBanner } from '@/components/app/video/BulkProgressBanner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PRODUCT_CATEGORIES, SCENE_TYPES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
+import { PRODUCT_CATEGORIES, SCENE_TYPES, CAMERA_MOTIONS, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
@@ -63,6 +63,9 @@ export default function AnimateVideo() {
   const isPaidUser = plan !== 'free';
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkImages, setBulkImages] = useState<BulkImage[]>([]);
+  const [customizePerImage, setCustomizePerImage] = useState(false);
+  const [activeImageTab, setActiveImageTab] = useState<string | null>(null);
+  const [perImageSettings, setPerImageSettings] = useState<Map<string, Record<string, any>>>(new Map());
 
   // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -360,11 +363,14 @@ export default function AnimateVideo() {
         return;
       }
 
+      const sharedParams = { category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
+          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+          aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined };
+
       runBulkAnimatePipeline(
         readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
-        { category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
-          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
-          aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined }
+        sharedParams,
+        customizePerImage ? perImageSettings : undefined
       );
       return;
     }
@@ -740,6 +746,122 @@ export default function AnimateVideo() {
             </div>
           )}
 
+          {/* Per-image customization toggle (bulk mode only) */}
+          {!showAnalysisUI && bulkMode && bulkImages.length > 1 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
+                <div className="flex items-center gap-2">
+                  <Settings2 className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Customize per image</p>
+                    <p className="text-xs text-muted-foreground">Override shared settings for individual images</p>
+                  </div>
+                </div>
+                <Switch checked={customizePerImage} onCheckedChange={(v) => {
+                  setCustomizePerImage(v);
+                  if (v && !activeImageTab && bulkImages.length > 0) setActiveImageTab(bulkImages[0].id);
+                }} />
+              </div>
+
+              {customizePerImage && (
+                <div className="space-y-3">
+                  {/* Thumbnail tab bar */}
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {bulkImages.map((img, idx) => {
+                      const isActive = activeImageTab === img.id;
+                      const hasOverride = perImageSettings.has(img.id);
+                      return (
+                        <button
+                          key={img.id}
+                          onClick={() => setActiveImageTab(img.id)}
+                          className={cn(
+                            'relative shrink-0 w-14 h-14 rounded-lg border-2 overflow-hidden transition-all',
+                            isActive ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/40'
+                          )}
+                        >
+                          <img src={img.preview} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
+                          <span className="absolute bottom-0 left-0 right-0 text-[9px] font-bold text-primary-foreground bg-foreground/60 text-center">{idx + 1}</span>
+                          {hasOverride && (
+                            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Per-image settings overrides */}
+                  {activeImageTab && (() => {
+                    const imgOverrides = perImageSettings.get(activeImageTab) || {};
+                    const setOverride = (key: string, value: any) => {
+                      setPerImageSettings(prev => {
+                        const next = new Map(prev);
+                        const current = next.get(activeImageTab!) || {};
+                        next.set(activeImageTab!, { ...current, [key]: value });
+                        return next;
+                      });
+                    };
+                    const imgIdx = bulkImages.findIndex(i => i.id === activeImageTab);
+                    return (
+                      <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-foreground">Image {imgIdx + 1} overrides</p>
+                          {Object.keys(imgOverrides).length > 0 && (
+                            <button
+                              onClick={() => {
+                                setPerImageSettings(prev => { const next = new Map(prev); next.delete(activeImageTab!); return next; });
+                              }}
+                              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              Reset to shared
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Camera Motion</label>
+                            <select
+                              value={imgOverrides.cameraMotion || cameraMotion}
+                              onChange={(e) => setOverride('cameraMotion', e.target.value)}
+                              className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
+                            >
+                              {CAMERA_MOTIONS.map(cm => (
+                                <option key={cm.id} value={cm.id}>{cm.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Motion Intensity</label>
+                            <select
+                              value={imgOverrides.motionIntensity || motionIntensity}
+                              onChange={(e) => setOverride('motionIntensity', e.target.value)}
+                              className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
+                            >
+                              <option value="low">Low</option>
+                              <option value="medium">Medium</option>
+                              <option value="high">High</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Custom motion note</label>
+                          <Textarea
+                            value={imgOverrides.userPrompt ?? ''}
+                            onChange={(e) => setOverride('userPrompt', e.target.value)}
+                            placeholder="Override motion note for this image..."
+                            className="min-h-[60px] resize-none text-xs"
+                            maxLength={500}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
           <ValidationWarnings warnings={warnings} />
 
           {/* ──── Premium Analysis Loading State ──── */}
@@ -749,9 +871,9 @@ export default function AnimateVideo() {
               <div className="grid lg:grid-cols-2 gap-5">
                 {/* Left: Large image preview */}
                 <div className="relative rounded-2xl overflow-hidden border border-border bg-muted/10 shadow-sm">
-                  {imagePreview && (
+                  {(imagePreview || (bulkMode && bulkImages[0]?.preview)) && (
                     <img
-                      src={imagePreview}
+                      src={imagePreview || bulkImages[0]?.preview}
                       alt="Uploaded"
                       className="w-full max-h-[500px] object-cover"
                     />
@@ -1130,10 +1252,10 @@ export default function AnimateVideo() {
             </div>
 
             {/* Source image preview */}
-            {imagePreview && (
+            {(imagePreview || (bulkMode && bulkImages[0]?.preview)) && (
               <div className="flex items-center gap-4">
                 <div className="rounded-lg overflow-hidden border border-border w-20 h-20 shrink-0">
-                  <img src={imagePreview} alt="Source" className="w-full h-full object-cover" />
+                  <img src={imagePreview || bulkImages[0]?.preview} alt="Source" className="w-full h-full object-cover" />
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <p>Your image is being animated with <span className="text-foreground font-medium">{cameraMotion.replace(/_/g, ' ')}</span> camera motion.</p>
