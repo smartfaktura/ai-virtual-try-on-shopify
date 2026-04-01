@@ -728,6 +728,7 @@ export type Database = {
           kling_task_id: string | null
           model_name: string
           negative_prompt: string | null
+          preview_url: string | null
           project_id: string | null
           prompt: string
           source_image_url: string
@@ -748,6 +749,7 @@ export type Database = {
           kling_task_id?: string | null
           model_name?: string
           negative_prompt?: string | null
+          preview_url?: string | null
           project_id?: string | null
           prompt?: string
           source_image_url: string
@@ -768,6 +770,7 @@ export type Database = {
           kling_task_id?: string | null
           model_name?: string
           negative_prompt?: string | null
+          preview_url?: string | null
           project_id?: string | null
           prompt?: string
           source_image_url?: string

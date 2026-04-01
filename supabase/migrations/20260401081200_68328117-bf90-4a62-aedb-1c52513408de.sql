@@ -1,0 +1,1 @@
+ALTER TABLE public.generated_videos ADD COLUMN preview_url TEXT;
