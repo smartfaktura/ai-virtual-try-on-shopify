@@ -1,66 +1,72 @@
 
 
-# Catalog Studio — Resilience, Dedicated Queue, and Bug Fixes
+# Catalog Studio Debug Report — Findings & Fixes
 
-## Critical Bugs Found
+## Current State: What Works
+- **Queue routing**: `process-queue` correctly maps `catalog` → `generate-catalog` (line 17)
+- **Credit pricing**: `enqueue-generation` charges 4 credits for catalog jobs (correct)
+- **Prompt flow**: `generate-catalog` correctly uses `prompt_final` when present (line 336)
+- **Product-only mode**: `generate-catalog` accepts missing `model` field (line 294 validates only `product.imageUrl`)
+- **Retry logic**: Seedream transient errors (429/502/503) retry once with 3s delay
+- **Completion flow**: `completeQueueJob` properly handles refunds, inserts into `generation_jobs`, and sends failure emails
+- **Polling**: 10-minute hard timeout, 401 session refresh, per-product progress tracking
 
-### Bug 1: Catalog jobs enqueued as `jobType: 'tryon'` — wrong credit cost
-In `useCatalogGenerate.ts` line 135, jobs are sent as `jobType: 'tryon'`. The `enqueue-generation` function charges **6 credits** per `tryon` image (line 45-46), but the UI shows **4 credits**. Users are overcharged by 50%.
+## Bugs Found
 
-**Fix**: Change `jobType` from `'tryon'` to `'catalog'` and add `catalog` as a valid job type in `enqueue-generation` with a 4-credit cost.
+### Bug 1: `product_image_url` stored as base64 blob in `generation_jobs`
+**Severity: Medium** — `payload.product.imageUrl` at line 277 of `generate-catalog` is the base64 string sent from the client. This gets stored in the `product_image_url` column, bloating the database with massive base64 strings instead of a clean URL.
 
-### Bug 2: `generate-catalog` rejects product-only mode
-The `generate-catalog` edge function validates that `body.model.imageUrl` is present (line 257). In product-only mode, no model is sent. The job would fail with a 400 error.
+**Fix**: After uploading the generated image to storage, also resolve the original product URL from the non-base64 source. Add `product_image_url` to the payload from the client side as the original URL (not base64).
 
-**Fix**: Make model fields optional in `generate-catalog`. When no model is provided, generate product-only shots (ghost mannequin, flat lay, etc.) without model reference images.
+### Bug 2: `workflow_slug` hardcoded to `"catalog-shot-set"` (outdated)
+**Severity: Low** — Line 275 still says `"catalog-shot-set"` but the feature was renamed to "Catalog Studio". This affects library filtering and analytics.
 
-### Bug 3: `generate-catalog` ignores `prompt_final` from catalog engine
-When catalog jobs come through `generate-tryon` via `catalog_mode`, the pre-assembled `prompt_final` is used correctly. But when routed through the dedicated `generate-catalog` function, it rebuilds the prompt from scratch using `buildCatalogPrompt()` — completely ignoring the sophisticated prompt from the catalog engine (fashion style, support wardrobe, shot-specific templates). All the engine work is wasted.
+**Fix**: Change to `"catalog-studio"`.
 
-**Fix**: In `generate-catalog`, check for `prompt_final` first and use it. Fall back to `buildCatalogPrompt()` only for legacy/non-engine calls.
+### Bug 3: Completion screen "View in Library" uses `window.location.href` instead of React Router
+**Severity: Low** — Line 304 does a full page reload (`window.location.href = '/app/library'`). Should use React Router navigation.
 
-### Bug 4: No client-side polling timeout
-Polling runs forever via `setInterval` with no maximum duration. If a job gets stuck in `processing` and the cleanup job doesn't catch it, the user's browser polls indefinitely.
+**Fix**: Use `useNavigate()` from react-router-dom.
 
-**Fix**: Add a 10-minute hard timeout that force-completes the batch with whatever results exist.
+### Bug 4: Result images may contain expired Seedream URLs as fallback
+**Severity: Medium** — If the storage upload fails (lines 396-401), the system falls back to the raw Seedream URL which expires after a few hours. The completion page would show broken images.
 
-### Bug 5: No error handling for base64 conversion failures
-`convertImageToBase64` is called for every product and model image during enqueue. If any conversion fails (network error, CORS, large image), the entire batch silently breaks — no error is surfaced.
+**Fix**: Already handled with retry, but add a warning toast on the completion screen if an image URL doesn't match the expected storage domain.
 
-**Fix**: Wrap each `convertImageToBase64` call in try/catch, skip that product/model with a toast warning, and continue with the rest.
+### Bug 5: Timer effect has dependency issue
+**Severity: Low** — Line 95: `useEffect` depends on `batchState` (the whole object), causing the interval to be torn down and recreated on every poll update (every 3 seconds). This resets the timer each cycle.
 
----
+**Fix**: Extract `batchState?.allDone` as the only dependency, and use a ref for `generationStartedAt`.
 
-## New Feature: Dedicated Catalog Queue
+### Bug 6: No `product_id` passed in catalog payload
+**Severity: Medium** — In `useCatalogGenerate.ts`, the enqueue payload doesn't include `product_id`. So `generate-catalog` line 266 (`payload.product_id`) is always null, meaning catalog images won't be linked to products in the library.
 
-Currently catalog jobs share the queue with all other generation types. Since catalog uses Seedream exclusively (no Gemini fallback chain), they should be separated to avoid blocking or being blocked by other job types.
+**Fix**: Add `product_id: productId` to the payload in `enqueueJob`.
 
-### Changes:
+## Plan
 
-**1. `enqueue-generation/index.ts`**
-- Add `'catalog'` to `validJobTypes` array
-- Add catalog-specific credit cost: `4` per image (flat, no model/scene premium)
-
-**2. `process-queue/index.ts`**
-- Already has `catalog: "generate-catalog"` mapping — no change needed
-
-**3. `generate-catalog/index.ts`**
-- Accept `prompt_final` field; use it when present instead of `buildCatalogPrompt()`
-- Make `model` fields optional for product-only mode
-- When no model image, send only product image as reference
-- Add retry logic: if Seedream fails with a transient error, retry once after 3s
-
-**4. `useCatalogGenerate.ts`**
-- Change `jobType: 'tryon'` → `jobType: 'catalog'`
-- Wrap `convertImageToBase64` in try/catch per product
-- Add 10-minute polling hard timeout
-- On insufficient credits error from any job, stop enqueueing remaining jobs immediately (fail-fast)
-
-## Files Modified
+### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `supabase/functions/enqueue-generation/index.ts` | Add `catalog` to valid types, 4-credit pricing |
-| `supabase/functions/generate-catalog/index.ts` | Use `prompt_final`, optional model, retry logic |
-| `src/hooks/useCatalogGenerate.ts` | Fix jobType, add polling timeout, base64 error handling, fail-fast on credit errors |
+| `src/hooks/useCatalogGenerate.ts` | Add `product_id` and `product_image_url` (original URL) to enqueue payload |
+| `supabase/functions/generate-catalog/index.ts` | Fix `workflow_slug` to `"catalog-studio"`, use `product_image_url` from payload instead of base64 |
+| `src/pages/CatalogGenerate.tsx` | Fix timer effect dependencies, replace `window.location.href` with `useNavigate()` |
+
+### Detailed Changes
+
+**1. `useCatalogGenerate.ts` — Add product metadata to payload**
+- In `enqueueJob`, add to the payload object:
+  - `product_id: productId`
+  - `product_image_url: <original URL>` — pass the original product image URL (not base64) as a separate field
+- This requires passing the original URL alongside the base64 version through the pipeline
+
+**2. `generate-catalog/index.ts` — Fix stored metadata**
+- Line 275: Change `workflow_slug: "catalog-shot-set"` → `"catalog-studio"`
+- Line 277: Use `payload.product_image_url` (the clean URL) instead of `(payload.product as Record<string, unknown>)?.imageUrl` (which is base64)
+
+**3. `CatalogGenerate.tsx` — Fix timer and navigation**
+- Extract `batchState?.allDone` into a variable and use only that + `generationStartedAt` as effect dependencies
+- Use `generationStartedAtRef` to avoid re-running the effect
+- Replace `window.location.href = '/app/library'` with `navigate('/app/library')` using `useNavigate()`
 
