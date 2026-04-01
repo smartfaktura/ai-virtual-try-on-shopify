@@ -7,8 +7,8 @@ const videos = Array.from({ length: 10 }, (_, i) => `/videos/showcase/showcase-$
 export function VideoShowcaseSection() {
   return (
     <section className="py-20 lg:py-28 bg-background overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 text-center">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground">
           Your Products, In Motion
         </h2>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -16,7 +16,7 @@ export function VideoShowcaseSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1 px-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1 px-1 sm:px-2 lg:px-4">
         {videos.map((src, i) => (
           <div
             key={i}
@@ -34,8 +34,8 @@ export function VideoShowcaseSection() {
         ))}
       </div>
 
-      <div className="flex justify-center mt-10">
-        <Button asChild size="lg" className="gap-2">
+      <div className="flex justify-center mt-14">
+        <Button asChild size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25">
           <Link to="/app/video">
             Start Creating Videos <ArrowRight className="w-4 h-4" />
           </Link>
