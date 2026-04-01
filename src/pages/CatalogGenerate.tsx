@@ -82,19 +82,28 @@ export default function CatalogGenerate() {
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
-  // Timer effect
+  const generationStartedAtRef = useRef<number | null>(null);
+  const allDone = batchState?.allDone ?? false;
+  const hasBatch = !!batchState;
+
+  // Keep ref in sync
+  useEffect(() => { generationStartedAtRef.current = generationStartedAt; }, [generationStartedAt]);
+
+  // Timer effect — only depends on allDone and hasBatch
   useEffect(() => {
-    if (batchState && !batchState.allDone && generationStartedAt) {
+    if (hasBatch && !allDone && generationStartedAtRef.current) {
       timerRef.current = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - generationStartedAt) / 1000));
+        if (generationStartedAtRef.current) {
+          setElapsedSeconds(Math.floor((Date.now() - generationStartedAtRef.current) / 1000));
+        }
       }, 1000);
       return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }
-    if (batchState?.allDone && timerRef.current) {
+    if (allDone && timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, [batchState?.allDone, generationStartedAt, batchState]);
+  }, [allDone, hasBatch]);
 
   // Fetch products
   const { data: userProducts = [], isLoading: productsLoading } = useQuery({
