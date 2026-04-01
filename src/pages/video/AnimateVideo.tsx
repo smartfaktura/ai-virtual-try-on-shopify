@@ -1130,10 +1130,10 @@ export default function AnimateVideo() {
             </div>
 
             {/* Source image preview */}
-            {imagePreview && (
+            {(imagePreview || (bulkMode && bulkImages[0]?.preview)) && (
               <div className="flex items-center gap-4">
                 <div className="rounded-lg overflow-hidden border border-border w-20 h-20 shrink-0">
-                  <img src={imagePreview} alt="Source" className="w-full h-full object-cover" />
+                  <img src={imagePreview || bulkImages[0]?.preview} alt="Source" className="w-full h-full object-cover" />
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <p>Your image is being animated with <span className="text-foreground font-medium">{cameraMotion.replace(/_/g, ' ')}</span> camera motion.</p>
