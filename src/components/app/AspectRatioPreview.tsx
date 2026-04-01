@@ -64,7 +64,7 @@ export function AspectRatioMultiSelector({ value, onChange }: AspectRatioMultiSe
         {ratios.map((ratio) => {
           const selected = value.has(ratio);
           return (
-            <button key={ratio} onClick={() => toggle(ratio)}
+            <button type="button" key={ratio} onClick={() => toggle(ratio)}
               className={cn(
                 'relative p-4 rounded-xl border-2 transition-all flex-1 min-w-[120px]',
                 selected
