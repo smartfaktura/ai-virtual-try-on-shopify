@@ -218,7 +218,7 @@ export default function WorkflowsFeature() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Settings2 className="w-4 h-4" />
-            Workflows
+            Templates
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6">
             6 Visual Pipelines.<br />One Upload. Zero Prompts.
