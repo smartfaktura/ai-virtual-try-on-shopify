@@ -1,68 +1,98 @@
 
 
-# Add "Styling Props" Step to Catalog Studio
+# Catalog Studio: Props Redesign + UI Fixes
 
-## Concept
-A new **Step 6: Props** (between Shots and Review, which becomes Step 7) where users can pick extra products from their library to include as styling accessories in their catalog shots. For example: "Freya wearing Pink Bag + a gold ring on her hand."
+## Overview
+Three fixes plus a major Props step redesign — moving from "global props" to a per-generation-combination props assignment with an "apply to all" shortcut.
 
-The props are pulled from the user's existing product library — no new upload needed. Selected props get injected into every generation prompt as additional items in the scene.
+## 1. Move Brand Models Above Library Models
+**File: `CatalogStepModelsV2.tsx`**
+- Swap the render order: show "Your Brand Models" section first (currently "My Models" at bottom), then "Library Models" below
+- Rename section header from "My Models" to "YOUR BRAND MODELS" with a small crown/star icon to emphasize uniqueness
+- Add a subtle upsell note if user has zero brand models: "Create your own AI model for your brand" with a link to `/app/brand-models`
+
+## 2. Fix Stepper Overflow
+**File: `CatalogStepper.tsx`**
+- 7 steps is too wide — the pills overlap at the edges on smaller desktops
+- Desktop fix: reduce `px-4` to `px-3`, reduce `gap-2.5` to `gap-1.5`, make connector lines shorter (`w-4 lg:w-6` instead of `w-6 lg:w-10`), shrink text to `text-[10px]`
+- At `md` breakpoint and below (but above mobile), hide step labels and show icon-only pills to save space
+- This keeps 7 steps fitting within ~1100px without overlap
+
+## 3. Redesign Props Step as Generation Matrix
+**File: `CatalogStepProps.tsx` — full rewrite**
+
+Instead of a simple product grid, show a numbered list of every generation combination with per-row prop controls:
 
 ```text
-Products → Style → Models → Background → Shots → Props → Review
-   1         2        3          4          5       6(NEW)    7
+┌──────────────────────────────────────────────────────────────┐
+│ Add Styling Props                              (optional)    │
+│ Add extra items to your shots. Pick per shot or apply to all │
+│                                                              │
+│ ┌─ "Add props to all shots" button ─────────────────────┐   │
+│                                                              │
+│ #1  [img] Pink Bag × Freya × Full Body    [+ Add prop]      │
+│ #2  [img] Pink Bag × Freya × Detail       [+ Add prop]      │
+│ #3  [img] Pink Bag × Zara  × Full Body    [+ Add prop]  🏷  │
+│     └─ Props: Gold Ring, Silver Watch           [× remove]   │
+│ #4  [img] Pink Bag × Zara  × Detail       [+ Add prop]      │
+│ ...                                                          │
+│                                                              │
+│ [Back]                        [Skip — no props]  [Next →]    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-## Frontend: New Step Component
+**Data model change:**
+- Replace `selectedPropIds: Set<string>` with `propsMap: Map<string, Set<string>>` where key = combination key (`${productId}__${modelId}__${shotId}`) and value = set of prop product IDs
+- Add a `globalPropIds: Set<string>` for "apply to all" props
 
-**New file: `src/components/app/catalog/CatalogStepProps.tsx`**
+**Each combination row shows:**
+- Product thumbnail + product name × model name × shot name
+- An "+ Add prop" button that opens a small popover/dropdown with the product library grid (excluding hero products) for multi-select
+- If props are assigned, show them as small chips below the row with remove buttons
 
-- Header: "Add Styling Props" with subtitle "Pick extra items from your library to appear in every shot (optional)"
-- Shows the user's product library as a compact grid (similar to product step but smaller cards)
-- Excludes products already selected as hero products (they're the main subjects)
-- Multi-select with simple check/uncheck — no ordering needed
-- "Skip" button clearly available (this step is optional)
-- Each selected prop card shows a small "prop" badge
-- Footer with Back / Next buttons + "Skip — no props" link
+**"Add to all shots" button at top:**
+- Opens the same product picker popover
+- Selected props get applied to every combination row
+- Individual rows can still override (add/remove per-row)
 
-## State Changes in `CatalogGenerate.tsx`
+**Props in the interface:**
+```typescript
+// New in CatalogStepProps
+interface GenerationCombo {
+  key: string;           // productId__modelId__shotId
+  product: { id: string; title: string; imageUrl: string };
+  model: { id: string; name: string; previewUrl: string } | null; // null = product-only
+  shot: { id: CatalogShotId; label: string };
+}
+```
 
-- Add `selectedPropIds: Set<string>` state
-- Stepper grows from 6 to 7 steps (Props = step 6, Review = step 7)
-- Step validation: Props step is always passable (optional), `canStep6 = true`
-- Pass selected prop products to Review and to the generation config
+**State in CatalogGenerate.tsx:**
+- Replace `selectedPropIds: Set<string>` with `propAssignments: Record<string, string[]>` (combo key → array of prop product IDs)
+- Pass `products`, `selectedModelIds`, `selectedShots`, `allModels` into the Props step so it can build the combo list
 
-## Type Changes in `src/types/catalog.ts`
+## 4. Update Prompt Injection
+**File: `useCatalogGenerate.ts`**
+- Instead of appending the same props to every prompt, look up props for each specific combination key
+- Per-job prompt assembly: check `config.propAssignments[comboKey]` and only append those prop titles
 
-- Add `stylingProps` to `CatalogSessionConfig`:
-  ```typescript
-  stylingProps?: Array<{ id: string; title: string; imageUrl: string; detectedCategory: ProductCategory }>;
-  ```
+## 5. Update Types
+**File: `types/catalog.ts`**
+- Replace `stylingProps` with `propAssignments: Record<string, { id: string; title: string; imageUrl: string }[]>`
 
-## Prompt Injection in `useCatalogGenerate.ts`
+## 6. Update Review + Sidebar
+- **Review (`CatalogStepReviewV2.tsx`)**: Show props summary — e.g. "3 of 12 shots have styling props" with expandable detail
+- **Sidebar (`CatalogContextSidebar.tsx`)**: Show "Props: 3/12 shots" instead of just count
 
-- When assembling prompts, if `config.stylingProps` has items, append a styling props block to the prompt:
-  ```
-  "Additionally, include these styling accessories visible in the scene: [gold ring on the model's right hand], [silver watch on the wrist]"
-  ```
-- Props titles get injected into `assemblePrompt` output as a post-processing step (no changes to `catalogEngine.ts` needed — just string concatenation after `assemblePrompt` returns)
-
-## Context Sidebar Update
-
-- Add a "Props" row showing count of selected props (e.g. "2 items") or "None"
-
-## Review Step Update
-
-- Show selected props in a new section between Style/Background and Shots
-- Small thumbnail strip of prop products with titles
-
-## Files to Create/Modify
+## Files to modify
 
 | File | Action |
 |------|--------|
-| `src/components/app/catalog/CatalogStepProps.tsx` | **Create** — new step component |
-| `src/pages/CatalogGenerate.tsx` | **Modify** — add step 6 state, update stepper to 7 steps, wire new step |
-| `src/types/catalog.ts` | **Modify** — add `stylingProps` to `CatalogSessionConfig` |
-| `src/hooks/useCatalogGenerate.ts` | **Modify** — append props text to assembled prompts |
-| `src/components/app/catalog/CatalogContextSidebar.tsx` | **Modify** — add Props row |
-| `src/components/app/catalog/CatalogStepReviewV2.tsx` | **Modify** — show props section |
+| `CatalogStepModelsV2.tsx` | Swap brand models to top, add upsell |
+| `CatalogStepper.tsx` | Tighten spacing for 7 steps |
+| `CatalogStepProps.tsx` | Full rewrite — generation matrix with per-row prop picker |
+| `CatalogGenerate.tsx` | Replace `selectedPropIds` state with `propAssignments` map |
+| `types/catalog.ts` | Update `CatalogSessionConfig` type |
+| `useCatalogGenerate.ts` | Per-combination prop injection |
+| `CatalogStepReviewV2.tsx` | Update props summary display |
+| `CatalogContextSidebar.tsx` | Update props row display |
 
