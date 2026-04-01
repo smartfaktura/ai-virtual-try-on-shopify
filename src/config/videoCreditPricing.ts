@@ -69,3 +69,9 @@ export function estimateCredits(params: CreditEstimateParams): number {
 
   return 10;
 }
+
+/** Estimate total credits for a bulk batch */
+export function estimateBulkCredits(params: CreditEstimateParams, imageCount: number): { perImage: number; total: number } {
+  const perImage = estimateCredits(params);
+  return { perImage, total: perImage * imageCount };
+}

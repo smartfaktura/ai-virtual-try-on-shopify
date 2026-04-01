@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LucideIcon } from 'lucide-react';
 
@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { ProductContextSelector } from '@/components/app/video/ProductContextSelector';
 import { MotionGoalSelector } from '@/components/app/video/MotionGoalSelector';
@@ -22,18 +23,20 @@ import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/video/VideoResultsPanel';
+import { BulkImageGrid, type BulkImage } from '@/components/app/video/BulkImageGrid';
+import { BulkProgressBanner } from '@/components/app/video/BulkProgressBanner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PRODUCT_CATEGORIES, SCENE_TYPES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
-import { estimateCredits } from '@/config/videoCreditPricing';
+import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
+import { useBulkVideoProject } from '@/hooks/useBulkVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { useCredits } from '@/contexts/CreditContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { toast } from '@/lib/brandedToast';
 import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
-
 type AspectRatio = '9:16' | '1:1' | '16:9';
 type Duration = '5' | '10';
 type AudioMode = 'silent' | 'ambient';
@@ -58,8 +61,14 @@ export default function AnimateVideo() {
     runAnimatePipeline, resetPipeline, activeJob,
   } = useVideoProject();
 
-  const { balance: creditsBalance } = useCredits();
+  const { bulkItems, isBulkRunning, isBulkComplete, runBulkAnimatePipeline, resetBulk } = useBulkVideoProject();
+
+  const { balance: creditsBalance, plan } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
+
+  const isPaidUser = plan !== 'free';
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkImages, setBulkImages] = useState<BulkImage[]>([]);
 
   // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -281,7 +290,68 @@ export default function AnimateVideo() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // ── Bulk image handling ──
+  const handleBulkAddFiles = useCallback(async (files: File[]) => {
+    const remaining = 10 - bulkImages.length;
+    const toAdd = files.slice(0, remaining);
+
+    for (const file of toAdd) {
+      if (file.size > 20 * 1024 * 1024) { toast.error(`${file.name} exceeds 20MB`); continue; }
+
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const preview = URL.createObjectURL(file);
+
+      setBulkImages(prev => [...prev, { id, file, url: null, preview, isUploading: true, uploadProgress: 30 }]);
+
+      const url = await upload(file);
+      if (url) {
+        setBulkImages(prev => prev.map(img => img.id === id ? { ...img, url, isUploading: false, uploadProgress: 100 } : img));
+
+        // Analyze the first image only
+        setBulkImages(prev => {
+          const current = prev;
+          const firstWithUrl = current.find(i => i.url);
+          if (firstWithUrl?.id === id && !hasAnalyzed) {
+            analyzeImage(url).then(analysis => {
+              if (analysis) setAnalysisCompleteData(analysis);
+            });
+            setUploadCompleteTime(Date.now());
+          }
+          return current;
+        });
+      } else {
+        setBulkImages(prev => prev.filter(img => img.id !== id));
+      }
+    }
+  }, [bulkImages, upload, analyzeImage, hasAnalyzed]);
+
+  const handleBulkRemoveImage = useCallback((id: string) => {
+    setBulkImages(prev => prev.filter(img => img.id !== id));
+  }, []);
+
   const handleGenerate = () => {
+    if (bulkMode && bulkImages.length > 0) {
+      const readyImages = bulkImages.filter(img => img.url);
+      if (readyImages.length === 0) { toast.error('Wait for images to finish uploading'); return; }
+
+      const { total } = estimateBulkCredits(
+        { workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion },
+        readyImages.length
+      );
+      if (total > creditsBalance) {
+        toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
+        return;
+      }
+
+      runBulkAnimatePipeline(
+        readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
+        { category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
+          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+          aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined }
+      );
+      return;
+    }
+
     if (!imageUrl) { toast.error('Please upload an image first'); return; }
 
     runAnimatePipeline({
@@ -297,7 +367,10 @@ export default function AnimateVideo() {
   const handleReuse = () => resetPipeline();
   const handleNewProject = () => {
     resetPipeline();
+    resetBulk();
     removeImage();
+    setBulkImages([]);
+    setBulkMode(false);
     setUserPrompt('');
   };
 
@@ -394,8 +467,21 @@ export default function AnimateVideo() {
       </PageHeader>
 
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
-      {!isPipelineActive && !isComplete && !imageUrl && (
+      {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
         <>
+          {/* Bulk mode toggle for paid users */}
+          {isPaidUser && (
+            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-2">
+                <Images className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Batch Mode</p>
+                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
+                </div>
+              </div>
+              <Switch checked={bulkMode} onCheckedChange={setBulkMode} />
+            </div>
+          )}
           {/* Category Chips Row */}
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">Works across ecommerce categories</p>
@@ -420,13 +506,32 @@ export default function AnimateVideo() {
             {/* Left: Dominant Upload Card */}
             <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Upload your product image</h2>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {bulkMode ? 'Upload your product images' : 'Upload your product image'}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  We'll detect category, scene type, and recommended motion automatically.
+                  {bulkMode
+                    ? 'Select up to 10 images — first image is analyzed to configure settings for all.'
+                    : "We'll detect category, scene type, and recommended motion automatically."}
                 </p>
               </div>
 
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple={bulkMode}
+                onChange={(e) => {
+                  if (bulkMode) {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length > 0) handleBulkAddFiles(files);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  } else {
+                    handleFileSelect(e);
+                  }
+                }}
+                className="hidden"
+              />
 
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -551,7 +656,7 @@ export default function AnimateVideo() {
       )}
 
       {/* ──── POST-UPLOAD: Form with image preview + settings ──── */}
-      {!isPipelineActive && !isComplete && imageUrl && (
+      {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && (imageUrl || (bulkMode && bulkImages.length > 0)) && (
         <div className="space-y-5">
           {/* Hide small upload preview during analysis — it's shown large in the analysis grid */}
           {!showAnalysisUI && (
@@ -882,12 +987,40 @@ export default function AnimateVideo() {
                 </Alert>
               )}
 
+              {/* Bulk image grid (shown after analysis when bulk mode is on) */}
+              {bulkMode && isPaidUser && (
+                <BulkImageGrid
+                  images={bulkImages}
+                  maxImages={10}
+                  onAddFiles={handleBulkAddFiles}
+                  onRemoveImage={handleBulkRemoveImage}
+                  disabled={isBulkRunning}
+                />
+              )}
+
               {/* Generate */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
-                <Button onClick={handleGenerate} disabled={!imageUrl || isUploading} className="gap-2" size="lg">
+                {bulkMode && bulkImages.length > 1 ? (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Estimated cost:</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion })} × {bulkImages.filter(i => i.url).length} = {estimateBulkCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }, bulkImages.filter(i => i.url).length).total} credits
+                    </span>
+                  </div>
+                ) : (
+                  <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
+                )}
+                <Button
+                  onClick={handleGenerate}
+                  disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
+                  className="gap-2"
+                  size="lg"
+                >
                   <Sparkles className="h-4 w-4" />
-                  Generate Video
+                  {bulkMode && bulkImages.length > 1
+                    ? `Generate ${bulkImages.filter(i => i.url).length} Videos`
+                    : 'Generate Video'}
                 </Button>
               </div>
             </>
@@ -981,8 +1114,21 @@ export default function AnimateVideo() {
         </div>
       )}
 
-      {/* ──── COMPLETE: Results panel ──── */}
-      {isComplete && videoUrl && (
+      {/* ──── BULK PROGRESS ──── */}
+      {(isBulkRunning || isBulkComplete) && bulkItems.length > 0 && (
+        <div className="space-y-4">
+          <BulkProgressBanner items={bulkItems} isComplete={isBulkComplete} />
+          {isBulkComplete && (
+            <Button variant="outline" onClick={handleNewProject} className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Start New Batch
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* ──── COMPLETE: Results panel (single mode) ──── */}
+      {isComplete && videoUrl && !isBulkComplete && (
         <VideoResultsPanel
           videoUrl={videoUrl}
           sourceImageUrl={imagePreview || imageUrl || undefined}
