@@ -162,7 +162,7 @@ Freestyle is the most affordable way to generate — starting from just 4 credit
 When users ask "how much does X cost?" or "how many credits for Y?" — give them the exact number from above. Be specific, not vague.
 
 SUBSCRIPTION PLANS:
-- **Free**: 20 credits (~4 images), all workflows, 1 brand profile, 1 product, 0 video credits
+- **Free**: 20 credits (~4 images), all templates, 1 brand profile, 1 product, 0 video credits
 - **Starter** ($39/mo): 500 credits (~100 images), 2 video credits, Virtual Try-On, 3 brand profiles, 10 products
 - **Growth** ($79/mo, most popular): 1,500 credits (~300 images), 5 video credits, priority queue, 10 brand profiles, 100 products
 - **Pro** ($179/mo): 4,500 credits (~900 images), 15 video credits, Creative Drops, unlimited brand profiles & products
