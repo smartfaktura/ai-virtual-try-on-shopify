@@ -173,7 +173,9 @@ export default function VideoHub() {
       const videos = await Promise.all(
         selected.map(async (v, i) => ({
           url: await toSignedUrl(v.video_url!),
-          name: `video_${i + 1}`,
+          name: v.camera_type
+            ? `${v.camera_type}_${v.id.slice(0, 6)}`
+            : `video_${i + 1}`,
         }))
       );
       await downloadVideosAsZip(videos, 'videos');
