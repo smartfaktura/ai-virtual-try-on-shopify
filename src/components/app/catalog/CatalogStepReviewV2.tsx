@@ -229,7 +229,7 @@ export function CatalogStepReviewV2({
           {hasEnoughCredits ? (
             <span className="text-xs text-muted-foreground">{balance} available</span>
           ) : (
-            <button onClick={onOpenBuyModal} className="flex items-center gap-1 text-xs text-destructive font-semibold hover:underline">
+            <button onClick={onOpenBuyModal} className="flex items-center gap-1 text-xs text-destructive font-semibold hover:underline focus-visible:ring-2 focus-visible:ring-primary rounded">
               <Ban className="w-3 h-3" />
               {balance} available — need {totalCredits - balance} more
             </button>

@@ -52,6 +52,15 @@ export function CatalogStepBackgroundsV2({
                 </div>
               )}
 
+              {/* Popular badge */}
+              {bg.id === POPULAR_BACKGROUND && !isSelected && (
+                <div className="absolute top-2.5 left-2.5">
+                  <Badge variant="secondary" className="text-[9px] gap-1 shadow-sm">
+                    <Star className="w-2.5 h-2.5" /> Popular
+                  </Badge>
+                </div>
+              )}
+
               {/* Label overlay */}
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-3 py-2.5">
                 <p className="text-xs font-medium text-white">{bg.label}</p>

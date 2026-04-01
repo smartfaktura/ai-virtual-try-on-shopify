@@ -51,7 +51,7 @@ export function CatalogStepFashionStyle({
               )}
             >
               {/* Color mood strip */}
-              <div className="h-2 flex shrink-0">
+              <div className="h-2 flex shrink-0" aria-hidden="true">
                 {moods.map((color, i) => (
                   <div key={i} className="flex-1" style={{ backgroundColor: color }} />
                 ))}
