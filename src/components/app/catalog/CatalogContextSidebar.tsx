@@ -25,6 +25,7 @@ interface CatalogContextSidebarProps {
   productOnlyMode: boolean;
   backgroundId: string | null;
   selectedShots: Set<CatalogShotId>;
+  selectedPropCount: number;
   totalImages: number;
   totalCredits: number;
   currentStep: number;
