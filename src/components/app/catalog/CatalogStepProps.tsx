@@ -310,13 +310,7 @@ export function CatalogStepProps({
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="p-1">
-                          {combo.shot.previewUrl ? (
-                            <div className="w-32 h-32 rounded overflow-hidden">
-                              <img src={combo.shot.previewUrl} alt={combo.shot.label} className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <p className="text-xs">{combo.shot.label}</p>
-                          )}
+                          <p className="text-xs font-medium">{combo.shot.label}</p>
                         </TooltipContent>
                       </Tooltip>
 
