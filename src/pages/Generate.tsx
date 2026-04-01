@@ -422,7 +422,7 @@ export default function Generate() {
   const [imageCount, setImageCount] = useState<'1' | '2' | '3' | '4'>('1');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [selectedAspectRatios, setSelectedAspectRatios] = useState<Set<AspectRatio>>(new Set());
-  const [quality, setQuality] = useState<ImageQuality>('standard');
+  const [quality, setQuality] = useState<ImageQuality>('high');
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [selectedFramings, setSelectedFramings] = useState<Set<string>>(new Set(['auto']));
 
