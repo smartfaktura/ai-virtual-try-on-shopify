@@ -161,16 +161,22 @@ export default function AIProductPhotographyEcommerce() {
     return picks;
   }, [presets, usedIds]);
 
-  // Tab images with smart fallback — never show camera placeholder
+  const [activeTab, setActiveTab] = useState('white-bg');
+
+  // Tab images: 3 per tab with smart fallback
   const tabImages = useMemo(() => {
-    const map: Record<string, DiscoverPreset | null> = {};
+    const map: Record<string, DiscoverPreset[]> = {};
     for (const tab of OUTCOME_TABS) {
-      const picks = pickByCategory(presets, tab.category, 1, usedIds);
-      let pick = picks[0] ?? null;
-      // Fallback: grab any featured preset not yet used
-      if (!pick) pick = pickFeaturedFallback(presets, usedIds);
-      if (pick) usedIds.add(pick.id);
-      map[tab.id] = pick;
+      const picks = pickByCategory(presets, tab.category, 3, usedIds);
+      // Fill remaining slots with featured fallbacks
+      while (picks.length < 3) {
+        const fb = pickFeaturedFallback(presets, usedIds);
+        if (!fb) break;
+        picks.push(fb);
+        usedIds.add(fb.id);
+      }
+      picks.forEach(p => usedIds.add(p.id));
+      map[tab.id] = picks;
     }
     return map;
   }, [presets, usedIds]);
