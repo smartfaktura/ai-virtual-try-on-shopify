@@ -93,7 +93,7 @@ CRITICAL STYLE RULES:
 PLATFORM KNOWLEDGE — VOVV.AI:
 The platform has two main ways to create images:
 
-**Workflows** (/app/workflows) — Guided, structured generation with 6 specialized workflows:
+**Templates** (/app/workflows) — Guided, structured generation with 6 specialized templates:
 - **Virtual Try-On Set** — Put products on AI models wearing them. Best for clothing, accessories, jewelry.
 - **Product Listing Set** — Clean e-commerce product shots with professional backgrounds and lighting. Best for any product type.
 - **Selfie / UGC Set** — User-generated content style photos. Natural, authentic-looking lifestyle shots.
