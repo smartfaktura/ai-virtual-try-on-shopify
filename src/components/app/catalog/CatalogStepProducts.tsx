@@ -424,11 +424,10 @@ export function CatalogStepProducts({
               className="flex-1 rounded-xl"
             />
             <Button
-              disabled={!importUrl.trim() || isImporting}
-              onClick={() => { setIsImporting(true); setTimeout(() => setIsImporting(false), 2000); }}
+              disabled
               className="rounded-xl"
             >
-              {isImporting ? 'Detecting…' : 'Import'}
+              Coming Soon
             </Button>
           </div>
           {isImporting && (
