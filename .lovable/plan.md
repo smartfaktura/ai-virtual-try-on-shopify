@@ -1,55 +1,59 @@
 
 
-# Fix Duplicate Videos and Auto-Refresh in Video Hub
+# Bulk Video Generation for Paid Users
 
-## Problems Identified
+## Summary
 
-1. **Duplicate videos**: The `generated_videos` table likely contains duplicate rows per generation (e.g., from retries or the recover function re-inserting). The `fetchHistory` query has no deduplication by `kling_task_id`.
+Add multi-image support to the Animate Image page. Paid users can upload multiple images, the first image gets analyzed, and they can choose to apply the same settings to all images. Each video is enqueued as a separate job in the existing queue — no backend changes needed.
 
-2. **No auto-refresh after completion**: When a video finishes processing while the user is on the Video Hub, the history only refreshes every 15 seconds IF there are already processing/queued videos visible. There is no realtime listener or window-focus refetch to catch completions smoothly.
+## How It Works
 
-## Plan
+1. **Upload phase**: Paid users see a multi-image upload zone (up to 10 images). Free users remain single-image only.
+2. **Analysis**: First image is analyzed by AI to detect category, scene type, motion goals. Results pre-fill settings.
+3. **Apply to all toggle**: A prominent "Apply same settings to all images" checkbox (default ON). If OFF, user can tab through images and tweak per-image settings (stretch goal — start with "apply to all" only).
+4. **Credit estimate**: Shows total cost (e.g., "10 credits × 5 images = 50 credits") with balance check.
+5. **Generate**: Loops through images, calling `runAnimatePipeline` for each. Jobs enter the existing queue sequentially with pacing delays.
+6. **Progress**: A batch progress banner shows "Generating 3/5 videos" with individual status indicators.
 
-### 1. Deduplicate history query (`src/hooks/useGenerateVideo.ts`)
-- Add `.not('kling_task_id', 'is', null)` filter to exclude incomplete rows
-- Deduplicate results client-side by `kling_task_id` to prevent showing the same video twice (keep the latest row)
+## Technical Plan
 
-### 2. Add window focus refetch (`src/hooks/useGenerateVideo.ts`)
-- Add a `visibilitychange` / `focus` event listener that calls `fetchHistory()` when the user returns to the tab or navigates back to Video Hub
-- This ensures videos completed while away are immediately visible
+### 1. New component: `BulkImageUploader.tsx`
+- Grid of uploaded image thumbnails with add/remove
+- Drag-and-drop or file picker for multiple files
+- Shows analysis badge on the first image
+- Paid-user gate check via `useCredits().plan`
 
-### 3. Faster polling when jobs are active (`src/hooks/useGenerateVideo.ts`)
-- Reduce the auto-refresh interval from 15s to 8s for processing videos
-- Immediately refresh history when the queue `activeJob` transitions to `completed`
+### 2. Update `AnimateVideo.tsx`
+- Add state: `bulkImages: Array<{ url, preview, analysisResult? }>`
+- When `plan !== 'free'`, show bulk upload option
+- "Apply same settings to all" toggle (default true)
+- Update credit estimate to multiply by image count
+- Generate button triggers sequential pipeline for each image
+- Show batch progress UI during generation
 
-### 4. Smooth transition on completion (`src/pages/VideoHub.tsx`)
-- After `onDeleted` or when `selectedVideo` updates, refresh history to reflect the latest state
+### 3. Update `useVideoProject.ts`
+- Add `runBulkAnimatePipeline(images[], sharedParams)` that loops through images, creating a project + enqueuing for each
+- Uses pacing delay between enqueue calls (300ms via existing `paceDelay`)
+- Tracks bulk progress: `{ total, completed, failed }`
 
-## Technical Details
+### 4. Batch progress UI
+- Reuse existing progress banner pattern from image generation
+- Show per-image status (queued / generating / complete / failed)
+- Link to Video Hub when all complete
 
-### File: `src/hooks/useGenerateVideo.ts`
+### 5. Credit validation
+- Upfront check: `estimateCredits(params) × imageCount <= balance`
+- Block generation with clear message if insufficient
 
-**fetchHistory** - Add deduplication:
-```typescript
-// After fetching, deduplicate by kling_task_id
-const seen = new Set<string>();
-const deduped = signedHistory.filter(v => {
-  if (!v.kling_task_id) return true;
-  if (seen.has(v.kling_task_id)) return false;
-  seen.add(v.kling_task_id);
-  return true;
-});
-setHistory(deduped);
-```
+## What's NOT Changing
+- No backend/edge function changes — each video is a standard single job
+- No database schema changes — each video gets its own `video_projects` + `generated_videos` rows
+- Queue system handles concurrency naturally
+- Free users keep single-image behavior
 
-**Add focus-based refresh:**
-```typescript
-useEffect(() => {
-  const onFocus = () => fetchHistory();
-  window.addEventListener('focus', onFocus);
-  return () => window.removeEventListener('focus', onFocus);
-}, [fetchHistory]);
-```
-
-**Reduce polling interval** from 15000ms to 8000ms for snappier updates.
+## File Changes
+- **New**: `src/components/app/video/BulkImageGrid.tsx` — multi-image upload grid
+- **Update**: `src/pages/video/AnimateVideo.tsx` — bulk mode toggle + batch generation flow
+- **Update**: `src/hooks/useVideoProject.ts` — `runBulkAnimatePipeline` method
+- **Update**: `src/config/videoCreditPricing.ts` — add bulk estimate helper
 
