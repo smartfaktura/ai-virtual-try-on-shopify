@@ -5,7 +5,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getFashionStyle, getBackground, getShotDefinition } from '@/lib/catalogEngine';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, ArrowRight, Gem } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
