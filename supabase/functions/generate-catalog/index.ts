@@ -287,9 +287,10 @@ serve(async (req) => {
   }
 
   const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+  let body: CatalogPayload = {} as CatalogPayload;
 
   try {
-    const body: CatalogPayload = await req.json();
+    body = await req.json();
 
     // Validate: product.imageUrl is always required; model is optional for product-only mode
     if (!body.product?.imageUrl) {
