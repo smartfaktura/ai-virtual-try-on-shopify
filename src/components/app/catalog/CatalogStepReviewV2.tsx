@@ -9,6 +9,12 @@ import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, A
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
+interface PropItem {
+  id: string;
+  title: string;
+  imageUrl: string;
+}
+
 const CREDITS_PER_IMAGE = 4;
 
 interface CatalogStepReviewV2Props {
