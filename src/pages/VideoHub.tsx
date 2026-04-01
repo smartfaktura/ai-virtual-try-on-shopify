@@ -177,6 +177,7 @@ export default function VideoHub() {
           name: buildVideoFileName({
             cameraType: v.camera_type,
             settingsJson: v.settings_json,
+            projectTitle: v.project_title,
             videoId: v.id,
           }),
         }))

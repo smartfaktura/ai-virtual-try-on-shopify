@@ -59,6 +59,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       a.download = buildVideoFileName({
         cameraType: video.camera_type,
         settingsJson: video.settings_json,
+        projectTitle: video.project_title,
         videoId: video.id,
       });
       document.body.appendChild(a);
