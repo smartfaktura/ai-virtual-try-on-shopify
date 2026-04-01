@@ -5,7 +5,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getFashionStyle, getBackground, getShotDefinition } from '@/lib/catalogEngine';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Image, Palette, Ban } from 'lucide-react';
+import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, ArrowRight } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
@@ -44,51 +44,89 @@ export function CatalogStepReviewV2({
         <p className="text-sm text-muted-foreground mt-1">Confirm your catalog settings before generating.</p>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryCard
-          icon={Package}
-          label="Products"
-          count={products.length}
-          thumbnails={products.slice(0, 4).map(p => ({ src: p.images[0]?.url, name: p.title }))}
-          overflow={products.length > 4 ? products.length - 4 : 0}
-        />
-        <SummaryCard
-          icon={Users}
-          label={productOnlyMode ? 'Product Only' : 'Models'}
-          count={productOnlyMode ? 0 : models.length}
-          thumbnails={productOnlyMode ? [] : models.slice(0, 4).map(m => ({ src: m.previewUrl, name: m.name }))}
-          overflow={!productOnlyMode && models.length > 4 ? models.length - 4 : 0}
-        />
-        <div className="rounded-lg border border-border bg-card p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <Palette className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium">Style</span>
+      {/* Visual summary strip */}
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {/* Product thumbnails */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-2 mb-3">
+            <Package className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground">Products</span>
+            <Badge variant="secondary" className="text-[9px] ml-auto">{products.length}</Badge>
           </div>
-          <p className="text-xs text-foreground font-medium">{style?.label || '—'}</p>
-          {bg && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border border-border" style={{ backgroundColor: bg.hex }} />
-              <span className="text-[10px] text-muted-foreground font-mono">{bg.hex}</span>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {products.map(p => (
+              <div key={p.id} className="flex-shrink-0 w-14">
+                <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
+                  {p.images[0]?.url ? (
+                    <ShimmerImage src={getOptimizedUrl(p.images[0].url, { quality: 50 })} alt={p.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-muted" />
+                  )}
+                </div>
+                <p className="text-[9px] text-muted-foreground mt-1 truncate text-center">{p.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Models strip */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground">{productOnlyMode ? 'Product Only' : 'Models'}</span>
+            {!productOnlyMode && <Badge variant="secondary" className="text-[9px] ml-auto">{models.length}</Badge>}
+          </div>
+          {productOnlyMode ? (
+            <p className="text-xs text-muted-foreground">Packshots and product-only images</p>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {models.map(m => (
+                <div key={m.modelId} className="flex-shrink-0 w-12">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted ring-1 ring-border">
+                    {m.previewUrl ? (
+                      <img src={getOptimizedUrl(m.previewUrl, { quality: 50 })} alt={m.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-muted" />
+                    )}
+                  </div>
+                  <p className="text-[9px] text-muted-foreground mt-1 truncate text-center">{m.name}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>
-        <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+
+        {/* Style + Background row */}
+        <div className="p-4 border-b border-border flex items-center gap-6">
           <div className="flex items-center gap-2">
+            <Palette className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-foreground">{style?.label || '—'}</span>
+          </div>
+          {bg && (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: bg.hex }} />
+              <span className="text-xs font-medium text-foreground">{bg.label}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Shots list */}
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2">
             <Camera className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium">Shots</span>
+            <span className="text-xs font-semibold text-foreground">Shots</span>
             <Badge variant="secondary" className="text-[9px] ml-auto">{shots.length}</Badge>
           </div>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {shots.map(s => (
-              <span key={s!.id} className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{s!.label}</span>
+              <span key={s!.id} className="text-[10px] bg-muted text-muted-foreground px-2 py-1 rounded-md font-medium">{s!.label}</span>
             ))}
           </div>
         </div>
       </div>
 
       {/* Credit calculation */}
-      <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+      <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
         <div className="flex items-center gap-2 text-sm flex-wrap">
           <span className="font-medium">{products.length} product{products.length !== 1 ? 's' : ''}</span>
           {!productOnlyMode && models.length > 0 && (
@@ -100,10 +138,10 @@ export function CatalogStepReviewV2({
           <span className="text-muted-foreground">×</span>
           <span className="font-medium">{shots.length} shot{shots.length !== 1 ? 's' : ''}</span>
           <span className="text-muted-foreground">×</span>
-          <span className="font-medium">{CREDITS_PER_IMAGE} credits</span>
+          <span className="font-medium">{CREDITS_PER_IMAGE} cr</span>
           <span className="text-muted-foreground">=</span>
-          <span className="font-bold">{totalCredits} credits</span>
-          <span className="text-muted-foreground text-xs">({totalImages} images)</span>
+          <span className="text-lg font-bold text-foreground">{totalCredits} credits</span>
+          <span className="text-[10px] text-muted-foreground">({totalImages} images)</span>
         </div>
         <div className={cn(
           'flex items-center justify-between rounded-lg p-3',
@@ -132,7 +170,8 @@ export function CatalogStepReviewV2({
         <Button
           onClick={hasEnoughCredits ? onGenerate : onOpenBuyModal}
           disabled={isGenerating || totalImages === 0}
-          className="gap-2"
+          className="gap-2 px-6"
+          size="lg"
         >
           {isGenerating ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -140,44 +179,9 @@ export function CatalogStepReviewV2({
             <Sparkles className="w-4 h-4" />
           )}
           {hasEnoughCredits ? `Generate ${totalImages} Images` : 'Buy Credits'}
+          {hasEnoughCredits && <ArrowRight className="w-4 h-4" />}
         </Button>
       </div>
-    </div>
-  );
-}
-
-function SummaryCard({ icon: Icon, label, count, thumbnails, overflow }: {
-  icon: any;
-  label: string;
-  count: number;
-  thumbnails: Array<{ src?: string; name: string }>;
-  overflow: number;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium">{label}</span>
-        {count > 0 && <Badge variant="secondary" className="ml-auto text-[9px]">{count}</Badge>}
-      </div>
-      {thumbnails.length > 0 && (
-        <div className="flex gap-1">
-          {thumbnails.map((t, i) => (
-            <div key={i} className="w-7 h-7 rounded overflow-hidden bg-muted" title={t.name}>
-              {t.src ? (
-                <img src={getOptimizedUrl(t.src, { quality: 40 })} alt={t.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-muted" />
-              )}
-            </div>
-          ))}
-          {overflow > 0 && (
-            <div className="w-7 h-7 rounded bg-muted flex items-center justify-center text-[9px] text-muted-foreground font-medium">
-              +{overflow}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
