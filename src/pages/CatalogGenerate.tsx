@@ -267,7 +267,7 @@ export default function CatalogGenerate() {
     setModelExplicitlyChosen(false);
     setSelectedBackgroundId(null);
     setSelectedShots(new Set());
-    setSelectedPropIds(new Set());
+    setPropAssignments({});
     setGenerationStartedAt(null);
     setElapsedSeconds(0);
   };
