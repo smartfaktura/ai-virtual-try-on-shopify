@@ -18,6 +18,7 @@ import { CatalogStepFashionStyle } from '@/components/app/catalog/CatalogStepFas
 import { CatalogStepModelsV2 } from '@/components/app/catalog/CatalogStepModelsV2';
 import { CatalogStepBackgroundsV2 } from '@/components/app/catalog/CatalogStepBackgroundsV2';
 import { CatalogStepShots } from '@/components/app/catalog/CatalogStepShots';
+import { CatalogStepProps } from '@/components/app/catalog/CatalogStepProps';
 import { CatalogStepReviewV2 } from '@/components/app/catalog/CatalogStepReviewV2';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
@@ -27,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-import { Package, Palette, Users, Image, Camera, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, Gem, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
@@ -40,7 +41,8 @@ const STEPS = [
   { number: 3, label: 'Models', icon: Users },
   { number: 4, label: 'Background', icon: Image },
   { number: 5, label: 'Shots', icon: Camera },
-  { number: 6, label: 'Review', icon: ClipboardCheck },
+  { number: 6, label: 'Props', icon: Gem },
+  { number: 7, label: 'Review', icon: ClipboardCheck },
 ];
 
 function formatTime(seconds: number): string {
@@ -72,6 +74,9 @@ export default function CatalogGenerate() {
 
   // Step 5
   const [selectedShots, setSelectedShots] = useState<Set<CatalogShotId>>(new Set());
+
+  // Step 6 — props
+  const [selectedPropIds, setSelectedPropIds] = useState<Set<string>>(new Set());
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -185,7 +190,8 @@ export default function CatalogGenerate() {
   const canStep3 = modelExplicitlyChosen;
   const canStep4 = selectedBackgroundId !== null;
   const canStep5 = selectedShots.size >= 1;
-  const canStep6 = canStep5;
+  const canStep6 = canStep5; // props step is always passable (optional)
+  const canStep7 = canStep6;
 
   const canNavigateTo = (s: number) => {
     if (s <= step) return true;
@@ -194,6 +200,7 @@ export default function CatalogGenerate() {
     if (s === 4) return canStep1 && canStep2 && canStep3;
     if (s === 5) return canStep1 && canStep2 && canStep3 && canStep4;
     if (s === 6) return canStep1 && canStep2 && canStep3 && canStep4 && canStep5;
+    if (s === 7) return canStep1 && canStep2 && canStep3 && canStep4 && canStep5;
     return false;
   };
 
@@ -233,6 +240,13 @@ export default function CatalogGenerate() {
       models,
       backgroundId: selectedBackgroundId,
       selectedShots: Array.from(selectedShots),
+      stylingProps: Array.from(selectedPropIds).map(id => {
+        const p = products.find(pr => pr.id === id);
+        return p ? {
+          id: p.id, title: p.title, imageUrl: p.images[0]?.url || '',
+          detectedCategory: detectProductCategory(p.title, p.productType, p.description),
+        } : null;
+      }).filter(Boolean) as CatalogSessionConfig['stylingProps'],
     };
 
     await startGeneration(config);
@@ -249,6 +263,7 @@ export default function CatalogGenerate() {
     setModelExplicitlyChosen(false);
     setSelectedBackgroundId(null);
     setSelectedShots(new Set());
+    setSelectedPropIds(new Set());
     setGenerationStartedAt(null);
     setElapsedSeconds(0);
   };
@@ -548,6 +563,17 @@ export default function CatalogGenerate() {
           )}
 
           {step === 6 && (
+            <CatalogStepProps
+              allProducts={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
+              heroProductIds={selectedProductIds}
+              selectedPropIds={selectedPropIds}
+              onPropSelectionChange={setSelectedPropIds}
+              onBack={() => setStep(5)}
+              onNext={() => setStep(7)}
+            />
+          )}
+
+          {step === 7 && (
             <CatalogStepReviewV2
               products={products.filter(p => selectedProductIds.has(p.id))}
               models={allModels.filter(m => selectedModelIds.has(m.modelId))}
@@ -555,11 +581,15 @@ export default function CatalogGenerate() {
               fashionStyleId={fashionStyle}
               backgroundId={selectedBackgroundId}
               selectedShots={selectedShots}
+              stylingProps={Array.from(selectedPropIds).map(id => {
+                const p = products.find(pr => pr.id === id);
+                return p ? { id: p.id, title: p.title, imageUrl: p.images[0]?.url || '' } : null;
+              }).filter(Boolean) as { id: string; title: string; imageUrl: string }[]}
               totalImages={totalImages}
               totalCredits={totalCredits}
               balance={balance}
               isGenerating={isGenerating}
-              onBack={() => setStep(5)}
+              onBack={() => setStep(6)}
               onGenerate={handleGenerate}
               onOpenBuyModal={openBuyModal}
             />
@@ -575,6 +605,7 @@ export default function CatalogGenerate() {
             productOnlyMode={productOnlyMode}
             backgroundId={selectedBackgroundId}
             selectedShots={selectedShots}
+            selectedPropCount={selectedPropIds.size}
             totalImages={totalImages}
             totalCredits={totalCredits}
             currentStep={step}

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getFashionStyle, getBackground } from '@/lib/catalogEngine';
-import { Package, Palette, Users, Image, Camera, Sparkles } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, Gem, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
@@ -25,6 +25,7 @@ interface CatalogContextSidebarProps {
   productOnlyMode: boolean;
   backgroundId: string | null;
   selectedShots: Set<CatalogShotId>;
+  selectedPropCount: number;
   totalImages: number;
   totalCredits: number;
   currentStep: number;
@@ -32,7 +33,7 @@ interface CatalogContextSidebarProps {
 
 export function CatalogContextSidebar({
   selectedProducts, fashionStyleId, models, productOnlyMode,
-  backgroundId, selectedShots, totalImages, totalCredits, currentStep,
+  backgroundId, selectedShots, selectedPropCount, totalImages, totalCredits, currentStep,
 }: CatalogContextSidebarProps) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
   const bg = backgroundId ? getBackground(backgroundId) : null;
@@ -42,7 +43,7 @@ export function CatalogContextSidebar({
       <div className="rounded-xl border border-border bg-card p-4 space-y-5">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">STUDIO SETUP</h4>
-          <Badge variant="secondary" className="text-[9px]">Step {currentStep}/6</Badge>
+          <Badge variant="secondary" className="text-[9px]">Step {currentStep}/7</Badge>
         </div>
 
         {/* Products */}
@@ -116,6 +117,15 @@ export function CatalogContextSidebar({
             <span className="text-[10px] text-foreground font-medium">{selectedShots.size} shot{selectedShots.size !== 1 ? 's' : ''}</span>
           ) : (
             <span className="text-[10px] text-muted-foreground/50">Not selected</span>
+          )}
+        </SidebarRow>
+
+        {/* Props */}
+        <SidebarRow icon={Gem} label="Props" done={selectedPropCount > 0}>
+          {selectedPropCount > 0 ? (
+            <span className="text-[10px] text-foreground font-medium">{selectedPropCount} item{selectedPropCount !== 1 ? 's' : ''}</span>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/50">None</span>
           )}
         </SidebarRow>
       </div>

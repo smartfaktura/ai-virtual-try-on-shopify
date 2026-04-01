@@ -128,6 +128,7 @@ export interface CatalogSessionConfig {
   models: CatalogModelEntry[];
   backgroundId: string;
   selectedShots: CatalogShotId[];
+  stylingProps?: Array<{ id: string; title: string; imageUrl: string; detectedCategory: ProductCategory }>;
 }
 
 export interface CatalogJobExtended {
