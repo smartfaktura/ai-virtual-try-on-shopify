@@ -101,21 +101,27 @@ function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<s
 export default function AIProductPhotographyEcommerce() {
   const { data: presets = [] } = useDiscoverPresets();
 
-  const heroImages = useMemo(() => pickFeatured(presets, 6), [presets]);
+  const usedIds = useMemo(() => new Set<string>(), []);
+
+  const heroImages = useMemo(() => {
+    usedIds.clear();
+    const picks = pickProductLed(presets, 6);
+    picks.forEach(p => usedIds.add(p.id));
+    return picks;
+  }, [presets, usedIds]);
 
   const tabImages = useMemo(() => {
-    const used = new Set<string>();
     const map: Record<string, DiscoverPreset | null> = {};
     for (const tab of OUTCOME_TABS) {
-      const picks = pickByCategory(presets, tab.category, 1, used);
+      const picks = pickByCategory(presets, tab.category, 1, usedIds);
       const pick = picks[0] ?? null;
-      if (pick) used.add(pick.id);
+      if (pick) usedIds.add(pick.id);
       map[tab.id] = pick;
     }
     return map;
-  }, [presets]);
+  }, [presets, usedIds]);
 
-  const showcaseImages = useMemo(() => pickFeatured(presets, 12), [presets]);
+  const showcaseImages = useMemo(() => pickProductLed(presets, 12, usedIds), [presets, usedIds]);
 
   const faqSchema = useMemo(() => ({
     '@context': 'https://schema.org',
