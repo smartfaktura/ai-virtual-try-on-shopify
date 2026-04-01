@@ -390,7 +390,7 @@ export default function AnimateVideo() {
 
     if (!imageUrl) { toast.error('Please upload an image first'); return; }
 
-    // Multi-motion for single image: generate one video per motion
+    // Multi-motion for single image: use bulk pipeline for single loading screen
     if (motionCount > 1) {
       const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
       const total = perVideoCost * motionCount;
@@ -398,20 +398,22 @@ export default function AnimateVideo() {
         toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
         return;
       }
-      for (let i = 0; i < selectedCameraMotions.length; i++) {
-        if (i > 0) {
-          resetPipeline();
-          await new Promise(r => setTimeout(r, 300));
-        }
-        await runAnimatePipeline({
-          imageUrl,
-          category, sceneType, motionGoalId,
-          cameraMotion: selectedCameraMotions[i], subjectMotion, realismLevel, loopStyle, motionIntensity,
-          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
-          aspectRatio, duration, audioMode,
-          userPrompt: userPrompt || undefined,
-        });
-      }
+      const singleImageAsBulk = selectedCameraMotions.map((motion, i) => ({
+        id: `${motion}-${i}`,
+        url: imageUrl,
+        preview: imageUrl,
+      }));
+      const sharedSingle = {
+        category, sceneType, motionGoalId,
+        cameraMotion: selectedCameraMotions[0], subjectMotion, realismLevel, loopStyle, motionIntensity,
+        preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+        aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined,
+      };
+      const perMotionOverrides = new Map<string, Record<string, any>>();
+      selectedCameraMotions.forEach((motion, i) => {
+        perMotionOverrides.set(`${motion}-${i}`, { cameraMotion: motion });
+      });
+      runBulkAnimatePipeline(singleImageAsBulk, sharedSingle, perMotionOverrides);
       return;
     }
 
