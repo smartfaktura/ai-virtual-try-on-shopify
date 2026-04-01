@@ -639,7 +639,7 @@ export default function Dashboard() {
             <div className="flex-1">
               <h3 className="text-lg font-bold text-foreground">Freestyle Studio</h3>
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                Full creative control — mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
+                Full creative control - mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
               </p>
             </div>
             <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4" onClick={() => navigate('/app/freestyle')}>
