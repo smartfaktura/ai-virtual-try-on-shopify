@@ -5,84 +5,15 @@ import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
 import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState, useRef, useCallback, useEffect, type CSSProperties } from 'react';
+import { useState, useCallback } from 'react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { downloadVideosAsZip } from '@/lib/dropDownload';
-import { toSignedUrl } from '@/lib/signedUrl';
-import { toast } from 'sonner';
-import { buildVideoFileName } from '@/lib/videoFilename';
-
-interface RecentVideoCardProps {
-  video: GeneratedVideo;
-  onClick: () => void;
-  selectMode: boolean;
-  selected: boolean;
-  onToggleSelect: () => void;
-}
-
-function getMediaFrameStyle(aspectRatio: string | null | undefined): CSSProperties {
-  if (!aspectRatio || !aspectRatio.includes(':')) {
-    return { width: '100%', height: '100%' };
-  }
-
-  const [width, height] = aspectRatio.split(':').map(Number);
-  if (!width || !height) {
-    return { width: '100%', height: '100%' };
-  }
-
-  const normalizedAspectRatio = `${width} / ${height}`;
-  const cardRatio = 3 / 4;
-  const mediaRatio = width / height;
-
-  return mediaRatio >= cardRatio
-    ? { width: '100%', aspectRatio: normalizedAspectRatio }
-    : { height: '100%', aspectRatio: normalizedAspectRatio };
-}
 
 function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const isMobile = useIsMobile();
   const isComplete = video.status === 'complete' && video.video_url;
-  const [hovering, setHovering] = useState(false);
-  const [canPlay, setCanPlay] = useState(false);
-  const thumbnailUrl = getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 });
-  const displayAspectRatio =
-    typeof video.settings_json?.aspectRatio === 'string'
-      ? video.settings_json.aspectRatio
-      : video.aspect_ratio;
-  const mediaFrameStyle = getMediaFrameStyle(displayAspectRatio);
-
-  useEffect(() => {
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.removeAttribute('src');
-        videoRef.current.load();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!videoRef.current || !canPlay) return;
-    if (hovering) {
-      videoRef.current.play().catch(() => {});
-    } else {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  }, [hovering, canPlay]);
-
-  const handleMouseEnter = useCallback(() => {
-    if (!isMobile && isComplete && !selectMode) setHovering(true);
-  }, [isMobile, isComplete, selectMode]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (!isMobile && isComplete && !selectMode) {
-      setHovering(false);
-      setCanPlay(false);
-    }
-  }, [isMobile, isComplete, selectMode]);
+  const thumbnailUrl = getOptimizedUrl(
+    (video as any).preview_url || video.source_image_url,
+    { width: 800, quality: 60 },
+  );
 
   const handleClick = useCallback(() => {
     if (selectMode) {
