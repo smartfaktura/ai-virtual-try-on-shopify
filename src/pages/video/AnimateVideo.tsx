@@ -61,8 +61,14 @@ export default function AnimateVideo() {
     runAnimatePipeline, resetPipeline, activeJob,
   } = useVideoProject();
 
-  const { balance: creditsBalance } = useCredits();
+  const { bulkItems, isBulkRunning, isBulkComplete, runBulkAnimatePipeline, resetBulk } = useBulkVideoProject();
+
+  const { balance: creditsBalance, plan } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
+
+  const isPaidUser = plan !== 'free';
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkImages, setBulkImages] = useState<BulkImage[]>([]);
 
   // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
