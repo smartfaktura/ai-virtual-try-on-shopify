@@ -394,7 +394,7 @@ export default function Dashboard() {
               <span><strong className="text-foreground">{balance}</strong> credits available</span>
             </div>
             <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => setStartModalOpen(true)}>
-              Start with a Workflow
+              Start with a Template
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
