@@ -22,6 +22,7 @@ import { CatalogStepProps } from '@/components/app/catalog/CatalogStepProps';
 import { CatalogStepReviewV2 } from '@/components/app/catalog/CatalogStepReviewV2';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
@@ -81,6 +82,7 @@ export default function CatalogGenerate() {
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Elapsed time tracking
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
@@ -406,13 +408,25 @@ export default function CatalogGenerate() {
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">VOVV.AI</p>
-              <Button variant="outline" size="sm" className="text-xs" onClick={() => {
-                if (confirm('Cancel the remaining generations? Completed images will be kept.')) {
-                  resetBatch();
-                }
-              }}>
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCancelDialog(true)}>
                 Cancel
               </Button>
+              <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel generation?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Already-queued images will still be processed and credits for completed images will be used. Only future batches will be stopped.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep going</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => { resetBatch(); setShowCancelDialog(false); }}>
+                      Cancel generation
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
 
             {(() => {
@@ -638,6 +652,7 @@ export default function CatalogGenerate() {
             totalImages={totalImages}
             totalCredits={totalCredits}
             currentStep={step}
+            balance={balance}
           />
         </div>
       </div>

@@ -60,7 +60,7 @@ export function CatalogStepModelsV2({
       {/* Product Only toggle */}
       <button
         onClick={onProductOnlyToggle}
-        className={cn(
+        className={cn('outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
           'w-full rounded-xl border p-4 text-left transition-all duration-150 flex items-center gap-4',
           productOnlyMode
             ? 'border-primary ring-2 ring-primary/20 bg-card'

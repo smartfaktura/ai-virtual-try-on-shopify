@@ -30,11 +30,12 @@ interface CatalogContextSidebarProps {
   totalImages: number;
   totalCredits: number;
   currentStep: number;
+  balance?: number;
 }
 
 export function CatalogContextSidebar({
   selectedProducts, fashionStyleId, models, productOnlyMode,
-  backgroundId, selectedShots, selectedPropCount, totalCombos, totalImages, totalCredits, currentStep,
+  backgroundId, selectedShots, selectedPropCount, totalCombos, totalImages, totalCredits, currentStep, balance,
 }: CatalogContextSidebarProps) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
   const bg = backgroundId ? getBackground(backgroundId) : null;
@@ -144,6 +145,11 @@ export function CatalogContextSidebar({
             <span className="text-2xl font-semibold text-foreground tracking-tight">{totalCredits}</span>
             <span className="text-[10px] text-muted-foreground">credits · {totalImages} images</span>
           </div>
+          {balance !== undefined && (
+            <p className={cn('text-[10px] font-medium', balance >= totalCredits ? 'text-primary' : 'text-destructive')}>
+              {balance} credits available{balance < totalCredits ? ' — not enough' : ''}
+            </p>
+          )}
         </div>
       )}
     </div>

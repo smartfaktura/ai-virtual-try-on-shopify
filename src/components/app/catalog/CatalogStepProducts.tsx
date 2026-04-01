@@ -359,50 +359,63 @@ export function CatalogStepProducts({
 
               {/* ── List View ─────────────────────────────── */}
               {filtered.length > 0 && viewMode === 'list' && (
-                <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
-                  {visible.map((up, idx) => {
-                    const isSelected = selectedProductIds.has(up.id);
-                    const isDisabled = !isSelected && selectedProductIds.size >= maxProducts;
-                    const selNum = getSelectionNumber(up.id);
-                    return (
-                      <button
-                        key={up.id}
-                        type="button"
-                        onClick={() => toggleProduct(up.id)}
-                        disabled={isDisabled}
-                        className={cn(
-                          'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left',
-                          isSelected
-                            ? 'bg-primary/5 border border-primary/20'
-                            : cn('border border-transparent hover:bg-muted/40', idx % 2 === 1 && 'bg-muted/20'),
-                          isDisabled && 'opacity-35 cursor-not-allowed'
-                        )}
-                      >
-                        <ShimmerImage
-                          src={getOptimizedUrl(up.image_url, { quality: 60 })}
-                          alt={up.title}
-                          className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{up.title}</p>
-                          {up.product_type && (
-                            <span className="inline-block text-[10px] text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 mt-0.5">
-                              {up.product_type}
-                            </span>
+                <>
+                  <div className="space-y-1 max-h-[min(420px,50vh)] overflow-y-auto pr-1">
+                    {visible.map((up, idx) => {
+                      const isSelected = selectedProductIds.has(up.id);
+                      const isDisabled = !isSelected && selectedProductIds.size >= maxProducts;
+                      const selNum = getSelectionNumber(up.id);
+                      return (
+                        <button
+                          key={up.id}
+                          type="button"
+                          onClick={() => toggleProduct(up.id)}
+                          disabled={isDisabled}
+                          className={cn(
+                            'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left',
+                            isSelected
+                              ? 'bg-primary/5 border border-primary/20'
+                              : cn('border border-transparent hover:bg-muted/40', idx % 2 === 1 && 'bg-muted/20'),
+                            isDisabled && 'opacity-35 cursor-not-allowed'
                           )}
-                        </div>
-                        <div className={cn(
-                          'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-semibold transition-all duration-200',
-                          isSelected
-                            ? 'bg-primary text-primary-foreground'
-                            : 'border-2 border-muted-foreground/15'
-                        )}>
-                          {isSelected && (selNum ?? <Check className="w-3 h-3" />)}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                        >
+                          <ShimmerImage
+                            src={getOptimizedUrl(up.image_url, { quality: 60 })}
+                            alt={up.title}
+                            className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{up.title}</p>
+                            {up.product_type && (
+                              <span className="inline-block text-[10px] text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 mt-0.5">
+                                {up.product_type}
+                              </span>
+                            )}
+                          </div>
+                          <div className={cn(
+                            'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-semibold transition-all duration-200',
+                            isSelected
+                              ? 'bg-primary text-primary-foreground'
+                              : 'border-2 border-muted-foreground/15'
+                          )}>
+                            {isSelected && (selNum ?? <Check className="w-3 h-3" />)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {filtered.length > visibleCount && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVisibleCount(c => c + PRODUCTS_PER_PAGE)}
+                      className="w-full rounded-xl"
+                    >
+                      Load more ({filtered.length - visibleCount} remaining)
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}
