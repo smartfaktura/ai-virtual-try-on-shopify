@@ -53,6 +53,10 @@ interface UseGenerateVideoResult {
   history: GeneratedVideo[];
   isLoadingHistory: boolean;
   refreshHistory: () => void;
+  loadMore: () => void;
+  hasMore: boolean;
+  totalCount: number;
+  isLoadingMore: boolean;
 }
 
 export function useGenerateVideo(): UseGenerateVideoResult {
