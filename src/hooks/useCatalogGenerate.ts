@@ -156,6 +156,7 @@ export function useCatalogGenerate() {
     productImageB64: string,
     productTitle: string,
     productId: string,
+    productOriginalUrl: string,
     shotId: CatalogShotId,
     shotLabel: string,
     renderPath: RenderPath,
@@ -177,6 +178,8 @@ export function useCatalogGenerate() {
           shot_id: shotId,
           prompt_final: prompt,
           product: { title: productTitle, imageUrl: productImageB64 },
+          product_id: productId,
+          product_image_url: productOriginalUrl,
           ...(modelImageB64 && { model: { imageUrl: modelImageB64, name: modelProfile } }),
           ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),
           aspectRatio: '3:4',
@@ -304,7 +307,7 @@ export function useCatalogGenerate() {
         });
 
         const anchorResult = await enqueueJob(
-          token, productB64, product.title, product.id,
+          token, productB64, product.title, product.id, product.imageUrl,
           effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
           anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
         );
@@ -333,7 +336,7 @@ export function useCatalogGenerate() {
           });
 
           const jobResult = await enqueueJob(
-            token, productB64, product.title, product.id,
+            token, productB64, product.title, product.id, product.imageUrl,
             shotId, shotDef.label, renderPath, prompt,
             modelB64, session.modelProfile, null, batchId, enqueueCount++,
           );

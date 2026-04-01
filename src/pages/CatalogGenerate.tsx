@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +48,7 @@ function formatTime(seconds: number): string {
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { balance, refreshBalance, openBuyModal } = useCredits();
   const [step, setStep] = useState(1);
 
@@ -80,19 +82,28 @@ export default function CatalogGenerate() {
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
-  // Timer effect
+  const generationStartedAtRef = useRef<number | null>(null);
+  const allDone = batchState?.allDone ?? false;
+  const hasBatch = !!batchState;
+
+  // Keep ref in sync
+  useEffect(() => { generationStartedAtRef.current = generationStartedAt; }, [generationStartedAt]);
+
+  // Timer effect — only depends on allDone and hasBatch
   useEffect(() => {
-    if (batchState && !batchState.allDone && generationStartedAt) {
+    if (hasBatch && !allDone && generationStartedAtRef.current) {
       timerRef.current = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - generationStartedAt) / 1000));
+        if (generationStartedAtRef.current) {
+          setElapsedSeconds(Math.floor((Date.now() - generationStartedAtRef.current) / 1000));
+        }
       }, 1000);
       return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }
-    if (batchState?.allDone && timerRef.current) {
+    if (allDone && timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, [batchState?.allDone, generationStartedAt, batchState]);
+  }, [allDone, hasBatch]);
 
   // Fetch products
   const { data: userProducts = [], isLoading: productsLoading } = useQuery({
@@ -301,7 +312,7 @@ export default function CatalogGenerate() {
                 <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm">
                   <RefreshCw className="w-3.5 h-3.5" /> New Set
                 </Button>
-                <Button onClick={() => window.location.href = '/app/library'} className="gap-2 text-sm">
+                <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm">
                   View in Library <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
