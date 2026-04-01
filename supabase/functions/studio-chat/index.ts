@@ -103,7 +103,7 @@ The platform has two main ways to create images:
 
 **Freestyle** (/app/freestyle) — Open-ended AI generation with full creative control via text prompts.
 
-**Creative Drops** (/app/creative-drops) — Scheduled automatic content generation batches.
+**Content Calendar** (/app/creative-drops) — Scheduled automatic content generation batches.
 
 **Picture Perspectives** (/app/perspectives) — Generate multi-angle views of any product from a single source image. Creates front, back, left-side, right-side, close-up, and detail shots. Perfect for marketplace listings (Amazon, Etsy, Shopify) that need multiple angles. Works with both product-only and on-model images.
 - CTA: [[Generate Perspectives|/app/perspectives]]
