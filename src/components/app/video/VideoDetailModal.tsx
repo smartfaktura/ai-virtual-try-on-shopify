@@ -226,9 +226,11 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
               {isComplete && (
                 <Button
                   onClick={handleDownload}
+                  disabled={downloading}
                   className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
-                  <Download className="w-4 h-4 mr-2" /> Download Video
+                  {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  {downloading ? 'Preparing Download…' : 'Download Video'}
                 </Button>
               )}
 
