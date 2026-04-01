@@ -153,11 +153,12 @@ export default function AIProductPhotographyEcommerce() {
           {heroImages.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
               {heroImages.map((img, i) => (
-                <div key={img.id} className="rounded-xl overflow-hidden border border-border shadow-sm bg-card aspect-[3/4]">
+                <div key={img.id} className="rounded-xl overflow-hidden border border-border shadow-sm bg-muted">
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 400, quality: 75 })}
                     alt={`AI product photography for ecommerce example – ${img.title}`}
-                    className="w-full h-full object-cover"
+                    aspectRatio={img.aspect_ratio?.replace(':', '/') || '3/4'}
+                    className="w-full h-full object-contain"
                     fetchPriority={i < 3 ? 'high' : 'low'}
                     loading={i < 3 ? 'eager' : 'lazy'}
                   />
