@@ -1,35 +1,39 @@
 
-Fix `/ai-product-photography-for-ecommerce` by switching it to the same image behavior used in Discover, not the cropped landing-hero pattern.
 
-1. Correct the image strategy on this page
-- Remove the current forced `aspect-[3/4]` + `aspectRatio="3/4"` + `object-cover` setup from the hero and tab preview areas.
-- Use the proven Discover-style rendering instead: natural-ratio images with `ShimmerImage` + `wrapperClassName="h-auto"` + `className="w-full h-auto block"`.
-- Keep compression/optimization, but size URLs per section so images stay sharp without overfetching.
+# Fix Image Rendering on SEO Ecommerce Page
 
-2. Fix all image sections consistently
-- Hero grid: replace the fixed crop cards with natural-ratio cards so originals stay visible and never look zoomed.
-- Outcome tabs: replace the forced portrait frame with a padded preview card that preserves original ratio; if height needs limiting, cap height without cropping.
-- Showcase gallery: align it with the Discover/PublicDiscover card behavior and keep the masonry layout stable while images load.
+## Problem
+Images are rendering at natural dimensions inside a CSS `columns` masonry layout. Since the source images are tall portraits (likely 1024x1536), each image becomes a massive vertical strip spanning the full viewport height. The middle image isn't even a product — it's a scene/background.
 
-3. Improve which presets the page selects
-- Stop using a raw “first featured items” pull for this ecommerce page.
-- Prefer presets that are clearly product-led: `product_name` / `product_image_url` present, and usually `model_name` absent.
-- Keep tab matching by category, but rank ecommerce-relevant presets first so the page stops surfacing face closeups and beauty portraits where product visuals should appear.
-- Deduplicate across hero, tabs, and showcase so the page feels curated instead of random.
+## Root Cause
+The previous fix removed `object-cover` and forced aspect ratios, letting images render at natural ratio. But these AI-generated images are very tall portraits, so "natural ratio" = enormous vertical strips.
 
-4. Keep the design, but make it feel more like VOVV product discovery
-- Reuse the same card language as the app’s discovery feed: muted card backgrounds, subtle borders, cleaner badges, less decorative cropping.
-- Keep the current typography/spacing direction, but reduce visual noise until the image system is stable.
+## Solution
+Use a **standard CSS grid with controlled aspect-ratio cards** and `object-cover` — but use a less aggressive ratio than 3/4. Use `aspect-[4/5]` which works well for both portrait and landscape source images without extreme cropping. Add `object-top` to keep product/face visible.
 
-5. Small cleanup during implementation
-- Remove or adjust the current `fetchPriority` usage that is triggering the React warning on this page.
-- Keep above-the-fold images eager/preloaded, and leave the rest lazy.
+Replace the CSS `columns` masonry layout with a regular `grid` for predictable, controlled sizing.
 
-Files to update
-- `src/pages/seo/AIProductPhotographyEcommerce.tsx` — main fix: image selection, image rendering, hero/tabs/showcase layout
-- `src/components/ui/shimmer-image.tsx` — only if needed for the fetch priority warning; avoid changing global image behavior unless it’s a safe, isolated fix
+### Changes in `src/pages/seo/AIProductPhotographyEcommerce.tsx`
 
-Technical details
-- The previous implementation copied the wrong pattern: `HeroSection` and some landing showcases intentionally crop to fixed ratios for editorial cards.
-- The correct reference for “original ratio, not zoomed” is `src/components/app/DiscoverCard.tsx` plus the stable multi-column approach in `src/pages/PublicDiscover.tsx`.
-- For this page I would follow that pattern exactly instead of introducing another custom image treatment.
+**Hero grid** (line ~201):
+- Replace `columns-2 md:columns-3` masonry → `grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4`
+- Remove `break-inside-avoid`, `space-y-*`
+- Each card: `aspect-[4/5] rounded-2xl overflow-hidden` wrapper
+- Image: remove `wrapperClassName="h-auto"`, add `className="w-full h-full object-cover object-top"`
+
+**Outcome tabs** (line ~266-274):
+- Wrap image in `aspect-[4/5]` container
+- Image: `className="w-full h-full object-cover object-top"` instead of `h-auto`
+
+**Showcase gallery** (line ~421):
+- Replace `columns-2 md:columns-3 lg:columns-4` → `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3`
+- Remove `space-y-3`, `break-inside-avoid`
+- Each card: `aspect-[4/5]` wrapper with `object-cover object-top`
+
+This is the standard ecommerce grid pattern — controlled card sizes with cover-fit images. No more viewport-height strips.
+
+## Files
+| File | Change |
+|------|--------|
+| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Replace masonry columns with grid + aspect-[4/5] cards |
+
