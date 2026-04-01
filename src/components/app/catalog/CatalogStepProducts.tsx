@@ -82,7 +82,7 @@ export function CatalogStepProducts({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
   const [importUrl, setImportUrl] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
+  
   const [activeTab, setActiveTab] = useState<'library' | 'url' | 'csv'>('library');
 
   const filtered = products.filter(p =>
@@ -334,7 +334,7 @@ export function CatalogStepProducts({
                       <button
                         type="button"
                         onClick={onAddProduct}
-                        className="group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border hover:border-primary/40 bg-transparent hover:bg-primary/5 transition-all duration-200 min-h-[200px]"
+                        className="group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border hover:border-primary/40 bg-transparent hover:bg-primary/5 transition-all duration-200 min-h-[200px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
                         <div className="w-10 h-10 rounded-xl bg-muted/50 group-hover:bg-primary/10 flex items-center justify-center mb-2 transition-colors duration-200">
                           <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />

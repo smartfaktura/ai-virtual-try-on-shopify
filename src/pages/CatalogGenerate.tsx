@@ -386,7 +386,7 @@ export default function CatalogGenerate() {
                     <button
                       key={i}
                       onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all"
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
@@ -403,12 +403,14 @@ export default function CatalogGenerate() {
                   {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed
                 </div>
                 <p className="text-xs text-muted-foreground">Credits for failed images are automatically refunded.</p>
-                {batchState.jobs.filter(j => j.status === 'failed').map(j => (
-                  <div key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
-                    {j.productName} — {j.shotLabel}
-                  </div>
-                ))}
+                <ul role="list" className="space-y-1">
+                  {batchState.jobs.filter(j => j.status === 'failed').map(j => (
+                    <li key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
+                      <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
+                      {j.productName} — {j.shotLabel}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
@@ -504,7 +506,7 @@ export default function CatalogGenerate() {
                     <button
                       key={i}
                       onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all"
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
                     </button>
@@ -710,7 +712,7 @@ export default function CatalogGenerate() {
               <Button
                 size="sm"
                 variant="outline"
-                className="fixed bottom-20 right-4 z-40 rounded-full shadow-lg gap-1.5 text-xs lg:hidden"
+                className="fixed bottom-24 right-4 z-40 rounded-full shadow-lg gap-1.5 text-xs lg:hidden"
               >
                 <LayoutList className="w-3.5 h-3.5" />
                 Summary
