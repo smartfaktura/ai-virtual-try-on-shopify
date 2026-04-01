@@ -6,11 +6,28 @@ import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo'
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useState, useCallback } from 'react';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { downloadVideosAsZip } from '@/lib/dropDownload';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { toast } from 'sonner';
 import { buildVideoFileName } from '@/lib/videoFilename';
+
+/* ------------------------------------------------------------------ */
+/*  Ratio helpers                                                      */
+/* ------------------------------------------------------------------ */
+
+/** Convert "16:9" → "16/9", fallback to undefined */
+function ratioToCss(ratio: string | undefined | null): string | undefined {
+  if (!ratio) return undefined;
+  const parts = ratio.split(':');
+  if (parts.length === 2) return `${parts[0]}/${parts[1]}`;
+  return undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/*  RecentVideoCard                                                    */
+/* ------------------------------------------------------------------ */
 
 interface RecentVideoCardProps {
   video: GeneratedVideo;
@@ -22,10 +39,18 @@ interface RecentVideoCardProps {
 
 function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
   const isComplete = video.status === 'complete' && video.video_url;
-  const thumbnailUrl = getOptimizedUrl(
-    (video as any).preview_url || video.source_image_url,
-    { width: 800, quality: 60 },
-  );
+
+  // Prefer preview_url (actual video frame) > source_image_url
+  const rawThumb = video.preview_url || video.source_image_url;
+  const thumbnailUrl = getOptimizedUrl(rawThumb, { quality: 60 });
+
+  // Determine aspect-ratio for the wrapper:
+  // Use the video's stored aspect_ratio when available, otherwise default to 3/4
+  const cssRatio = ratioToCss(video.aspect_ratio) || '3/4';
+
+  // Track natural image ratio for more accurate framing
+  const [naturalRatio, setNaturalRatio] = useState<string | undefined>(undefined);
+  const displayRatio = naturalRatio || cssRatio;
 
   const handleClick = useCallback(() => {
     if (selectMode) {
@@ -42,7 +67,7 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
       className="group cursor-pointer"
       onClick={handleClick}
     >
-      <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
+      <div className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
         {selectMode && (
           <div className="absolute top-2 left-2 z-20">
             <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -55,12 +80,17 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           </div>
         )}
 
-        <img
+        <ShimmerImage
           src={thumbnailUrl}
           alt=""
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover"
+          aspectRatio={displayRatio}
+          className="w-full h-full object-cover"
+          onLoad={(e) => {
+            const img = e.currentTarget;
+            if (img.naturalWidth && img.naturalHeight) {
+              setNaturalRatio(`${img.naturalWidth}/${img.naturalHeight}`);
+            }
+          }}
         />
 
         {showStatusBadge && (
@@ -86,6 +116,10 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  VideoHub page                                                      */
+/* ------------------------------------------------------------------ */
 
 export default function VideoHub() {
   const { history, isLoadingHistory, refreshHistory, removeFromHistory, loadMore, hasMore, totalCount, isLoadingMore } = useGenerateVideo();
@@ -192,7 +226,7 @@ export default function VideoHub() {
         />
       </div>
 
-      {/* In Progress Videos */}
+      {/* In Progress + Completed Videos */}
       {(() => {
         const processingVideos = history.filter(v => v.status === 'processing' || v.status === 'queued');
         const completedVideos = history.filter(v => v.status !== 'processing' && v.status !== 'queued');
