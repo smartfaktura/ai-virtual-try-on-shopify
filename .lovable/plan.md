@@ -1,83 +1,66 @@
 
 
-# Catalog Studio — Loading, Completion, Prompt Intelligence, and UX Polish
+# Catalog Studio — Resilience, Dedicated Queue, and Bug Fixes
 
-## Problems Identified
+## Critical Bugs Found
 
-1. **Grey generate button, long wait with no feedback** — `isGenerating` is set true then immediately false after enqueueing. No loading indicator during the enqueue loop which can take 10-30s for large batches.
-2. **Bikini generates with pants** — No `swimwear` category exists. Bikini falls to `unknown` → `upper_body_slot` → support wardrobe adds "neutral straight trousers". Need a `swimwear` category with appropriate support wardrobe (no bottoms for bikini tops, no tops for bikini bottoms).
-3. **Ghost mannequin has shadow** — Prompt includes "soft shadow beneath product". Should be shadowless for ghost mannequin.
-4. **No estimated time or elapsed time** during generation.
-5. **Completion screen** needs more polish — VOVV.AI branding, elapsed time summary, better layout.
-6. **Background color consistency** — User wants the hex code visible per background so they can match across sets.
-7. **No final confirmation/review step** before generating — User wants to see the full job list and optionally add accessories (extra reference images per product).
-8. **Design inconsistency** with Templates/Workflows pages — Catalog Studio steps look different from the rest of the app.
+### Bug 1: Catalog jobs enqueued as `jobType: 'tryon'` — wrong credit cost
+In `useCatalogGenerate.ts` line 135, jobs are sent as `jobType: 'tryon'`. The `enqueue-generation` function charges **6 credits** per `tryon` image (line 45-46), but the UI shows **4 credits**. Users are overcharged by 50%.
 
-## Plan
+**Fix**: Change `jobType` from `'tryon'` to `'catalog'` and add `catalog` as a valid job type in `enqueue-generation` with a 4-credit cost.
 
-### 1. Fix Generate Button Loading State (`useCatalogGenerate.ts`)
-- Keep `isGenerating = true` throughout the entire enqueue loop (currently set to false too early at line 306)
-- Move `setIsGenerating(false)` to after polling starts
-- In the UI, show a branded "Preparing your photoshoot..." overlay with a spinner during the enqueue phase (before batch state exists)
+### Bug 2: `generate-catalog` rejects product-only mode
+The `generate-catalog` edge function validates that `body.model.imageUrl` is present (line 257). In product-only mode, no model is sent. The job would fail with a 400 error.
 
-### 2. Add Swimwear Category (`catalogEngine.ts` + `types/catalog.ts`)
-- Add `swimwear` to `ProductCategory` union type
-- Add keywords: `bikini`, `swimsuit`, `swimwear`, `swim`, `bathing suit`, `one-piece`, `tankini`, `swim trunk`, `board short`
-- Map `swimwear` → `full_body_slot` in `CATEGORY_TO_SLOT`
-- Create swimwear-specific support wardrobe: **no additional clothing** — null out upper, lower, footwear slots. The product IS the outfit.
-- Add swimwear overrides in each `FashionStyleDefinition.supportWardrobeKits` or handle via a `resolveSupportWardrobe` special case
+**Fix**: Make model fields optional in `generate-catalog`. When no model is provided, generate product-only shots (ghost mannequin, flat lay, etc.) without model reference images.
 
-### 3. Fix Ghost Mannequin Shadow (`catalogEngine.ts`)
-- Change ghost mannequin prompt from "soft shadow beneath product" to "no shadow, floating isolated product, pure clean background, shadowless"
+### Bug 3: `generate-catalog` ignores `prompt_final` from catalog engine
+When catalog jobs come through `generate-tryon` via `catalog_mode`, the pre-assembled `prompt_final` is used correctly. But when routed through the dedicated `generate-catalog` function, it rebuilds the prompt from scratch using `buildCatalogPrompt()` — completely ignoring the sophisticated prompt from the catalog engine (fashion style, support wardrobe, shot-specific templates). All the engine work is wasted.
 
-### 4. Add Elapsed Time + Estimated Time (`CatalogGenerate.tsx`)
-- Track `generationStartedAt` timestamp when batch starts
-- Show elapsed time as `mm:ss` in the progress UI
-- Estimate remaining: `(elapsed / completedJobs) * remainingJobs`
-- Show both in the progress section
+**Fix**: In `generate-catalog`, check for `prompt_final` first and use it. Fall back to `buildCatalogPrompt()` only for legacy/non-engine calls.
 
-### 5. Redesign Progress & Completion UI (`CatalogGenerate.tsx`)
-- **Progress**: Add elapsed/estimated time display. Show a subtle VOVV.AI wordmark. Show per-product thumbnail + progress bar instead of just text rows.
-- **Completion**: Show total time taken, add background hex badge on each image, make the grid more editorial (larger cards, hover to see shot label). Keep lightbox on click.
+### Bug 4: No client-side polling timeout
+Polling runs forever via `setInterval` with no maximum duration. If a job gets stuck in `processing` and the cleanup job doesn't catch it, the user's browser polls indefinitely.
 
-### 6. Show Background Hex Code (`CatalogStepBackgroundsV2.tsx`)
-- Display the hex value below each background swatch name (already partially there via `bg.hex`, just surface it as copyable text)
+**Fix**: Add a 10-minute hard timeout that force-completes the batch with whatever results exist.
 
-### 7. Add Review/Confirmation Step (Step 6)
-- Insert a new step between Shots and Generate: **"Review & Confirm"**
-- Shows: selected products (thumbnails), selected models, selected style, background (with hex), selected shots
-- Per-product expandable section with optional "Add Accessories" — user can add 1-3 extra reference images (hat, sunglasses, bottom piece) that get injected into that product's prompt
-- "Generate" button moves here from the Shots step
-- Shots step gets a "Next: Review" button instead
+### Bug 5: No error handling for base64 conversion failures
+`convertImageToBase64` is called for every product and model image during enqueue. If any conversion fails (network error, CORS, large image), the entire batch silently breaks — no error is surfaced.
 
-### 8. Minimize Visual Noise Across All Steps
-- Reduce border weights from `border-2` to `border`
-- Remove emoji icons from shot cards (👤📦), use consistent Lucide icons or no icons
-- Stepper: thinner lines, smaller circles, less shadow
-- Use consistent `rounded-lg` instead of mixed `rounded-xl`, `rounded-2xl`
-- Remove gradient backgrounds from style cards — use flat subtle bg
-- Match card padding and spacing to Templates/Workflows page patterns
+**Fix**: Wrap each `convertImageToBase64` call in try/catch, skip that product/model with a toast warning, and continue with the rest.
+
+---
+
+## New Feature: Dedicated Catalog Queue
+
+Currently catalog jobs share the queue with all other generation types. Since catalog uses Seedream exclusively (no Gemini fallback chain), they should be separated to avoid blocking or being blocked by other job types.
+
+### Changes:
+
+**1. `enqueue-generation/index.ts`**
+- Add `'catalog'` to `validJobTypes` array
+- Add catalog-specific credit cost: `4` per image (flat, no model/scene premium)
+
+**2. `process-queue/index.ts`**
+- Already has `catalog: "generate-catalog"` mapping — no change needed
+
+**3. `generate-catalog/index.ts`**
+- Accept `prompt_final` field; use it when present instead of `buildCatalogPrompt()`
+- Make `model` fields optional for product-only mode
+- When no model image, send only product image as reference
+- Add retry logic: if Seedream fails with a transient error, retry once after 3s
+
+**4. `useCatalogGenerate.ts`**
+- Change `jobType: 'tryon'` → `jobType: 'catalog'`
+- Wrap `convertImageToBase64` in try/catch per product
+- Add 10-minute polling hard timeout
+- On insufficient credits error from any job, stop enqueueing remaining jobs immediately (fail-fast)
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
-| `src/types/catalog.ts` | Add `swimwear` to `ProductCategory`, add step 6 |
-| `src/lib/catalogEngine.ts` | Add swimwear category + keywords, fix ghost mannequin shadow, swimwear support wardrobe |
-| `src/pages/CatalogGenerate.tsx` | Add review step (step 6), fix loading state, add elapsed/estimated time, redesign progress + completion, minimize visual noise on stepper |
-| `src/hooks/useCatalogGenerate.ts` | Fix `isGenerating` timing (keep true during enqueue) |
-| `src/components/app/catalog/CatalogStepShots.tsx` | Remove generate button (moves to review step), remove emoji icons, clean up card styling |
-| `src/components/app/catalog/CatalogStepReview.tsx` | New component — review + confirm step with accessory add-on slots |
-| `src/components/app/catalog/CatalogStepProducts.tsx` | Reduce visual weight, match app styling |
-| `src/components/app/catalog/CatalogStepFashionStyle.tsx` | Remove gradients, flatten cards |
-| `src/components/app/catalog/CatalogStepModelsV2.tsx` | Reduce border weights, cleaner grid |
-| `src/components/app/catalog/CatalogStepBackgroundsV2.tsx` | Show hex code as copyable text under each swatch |
-
-## Technical Details
-
-- Swimwear `resolveSupportWardrobe`: when `heroSlot === 'full_body_slot'` AND category is `swimwear`, return all-null wardrobe (no support clothing at all — the swimwear IS the complete outfit)
-- Ghost mannequin prompt change is a single string replacement in `SHOT_DEFINITIONS`
-- `isGenerating` fix: move `setIsGenerating(false)` from line 306 to inside the `if (allJobs.length === 0)` error branch, and add it to the polling callback when `allDone` is true
-- Accessory references in review step: stored as `Map<productId, string[]>` (base64 URLs), passed into `CatalogSessionConfig` and appended to prompts as extra reference context
-- Estimated time calculation: `avgTimePerJob = elapsed / completed; remaining = avgTimePerJob * (total - completed - failed)`
+| File | Changes |
+|------|---------|
+| `supabase/functions/enqueue-generation/index.ts` | Add `catalog` to valid types, 4-credit pricing |
+| `supabase/functions/generate-catalog/index.ts` | Use `prompt_final`, optional model, retry logic |
+| `src/hooks/useCatalogGenerate.ts` | Fix jobType, add polling timeout, base64 error handling, fail-fast on credit errors |
 
