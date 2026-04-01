@@ -76,13 +76,16 @@ export function useVideoProject() {
 
     try {
       // 1. Create video_project
+      const cameraLabel = CAMERA_MOTIONS.find(c => c.id === params.cameraMotion)?.label || params.cameraMotion.replace(/_/g, ' ');
+      const productName = analysisResult?.detected_product || params.category.replace(/_/g, ' ');
+
       setPipelineStage('creating_project');
       const { data: project, error: projectError } = await supabase
         .from('video_projects')
         .insert({
           user_id: (await supabase.auth.getUser()).data.user!.id,
           workflow_type: 'animate',
-          title: 'Animate Image',
+          title: `${cameraLabel}-${productName}`,
           settings_json: {
             category: params.category,
             sceneType: params.sceneType,
