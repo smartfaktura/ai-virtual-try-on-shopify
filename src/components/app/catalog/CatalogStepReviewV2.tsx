@@ -117,6 +117,27 @@ export function CatalogStepReviewV2({
           )}
         </div>
 
+        {/* Styling Props */}
+        {stylingProps.length > 0 && (
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Gem className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-foreground">Styling Props</span>
+              <Badge variant="secondary" className="text-[9px] ml-auto">{stylingProps.length}</Badge>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {stylingProps.map(p => (
+                <div key={p.id} className="flex-shrink-0 w-14">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
+                    <ShimmerImage src={getOptimizedUrl(p.imageUrl, { quality: 50 })} alt={p.title} className="w-full h-full object-cover" />
+                  </div>
+                  <p className="text-[9px] text-muted-foreground mt-1 truncate text-center">{p.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Shots list */}
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
