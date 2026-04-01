@@ -41,7 +41,7 @@ function getTeamMemberForJob(group: BatchGroup): TeamMember {
 function getActionVerb(group: BatchGroup): string {
   if (group.isCreativeDrop) return 'creating your drop';
   switch (group.job_type) {
-    case 'video': return 'creating your video';
+    case 'video': return group.totalCount > 1 ? `creating ${group.totalCount} videos` : 'creating your video';
     case 'freestyle': return 'shooting';
     case 'upscale': return 'upscaling';
     case 'tryon': return 'styling';
@@ -91,6 +91,7 @@ export function GlobalGenerationBar() {
           quality: (payload?.quality as string) ?? null,
           resolution: (payload?.resolution as string) ?? null,
           creative_drop_id: (payload?.creative_drop_id as string) ?? null,
+          batch_id: (payload?.batch_id as string) ?? null,
         };
       });
 
@@ -260,7 +261,7 @@ export function GlobalGenerationBar() {
                         <p className="text-xs font-semibold truncate text-foreground">
                           {isUpscale
                             ? `${member.name} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
-                            : group.job_type === 'video' ? `${member.name} is creating your video`
+                            : group.job_type === 'video' ? `${member.name} is creating ${group.totalCount > 1 ? `${group.totalCount} videos` : 'your video'}`
                             : group.isCreativeDrop ? `${member.name} is creating your drop`
                             : group.job_type === 'freestyle' ? `${member.name} is shooting`
                             : group.job_type === 'tryon' ? `${member.name} is styling`
@@ -310,7 +311,7 @@ export function GlobalGenerationBar() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate text-foreground">
-                          {isVideo ? 'Your video is ready!' 
+                          {isVideo ? (group.totalCount > 1 ? `${group.totalCount} videos are ready!` : 'Your video is ready!') 
                             : group.job_type === 'upscale' ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
                             : 'Your images are ready!'}
                         </p>
