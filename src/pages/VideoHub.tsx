@@ -86,6 +86,13 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
           </Badge>
         )}
 
+        {/* Camera motion label */}
+        {video.camera_type && !showStatusBadge && (
+          <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground capitalize">
+            {video.camera_type.replace(/_/g, ' ')}
+          </Badge>
+        )}
+
         {/* Loading spinner while buffering on hover */}
         {hovering && !canPlay && isComplete && (
           <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 z-10">
