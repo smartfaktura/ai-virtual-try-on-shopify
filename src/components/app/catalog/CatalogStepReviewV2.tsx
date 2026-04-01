@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -56,6 +56,15 @@ export function CatalogStepReviewV2({
   const shots = useMemo(() => Array.from(selectedShots).map(id => getShotDefinition(id)).filter(Boolean), [selectedShots]);
   const hasEnoughCredits = balance >= totalCredits;
   const [clicked, setClicked] = useState(false);
+  const prevGenerating = useRef(isGenerating);
+
+  // Reset clicked when generation finishes (success or failure)
+  useEffect(() => {
+    if (prevGenerating.current && !isGenerating) {
+      setClicked(false);
+    }
+    prevGenerating.current = isGenerating;
+  }, [isGenerating]);
 
   const handleGenerateClick = () => {
     if (clicked || isGenerating) return;
@@ -135,14 +144,15 @@ export function CatalogStepReviewV2({
             <div className="flex items-center gap-2">
               <Palette className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-medium text-foreground">{style?.label || '—'}</span>
+              <SectionEditButton onClick={onStepClick ? () => onStepClick(2) : undefined} />
             </div>
             {bg && (
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: bg.hex }} />
                 <span className="text-xs font-medium text-foreground">{bg.label}</span>
+                <SectionEditButton onClick={onStepClick ? () => onStepClick(4) : undefined} />
               </div>
             )}
-            <SectionEditButton onClick={onStepClick ? () => onStepClick(2) : undefined} />
           </div>
         </div>
 

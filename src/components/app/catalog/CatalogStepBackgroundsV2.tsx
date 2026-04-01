@@ -54,7 +54,7 @@ export function CatalogStepBackgroundsV2({
                 <p className="text-xs font-medium text-white">{bg.label}</p>
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="text-[10px] text-white/70">{bg.shadowStyle} shadows</p>
-                  <span className="text-[9px] font-mono text-white/50">{bg.hex}</span>
+                  <span className="text-[9px] font-mono text-white/50 hidden sm:inline">{bg.hex}</span>
                 </div>
               </div>
             </button>

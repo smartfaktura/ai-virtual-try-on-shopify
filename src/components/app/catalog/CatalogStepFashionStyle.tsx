@@ -44,7 +44,7 @@ export function CatalogStepFashionStyle({
               key={style.id}
               onClick={() => onStyleChange(style.id)}
               className={cn(
-                'relative rounded-xl border overflow-hidden text-left transition-all duration-150 group flex flex-col h-full',
+                'relative rounded-xl border overflow-hidden text-left transition-all duration-150 group flex flex-col h-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 isSelected
                   ? 'border-primary ring-2 ring-primary/20 bg-card'
                   : 'border-border hover:border-primary/30 bg-card hover:shadow-sm',

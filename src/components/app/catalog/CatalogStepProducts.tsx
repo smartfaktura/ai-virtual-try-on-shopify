@@ -213,7 +213,7 @@ export function CatalogStepProducts({
                         onProductSelectionChange(new Set(ids));
                       }}
                     >
-                      Select All
+                      {searchQuery.trim() ? `Select All (${Math.min(filtered.length, maxProducts)})` : 'Select All'}
                     </Button>
                     {selectedProductIds.size > 0 && (
                       <>
