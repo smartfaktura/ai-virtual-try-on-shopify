@@ -416,13 +416,13 @@ export default function AIProductPhotographyEcommerce() {
               </p>
             </div>
             {showcaseImages.length > 0 && (
-              <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3 mb-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-12">
                 {showcaseImages.map(img => (
-                  <div key={img.id} className="group relative rounded-2xl overflow-hidden border border-border bg-muted break-inside-avoid">
+                  <div key={img.id} className="group relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-muted">
                     <ShimmerImage
                       src={getOptimizedUrl(img.image_url, { width: 350, quality: 70 })}
                       alt={`Ecommerce product image example – ${img.title}`}
-                      className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
+                      className="w-full h-full object-cover object-top [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
                       loading="lazy"
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
