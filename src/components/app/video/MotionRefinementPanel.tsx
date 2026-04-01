@@ -1,10 +1,13 @@
 import { cn } from '@/lib/utils';
 import { CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { InfoTooltip } from './InfoTooltip';
 import { Badge } from '@/components/ui/badge';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+
+const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
 
 interface MotionRefinementPanelProps {
   cameraMotion: string;
@@ -21,6 +24,8 @@ interface MotionRefinementPanelProps {
   multiSelect?: boolean;
   selectedCameraMotions?: string[];
   onMultiCameraMotionChange?: (ids: string[]) => void;
+  /** Controls upsell display for free users */
+  isPaidUser?: boolean;
 }
 
 function ChipRow({ label, tooltip, items, value, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
