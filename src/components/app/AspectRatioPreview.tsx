@@ -108,7 +108,7 @@ export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProp
         {ratios.map((ratio) => {
           const selected = value === ratio;
           return (
-            <button key={ratio} onClick={() => onChange(ratio)}
+            <button type="button" key={ratio} onClick={() => onChange(ratio)}
               className={cn(
                 'relative p-4 rounded-xl border-2 transition-all flex-1 min-w-[120px]',
                 selected
