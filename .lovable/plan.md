@@ -1,95 +1,71 @@
 
 
-# /app/catalog — Round 8 Audit
+# /app/catalog — Round 9 Audit
 
-The flow is extremely well-polished. After thorough review of all 10 component files, here are the remaining micro-refinements:
+The flow is near-perfect after 8 rounds. Here are the final micro-refinements I found:
 
 ## Findings
 
-### 1. Props step: tiny prop thumbnail uses raw `<img>` instead of `<ShimmerImage>`
-**File: `CatalogStepProps.tsx` line 360**
-Inside the assigned-props chip display, the 4×4px prop thumbnail uses `<img>` while every other image in the flow uses `<ShimmerImage>`. Inconsistent loading behavior.
+### 1. Stepper buttons lack `focus-visible` ring
+**File: `CatalogStepper.tsx` lines 34, 77**
+Both desktop and mobile stepper `<button>` elements have no `focus-visible` styling. Keyboard users navigating between steps can't see which step is focused. Every other interactive element in the flow now has focus rings except these.
+**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-full` to both stepper buttons.
 
-### 2. Lightbox filename loop has an indentation bug masking logic
-**File: `CatalogGenerate.tsx` lines 531-538**
-The `if (imgIdx === i)` block is indented incorrectly — the opening brace alignment doesn't match the closing. The `break` only exits the inner `for...of` loop over `j.images`, and the outer `break` on line 540 uses string comparison (`filename !== \`catalog-${i+1}.jpg\``) which is fragile. A boolean flag would be cleaner and more reliable.
+### 2. UnderlineTab in Products step lacks `focus-visible` ring
+**File: `CatalogStepProducts.tsx` line 57-72**
+The `UnderlineTab` component (My Products / Import URL / Upload CSV) is a `<button>` with no focus-visible styling. Inconsistent with all other interactive elements.
+**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary rounded` to the button.
 
-### 3. Collapsible triggers in Shots step lack `focus-visible` ring
-**File: `CatalogStepShots.tsx` lines 68, 92**
-The `CollapsibleTrigger` for "On-Model" and "Product-Only" sections have no focus-visible styling. Keyboard users can't see which section header is focused.
+### 3. Prop picker modal items lack `focus-visible` ring
+**File: `CatalogStepProps.tsx` line 120-142**
+The prop product cards inside `PropPickerModal` are `<button>` elements with no focus-visible styling.
+**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1` to the button.
 
-### 4. Fashion Style cards: color mood strip has no `aria-hidden`
-**File: `CatalogStepFashionStyle.tsx` lines 54-58**
-The decorative color strip divs are visible to screen readers but carry no semantic meaning. Adding `aria-hidden="true"` is a minor a11y improvement.
+### 4. Prop removal `X` button lacks `focus-visible` ring and accessible label
+**File: `CatalogStepProps.tsx` line 363-367**
+The tiny `<button>` to remove a prop from a combo has no focus ring and no `aria-label`. Screen readers will announce it as an empty button.
+**Fix**: Add `aria-label="Remove prop"` and `focus-visible:ring-2 focus-visible:ring-primary rounded`.
 
-### 5. Background step: no "Recommended" or "Popular" indicator
-**File: `CatalogStepBackgroundsV2.tsx`**
-Unlike Fashion Style (which shows a "Popular" badge) and Shots (which shows "Recommended" badges), the Background step has no guidance for users who aren't sure which to pick. A subtle "Popular" badge on one default option would help.
+### 5. "Clear all" props link lacks `focus-visible` styling
+**File: `CatalogStepProps.tsx` line 277**
+The "Clear all" link-style button has no focus-visible ring. It's a raw `<button>` with only underline styling.
+**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary rounded`.
 
-### 6. Mobile summary chip condition is slightly wrong
-**File: `CatalogGenerate.tsx` line 704**
-The condition `!(step === 1 && selectedProductIds.size > 0)` hides the summary chip on Step 1 when products are selected (to avoid overlapping the sticky bar). But the sticky bar also appears when `activeTab === 'library'` inside CatalogStepProducts — if user switches to URL/CSV tab, the sticky bar disappears but the summary chip stays hidden. Not a real issue since selecting products only happens in the library tab, but the logic could be tighter.
+### 6. Generation progress: product status cards could show a mini progress bar per product
+**File: `CatalogGenerate.tsx` lines 476-493**
+Currently each product shows "X/Y" text and a badge. A tiny inline `Progress` bar (already imported) would give better visual feedback without adding complexity.
+**Fix**: Add a `<Progress value={...} className="h-1 mt-1.5" />` inside each product status card.
 
-### 7. Products "Select All" could select more than `maxProducts` if `filtered.length > maxProducts`
-**File: `CatalogStepProducts.tsx` line 211**
-Already correctly sliced: `.slice(0, maxProducts)`. This is fine — just confirming.
-
-### 8. Review step "Buy Credits" link button lacks focus-visible ring
-**File: `CatalogStepReviewV2.tsx` line 232**
-The inline `<button>` for "need X more credits" has no focus-visible styling.
+### 7. `Checkbox` import is unused in `CatalogStepProps.tsx`
+**File: `CatalogStepProps.tsx` line 8**
+The `Checkbox` component is imported but never used — leftover from a previous iteration.
+**Fix**: Remove the import.
 
 ## Summary
 
 | # | Item | Effort | Impact |
 |---|------|--------|--------|
-| 1 | ShimmerImage in prop chip | Trivial | Visual consistency |
-| 2 | Clean up lightbox filename loop | Trivial | Code clarity |
-| 3 | Collapsible trigger focus rings | Trivial | Accessibility |
-| 4 | aria-hidden on color strip | Trivial | Accessibility |
-| 5 | Popular badge on default background | Trivial | UX guidance |
-| 6 | Mobile summary chip condition | Trivial | Edge case |
-| 8 | Buy credits button focus ring | Trivial | Accessibility |
+| 1 | Stepper focus-visible | Trivial | Accessibility |
+| 2 | UnderlineTab focus-visible | Trivial | Accessibility |
+| 3 | Prop picker focus-visible | Trivial | Accessibility |
+| 4 | Prop remove button a11y | Trivial | Accessibility |
+| 5 | Clear all focus-visible | Trivial | Accessibility |
+| 6 | Per-product progress bar | Small | UX feedback |
+| 7 | Remove unused import | Trivial | Code hygiene |
 
-All items are cosmetic or minor a11y polish. Nothing functional remains.
+Items 1-5 complete the accessibility pass — after these, every interactive element in the catalog flow will have keyboard focus indicators. Item 6 adds visual polish to the generation phase. Item 7 is cleanup.
 
 ## Technical Details
 
-**Item 1** — In `CatalogStepProps.tsx` line 360, replace:
-```tsx
-<img src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
+**Item 1** — In `CatalogStepper.tsx`, add to both desktop (line 34) and mobile (line 77) buttons:
 ```
-with:
-```tsx
-<ShimmerImage src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
+focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1
 ```
 
-**Item 2** — In `CatalogGenerate.tsx` lines 527-541, replace the loop with a cleaner version using a `found` flag:
+**Item 6** — In the product status card (line 476-493), add after the text line:
 ```tsx
-let found = false;
-let imgIdx = 0;
-for (const j of batchState.jobs) {
-  if (found) break;
-  if (j.status === 'completed') {
-    for (const imgUrl of j.images) {
-      if (imgIdx === i) {
-        const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
-        const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
-        filename = `${safeName}_${safeShot}.jpg`;
-        found = true;
-        break;
-      }
-      imgIdx++;
-    }
-  }
-}
+<Progress value={Math.round(((info.done + info.failed) / info.total) * 100)} className="h-1 mt-1" />
 ```
 
-**Item 3** — In `CatalogStepShots.tsx` lines 68 and 92, add to `CollapsibleTrigger`:
-```tsx
-className="... focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
-```
-
-**Item 5** — In `CatalogStepBackgroundsV2.tsx`, add a `Sparkles` icon + "Popular" badge on the default background (e.g. `studio_white`), similar to how Fashion Style marks `premium_neutral`.
-
-**Item 8** — In `CatalogStepReviewV2.tsx` line 232, add `focus-visible:ring-2 focus-visible:ring-primary rounded` to the buy-credits button.
+**Item 7** — Remove `Checkbox` from the import on line 8 of `CatalogStepProps.tsx`.
 
