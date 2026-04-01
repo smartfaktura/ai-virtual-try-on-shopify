@@ -296,7 +296,8 @@ export function useCatalogGenerate() {
           shotDef: effectiveAnchorDef,
           renderPath: 'anchor_generate',
         });
-        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, config.stylingProps);
+        const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${effectiveAnchorId}`;
+        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, config.propAssignments);
 
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
