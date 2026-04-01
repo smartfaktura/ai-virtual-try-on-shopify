@@ -156,6 +156,7 @@ export function useCatalogGenerate() {
     productImageB64: string,
     productTitle: string,
     productId: string,
+    productOriginalUrl: string,
     shotId: CatalogShotId,
     shotLabel: string,
     renderPath: RenderPath,
