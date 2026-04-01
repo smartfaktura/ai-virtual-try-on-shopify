@@ -33,7 +33,7 @@ export function CatalogStepFashionStyle({
         <p className="text-sm text-muted-foreground mt-1">Sets the tone, lighting, and wardrobe for your catalog.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-stretch">
         {FASHION_STYLES.map(style => {
           const isSelected = selectedStyle === style.id;
           const isRecommended = style.id === RECOMMENDED_STYLE;
@@ -44,24 +44,24 @@ export function CatalogStepFashionStyle({
               key={style.id}
               onClick={() => onStyleChange(style.id)}
               className={cn(
-                'relative rounded-xl border overflow-hidden text-left transition-all duration-150 group',
+                'relative rounded-xl border overflow-hidden text-left transition-all duration-150 group flex flex-col h-full',
                 isSelected
                   ? 'border-primary ring-2 ring-primary/20 bg-card'
                   : 'border-border hover:border-primary/30 bg-card hover:shadow-sm',
               )}
             >
               {/* Color mood strip */}
-              <div className="h-2 flex">
+              <div className="h-2 flex shrink-0">
                 {moods.map((color, i) => (
                   <div key={i} className="flex-1" style={{ backgroundColor: color }} />
                 ))}
               </div>
 
-              <div className="p-4 space-y-2">
+              <div className="p-4 flex flex-col flex-1">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1">
                     <p className="text-sm font-semibold text-foreground">{style.label}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{style.description}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed min-h-[2.5rem] line-clamp-3">{style.description}</p>
                   </div>
                   {isSelected && (
                     <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-2">
@@ -70,11 +70,13 @@ export function CatalogStepFashionStyle({
                   )}
                 </div>
 
-                {isRecommended && !isSelected && (
-                  <Badge variant="secondary" className="text-[9px] gap-1">
-                    <Star className="w-2.5 h-2.5" /> Popular
-                  </Badge>
-                )}
+                <div className="h-5 mt-2">
+                  {isRecommended && !isSelected ? (
+                    <Badge variant="secondary" className="text-[9px] gap-1">
+                      <Star className="w-2.5 h-2.5" /> Popular
+                    </Badge>
+                  ) : null}
+                </div>
               </div>
             </button>
           );
