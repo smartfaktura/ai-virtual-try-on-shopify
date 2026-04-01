@@ -327,7 +327,8 @@ export function useCatalogGenerate() {
             shotDef,
             renderPath,
           });
-          const prompt = appendPropsToPrompt(rawPrompt, config.stylingProps);
+          const comboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${shotId}`;
+          const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
 
           const jobResult = await enqueueJob(
             token, productB64, product.title, product.id, product.imageUrl,
