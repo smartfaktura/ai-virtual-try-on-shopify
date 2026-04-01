@@ -672,7 +672,7 @@ export default function CatalogGenerate() {
           )}
         </div>
 
-        {/* Context sidebar — hidden on mobile */}
+        {/* Context sidebar — desktop */}
         <div className="hidden lg:block w-64 flex-shrink-0">
           <CatalogContextSidebar
             selectedProducts={sidebarProducts}
@@ -689,6 +689,43 @@ export default function CatalogGenerate() {
             balance={balance}
           />
         </div>
+
+        {/* Mobile summary drawer */}
+        {isMobile && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="fixed bottom-20 right-4 z-40 rounded-full shadow-lg gap-1.5 text-xs lg:hidden"
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                Summary
+                {totalImages > 0 && (
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 ml-0.5">{totalImages} img</Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+              <div className="pt-2">
+                <CatalogContextSidebar
+                  selectedProducts={sidebarProducts}
+                  fashionStyleId={fashionStyle}
+                  models={sidebarModels}
+                  productOnlyMode={productOnlyMode}
+                  backgroundId={selectedBackgroundId}
+                  selectedShots={selectedShots}
+                  selectedPropCount={Object.values(propAssignments).filter(ids => ids.length > 0).length}
+                  totalCombos={selectedProductIds.size * Math.max(1, modelCount) * selectedShots.size}
+                  totalImages={totalImages}
+                  totalCredits={totalCredits}
+                  currentStep={step}
+                  balance={balance}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
 
       <BuyCreditsModal />
