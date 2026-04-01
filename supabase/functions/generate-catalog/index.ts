@@ -388,7 +388,7 @@ serve(async (req) => {
 
         if (!uploadError) {
           const { data: publicUrlData } = supabase.storage
-            .from("workflow-previews")
+            .from("catalog-previews")
             .getPublicUrl(storagePath);
           finalUrl = publicUrlData.publicUrl;
           console.log(`[generate-catalog] Uploaded to storage: ${storagePath}`);
