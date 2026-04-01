@@ -106,7 +106,7 @@ export default function AnimateVideo() {
     if (analysis.category) { setCategory(analysis.category); setDetectedCategory(analysis.category); }
     if (analysis.ecommerce_scene_type) { setSceneType(analysis.ecommerce_scene_type); setDetectedSceneType(analysis.ecommerce_scene_type); }
     if (analysis.recommended_motion_goals?.length) { setRecommendedGoalIds(analysis.recommended_motion_goals); setMotionGoalId(analysis.recommended_motion_goals[0]); }
-    if (analysis.recommended_camera_motion) setCameraMotion(analysis.recommended_camera_motion);
+    if (analysis.recommended_camera_motion) { setCameraMotion(analysis.recommended_camera_motion); setSelectedCameraMotions([analysis.recommended_camera_motion]); }
     if (analysis.recommended_subject_motion) setSubjectMotion(analysis.recommended_subject_motion);
     if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
     if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
@@ -127,6 +127,7 @@ export default function AnimateVideo() {
 
   // Refinements
   const [cameraMotion, setCameraMotion] = useState('slow_push_in');
+  const [selectedCameraMotions, setSelectedCameraMotions] = useState<string[]>(['slow_push_in']);
   const [subjectMotion, setSubjectMotion] = useState('minimal');
   const [realismLevel, setRealismLevel] = useState('realistic');
   const [loopStyle, setLoopStyle] = useState('none');
@@ -181,6 +182,7 @@ export default function AnimateVideo() {
     const goal = goals.find(g => g.id === motionGoalId);
     if (goal) {
       setCameraMotion(goal.defaultCameraMotion);
+      setSelectedCameraMotions([goal.defaultCameraMotion]);
       setSubjectMotion(goal.subjectMotion);
       setMotionIntensity(goal.defaultIntensity);
     }
@@ -349,15 +351,15 @@ export default function AnimateVideo() {
     });
   }, [bulkImages, hasAnalyzed, analyzeImage]);
 
-  const handleGenerate = () => {
+  const motionCount = isPaidUser ? selectedCameraMotions.length : 1;
+
+  const handleGenerate = async () => {
     if (bulkMode && bulkImages.length > 0) {
       const readyImages = bulkImages.filter(img => img.url);
       if (readyImages.length === 0) { toast.error('Wait for images to finish uploading'); return; }
 
-      const { total } = estimateBulkCredits(
-        { workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion },
-        readyImages.length
-      );
+      const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+      const total = perVideoCost * readyImages.length * motionCount;
       if (total > creditsBalance) {
         toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
         return;
@@ -367,15 +369,51 @@ export default function AnimateVideo() {
           preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
           aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined };
 
-      runBulkAnimatePipeline(
-        readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
-        sharedParams,
-        customizePerImage ? perImageSettings : undefined
-      );
+      // Multi-motion: run bulk pipeline once per camera motion
+      if (motionCount > 1) {
+        for (const motion of selectedCameraMotions) {
+          await runBulkAnimatePipeline(
+            readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
+            { ...sharedParams, cameraMotion: motion },
+            customizePerImage ? perImageSettings : undefined
+          );
+        }
+      } else {
+        runBulkAnimatePipeline(
+          readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
+          sharedParams,
+          customizePerImage ? perImageSettings : undefined
+        );
+      }
       return;
     }
 
     if (!imageUrl) { toast.error('Please upload an image first'); return; }
+
+    // Multi-motion for single image: generate one video per motion
+    if (motionCount > 1) {
+      const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+      const total = perVideoCost * motionCount;
+      if (total > creditsBalance) {
+        toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
+        return;
+      }
+      for (let i = 0; i < selectedCameraMotions.length; i++) {
+        if (i > 0) {
+          resetPipeline();
+          await new Promise(r => setTimeout(r, 300));
+        }
+        await runAnimatePipeline({
+          imageUrl,
+          category, sceneType, motionGoalId,
+          cameraMotion: selectedCameraMotions[i], subjectMotion, realismLevel, loopStyle, motionIntensity,
+          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+          aspectRatio, duration, audioMode,
+          userPrompt: userPrompt || undefined,
+        });
+      }
+      return;
+    }
 
     runAnimatePipeline({
       imageUrl,
@@ -1086,11 +1124,14 @@ export default function AnimateVideo() {
                 realismLevel={realismLevel}
                 loopStyle={loopStyle}
                 motionIntensity={motionIntensity}
-                onCameraMotionChange={setCameraMotion}
+                onCameraMotionChange={(v) => { setCameraMotion(v); setSelectedCameraMotions([v]); }}
                 onSubjectMotionChange={setSubjectMotion}
                 onRealismLevelChange={setRealismLevel}
                 onLoopStyleChange={setLoopStyle}
                 onMotionIntensityChange={setMotionIntensity}
+                multiSelect={isPaidUser}
+                selectedCameraMotions={selectedCameraMotions}
+                onMultiCameraMotionChange={(ids) => { setSelectedCameraMotions(ids); setCameraMotion(ids[0]); }}
               />
 
               <PreservationRulesPanel
@@ -1176,28 +1217,46 @@ export default function AnimateVideo() {
 
 
               {/* Generate */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                {bulkMode && bulkImages.length > 1 ? (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Estimated cost:</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      {estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion })} × {bulkImages.filter(i => i.url).length} = {estimateBulkCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }, bulkImages.filter(i => i.url).length).total} credits
-                    </span>
-                  </div>
-                ) : (
-                  <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
-                )}
+              <div className="flex flex-col gap-3">
+                {(() => {
+                  const perVideo = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+                  const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
+                  const totalVideos = imageCount * motionCount;
+                  const totalCredits = perVideo * totalVideos;
+
+                  return (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border flex-wrap">
+                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Estimated cost:</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {totalVideos > 1 ? (
+                          <>
+                            {perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits
+                          </>
+                        ) : (
+                          <>{perVideo} credits</>
+                        )}
+                      </span>
+                      {motionCount > 1 && (
+                        <span className="text-xs text-muted-foreground">
+                          ({motionCount} camera motion{motionCount > 1 ? 's' : ''}{imageCount > 1 ? ` × ${imageCount} images` : ''})
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <Button
                   onClick={handleGenerate}
                   disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
-                  className="gap-2"
+                  className="gap-2 self-start"
                   size="lg"
                 >
                   <Sparkles className="h-4 w-4" />
-                  {bulkMode && bulkImages.length > 1
-                    ? `Generate ${bulkImages.filter(i => i.url).length} Videos`
-                    : 'Generate Video'}
+                  {(() => {
+                    const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
+                    const totalVideos = imageCount * motionCount;
+                    return totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video';
+                  })()}
                 </Button>
               </div>
             </>
