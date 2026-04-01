@@ -1,26 +1,27 @@
 
 
-# Update Perspectives Card Animation Images
+# Match Video Showcase Section CTA and Spacing to Landing Page Style
 
-## What
-Replace the 4 current placeholder PNG images in the "Picture Perspectives" carousel animation with the 6 uploaded real perspective photos, and update the badge copy.
+## Problem
+The video section CTA button uses default styling (`size="lg" className="gap-2"`) while all other landing page CTAs use the rounded-full pill style with larger padding and shadow. Section spacing also needs alignment.
 
-## Steps
+## Changes — `src/components/landing/VideoShowcaseSection.tsx`
 
-### 1. Copy uploaded images to `public/images/perspectives/`
-Save the 6 uploaded JPGs as `VOVVAI-Perspectives-1.jpg` through `VOVVAI-Perspectives-6.jpg` in `public/images/perspectives/`.
+### 1. Update CTA button to match other landing CTAs
+Current: `<Button asChild size="lg" className="gap-2">`
+New: `<Button asChild size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25">`
 
-### 2. Update `src/components/app/workflowAnimationData.tsx`
-In the `'Picture Perspectives'` entry (~line 201):
-- Change `background` to use `VOVVAI-Perspectives-1.jpg`
-- Replace the `backgrounds` array with all 6 images
-- Update badge from `'1 Photo, 4 Angles'` → `'1 Photo, Endless Angles'`
-- Update second badge from `'One Click'` → `'No Reshoots Needed'`
+This matches the exact pattern from FinalCTA and ChannelShowcase sections.
 
-## Files
+### 2. Adjust section and grid spacing
+- Section padding: keep `py-20 lg:py-28` (already matches)
+- Heading container: increase bottom margin from `mb-10` to `mb-12` for more breathing room
+- Grid: add `sm:px-2 lg:px-4` for slightly more edge padding on larger screens
+- CTA container: increase top margin from `mt-10` to `mt-14` to match ChannelShowcase's `mt-14`
 
-| File | Change |
-|------|--------|
-| `public/images/perspectives/` | 6 new JPGs from uploads |
-| `src/components/app/workflowAnimationData.tsx` | Update backgrounds array and badge labels |
+### 3. Refine heading weight
+Per design system, use `font-semibold` instead of `font-bold` on the h2 to match the premium editorial feel used site-wide.
+
+## Single file change
+`src/components/landing/VideoShowcaseSection.tsx`
 
