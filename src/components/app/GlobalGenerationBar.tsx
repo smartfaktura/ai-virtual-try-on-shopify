@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /** Pages where dedicated activity UI already exists */
-const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/perspectives'];
+const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/perspectives', '/app/video'];
 
 function elapsedLabel(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);

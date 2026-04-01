@@ -390,7 +390,59 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ recovered, checked: stuckVideos.length }), {
+      // Also resolve stuck generation_queue entries for video jobs
+      const { data: stuckQueueJobs } = await serviceClient
+        .from("generation_queue")
+        .select("id, result, credits_reserved, user_id")
+        .eq("user_id", userId)
+        .eq("job_type", "video")
+        .in("status", ["processing", "queued"]);
+
+      let queueResolved = 0;
+      if (stuckQueueJobs && stuckQueueJobs.length > 0) {
+        for (const qJob of stuckQueueJobs) {
+          const klingTaskId = (qJob.result as Record<string, unknown>)?.kling_task_id as string | undefined;
+          if (!klingTaskId) continue;
+
+          // Check if the corresponding generated_videos row has resolved
+          const { data: videoRow } = await serviceClient
+            .from("generated_videos")
+            .select("status, video_url")
+            .eq("kling_task_id", klingTaskId)
+            .single();
+
+          if (!videoRow) continue;
+
+          if (videoRow.status === "complete") {
+            await serviceClient
+              .from("generation_queue")
+              .update({
+                status: "completed",
+                result: { kling_task_id: klingTaskId, video_url: videoRow.video_url },
+                completed_at: new Date().toISOString(),
+              })
+              .eq("id", qJob.id);
+            queueResolved++;
+          } else if (videoRow.status === "failed") {
+            await serviceClient
+              .from("generation_queue")
+              .update({
+                status: "failed",
+                error_message: "Video generation failed",
+                completed_at: new Date().toISOString(),
+              })
+              .eq("id", qJob.id);
+
+            await serviceClient.rpc("refund_credits", {
+              p_user_id: qJob.user_id,
+              p_amount: qJob.credits_reserved,
+            });
+            queueResolved++;
+          }
+        }
+      }
+
+      return new Response(JSON.stringify({ recovered, checked: stuckVideos.length, queue_resolved: queueResolved }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
