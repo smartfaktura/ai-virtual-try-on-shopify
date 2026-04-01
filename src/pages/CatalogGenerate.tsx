@@ -276,6 +276,7 @@ export default function CatalogGenerate() {
     setPropAssignments({});
     setGenerationStartedAt(null);
     setElapsedSeconds(0);
+    setShowCancelDialog(false);
   };
 
   // Estimated time remaining
