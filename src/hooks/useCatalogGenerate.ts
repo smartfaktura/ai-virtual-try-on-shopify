@@ -17,6 +17,7 @@ import type {
 } from '@/types/catalog';
 
 const CREDITS_PER_IMAGE = 4;
+const POLLING_HARD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 export type { CatalogBatchStateV2 as CatalogBatchState };
 
@@ -25,6 +26,7 @@ export function useCatalogGenerate() {
   const [batchState, setBatchState] = useState<CatalogBatchStateV2 | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingStartRef = useRef<number>(0);
   const jobsRef = useRef<CatalogJobExtended[]>([]);
 
   useEffect(() => {
@@ -40,8 +42,35 @@ export function useCatalogGenerate() {
     stopPolling();
     const jobs = jobsRef.current;
     if (jobs.length === 0) return;
+    pollingStartRef.current = Date.now();
 
     const poll = async () => {
+      // Hard timeout: force-complete after 10 minutes
+      if (Date.now() - pollingStartRef.current > POLLING_HARD_TIMEOUT_MS) {
+        console.warn('[catalog] Polling hard timeout reached (10m), force-completing batch');
+        const updated = jobsRef.current.map(j =>
+          ['queued', 'processing'].includes(j.status)
+            ? { ...j, status: 'failed' as const, error: 'Timed out after 10 minutes' }
+            : j
+        );
+        jobsRef.current = updated;
+        const aggregatedImages = updated.flatMap(j => j.images);
+        setBatchState({
+          jobs: updated, totalJobs: updated.length,
+          completedJobs: updated.filter(j => j.status === 'completed').length,
+          failedJobs: updated.filter(j => j.status === 'failed').length,
+          allDone: true, aggregatedImages, anchorStatus: {}, phase: 'complete',
+        });
+        stopPolling();
+        setIsGenerating(false);
+        if (aggregatedImages.length > 0) {
+          toast.warning(`Completed with ${aggregatedImages.length} image(s) — some jobs timed out`);
+        } else {
+          toast.error('Generation timed out');
+        }
+        return;
+      }
+
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       let token = await getAuthToken() || SUPABASE_KEY;
@@ -86,10 +115,8 @@ export function useCatalogGenerate() {
       const allDone = updated.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
       const aggregatedImages = updated.flatMap(j => j.images);
 
-      // Determine phase
       const anchorJobs = updated.filter(j => j.isAnchor);
       const anchorsAllDone = anchorJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
-      const derivativeJobs = updated.filter(j => !j.isAnchor);
       const phase = allDone ? 'complete' as const : !anchorsAllDone ? 'anchors' as const : 'derivatives' as const;
 
       const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
@@ -112,6 +139,17 @@ export function useCatalogGenerate() {
     pollingRef.current = setInterval(poll, 3000);
   }, [stopPolling]);
 
+  // ── Safe base64 conversion ──
+  const safeConvertBase64 = async (url: string, label: string): Promise<string | null> => {
+    try {
+      return await convertImageToBase64(url);
+    } catch (err) {
+      console.error(`[catalog] Failed to convert ${label} image to base64:`, err);
+      toast.warning(`Could not process image for "${label}" — skipping`);
+      return null;
+    }
+  };
+
   // ── Enqueue a single job ──
   const enqueueJob = async (
     token: string,
@@ -127,12 +165,12 @@ export function useCatalogGenerate() {
     anchorImageUrl: string | null,
     batchId: string,
     enqueueCount: number,
-  ): Promise<CatalogJobExtended | null> => {
+  ): Promise<CatalogJobExtended | 'insufficient_credits' | null> => {
     await paceDelay(enqueueCount);
 
     const result = await enqueueWithRetry(
       {
-        jobType: 'tryon',
+        jobType: 'catalog',
         payload: {
           catalog_mode: true,
           render_path: renderPath,
@@ -156,8 +194,10 @@ export function useCatalogGenerate() {
 
     if (isEnqueueError(result)) {
       if (result.type === 'insufficient_credits') {
-        toast.error('Insufficient credits');
+        toast.error('Insufficient credits — stopping batch');
+        return 'insufficient_credits';
       }
+      console.error(`[catalog] Enqueue error for ${productTitle}/${shotId}:`, result.message);
       return null;
     }
 
@@ -208,13 +248,15 @@ export function useCatalogGenerate() {
     const batchId = crypto.randomUUID();
     const allJobs: CatalogJobExtended[] = [];
     let enqueueCount = 0;
+    let creditsFailed = false;
 
-    // Models to iterate: if empty, use a single null-model pass
     const modelsToUse = config.models.length > 0
       ? config.models
       : [{ id: '__product_only__', profile: 'no model', audience: 'adult_woman' as const, imageUrl: null }];
 
     for (const model of modelsToUse) {
+      if (creditsFailed) break;
+
       const isProductOnly = model.id === '__product_only__';
 
       const session = buildSessionLock(
@@ -225,14 +267,25 @@ export function useCatalogGenerate() {
         config.backgroundId,
       );
 
-      const modelB64 = model.imageUrl ? await convertImageToBase64(model.imageUrl) : null;
+      let modelB64: string | null = null;
+      if (model.imageUrl) {
+        modelB64 = await safeConvertBase64(model.imageUrl, model.profile || 'model');
+        if (!modelB64 && !isProductOnly) {
+          // Model image failed but we need it for on-model shots — skip this model
+          console.warn(`[catalog] Skipping model "${model.profile}" — image conversion failed`);
+          continue;
+        }
+      }
 
       for (const product of config.products) {
+        if (creditsFailed) break;
+
         const lookLock = buildProductLookLock(product, session, product.detectedCategory);
-        const productB64 = await convertImageToBase64(product.imageUrl);
+        const productB64 = await safeConvertBase64(product.imageUrl, product.title);
+        if (!productB64) continue; // Skip product if image fails
+
         const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
 
-        // Anchor shot
         const anchorShotId = lookLock.anchorShotId;
         const effectiveAnchorId = config.selectedShots.includes(anchorShotId) ? anchorShotId : config.selectedShots[0];
         const effectiveAnchorDef = getShotDefinition(effectiveAnchorId);
@@ -250,17 +303,20 @@ export function useCatalogGenerate() {
           renderPath: 'anchor_generate',
         });
 
-        const anchorJob = await enqueueJob(
+        const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id,
           effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
           anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
         );
 
-        if (anchorJob) allJobs.push(anchorJob);
+        if (anchorResult === 'insufficient_credits') { creditsFailed = true; break; }
+        if (anchorResult) allJobs.push(anchorResult);
 
         // Remaining shots
         const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
         for (const shotId of remainingShots) {
+          if (creditsFailed) break;
+
           const shotDef = getShotDefinition(shotId);
           if (!shotDef) continue;
 
@@ -276,13 +332,14 @@ export function useCatalogGenerate() {
             renderPath,
           });
 
-          const job = await enqueueJob(
+          const jobResult = await enqueueJob(
             token, productB64, product.title, product.id,
             shotId, shotDef.label, renderPath, prompt,
             modelB64, session.modelProfile, null, batchId, enqueueCount++,
           );
 
-          if (job) allJobs.push(job);
+          if (jobResult === 'insufficient_credits') { creditsFailed = true; break; }
+          if (jobResult) allJobs.push(jobResult);
         }
       }
     }
@@ -290,9 +347,13 @@ export function useCatalogGenerate() {
     if (allJobs.length > 0) sendWake(token);
 
     if (allJobs.length === 0) {
-      toast.error('Could not queue any jobs');
+      toast.error(creditsFailed ? 'Insufficient credits to start generation' : 'Could not queue any jobs');
       setIsGenerating(false);
       return false;
+    }
+
+    if (creditsFailed && allJobs.length > 0) {
+      toast.warning(`Queued ${allJobs.length} job(s) before running out of credits`);
     }
 
     jobsRef.current = allJobs;
@@ -306,7 +367,6 @@ export function useCatalogGenerate() {
 
     toast.info(`Queued ${allJobs.length} catalog image${allJobs.length > 1 ? 's' : ''}`);
     pollJobs();
-    // isGenerating stays true — cleared when batch completes or on reset
     return true;
   }, [user, pollJobs]);
 
@@ -314,6 +374,7 @@ export function useCatalogGenerate() {
     stopPolling();
     setBatchState(null);
     jobsRef.current = [];
+    setIsGenerating(false);
   }, [stopPolling]);
 
   return { startGeneration, batchState, isGenerating, resetBatch };

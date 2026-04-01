@@ -26,96 +26,120 @@ function seedreamAspectRatio(appRatio: string): string {
 
 const SEEDREAM_MODERATION_CODES = [1301, 1302, 1303, 1304, 1305, 1024];
 
-// ── Seedream 4.5 generation (only engine for catalog) ────────────────────
+// ── Seedream generation with retry ───────────────────────────────────────
 async function generateImageSeedream(
   prompt: string,
   imageUrls: string[],
   model: string,
   apiKey: string,
   aspectRatio = "1:1",
+  maxRetries = 1,
 ): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const seedreamRatio = seedreamAspectRatio(aspectRatio);
   const timeoutMs = 90_000;
 
-  try {
-    const body: Record<string, unknown> = {
-      model, prompt, size: "2K",
-      aspect_ratio: seedreamRatio,
-      response_format: "url",
-      watermark: false,
-      sequential_image_generation: "disabled",
-    };
-    if (imageUrls.length === 1) {
-      body.image = imageUrls[0];
-    } else if (imageUrls.length > 1) {
-      body.image = imageUrls;
-    }
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const body: Record<string, unknown> = {
+        model, prompt, size: "2K",
+        aspect_ratio: seedreamRatio,
+        response_format: "url",
+        watermark: false,
+        sequential_image_generation: "disabled",
+      };
+      if (imageUrls.length === 1) {
+        body.image = imageUrls[0];
+      } else if (imageUrls.length > 1) {
+        body.image = imageUrls;
+      }
 
-    const response = await fetch(ARK_BASE, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
+      const response = await fetch(ARK_BASE, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
 
-    if (!response.ok) {
-      let errorText = "";
-      try { errorText = await response.text(); } catch (_) { /* ignore */ }
-      try {
-        const errJson = JSON.parse(errorText);
-        const errCode = errJson?.error?.code || errJson?.code;
-        if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
-          return { ok: false, error: `Content moderated: ${errJson?.error?.message || errJson?.message}` };
+      if (!response.ok) {
+        let errorText = "";
+        try { errorText = await response.text(); } catch (_) { /* ignore */ }
+
+        // Check moderation
+        try {
+          const errJson = JSON.parse(errorText);
+          const errCode = errJson?.error?.code || errJson?.code;
+          if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
+            return { ok: false, error: `Content moderated: ${errJson?.error?.message || errJson?.message}` };
+          }
+        } catch (_) { /* not JSON */ }
+
+        // Transient errors: retry
+        const isTransient = response.status === 429 || response.status === 502 || response.status === 503;
+        if (isTransient && attempt < maxRetries) {
+          console.warn(`[generate-catalog] Seedream transient ${response.status}, retrying in 3s...`);
+          await new Promise(r => setTimeout(r, 3000));
+          continue;
         }
-      } catch (_) { /* not JSON */ }
-      return { ok: false, error: `ARK API error ${response.status}: ${errorText.slice(0, 200)}` };
-    }
+        return { ok: false, error: `ARK API error ${response.status}: ${errorText.slice(0, 200)}` };
+      }
 
-    const data = await response.json();
-    const respCode = data?.error?.code || data?.code;
-    if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
-      return { ok: false, error: `Content moderated: ${data?.error?.message || data?.message}` };
-    }
+      const data = await response.json();
+      const respCode = data?.error?.code || data?.code;
+      if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
+        return { ok: false, error: `Content moderated: ${data?.error?.message || data?.message}` };
+      }
 
-    const imageUrl = data?.data?.[0]?.url;
-    if (!imageUrl) {
-      return { ok: false, error: "No URL in Seedream response" };
+      const imageUrl = data?.data?.[0]?.url;
+      if (!imageUrl) {
+        return { ok: false, error: "No URL in Seedream response" };
+      }
+      return { ok: true, imageUrl };
+    } catch (error: unknown) {
+      const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+      if (!isTimeout && attempt < maxRetries) {
+        console.warn(`[generate-catalog] Seedream error, retrying in 3s...`, error);
+        await new Promise(r => setTimeout(r, 3000));
+        continue;
+      }
+      return { ok: false, error: isTimeout ? "Seedream request timed out (90s)" : (error instanceof Error ? error.message : "Unknown error") };
     }
-    return { ok: true, imageUrl };
-  } catch (error: unknown) {
-    const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
-    return { ok: false, error: isTimeout ? "Seedream request timed out (90s)" : (error instanceof Error ? error.message : "Unknown error") };
   }
+  return { ok: false, error: "Max retries exceeded" };
 }
 
-// ── Build catalog prompt from structured spec ────────────────────────────
+// ── Build catalog prompt from structured spec (legacy fallback) ──────────
 interface CatalogPayload {
   product: {
     title: string;
     description?: string;
-    productType: string;
+    productType?: string;
     imageUrl: string;
   };
-  model: {
-    name: string;
-    gender: string;
-    ethnicity: string;
-    bodyType: string;
-    ageRange: string;
-    imageUrl: string;
+  model?: {
+    name?: string;
+    gender?: string;
+    ethnicity?: string;
+    bodyType?: string;
+    ageRange?: string;
+    imageUrl?: string;
+  } | null;
+  pose?: {
+    name?: string;
+    instruction?: string;
   };
-  pose: {
-    name: string;
-    instruction: string;
+  background?: {
+    label?: string;
+    instruction?: string;
   };
-  background: {
-    label: string;
-    instruction: string;
-  };
-  aspectRatio: string;
+  aspectRatio?: string;
   batch_id?: string;
-  // Queue metadata (injected by process-queue)
+  prompt_final?: string;
+  catalog_mode?: boolean;
+  render_path?: string;
+  shot_id?: string;
+  anchor_image_url?: string;
+  // Queue metadata
   user_id?: string;
   job_id?: string;
   credits_reserved?: number;
@@ -123,25 +147,41 @@ interface CatalogPayload {
   product_id?: string;
   product_name?: string;
   product_image_url?: string;
+  imageCount?: number;
+  quality?: string;
 }
 
 function buildCatalogPrompt(p: CatalogPayload): string {
+  const model = p.model;
+  if (!model?.gender) {
+    // Product-only mode
+    return `A professional e-commerce catalog photograph of ${p.product.title || "the product"} shown in [PRODUCT IMAGE].
+${p.pose?.instruction ? `\nSHOT: ${p.pose.instruction}` : ""}
+${p.background?.instruction ? `\nENVIRONMENT: ${p.background.instruction}` : ""}
+
+STYLE: Clean e-commerce catalog photography. Even, professional studio lighting. Sharp focus on the product. Ultra high resolution, 8K detail.
+
+CONSTRAINTS:
+- Preserve all colors, textures, patterns, labels, and branding with 100% fidelity.
+- No text overlays, watermarks, or logos added to the image.`;
+  }
+
   const ageDescMap: Record<string, string> = {
     "young-adult": "early 20s",
     adult: "late 20s to mid 30s",
     mature: "40s to 50s",
   };
-  const ageDesc = ageDescMap[p.model.ageRange] || "adult";
+  const ageDesc = ageDescMap[model.ageRange || "adult"] || "adult";
 
-  return `A professional e-commerce catalog photograph of a ${p.model.gender} model, ${p.model.ethnicity}, ${ageDesc}, ${p.model.bodyType} build.
+  return `A professional e-commerce catalog photograph of a ${model.gender} model, ${model.ethnicity}, ${ageDesc}, ${model.bodyType} build.
 
 The model is wearing the EXACT ${p.product.productType || "product"} shown in [PRODUCT IMAGE] — preserve all colors, textures, patterns, labels, and branding with 100% fidelity.${p.product.description ? ` Product: ${p.product.description}.` : ""}
 
-POSE: ${p.pose.instruction}
+POSE: ${p.pose?.instruction || "Natural standing pose, looking at camera"}
 
-ENVIRONMENT: ${p.background.instruction}
+ENVIRONMENT: ${p.background?.instruction || "Clean studio background, soft neutral lighting"}
 
-STYLE: Clean e-commerce catalog photography. Even, professional studio lighting. Sharp focus on the product. The product must be the hero of the image. Ultra high resolution, 8K detail.
+STYLE: Clean e-commerce catalog photography. Even, professional studio lighting. Sharp focus on the product. Ultra high resolution, 8K detail.
 
 CONSTRAINTS:
 - Do NOT change the product's appearance, colors, or branding from [PRODUCT IMAGE].
@@ -164,7 +204,6 @@ async function completeQueueJob(
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
-  // Guard: if user already cancelled, skip completion
   const { data: currentJob } = await supabase
     .from("generation_queue")
     .select("status")
@@ -187,7 +226,6 @@ async function completeQueueJob(
     await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
     console.log(`[generate-catalog] Refunded ${creditsReserved} credits for failed job ${jobId}`);
 
-    // Fire-and-forget failure email
     try {
       const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
       const settings = (profile?.settings as Record<string, unknown>) || {};
@@ -206,7 +244,7 @@ async function completeQueueJob(
               productName: (payload.product_name as string) || undefined,
             },
           }),
-        }).catch((e) => console.warn("[generate-catalog] Failed email send failed:", e.message));
+        }).catch((e) => console.warn("[generate-catalog] Failed email send failed:", (e as Error).message));
       }
     } catch (e) { console.warn("[generate-catalog] Failed email lookup failed:", e); }
     return;
@@ -231,7 +269,7 @@ async function completeQueueJob(
     quality: "standard",
     requested_count: requestedCount,
     credits_used: creditsReserved,
-    scene_name: (payload.pose as Record<string, unknown>)?.name || null,
+    scene_name: (payload.pose as Record<string, unknown>)?.name || (payload.shot_id as string) || null,
     model_name: (payload.model as Record<string, unknown>)?.name || null,
     model_image_url: (payload.model as Record<string, unknown>)?.originalImageUrl || null,
     workflow_slug: "catalog-shot-set",
@@ -253,10 +291,10 @@ serve(async (req) => {
   try {
     const body: CatalogPayload = await req.json();
 
-    // Validate required fields
-    if (!body.product?.imageUrl || !body.model?.imageUrl || !body.pose?.instruction || !body.background?.instruction) {
+    // Validate: product.imageUrl is always required; model is optional for product-only mode
+    if (!body.product?.imageUrl) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: product.imageUrl, model.imageUrl, pose.instruction, background.instruction" }),
+        JSON.stringify({ error: "Missing required field: product.imageUrl" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -293,12 +331,18 @@ serve(async (req) => {
     }
 
     const aspectRatio = body.aspectRatio || "4:5";
-    const prompt = buildCatalogPrompt(body);
 
-    console.log(`[generate-catalog] Generating: product="${body.product.title}", model="${body.model.name}", pose="${body.pose.name}", bg="${body.background.label}", ratio=${aspectRatio}`);
+    // Use prompt_final from catalog engine if present; fall back to legacy buildCatalogPrompt
+    const prompt = body.prompt_final || buildCatalogPrompt(body);
 
-    // Reference images: product first (hero), then model
-    const referenceImages = [body.product.imageUrl, body.model.imageUrl];
+    const hasModel = !!body.model?.imageUrl;
+    const logModel = hasModel ? `model="${body.model?.name}"` : "product-only";
+    console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || body.pose?.name || 'default'}", ratio=${aspectRatio}`);
+
+    // Reference images: product first (hero), then model if available, then anchor if available
+    const referenceImages: string[] = [body.product.imageUrl];
+    if (body.model?.imageUrl) referenceImages.push(body.model.imageUrl);
+    if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
 
     const seedreamResult = await generateImageSeedream(
       prompt,
@@ -306,6 +350,7 @@ serve(async (req) => {
       "seedream-4-5-251128",
       arkApiKey,
       aspectRatio,
+      1, // 1 retry for transient errors
     );
 
     if (!seedreamResult.ok || !seedreamResult.imageUrl) {
@@ -357,12 +402,11 @@ serve(async (req) => {
 
     const images = [finalUrl];
 
-    // Complete queue job if called internally
     if (isQueueInternal && body.job_id) {
       await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, 1, [], body as unknown as Record<string, unknown>);
     }
 
-    console.log(`[generate-catalog] ✓ Catalog image generated for "${body.product.title}" with model "${body.model.name}"`);
+    console.log(`[generate-catalog] ✓ Catalog image generated for "${body.product.title}"`);
 
     return new Response(
       JSON.stringify({

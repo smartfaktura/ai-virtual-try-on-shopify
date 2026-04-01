@@ -40,7 +40,9 @@ function calculateCreditCost(
 
   let perImage: number;
 
-  if (jobType === "upscale") {
+  if (jobType === "catalog") {
+    perImage = 4;
+  } else if (jobType === "upscale") {
     perImage = resolution === "4k" ? 15 : 10;
   } else if (jobType === "workflow" || jobType === "tryon") {
     perImage = 6;
@@ -109,7 +111,7 @@ serve(async (req) => {
       );
     }
 
-    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video"];
+    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video", "catalog"];
     if (!validJobTypes.includes(jobType)) {
       return new Response(
         JSON.stringify({ error: `Invalid job type: ${jobType}` }),
