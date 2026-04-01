@@ -41,7 +41,7 @@ export function CatalogContextSidebar({
     <div className="sticky top-24 space-y-4">
       <div className="rounded-xl border border-border bg-card p-4 space-y-5">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Your Setup</h4>
+          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">STUDIO SETUP</h4>
           <Badge variant="secondary" className="text-[9px]">Step {currentStep}/6</Badge>
         </div>
 
