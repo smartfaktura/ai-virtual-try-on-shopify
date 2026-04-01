@@ -122,8 +122,8 @@ const steps = [
   },
   {
     number: '02',
-    title: 'Pick a Workflow',
-    description: 'Choose from curated workflows like "On-Model Editorial", "Lifestyle Scene", or "Social Media Pack". Each one is a complete visual pipeline.',
+    title: 'Pick a Template',
+    description: 'Choose from curated templates like "On-Model Editorial", "Lifestyle Scene", or "Social Media Pack". Each one is a complete visual pipeline.',
   },
   {
     number: '03',
