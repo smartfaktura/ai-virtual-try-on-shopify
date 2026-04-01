@@ -429,6 +429,7 @@ export default function AnimateVideo() {
       preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
       aspectRatio, duration, audioMode,
       userPrompt: userPrompt || undefined,
+      sourceName: sourceName || undefined,
     });
   };
 
