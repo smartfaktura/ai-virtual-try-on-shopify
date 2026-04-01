@@ -110,7 +110,7 @@ const benefits = [
   {
     icon: Palette,
     title: 'Brand-Consistent Output',
-    description: 'Pair workflows with Brand Profiles to ensure every image matches your visual identity automatically.',
+    description: 'Pair templates with Brand Profiles to ensure every image matches your visual identity automatically.',
   },
 ];
 
