@@ -709,19 +709,34 @@ export default function AnimateVideo() {
           {/* Hide small upload preview during analysis — it's shown large in the analysis grid */}
           {!showAnalysisUI && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Upload Image</label>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-xs">
-                <img src={imagePreview!} alt="Upload" className="w-full rounded-xl object-cover" />
-                <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
-                  <X className="h-4 w-4" />
-                </button>
-                {isUploading && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <Progress value={uploadProgress} className="h-1" />
+              <label className="text-sm font-medium text-foreground">
+                {bulkMode ? `Images (${bulkImages.length})` : 'Upload Image'}
+              </label>
+              {bulkMode && isPaidUser ? (
+                <BulkImageGrid
+                  images={bulkImages}
+                  maxImages={10}
+                  onAddFiles={handleBulkAddFiles}
+                  onRemoveImage={handleBulkRemoveImage}
+                  disabled={isBulkRunning}
+                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
+                />
+              ) : (
+                <>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                  <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-xs">
+                    <img src={imagePreview!} alt="Upload" className="w-full rounded-xl object-cover" />
+                    <button onClick={removeImage} className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background">
+                      <X className="h-4 w-4" />
+                    </button>
+                    {isUploading && (
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <Progress value={uploadProgress} className="h-1" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           )}
 
