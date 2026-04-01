@@ -312,7 +312,7 @@ export default function CatalogGenerate() {
                 <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm">
                   <RefreshCw className="w-3.5 h-3.5" /> New Set
                 </Button>
-                <Button onClick={() => window.location.href = '/app/library'} className="gap-2 text-sm">
+                <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm">
                   View in Library <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               </div>

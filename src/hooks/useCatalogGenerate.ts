@@ -336,7 +336,7 @@ export function useCatalogGenerate() {
           });
 
           const jobResult = await enqueueJob(
-            token, productB64, product.title, product.id,
+            token, productB64, product.title, product.id, product.imageUrl,
             shotId, shotDef.label, renderPath, prompt,
             modelB64, session.modelProfile, null, batchId, enqueueCount++,
           );
