@@ -121,7 +121,7 @@ function PropPickerModal({
                     key={p.id}
                     onClick={() => toggleItem(p.id)}
                     className={cn(
-                      'relative rounded-lg border p-2 text-left transition-all hover:shadow-sm',
+                      'relative rounded-lg border p-2 text-left transition-all hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                       checked ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'border-border hover:border-foreground/20',
                     )}
                   >
