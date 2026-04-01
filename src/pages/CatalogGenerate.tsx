@@ -386,7 +386,7 @@ export default function CatalogGenerate() {
                     <button
                       key={i}
                       onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all"
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
