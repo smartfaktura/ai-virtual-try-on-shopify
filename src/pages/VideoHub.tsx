@@ -7,6 +7,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useState, useCallback } from 'react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { downloadVideosAsZip } from '@/lib/dropDownload';
+import { toSignedUrl } from '@/lib/signedUrl';
+import { toast } from 'sonner';
+import { buildVideoFileName } from '@/lib/videoFilename';
+
+interface RecentVideoCardProps {
+  video: GeneratedVideo;
+  onClick: () => void;
+  selectMode: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+}
 
 function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
   const isComplete = video.status === 'complete' && video.video_url;
@@ -24,17 +36,13 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
   }, [selectMode, onToggleSelect, onClick]);
 
   const showStatusBadge = video.status === 'processing' || video.status === 'queued';
-  const isPlaying = hovering && canPlay;
 
   return (
     <div
       className="group cursor-pointer"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {/* Select checkbox overlay */}
         {selectMode && (
           <div className="absolute top-2 left-2 z-20">
             <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -50,37 +58,10 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
         <img
           src={thumbnailUrl}
           alt=""
-          aria-hidden="true"
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover scale-105 blur-xl opacity-25"
+          className="absolute inset-0 w-full h-full object-cover"
         />
-
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative max-h-full max-w-full overflow-hidden" style={mediaFrameStyle}>
-            {hovering && isComplete && !selectMode && (
-              <video
-                ref={videoRef}
-                src={video.video_url!}
-                poster={thumbnailUrl}
-                loop
-                muted
-                playsInline
-                preload="none"
-                onCanPlay={() => setCanPlay(true)}
-                className="absolute inset-0 h-full w-full object-contain bg-transparent"
-                style={{ visibility: isPlaying ? 'visible' : 'hidden' }}
-              />
-            )}
-            <img
-              src={thumbnailUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className={`absolute inset-0 h-full w-full object-contain ${isPlaying ? 'invisible' : 'visible'}`}
-            />
-          </div>
-        </div>
 
         {showStatusBadge && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900 animate-pulse">
@@ -94,15 +75,9 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           </Badge>
         )}
 
-        {hovering && !canPlay && isComplete && !selectMode && (
-          <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 z-10">
-            <Loader2 className="h-6 w-6 text-background animate-spin" />
-          </div>
-        )}
-
-        {isComplete && !hovering && !selectMode && (
+        {isComplete && !selectMode && (
           <div className="absolute bottom-2 left-2 z-10">
-            <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
+            <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
               <Play className="h-3 w-3 text-foreground ml-0.5" />
             </div>
           </div>
