@@ -114,9 +114,9 @@ export function CatalogStepShots({
 
       {/* Pinned credit calculator */}
       <div className="sticky bottom-4 z-10">
-        <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm p-4 shadow-lg space-y-3">
-          <div className="flex items-center gap-2 text-sm flex-wrap">
-            <Package className="w-3.5 h-3.5 text-muted-foreground" />
+        <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm p-3 sm:p-4 shadow-lg space-y-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-wrap">
+            <Package className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
             <span className="font-medium">{productCount} product{productCount !== 1 ? 's' : ''}</span>
             {modelCount > 0 && (
               <>

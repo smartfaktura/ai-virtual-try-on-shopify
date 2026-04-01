@@ -102,7 +102,7 @@ export function CatalogStepModelsV2({
           <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
         </div>
         {filteredUser.length > 0 ? (
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
             {filteredUser.map(model => (
               <ModelSelectorCard
                 key={model.modelId}
@@ -134,7 +134,7 @@ export function CatalogStepModelsV2({
       {filteredLibrary.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
             {filteredLibrary.map(model => (
               <ModelSelectorCard
                 key={model.modelId}
