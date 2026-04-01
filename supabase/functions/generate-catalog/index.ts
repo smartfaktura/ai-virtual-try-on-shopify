@@ -413,7 +413,7 @@ serve(async (req) => {
         images,
         generatedCount: 1,
         requestedCount: 1,
-        workflow_name: "Catalog Shot Set",
+        workflow_name: "Catalog Studio",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
