@@ -194,7 +194,7 @@ export function useCatalogGenerate() {
     return null;
   };
 
-  // ── Main generation pipeline ──
+  // ── Main generation pipeline (multi-model) ──
   const startGeneration = useCallback(async (config: CatalogSessionConfig): Promise<boolean> => {
     if (!user) { toast.error('Sign in to generate'); return false; }
 
@@ -206,75 +206,81 @@ export function useCatalogGenerate() {
     const allJobs: CatalogJobExtended[] = [];
     let enqueueCount = 0;
 
-    // Stage 1: Build session lock
-    const session = buildSessionLock(
-      config.fashionStyle, config.modelId, config.modelProfile,
-      config.modelAudience, config.backgroundId,
-    );
+    // Models to iterate: if empty, use a single null-model pass
+    const modelsToUse = config.models.length > 0
+      ? config.models
+      : [{ id: '__product_only__', profile: 'no model', audience: 'adult_woman' as const, imageUrl: null }];
 
-    // Prepare model image
-    const modelB64 = config.modelImageUrl ? await convertImageToBase64(config.modelImageUrl) : null;
+    for (const model of modelsToUse) {
+      const isProductOnly = model.id === '__product_only__';
 
-    for (const product of config.products) {
-      // Stage 2: Resolve look
-      const lookLock = buildProductLookLock(product, session, product.detectedCategory);
-      const productB64 = await convertImageToBase64(product.imageUrl);
-      const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
-
-      // Stage 3: Enqueue anchor
-      const anchorShotId = lookLock.anchorShotId;
-      const anchorShotDef = getShotDefinition(anchorShotId);
-
-      // Make sure anchor is in selected shots, if not use first selected
-      const effectiveAnchorId = config.selectedShots.includes(anchorShotId) ? anchorShotId : config.selectedShots[0];
-      const effectiveAnchorDef = getShotDefinition(effectiveAnchorId);
-
-      if (!effectiveAnchorDef) continue;
-
-      const anchorPrompt = assemblePrompt({
-        productTitle: heroBlock,
-        productCategory: product.detectedCategory,
-        modelProfile: session.modelProfile,
-        supportWardrobePrompt: lookLock.supportWardrobePrompt,
-        backgroundPrompt: session.backgroundPrompt,
-        lightingPrompt: session.lightingPrompt,
-        shotDef: effectiveAnchorDef,
-        renderPath: 'anchor_generate',
-      });
-
-      const anchorJob = await enqueueJob(
-        token, productB64, product.title, product.id,
-        effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
-        anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
+      const session = buildSessionLock(
+        config.fashionStyle,
+        isProductOnly ? null : model.id,
+        model.profile,
+        model.audience,
+        config.backgroundId,
       );
 
-      if (anchorJob) allJobs.push(anchorJob);
+      const modelB64 = model.imageUrl ? await convertImageToBase64(model.imageUrl) : null;
 
-      // Enqueue remaining shots
-      const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
-      for (const shotId of remainingShots) {
-        const shotDef = getShotDefinition(shotId);
-        if (!shotDef) continue;
+      for (const product of config.products) {
+        const lookLock = buildProductLookLock(product, session, product.detectedCategory);
+        const productB64 = await convertImageToBase64(product.imageUrl);
+        const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
 
-        const renderPath = classifyRenderPath(effectiveAnchorId, shotId, product.detectedCategory);
-        const prompt = assemblePrompt({
+        // Anchor shot
+        const anchorShotId = lookLock.anchorShotId;
+        const effectiveAnchorId = config.selectedShots.includes(anchorShotId) ? anchorShotId : config.selectedShots[0];
+        const effectiveAnchorDef = getShotDefinition(effectiveAnchorId);
+
+        if (!effectiveAnchorDef) continue;
+
+        const anchorPrompt = assemblePrompt({
           productTitle: heroBlock,
           productCategory: product.detectedCategory,
           modelProfile: session.modelProfile,
           supportWardrobePrompt: lookLock.supportWardrobePrompt,
           backgroundPrompt: session.backgroundPrompt,
           lightingPrompt: session.lightingPrompt,
-          shotDef,
-          renderPath,
+          shotDef: effectiveAnchorDef,
+          renderPath: 'anchor_generate',
         });
 
-        const job = await enqueueJob(
+        const anchorJob = await enqueueJob(
           token, productB64, product.title, product.id,
-          shotId, shotDef.label, renderPath, prompt,
-          modelB64, session.modelProfile, null, batchId, enqueueCount++,
+          effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
+          anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
         );
 
-        if (job) allJobs.push(job);
+        if (anchorJob) allJobs.push(anchorJob);
+
+        // Remaining shots
+        const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
+        for (const shotId of remainingShots) {
+          const shotDef = getShotDefinition(shotId);
+          if (!shotDef) continue;
+
+          const renderPath = classifyRenderPath(effectiveAnchorId, shotId, product.detectedCategory);
+          const prompt = assemblePrompt({
+            productTitle: heroBlock,
+            productCategory: product.detectedCategory,
+            modelProfile: session.modelProfile,
+            supportWardrobePrompt: lookLock.supportWardrobePrompt,
+            backgroundPrompt: session.backgroundPrompt,
+            lightingPrompt: session.lightingPrompt,
+            shotDef,
+            renderPath,
+          });
+
+          const job = await enqueueJob(
+            token, productB64, product.title, product.id,
+            shotId, shotDef.label, renderPath, prompt,
+            modelB64, session.modelProfile, null, batchId, enqueueCount++,
+          );
+
+          if (job) allJobs.push(job);
+        }
       }
     }
 
@@ -295,7 +301,7 @@ export function useCatalogGenerate() {
       allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
     });
 
-    toast.info(`Queued ${allJobs.length} catalog image${allJobs.length > 1 ? 's' : ''} (anchor-first pipeline)`);
+    toast.info(`Queued ${allJobs.length} catalog image${allJobs.length > 1 ? 's' : ''}`);
     pollJobs();
     setIsGenerating(false);
     return true;
