@@ -9,10 +9,11 @@ import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, A
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
-interface PropItem {
+interface PropProduct {
   id: string;
   title: string;
-  imageUrl: string;
+  image_url: string;
+  product_type: string;
 }
 
 const CREDITS_PER_IMAGE = 4;
@@ -24,7 +25,8 @@ interface CatalogStepReviewV2Props {
   fashionStyleId: FashionStyleId | null;
   backgroundId: string | null;
   selectedShots: Set<CatalogShotId>;
-  stylingProps: PropItem[];
+  propAssignments: Record<string, string[]>;
+  allProducts: PropProduct[];
   totalImages: number;
   totalCredits: number;
   balance: number;
