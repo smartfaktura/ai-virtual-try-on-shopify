@@ -459,7 +459,7 @@ export default function Dashboard() {
         {/* Explore Workflows — compact animated cards */}
         {workflows.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Templates</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[...workflows].sort((a, b) => {
                 const order: Record<string, number> = {
