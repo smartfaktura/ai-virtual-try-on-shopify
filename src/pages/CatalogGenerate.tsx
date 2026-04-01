@@ -345,10 +345,25 @@ export default function CatalogGenerate() {
                 </div>
               </div>
               <p className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">VOVV.AI</p>
-              <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
                 <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm">
                   <RefreshCw className="w-3.5 h-3.5" /> New Set
                 </Button>
+                {batchState.aggregatedImages.length > 1 && (
+                  <Button variant="outline" onClick={() => {
+                    const images = batchState.jobs
+                      .filter(j => j.status === 'completed' && j.images.length > 0)
+                      .flatMap(j => j.images.map(url => ({
+                        url,
+                        workflow_name: j.productName || 'Catalog',
+                        scene_name: j.shotLabel || 'image',
+                        product_title: j.productName,
+                      })));
+                    downloadDropAsZip(images, 'Catalog-Export');
+                  }} className="gap-2 text-sm">
+                    <Download className="w-3.5 h-3.5" /> Download All
+                  </Button>
+                )}
                 <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm">
                   View in Library <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
