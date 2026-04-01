@@ -110,7 +110,7 @@ function PropPickerModal({
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No products found.</p>
           ) : (
-            <div className="grid grid-cols-3 gap-2 py-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 py-2">
               {filtered.map(p => {
                 const checked = localSelected.has(p.id);
                 return (
