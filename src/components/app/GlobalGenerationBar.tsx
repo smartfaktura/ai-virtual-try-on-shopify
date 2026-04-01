@@ -91,6 +91,7 @@ export function GlobalGenerationBar() {
           quality: (payload?.quality as string) ?? null,
           resolution: (payload?.resolution as string) ?? null,
           creative_drop_id: (payload?.creative_drop_id as string) ?? null,
+          batch_id: (payload?.batch_id as string) ?? null,
         };
       });
 
