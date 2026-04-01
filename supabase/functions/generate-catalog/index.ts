@@ -380,7 +380,7 @@ serve(async (req) => {
         const storagePath = `${userId}/${jobId}/catalog-0.${fmt.ext}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("workflow-previews")
+          .from("catalog-previews")
           .upload(storagePath, imgBytes, {
             contentType: fmt.contentType,
             cacheControl: "3600",
