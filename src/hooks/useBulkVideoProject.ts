@@ -190,7 +190,7 @@ export function useBulkVideoProject() {
           duration: mergedParams.duration,
           model_name: 'kling-v3',
           aspect_ratio: mergedParams.aspectRatio,
-          mode: 'std',
+          mode: 'pro',
           with_audio: mergedParams.audioMode === 'ambient',
           cameraMotion: mergedParams.cameraMotion,
           audioMode: mergedParams.audioMode,
