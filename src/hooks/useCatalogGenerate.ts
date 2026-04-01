@@ -19,6 +19,16 @@ import type {
 const CREDITS_PER_IMAGE = 4;
 const POLLING_HARD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
+/** Append styling props to the assembled prompt */
+function appendPropsToPrompt(
+  prompt: string,
+  props?: CatalogSessionConfig['stylingProps'],
+): string {
+  if (!props || props.length === 0) return prompt;
+  const items = props.map(p => p.title).join(', ');
+  return `${prompt}\nAdditionally, include these styling accessories visible in the scene: ${items}.`;
+}
+
 export type { CatalogBatchStateV2 as CatalogBatchState };
 
 export function useCatalogGenerate() {
