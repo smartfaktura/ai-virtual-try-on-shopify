@@ -1,63 +1,61 @@
 
 
-# /app/catalog — Final Audit Insights
+# /app/catalog — Round 4 Audit
 
-After three rounds of optimization, the catalog flow is in strong shape. Here are the remaining items I found:
+The previous three rounds addressed all major functional bugs and most polish items. The flow is now solid. Here are the remaining items I found:
 
-## Issues & Improvements
+## Remaining Issues
 
-### 1. Review step: `clicked` state never resets on failure
-**File: `CatalogStepReviewV2.tsx` line 58-68**
-When `onGenerate()` fails or the user doesn't have enough credits and closes the buy modal, `clicked` remains `true` — the Generate button stays permanently disabled. The component never resets it.
-**Fix**: Reset `clicked` to `false` when `isGenerating` transitions from `true` back to `false`, and immediately when opening the buy modal.
+### 1. `confirm()` used for cancel — should be a proper dialog
+**File: `CatalogGenerate.tsx` line 410**
+The cancel button uses `window.confirm()` which is a browser-native blocking dialog. It looks out of place in a polished app and can't be styled.
+**Fix**: Replace with an `AlertDialog` component (already available in the project's UI library) for a consistent cancel confirmation.
 
-### 2. Review step: Style/Background "Edit" button navigates to Step 2 (Style) but Background is Step 4
-**File: `CatalogStepReviewV2.tsx` line 145**
-The Edit button next to the Style + Background row calls `onStepClick(2)`. But Background is Step 4. A user wanting to change the background gets sent to Style instead.
-**Fix**: Split into two separate Edit buttons — one for Style (Step 2) and one for Background (Step 4), or navigate to Step 4 since both are quick to change.
+### 2. Models step: no `focus-visible` ring on "Product Only" toggle or model cards
+**File: `CatalogStepModelsV2.tsx` line 63**
+The Product Only button and model cards lack focus-visible styling for keyboard navigation — same fix that was applied to Fashion Style and Shots cards but missed here.
+**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2` to the Product Only button and verify `ModelSelectorCard` has it too.
 
-### 3. Shots step: credit bar `sticky bottom-4` overlaps content on short viewports
-**File: `CatalogStepShots.tsx` line 116**
-On 440px viewport, the sticky credit calculator bar is ~120px tall and sits at `bottom-4`. If only 2-3 shot cards are visible, the bar overlaps them with no scroll margin.
-**Fix**: Add `scroll-pb-40` or `pb-44` to the parent container so content scrolls above the sticky bar.
+### 3. Products step: list view has no "Load more" button
+**File: `CatalogStepProducts.tsx` line 361-406**
+Grid view has "Load more" when `filtered.length > visibleCount`, but list view renders the same `visible` slice without a load-more button. Users in list view can't see products beyond the first 24.
+**Fix**: Add the same "Load more" button after the list view's scrollable container.
 
-### 4. Props step: "Skip — no props" link + "Next" button both do the same thing
-**File: `CatalogStepProps.tsx` lines 393-401**
-When no props are assigned, both the "Skip" link and the "Next" button call `onNext()`. This is redundant UI clutter.
-**Fix**: When `totalWithProps === 0`, show only the "Next" button with text "Skip: No Props" to consolidate.
+### 4. Products step: list view `max-h-[420px]` is arbitrary and may cut off on larger screens
+**File: `CatalogStepProducts.tsx` line 362**
+The `max-h-[420px]` on the list view container is fixed. On a desktop 1080p screen, this wastes vertical space. On a 440px mobile viewport, the actual available height is less.
+**Fix**: Use `max-h-[50vh]` or `max-h-[min(420px,50vh)]` for better responsiveness.
 
-### 5. Mobile: Background label text overlaps on 3-col grid at 440px
-**File: `CatalogStepBackgroundsV2.tsx` line 53-58**
-With 3 columns at 440px, each card is ~130px wide. The label overlay shows name + shadow style + hex code — the hex code likely overflows or overlaps on small cards.
-**Fix**: Hide the hex code on mobile with `hidden sm:inline`.
+### 5. Generation progress: `confirm()` Cancel doesn't stop in-flight jobs
+**File: `CatalogGenerate.tsx` line 410-413**
+`resetBatch()` clears local state and stops polling, but already-queued jobs continue processing on the server and consume credits. The cancel is only cosmetic.
+**Fix**: This is acceptable behavior (server-side cancellation is complex), but the confirm message should clarify: "Already-queued images will still be processed. Credits for completed images will be used."
 
-### 6. Products step: "Select All" selects from filtered results but label says "Select All"
-**File: `CatalogStepProducts.tsx` line 210-214**
-When a search filter is active, "Select All" selects only filtered products (correct behavior), but the button text doesn't reflect this. Could confuse users.
-**Fix**: Change label to "Select All ({filtered.length})" or "Select Visible" when search is active.
+### 6. Sidebar credit estimate doesn't show balance comparison
+**File: `CatalogContextSidebar.tsx` line 137-148**
+The sidebar shows `totalCredits` and `totalImages` but doesn't show the user's current balance or whether they have enough. The Review step shows this, but having it earlier (from Step 5 onward when shots are selected) would catch insufficient credits sooner.
+**Fix**: Pass `balance` to `CatalogContextSidebar` and show a red/green indicator when `totalImages > 0`.
 
-### 7. Generation progress: no way to cancel a running batch
-**File: `CatalogGenerate.tsx` lines 386-467**
-During generation, there's no cancel button. If a user queued 60 images by mistake, they must wait 10 minutes for the hard timeout.
-**Fix**: Add a "Cancel" button that calls `resetBatch()` and shows a confirmation dialog.
-
-### 8. Fashion Style step: no focus-visible ring on style cards
-**File: `CatalogStepFashionStyle.tsx` line 46-51**
-Style cards lack `focus-visible:ring-2 focus-visible:ring-primary` for keyboard navigation.
-**Fix**: Add the focus ring classes.
+### 7. No keyboard shortcut to advance steps
+Not a bug, but a nice-to-have. Power users generating multiple catalogs would benefit from Enter to advance and Escape to go back. Low priority.
 
 ## Recommended Priority
 
 | # | Fix | Effort | Impact |
 |---|-----|--------|--------|
-| 1 | Reset `clicked` state on failure | Trivial | Prevents stuck button (functional bug) |
-| 2 | Fix Edit navigation for Background | Trivial | Wrong step navigation (functional bug) |
-| 3 | Add scroll padding for sticky credit bar | Trivial | Content overlap on small screens |
-| 4 | Consolidate Skip/Next buttons in Props | Trivial | Cleaner UI |
-| 5 | Hide hex code on mobile backgrounds | Trivial | Text overflow |
-| 6 | "Select All" label clarity | Trivial | UX clarity |
-| 7 | Add cancel button during generation | Small | User control |
-| 8 | Focus ring on Fashion Style cards | Trivial | Accessibility |
+| 1 | Replace `confirm()` with AlertDialog | Small | Visual consistency |
+| 2 | Focus ring on Models step | Trivial | Accessibility |
+| 3 | Add "Load more" to list view | Trivial | Functional gap |
+| 4 | Responsive list view max-height | Trivial | Layout polish |
+| 5 | Clarify cancel message | Trivial | User expectations |
+| 6 | Show balance in sidebar estimate | Small | Early credit awareness |
 
-Items 1 and 2 are functional bugs that should be fixed. The rest are polish.
+No functional bugs remain. These are polish and accessibility items. Items 1-3 are the most worthwhile.
+
+## Technical Details
+
+- **AlertDialog replacement** (item 1): Import `AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger` from `@/components/ui/alert-dialog`. Add `showCancelDialog` state, render the dialog, and trigger it from the Cancel button.
+- **Focus ring** (item 2): Add classes to the Product Only `<button>` in `CatalogStepModelsV2.tsx` line 63. Check if `ModelSelectorCard` already has focus styling.
+- **Load more in list view** (item 3): Copy the existing "Load more" `<Button>` from the grid view section (lines 347-356) and place it after the list view's closing `</div>` at line 405.
+- **Sidebar balance** (item 6): Add `balance` prop to `CatalogContextSidebarProps`, pass it from `CatalogGenerate.tsx`, and render a small indicator below the credit estimate showing `{balance} available` with conditional red/green coloring.
 
