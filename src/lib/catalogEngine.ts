@@ -329,10 +329,10 @@ export function getLightingPrompt(lightingId: string): string {
 
 const ALL_CATEGORIES = new Set<ProductCategory>([
   'top', 'trousers', 'skirt', 'shorts', 'dress', 'jumpsuit', 'jacket_coat',
-  'shoes', 'bag', 'hat', 'sunglasses', 'scarf', 'belt', 'jewelry', 'accessory', 'unknown',
+  'shoes', 'bag', 'hat', 'sunglasses', 'scarf', 'belt', 'jewelry', 'accessory', 'swimwear', 'unknown',
 ]);
 
-const APPAREL = new Set<ProductCategory>(['top', 'trousers', 'skirt', 'shorts', 'dress', 'jumpsuit', 'jacket_coat', 'scarf', 'unknown']);
+const APPAREL = new Set<ProductCategory>(['top', 'trousers', 'skirt', 'shorts', 'dress', 'jumpsuit', 'jacket_coat', 'scarf', 'swimwear', 'unknown']);
 const APPAREL_PLUS_SHOES = new Set<ProductCategory>([...APPAREL, 'shoes']);
 const WEARABLE = new Set<ProductCategory>([...APPAREL, 'shoes', 'hat', 'sunglasses', 'belt']);
 const SMALL_ITEMS = new Set<ProductCategory>(['jewelry', 'sunglasses', 'scarf', 'belt', 'accessory']);
