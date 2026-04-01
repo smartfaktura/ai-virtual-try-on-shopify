@@ -1,50 +1,119 @@
 
 
-# Fix Video Detail Modal Layout + Investigate Kling Aspect Ratio
+# Rename "Workflows" to "Templates" — Frontend Only
 
-## Finding: Kling API Ignores aspect_ratio for image2video
+No backend changes. All route paths (`/app/workflows`, `/features/workflows`) stay the same. Only user-facing labels, headings, and copy change.
 
-From the Kling 3.0 docs: **"When you provide image_urls (first and/or last frame images), the aspect_ratio parameter becomes optional. The system will automatically adapt the aspect ratio based on the uploaded images."**
+---
 
-This means for image-to-video, Kling always outputs the same aspect ratio as the source image. A 3:4 portrait source image produces a 3:4 video regardless of what `aspect_ratio` value we send. The `aspect_ratio` parameter only applies to text-to-video.
+## Files and Changes
 
-**Impact:** The aspect ratio selector in Animate Video settings is misleading for image-to-video workflows. We have two options:
-1. Hide/disable the aspect ratio selector for image-to-video (since it has no effect)
-2. Pre-process the source image (crop/pad) to match the selected aspect ratio before sending to Kling
+### 1. Sidebar & Navigation
 
-I recommend **option 1** for now (honest UX) with a note explaining the output matches the source image.
+**`src/components/app/AppShell.tsx`**
+- Sidebar item: `'Workflows'` → `'Templates'`
 
-## Changes
+**`src/components/app/DashboardQuickActions.tsx`**
+- `'Browse Workflows'` → `'Browse Templates'`
 
-### 1. VideoDetailModal — Move actions above details (mobile-first)
+### 2. Workflows Page
 
-Reorder the right panel so Download + Delete appear immediately after the date/status header, before the details grid. On mobile this means users can act without scrolling past 12 metadata rows.
+**`src/pages/Workflows.tsx`**
+- Page title: `"Workflows"` → `"Templates"`
+- Subtitle: `"Choose a workflow and generate…"` → `"Choose a template and generate…"`
+- Section label: `"Create a New Set"` → `"Choose a Template"`
+- Comment labels (optional, for code clarity)
 
-```
-Header (title + date)
-  ↓
-Actions (Download + Delete)
-  ↓
-Details grid (Duration, Format, Resolution, etc.)
-```
+### 3. Dashboard
 
-### 2. VideoDetailModal — Fix format display
+**`src/pages/Dashboard.tsx`**
+- `"Start with a Workflow"` button → `"Start with a Template"`
+- `"Browse Workflows"` buttons (2 occurrences) → `"Browse Templates"`
+- Component name `DashboardWorkflowCard` is internal — leave as-is
 
-The format currently shows `video.aspect_ratio` from the DB which is what we *requested* (16:9), not what Kling actually produced. Since we already read real dimensions via `onLoadedMetadata`, we should:
-- Always prefer the actual video metadata when available
-- Show the requested ratio with a "(requested)" note if it differs from actual
+### 4. Start Modal
 
-### 3. Animate Video settings — Clarify aspect ratio behavior
+**`src/components/app/StartWorkflowModal.tsx`**
+- `displayName` values: `"Product Editorial Workflow"` → `"Product Editorial"`, `"Virtual Try-On Workflow"` → `"Virtual Try-On"`, `"UGC / Selfie Workflow"` → `"UGC / Selfie"`
+- `"Browse all workflows"` → `"Browse all templates"`
+- Step title: `"Let's create your first visuals"` — keep as-is (no "workflow" word)
 
-In the aspect ratio selector, add an info note: "Output matches your source image ratio" and either disable the selector or make it informational-only for image-to-video mode.
+### 5. Onboarding Checklist
 
-### 4. Fix DB stored aspect_ratio
+**`src/components/app/OnboardingChecklist.tsx`**
+- CTA: `'Go to Workflows'` → `'Go to Templates'`
 
-Stop saving the user-selected `aspect_ratio` to the `generated_videos` row for image2video, since it's inaccurate. Instead, when the video completes and we get `onLoadedMetadata` dimensions, we could update the DB — but simpler: just don't display the DB value when real metadata is available (already partially done).
+### 6. Workflow Card & Request Banner
 
-## Files to modify
+**`src/components/app/WorkflowCard.tsx`**
+- `"Create Set"` button — keep as-is (already good)
 
-1. **`src/components/app/video/VideoDetailModal.tsx`** — Reorder: actions before details
-2. **`src/pages/video/AnimateVideo.tsx`** — Add note on aspect ratio selector explaining output matches source image
-3. **`supabase/functions/generate-video/index.ts`** — Remove `aspect_ratio` from Kling request body for image2video (it's ignored anyway), prevents confusion in logs
+**`src/components/app/WorkflowRequestBanner.tsx`**
+- `"Missing a workflow for your brand?"` → `"Missing a template for your brand?"`
+- `"What workflow would you like us to create?"` → `"What template would you like us to create?"`
+- Placeholder: `"Describe the workflow, niche…"` → `"Describe the template, niche…"`
+
+### 7. Landing Page Components
+
+**`src/components/landing/LandingFAQ.tsx`**
+- `"What are Workflows?"` → `"What are Templates?"`
+- All answer text: `"Workflows"` → `"Templates"`, `"workflow"` → `"template"`
+
+**`src/components/landing/LandingFooter.tsx`**
+- Footer link label: `'Workflows'` → `'Templates'`
+
+**`src/components/landing/CreativeDropsSection.tsx`**
+- `'Pick your visual workflows'` → `'Pick your visual templates'`
+
+**`src/components/landing/FinalCTA.tsx`**
+- `'choose your workflows'` → `'choose your templates'`
+
+**`src/components/landing/HeroSection.tsx`**
+- Navigate path stays `/app/workflows`, button label `"Create My First Visual Set"` — already fine
+
+**`src/components/landing/FeatureGrid.tsx`**
+- `'Assign workflows and brand profiles'` → `'Assign templates and brand profiles'`
+
+### 8. Feature Page
+
+**`src/pages/features/WorkflowsFeature.tsx`**
+- SEO title: `"AI Photography Workflows"` → `"AI Photography Templates"`
+- Hero badge: `"Workflows"` → `"Templates"`
+- All body copy: `"workflow"` → `"template"`, `"Workflows"` → `"Templates"`
+- Section heading: `"Why Workflows?"` → `"Why Templates?"`
+- Benefits descriptions: update all `"workflow"` references
+
+### 9. Press Page
+
+**`src/pages/Press.tsx`**
+- `"multiple workflows"` → `"multiple templates"`
+
+### 10. Live Chat Knowledge
+
+**`supabase/functions/studio-chat/index.ts`**
+- System prompt: rename all `"Workflows"` → `"Templates"`, `"workflow"` → `"template"` in the platform knowledge section
+- CTA buttons: `"Browse Workflows"` → `"Browse Templates"`
+- Page context map: `"Workflows page — they are browsing available workflow templates"` → `"Templates page — they are browsing available templates"`
+- Pricing section: `"Workflow pricing"` → `"Template pricing"`, `"Workflows cost more"` → `"Templates cost more"`
+- Subscription plans: `"all workflows"` → `"all templates"`
+
+### 11. Video Hub
+
+**`src/pages/VideoHub.tsx`** — no "workflow" user-facing text, skip.
+
+**`src/components/app/video/VideoWorkflowCard.tsx`** — component name is internal, no user-facing "workflow" text, skip.
+
+---
+
+## What stays unchanged
+- All URL routes (`/app/workflows`, `/features/workflows`, etc.)
+- All database column names (`workflow_id`, `workflow_name`, `workflow_slug`)
+- All TypeScript type names and internal variable names
+- All query keys and localStorage keys
+- Component file names (renaming files is cosmetic, risky, and not user-visible)
+
+---
+
+## Summary
+~15 files updated, purely string/label changes. No logic, no routes, no backend.
 
