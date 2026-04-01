@@ -370,6 +370,7 @@ export default function AIProductPhotographyEcommerce() {
                           item={{ type: 'preset', data: imgs[2] }}
                           onClick={() => setSelectedItem({ type: 'preset', data: imgs[2] })}
                           hideLabels
+                          hidePrompt
                           aspectRatioOverride="16/9"
                         />
                       </div>
