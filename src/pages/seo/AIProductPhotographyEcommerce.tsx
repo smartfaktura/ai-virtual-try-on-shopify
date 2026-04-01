@@ -153,11 +153,12 @@ export default function AIProductPhotographyEcommerce() {
           {heroImages.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
               {heroImages.map((img, i) => (
-                <div key={img.id} className="rounded-xl overflow-hidden border border-border shadow-sm bg-card aspect-[3/4]">
+                <div key={img.id} className="rounded-xl overflow-hidden border border-border shadow-sm bg-muted">
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 400, quality: 75 })}
                     alt={`AI product photography for ecommerce example – ${img.title}`}
-                    className="w-full h-full object-cover"
+                    aspectRatio={img.aspect_ratio?.replace(':', '/') || '3/4'}
+                    className="w-full h-full object-contain"
                     fetchPriority={i < 3 ? 'high' : 'low'}
                     loading={i < 3 ? 'eager' : 'lazy'}
                   />
@@ -213,12 +214,13 @@ export default function AIProductPhotographyEcommerce() {
               return (
                 <TabsContent key={tab.id} value={tab.id}>
                   <div className="grid md:grid-cols-2 gap-8 items-center">
-                    <div className="rounded-xl overflow-hidden border border-border shadow-md aspect-[3/4] bg-card">
+                    <div className="rounded-xl overflow-hidden border border-border shadow-md bg-muted">
                       {img ? (
                         <ShimmerImage
                           src={getOptimizedUrl(img.image_url, { width: 600, quality: 80 })}
                           alt={`${tab.title} – ecommerce product image generator example`}
-                          className="w-full h-full object-cover"
+                          aspectRatio={img.aspect_ratio?.replace(':', '/') || '3/4'}
+                          className="w-full h-full object-contain"
                           loading="lazy"
                         />
                       ) : (
@@ -365,11 +367,12 @@ export default function AIProductPhotographyEcommerce() {
           {showcaseImages.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
               {showcaseImages.map(img => (
-                <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border bg-card aspect-[3/4]">
+                <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border bg-muted">
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 350, quality: 70 })}
                     alt={`Ecommerce product image example – ${img.title}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    aspectRatio={img.aspect_ratio?.replace(':', '/') || '3/4'}
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
