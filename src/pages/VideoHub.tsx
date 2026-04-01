@@ -106,9 +106,10 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           />
         )}
         <img
-          src={getOptimizedUrl(video.source_image_url, { quality: 60 })}
+          src={getOptimizedUrl(video.source_image_url, { width: 400, quality: 50 })}
           alt=""
           loading="lazy"
+          decoding="async"
           className={`w-full h-full object-cover ${isPlaying ? 'invisible' : 'visible'}`}
         />
 
