@@ -82,7 +82,7 @@ export function CatalogStepProducts({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
   const [importUrl, setImportUrl] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
+  
   const [activeTab, setActiveTab] = useState<'library' | 'url' | 'csv'>('library');
 
   const filtered = products.filter(p =>
