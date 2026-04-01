@@ -441,18 +441,12 @@ export function CatalogStepProducts({
             <h4 className="text-sm font-medium text-foreground">Upload Product CSV</h4>
             <p className="text-xs text-muted-foreground mt-1">Bulk-import products from a spreadsheet.</p>
           </div>
-          <div className="rounded-2xl border-2 border-dashed border-border hover:border-primary/40 transition-colors duration-200 p-12 text-center cursor-pointer group">
-            <div className="w-12 h-12 rounded-xl bg-muted/50 group-hover:bg-primary/10 flex items-center justify-center mx-auto mb-3 transition-colors duration-200">
-              <Upload className="w-5 h-5 text-muted-foreground/50 group-hover:text-primary transition-colors duration-200" />
+          <div className="rounded-2xl border-2 border-dashed border-border transition-colors duration-200 p-12 text-center">
+            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+              <Upload className="w-5 h-5 text-muted-foreground/50" />
             </div>
-            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Drag & drop your CSV here</p>
-            <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl">
-              <Download className="w-3.5 h-3.5" /> Download Template
-            </Button>
-            <p className="text-[11px] text-muted-foreground">Columns: title, image_url, product_type</p>
+            <p className="text-sm font-medium text-muted-foreground">CSV import coming soon</p>
+            <p className="text-xs text-muted-foreground mt-1">Use "My Products" to add items for now.</p>
           </div>
         </div>
       )}
