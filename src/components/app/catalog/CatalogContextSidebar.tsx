@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getFashionStyle, getBackground } from '@/lib/catalogEngine';
-import { Package, Palette, Users, Image, Camera, Sparkles } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, Gem, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
