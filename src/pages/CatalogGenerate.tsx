@@ -240,13 +240,17 @@ export default function CatalogGenerate() {
       models,
       backgroundId: selectedBackgroundId,
       selectedShots: Array.from(selectedShots),
-      stylingProps: Array.from(selectedPropIds).map(id => {
-        const p = products.find(pr => pr.id === id);
-        return p ? {
-          id: p.id, title: p.title, imageUrl: p.images[0]?.url || '',
-          detectedCategory: detectProductCategory(p.title, p.productType, p.description),
-        } : null;
-      }).filter(Boolean) as CatalogSessionConfig['stylingProps'],
+      propAssignments: Object.fromEntries(
+        Object.entries(propAssignments)
+          .filter(([, ids]) => ids.length > 0)
+          .map(([key, ids]) => [
+            key,
+            ids.map(id => {
+              const p = products.find(pr => pr.id === id);
+              return p ? { id: p.id, title: p.title, imageUrl: p.images[0]?.url || '' } : null;
+            }).filter(Boolean),
+          ]),
+      ),
     };
 
     await startGeneration(config);
