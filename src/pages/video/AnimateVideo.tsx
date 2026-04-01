@@ -568,28 +568,44 @@ export default function AnimateVideo() {
                 className="hidden"
               />
 
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="w-full flex-1 min-h-[200px] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-primary/[0.02] to-muted/5 hover:from-primary/[0.05] hover:to-muted/10 group"
-              >
-                {isUploading ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
-                    <span className="text-sm text-muted-foreground">Uploading...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 group-hover:scale-105 transition-all duration-300">
-                      <Upload className="h-6 w-6 text-primary" />
+              {/* Show BulkImageGrid when batch images exist */}
+              {bulkMode && bulkImages.length > 0 ? (
+                <div className="flex-1 space-y-3">
+                  <BulkImageGrid
+                    images={bulkImages}
+                    maxImages={10}
+                    onAddFiles={handleBulkAddFiles}
+                    onRemoveImage={handleBulkRemoveImage}
+                    disabled={isBulkRunning}
+                    onPickFromLibrary={() => setLibraryPickerOpen(true)}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-full flex-1 min-h-[200px] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-primary/[0.02] to-muted/5 hover:from-primary/[0.05] hover:to-muted/10 group"
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+                      <span className="text-sm text-muted-foreground">Uploading...</span>
                     </div>
-                    <div className="text-center space-y-1">
-                      <span className="text-sm font-medium text-foreground">Drop image here or click to browse</span>
-                      <p className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 20 MB</p>
-                    </div>
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <>
+                      <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 group-hover:scale-105 transition-all duration-300">
+                        <Upload className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="text-center space-y-1">
+                        <span className="text-sm font-medium text-foreground">
+                          {bulkMode ? 'Drop images here or click to browse' : 'Drop image here or click to browse'}
+                        </span>
+                        <p className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 20 MB</p>
+                      </div>
+                    </>
+                  )}
+                </button>
+              )}
 
               {/* Secondary input methods */}
               <div className="flex items-center gap-2 pt-1">
@@ -601,7 +617,7 @@ export default function AnimateVideo() {
                   disabled={isUploading}
                 >
                   <Upload className="h-3 w-3" />
-                  Upload image
+                  {bulkMode ? 'Upload images' : 'Upload image'}
                 </Button>
                 <Button
                   variant="outline"
@@ -613,16 +629,18 @@ export default function AnimateVideo() {
                   <FolderOpen className="h-3 w-3" />
                   Choose from Library
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
-                  disabled={isUploading}
-                  onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
-                >
-                  <ClipboardPaste className="h-3 w-3" />
-                  Paste (⌘V)
-                </Button>
+                {!bulkMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
+                    disabled={isUploading}
+                    onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
+                  >
+                    <ClipboardPaste className="h-3 w-3" />
+                    Paste (⌘V)
+                  </Button>
+                )}
               </div>
             </div>
 
