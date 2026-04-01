@@ -637,7 +637,7 @@ export default function AnimateVideo() {
       )}
 
       {/* ──── POST-UPLOAD: Form with image preview + settings ──── */}
-      {!isPipelineActive && !isComplete && imageUrl && (
+      {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && (imageUrl || (bulkMode && bulkImages.length > 0)) && (
         <div className="space-y-5">
           {/* Hide small upload preview during analysis — it's shown large in the analysis grid */}
           {!showAnalysisUI && (
