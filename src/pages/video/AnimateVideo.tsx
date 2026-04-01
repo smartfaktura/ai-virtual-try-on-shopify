@@ -507,10 +507,10 @@ export default function AnimateVideo() {
 
   const isPipelineActive = pipelineStage !== 'idle' && pipelineStage !== 'error' && !isComplete && (isGenerating || isAnalyzing || isBuildingPrompt || pipelineStage === 'creating_project');
 
-  const ASPECT_RATIOS: { value: AspectRatio; label: string }[] = [
-    { value: '9:16', label: '9:16' },
-    { value: '1:1', label: '1:1' },
-    { value: '16:9', label: '16:9' },
+  const ASPECT_RATIOS: { value: AspectRatio; label: string; iconW: string; iconH: string; desc: string }[] = [
+    { value: '9:16', label: '9:16', iconW: 'w-2.5', iconH: 'h-4', desc: 'Story' },
+    { value: '1:1', label: '1:1', iconW: 'w-3.5', iconH: 'h-3.5', desc: 'Square' },
+    { value: '16:9', label: '16:9', iconW: 'w-5', iconH: 'h-3', desc: 'Wide' },
   ];
 
   const getStageMessage = () => {
