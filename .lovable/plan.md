@@ -1,27 +1,34 @@
 
 
-# Duplicate Videos in Recent Grid — Analysis & Fix
+# Move Batch Mode Toggle Into Upload Section
 
-## Finding
-There is **no dedup bug**. The database contains no duplicate `kling_task_id` entries. Each "duplicate-looking" pair is a legitimately separate video generation from the same source image with different camera motions — they just look identical because the grid shows the source image as thumbnail, not the actual video frame.
+## Problem
+The Batch Mode toggle sits above the upload card as a separate element, visually disconnected from the upload area it controls. It should be part of the upload card itself for better UX flow.
 
-## The Real Problem
-When a user generates multiple camera motions from the same image (the new multi-motion feature), the Recent Videos grid shows identical-looking thumbnails with no way to tell them apart.
+## Change
 
-## Proposed Fix
+### `src/pages/video/AnimateVideo.tsx`
 
-### 1. Add camera motion label overlay to `RecentVideoCard` (`VideoHub.tsx`)
-- Query the `camera_type` column from `generated_videos` (already exists in the table)
-- Display a small label/badge on the thumbnail showing the camera motion name (e.g., "Orbit", "Dolly In") so identical source images are visually distinguishable
-- Only show the badge when multiple videos share the same source image
+1. **Remove** the standalone Batch Mode toggle block (lines 542-581) from above the upload card
+2. **Move it inside** the upload card (the `rounded-2xl border` container starting at line 586), placing it as the first element — a compact row at the top of the card, above the heading text
+3. Style it as a subtle inline row with a thin bottom divider (`border-b`) separating it from the upload content below, rather than its own bordered card
+4. Keep all existing logic (paid/free gating, Sophia avatar, upgrade button) intact
 
-### 2. No data deletion needed
-All records are unique and valid — different kling task IDs, different video outputs. Deleting them would remove real user content.
+### Layout result
+```text
+┌─────────────────────────────────┐  ┌──────────────┐
+│ [icon] Batch Mode    [Upgrade] [⊙] │  │ How it works │
+│ ─────────────────────────────── │  │ ...          │
+│ Upload your product image       │  │              │
+│ We'll detect category...        │  │              │
+│                                 │  │              │
+│   ┌─ - - - - - - - - - - ─┐   │  │              │
+│   │  Drop image here       │   │  │              │
+│   └─ - - - - - - - - - - ─┘   │  │              │
+│                                 │  │              │
+│  [Upload] [Library] [Paste]     │  │              │
+└─────────────────────────────────┘  └──────────────┘
+```
 
-## Alternative: Group same-source videos
-Instead of badges, group videos from the same source image into a single card with a count indicator (e.g., "2 versions") that expands to show both. This is a larger change but gives cleaner UX.
-
-## Files
-- **Update**: `src/pages/VideoHub.tsx` — add motion label badge to `RecentVideoCard`
-- **Update**: `src/hooks/useGenerateVideo.ts` — include `camera_type` in the `GeneratedVideo` interface and select query
+No other files affected.
 
