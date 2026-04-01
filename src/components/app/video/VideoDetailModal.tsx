@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import type { GeneratedVideo } from '@/hooks/useGenerateVideo';
+import { buildVideoFileName } from '@/lib/videoFilename';
 
 interface VideoDetailModalProps {
   video: GeneratedVideo | null;
