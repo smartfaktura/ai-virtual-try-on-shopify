@@ -110,6 +110,9 @@ export function useVideoProject() {
         .single();
 
       if (projectError || !project) throw new Error(projectError?.message || 'Failed to create project');
+      const shortId = project.id.slice(0, 6);
+      // Update title with shortId
+      await supabase.from('video_projects').update({ title: `${cameraLabel}-${productName}-${shortId}` }).eq('id', project.id);
       setProjectId(project.id);
 
       // 2. Insert video_input
