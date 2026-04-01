@@ -81,9 +81,19 @@ function pickByCategory(presets: DiscoverPreset[], category: string, count = 1, 
   return presets.filter(p => (p.discover_categories?.includes(category) || p.category === category) && !exclude.has(p.id)).slice(0, count);
 }
 
-function pickFeatured(presets: DiscoverPreset[], count: number): DiscoverPreset[] {
-  const featured = presets.filter(p => p.is_featured);
-  return (featured.length >= count ? featured : presets).slice(0, count);
+function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<string> = new Set()): DiscoverPreset[] {
+  // Prefer presets with product context (ecommerce-relevant), deprioritize model-only beauty shots
+  const scored = presets
+    .filter(p => !exclude.has(p.id))
+    .map(p => {
+      let score = 0;
+      if (p.product_name || p.product_image_url) score += 3;
+      if (p.is_featured) score += 2;
+      if (!p.model_name) score += 1; // pure product shots rank higher for ecommerce
+      return { preset: p, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, count).map(s => s.preset);
 }
 
 /* ─── COMPONENT ─── */
