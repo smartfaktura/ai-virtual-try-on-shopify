@@ -19,6 +19,7 @@ interface DiscoverCardProps {
   isAdmin?: boolean;
   onToggleFeatured?: (e: React.MouseEvent) => void;
   hideLabels?: boolean;
+  hidePrompt?: boolean;
   aspectRatioOverride?: string;
 }
 
@@ -30,7 +31,7 @@ function getGenerationLabel(item: DiscoverItem): string {
   return 'Freestyle';
 }
 
-export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, aspectRatioOverride }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels, hidePrompt, aspectRatioOverride }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
   const isPreset = item.type === 'preset';
@@ -115,13 +116,13 @@ export function DiscoverCard({ item, onClick, onRecreate, isSaved, onToggleSave,
           >
             Recreate this <ArrowRight className="w-3 h-3" />
           </button>
-        ) : (
+        ) : !hidePrompt ? (
           <div className="text-center">
             <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">
               {isPreset ? item.data.prompt : item.data.name}
             </p>
           </div>
-        )}
+        ) : null}
 
         {/* Product chip or scene label for items without thumbnails */}
         {productName && !productThumb && (

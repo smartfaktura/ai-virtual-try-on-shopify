@@ -264,6 +264,7 @@ export default function AIProductPhotographyEcommerce() {
                     item={{ type: 'preset', data: img }}
                     onClick={() => setSelectedItem({ type: 'preset', data: img })}
                     hideLabels
+                    hidePrompt
                   />
                 </div>
               ))}
@@ -347,6 +348,7 @@ export default function AIProductPhotographyEcommerce() {
                           item={{ type: 'preset', data: imgs[0] }}
                           onClick={() => setSelectedItem({ type: 'preset', data: imgs[0] })}
                           hideLabels
+                          hidePrompt
                           aspectRatioOverride="3/4"
                         />
                       </div>
@@ -357,6 +359,7 @@ export default function AIProductPhotographyEcommerce() {
                           item={{ type: 'preset', data: imgs[1] }}
                           onClick={() => setSelectedItem({ type: 'preset', data: imgs[1] })}
                           hideLabels
+                          hidePrompt
                           aspectRatioOverride="3/4"
                         />
                       </div>
@@ -367,6 +370,7 @@ export default function AIProductPhotographyEcommerce() {
                           item={{ type: 'preset', data: imgs[2] }}
                           onClick={() => setSelectedItem({ type: 'preset', data: imgs[2] })}
                           hideLabels
+                          hidePrompt
                           aspectRatioOverride="16/9"
                         />
                       </div>
@@ -411,6 +415,7 @@ export default function AIProductPhotographyEcommerce() {
                     <DiscoverCard
                       item={{ type: 'preset', data: img }}
                       onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                      hidePrompt
                     />
                   </div>
                 ))}
