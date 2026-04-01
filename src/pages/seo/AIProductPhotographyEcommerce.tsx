@@ -586,10 +586,11 @@ export default function AIProductPhotographyEcommerce() {
       {/* Detail modal – same as /discover */}
       <PublicDiscoverDetailModal
         item={selectedItem}
+        open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         relatedItems={[]}
         onSelectRelated={(item) => setSelectedItem(item)}
-        onUseItem={(item) => {
+        onRecreate={(item) => {
           if (item.type === 'preset') {
             const d = item.data;
             if (d.workflow_slug) {
@@ -603,7 +604,6 @@ export default function AIProductPhotographyEcommerce() {
             }
           }
         }}
-        onSearchSimilar={() => {}}
       />
     </PageLayout>
   );
