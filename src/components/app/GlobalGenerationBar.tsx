@@ -310,7 +310,7 @@ export function GlobalGenerationBar() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate text-foreground">
-                          {isVideo ? 'Your video is ready!' 
+                          {isVideo ? (group.totalCount > 1 ? `${group.totalCount} videos are ready!` : 'Your video is ready!') 
                             : group.job_type === 'upscale' ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
                             : 'Your images are ready!'}
                         </p>
