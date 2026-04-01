@@ -1,33 +1,34 @@
 
 
-# Multi Camera Motion Selection (Paid Only)
+# Improve Bulk Image Grid & Multi-Motion UX
 
-## Concept
-Allow paid users to select **multiple camera motions** for the same image. Each selected motion generates a separate video job — so selecting 3 camera motions = 3 videos from 1 image.
+## Problems identified
+1. **Duplicate "Images (4)" label** — Line 757 renders `Images (${bulkImages.length})` as a label, but the `BulkImageGrid` component already shows its own count header. Result: "Images (4)" appears twice.
+2. **"Customize per image" toggle** — Floating card with odd spacing/styling; should be visually integrated with the image grid above it.
+3. **Multi-camera motion** — The `MultiChipRow` component exists and is wired correctly, but there's no visual indicator for free users that this is a paid feature. Need VOVV.AI avatar-branded upsell messaging next to Camera Motion for free users.
 
 ## Changes
 
-### 1. `MotionRefinementPanel.tsx` — Multi-select camera motion chips
-- Add `multiSelect?: boolean` and `onMultiCameraMotionChange?: (ids: string[]) => void` props
-- When `multiSelect` is true, the Camera Motion `ChipRow` becomes a toggle — clicking a chip adds/removes it from a `string[]` instead of replacing a single value
-- Selected chips show checkmark or filled style; minimum 1 must stay selected
-- Show count badge like "3 motions × N credits each"
+### 1. Remove duplicate image count label (`AnimateVideo.tsx`)
+Delete the `<label>Images ({bulkImages.length})</label>` wrapper (lines 755-758) in the post-upload section. The `BulkImageGrid` already displays the count. Keep only the grid itself.
 
-### 2. `AnimateVideo.tsx` — Wire multi-motion to generation
-- Add `selectedCameraMotions: string[]` state (defaults to `[cameraMotion]`), synced when single `cameraMotion` changes
-- Pass `multiSelect={isPaidUser}` to `MotionRefinementPanel`
-- On generate: if multiple motions selected, loop through each motion and call `runAnimatePipeline` sequentially (reusing the same image + settings but swapping `cameraMotion`)
-- Update credit estimate: multiply per-video cost × number of selected motions (× bulk images if in batch mode)
-- Free users: single-select only (current behavior unchanged)
+### 2. Integrate "Customize per image" into the image grid card (`AnimateVideo.tsx`)
+Instead of rendering the customize toggle as a separate bordered card below the grid, merge it into the same visual container as the `BulkImageGrid`:
+- Wrap the grid + customize toggle in a single `rounded-xl border bg-card p-4` container
+- The toggle becomes a subtle row at the bottom of the grid card with a divider
+- When expanded, the thumbnail tab bar and overrides render inside the same card
 
-### 3. `useVideoProject.ts` — No changes needed
-The existing `runAnimatePipeline` already accepts `cameraMotion` as a param and names projects with the motion label. Each call with a different motion will create a separate project with the correct name.
+### 3. Add VOVV avatar upsell for multi-camera motion (`MotionRefinementPanel.tsx`)
+When `multiSelect` is false (free user):
+- Below the Camera Motion `ChipRow`, add a small inline banner with Sophia's avatar: "Select multiple camera motions with any paid plan" + "Upgrade" link
+- Styled as a subtle muted row (similar to the Batch Mode upsell pattern)
 
-### 4. Credit display update
-- Show "N camera motions selected → N videos" messaging near the credit estimate
-- In batch mode: total = images × motions × per-video cost
+When `multiSelect` is true (paid user):
+- The existing `MultiChipRow` is already correct — just add a small helper text: "Select multiple to generate one video per motion"
 
-## Files
-- **Update**: `src/components/app/video/MotionRefinementPanel.tsx`
-- **Update**: `src/pages/video/AnimateVideo.tsx`
+New props on `MotionRefinementPanel`: `isPaidUser?: boolean` to control the upsell display.
+
+## Files to modify
+- **`src/pages/video/AnimateVideo.tsx`** — Remove duplicate label, merge customize toggle into grid card
+- **`src/components/app/video/MotionRefinementPanel.tsx`** — Add VOVV avatar upsell for free users next to Camera Motion
 
