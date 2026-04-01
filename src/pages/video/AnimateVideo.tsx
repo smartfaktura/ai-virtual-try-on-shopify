@@ -674,6 +674,9 @@ export default function AnimateVideo() {
             open={libraryPickerOpen}
             onOpenChange={setLibraryPickerOpen}
             onSelect={handleLibrarySelect}
+            multiSelect={bulkMode}
+            onMultiSelect={handleBulkLibrarySelect}
+            maxSelect={10 - bulkImages.length}
           />
         </>
       )}
