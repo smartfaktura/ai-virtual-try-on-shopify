@@ -290,7 +290,68 @@ export default function AnimateVideo() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // ── Bulk image handling ──
+  const handleBulkAddFiles = useCallback(async (files: File[]) => {
+    const remaining = 10 - bulkImages.length;
+    const toAdd = files.slice(0, remaining);
+
+    for (const file of toAdd) {
+      if (file.size > 20 * 1024 * 1024) { toast.error(`${file.name} exceeds 20MB`); continue; }
+
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const preview = URL.createObjectURL(file);
+
+      setBulkImages(prev => [...prev, { id, file, url: null, preview, isUploading: true, uploadProgress: 30 }]);
+
+      const url = await upload(file);
+      if (url) {
+        setBulkImages(prev => prev.map(img => img.id === id ? { ...img, url, isUploading: false, uploadProgress: 100 } : img));
+
+        // Analyze the first image only
+        setBulkImages(prev => {
+          const current = prev;
+          const firstWithUrl = current.find(i => i.url);
+          if (firstWithUrl?.id === id && !hasAnalyzed) {
+            analyzeImage(url).then(analysis => {
+              if (analysis) setAnalysisCompleteData(analysis);
+            });
+            setUploadCompleteTime(Date.now());
+          }
+          return current;
+        });
+      } else {
+        setBulkImages(prev => prev.filter(img => img.id !== id));
+      }
+    }
+  }, [bulkImages, upload, analyzeImage, hasAnalyzed]);
+
+  const handleBulkRemoveImage = useCallback((id: string) => {
+    setBulkImages(prev => prev.filter(img => img.id !== id));
+  }, []);
+
   const handleGenerate = () => {
+    if (bulkMode && bulkImages.length > 0) {
+      const readyImages = bulkImages.filter(img => img.url);
+      if (readyImages.length === 0) { toast.error('Wait for images to finish uploading'); return; }
+
+      const { total } = estimateBulkCredits(
+        { workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion },
+        readyImages.length
+      );
+      if (total > creditsBalance) {
+        toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
+        return;
+      }
+
+      runBulkAnimatePipeline(
+        readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
+        { category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity,
+          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+          aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined }
+      );
+      return;
+    }
+
     if (!imageUrl) { toast.error('Please upload an image first'); return; }
 
     runAnimatePipeline({
@@ -306,7 +367,10 @@ export default function AnimateVideo() {
   const handleReuse = () => resetPipeline();
   const handleNewProject = () => {
     resetPipeline();
+    resetBulk();
     removeImage();
+    setBulkImages([]);
+    setBulkMode(false);
     setUserPrompt('');
   };
 
