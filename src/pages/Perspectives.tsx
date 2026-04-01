@@ -51,6 +51,10 @@ const FALLBACK_VARIATIONS: VariationType[] = [
   { id: 'left', label: 'Left Side', instruction: 'Left side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a left side view of your product for best results (optional)', recommended: true } },
   { id: 'right', label: 'Right Side', instruction: 'Right side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a right side view of your product for best results (optional)', recommended: true } },
   { id: 'wide', label: 'Wide / Environment', instruction: 'Pulled-back contextual shot...', category: 'context', referenceUpload: { prompt: 'Upload a wide/environment reference of your product for best results (optional)', recommended: true } },
+  { id: 'supermacro', label: 'Super Macro / Texture', instruction: 'Ultra-extreme close-up focusing on a single micro-detail...', category: 'detail', referenceUpload: null },
+  { id: 'front-left-45', label: '45° Front-Left', instruction: 'Classic three-quarter angle from the front-left...', category: 'angle', referenceUpload: null },
+  { id: 'front-right-45', label: '45° Front-Right', instruction: 'Three-quarter angle from the front-right...', category: 'angle', referenceUpload: null },
+  { id: 'topdown', label: 'Top-Down / Flat Lay', instruction: 'Direct overhead bird\'s-eye view...', category: 'top_down', referenceUpload: null },
 ];
 
 const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
