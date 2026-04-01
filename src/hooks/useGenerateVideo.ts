@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { toSignedUrl } from '@/lib/signedUrl';
@@ -59,23 +59,39 @@ interface UseGenerateVideoResult {
   isLoadingMore: boolean;
 }
 
+const PAGE_SIZE = 20;
+
+/** Status priority for dedup merge — higher wins */
+const STATUS_PRIORITY: Record<string, number> = {
+  queued: 0,
+  processing: 1,
+  failed: 2,
+  complete: 3,
+  completed: 3,
+};
+
 export function useGenerateVideo(): UseGenerateVideoResult {
   const [status, setStatus] = useState<VideoGenStatus>('idle');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<GeneratedVideo[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // Track real backend rows fetched (not deduplicated count)
+  const fetchedRowCountRef = useRef(0);
+  const initialLoadDoneRef = useRef(false);
 
   const { refreshBalance } = useCredits();
 
-  // Use the shared generation queue for video jobs
   const queue = useGenerationQueue({
     jobTypes: ['video'],
     onGenerationFailed: (_jobId, message) => {
       setStatus('error');
       setError(message);
       toast.error(message);
-      fetchHistory();
+      silentRefreshHistory();
       refreshBalance();
     },
     onCreditRefresh: refreshBalance,
@@ -105,10 +121,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         toSignedUrl(result.video_url as string).then(signed => setVideoUrl(signed));
       }
       toast.success('Video generated successfully!');
-      fetchHistory();
+      silentRefreshHistory();
       refreshBalance();
     }
-    // failed is handled by onGenerationFailed callback
   }, [queue.activeJob?.status, queue.activeJob?.id]);
 
   // Client-side Kling status polling when job is processing
@@ -121,7 +136,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     if (!klingTaskId) return;
 
     let cancelled = false;
-    const MAX_POLLS = 60; // 10 min at 10s intervals
+    const MAX_POLLS = 60;
     let pollCount = 0;
 
     const poll = async () => {
@@ -139,17 +154,8 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           return;
         }
 
-        if (data.status === 'succeed' && data.video_url) {
-          // Queue job was updated by edge function — queue polling will pick it up
-          return;
-        }
-
-        if (data.status === 'failed') {
-          // Queue job was updated by edge function — queue polling will pick it up
-          return;
-        }
-
-        // Still processing — poll again
+        if (data.status === 'succeed' && data.video_url) return;
+        if (data.status === 'failed') return;
         if (!cancelled) setTimeout(poll, 10000);
       } catch (err) {
         console.warn('[useGenerateVideo] Status poll exception:', err);
@@ -157,19 +163,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       }
     };
 
-    // Start polling after a short delay (give Kling time to start)
     const initialDelay = setTimeout(poll, 5000);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(initialDelay);
-    };
+    return () => { cancelled = true; clearTimeout(initialDelay); };
   }, [queue.activeJob?.id, queue.activeJob?.status]);
-
-  const PAGE_SIZE = 20;
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const mapVideos = useCallback(async (data: any[]): Promise<GeneratedVideo[]> => {
     const signed = await Promise.all(
@@ -189,19 +185,48 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     return signed;
   }, []);
 
-  const deduplicateVideos = useCallback((videos: GeneratedVideo[]): GeneratedVideo[] => {
-    const seen = new Set<string>();
-    return videos.filter(v => {
-      if (!v.kling_task_id) return true;
-      if (seen.has(v.kling_task_id)) return false;
-      seen.add(v.kling_task_id);
-      return true;
-    });
+  /**
+   * Merge-dedup: group by kling_task_id (fallback to id), keep the row
+   * with the strongest status (completed > failed > processing > queued).
+   * Tie-break by completed_at then created_at descending.
+   */
+  const mergeDeduplicateVideos = useCallback((videos: GeneratedVideo[]): GeneratedVideo[] => {
+    const map = new Map<string, GeneratedVideo>();
+    for (const v of videos) {
+      const key = v.kling_task_id || v.id;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, v);
+        continue;
+      }
+      // Prefer the row with stronger status
+      const existingPri = STATUS_PRIORITY[existing.status] ?? 1;
+      const newPri = STATUS_PRIORITY[v.status] ?? 1;
+      if (newPri > existingPri) {
+        map.set(key, v);
+      } else if (newPri === existingPri) {
+        // Same status — prefer the one with a video_url, or newer timestamp
+        if (v.video_url && !existing.video_url) {
+          map.set(key, v);
+        } else if (v.completed_at && existing.completed_at && v.completed_at > existing.completed_at) {
+          map.set(key, v);
+        } else if (v.created_at > existing.created_at) {
+          map.set(key, v);
+        }
+      }
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }, []);
 
+  /**
+   * Fetch initial page — shows loading skeleton only on first load.
+   */
   const fetchHistory = useCallback(async () => {
     try {
-      setIsLoadingHistory(true);
+      if (!initialLoadDoneRef.current) setIsLoadingHistory(true);
+
       const { data, error: fetchError, count } = await supabase
         .from('generated_videos')
         .select('*, video_projects(settings_json, workflow_type, title)', { count: 'exact' })
@@ -213,24 +238,67 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         return;
       }
 
+      const rawRows = data || [];
       const total = count ?? 0;
       setTotalCount(total);
-      const signed = await mapVideos(data || []);
-      const deduped = deduplicateVideos(signed);
-      setHistory(deduped);
+      fetchedRowCountRef.current = rawRows.length;
+
+      const signed = await mapVideos(rawRows);
+      setHistory(prev => {
+        // Merge new data with existing to preserve any extra pages already loaded
+        const combined = [...signed, ...prev.filter(p => !signed.some(s => s.id === p.id))];
+        return mergeDeduplicateVideos(combined);
+      });
       setHasMore(total > PAGE_SIZE);
     } catch (err) {
       console.error('[useGenerateVideo] History fetch error:', err);
     } finally {
       setIsLoadingHistory(false);
+      initialLoadDoneRef.current = true;
     }
-  }, [mapVideos, deduplicateVideos]);
+  }, [mapVideos, mergeDeduplicateVideos]);
+
+  /**
+   * Silent refresh — no loading state change, used for background polls.
+   */
+  const silentRefreshHistory = useCallback(async () => {
+    try {
+      // Fetch at least as many rows as we've previously loaded
+      const rowsToFetch = Math.max(fetchedRowCountRef.current, PAGE_SIZE);
+      const { data, error: fetchError, count } = await supabase
+        .from('generated_videos')
+        .select('*, video_projects(settings_json, workflow_type, title)', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(0, rowsToFetch - 1);
+
+      if (fetchError) {
+        console.error('[useGenerateVideo] Silent refresh error:', fetchError);
+        return;
+      }
+
+      const rawRows = data || [];
+      const total = count ?? 0;
+      setTotalCount(total);
+
+      const signed = await mapVideos(rawRows);
+      setHistory(prev => {
+        // Merge: keep any extra paginated rows not in this fetch
+        const fetchedIds = new Set(signed.map(s => s.id));
+        const extras = prev.filter(p => !fetchedIds.has(p.id));
+        return mergeDeduplicateVideos([...signed, ...extras]);
+      });
+      setHasMore(total > rowsToFetch);
+    } catch (err) {
+      console.error('[useGenerateVideo] Silent refresh error:', err);
+    }
+  }, [mapVideos, mergeDeduplicateVideos]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
     try {
       setIsLoadingMore(true);
-      const from = history.length;
+      // Use the real fetched row count as offset, not deduplicated history length
+      const from = fetchedRowCountRef.current;
       const { data, error: fetchError } = await supabase
         .from('generated_videos')
         .select('*, video_projects(settings_json, workflow_type, title)')
@@ -242,18 +310,18 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         return;
       }
 
-      const signed = await mapVideos(data || []);
-      setHistory(prev => {
-        const combined = [...prev, ...signed];
-        return deduplicateVideos(combined);
-      });
-      setHasMore((data || []).length >= PAGE_SIZE);
+      const rawRows = data || [];
+      fetchedRowCountRef.current += rawRows.length;
+
+      const signed = await mapVideos(rawRows);
+      setHistory(prev => mergeDeduplicateVideos([...prev, ...signed]));
+      setHasMore(rawRows.length >= PAGE_SIZE);
     } catch (err) {
       console.error('[useGenerateVideo] Load more error:', err);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [history.length, isLoadingMore, hasMore, mapVideos, deduplicateVideos]);
+  }, [isLoadingMore, hasMore, mapVideos, mergeDeduplicateVideos]);
 
   // Auto-recover stuck "processing" videos on mount
   const recoverStuckVideos = useCallback(async () => {
@@ -264,33 +332,32 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       if (fnError) return;
       if (data?.recovered > 0) {
         toast.info(`${data.recovered} video(s) updated from processing`);
-        fetchHistory();
+        silentRefreshHistory();
       }
     } catch (_) { /* silent */ }
-  }, [fetchHistory]);
+  }, [silentRefreshHistory]);
 
   // Load history on mount, then auto-recover
   useEffect(() => {
     fetchHistory().then(() => recoverStuckVideos());
   }, [fetchHistory, recoverStuckVideos]);
 
-  // Auto-refresh history while any video is still processing
+  // Auto-refresh history silently while any video is still processing
   useEffect(() => {
     const hasProcessing = history.some(v => v.status === 'processing' || v.status === 'queued');
     if (!hasProcessing) return;
     const interval = setInterval(() => {
-      fetchHistory();
-      recoverStuckVideos();
+      silentRefreshHistory();
     }, 8000);
     return () => clearInterval(interval);
-  }, [history, fetchHistory, recoverStuckVideos]);
+  }, [history, silentRefreshHistory]);
 
-  // Refresh history on window focus
+  // Silent refresh history on window focus (no flash)
   useEffect(() => {
-    const onFocus = () => fetchHistory();
+    const onFocus = () => silentRefreshHistory();
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [fetchHistory]);
+  }, [silentRefreshHistory]);
 
   const reset = useCallback(() => {
     queue.reset();
@@ -322,7 +389,6 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setError(null);
 
       try {
-        // Calculate credit cost
         const creditCost = estimateCredits({
           workflowType: 'animate',
           duration: params.duration || '5',

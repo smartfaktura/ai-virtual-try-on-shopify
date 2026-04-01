@@ -74,7 +74,38 @@ export function GlobalGenerationBar() {
 
       if (!data || data.length === 0) return [];
 
-      const jobs: ActiveJob[] = data.map((row) => {
+      // For video jobs that are "processing" for a while, check if their videos
+      // are already done in generated_videos — if so, filter them out to prevent
+      // the floating bar from showing stale "creating" state
+      const videoProcessingJobs = data.filter(
+        r => r.job_type === 'video' && r.status === 'processing' && r.started_at &&
+          (Date.now() - new Date(r.started_at).getTime()) > 30000
+      );
+      const completedVideoJobIds = new Set<string>();
+      if (videoProcessingJobs.length > 0) {
+        const projectIds = videoProcessingJobs
+          .map(j => (j.payload as Record<string, unknown>)?.project_id as string)
+          .filter(Boolean);
+        if (projectIds.length > 0) {
+          const { data: doneVideos } = await supabase
+            .from('generated_videos')
+            .select('project_id')
+            .in('project_id', projectIds)
+            .in('status', ['complete', 'completed', 'failed']);
+          const doneProjectIds = new Set((doneVideos || []).map(v => v.project_id).filter(Boolean));
+          for (const job of videoProcessingJobs) {
+            const pid = (job.payload as Record<string, unknown>)?.project_id as string;
+            if (pid && doneProjectIds.has(pid)) {
+              completedVideoJobIds.add(job.id);
+            }
+          }
+        }
+      }
+
+      const filteredData = data.filter(r => !completedVideoJobIds.has(r.id));
+      if (filteredData.length === 0) return [];
+
+      const jobs: ActiveJob[] = filteredData.map((row) => {
         const payload = row.payload as Record<string, unknown> | null;
         return {
           id: row.id,

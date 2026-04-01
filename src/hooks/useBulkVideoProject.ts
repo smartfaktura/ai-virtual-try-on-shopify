@@ -1,12 +1,10 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useVideoProject } from '@/hooks/useVideoProject';
 import type { BulkProgressItem, BulkItemStatus } from '@/components/app/video/BulkProgressBanner';
 import { toast } from '@/lib/brandedToast';
 import { resolveVideoStrategy, type VideoAnalysis, type WorkflowType } from '@/lib/videoStrategyResolver';
 import { CAMERA_MOTIONS } from '@/lib/videoMotionRecipes';
 import { buildVideoPrompt } from '@/lib/videoPromptTemplates';
-import { estimateCredits } from '@/config/videoCreditPricing';
 import { enqueueWithRetry, isEnqueueError, paceDelay, sendWake, getAuthToken } from '@/lib/enqueueGeneration';
 
 interface BulkImage {
@@ -35,7 +33,6 @@ interface BulkAnimateParams {
 }
 
 export function useBulkVideoProject() {
-  const videoProject = useVideoProject();
   const [bulkItems, setBulkItems] = useState<BulkProgressItem[]>([]);
   const [isBulkRunning, setIsBulkRunning] = useState(false);
   const [isBulkComplete, setIsBulkComplete] = useState(false);
@@ -127,7 +124,7 @@ export function useBulkVideoProject() {
           sort_order: 0,
         });
 
-        // 3. Resolve strategy + build prompt (skip analysis for bulk — use defaults)
+        // 3. Resolve strategy + build prompt
         const fallbackAnalysis: VideoAnalysis = {
           subject_category: mergedParams.category,
           scene_type: mergedParams.sceneType,
@@ -208,7 +205,7 @@ export function useBulkVideoProject() {
             payload,
             imageCount: 1,
             quality: 'standard',
-            skipWake: i < images.length - 1, // Only wake on last job
+            skipWake: i < images.length - 1,
           },
           token,
         );
@@ -246,11 +243,9 @@ export function useBulkVideoProject() {
     setBulkItems([]);
     setIsBulkRunning(false);
     setIsBulkComplete(false);
-    videoProject.resetPipeline();
-  }, [videoProject]);
+  }, []);
 
   return {
-    ...videoProject,
     bulkItems,
     isBulkRunning,
     isBulkComplete,
