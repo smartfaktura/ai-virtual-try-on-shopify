@@ -19,6 +19,7 @@ interface DiscoverCardProps {
   isAdmin?: boolean;
   onToggleFeatured?: (e: React.MouseEvent) => void;
   hideLabels?: boolean;
+  hidePrompt?: boolean;
   aspectRatioOverride?: string;
 }
 
