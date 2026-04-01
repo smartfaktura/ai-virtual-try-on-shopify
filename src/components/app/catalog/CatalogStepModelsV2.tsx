@@ -24,7 +24,6 @@ export function CatalogStepModelsV2({
   libraryModels, userModels, selectedModelIds, productOnlyMode, onModelToggle, onProductOnlyToggle,
   onBack, onNext, canProceed,
 }: CatalogStepModelsV2Props) {
-  const navigate = useNavigate();
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
 
   const filteredLibrary = useMemo(() => {
