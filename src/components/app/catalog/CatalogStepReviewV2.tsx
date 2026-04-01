@@ -119,26 +119,32 @@ export function CatalogStepReviewV2({
           )}
         </div>
 
-        {/* Styling Props */}
-        {stylingProps.length > 0 && (
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Gem className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs font-semibold text-foreground">Styling Props</span>
-              <Badge variant="secondary" className="text-[9px] ml-auto">{stylingProps.length}</Badge>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {stylingProps.map(p => (
-                <div key={p.id} className="flex-shrink-0 w-14">
-                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
-                    <ShimmerImage src={getOptimizedUrl(p.imageUrl, { quality: 50 })} alt={p.title} className="w-full h-full object-cover" />
+        {/* Styling Props summary */}
+        {(() => {
+          const combosWithProps = Object.values(propAssignments).filter(ids => ids.length > 0).length;
+          if (combosWithProps === 0) return null;
+          const uniquePropIds = new Set(Object.values(propAssignments).flat());
+          const propItems = Array.from(uniquePropIds).map(id => allProducts.find(p => p.id === id)).filter(Boolean) as PropProduct[];
+          return (
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center gap-2 mb-3">
+                <Gem className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold text-foreground">Styling Props</span>
+                <Badge variant="secondary" className="text-[9px] ml-auto">{combosWithProps}/{totalImages} shots</Badge>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {propItems.map(p => (
+                  <div key={p.id} className="flex-shrink-0 w-14">
+                    <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
+                      <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 50 })} alt={p.title} className="w-full h-full object-cover" />
+                    </div>
+                    <p className="text-[9px] text-muted-foreground mt-1 truncate text-center">{p.title}</p>
                   </div>
-                  <p className="text-[9px] text-muted-foreground mt-1 truncate text-center">{p.title}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Shots list */}
         <div className="p-4">
