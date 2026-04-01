@@ -70,6 +70,7 @@ export default function AnimateVideo() {
   // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sourceName, setSourceName] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<ValidationWarning[]>([]);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
