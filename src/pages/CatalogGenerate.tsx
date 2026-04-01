@@ -41,7 +41,8 @@ const STEPS = [
   { number: 3, label: 'Models', icon: Users },
   { number: 4, label: 'Background', icon: Image },
   { number: 5, label: 'Shots', icon: Camera },
-  { number: 6, label: 'Review', icon: ClipboardCheck },
+  { number: 6, label: 'Props', icon: Gem },
+  { number: 7, label: 'Review', icon: ClipboardCheck },
 ];
 
 function formatTime(seconds: number): string {
