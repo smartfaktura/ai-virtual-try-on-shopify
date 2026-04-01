@@ -1,68 +1,83 @@
 
 
-# Catalog Studio — Full UX Redesign
+# Catalog Studio — Loading, Completion, Prompt Intelligence, and UX Polish
 
-## Rename
-"Catalog Shot Set" → **"Catalog Studio"** across all headings, subtitles, and the "How it works" banner.
+## Problems Identified
 
-## Files to Modify
+1. **Grey generate button, long wait with no feedback** — `isGenerating` is set true then immediately false after enqueueing. No loading indicator during the enqueue loop which can take 10-30s for large batches.
+2. **Bikini generates with pants** — No `swimwear` category exists. Bikini falls to `unknown` → `upper_body_slot` → support wardrobe adds "neutral straight trousers". Need a `swimwear` category with appropriate support wardrobe (no bottoms for bikini tops, no tops for bikini bottoms).
+3. **Ghost mannequin has shadow** — Prompt includes "soft shadow beneath product". Should be shadowless for ghost mannequin.
+4. **No estimated time or elapsed time** during generation.
+5. **Completion screen** needs more polish — VOVV.AI branding, elapsed time summary, better layout.
+6. **Background color consistency** — User wants the hex code visible per background so they can match across sets.
+7. **No final confirmation/review step** before generating — User wants to see the full job list and optionally add accessories (extra reference images per product).
+8. **Design inconsistency** with Templates/Workflows pages — Catalog Studio steps look different from the rest of the app.
 
-| File | Changes |
-|------|---------|
-| `src/pages/CatalogGenerate.tsx` | Rename title, redesign stepper, remove filter state, update model step props, add more shots to engine, fix credit calc display with model multiplier |
-| `src/components/app/catalog/CatalogStepProducts.tsx` | Add source tabs (Product Library / Import URL / Upload File), download template link, cleaner card layout |
-| `src/components/app/catalog/CatalogStepFashionStyle.tsx` | Larger cards with more breathing room, cleaner copy, remove technical badges (poseEnergy etc.) |
-| `src/components/app/catalog/CatalogStepModelsV2.tsx` | Remove ModelFilterBar, simpler grid with multi-select, show selection count badge, no gender/body/age filters |
-| `src/components/app/catalog/CatalogStepShots.tsx` | Show credit formula breakdown with model count, add more shot variety |
-| `src/lib/catalogEngine.ts` | Add ~8 new shot definitions (lifestyle, over-shoulder, waist-up, layered look, arm-extended, cross-body, wrist-shot, on-surface) |
+## Plan
 
-## Detailed Changes
+### 1. Fix Generate Button Loading State (`useCatalogGenerate.ts`)
+- Keep `isGenerating = true` throughout the entire enqueue loop (currently set to false too early at line 306)
+- Move `setIsGenerating(false)` to after polling starts
+- In the UI, show a branded "Preparing your photoshoot..." overlay with a spinner during the enqueue phase (before batch state exists)
 
-### 1. Stepper Redesign (`CatalogGenerate.tsx`)
-- Replace pill-based breadcrumb with a clean horizontal numbered stepper with connecting lines
-- Each step: number circle + label below, active = primary fill, done = checkmark, future = muted outline
-- More visual weight and spacing between steps
+### 2. Add Swimwear Category (`catalogEngine.ts` + `types/catalog.ts`)
+- Add `swimwear` to `ProductCategory` union type
+- Add keywords: `bikini`, `swimsuit`, `swimwear`, `swim`, `bathing suit`, `one-piece`, `tankini`, `swim trunk`, `board short`
+- Map `swimwear` → `full_body_slot` in `CATEGORY_TO_SLOT`
+- Create swimwear-specific support wardrobe: **no additional clothing** — null out upper, lower, footwear slots. The product IS the outfit.
+- Add swimwear overrides in each `FashionStyleDefinition.supportWardrobeKits` or handle via a `resolveSupportWardrobe` special case
 
-### 2. Products Step — Source Tabs
-- Add 3 tabs at the top: **"My Products"** (current grid) | **"Import from URL"** (paste website link) | **"Upload CSV"** (file upload + download template)
-- "My Products" tab = existing product grid (unchanged logic)
-- "Import from URL" = simple input + "Import" button (calls existing `import-product` edge function)
-- "Upload CSV" = drag-and-drop zone + "Download Template" button (CSV with columns: title, image_url, product_type)
-- Keep existing grid/list toggle, search, select all/clear for "My Products" tab
+### 3. Fix Ghost Mannequin Shadow (`catalogEngine.ts`)
+- Change ghost mannequin prompt from "soft shadow beneath product" to "no shadow, floating isolated product, pure clean background, shadowless"
 
-### 3. Fashion Style Cards
-- Increase card size — `lg:grid-cols-3` instead of `lg:grid-cols-5` so they're roomier
-- Remove technical badges (poseEnergy, accessoryIntensity) — these are internal engine values
-- Keep just: bold label + 2-line description
-- Add a subtle style-representative color accent or icon per style
+### 4. Add Elapsed Time + Estimated Time (`CatalogGenerate.tsx`)
+- Track `generationStartedAt` timestamp when batch starts
+- Show elapsed time as `mm:ss` in the progress UI
+- Estimate remaining: `(elapsed / completedJobs) * remainingJobs`
+- Show both in the progress section
 
-### 4. Model Selection — Simplify
-- Remove `ModelFilterBar` entirely (no gender/body/age dropdowns)
-- Keep "No Model — Product Only" toggle card at top
-- Show all library models in a clean grid (keep existing `ModelSelectorCard`)
-- Multi-select with count badge: "3 models selected — each multiplies your shot count"
-- Remove filter state from `CatalogGenerate.tsx` (genderFilter, bodyTypeFilter, ageFilter)
+### 5. Redesign Progress & Completion UI (`CatalogGenerate.tsx`)
+- **Progress**: Add elapsed/estimated time display. Show a subtle VOVV.AI wordmark. Show per-product thumbnail + progress bar instead of just text rows.
+- **Completion**: Show total time taken, add background hex badge on each image, make the grid more editorial (larger cards, hover to see shot label). Keep lightbox on click.
 
-### 5. More Shots
-Add to `SHOT_DEFINITIONS` in `catalogEngine.ts`:
-- **Lifestyle Context** (on-model) — relaxed lifestyle pose with natural environment feel
-- **Over Shoulder** (on-model) — viewed from behind over shoulder
-- **Waist-Up Crop** (on-model) — cropped at waist for upper-body focus
-- **Walking Motion** (on-model) — natural stride, full body
-- **Cross-Body** (on-model, bag) — cross-body bag carry style
-- **Wrist Shot** (on-model, jewelry) — close-up of wrist/hand with jewelry
-- **On Surface** (product-only) — product placed on textured surface
-- **Styled Flat Lay** (product-only) — product with minimal props arrangement
+### 6. Show Background Hex Code (`CatalogStepBackgroundsV2.tsx`)
+- Display the hex value below each background swatch name (already partially there via `bg.hex`, just surface it as copyable text)
 
-### 6. Credit Calculation Display
-In the Shots step summary, show the full formula:
-- `{products} products × {models} models × {shots} shots × 4 credits = {total} credits`
-- When models = 0 (product only), show: `{products} products × {shots} shots × 4 credits = {total} credits`
+### 7. Add Review/Confirmation Step (Step 6)
+- Insert a new step between Shots and Generate: **"Review & Confirm"**
+- Shows: selected products (thumbnails), selected models, selected style, background (with hex), selected shots
+- Per-product expandable section with optional "Add Accessories" — user can add 1-3 extra reference images (hat, sunglasses, bottom piece) that get injected into that product's prompt
+- "Generate" button moves here from the Shots step
+- Shots step gets a "Next: Review" button instead
 
-## Technical Notes
-- Remove `genderFilter`, `bodyTypeFilter`, `ageFilter` state and all `ModelFilterBar` references from `CatalogGenerate.tsx`
-- Remove `ModelFilterBar` import from `CatalogStepModelsV2.tsx`
-- `CatalogStepModelsV2` props simplified: drop filter-related props
-- New shot IDs added to `CatalogShotId` union type in `src/types/catalog.ts`
-- Product import tabs are UI-only for now (URL import calls existing edge function, CSV is a new client-side parser)
+### 8. Minimize Visual Noise Across All Steps
+- Reduce border weights from `border-2` to `border`
+- Remove emoji icons from shot cards (👤📦), use consistent Lucide icons or no icons
+- Stepper: thinner lines, smaller circles, less shadow
+- Use consistent `rounded-lg` instead of mixed `rounded-xl`, `rounded-2xl`
+- Remove gradient backgrounds from style cards — use flat subtle bg
+- Match card padding and spacing to Templates/Workflows page patterns
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/types/catalog.ts` | Add `swimwear` to `ProductCategory`, add step 6 |
+| `src/lib/catalogEngine.ts` | Add swimwear category + keywords, fix ghost mannequin shadow, swimwear support wardrobe |
+| `src/pages/CatalogGenerate.tsx` | Add review step (step 6), fix loading state, add elapsed/estimated time, redesign progress + completion, minimize visual noise on stepper |
+| `src/hooks/useCatalogGenerate.ts` | Fix `isGenerating` timing (keep true during enqueue) |
+| `src/components/app/catalog/CatalogStepShots.tsx` | Remove generate button (moves to review step), remove emoji icons, clean up card styling |
+| `src/components/app/catalog/CatalogStepReview.tsx` | New component — review + confirm step with accessory add-on slots |
+| `src/components/app/catalog/CatalogStepProducts.tsx` | Reduce visual weight, match app styling |
+| `src/components/app/catalog/CatalogStepFashionStyle.tsx` | Remove gradients, flatten cards |
+| `src/components/app/catalog/CatalogStepModelsV2.tsx` | Reduce border weights, cleaner grid |
+| `src/components/app/catalog/CatalogStepBackgroundsV2.tsx` | Show hex code as copyable text under each swatch |
+
+## Technical Details
+
+- Swimwear `resolveSupportWardrobe`: when `heroSlot === 'full_body_slot'` AND category is `swimwear`, return all-null wardrobe (no support clothing at all — the swimwear IS the complete outfit)
+- Ghost mannequin prompt change is a single string replacement in `SHOT_DEFINITIONS`
+- `isGenerating` fix: move `setIsGenerating(false)` from line 306 to inside the `if (allJobs.length === 0)` error branch, and add it to the polling callback when `allDone` is true
+- Accessory references in review step: stored as `Map<productId, string[]>` (base64 URLs), passed into `CatalogSessionConfig` and appended to prompts as extra reference context
+- Estimated time calculation: `avgTimePerJob = elapsed / completed; remaining = avgTimePerJob * (total - completed - failed)`
 
