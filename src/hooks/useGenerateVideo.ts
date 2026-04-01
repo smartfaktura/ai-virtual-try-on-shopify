@@ -20,6 +20,7 @@ export interface GeneratedVideo {
   status: string;
   created_at: string;
   completed_at: string | null;
+  camera_type: string | null;
 }
 
 interface UseGenerateVideoResult {
