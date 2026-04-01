@@ -41,7 +41,7 @@ function getTeamMemberForJob(group: BatchGroup): TeamMember {
 function getActionVerb(group: BatchGroup): string {
   if (group.isCreativeDrop) return 'creating your drop';
   switch (group.job_type) {
-    case 'video': return 'creating your video';
+    case 'video': return group.totalCount > 1 ? `creating ${group.totalCount} videos` : 'creating your video';
     case 'freestyle': return 'shooting';
     case 'upscale': return 'upscaling';
     case 'tryon': return 'styling';
