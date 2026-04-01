@@ -247,19 +247,21 @@ const CATEGORY_SCENE_MOTION_MATRIX: Record<string, Record<string, string[]>> = {
 export interface CameraMotionOption {
   id: string;
   label: string;
+  /** Relative path inside landing-assets bucket for hover preview video */
+  preview?: string;
 }
 
 export const CAMERA_MOTIONS: CameraMotionOption[] = [
-  { id: 'static', label: 'Static' },
-  { id: 'slow_push_in', label: 'Slow Push-in' },
-  { id: 'gentle_pan', label: 'Gentle Pan' },
-  { id: 'camera_drift', label: 'Camera Drift' },
-  { id: 'premium_handheld', label: 'Premium Handheld' },
-  { id: 'orbit', label: 'Orbit' },
-  { id: 'dolly_zoom', label: 'Dolly Zoom' },
-  { id: 'tilt_reveal', label: 'Tilt Reveal' },
-  { id: 'tracking_follow', label: 'Tracking Follow' },
-  { id: 'crane_up', label: 'Crane Up' },
+  { id: 'static', label: 'Static', preview: 'video-previews/static.mp4' },
+  { id: 'slow_push_in', label: 'Slow Push-in', preview: 'video-previews/slow_push_in.mp4' },
+  { id: 'gentle_pan', label: 'Gentle Pan', preview: 'video-previews/gentle_pan.mp4' },
+  { id: 'camera_drift', label: 'Camera Drift', preview: 'video-previews/camera_drift.mp4' },
+  { id: 'premium_handheld', label: 'Premium Handheld', preview: 'video-previews/premium_handheld.mp4' },
+  { id: 'orbit', label: 'Orbit', preview: 'video-previews/orbit.mp4' },
+  { id: 'dolly_zoom', label: 'Dolly Zoom', preview: 'video-previews/dolly_zoom.mp4' },
+  { id: 'tilt_reveal', label: 'Tilt Reveal', preview: 'video-previews/tilt_reveal.mp4' },
+  { id: 'tracking_follow', label: 'Tracking Follow', preview: 'video-previews/tracking_follow.mp4' },
+  { id: 'crane_up', label: 'Crane Up', preview: 'video-previews/crane_up.mp4' },
 ];
 
 // ─── Subject Motion Options ───

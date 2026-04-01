@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils';
-import { CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
+import { SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Check, Sparkles } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { InfoTooltip } from './InfoTooltip';
-import { Badge } from '@/components/ui/badge';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { CameraMotionGrid } from './CameraMotionGrid';
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
 
@@ -55,51 +55,6 @@ function ChipRow({ label, tooltip, items, value, onChange }: { label: string; to
   );
 }
 
-function MultiChipRow({ label, tooltip, items, selected, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; selected: string[]; onChange: (ids: string[]) => void }) {
-  const toggle = (id: string) => {
-    if (selected.includes(id)) {
-      // Don't allow deselecting the last one
-      if (selected.length <= 1) return;
-      onChange(selected.filter(s => s !== id));
-    } else {
-      onChange([...selected, id]);
-    }
-  };
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <label className="text-xs text-muted-foreground">{label}</label>
-        {tooltip && <InfoTooltip text={tooltip} />}
-        {selected.length > 1 && (
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-            {selected.length} selected → {selected.length} videos
-          </Badge>
-        )}
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {items.map((item) => {
-          const isSelected = selected.includes(item.id);
-          return (
-            <button
-              key={item.id}
-              onClick={() => toggle(item.id)}
-              className={cn(
-                'px-2.5 py-1 rounded-full text-xs border transition-colors flex items-center gap-1',
-                isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border text-muted-foreground hover:border-primary/40'
-              )}
-            >
-              {isSelected && selected.length > 1 && <Check className="h-3 w-3" />}
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 const INTENSITIES = [
   { id: 'low', label: 'Low' },
@@ -123,18 +78,23 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
           <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
             {props.multiSelect && props.selectedCameraMotions && props.onMultiCameraMotionChange ? (
               <>
-                <MultiChipRow
-                  label="Camera Motion"
-                  tooltip="Select multiple camera motions to generate a separate video for each. Controls how the virtual camera moves during the video."
-                  items={CAMERA_MOTIONS}
+                <CameraMotionGrid
+                  value={props.cameraMotion}
+                  onChange={props.onCameraMotionChange}
+                  multiSelect
                   selected={props.selectedCameraMotions}
-                  onChange={props.onMultiCameraMotionChange}
+                  onMultiChange={props.onMultiCameraMotionChange}
+                  tooltip="Select multiple camera motions to generate a separate video for each."
                 />
                 <p className="text-[11px] text-muted-foreground -mt-2">Select multiple to generate one video per motion</p>
               </>
             ) : (
               <>
-                <ChipRow label="Camera Motion" tooltip="Controls how the virtual camera moves during the video. Affects framing but not the subject." items={CAMERA_MOTIONS} value={props.cameraMotion} onChange={props.onCameraMotionChange} />
+                <CameraMotionGrid
+                  value={props.cameraMotion}
+                  onChange={props.onCameraMotionChange}
+                  tooltip="Controls how the virtual camera moves during the video."
+                />
                 {props.isPaidUser === false && (
                   <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 -mt-2">
                     <img src={avatarSophia} alt="Sophia" className="h-5 w-5 rounded-full object-cover ring-1 ring-border" />
