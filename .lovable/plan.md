@@ -1,92 +1,95 @@
 
 
-# /app/catalog — Round 7 Audit
+# /app/catalog — Round 8 Audit
 
-After six rounds of fixes, the flow is highly polished. Here are the remaining micro-improvements I found:
+The flow is extremely well-polished. After thorough review of all 10 component files, here are the remaining micro-refinements:
 
 ## Findings
 
-### 1. Shots step has excessive bottom padding (`pb-44`) causing wasted space
-**File: `CatalogStepShots.tsx` line 44**
-The container uses `pb-44` (176px) to ensure the sticky credit calculator doesn't overlap content. This is generous — `pb-36` or `pb-32` would suffice and avoid the impression of a broken layout when scrolled to the bottom on desktop.
-**Fix**: Reduce to `pb-36`.
+### 1. Props step: tiny prop thumbnail uses raw `<img>` instead of `<ShimmerImage>`
+**File: `CatalogStepProps.tsx` line 360**
+Inside the assigned-props chip display, the 4×4px prop thumbnail uses `<img>` while every other image in the flow uses `<ShimmerImage>`. Inconsistent loading behavior.
 
-### 2. Review step: "Edit" buttons on each section lack `focus-visible` ring
-**File: `CatalogStepReviewV2.tsx` line 43**
-The `SectionEditButton` is a raw `<button>` with no focus-visible styling. Keyboard users can't see which Edit button is focused.
-**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded` to the button.
+### 2. Lightbox filename loop has an indentation bug masking logic
+**File: `CatalogGenerate.tsx` lines 531-538**
+The `if (imgIdx === i)` block is indented incorrectly — the opening brace alignment doesn't match the closing. The `break` only exits the inner `for...of` loop over `j.images`, and the outer `break` on line 540 uses string comparison (`filename !== \`catalog-${i+1}.jpg\``) which is fragile. A boolean flag would be cleaner and more reliable.
 
-### 3. Products floating selection bar uses `<img>` instead of `<ShimmerImage>`
-**File: `CatalogStepProducts.tsx` lines 476-481**
-The mini product thumbnails in the sticky bottom bar use raw `<img>` tags, which don't get the shimmer loading placeholder that every other image in the flow uses. This creates a flash of empty space before images load.
-**Fix**: Replace `<img>` with `<ShimmerImage>`.
+### 3. Collapsible triggers in Shots step lack `focus-visible` ring
+**File: `CatalogStepShots.tsx` lines 68, 92**
+The `CollapsibleTrigger` for "On-Model" and "Product-Only" sections have no focus-visible styling. Keyboard users can't see which section header is focused.
 
-### 4. Review step model images use raw `<img>` instead of `<ShimmerImage>`
-**File: `CatalogStepReviewV2.tsx` line 129**
-Same issue — model preview thumbnails in the review strip use `<img>` while everything else uses `<ShimmerImage>`.
-**Fix**: Replace with `<ShimmerImage>`.
+### 4. Fashion Style cards: color mood strip has no `aria-hidden`
+**File: `CatalogStepFashionStyle.tsx` lines 54-58**
+The decorative color strip divs are visible to screen readers but carry no semantic meaning. Adding `aria-hidden="true"` is a minor a11y improvement.
 
-### 5. Sidebar model images use raw `<img>` instead of `<ShimmerImage>`
-**File: `CatalogContextSidebar.tsx` line 90**
-Model preview circles in the sidebar use `<img>`. Inconsistent with the rest of the app.
-**Fix**: Replace with `<ShimmerImage>`.
+### 5. Background step: no "Recommended" or "Popular" indicator
+**File: `CatalogStepBackgroundsV2.tsx`**
+Unlike Fashion Style (which shows a "Popular" badge) and Shots (which shows "Recommended" badges), the Background step has no guidance for users who aren't sure which to pick. A subtle "Popular" badge on one default option would help.
 
-### 6. Products step: grid view product card lacks `focus-visible` ring
-**File: `CatalogStepProducts.tsx` line 281-328**
-The product card `<button>` in grid view has no focus-visible styling. List view cards also lack it.
-**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2` to both grid and list product buttons.
+### 6. Mobile summary chip condition is slightly wrong
+**File: `CatalogGenerate.tsx` line 704**
+The condition `!(step === 1 && selectedProductIds.size > 0)` hides the summary chip on Step 1 when products are selected (to avoid overlapping the sticky bar). But the sticky bar also appears when `activeTab === 'library'` inside CatalogStepProducts — if user switches to URL/CSV tab, the sticky bar disappears but the summary chip stays hidden. Not a real issue since selecting products only happens in the library tab, but the logic could be tighter.
 
-### 7. View toggle buttons (grid/list) lack `focus-visible` ring
-**File: `CatalogStepProducts.tsx` lines 239-261**
-The grid/list toggle pill buttons have no focus-visible ring.
-**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary` to both.
+### 7. Products "Select All" could select more than `maxProducts` if `filtered.length > maxProducts`
+**File: `CatalogStepProducts.tsx` line 211**
+Already correctly sliced: `.slice(0, maxProducts)`. This is fine — just confirming.
 
-### 8. Download All button has no loading/progress indicator
-**File: `CatalogGenerate.tsx` lines 353-363**
-For large catalogs (20+ images), the ZIP download takes several seconds. The button gives no feedback — users may click it multiple times.
-**Fix**: Add a `downloading` state that disables the button and shows a spinner while the ZIP is being assembled.
-
-### 9. `handleNewGeneration` doesn't reset `showCancelDialog`
-**File: `CatalogGenerate.tsx` line 266-279**
-When starting a new generation after completion, `showCancelDialog` isn't reset. Not a visible bug since it defaults to `false` and the dialog auto-closes, but stale state.
-**Fix**: Add `setShowCancelDialog(false)` to `handleNewGeneration`.
+### 8. Review step "Buy Credits" link button lacks focus-visible ring
+**File: `CatalogStepReviewV2.tsx` line 232**
+The inline `<button>` for "need X more credits" has no focus-visible styling.
 
 ## Summary
 
 | # | Item | Effort | Impact |
 |---|------|--------|--------|
-| 1 | Reduce shots step padding | Trivial | Layout |
-| 2 | Edit button focus-visible | Trivial | Accessibility |
-| 3 | ShimmerImage in selection bar | Trivial | Visual consistency |
-| 4 | ShimmerImage in review models | Trivial | Visual consistency |
-| 5 | ShimmerImage in sidebar models | Trivial | Visual consistency |
-| 6 | Product card focus-visible | Trivial | Accessibility |
-| 7 | View toggle focus-visible | Trivial | Accessibility |
-| 8 | Download All loading state | Small | UX feedback |
-| 9 | Reset cancel dialog state | Trivial | Clean state |
+| 1 | ShimmerImage in prop chip | Trivial | Visual consistency |
+| 2 | Clean up lightbox filename loop | Trivial | Code clarity |
+| 3 | Collapsible trigger focus rings | Trivial | Accessibility |
+| 4 | aria-hidden on color strip | Trivial | Accessibility |
+| 5 | Popular badge on default background | Trivial | UX guidance |
+| 6 | Mobile summary chip condition | Trivial | Edge case |
+| 8 | Buy credits button focus ring | Trivial | Accessibility |
 
-All items are trivial polish. Items 3-5 (ShimmerImage consistency) and 6-7 (focus rings) can be batched.
+All items are cosmetic or minor a11y polish. Nothing functional remains.
 
 ## Technical Details
 
-**Items 3-5** — Replace `<img src={...} alt={...} className="..." />` with `<ShimmerImage src={...} alt={...} className="..." />` in:
-- `CatalogStepProducts.tsx` line 478
-- `CatalogStepReviewV2.tsx` line 129
-- `CatalogContextSidebar.tsx` line 90
-
-**Item 8** — Add `const [isDownloading, setIsDownloading] = useState(false)` and wrap the `downloadDropAsZip` call:
+**Item 1** — In `CatalogStepProps.tsx` line 360, replace:
 ```tsx
-<Button
-  variant="outline"
-  disabled={isDownloading}
-  onClick={async () => {
-    setIsDownloading(true);
-    try { await downloadDropAsZip(images, 'Catalog-Export'); }
-    finally { setIsDownloading(false); }
-  }}
->
-  {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-  {isDownloading ? 'Preparing...' : 'Download All'}
-</Button>
+<img src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
 ```
+with:
+```tsx
+<ShimmerImage src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
+```
+
+**Item 2** — In `CatalogGenerate.tsx` lines 527-541, replace the loop with a cleaner version using a `found` flag:
+```tsx
+let found = false;
+let imgIdx = 0;
+for (const j of batchState.jobs) {
+  if (found) break;
+  if (j.status === 'completed') {
+    for (const imgUrl of j.images) {
+      if (imgIdx === i) {
+        const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
+        const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
+        filename = `${safeName}_${safeShot}.jpg`;
+        found = true;
+        break;
+      }
+      imgIdx++;
+    }
+  }
+}
+```
+
+**Item 3** — In `CatalogStepShots.tsx` lines 68 and 92, add to `CollapsibleTrigger`:
+```tsx
+className="... focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+```
+
+**Item 5** — In `CatalogStepBackgroundsV2.tsx`, add a `Sparkles` icon + "Popular" badge on the default background (e.g. `studio_white`), similar to how Fashion Style marks `premium_neutral`.
+
+**Item 8** — In `CatalogStepReviewV2.tsx` line 232, add `focus-visible:ring-2 focus-visible:ring-primary rounded` to the buy-credits button.
 
