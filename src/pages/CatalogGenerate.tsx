@@ -615,7 +615,8 @@ export default function CatalogGenerate() {
             productOnlyMode={productOnlyMode}
             backgroundId={selectedBackgroundId}
             selectedShots={selectedShots}
-            selectedPropCount={selectedPropIds.size}
+            selectedPropCount={Object.values(propAssignments).filter(ids => ids.length > 0).length}
+            totalCombos={selectedProductIds.size * Math.max(1, modelCount) * selectedShots.size}
             totalImages={totalImages}
             totalCredits={totalCredits}
             currentStep={step}
