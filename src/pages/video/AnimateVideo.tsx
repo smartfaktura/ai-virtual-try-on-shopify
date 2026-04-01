@@ -1245,24 +1245,12 @@ export default function AnimateVideo() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
                     <label className="text-xs text-muted-foreground">Aspect Ratio</label>
-                    <InfoTooltip text="Match your output channel. 9:16 for Reels/TikTok, 1:1 for feed posts, 16:9 for ads and web." />
+                    <InfoTooltip text="For image-to-video, the output always matches your source image ratio. This selector is informational only." />
                   </div>
-                  <div className="flex gap-2">
-                    {ASPECT_RATIOS.map((ar) => (
-                      <button key={ar.value} onClick={() => setAspectRatio(ar.value)}
-                        className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border transition-colors',
-                          aspectRatio === ar.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
-                        )}>
-                        <span className={cn('rounded-[2px] border', ar.iconW, ar.iconH,
-                          aspectRatio === ar.value ? 'border-primary-foreground bg-primary-foreground/20' : 'border-current bg-current/10'
-                        )} />
-                        <span className="flex flex-col items-start leading-none">
-                          <span className="font-medium">{ar.label}</span>
-                          <span className="text-[10px] opacity-70">{ar.desc}</span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    Output matches your source image ratio
+                  </p>
                 </div>
 
                 <div className="space-y-2">

@@ -129,7 +129,8 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     };
     if (prompt) klingBody.prompt = prompt;
     if (negativePrompt) klingBody.negative_prompt = negativePrompt;
-    if (aspectRatio) klingBody.aspect_ratio = aspectRatio;
+    // Note: aspect_ratio is NOT sent for image2video — Kling ignores it
+    // and always outputs the same ratio as the source image.
     if (typeof cfgScale === "number") klingBody.cfg_scale = cfgScale;
     klingBody.sound = withAudio ? "on" : "off";
 
