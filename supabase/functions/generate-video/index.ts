@@ -172,6 +172,9 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     if (typeof cfgScale === "number") dbRow.cfg_scale = cfgScale;
     if (projectId) dbRow.project_id = projectId;
     if (workflowType) dbRow.workflow_type = workflowType;
+    // Persist camera motion for download naming & metadata display
+    const cameraMotionValue = body.cameraMotion as string | undefined;
+    if (cameraMotionValue) dbRow.camera_type = cameraMotionValue;
 
     await serviceClient.from("generated_videos").insert(dbRow);
 

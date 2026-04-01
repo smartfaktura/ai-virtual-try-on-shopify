@@ -229,7 +229,7 @@ function VideoGenerateInner() {
     if (!videoUrl) return;
     const a = document.createElement('a');
     a.href = videoUrl;
-    a.download = `video-${Date.now()}.mp4`;
+    a.download = `video-${cameraPreset !== 'none' ? cameraPreset : Date.now()}.mp4`;
     a.target = '_blank';
     a.click();
   };

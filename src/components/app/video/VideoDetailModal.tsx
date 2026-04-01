@@ -56,7 +56,11 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `video-${video.camera_type || video.id.slice(0, 8)}.mp4`;
+      a.download = buildVideoFileName({
+        cameraType: video.camera_type,
+        settingsJson: video.settings_json,
+        videoId: video.id,
+      });
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
