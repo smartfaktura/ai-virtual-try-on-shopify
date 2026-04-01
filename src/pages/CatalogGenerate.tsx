@@ -593,10 +593,8 @@ export default function CatalogGenerate() {
               fashionStyleId={fashionStyle}
               backgroundId={selectedBackgroundId}
               selectedShots={selectedShots}
-              stylingProps={Array.from(selectedPropIds).map(id => {
-                const p = products.find(pr => pr.id === id);
-                return p ? { id: p.id, title: p.title, imageUrl: p.images[0]?.url || '' } : null;
-              }).filter(Boolean) as { id: string; title: string; imageUrl: string }[]}
+              propAssignments={propAssignments}
+              allProducts={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
               totalImages={totalImages}
               totalCredits={totalCredits}
               balance={balance}
