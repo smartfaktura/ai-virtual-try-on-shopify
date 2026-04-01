@@ -1,119 +1,99 @@
 
 
-# Rename "Workflows" to "Templates" — Frontend Only
+# Rename "Creative Drops" → "Content Calendar" — Frontend Only
 
-No backend changes. All route paths (`/app/workflows`, `/features/workflows`) stay the same. Only user-facing labels, headings, and copy change.
+Same approach as the Workflows→Templates rename. All route paths (`/app/creative-drops`, `/features/creative-drops`) stay unchanged. Only user-facing labels and copy change.
 
 ---
 
 ## Files and Changes
 
 ### 1. Sidebar & Navigation
-
 **`src/components/app/AppShell.tsx`**
-- Sidebar item: `'Workflows'` → `'Templates'`
+- `'Creative Drops'` → `'Content Calendar'`
 
-**`src/components/app/DashboardQuickActions.tsx`**
-- `'Browse Workflows'` → `'Browse Templates'`
+### 2. Main Page
+**`src/pages/CreativeDrops.tsx`**
+- Page title: `'Creative Drops'` → `'Content Calendar'`
+- Subtitle: update copy to match (e.g. "Schedule recurring content and receive fresh assets on autopilot.")
 
-### 2. Workflows Page
+### 3. Global Generation Bar
+**`src/components/app/GlobalGenerationBar.tsx`**
+- `'View in Creative Drops'` → `'View in Content Calendar'`
 
-**`src/pages/Workflows.tsx`**
-- Page title: `"Workflows"` → `"Templates"`
-- Subtitle: `"Choose a workflow and generate…"` → `"Choose a template and generate…"`
-- Section label: `"Create a New Set"` → `"Choose a Template"`
-- Comment labels (optional, for code clarity)
+### 4. Studio Chat Suggestions
+**`src/components/app/StudioChat.tsx`**
+- `'How do Creative Drops work?'` → `'How does the Content Calendar work?'`
 
-### 3. Dashboard
+### 5. Drop Detail Modal
+**`src/components/app/DropDetailModal.tsx`**
+- Label `'Creative Drop'` → `'Content Calendar'`
 
-**`src/pages/Dashboard.tsx`**
-- `"Start with a Workflow"` button → `"Start with a Template"`
-- `"Browse Workflows"` buttons (2 occurrences) → `"Browse Templates"`
-- Component name `DashboardWorkflowCard` is internal — leave as-is
+### 6. Dashboard Tip Card
+**`src/components/app/DashboardTipCard.tsx`**
+- `'Schedule monthly Creative Drops…'` → `'Schedule monthly content drops…'` or similar
 
-### 4. Start Modal
+### 7. Upcoming Drops Card
+**`src/components/app/UpcomingDropsCard.tsx`**
+- No "Creative Drop" label visible, but verify — likely fine as-is
 
-**`src/components/app/StartWorkflowModal.tsx`**
-- `displayName` values: `"Product Editorial Workflow"` → `"Product Editorial"`, `"Virtual Try-On Workflow"` → `"Virtual Try-On"`, `"UGC / Selfie Workflow"` → `"UGC / Selfie"`
-- `"Browse all workflows"` → `"Browse all templates"`
-- Step title: `"Let's create your first visuals"` — keep as-is (no "workflow" word)
-
-### 5. Onboarding Checklist
-
-**`src/components/app/OnboardingChecklist.tsx`**
-- CTA: `'Go to Workflows'` → `'Go to Templates'`
-
-### 6. Workflow Card & Request Banner
-
-**`src/components/app/WorkflowCard.tsx`**
-- `"Create Set"` button — keep as-is (already good)
-
-**`src/components/app/WorkflowRequestBanner.tsx`**
-- `"Missing a workflow for your brand?"` → `"Missing a template for your brand?"`
-- `"What workflow would you like us to create?"` → `"What template would you like us to create?"`
-- Placeholder: `"Describe the workflow, niche…"` → `"Describe the template, niche…"`
-
-### 7. Landing Page Components
+### 8. Landing Page Components
+**`src/components/landing/CreativeDropsSection.tsx`**
+- `'Schedule monthly Creative Drops…'` → `'Schedule your Content Calendar…'`
+- Button: `'Set Up Monthly Creative Drops'` → `'Set Up Your Content Calendar'`
 
 **`src/components/landing/LandingFAQ.tsx`**
-- `"What are Workflows?"` → `"What are Templates?"`
-- All answer text: `"Workflows"` → `"Templates"`, `"workflow"` → `"template"`
+- `'What are Creative Drops?'` → `'What is the Content Calendar?'`
+- Answer text: update accordingly
+
+**`src/components/landing/LandingPricing.tsx`**
+- `'Creative Drops included on Growth and above'` → `'Content Calendar included on Growth and above'`
 
 **`src/components/landing/LandingFooter.tsx`**
-- Footer link label: `'Workflows'` → `'Templates'`
-
-**`src/components/landing/CreativeDropsSection.tsx`**
-- `'Pick your visual workflows'` → `'Pick your visual templates'`
-
-**`src/components/landing/FinalCTA.tsx`**
-- `'choose your workflows'` → `'choose your templates'`
-
-**`src/components/landing/HeroSection.tsx`**
-- Navigate path stays `/app/workflows`, button label `"Create My First Visual Set"` — already fine
+- `'Creative Drops'` → `'Content Calendar'`
 
 **`src/components/landing/FeatureGrid.tsx`**
-- `'Assign workflows and brand profiles'` → `'Assign templates and brand profiles'`
+- `'Recurring Creative Drops tied to…'` → `'Recurring content drops tied to…'`
 
-### 8. Feature Page
+**`src/components/landing/HowItWorks.tsx`**
+- `'schedule Creative Drops'` → `'schedule your Content Calendar'`
 
-**`src/pages/features/WorkflowsFeature.tsx`**
-- SEO title: `"AI Photography Workflows"` → `"AI Photography Templates"`
-- Hero badge: `"Workflows"` → `"Templates"`
-- All body copy: `"workflow"` → `"template"`, `"Workflows"` → `"Templates"`
-- Section heading: `"Why Workflows?"` → `"Why Templates?"`
-- Benefits descriptions: update all `"workflow"` references
+### 9. Feature Pages
+**`src/pages/features/CreativeDropsFeature.tsx`**
+- SEO title, badge, hero heading, all body copy: `'Creative Drops'` → `'Content Calendar'`
+- `'Why Creative Drops?'` → `'Why Content Calendar?'`
+- CTA: `'Set up your first Creative Drop'` → `'Set up your Content Calendar'`
 
-### 9. Press Page
+**`src/pages/features/BrandProfilesFeature.tsx`**
+- 2 references: `'Creative Drop'` → `'Content Calendar'`
 
-**`src/pages/Press.tsx`**
-- `"multiple workflows"` → `"multiple templates"`
+### 10. Help Center & Changelog
+**`src/pages/HelpCenter.tsx`**
+- `'What are Creative Drops?'` → `'What is the Content Calendar?'`
+- Answer text updated
 
-### 10. Live Chat Knowledge
+**`src/pages/Changelog.tsx`**
+- `'Creative Drops & Bulk Generation'` → `'Content Calendar & Bulk Generation'`
+- `'Creative Drops — automated content delivery'` → `'Content Calendar — automated content delivery'`
 
+### 11. Admin Status
+**`src/pages/AdminStatus.tsx`**
+- MetricCard title: `'Creative Drops'` → `'Content Calendar'`
+
+### 12. Live Chat Knowledge
 **`supabase/functions/studio-chat/index.ts`**
-- System prompt: rename all `"Workflows"` → `"Templates"`, `"workflow"` → `"template"` in the platform knowledge section
-- CTA buttons: `"Browse Workflows"` → `"Browse Templates"`
-- Page context map: `"Workflows page — they are browsing available workflow templates"` → `"Templates page — they are browsing available templates"`
-- Pricing section: `"Workflow pricing"` → `"Template pricing"`, `"Workflows cost more"` → `"Templates cost more"`
-- Subscription plans: `"all workflows"` → `"all templates"`
-
-### 11. Video Hub
-
-**`src/pages/VideoHub.tsx`** — no "workflow" user-facing text, skip.
-
-**`src/components/app/video/VideoWorkflowCard.tsx`** — component name is internal, no user-facing "workflow" text, skip.
+- All `'Creative Drops'` → `'Content Calendar'` in system prompt, page context map, pricing descriptions, and CTA buttons
 
 ---
 
 ## What stays unchanged
-- All URL routes (`/app/workflows`, `/features/workflows`, etc.)
-- All database column names (`workflow_id`, `workflow_name`, `workflow_slug`)
-- All TypeScript type names and internal variable names
-- All query keys and localStorage keys
-- Component file names (renaming files is cosmetic, risky, and not user-visible)
-
----
+- All URL routes (`/app/creative-drops`, `/features/creative-drops`)
+- All database table names (`creative_drops`, `creative_schedules`)
+- All query keys (`['creative-drops']`, `['creative-schedules']`)
+- All edge function names (`trigger-creative-drop`, `complete-creative-drop`, etc.)
+- All internal variable names and component file names
+- The word "drop" when used generically (e.g. "Your drop arrives", "Drop triggered") — these still make sense contextually
 
 ## Summary
-~15 files updated, purely string/label changes. No logic, no routes, no backend.
+~18 files, purely string/label changes. No logic, routes, or backend changes.
 
