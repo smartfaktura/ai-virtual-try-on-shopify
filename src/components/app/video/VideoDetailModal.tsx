@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, X, Film, Clock, Monitor, Maximize, Video, Sparkles, Eye, RotateCcw, Volume2, Layers, Move, Target, Clapperboard } from 'lucide-react';
+import { Download, Trash2, X, Film, Clock, Monitor, Maximize, Video, Sparkles, Eye, RotateCcw, Volume2, Layers, Move, Target, Clapperboard, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
