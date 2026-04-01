@@ -273,7 +273,7 @@ export function useCatalogGenerate() {
 
         if (!effectiveAnchorDef) continue;
 
-        const anchorPrompt = assemblePrompt({
+        const rawAnchorPrompt = assemblePrompt({
           productTitle: heroBlock,
           productCategory: product.detectedCategory,
           modelProfile: session.modelProfile,
@@ -283,6 +283,7 @@ export function useCatalogGenerate() {
           shotDef: effectiveAnchorDef,
           renderPath: 'anchor_generate',
         });
+        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, config.stylingProps);
 
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
