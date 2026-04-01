@@ -224,7 +224,7 @@ export default function WorkflowsFeature() {
             6 Visual Pipelines.<br />One Upload. Zero Prompts.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            From on-model editorial to flat lays, UGC selfies to interior staging — each workflow is a complete creative pipeline that turns a single product image into dozens of studio-quality visuals.
+            From on-model editorial to flat lays, UGC selfies to interior staging — each template is a complete creative pipeline that turns a single product image into dozens of studio-quality visuals.
           </p>
           <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
             Start Free — No Credit Card
