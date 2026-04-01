@@ -582,6 +582,29 @@ export default function AIProductPhotographyEcommerce() {
           </div>
         </div>
       </section>
+
+      {/* Detail modal – same as /discover */}
+      <PublicDiscoverDetailModal
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        relatedItems={[]}
+        onSelectRelated={(item) => setSelectedItem(item)}
+        onUseItem={(item) => {
+          if (item.type === 'preset') {
+            const d = item.data;
+            if (d.workflow_slug) {
+              const params = new URLSearchParams();
+              if (d.model_name) params.set('model', d.model_name);
+              if (d.scene_name) params.set('scene', d.scene_name);
+              navigate(`/app/generate/${d.workflow_slug}?${params.toString()}`);
+            } else {
+              const params = new URLSearchParams({ prompt: d.prompt, ratio: d.aspect_ratio, quality: d.quality });
+              navigate(`/app/freestyle?${params.toString()}`);
+            }
+          }
+        }}
+        onSearchSimilar={() => {}}
+      />
     </PageLayout>
   );
 }
