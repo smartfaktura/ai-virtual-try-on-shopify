@@ -1,66 +1,63 @@
 
-
-# Mobile Optimization for Catalog Studio Steps
-
-Viewport is 440px. I'll audit each step component and the page layout for mobile issues and fix them.
+# /app/catalog Analysis — Issues & Improvements
 
 ## Issues Found
 
-### 1. Page Layout (`CatalogGenerate.tsx`)
-- Sidebar is `hidden lg:block` — already hidden on mobile, good
-- `pb-32` may be excessive on mobile
-- No horizontal padding issues
+### 1. Mobile: Page header overflows
+**File: `CatalogGenerate.tsx` line 484-488**
+- `PageHeader` + `CatalogTeamStrip` are in a `flex justify-between` row. The team strip is `hidden md:block` (good), but the PageHeader subtitle text "Generate consistent product photography across your entire catalog" is long and may wrap awkwardly on 440px. Could truncate or shorten on mobile.
 
-### 2. Stepper (`CatalogStepper.tsx`)
-- Mobile stepper shows 7 icon buttons + labels in a row with `px-2` — at 440px, 7 items × ~50px each = ~350px, tight but connector lines `w-4 mx-0.5` add up
-- Labels `text-[9px]` may get truncated or overlap
-- **Fix**: Hide labels on mobile, show only icons. Use `flex-1` between items for even spacing. Remove fixed `w-4` connectors on mobile.
+### 2. Mobile: `pb-32` excessive bottom padding
+**File: `CatalogGenerate.tsx` line 482**
+- `pb-32` (128px) is too much on mobile where screen real estate is limited. Should be `pb-16 sm:pb-32`.
 
-### 3. Products Step (`CatalogStepProducts.tsx`)
-- Grid is `grid-cols-2` on mobile — fits at 440px
-- Tabs bar `gap-6` could be tight — labels "My Products", "Import URL", "Upload CSV" may overflow
-- **Fix**: Reduce tab gap to `gap-3` on mobile, use shorter labels or allow wrapping
-- Floating selection bar: `px-5` + thumbnails + text + button may overflow
-- **Fix**: Reduce padding, hide some thumbnails on mobile
+### 3. Products step: Floating selection bar can overflow on mobile
+**File: `CatalogStepProducts.tsx` line ~320+**
+- The floating bar contains thumbnails + text + button. Need to verify it has `overflow-hidden` and proper truncation on 440px. The tab gap is already `gap-3 sm:gap-6` which is fine.
 
-### 4. Style Step (`CatalogStepFashionStyle.tsx`)
-- Grid `grid-cols-1 sm:grid-cols-2` — on 440px (<640px) it's single column, fine
-- No issues
+### 4. Shots step: "Next: Review" button text is wrong
+**File: `CatalogStepShots.tsx` line 141**
+- Button says "Next: Review" but the next step is actually **Props** (step 6), not Review (step 7). Should say "Next: Props".
 
-### 5. Models Step (`CatalogStepModelsV2.tsx`)
-- Brand models grid: `grid-cols-4 sm:grid-cols-5` — at 440px, 4 columns = ~100px each, tight but workable
-- Library models grid: same pattern
-- **Fix**: Use `grid-cols-3` as base for smaller phones, `grid-cols-4 sm:grid-cols-5`
+### 5. Props step: Combo list has no empty state when 0 combos
+**File: `CatalogStepProps.tsx`**
+- If `heroProducts` is empty or `selectedShots` is empty (shouldn't happen due to step validation, but defensive), the combo list renders nothing without explanation.
 
-### 6. Backgrounds Step (`CatalogStepBackgroundsV2.tsx`)
-- Grid `grid-cols-2 sm:grid-cols-3` — 2 columns at 440px, fine
-- No issues
+### 6. Props step: Prop picker modal doesn't reset search on reopen
+**File: `CatalogStepProps.tsx` line 68-71**
+- `handleOpenChange` resets `localSelected` but not `search`. If user searched, closed, and reopened, old search text persists.
 
-### 7. Shots Step (`CatalogStepShots.tsx`)
-- Grid `grid-cols-2 sm:grid-cols-3` — fine
-- Credit calculator bar: text wraps via `flex-wrap`, should be OK
-- **Fix**: Reduce padding in pinned credit bar on mobile
+### 7. Review step: Props summary uses `totalImages` for denominator
+**File: `CatalogStepReviewV2.tsx` line 133**
+- `{combosWithProps}/{totalImages} shots` — but `totalImages` comes from the parent as `products × models × shots`, which IS the same as total combos. This is correct but the variable name is confusing.
 
-### 8. Props Step (`CatalogStepProps.tsx`)
-- Combo rows pack many elements in a single flex row: number + thumbnail + shot badge + title + prop chips + button — this WILL overflow at 440px
-- **Fix**: Stack the combo row on mobile — product info on one line, props + actions on a second line
-- Prop picker modal `sm:max-w-lg` — on mobile it should be full-screen
-- **Fix**: Add `max-w-full` or use sheet pattern on mobile
+### 8. Stepper: Mobile connector lines could use `bg-primary/30` transition
+**File: `CatalogStepper.tsx` line 96-98**
+- Mobile connectors lack the `transition-colors` class that desktop connectors have. Minor visual inconsistency.
 
-### 9. Review Step (`CatalogStepReviewV2.tsx`)
-- Product thumbnails: `w-14` in a horizontal scroll — fine
-- Credit calculation: text wraps via `flex-wrap` — fine
-- Style + Background row: `flex gap-6` may not wrap
-- **Fix**: Make style/bg row wrap on mobile
+### 9. Context Sidebar: Models count shows "1" text when exactly 1 or 2 models
+**File: `CatalogContextSidebar.tsx` line 99**
+- When `models.length <= 2`, it shows the number as text ("1" or "2") next to thumbnails. This is redundant since the thumbnails are already visible. Could remove.
 
-## Files to Modify
+### 10. No keyboard navigation for shot cards
+**File: `CatalogStepShots.tsx`**
+- Shot cards are `<button>` elements (good for a11y), but there's no focus ring styling. Same issue in Background cards.
 
-| File | Changes |
-|------|---------|
-| `CatalogStepper.tsx` | Hide labels on mobile (icon-only), use even spacing |
-| `CatalogStepProducts.tsx` | Reduce tab gap on mobile, compact floating bar |
-| `CatalogStepModelsV2.tsx` | Change base grid to `grid-cols-3` |
-| `CatalogStepShots.tsx` | Reduce padding in pinned credit bar |
-| `CatalogStepProps.tsx` | Stack combo rows on mobile, full-screen picker modal, responsive prop chips |
-| `CatalogStepReviewV2.tsx` | Wrap style/bg row on mobile |
+### 11. Background step: Grid could use 3 columns on mobile
+**File: `CatalogStepBackgroundsV2.tsx` line 24**
+- Currently `grid-cols-2 sm:grid-cols-3`. Background swatches are simple color blocks — 3 columns would fit fine at 440px and show more options without scrolling.
 
+## Recommended Improvements
+
+| # | Fix | File | Effort |
+|---|-----|------|--------|
+| 1 | Reduce bottom padding on mobile | `CatalogGenerate.tsx` | Trivial |
+| 2 | Fix "Next: Review" → "Next: Props" | `CatalogStepShots.tsx` | Trivial |
+| 3 | Reset search on modal reopen | `CatalogStepProps.tsx` | Trivial |
+| 4 | Add `transition-colors` to mobile stepper connectors | `CatalogStepper.tsx` | Trivial |
+| 5 | Remove redundant model count text when ≤2 | `CatalogContextSidebar.tsx` | Trivial |
+| 6 | Use 3-col grid for backgrounds on mobile | `CatalogStepBackgroundsV2.tsx` | Trivial |
+| 7 | Shorten PageHeader subtitle on mobile | `CatalogGenerate.tsx` | Small |
+| 8 | Add focus-visible ring to shot/bg cards | `CatalogStepShots.tsx`, `CatalogStepBackgroundsV2.tsx` | Small |
+
+All are minor polish fixes. No breaking issues or critical bugs found — the flow is structurally sound.
