@@ -165,7 +165,7 @@ SUBSCRIPTION PLANS:
 - **Free**: 20 credits (~4 images), all templates, 1 brand profile, 1 product, 0 video credits
 - **Starter** ($39/mo): 500 credits (~100 images), 2 video credits, Virtual Try-On, 3 brand profiles, 10 products
 - **Growth** ($79/mo, most popular): 1,500 credits (~300 images), 5 video credits, priority queue, 10 brand profiles, 100 products
-- **Pro** ($179/mo): 4,500 credits (~900 images), 15 video credits, Creative Drops, unlimited brand profiles & products
+- **Pro** ($179/mo): 4,500 credits (~900 images), 15 video credits, Content Calendar, unlimited brand profiles & products
 - **Enterprise**: Custom pricing, unlimited everything, dedicated account manager
 - Annual billing saves ~17% on all paid plans
 
