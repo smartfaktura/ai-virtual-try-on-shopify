@@ -440,7 +440,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] isolated, ghost mannequin style, natural shape preserved, perfectly aligned, centered composition, soft shadow beneath product, ultra clean ecommerce packshot, sharp material details, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] isolated, ghost mannequin style, natural shape preserved, perfectly aligned, centered composition, no shadow, floating isolated product, pure clean background, shadowless, ultra clean ecommerce packshot, sharp material details, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'front_flat',
