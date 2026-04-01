@@ -284,7 +284,7 @@ export function CatalogStepProducts({
                           onClick={() => toggleProduct(up.id)}
                           disabled={isDisabled}
                           className={cn(
-                            'group relative flex flex-col rounded-2xl bg-card border overflow-hidden transition-all duration-200 text-left',
+                            'group relative flex flex-col rounded-2xl bg-card border overflow-hidden transition-all duration-200 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                             isSelected
                               ? 'ring-2 ring-primary border-primary/30 shadow-md shadow-primary/10'
                               : 'border-border hover:shadow-lg hover:-translate-y-0.5',
