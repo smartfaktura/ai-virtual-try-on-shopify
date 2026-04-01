@@ -200,20 +200,22 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Picture Perspectives': {
     mode: 'carousel',
-    background: '/images/perspectives/front.png',
+    background: '/images/perspectives/VOVVAI-Perspectives-1.jpg',
     backgrounds: [
-      '/images/perspectives/front.png',
-      '/images/perspectives/left-side.png',
-      '/images/perspectives/back.png',
-      '/images/perspectives/right-side.png',
+      '/images/perspectives/VOVVAI-Perspectives-1.jpg',
+      '/images/perspectives/VOVVAI-Perspectives-2.jpg',
+      '/images/perspectives/VOVVAI-Perspectives-3.jpg',
+      '/images/perspectives/VOVVAI-Perspectives-4.jpg',
+      '/images/perspectives/VOVVAI-Perspectives-5.jpg',
+      '/images/perspectives/VOVVAI-Perspectives-6.jpg',
     ],
     elements: [
       {
-        type: 'badge', label: '1 Photo, 4 Angles', icon: <Sparkles className="w-3 h-3" />,
+        type: 'badge', label: '1 Photo, Endless Angles', icon: <Sparkles className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
       {
-        type: 'badge', label: 'One Click', icon: <Camera className="w-3 h-3" />,
+        type: 'badge', label: 'No Reshoots Needed', icon: <Camera className="w-3 h-3" />,
         position: { bottom: '8%', left: '6%' }, enterDelay: 0.8, animation: 'slide-up',
       },
     ],
