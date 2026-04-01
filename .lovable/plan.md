@@ -1,45 +1,46 @@
 
 
-# Fix: Prevent Accidental Generate Click Near Image Size Selector
+# Add 4 New Perspective Variations
 
-## Problem
-When selecting an image size, the "Select at least 1" validation alert disappears, causing a layout shift. The Generate button (directly below) jumps up into where the user just clicked, catching the click unintentionally.
+## Current State
+The "Picture Perspectives" workflow has 5 variations stored in the DB `workflows.generation_config.variation_strategy.variations`:
+1. Close-up / Macro (detail)
+2. Back Angle (angle)
+3. Left Side (angle)
+4. Right Side (angle)
+5. Wide / Environment (context)
 
-## Root Cause
-In `AspectRatioMultiSelector`, the validation message (`"Select at least 1 image size"`) is conditionally rendered. When the user clicks their first aspect ratio:
-1. The ratio gets selected
-2. The warning disappears (layout shrinks ~40px)
-3. The Generate button shifts upward
-4. If the user double-clicks or clicks fast, the second click lands on the now-shifted Generate button
+## New Variations to Add (4 total)
 
-## Solution — 2 changes
+### 1. **Super Macro / Texture** (detail category)
+An even tighter crop than Close-up / Macro — focusing on a single micro-detail like a thread, grain, clasp, or logo emboss. Think "product under a magnifying glass."
 
-### 1. Reserve space for validation message (prevent layout shift)
-**File: `src/components/app/AspectRatioPreview.tsx`**
+### 2. **45° Front-Left** (angle category)
+Classic three-quarter angle from the front-left, showing depth and dimension — the most common e-commerce "hero angle."
 
-Instead of conditionally rendering the validation alert, always render it but use `opacity-0` + `invisible` when sizes are selected. This keeps the space reserved and prevents the layout shift.
+### 3. **45° Front-Right** (angle category)
+Mirror of front-left three-quarter angle. Gives variety for layouts and A/B testing.
 
-```tsx
-// Before
-{value.size === 0 && (
-  <div className="flex items-center gap-2 ...">...</div>
-)}
+### 4. **Top-Down / Flat Lay** (detail category)
+Bird's-eye overhead shot looking straight down at the product. Great for accessories, shoes, bags, and small items.
 
-// After
-<div className={cn(
-  "flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium transition-opacity",
-  value.size === 0 ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
-)}>
-  <AlertCircle className="w-4 h-4 shrink-0" />
-  Select at least 1 image size
-</div>
-```
+## Changes
 
-### 2. Add `type="button"` to all aspect ratio buttons (defensive)
-**File: `src/components/app/AspectRatioPreview.tsx`**
+### 1. Database migration — update workflow `generation_config`
+Update the `workflows` row for "Picture Perspectives" to append 4 new variation objects to `generation_config.variation_strategy.variations`. Each gets the same structure: `label`, `instruction`, `category`, `referenceUpload`.
 
-Add `type="button"` to both `AspectRatioMultiSelector` and `AspectRatioSelector` button elements as a defensive measure (prevents form submission if ever wrapped in a form in the future).
+Instructions will follow the same detailed style as existing ones (specific angle direction, environment matching, lighting consistency).
 
-### Files modified
-- `src/components/app/AspectRatioPreview.tsx` — layout shift fix + type="button"
+### 2. `src/pages/Perspectives.tsx` — update fallback + icons
+- Add 4 new entries to `FALLBACK_VARIATIONS` array (used when DB config isn't loaded)
+- Add 4 new entries to `VARIATION_ICONS` map with appropriate Lucide icons
+- Import additional icons: `Focus`, `CornerUpLeft`, `CornerUpRight`, `ArrowDown` (or similar)
+
+### 3. `src/hooks/useGeneratePerspectives.ts` — extend category detection
+- Update `detectCategory()` to recognize "top" / "flat lay" / "overhead" as a new or existing category
+- Add photography DNA for top-down shots in both `getProductOnlyPhotographyDNA` and `getOnModelPhotographyDNA`
+- The "super macro" variation will use the existing `macro` category path — no changes needed there
+
+## No other files affected
+The variation data flows from the DB config → hook prompt builder → edge function. All other workflows, templates, and scenes are untouched.
 
