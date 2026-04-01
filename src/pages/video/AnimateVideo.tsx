@@ -687,6 +687,7 @@ export default function AnimateVideo() {
                   </Button>
                 )}
               </div>
+              </div>
             </div>
 
             {/* Right: How It Works + Best Results (lighter) */}
