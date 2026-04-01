@@ -75,8 +75,8 @@ export default function CatalogGenerate() {
   // Step 5
   const [selectedShots, setSelectedShots] = useState<Set<CatalogShotId>>(new Set());
 
-  // Step 6 — props
-  const [selectedPropIds, setSelectedPropIds] = useState<Set<string>>(new Set());
+  // Step 6 — per-combo prop assignments
+  const [propAssignments, setPropAssignments] = useState<Record<string, string[]>>({});
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
