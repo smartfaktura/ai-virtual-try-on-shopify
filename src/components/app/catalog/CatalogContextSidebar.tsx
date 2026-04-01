@@ -81,9 +81,9 @@ export function CatalogContextSidebar({
           {productOnlyMode ? (
             <span className="text-[10px] text-foreground font-medium">Product Only</span>
           ) : models.length > 0 ? (
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
               <div className="flex -space-x-1">
-                {models.slice(0, 3).map(m => (
+                {models.slice(0, 2).map(m => (
                   <div key={m.modelId} className="w-5 h-5 rounded-full border border-card overflow-hidden bg-muted">
                     {m.previewUrl ? (
                       <img src={getOptimizedUrl(m.previewUrl, { quality: 30 })} alt={m.name} className="w-full h-full object-cover" />
@@ -93,7 +93,11 @@ export function CatalogContextSidebar({
                   </div>
                 ))}
               </div>
-              <span className="text-[10px] text-muted-foreground font-medium">{models.length}</span>
+              {models.length > 2 ? (
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-5 font-semibold">+{models.length - 2}</Badge>
+              ) : (
+                <span className="text-[10px] text-muted-foreground font-medium">{models.length}</span>
+              )}
             </div>
           ) : (
             <span className="text-[10px] text-muted-foreground/50">Not selected</span>

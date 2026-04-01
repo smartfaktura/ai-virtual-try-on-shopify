@@ -103,7 +103,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
           })}
         </div>
         {/* Progress bar */}
-        <div className="mt-3 h-0.5 bg-border rounded-full overflow-hidden">
+        <div className="mt-3 h-1 bg-border rounded-full overflow-hidden">
           <div
             className="h-full bg-primary transition-all duration-300 rounded-full"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
