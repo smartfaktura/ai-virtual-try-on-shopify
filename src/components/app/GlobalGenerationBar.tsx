@@ -260,7 +260,7 @@ export function GlobalGenerationBar() {
                         <p className="text-xs font-semibold truncate text-foreground">
                           {isUpscale
                             ? `${member.name} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
-                            : group.job_type === 'video' ? `${member.name} is creating your video`
+                            : group.job_type === 'video' ? `${member.name} is creating ${group.totalCount > 1 ? `${group.totalCount} videos` : 'your video'}`
                             : group.isCreativeDrop ? `${member.name} is creating your drop`
                             : group.job_type === 'freestyle' ? `${member.name} is shooting`
                             : group.job_type === 'tryon' ? `${member.name} is styling`
