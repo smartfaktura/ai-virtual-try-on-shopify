@@ -41,6 +41,7 @@ export function useBulkVideoProject() {
   const runBulkAnimatePipeline = useCallback(async (
     images: BulkImage[],
     params: BulkAnimateParams,
+    perImageParams?: Map<string, Record<string, any>>,
   ) => {
     if (images.length === 0) return;
 
