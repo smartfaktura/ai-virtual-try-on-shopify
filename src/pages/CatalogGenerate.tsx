@@ -712,7 +712,7 @@ export default function CatalogGenerate() {
               <Button
                 size="sm"
                 variant="outline"
-                className="fixed bottom-20 right-4 z-40 rounded-full shadow-lg gap-1.5 text-xs lg:hidden"
+                className="fixed bottom-24 right-4 z-40 rounded-full shadow-lg gap-1.5 text-xs lg:hidden"
               >
                 <LayoutList className="w-3.5 h-3.5" />
                 Summary
