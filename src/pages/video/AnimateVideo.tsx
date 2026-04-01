@@ -539,51 +539,52 @@ export default function AnimateVideo() {
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
       {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
         <>
-          {/* Batch Mode toggle — paid vs free */}
-          <div className={cn(
-            'flex items-center justify-between rounded-xl border p-3 transition-colors',
-            isPaidUser ? 'border-border bg-card' : 'border-border/60 bg-muted/20'
-          )}>
-            <div className="flex items-center gap-3">
-              {isPaidUser ? (
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Images className="h-4 w-4 text-primary" />
-                </div>
-              ) : (
-                <img
-                  src={getOptimizedUrl(TEAM_MEMBERS.find(m => m.name === 'Sophia')?.avatar || '', { quality: 60 })}
-                  alt="Sophia"
-                  className="w-8 h-8 rounded-full object-cover border-2 border-background shrink-0"
-                />
-              )}
-              <div>
-                <p className="text-sm font-medium text-foreground">Batch Mode</p>
-                {isPaidUser ? (
-                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Upgrade to any paid plan to animate multiple images at once
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {!isPaidUser && (
-                <button
-                  onClick={() => navigate('/app/settings')}
-                  className="text-[10px] font-semibold text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md transition-colors"
-                >
-                  Upgrade
-                </button>
-              )}
-              <Switch checked={bulkMode} onCheckedChange={setBulkMode} disabled={!isPaidUser} />
-            </div>
-          </div>
-
           {/* Two-column layout: Upload Card + How It Works */}
           <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5">
             {/* Left: Dominant Upload Card */}
-            <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
+            <div className="rounded-2xl border border-border bg-card shadow-sm hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
+              {/* Batch Mode toggle — inside the card */}
+              <div className={cn(
+                'flex items-center justify-between rounded-t-2xl px-6 py-3 border-b transition-colors',
+                isPaidUser ? 'border-border bg-muted/30' : 'border-border/60 bg-muted/20'
+              )}>
+                <div className="flex items-center gap-3">
+                  {isPaidUser ? (
+                    <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Images className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                  ) : (
+                    <img
+                      src={getOptimizedUrl(TEAM_MEMBERS.find(m => m.name === 'Sophia')?.avatar || '', { quality: 60 })}
+                      alt="Sophia"
+                      className="w-7 h-7 rounded-full object-cover border-2 border-background shrink-0"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Batch Mode</p>
+                    {isPaidUser ? (
+                      <p className="text-[11px] text-muted-foreground leading-tight">Animate up to 10 images with the same settings</p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground leading-tight">
+                        Upgrade to any paid plan to animate multiple images at once
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {!isPaidUser && (
+                    <button
+                      onClick={() => navigate('/app/settings')}
+                      className="text-[10px] font-semibold text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md transition-colors"
+                    >
+                      Upgrade
+                    </button>
+                  )}
+                  <Switch checked={bulkMode} onCheckedChange={setBulkMode} disabled={!isPaidUser} />
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4 flex-1 flex flex-col">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
                   {bulkMode ? 'Upload your product images' : 'Upload your product image'}
