@@ -81,9 +81,19 @@ function pickByCategory(presets: DiscoverPreset[], category: string, count = 1, 
   return presets.filter(p => (p.discover_categories?.includes(category) || p.category === category) && !exclude.has(p.id)).slice(0, count);
 }
 
-function pickFeatured(presets: DiscoverPreset[], count: number): DiscoverPreset[] {
-  const featured = presets.filter(p => p.is_featured);
-  return (featured.length >= count ? featured : presets).slice(0, count);
+function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<string> = new Set()): DiscoverPreset[] {
+  // Prefer presets with product context (ecommerce-relevant), deprioritize model-only beauty shots
+  const scored = presets
+    .filter(p => !exclude.has(p.id))
+    .map(p => {
+      let score = 0;
+      if (p.product_name || p.product_image_url) score += 3;
+      if (p.is_featured) score += 2;
+      if (!p.model_name) score += 1; // pure product shots rank higher for ecommerce
+      return { preset: p, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, count).map(s => s.preset);
 }
 
 /* ─── COMPONENT ─── */
@@ -91,21 +101,27 @@ function pickFeatured(presets: DiscoverPreset[], count: number): DiscoverPreset[
 export default function AIProductPhotographyEcommerce() {
   const { data: presets = [] } = useDiscoverPresets();
 
-  const heroImages = useMemo(() => pickFeatured(presets, 6), [presets]);
+  const usedIds = useMemo(() => new Set<string>(), []);
+
+  const heroImages = useMemo(() => {
+    usedIds.clear();
+    const picks = pickProductLed(presets, 6);
+    picks.forEach(p => usedIds.add(p.id));
+    return picks;
+  }, [presets, usedIds]);
 
   const tabImages = useMemo(() => {
-    const used = new Set<string>();
     const map: Record<string, DiscoverPreset | null> = {};
     for (const tab of OUTCOME_TABS) {
-      const picks = pickByCategory(presets, tab.category, 1, used);
+      const picks = pickByCategory(presets, tab.category, 1, usedIds);
       const pick = picks[0] ?? null;
-      if (pick) used.add(pick.id);
+      if (pick) usedIds.add(pick.id);
       map[tab.id] = pick;
     }
     return map;
-  }, [presets]);
+  }, [presets, usedIds]);
 
-  const showcaseImages = useMemo(() => pickFeatured(presets, 12), [presets]);
+  const showcaseImages = useMemo(() => pickProductLed(presets, 12, usedIds), [presets, usedIds]);
 
   const faqSchema = useMemo(() => ({
     '@context': 'https://schema.org',
@@ -182,15 +198,14 @@ export default function AIProductPhotographyEcommerce() {
 
           {/* Hero visual grid */}
           {heroImages.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
+            <div className="columns-2 md:columns-3 gap-3 md:gap-4 max-w-4xl mx-auto space-y-3 md:space-y-4">
               {heroImages.map((img, i) => (
-                <div key={img.id} className="rounded-2xl overflow-hidden border border-border shadow-sm bg-muted aspect-[3/4]">
+                <div key={img.id} className="rounded-2xl overflow-hidden border border-border shadow-sm bg-muted break-inside-avoid">
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 400, quality: 75 })}
                     alt={`AI product photography for ecommerce example – ${img.title}`}
-                    aspectRatio="3/4"
-                    className="w-full h-full object-cover object-top"
-                    fetchPriority={i < 3 ? 'high' : 'low'}
+                    wrapperClassName="h-auto"
+                    className="w-full h-auto block"
                     loading={i < 3 ? 'eager' : 'lazy'}
                   />
                 </div>
@@ -248,17 +263,17 @@ export default function AIProductPhotographyEcommerce() {
                 return (
                   <TabsContent key={tab.id} value={tab.id}>
                     <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-muted aspect-[3/4]">
+                      <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-muted">
                         {img ? (
                           <ShimmerImage
                             src={getOptimizedUrl(img.image_url, { width: 600, quality: 80 })}
                             alt={`${tab.title} – ecommerce product image generator example`}
-                            aspectRatio="3/4"
-                            className="w-full h-full object-cover object-top"
+                            wrapperClassName="h-auto"
+                            className="w-full h-auto block"
                             loading="lazy"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <div className="w-full aspect-[4/3] flex items-center justify-center text-muted-foreground">
                             <Camera className="h-12 w-12" />
                           </div>
                         )}
