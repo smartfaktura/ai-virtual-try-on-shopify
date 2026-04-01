@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, X, Film, Clock, Monitor, Maximize, Video, Sparkles, Eye, RotateCcw, Volume2, Layers, Move, Target, Clapperboard } from 'lucide-react';
+import { Download, Trash2, X, Film, Clock, Monitor, Maximize, Video, Sparkles, Eye, RotateCcw, Volume2, Layers, Move, Target, Clapperboard, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,7 @@ interface VideoDetailModalProps {
 
 export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -85,6 +86,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
 
   const handleDownload = async () => {
     if (!video.video_url) return;
+    setDownloading(true);
     try {
       const res = await fetch(video.video_url);
       const blob = await res.blob();
@@ -104,6 +106,8 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       toast.success('Download started');
     } catch {
       toast.error('Failed to download video');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -222,9 +226,11 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
               {isComplete && (
                 <Button
                   onClick={handleDownload}
+                  disabled={downloading}
                   className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
-                  <Download className="w-4 h-4 mr-2" /> Download Video
+                  {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  {downloading ? 'Preparing Download…' : 'Download Video'}
                 </Button>
               )}
 
