@@ -785,6 +785,7 @@ const HERO_PHRASING: Partial<Record<ProductCategory, string>> = {
   jewelry: 'worn as the hero jewelry piece',
   scarf: 'worn as the hero scarf/wrap',
   belt: 'worn as the hero belt',
+  swimwear: 'worn as the hero swimwear piece',
 };
 
 export function getHeroProductBlock(title: string, category: ProductCategory): string {
