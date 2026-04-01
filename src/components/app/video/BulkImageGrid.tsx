@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { X, Plus, Sparkles, Upload } from 'lucide-react';
+import { X, Plus, Sparkles, Upload, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
@@ -19,6 +19,7 @@ interface BulkImageGridProps {
   onRemoveImage: (id: string) => void;
   analyzedIndex?: number;
   disabled?: boolean;
+  onPickFromLibrary?: () => void;
 }
 
 export function BulkImageGrid({
@@ -28,6 +29,7 @@ export function BulkImageGrid({
   onRemoveImage,
   analyzedIndex = 0,
   disabled = false,
+  onPickFromLibrary,
 }: BulkImageGridProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -105,15 +107,26 @@ export function BulkImageGrid({
           </div>
         ))}
 
-        {/* Add more button */}
+        {/* Add more buttons */}
         {canAdd && (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Plus className="h-5 w-5" />
-            <span className="text-[10px]">Add</span>
-          </button>
+          <>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="h-5 w-5" />
+              <span className="text-[10px]">Upload</span>
+            </button>
+            {onPickFromLibrary && (
+              <button
+                onClick={onPickFromLibrary}
+                className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <FolderOpen className="h-5 w-5" />
+                <span className="text-[10px]">Library</span>
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

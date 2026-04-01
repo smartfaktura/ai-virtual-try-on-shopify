@@ -329,6 +329,29 @@ export default function AnimateVideo() {
     setBulkImages(prev => prev.filter(img => img.id !== id));
   }, []);
 
+  // Handle multi-select from library in batch mode
+  const handleBulkLibrarySelect = useCallback((urls: string[]) => {
+    const remaining = 10 - bulkImages.length;
+    const toAdd = urls.slice(0, remaining);
+    const newImages: BulkImage[] = toAdd.map(url => ({
+      id: `lib-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      url,
+      preview: url,
+      isUploading: false,
+    }));
+    setBulkImages(prev => {
+      const updated = [...prev, ...newImages];
+      // Trigger analysis on first image if not yet analyzed
+      if (!hasAnalyzed && updated.length > 0 && updated[0].url) {
+        setUploadCompleteTime(Date.now());
+        analyzeImage(updated[0].url).then(analysis => {
+          if (analysis) setAnalysisCompleteData(analysis);
+        });
+      }
+      return updated;
+    });
+  }, [bulkImages, hasAnalyzed, analyzeImage]);
+
   const handleGenerate = () => {
     if (bulkMode && bulkImages.length > 0) {
       const readyImages = bulkImages.filter(img => img.url);
@@ -465,6 +488,15 @@ export default function AnimateVideo() {
       >
         <div />
       </PageHeader>
+
+      <LibraryPickerModal
+        open={libraryPickerOpen}
+        onOpenChange={setLibraryPickerOpen}
+        onSelect={handleLibrarySelect}
+        multiSelect={bulkMode}
+        onMultiSelect={handleBulkLibrarySelect}
+        maxSelect={Math.max(1, 10 - bulkImages.length)}
+      />
 
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
       {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
@@ -647,11 +679,6 @@ export default function AnimateVideo() {
             </div>
           </div>
 
-          <LibraryPickerModal
-            open={libraryPickerOpen}
-            onOpenChange={setLibraryPickerOpen}
-            onSelect={handleLibrarySelect}
-          />
         </>
       )}
 
@@ -995,6 +1022,7 @@ export default function AnimateVideo() {
                   onAddFiles={handleBulkAddFiles}
                   onRemoveImage={handleBulkRemoveImage}
                   disabled={isBulkRunning}
+                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
                 />
               )}
 

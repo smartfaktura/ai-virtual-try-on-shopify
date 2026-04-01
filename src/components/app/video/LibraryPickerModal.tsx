@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Search, ImageIcon, Check } from 'lucide-react';
 import { useLibraryItems } from '@/hooks/useLibraryItems';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -10,19 +11,44 @@ interface LibraryPickerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (imageUrl: string) => void;
+  multiSelect?: boolean;
+  onMultiSelect?: (urls: string[]) => void;
+  maxSelect?: number;
 }
 
-export function LibraryPickerModal({ open, onOpenChange, onSelect }: LibraryPickerModalProps) {
+export function LibraryPickerModal({ open, onOpenChange, onSelect, multiSelect = false, onMultiSelect, maxSelect = 10 }: LibraryPickerModalProps) {
   const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<string[]>([]);
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems('newest', search);
 
   const allItems = data?.pages.flatMap(p => p.items) ?? [];
 
+  const handleToggle = (url: string) => {
+    setSelected(prev =>
+      prev.includes(url) ? prev.filter(u => u !== url) : prev.length < maxSelect ? [...prev, url] : prev
+    );
+  };
+
+  const handleDone = () => {
+    if (onMultiSelect && selected.length > 0) {
+      onMultiSelect(selected);
+    }
+    setSelected([]);
+    onOpenChange(false);
+  };
+
+  const handleClose = (v: boolean) => {
+    if (!v) setSelected([]);
+    onOpenChange(v);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="text-base">Choose from Library</DialogTitle>
+          <DialogTitle className="text-base">
+            {multiSelect ? `Choose images (${selected.length}/${maxSelect})` : 'Choose from Library'}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="relative">
@@ -48,29 +74,43 @@ export function LibraryPickerModal({ open, onOpenChange, onSelect }: LibraryPick
           ) : (
             <>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pb-4">
-                {allItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      onSelect(item.imageUrl);
-                      onOpenChange(false);
-                    }}
-                    className={cn(
-                      "relative aspect-square rounded-lg overflow-hidden border border-border",
-                      "hover:border-primary/50 hover:shadow-md hover:shadow-primary/5",
-                      "transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    )}
-                  >
-                    <img
-                      src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
-                      alt={item.label}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-[10px] text-white truncate">{item.label}</p>
-                    </div>
-                  </button>
-                ))}
+                {allItems.map((item) => {
+                  const isSelected = multiSelect && selected.includes(item.imageUrl);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if (multiSelect) {
+                          handleToggle(item.imageUrl);
+                        } else {
+                          onSelect(item.imageUrl);
+                          onOpenChange(false);
+                        }
+                      }}
+                      className={cn(
+                        "relative aspect-square rounded-lg overflow-hidden border",
+                        isSelected
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "border-border hover:border-primary/50 hover:shadow-md hover:shadow-primary/5",
+                        "transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      )}
+                    >
+                      <img
+                        src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
+                        alt={item.label}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="h-3 w-3 text-primary-foreground" />
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-[10px] text-white truncate">{item.label}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
               {hasNextPage && (
                 <div className="flex justify-center pb-4">
@@ -86,6 +126,17 @@ export function LibraryPickerModal({ open, onOpenChange, onSelect }: LibraryPick
             </>
           )}
         </div>
+
+        {multiSelect && (
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => handleClose(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleDone} disabled={selected.length === 0}>
+              Done ({selected.length} selected)
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
