@@ -79,12 +79,13 @@ export function AspectRatioMultiSelector({ value, onChange }: AspectRatioMultiSe
           );
         })}
       </div>
-      {value.size === 0 && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          Select at least 1 image size
-        </div>
-      )}
+      <div className={cn(
+        "flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium transition-all",
+        value.size === 0 ? "opacity-100" : "opacity-0 h-0 overflow-hidden py-0"
+      )}>
+        <AlertCircle className="w-4 h-4 shrink-0" />
+        Select at least 1 image size
+      </div>
     </div>
   );
 }
