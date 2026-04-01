@@ -749,9 +749,9 @@ export default function AnimateVideo() {
               <div className="grid lg:grid-cols-2 gap-5">
                 {/* Left: Large image preview */}
                 <div className="relative rounded-2xl overflow-hidden border border-border bg-muted/10 shadow-sm">
-                  {imagePreview && (
+                  {(imagePreview || (bulkMode && bulkImages[0]?.preview)) && (
                     <img
-                      src={imagePreview}
+                      src={imagePreview || bulkImages[0]?.preview}
                       alt="Uploaded"
                       className="w-full max-h-[500px] object-cover"
                     />
