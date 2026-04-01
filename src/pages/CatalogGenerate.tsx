@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-import { Package, Palette, Users, Image, Camera, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, Gem, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
