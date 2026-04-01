@@ -1,47 +1,50 @@
 
 
-# Add Multi-Select & Bulk Download to Video Hub
+# Fix Bulk Video Generation UX — Batch as Single Unit
 
-## Changes
+## Problem
 
-### 1. `src/lib/dropDownload.ts` — add video ZIP utility
+When bulk-generating videos, each image is enqueued individually via `useBulkVideoProject` → `useVideoProject.runAnimatePipeline` → `useGenerateVideo.startGeneration`. This causes:
 
-Add a `downloadVideosAsZip` function:
-- Accepts `videos: {url: string; name: string}[]`, `zipName: string`, `onProgress?`
-- Fetches each URL, detects extension from content-type (defaulting to `.mp4` for video types)
-- Adds to JSZip flat (no subfolders), triggers download
+1. **Individual toast per image** — "Video queued — it will start automatically" fires N times
+2. **Individual `generation_queue` entries without a shared `batch_id`** — the `batchGrouping.ts` fallback time-window grouping may or may not merge them, and even when it does, the GlobalGenerationBar shows separate "Leo is creating your video" cards
+3. **`resetPipeline()` called between images** — clears the previous job's polling, causing stale state
 
-Add video extension helper alongside existing `getExtensionFromContentType`:
-```ts
-function getVideoExtension(ct: string | null): string {
-  if (!ct) return '.mp4';
-  if (ct.includes('video/mp4')) return '.mp4';
-  if (ct.includes('video/webm')) return '.webm';
-  return '.mp4';
-}
-```
+## Solution
 
-### 2. `src/pages/VideoHub.tsx` — multi-select mode + bulk download
+Refactor `useBulkVideoProject` to enqueue all jobs as a proper batch (shared `batch_id`) and suppress per-image toasts/pipeline resets during bulk mode.
 
-**State additions:**
-- `selectMode: boolean` — toggled by a "Select" / "Done" button
-- `selectedIds: Set<string>` — tracks selected video IDs
-- `isDownloading: boolean` — loading state for ZIP generation
+### Changes
 
-**Header change:**
-- Add a `Button` (ghost/outline) next to "Recent Videos" heading: shows "Select" when off, "Done" when on
-- Exiting select mode clears `selectedIds`
+### 1. `src/hooks/useBulkVideoProject.ts` — Direct enqueue with batch_id
 
-**RecentVideoCard props update:**
-- Add `selectMode`, `selected`, `onToggleSelect` props
-- In select mode: click calls `onToggleSelect` instead of `onClick`; suppress hover-play
-- Show a circular checkbox overlay (top-left corner) with check icon when selected, empty circle when not
+Instead of calling `videoProject.runAnimatePipeline()` per image (which fires toasts, resets state, creates projects), refactor to:
 
-**Sticky bottom bar:**
-- Renders when `selectedIds.size > 0` — fixed to bottom, shows "{N} selected" + "Download as ZIP" button
-- Download handler: filters `history` for selected IDs where `video_url` exists, signs URLs via `toSignedUrl()` (since `generated-videos` bucket is private), then calls `downloadVideosAsZip`
+- Generate a single `batch_id = crypto.randomUUID()` for the entire bulk run
+- For each image: create the `video_project`, `video_input`, `video_shot` records directly (same logic as `useVideoProject.runAnimatePipeline`)
+- Call `enqueueWithRetry()` directly with `batch_id` in the payload, using `paceDelay()` between calls
+- Send a single `sendWake()` after all jobs are enqueued
+- Show only ONE summary toast at the end ("7 videos queued successfully")
+- No `resetPipeline()` between images
+
+### 2. `src/hooks/useGenerateVideo.ts` — Accept `isBulk` flag
+
+Add an optional `isBulk` parameter to `startGeneration()`:
+- When `isBulk === true`, suppress the "Video queued" toast
+- This prevents N individual toasts when called from bulk flow
+
+### 3. `src/lib/batchGrouping.ts` — Already supports `batch_id`
+
+No changes needed — the grouping logic already handles `batch_id` in its first pass, which will correctly merge all bulk video jobs into a single `BatchGroup` in the GlobalGenerationBar.
+
+### 4. `src/components/app/GlobalGenerationBar.tsx` — Video batch display
+
+Update the video branch in the expanded detail view:
+- When a video `BatchGroup` has `totalCount > 1`, show "Leo is creating N videos" instead of "Leo is creating your video"
+- Show progress as `completedCount/totalCount done`
 
 ### Files
-- **Update**: `src/lib/dropDownload.ts`
-- **Update**: `src/pages/VideoHub.tsx`
+- **Update**: `src/hooks/useBulkVideoProject.ts` — enqueue directly with shared batch_id, no per-image pipeline resets/toasts
+- **Update**: `src/hooks/useGenerateVideo.ts` — add `isBulk` param to suppress toast
+- **Update**: `src/components/app/GlobalGenerationBar.tsx` — pluralize video batch display
 
