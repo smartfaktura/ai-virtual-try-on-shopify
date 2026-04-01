@@ -521,13 +521,15 @@ export default function CatalogGenerate() {
             for (const j of batchState.jobs) {
               if (j.status === 'completed') {
                 for (const imgUrl of j.images) {
-                  if (imgIdx === i) {
+                    if (imgIdx === i) {
                     const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
                     const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
                     filename = `${safeName}_${safeShot}.jpg`;
+                    break;
                   }
                   imgIdx++;
                 }
+                if (filename !== `catalog-${i + 1}.jpg`) break;
               }
             }
             fetch(url).then(r => r.blob()).then(blob => {
