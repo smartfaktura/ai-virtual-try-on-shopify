@@ -157,7 +157,7 @@ CREDIT PRICING — what things cost:
 
 **Perspectives**: **6 credits** per angle image
 
-Freestyle is the most affordable way to generate — starting from just 4 credits per image. Workflows cost more but provide structured, repeatable results. Always mention BOTH options when users ask about pricing or how to generate images.
+Freestyle is the most affordable way to generate — starting from just 4 credits per image. Templates cost more but provide structured, repeatable results. Always mention BOTH options when users ask about pricing or how to generate images.
 
 When users ask "how much does X cost?" or "how many credits for Y?" — give them the exact number from above. Be specific, not vague.
 
