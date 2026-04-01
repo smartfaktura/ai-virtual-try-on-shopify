@@ -35,7 +35,7 @@ export function CatalogStepModelsV2({
           Pick one or more models — each multiplies your shot count. Or choose product-only.
         </p>
         {selectedModelIds.size > 0 && !productOnlyMode && (
-          <Badge variant="default" className="mt-2">{selectionLabel}</Badge>
+          <Badge variant="default" className="mt-2 text-[10px]">{selectionLabel}</Badge>
         )}
       </div>
 
@@ -43,25 +43,25 @@ export function CatalogStepModelsV2({
       <button
         onClick={onProductOnlyToggle}
         className={cn(
-          'w-full rounded-xl border-2 p-4 text-left transition-all flex items-center gap-3',
+          'w-full rounded-lg border p-4 text-left transition-all flex items-center gap-3',
           productOnlyMode
-            ? 'border-primary ring-2 ring-primary/30 bg-primary/5'
-            : 'border-border hover:border-primary/50 bg-card',
+            ? 'border-primary bg-primary/5'
+            : 'border-border hover:border-primary/30 bg-card',
         )}
       >
         <div className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center',
+          'w-9 h-9 rounded-full flex items-center justify-center',
           productOnlyMode ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
         )}>
-          <UserX className="w-5 h-5" />
+          <UserX className="w-4 h-4" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold">No Model — Product Only</p>
-          <p className="text-[11px] text-muted-foreground">Generate packshots, flat lays, and product-focused images only</p>
+          <p className="text-sm font-medium">No Model — Product Only</p>
+          <p className="text-[11px] text-muted-foreground">Packshots, flat lays, and product-focused images</p>
         </div>
         {productOnlyMode && (
-          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-            <Check className="w-3 h-3 text-primary-foreground" />
+          <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+            <Check className="w-2.5 h-2.5 text-primary-foreground" />
           </div>
         )}
       </button>
@@ -69,7 +69,7 @@ export function CatalogStepModelsV2({
       {/* Library Models */}
       <div className="space-y-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 rounded-xl border border-border p-2">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
           {libraryModels.map(model => (
             <ModelSelectorCard
               key={model.modelId}
@@ -85,7 +85,7 @@ export function CatalogStepModelsV2({
       {userModels.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">My Models</span>
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 rounded-xl border border-border p-2">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
             {userModels.map(model => (
               <ModelSelectorCard
                 key={model.modelId}

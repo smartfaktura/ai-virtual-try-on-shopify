@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import { CatalogStepFashionStyle } from '@/components/app/catalog/CatalogStepFas
 import { CatalogStepModelsV2 } from '@/components/app/catalog/CatalogStepModelsV2';
 import { CatalogStepBackgroundsV2 } from '@/components/app/catalog/CatalogStepBackgroundsV2';
 import { CatalogStepShots } from '@/components/app/catalog/CatalogStepShots';
+import { CatalogStepReviewV2 } from '@/components/app/catalog/CatalogStepReviewV2';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { Progress } from '@/components/ui/progress';
@@ -22,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-import { Package, Palette, Users, Image, Camera, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
@@ -32,10 +33,17 @@ const CREDITS_PER_IMAGE = 4;
 const STEPS = [
   { number: 1, label: 'Products', icon: Package },
   { number: 2, label: 'Style', icon: Palette },
-  { number: 3, label: 'Model', icon: Users },
+  { number: 3, label: 'Models', icon: Users },
   { number: 4, label: 'Background', icon: Image },
   { number: 5, label: 'Shots', icon: Camera },
+  { number: 6, label: 'Review', icon: ClipboardCheck },
 ];
+
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
@@ -64,8 +72,27 @@ export default function CatalogGenerate() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
+  // Elapsed time tracking
+  const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
+
+  // Timer effect
+  useEffect(() => {
+    if (batchState && !batchState.allDone && generationStartedAt) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - generationStartedAt) / 1000));
+      }, 1000);
+      return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    }
+    if (batchState?.allDone && timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [batchState?.allDone, generationStartedAt, batchState]);
 
   // Fetch products
   const { data: userProducts = [], isLoading: productsLoading } = useQuery({
@@ -144,6 +171,7 @@ export default function CatalogGenerate() {
   const canStep3 = modelExplicitlyChosen;
   const canStep4 = selectedBackgroundId !== null;
   const canStep5 = selectedShots.size >= 1;
+  const canStep6 = canStep5;
 
   const canNavigateTo = (s: number) => {
     if (s <= step) return true;
@@ -151,6 +179,7 @@ export default function CatalogGenerate() {
     if (s === 3) return canStep1 && canStep2;
     if (s === 4) return canStep1 && canStep2 && canStep3;
     if (s === 5) return canStep1 && canStep2 && canStep3 && canStep4;
+    if (s === 6) return canStep1 && canStep2 && canStep3 && canStep4 && canStep5;
     return false;
   };
 
@@ -162,6 +191,9 @@ export default function CatalogGenerate() {
 
   const handleGenerate = async () => {
     if (!fashionStyle || !selectedBackgroundId) return;
+
+    setGenerationStartedAt(Date.now());
+    setElapsedSeconds(0);
 
     const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
 
@@ -203,7 +235,38 @@ export default function CatalogGenerate() {
     setModelExplicitlyChosen(false);
     setSelectedBackgroundId(null);
     setSelectedShots(new Set());
+    setGenerationStartedAt(null);
+    setElapsedSeconds(0);
   };
+
+  // Estimated time remaining
+  const estimatedRemaining = useMemo(() => {
+    if (!batchState || batchState.completedJobs === 0) return null;
+    const avgTime = elapsedSeconds / batchState.completedJobs;
+    const remaining = batchState.totalJobs - batchState.completedJobs - batchState.failedJobs;
+    return Math.ceil(avgTime * remaining);
+  }, [batchState, elapsedSeconds]);
+
+  // Show preparing state when isGenerating but no batchState yet
+  if (isGenerating && !batchState) {
+    return (
+      <div className="space-y-6 pb-32">
+        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
+        <div className="flex flex-col items-center justify-center py-20 space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          </div>
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">Preparing your photoshoot...</h2>
+            <p className="text-sm text-muted-foreground">Queuing images. This may take a moment.</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 tracking-widest uppercase">VOVV.AI</p>
+        </div>
+      </div>
+    );
+  }
 
   // If batch is active, show progress / completion
   if (batchState) {
@@ -217,41 +280,45 @@ export default function CatalogGenerate() {
         {batchState.allDone ? (
           /* ── Completion State ── */
           <div className="space-y-6">
-            <div className="rounded-2xl border border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-8 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-8 h-8 text-primary" />
+            <div className="rounded-lg border border-border bg-card p-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold tracking-tight">Your Catalog is Ready</h2>
+                <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {batchState.completedJobs} image{batchState.completedJobs !== 1 ? 's' : ''} generated successfully
+                  {batchState.completedJobs} image{batchState.completedJobs !== 1 ? 's' : ''} generated
                   {batchState.failedJobs > 0 && (
-                    <span className="text-destructive"> · {batchState.failedJobs} failed (credits refunded)</span>
+                    <span className="text-destructive"> · {batchState.failedJobs} failed</span>
                   )}
                 </p>
+                <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Total time: {formatTime(elapsedSeconds)}</span>
+                </div>
               </div>
+              <p className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">VOVV.AI</p>
               <div className="flex items-center justify-center gap-3 pt-2">
-                <Button variant="outline" onClick={handleNewGeneration} className="gap-2">
-                  <RefreshCw className="w-4 h-4" /> Generate Another Set
+                <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm">
+                  <RefreshCw className="w-3.5 h-3.5" /> New Set
                 </Button>
-                <Button onClick={() => window.location.href = '/app/library'} className="gap-2">
-                  View in Library <ArrowRight className="w-4 h-4" />
+                <Button onClick={() => window.location.href = '/app/library'} className="gap-2 text-sm">
+                  View in Library <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
 
             {batchState.aggregatedImages.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold">Generated Images</h3>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated Images</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                   {batchState.aggregatedImages.map((url, i) => (
                     <button
                       key={i}
                       onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/50 transition-all"
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all"
                     >
                       <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                     </button>
                   ))}
                 </div>
@@ -259,18 +326,16 @@ export default function CatalogGenerate() {
             )}
 
             {batchState.failedJobs > 0 && (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-destructive">
                   <AlertTriangle className="w-4 h-4" />
-                  {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed to generate
+                  {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Credits for failed images are automatically refunded to your balance.
-                </p>
+                <p className="text-xs text-muted-foreground">Credits for failed images are automatically refunded.</p>
                 {batchState.jobs.filter(j => j.status === 'failed').map(j => (
                   <div key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-destructive/60 flex-shrink-0" />
-                    {j.productName} — {j.shotLabel}: {j.error || 'Generation failed'}
+                    <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
+                    {j.productName} — {j.shotLabel}
                   </div>
                 ))}
               </div>
@@ -279,26 +344,30 @@ export default function CatalogGenerate() {
         ) : (
           /* ── In-Progress State ── */
           <div className="space-y-6">
-            <div className="rounded-2xl border border-border bg-gradient-to-b from-muted/50 to-transparent p-8 text-center space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Camera className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+            <div className="rounded-lg border border-border bg-card p-8 text-center space-y-4">
+              <div className="relative mx-auto w-12 h-12">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-primary" />
                 </div>
+                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold tracking-tight">
-                  VOVV.AI is generating your catalog...
-                </h2>
+                <h2 className="text-base font-semibold tracking-tight">Generating your catalog...</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {batchState.completedJobs} of {batchState.totalJobs} images complete
+                  {batchState.completedJobs} of {batchState.totalJobs} images
                 </p>
               </div>
-              <Progress value={progress} className="h-2 max-w-md mx-auto" />
+              <Progress value={progress} className="h-1.5 max-w-md mx-auto" />
+              <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Elapsed: {formatTime(elapsedSeconds)}</span>
+                {estimatedRemaining !== null && (
+                  <span className="flex items-center gap-1">~{formatTime(estimatedRemaining)} remaining</span>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">VOVV.AI</p>
             </div>
 
+            {/* Per-product progress */}
             {(() => {
               const productMap = new Map<string, { name: string; total: number; done: number; failed: number }>();
               for (const j of batchState.jobs) {
@@ -309,18 +378,18 @@ export default function CatalogGenerate() {
                 productMap.set(j.productId, existing);
               }
               return (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {Array.from(productMap.entries()).map(([pid, info]) => (
                     <div key={pid} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{info.name}</p>
                         <p className="text-[11px] text-muted-foreground">
-                          {info.done}/{info.total} complete
+                          {info.done}/{info.total}
                           {info.failed > 0 && <span className="text-destructive"> · {info.failed} failed</span>}
                         </p>
                       </div>
                       <Badge variant={info.done === info.total ? 'default' : 'secondary'} className="text-[10px]">
-                        {info.done === info.total ? 'Done' : 'In progress'}
+                        {info.done === info.total ? 'Done' : `${Math.round((info.done / info.total) * 100)}%`}
                       </Badge>
                     </div>
                   ))}
@@ -330,13 +399,13 @@ export default function CatalogGenerate() {
 
             {batchState.aggregatedImages.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold">Generated so far</h3>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated so far</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                   {batchState.aggregatedImages.map((url, i) => (
                     <button
                       key={i}
                       onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/50 transition-all"
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all"
                     >
                       <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
                     </button>
@@ -366,8 +435,8 @@ export default function CatalogGenerate() {
     <div className="space-y-6 pb-32">
       <PageHeader title="Catalog Studio" subtitle="Generate consistent product photography across your entire catalog"><div /></PageHeader>
 
-      {/* Horizontal numbered stepper */}
-      <div className="flex items-center justify-center gap-0 py-4">
+      {/* Minimal stepper */}
+      <div className="flex items-center justify-center gap-0 py-3">
         {STEPS.map((s, i) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
@@ -377,28 +446,28 @@ export default function CatalogGenerate() {
               <button
                 onClick={() => canClick && setStep(s.number)}
                 disabled={!canClick}
-                className="flex flex-col items-center gap-1.5 group"
+                className="flex flex-col items-center gap-1 group"
               >
                 <div className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2',
-                  isActive && 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25',
-                  isDone && !isActive && 'bg-primary/10 text-primary border-primary/30 cursor-pointer',
-                  !isActive && !isDone && canClick && 'bg-card text-muted-foreground border-border cursor-pointer hover:border-primary/40',
-                  !isActive && !isDone && !canClick && 'bg-muted text-muted-foreground/40 border-border/50',
+                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all border',
+                  isActive && 'bg-primary text-primary-foreground border-primary',
+                  isDone && !isActive && 'bg-primary/10 text-primary border-primary/20 cursor-pointer',
+                  !isActive && !isDone && canClick && 'bg-card text-muted-foreground border-border cursor-pointer hover:border-primary/30',
+                  !isActive && !isDone && !canClick && 'bg-muted text-muted-foreground/30 border-border/40',
                 )}>
-                  {isDone ? <Check className="w-5 h-5" /> : s.number}
+                  {isDone ? <Check className="w-3.5 h-3.5" /> : s.number}
                 </div>
                 <span className={cn(
-                  'text-[11px] font-medium transition-colors',
-                  isActive ? 'text-primary' : isDone ? 'text-primary/70' : 'text-muted-foreground',
+                  'text-[10px] font-medium transition-colors',
+                  isActive ? 'text-primary' : isDone ? 'text-primary/60' : 'text-muted-foreground/60',
                 )}>
                   {s.label}
                 </span>
               </button>
               {i < STEPS.length - 1 && (
                 <div className={cn(
-                  'w-12 sm:w-20 h-0.5 rounded-full mx-1 -mt-5',
-                  isDone ? 'bg-primary/40' : 'bg-border',
+                  'w-8 sm:w-14 h-px mx-1 -mt-4',
+                  isDone ? 'bg-primary/30' : 'bg-border',
                 )} />
               )}
             </div>
@@ -461,9 +530,8 @@ export default function CatalogGenerate() {
           selectedShots={selectedShots}
           onToggleShot={handleShotToggle}
           onBack={() => setStep(4)}
-          onGenerate={handleGenerate}
-          canGenerate={canStep5 && balance >= totalCredits}
-          isGenerating={isGenerating}
+          onNext={() => setStep(6)}
+          canProceed={canStep5}
           totalImages={totalImages}
           totalCredits={totalCredits}
           balance={balance}
@@ -471,6 +539,24 @@ export default function CatalogGenerate() {
           onPreselectRecommended={handlePreselectRecommended}
           productCount={selectedProductIds.size}
           modelCount={modelCount}
+        />
+      )}
+
+      {step === 6 && (
+        <CatalogStepReviewV2
+          products={products.filter(p => selectedProductIds.has(p.id))}
+          models={allModels.filter(m => selectedModelIds.has(m.modelId))}
+          productOnlyMode={productOnlyMode}
+          fashionStyleId={fashionStyle}
+          backgroundId={selectedBackgroundId}
+          selectedShots={selectedShots}
+          totalImages={totalImages}
+          totalCredits={totalCredits}
+          balance={balance}
+          isGenerating={isGenerating}
+          onBack={() => setStep(5)}
+          onGenerate={handleGenerate}
+          onOpenBuyModal={openBuyModal}
         />
       )}
 
