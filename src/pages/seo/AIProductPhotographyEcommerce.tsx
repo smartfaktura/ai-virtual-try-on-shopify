@@ -198,14 +198,13 @@ export default function AIProductPhotographyEcommerce() {
 
           {/* Hero visual grid */}
           {heroImages.length > 0 && (
-            <div className="columns-2 md:columns-3 gap-3 md:gap-4 max-w-4xl mx-auto space-y-3 md:space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
               {heroImages.map((img, i) => (
-                <div key={img.id} className="rounded-2xl overflow-hidden border border-border shadow-sm bg-muted break-inside-avoid">
+                <div key={img.id} className="aspect-[4/5] rounded-2xl overflow-hidden border border-border shadow-sm bg-muted">
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 400, quality: 75 })}
                     alt={`AI product photography for ecommerce example – ${img.title}`}
-                    wrapperClassName="h-auto"
-                    className="w-full h-auto block"
+                    className="w-full h-full object-cover object-top"
                     loading={i < 3 ? 'eager' : 'lazy'}
                   />
                 </div>
