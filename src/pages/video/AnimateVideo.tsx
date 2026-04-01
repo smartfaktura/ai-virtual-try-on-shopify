@@ -1217,28 +1217,46 @@ export default function AnimateVideo() {
 
 
               {/* Generate */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                {bulkMode && bulkImages.length > 1 ? (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Estimated cost:</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      {estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion })} × {bulkImages.filter(i => i.url).length} = {estimateBulkCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }, bulkImages.filter(i => i.url).length).total} credits
-                    </span>
-                  </div>
-                ) : (
-                  <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
-                )}
+              <div className="flex flex-col gap-3">
+                {(() => {
+                  const perVideo = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+                  const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
+                  const totalVideos = imageCount * motionCount;
+                  const totalCredits = perVideo * totalVideos;
+
+                  return (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border flex-wrap">
+                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Estimated cost:</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {totalVideos > 1 ? (
+                          <>
+                            {perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits
+                          </>
+                        ) : (
+                          <>{perVideo} credits</>
+                        )}
+                      </span>
+                      {motionCount > 1 && (
+                        <span className="text-xs text-muted-foreground">
+                          ({motionCount} camera motion{motionCount > 1 ? 's' : ''}{imageCount > 1 ? ` × ${imageCount} images` : ''})
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <Button
                   onClick={handleGenerate}
                   disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
-                  className="gap-2"
+                  className="gap-2 self-start"
                   size="lg"
                 >
                   <Sparkles className="h-4 w-4" />
-                  {bulkMode && bulkImages.length > 1
-                    ? `Generate ${bulkImages.filter(i => i.url).length} Videos`
-                    : 'Generate Video'}
+                  {(() => {
+                    const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
+                    const totalVideos = imageCount * motionCount;
+                    return totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video';
+                  })()}
                 </Button>
               </div>
             </>
