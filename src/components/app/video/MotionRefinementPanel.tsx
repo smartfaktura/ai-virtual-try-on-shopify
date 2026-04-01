@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils';
-import { CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
+import { SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Check, Sparkles } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { InfoTooltip } from './InfoTooltip';
-import { Badge } from '@/components/ui/badge';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { CameraMotionGrid } from './CameraMotionGrid';
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
 
