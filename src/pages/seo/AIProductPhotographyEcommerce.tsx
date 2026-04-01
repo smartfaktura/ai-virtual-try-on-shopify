@@ -213,7 +213,7 @@ export default function AIProductPhotographyEcommerce() {
       <JsonLd data={webPageSchema} />
 
       {/* ── 1. HERO ── */}
-      <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28">
+      <section className="relative overflow-hidden -mt-16 pt-28 pb-20 sm:pt-36 sm:pb-28">
         <div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-background to-background" />
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/8 rounded-full blur-3xl opacity-30" />
 
