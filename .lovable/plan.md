@@ -1,46 +1,50 @@
 
-Fix the Video Hub thumbnails by matching the card frame to the actual media ratio instead of forcing everything into `aspect-[3/4]`.
 
-1. Update `src/pages/VideoHub.tsx`
-- Replace the raw `<img>` thumbnail with the app’s standard `ShimmerImage` pattern.
-- Stop using a fixed `aspect-[3/4]` wrapper for every video card.
-- Make each card ratio-aware:
-  - Processing / queued cards: use the original source image’s real aspect ratio.
-  - Completed cards: use the preview image’s real aspect ratio when available, otherwise fall back to the saved video aspect ratio.
-- Keep `object-cover`, but only after the wrapper ratio matches the media ratio. That gives “fills the frame” without the current crop/zoom problem.
-- Remove the Video Hub-specific `width: 800` override and use the same optimization style used elsewhere in the app: `getOptimizedUrl(url, { quality: 60 })`.
+# Fix Video Detail Modal Layout + Investigate Kling Aspect Ratio
 
-2. Update `src/hooks/useGenerateVideo.ts`
-- Add `preview_url` to the `GeneratedVideo` shape instead of using `(video as any)`.
-- Sign `preview_url` the same way `video_url` and `source_image_url` are signed, so the grid always receives a valid thumbnail URL.
-- Keep existing fallback behavior: `preview_url -> source_image_url`.
+## Finding: Kling API Ignores aspect_ratio for image2video
 
-3. Add lightweight ratio detection in the Video Hub
-- Read image natural width/height on load and cache the computed aspect ratio per card.
-- Use that cached ratio to render the thumbnail wrapper with the correct `aspect-ratio`.
-- Start with a safe fallback ratio until the image metadata is known, then update the card once loaded.
+From the Kling 3.0 docs: **"When you provide image_urls (first and/or last frame images), the aspect_ratio parameter becomes optional. The system will automatically adapt the aspect ratio based on the uploaded images."**
 
-4. Keep the current lightweight preview strategy
-- Do not preload full videos in the grid.
-- Keep using static preview images for cards and full video playback only in the modal.
+This means for image-to-video, Kling always outputs the same aspect ratio as the source image. A 3:4 portrait source image produces a 3:4 video regardless of what `aspect_ratio` value we send. The `aspect_ratio` parameter only applies to text-to-video.
 
-Technical details
-- The current zoom issue is not mainly the optimizer itself; it is the combination of:
-  - fixed `3:4` card frames
-  - `object-cover`
-  - thumbnails whose real ratio is not `3:4`
-- Best-practice references already in this app:
-  - `RecentCreationsGallery.tsx`
-  - `LibraryImageCard.tsx`
-  - `shimmer-image.tsx`
-- No new backend or database change is needed for this fix. The preview pipeline already exists; the frontend just needs to render it using the correct ratio and signed URL handling.
+**Impact:** The aspect ratio selector in Animate Video settings is misleading for image-to-video workflows. We have two options:
+1. Hide/disable the aspect ratio selector for image-to-video (since it has no effect)
+2. Pre-process the source image (crop/pad) to match the selected aspect ratio before sending to Kling
 
-Files to update
-- `src/pages/VideoHub.tsx`
-- `src/hooks/useGenerateVideo.ts`
+I recommend **option 1** for now (honest UX) with a note explaining the output matches the source image.
 
-Validation
-- Check one processing card with a non-3:4 source image.
-- Check completed cards with `preview_url`.
-- Check old completed cards without `preview_url`.
-- Confirm cards still look sharp and no longer appear zoomed/cropped.
+## Changes
+
+### 1. VideoDetailModal — Move actions above details (mobile-first)
+
+Reorder the right panel so Download + Delete appear immediately after the date/status header, before the details grid. On mobile this means users can act without scrolling past 12 metadata rows.
+
+```
+Header (title + date)
+  ↓
+Actions (Download + Delete)
+  ↓
+Details grid (Duration, Format, Resolution, etc.)
+```
+
+### 2. VideoDetailModal — Fix format display
+
+The format currently shows `video.aspect_ratio` from the DB which is what we *requested* (16:9), not what Kling actually produced. Since we already read real dimensions via `onLoadedMetadata`, we should:
+- Always prefer the actual video metadata when available
+- Show the requested ratio with a "(requested)" note if it differs from actual
+
+### 3. Animate Video settings — Clarify aspect ratio behavior
+
+In the aspect ratio selector, add an info note: "Output matches your source image ratio" and either disable the selector or make it informational-only for image-to-video mode.
+
+### 4. Fix DB stored aspect_ratio
+
+Stop saving the user-selected `aspect_ratio` to the `generated_videos` row for image2video, since it's inaccurate. Instead, when the video completes and we get `onLoadedMetadata` dimensions, we could update the DB — but simpler: just don't display the DB value when real metadata is available (already partially done).
+
+## Files to modify
+
+1. **`src/components/app/video/VideoDetailModal.tsx`** — Reorder: actions before details
+2. **`src/pages/video/AnimateVideo.tsx`** — Add note on aspect ratio selector explaining output matches source image
+3. **`supabase/functions/generate-video/index.ts`** — Remove `aspect_ratio` from Kling request body for image2video (it's ignored anyway), prevents confusion in logs
+
