@@ -48,6 +48,7 @@ function formatTime(seconds: number): string {
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { balance, refreshBalance, openBuyModal } = useCredits();
   const [step, setStep] = useState(1);
 
