@@ -1,31 +1,55 @@
 
 
-# Add Date Prefix to Storage Filenames (Tryon + Freestyle)
+# Fix Duplicate Videos and Auto-Refresh in Video Hub
 
-## What Changes
+## Problems Identified
 
-Add a `YYYY-MM-DD_` prefix to generated image filenames in storage. Current format: `{userId}/{uuid}.png` → New format: `{userId}/2026-04-01_{uuid}.png`
+1. **Duplicate videos**: The `generated_videos` table likely contains duplicate rows per generation (e.g., from retries or the recover function re-inserting). The `fetchHistory` query has no deduplication by `kling_task_id`.
 
-This is a safe, non-breaking change — it only affects newly generated files. Existing images and their URLs remain untouched.
+2. **No auto-refresh after completion**: When a video finishes processing while the user is on the Video Hub, the history only refreshes every 15 seconds IF there are already processing/queued videos visible. There is no realtime listener or window-focus refetch to catch completions smoothly.
 
-## Files to Update
+## Plan
 
-### 1. `supabase/functions/generate-tryon/index.ts` (line 276)
-Change the fileName construction to include today's date:
+### 1. Deduplicate history query (`src/hooks/useGenerateVideo.ts`)
+- Add `.not('kling_task_id', 'is', null)` filter to exclude incomplete rows
+- Deduplicate results client-side by `kling_task_id` to prevent showing the same video twice (keep the latest row)
+
+### 2. Add window focus refetch (`src/hooks/useGenerateVideo.ts`)
+- Add a `visibilitychange` / `focus` event listener that calls `fetchHistory()` when the user returns to the tab or navigates back to Video Hub
+- This ensures videos completed while away are immediately visible
+
+### 3. Faster polling when jobs are active (`src/hooks/useGenerateVideo.ts`)
+- Reduce the auto-refresh interval from 15s to 8s for processing videos
+- Immediately refresh history when the queue `activeJob` transitions to `completed`
+
+### 4. Smooth transition on completion (`src/pages/VideoHub.tsx`)
+- After `onDeleted` or when `selectedVideo` updates, refresh history to reflect the latest state
+
+## Technical Details
+
+### File: `src/hooks/useGenerateVideo.ts`
+
+**fetchHistory** - Add deduplication:
+```typescript
+// After fetching, deduplicate by kling_task_id
+const seen = new Set<string>();
+const deduped = signedHistory.filter(v => {
+  if (!v.kling_task_id) return true;
+  if (seen.has(v.kling_task_id)) return false;
+  seen.add(v.kling_task_id);
+  return true;
+});
+setHistory(deduped);
 ```
-const fileName = `${userId}/${new Date().toISOString().slice(0,10)}_${crypto.randomUUID()}.${fmt.ext}`;
+
+**Add focus-based refresh:**
+```typescript
+useEffect(() => {
+  const onFocus = () => fetchHistory();
+  window.addEventListener('focus', onFocus);
+  return () => window.removeEventListener('focus', onFocus);
+}, [fetchHistory]);
 ```
 
-### 2. `supabase/functions/generate-freestyle/index.ts` (lines 613 and 660)
-Same change in both upload helper functions — add the date prefix to the filename.
-
-### 3. Redeploy edge functions
-Deploy `generate-tryon` and `generate-freestyle` to apply the changes.
-
-## Why It's Safe
-- Only changes the filename pattern for **new** uploads
-- Existing URLs/files are unchanged — nothing breaks
-- Storage paths remain under the same `{userId}/` folder
-- No database schema changes needed
-- No client-side changes needed (URLs are returned dynamically)
+**Reduce polling interval** from 15000ms to 8000ms for snappier updates.
 
