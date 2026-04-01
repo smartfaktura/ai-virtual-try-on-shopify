@@ -18,6 +18,15 @@ const RESOLUTION_MAP: Record<string, string> = {
   '21:9': '2560 × 1080',
 };
 
+const COMMON_ASPECT_RATIOS = [
+  { label: '1:1', value: 1 },
+  { label: '16:9', value: 16 / 9 },
+  { label: '9:16', value: 9 / 16 },
+  { label: '4:3', value: 4 / 3 },
+  { label: '3:4', value: 3 / 4 },
+  { label: '21:9', value: 21 / 9 },
+];
+
 const ICON_MAP: Record<string, React.ElementType> = {
   Duration: Clock,
   Format: Monitor,
@@ -33,6 +42,15 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Model: Clapperboard,
 };
 
+function getClosestAspectRatioLabel(width: number, height: number): string {
+  const ratio = width / height;
+  return COMMON_ASPECT_RATIOS.reduce((closest, candidate) => {
+    const closestDiff = Math.abs(closest.value - ratio);
+    const candidateDiff = Math.abs(candidate.value - ratio);
+    return candidateDiff < closestDiff ? candidate : closest;
+  }).label;
+}
+
 interface VideoDetailModalProps {
   video: GeneratedVideo | null;
   open: boolean;
@@ -43,6 +61,7 @@ interface VideoDetailModalProps {
 export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [videoMetadata, setVideoMetadata] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -62,17 +81,31 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
+  useEffect(() => {
+    setVideoMetadata(null);
+  }, [open, video?.id]);
+
   if (!open || !video) return null;
 
   const isComplete = video.status === 'complete' && video.video_url;
   const isProcessing = video.status === 'processing' || video.status === 'queued';
   const s = video.settings_json || {};
   const fmt = (v: string) => v.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const requestedAspectRatio =
+    typeof s.aspectRatio === 'string' && s.aspectRatio
+      ? s.aspectRatio
+      : video.aspect_ratio || '';
+  const displayAspectRatio = videoMetadata
+    ? getClosestAspectRatioLabel(videoMetadata.width, videoMetadata.height)
+    : requestedAspectRatio;
+  const displayResolution = videoMetadata
+    ? `${videoMetadata.width} × ${videoMetadata.height}`
+    : RESOLUTION_MAP[displayAspectRatio] || '';
 
   const details: [string, string][] = ([
     ['Duration', video.duration ? `${video.duration}s` : ''],
-    ['Format', video.aspect_ratio || ''],
-    ['Resolution', RESOLUTION_MAP[video.aspect_ratio] || ''],
+    ['Format', displayAspectRatio],
+    ['Resolution', displayResolution],
     ['Camera Motion', video.camera_type || (s.cameraMotion as string) || ''],
     ['Style', (s.category as string) || ''],
     ['Scene Type', (s.sceneType as string) || ''],
@@ -148,6 +181,13 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
               autoPlay
               loop
               playsInline
+              preload="metadata"
+              onLoadedMetadata={(event) => {
+                const { videoWidth, videoHeight } = event.currentTarget;
+                if (videoWidth && videoHeight) {
+                  setVideoMetadata({ width: videoWidth, height: videoHeight });
+                }
+              }}
               className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] rounded-lg shadow-2xl"
             />
           ) : (
