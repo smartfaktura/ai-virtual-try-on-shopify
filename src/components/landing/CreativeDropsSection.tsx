@@ -68,7 +68,7 @@ export function CreativeDropsSection() {
               Your Visuals. Updated Automatically.
             </h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Schedule monthly Creative Drops and receive fresh visuals for your products — without doing anything.
+              Schedule your Content Calendar and receive fresh visuals for your products — without doing anything.
             </p>
 
             <ul className="space-y-4 mb-10">
