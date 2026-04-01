@@ -453,7 +453,7 @@ export function CatalogStepProducts({
 
       {/* ── Floating Selection Bar ────────────────────────── */}
       {selectedProductIds.size > 0 && (
-        <div className="sticky bottom-0 z-30 -mx-1 px-1">
+        <div className="sticky bottom-0 z-30 -mx-1 px-1 pb-[env(safe-area-inset-bottom)]">
           <div className="bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-3 sm:px-5 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
             {/* Mini thumbnails — hide on small screens */}
             <div className="hidden sm:flex -space-x-2">
