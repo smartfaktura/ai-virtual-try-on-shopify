@@ -129,6 +129,8 @@ export interface CatalogSessionConfig {
   backgroundId: string;
   selectedShots: CatalogShotId[];
   stylingProps?: Array<{ id: string; title: string; imageUrl: string; detectedCategory: ProductCategory }>;
+  /** Per-combination prop assignments: key = productId__modelId__shotId, value = array of prop product metadata */
+  propAssignments?: Record<string, Array<{ id: string; title: string; imageUrl: string }>>;
 }
 
 export interface CatalogJobExtended {
