@@ -222,9 +222,16 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     const interval = setInterval(() => {
       fetchHistory();
       recoverStuckVideos();
-    }, 15000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [history, fetchHistory, recoverStuckVideos]);
+
+  // Refresh history on window focus
+  useEffect(() => {
+    const onFocus = () => fetchHistory();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchHistory]);
 
   const reset = useCallback(() => {
     queue.reset();
