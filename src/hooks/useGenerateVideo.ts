@@ -11,6 +11,7 @@ export type VideoGenStatus = 'idle' | 'queued' | 'creating' | 'processing' | 'co
 export interface GeneratedVideo {
   id: string;
   source_image_url: string;
+  preview_url: string | null;
   prompt: string;
   video_url: string | null;
   kling_task_id: string | null;
