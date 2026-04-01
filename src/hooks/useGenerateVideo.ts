@@ -166,7 +166,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setIsLoadingHistory(true);
       const { data, error: fetchError } = await supabase
         .from('generated_videos')
-        .select('*, video_projects(settings_json, workflow_type)')
+        .select('*, video_projects(settings_json, workflow_type, title)')
         .order('created_at', { ascending: false })
         .limit(20);
 
