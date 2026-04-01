@@ -106,7 +106,7 @@ export default function AnimateVideo() {
     if (analysis.category) { setCategory(analysis.category); setDetectedCategory(analysis.category); }
     if (analysis.ecommerce_scene_type) { setSceneType(analysis.ecommerce_scene_type); setDetectedSceneType(analysis.ecommerce_scene_type); }
     if (analysis.recommended_motion_goals?.length) { setRecommendedGoalIds(analysis.recommended_motion_goals); setMotionGoalId(analysis.recommended_motion_goals[0]); }
-    if (analysis.recommended_camera_motion) setCameraMotion(analysis.recommended_camera_motion);
+    if (analysis.recommended_camera_motion) { setCameraMotion(analysis.recommended_camera_motion); setSelectedCameraMotions([analysis.recommended_camera_motion]); }
     if (analysis.recommended_subject_motion) setSubjectMotion(analysis.recommended_subject_motion);
     if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
     if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
