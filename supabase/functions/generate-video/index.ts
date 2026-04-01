@@ -54,9 +54,9 @@ async function getUserId(req: Request): Promise<string> {
   );
 
   const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) throw new Error("Unauthorized");
-  return data.user.id;
+  const { data, error } = await supabase.auth.getClaims(token);
+  if (error || !data?.claims) throw new Error("Unauthorized");
+  return data.claims.sub as string;
 }
 
 // --- Helper: download video from Kling and save to storage ---
