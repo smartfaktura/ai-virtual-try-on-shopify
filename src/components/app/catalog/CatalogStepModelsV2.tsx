@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,6 @@ export function CatalogStepModelsV2({
   libraryModels, userModels, selectedModelIds, productOnlyMode, onModelToggle, onProductOnlyToggle,
   onBack, onNext, canProceed,
 }: CatalogStepModelsV2Props) {
-  const navigate = useNavigate();
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
 
   const filteredLibrary = useMemo(() => {
@@ -114,7 +113,7 @@ export function CatalogStepModelsV2({
           </div>
         ) : (
           <button
-            onClick={() => navigate('/app/brand-models')}
+            onClick={() => window.open('/app/brand-models', '_blank')}
             className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-5 transition-colors group"
           >
             <div className="flex items-center gap-3">

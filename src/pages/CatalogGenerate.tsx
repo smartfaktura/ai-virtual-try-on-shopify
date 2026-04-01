@@ -440,7 +440,7 @@ export default function CatalogGenerate() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Keep going</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => { resetBatch(); setShowCancelDialog(false); }}>
+                    <AlertDialogAction onClick={() => { resetBatch(); setGenerationStartedAt(null); setElapsedSeconds(0); setShowCancelDialog(false); }}>
                       Cancel generation
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -521,13 +521,15 @@ export default function CatalogGenerate() {
             for (const j of batchState.jobs) {
               if (j.status === 'completed') {
                 for (const imgUrl of j.images) {
-                  if (imgIdx === i) {
+                    if (imgIdx === i) {
                     const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
                     const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
                     filename = `${safeName}_${safeShot}.jpg`;
+                    break;
                   }
                   imgIdx++;
                 }
+                if (filename !== `catalog-${i + 1}.jpg`) break;
               }
             }
             fetch(url).then(r => r.blob()).then(blob => {
@@ -691,7 +693,7 @@ export default function CatalogGenerate() {
         </div>
 
         {/* Mobile summary drawer */}
-        {isMobile && (
+        {isMobile && !(step === 1 && selectedProductIds.size > 0) && (
           <Sheet>
             <SheetTrigger asChild>
               <Button

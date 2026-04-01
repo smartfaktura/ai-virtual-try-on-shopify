@@ -12,9 +12,10 @@ interface ModelSelectorCardProps {
 
 export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = false }: ModelSelectorCardProps) {
   return (
-    <div
+    <button
+      type="button"
       onClick={onSelect}
-      className={`relative cursor-pointer rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 group ${
+      className={`relative cursor-pointer rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 group text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none ${
         isSelected ? 'ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-lg scale-[1.02]' : 'ring-1 ring-border hover:ring-primary hover:shadow-md hover:scale-[1.01]'
       }`}
     >
@@ -38,6 +39,6 @@ export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = f
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
         <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
       </div>
-    </div>
+    </button>
   );
 }
