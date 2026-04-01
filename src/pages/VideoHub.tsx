@@ -95,7 +95,7 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           <video
             ref={videoRef}
             src={video.video_url!}
-            poster={getOptimizedUrl(video.source_image_url, { width: 400, quality: 50 })}
+            poster={getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 })}
             loop
             muted
             playsInline
