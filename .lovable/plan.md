@@ -1,51 +1,27 @@
 
 
-# Expand Per-Image Customization to All Settings
+# Duplicate Videos in Recent Grid — Analysis & Fix
 
-## Problem
-The "Customize per image" panel currently only exposes 3 override fields (Camera Motion, Motion Intensity, Custom prompt). Users expect to control **all** video settings per image.
+## Finding
+There is **no dedup bug**. The database contains no duplicate `kling_task_id` entries. Each "duplicate-looking" pair is a legitimately separate video generation from the same source image with different camera motions — they just look identical because the grid shows the source image as thumbnail, not the actual video frame.
 
-## Changes
+## The Real Problem
+When a user generates multiple camera motions from the same image (the new multi-motion feature), the Recent Videos grid shows identical-looking thumbnails with no way to tell them apart.
 
-### `src/pages/video/AnimateVideo.tsx` (lines 822-876)
-Replace the current minimal 3-field override panel with the full set of overridable settings, organized in sections:
+## Proposed Fix
 
-**Product Context section:**
-- Category (select — reuse existing category options)
-- Scene Type (select)
+### 1. Add camera motion label overlay to `RecentVideoCard` (`VideoHub.tsx`)
+- Query the `camera_type` column from `generated_videos` (already exists in the table)
+- Display a small label/badge on the thumbnail showing the camera motion name (e.g., "Orbit", "Dolly In") so identical source images are visually distinguishable
+- Only show the badge when multiple videos share the same source image
 
-**Motion section:**
-- Motion Goal (select from `getMotionGoalsForCategory`)
-- Camera Motion (select from `CAMERA_MOTIONS`)
-- Subject Motion (select)
-- Motion Intensity (select: low/medium/high)
-- Realism Level (select)
-- Loop Style (select)
+### 2. No data deletion needed
+All records are unique and valid — different kling task IDs, different video outputs. Deleting them would remove real user content.
 
-**Preservation section:**
-- Preserve Scene (switch)
-- Preserve Product Details (switch)
-- Preserve Identity (switch)
-- Preserve Outfit (switch)
+## Alternative: Group same-source videos
+Instead of badges, group videos from the same source image into a single card with a count indicator (e.g., "2 versions") that expands to show both. This is a larger change but gives cleaner UX.
 
-**Output section:**
-- Aspect Ratio (select: 9:16, 1:1, 16:9)
-- Duration (select: 5s, 10s)
-- Audio Mode (select: silent, ambient)
-
-**Prompt section:**
-- Custom motion note (textarea — already exists)
-
-Each field falls back to the shared setting when not overridden. The existing `setOverride(key, value)` pattern and `perImageSettings` Map already support arbitrary keys — no hook changes needed.
-
-### Layout
-- Use collapsible sections or a compact grid layout (3-4 columns for toggles, 2 columns for selects) to keep it scannable
-- Add section headers matching the main settings panel naming
-- Keep the "Reset to shared" button at the top
-
-### No changes needed in hooks
-`useBulkVideoProject.ts` already merges `perImageParams` with shared params via spread — all new keys will flow through automatically.
-
-### Files
-- **Update**: `src/pages/video/AnimateVideo.tsx` — expand per-image override panel (lines 822-876)
+## Files
+- **Update**: `src/pages/VideoHub.tsx` — add motion label badge to `RecentVideoCard`
+- **Update**: `src/hooks/useGenerateVideo.ts` — include `camera_type` in the `GeneratedVideo` interface and select query
 
