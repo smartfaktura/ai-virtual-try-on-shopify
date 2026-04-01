@@ -273,7 +273,7 @@ async function uploadBase64ToStorage(
   }
 
   const fmt = detectImageFormat(bytes);
-  const fileName = `${userId}/${crypto.randomUUID()}.${fmt.ext}`;
+  const fileName = `${userId}/${new Date().toISOString().slice(0,10)}_${crypto.randomUUID()}.${fmt.ext}`;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },

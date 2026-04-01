@@ -102,7 +102,7 @@ export function useFreestyleImages() {
       const response = await fetch(base64DataUrl);
       const blob = await response.blob();
       const fileId = crypto.randomUUID();
-      const filePath = `${user.id}/${fileId}.png`;
+      const filePath = `${user.id}/${new Date().toISOString().slice(0,10)}_${fileId}.png`;
 
       const { error: uploadError } = await supabase.storage
         .from('freestyle-images')
@@ -209,7 +209,7 @@ export function useFreestyleImages() {
         const response = await fetch(base64DataUrl);
         const blob = await response.blob();
         const fileId = crypto.randomUUID();
-        const filePath = `${user.id}/${fileId}.png`;
+        const filePath = `${user.id}/${new Date().toISOString().slice(0,10)}_${fileId}.png`;
 
         const { error: uploadError } = await supabase.storage
           .from('freestyle-images')
