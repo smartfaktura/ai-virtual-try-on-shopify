@@ -651,6 +651,7 @@ export default function CatalogGenerate() {
             totalImages={totalImages}
             totalCredits={totalCredits}
             currentStep={step}
+            balance={balance}
           />
         </div>
       </div>

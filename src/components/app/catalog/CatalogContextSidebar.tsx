@@ -145,6 +145,11 @@ export function CatalogContextSidebar({
             <span className="text-2xl font-semibold text-foreground tracking-tight">{totalCredits}</span>
             <span className="text-[10px] text-muted-foreground">credits · {totalImages} images</span>
           </div>
+          {balance !== undefined && (
+            <p className={cn('text-[10px] font-medium', balance >= totalCredits ? 'text-green-600' : 'text-destructive')}>
+              {balance} credits available{balance < totalCredits ? ' — not enough' : ''}
+            </p>
+          )}
         </div>
       )}
     </div>

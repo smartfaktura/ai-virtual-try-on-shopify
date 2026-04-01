@@ -359,7 +359,7 @@ export function CatalogStepProducts({
 
               {/* ── List View ─────────────────────────────── */}
               {filtered.length > 0 && viewMode === 'list' && (
-                <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
+                <div className="space-y-1 max-h-[min(420px,50vh)] overflow-y-auto pr-1">
                   {visible.map((up, idx) => {
                     const isSelected = selectedProductIds.has(up.id);
                     const isDisabled = !isSelected && selectedProductIds.size >= maxProducts;
@@ -403,6 +403,17 @@ export function CatalogStepProducts({
                     );
                   })}
                 </div>
+
+                {filtered.length > visibleCount && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVisibleCount(c => c + PRODUCTS_PER_PAGE)}
+                    className="w-full rounded-xl"
+                  >
+                    Load more ({filtered.length - visibleCount} remaining)
+                  </Button>
+                )}
               )}
             </div>
           )}
