@@ -124,7 +124,7 @@ export function CatalogContextSidebar({
         {/* Props */}
         <SidebarRow icon={Gem} label="Props" done={selectedPropCount > 0}>
           {selectedPropCount > 0 ? (
-            <span className="text-[10px] text-foreground font-medium">{selectedPropCount} item{selectedPropCount !== 1 ? 's' : ''}</span>
+            <span className="text-[10px] text-foreground font-medium">{selectedPropCount}/{totalCombos} shots</span>
           ) : (
             <span className="text-[10px] text-muted-foreground/50">None</span>
           )}
