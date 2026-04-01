@@ -88,7 +88,7 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
 }
 
 export default function VideoHub() {
-  const { history, isLoadingHistory, refreshHistory, loadMore, hasMore, totalCount, isLoadingMore } = useGenerateVideo();
+  const { history, isLoadingHistory, refreshHistory, removeFromHistory, loadMore, hasMore, totalCount, isLoadingMore } = useGenerateVideo();
   const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
