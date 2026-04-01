@@ -1,55 +1,66 @@
 
 
-# Catalog Studio: Props UX Improvements + Chat Position + Stepper Resize
+# Mobile Optimization for Catalog Studio Steps
 
-## Changes Overview
+Viewport is 440px. I'll audit each step component and the page layout for mobile issues and fix them.
 
-### 1. Move Chat Widget to Right Side on /app/catalog
-**File: `src/components/app/StudioChat.tsx`**
-- The chat panel and FAB are currently fixed to `left-4 lg:left-[var(--sidebar-offset)]`
-- Add route detection: when `location.pathname.startsWith('/app/catalog')`, swap positioning to `right-4` for both the panel and the floating button
-- This prevents the chat from overlapping the main content area on the catalog page
+## Issues Found
 
-### 2. Redesign Props Picker as a Full Modal (Dialog) with Search
-**File: `src/components/app/catalog/CatalogStepProps.tsx`**
-- Replace the small `Popover` prop picker with a proper `Dialog` modal (wider, ~500px)
-- Add a search input at the top of the modal to filter products by name/type
-- Display products in a grid layout (similar to CatalogStepProducts grid but smaller cards — 3 columns, ~80px images with title + type badge)
-- Each card is selectable with a checkbox/check overlay (matching the product step pattern)
-- Add a sticky footer with a **"Select Props"** CTA button that confirms and closes the modal
-- Show count of selected items in the button: "Select 3 Props"
+### 1. Page Layout (`CatalogGenerate.tsx`)
+- Sidebar is `hidden lg:block` — already hidden on mobile, good
+- `pb-32` may be excessive on mobile
+- No horizontal padding issues
 
-### 3. Show Shot Preview Thumbnail in Each Combo Row
-**File: `src/components/app/catalog/CatalogStepProps.tsx`**
-- Next to the product image in each combo row, add a small shot type preview icon/thumbnail (e.g. a mini framing diagram or the shot label as a styled badge)
-- Use a `Tooltip` or hover card: on hover over the shot badge, show a larger preview image of what that shot type looks like (pull from existing shot definition preview URLs via `getShotDefinition`)
-- Layout: `[product img] [shot badge with hover preview] Product Name × Model Name — Shot Label [+ Add prop]`
+### 2. Stepper (`CatalogStepper.tsx`)
+- Mobile stepper shows 7 icon buttons + labels in a row with `px-2` — at 440px, 7 items × ~50px each = ~350px, tight but connector lines `w-4 mx-0.5` add up
+- Labels `text-[9px]` may get truncated or overlap
+- **Fix**: Hide labels on mobile, show only icons. Use `flex-1` between items for even spacing. Remove fixed `w-4` connectors on mobile.
 
-### 4. Show Assigned Props as Image Chips (Not Text-Only)
-**File: `src/components/app/catalog/CatalogStepProps.tsx`**
-- When props are assigned to a combo row, show them as small image+title chips (inline, next to the "+ Add prop" button area, not below)
-- Each chip: `[24px thumbnail] Title [x]` — similar to how products appear in the sidebar
-- Keep chips on the same row as the combo details when space allows; wrap below only if needed
+### 3. Products Step (`CatalogStepProducts.tsx`)
+- Grid is `grid-cols-2` on mobile — fits at 440px
+- Tabs bar `gap-6` could be tight — labels "My Products", "Import URL", "Upload CSV" may overflow
+- **Fix**: Reduce tab gap to `gap-3` on mobile, use shorter labels or allow wrapping
+- Floating selection bar: `px-5` + thumbnails + text + button may overflow
+- **Fix**: Reduce padding, hide some thumbnails on mobile
 
-### 5. Make Stepper Full-Width (Edge-to-Edge)
-**File: `src/components/app/catalog/CatalogStepper.tsx`**
-- Desktop stepper: use `justify-between` instead of `justify-center` so steps span the full width of the content area
-- Increase connector line width to fill available space (`flex-1` instead of fixed `w-3 lg:w-5`)
-- Slightly increase pill padding and icon size for better readability
-- Progress bar (mobile): increase height from `h-0.5` to `h-1`
+### 4. Style Step (`CatalogStepFashionStyle.tsx`)
+- Grid `grid-cols-1 sm:grid-cols-2` — on 440px (<640px) it's single column, fine
+- No issues
 
-### 6. Sidebar: Cap Thumbnails at 2 + Overflow Count
-**File: `src/components/app/catalog/CatalogContextSidebar.tsx`**
-- **Products row**: Show max 2 product thumbnails + `(+N)` badge if more than 2 selected. Remove the "N items" text — the count is conveyed by the badge
-- **Models row**: Show max 2 model avatars + `(+N)` badge
-- **Props row**: If props assigned, show max 2 prop thumbnails + `(+N)` badge, replacing the "N/M shots" text
+### 5. Models Step (`CatalogStepModelsV2.tsx`)
+- Brand models grid: `grid-cols-4 sm:grid-cols-5` — at 440px, 4 columns = ~100px each, tight but workable
+- Library models grid: same pattern
+- **Fix**: Use `grid-cols-3` as base for smaller phones, `grid-cols-4 sm:grid-cols-5`
 
-### Files to Modify
+### 6. Backgrounds Step (`CatalogStepBackgroundsV2.tsx`)
+- Grid `grid-cols-2 sm:grid-cols-3` — 2 columns at 440px, fine
+- No issues
+
+### 7. Shots Step (`CatalogStepShots.tsx`)
+- Grid `grid-cols-2 sm:grid-cols-3` — fine
+- Credit calculator bar: text wraps via `flex-wrap`, should be OK
+- **Fix**: Reduce padding in pinned credit bar on mobile
+
+### 8. Props Step (`CatalogStepProps.tsx`)
+- Combo rows pack many elements in a single flex row: number + thumbnail + shot badge + title + prop chips + button — this WILL overflow at 440px
+- **Fix**: Stack the combo row on mobile — product info on one line, props + actions on a second line
+- Prop picker modal `sm:max-w-lg` — on mobile it should be full-screen
+- **Fix**: Add `max-w-full` or use sheet pattern on mobile
+
+### 9. Review Step (`CatalogStepReviewV2.tsx`)
+- Product thumbnails: `w-14` in a horizontal scroll — fine
+- Credit calculation: text wraps via `flex-wrap` — fine
+- Style + Background row: `flex gap-6` may not wrap
+- **Fix**: Make style/bg row wrap on mobile
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/app/StudioChat.tsx` | Move to right side when on `/app/catalog` |
-| `src/components/app/catalog/CatalogStepProps.tsx` | Replace popover with Dialog modal + search + grid cards + shot preview thumbnails + image chips for assigned props + "Select Props" CTA |
-| `src/components/app/catalog/CatalogStepper.tsx` | Full-width stepper with flex-1 connectors |
-| `src/components/app/catalog/CatalogContextSidebar.tsx` | Cap thumbnails at 2 + (+N) overflow badge |
+| `CatalogStepper.tsx` | Hide labels on mobile (icon-only), use even spacing |
+| `CatalogStepProducts.tsx` | Reduce tab gap on mobile, compact floating bar |
+| `CatalogStepModelsV2.tsx` | Change base grid to `grid-cols-3` |
+| `CatalogStepShots.tsx` | Reduce padding in pinned credit bar |
+| `CatalogStepProps.tsx` | Stack combo rows on mobile, full-screen picker modal, responsive prop chips |
+| `CatalogStepReviewV2.tsx` | Wrap style/bg row on mobile |
 
