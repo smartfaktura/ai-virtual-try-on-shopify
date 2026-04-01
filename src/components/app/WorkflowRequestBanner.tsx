@@ -104,7 +104,7 @@ export function WorkflowRequestBanner() {
             </p>
           </div>
           <Textarea
-            placeholder="Describe the workflow, niche, or product type you need…"
+            placeholder="Describe the template, niche, or product type you need…"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="min-h-[80px] text-sm bg-background"

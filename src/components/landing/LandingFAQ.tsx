@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: 'How many credits does each generation cost?',
-    a: 'Workflows and Virtual Try-On cost 6 credits per image. Freestyle costs 4 credits per image, or 6 credits when you add a model or scene. Your dashboard always shows the exact cost before you generate.',
+    a: 'Templates and Virtual Try-On cost 6 credits per image. Freestyle costs 4 credits per image, or 6 credits when you add a model or scene. Your dashboard always shows the exact cost before you generate.',
   },
   {
     q: 'Is there a free trial?',
