@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { downloadVideosAsZip } from '@/lib/dropDownload';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { toast } from 'sonner';
+import { buildVideoFileName } from '@/lib/videoFilename';
 
 interface RecentVideoCardProps {
   video: GeneratedVideo;
