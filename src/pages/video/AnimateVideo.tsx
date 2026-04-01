@@ -1124,11 +1124,14 @@ export default function AnimateVideo() {
                 realismLevel={realismLevel}
                 loopStyle={loopStyle}
                 motionIntensity={motionIntensity}
-                onCameraMotionChange={setCameraMotion}
+                onCameraMotionChange={(v) => { setCameraMotion(v); setSelectedCameraMotions([v]); }}
                 onSubjectMotionChange={setSubjectMotion}
                 onRealismLevelChange={setRealismLevel}
                 onLoopStyleChange={setLoopStyle}
                 onMotionIntensityChange={setMotionIntensity}
+                multiSelect={isPaidUser}
+                selectedCameraMotions={selectedCameraMotions}
+                onMultiCameraMotionChange={(ids) => { setSelectedCameraMotions(ids); setCameraMotion(ids[0]); }}
               />
 
               <PreservationRulesPanel
