@@ -145,7 +145,7 @@ CREDIT PRICING — what things cost:
 - Standard quality: **4 credits** per image
 - High quality (or with model/scene): **6 credits** per image
 
-**Workflow pricing** (guided structured generation):
+**Template pricing** (guided structured generation):
 - Standard quality: **4 credits** per image
 - High quality: **6 credits** per image
 - With AI model reference: **6 credits** per image
