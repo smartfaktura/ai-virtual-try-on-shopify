@@ -1,48 +1,26 @@
 
 
-# Video Showcase Section for Landing Page
+# Update Perspectives Card Animation Images
 
-## Placement
-Insert **between FreestyleShowcaseSection and ModelShowcaseSection** (after line 60 in Landing.tsx). This is the ideal CRO position because:
-- Visitor has already seen static image results (hero, categories, freestyle)
-- Video motion creates a pattern interrupt that re-engages scroll momentum
-- It answers the objection "do these look real?" with moving proof before the model/environment deep-dives
+## What
+Replace the 4 current placeholder PNG images in the "Picture Perspectives" carousel animation with the 6 uploaded real perspective photos, and update the badge copy.
 
-## Design
-A full-bleed section with edge-to-edge video grid, no container padding — videos run right to the edges for a cinematic, modern feel. Subtle gradient overlays top and bottom so it blends into surrounding sections.
+## Steps
 
-```text
-────────────────────────────────────────────────
-  Your Products, In Motion
-  AI-generated video ads ready in minutes,
-  not weeks.
+### 1. Copy uploaded images to `public/images/perspectives/`
+Save the 6 uploaded JPGs as `VOVVAI-Perspectives-1.jpg` through `VOVVAI-Perspectives-6.jpg` in `public/images/perspectives/`.
 
-  ┌────┐┌────┐┌────┐┌────┐┌────┐
-  │3:4 ││3:4 ││3:4 ││3:4 ││3:4 │  ← row 1
-  │auto││auto││auto││auto││auto│
-  └────┘└────┘└────┘└────┘└────┘
-  ┌────┐┌────┐┌────┐┌────┐┌────┐
-  │3:4 ││3:4 ││3:4 ││3:4 ││3:4 │  ← row 2
-  └────┘└────┘└────┘└────┘└────┘
-
-  [Start Creating Videos →]        ← CTA button
-────────────────────────────────────────────────
-```
-
-- **Grid**: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1` with tiny gaps for a mosaic look
-- **Cards**: `aspect-[3/4] rounded-lg overflow-hidden` — all uniform, no labels
-- **Videos**: `<video autoPlay muted loop playsInline>` with `object-cover`
-- **Copy** (CRO-optimized):
-  - Heading: "Your Products, In Motion"
-  - Subheading: "AI-generated video ads ready in minutes, not weeks."
-- **CTA**: Primary button linking to `/app/video` (or `/auth` if not logged in)
-- **Mobile**: collapses to 2 columns, showing 6 videos (hide last 4 on small screens)
-- Uses existing `/videos/showcase/showcase-1.mp4` through `showcase-10.mp4`
+### 2. Update `src/components/app/workflowAnimationData.tsx`
+In the `'Picture Perspectives'` entry (~line 201):
+- Change `background` to use `VOVVAI-Perspectives-1.jpg`
+- Replace the `backgrounds` array with all 6 images
+- Update badge from `'1 Photo, 4 Angles'` → `'1 Photo, Endless Angles'`
+- Update second badge from `'One Click'` → `'No Reshoots Needed'`
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/landing/VideoShowcaseSection.tsx` | New component with video grid, heading, CTA |
-| `src/pages/Landing.tsx` | Lazy-import and insert between FreestyleShowcase and ModelShowcase |
+| `public/images/perspectives/` | 6 new JPGs from uploads |
+| `src/components/app/workflowAnimationData.tsx` | Update backgrounds array and badge labels |
 
