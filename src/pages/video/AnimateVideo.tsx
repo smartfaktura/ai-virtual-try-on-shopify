@@ -1,13 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Shirt, Flower2, Gem, Watch, Lamp, UtensilsCrossed, Smartphone, Dumbbell, Pill, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, Images, Lock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { LucideIcon } from 'lucide-react';
-
-const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
-  Shirt, Sparkles, Flower2, Gem, Watch, Lamp,
-  UtensilsCrossed, Smartphone, Dumbbell, Pill,
-};
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
