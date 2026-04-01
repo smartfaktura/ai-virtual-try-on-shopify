@@ -123,18 +123,23 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
           <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
             {props.multiSelect && props.selectedCameraMotions && props.onMultiCameraMotionChange ? (
               <>
-                <MultiChipRow
-                  label="Camera Motion"
-                  tooltip="Select multiple camera motions to generate a separate video for each. Controls how the virtual camera moves during the video."
-                  items={CAMERA_MOTIONS}
+                <CameraMotionGrid
+                  value={props.cameraMotion}
+                  onChange={props.onCameraMotionChange}
+                  multiSelect
                   selected={props.selectedCameraMotions}
-                  onChange={props.onMultiCameraMotionChange}
+                  onMultiChange={props.onMultiCameraMotionChange}
+                  tooltip="Select multiple camera motions to generate a separate video for each."
                 />
                 <p className="text-[11px] text-muted-foreground -mt-2">Select multiple to generate one video per motion</p>
               </>
             ) : (
               <>
-                <ChipRow label="Camera Motion" tooltip="Controls how the virtual camera moves during the video. Affects framing but not the subject." items={CAMERA_MOTIONS} value={props.cameraMotion} onChange={props.onCameraMotionChange} />
+                <CameraMotionGrid
+                  value={props.cameraMotion}
+                  onChange={props.onCameraMotionChange}
+                  tooltip="Controls how the virtual camera moves during the video."
+                />
                 {props.isPaidUser === false && (
                   <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 -mt-2">
                     <img src={avatarSophia} alt="Sophia" className="h-5 w-5 rounded-full object-cover ring-1 ring-border" />
