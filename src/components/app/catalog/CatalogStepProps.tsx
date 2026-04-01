@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getShotDefinition } from '@/lib/catalogEngine';
 import { cn } from '@/lib/utils';
