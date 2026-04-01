@@ -145,7 +145,18 @@ export default function AIProductPhotographyEcommerce() {
 
   const heroImages = useMemo(() => {
     usedIds.clear();
-    const picks = pickProductLed(presets, 6);
+    // Pick featured fashion presets first, then any fashion preset
+    const isFashion = (p: DiscoverPreset) =>
+      p.category === 'fashion' || p.discover_categories?.includes('fashion');
+    const fashionFeatured = presets.filter(p => isFashion(p) && p.is_featured).slice(0, 6);
+    const picks = fashionFeatured.length >= 6
+      ? fashionFeatured
+      : [
+          ...fashionFeatured,
+          ...presets
+            .filter(p => isFashion(p) && !fashionFeatured.some(f => f.id === p.id))
+            .slice(0, 6 - fashionFeatured.length),
+        ];
     picks.forEach(p => usedIds.add(p.id));
     return picks;
   }, [presets, usedIds]);
