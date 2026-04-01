@@ -75,7 +75,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                   onClick={() => canClick && onStepClick(s.number)}
                   disabled={!canClick}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 mx-auto",
+                    "flex flex-col items-center gap-0.5 mx-auto rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                     !canClick && 'opacity-50 cursor-default',
                   )}
                 >

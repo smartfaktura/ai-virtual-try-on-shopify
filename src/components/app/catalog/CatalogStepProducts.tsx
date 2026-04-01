@@ -58,7 +58,7 @@ function UnderlineTab({
       type="button"
       onClick={onClick}
       className={cn(
-        'relative flex items-center gap-1.5 pb-2.5 text-sm font-medium transition-colors duration-200',
+        'relative flex items-center gap-1.5 pb-2.5 text-sm font-medium transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         active
           ? 'text-foreground'
           : 'text-muted-foreground hover:text-foreground/70'

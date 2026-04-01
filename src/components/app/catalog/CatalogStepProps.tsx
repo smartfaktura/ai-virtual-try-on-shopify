@@ -361,8 +361,9 @@ export function CatalogStepProps({
                                     </div>
                                     {p.title.length > 12 ? p.title.slice(0, 10) + '…' : p.title}
                                     <button
+                                      aria-label="Remove prop"
                                       onClick={() => handleRemoveProp(combo.key, p.id)}
-                                      className="hover:text-destructive transition-colors ml-0.5"
+                                      className="hover:text-destructive transition-colors ml-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     >
                                       <X className="w-2.5 h-2.5" />
                                     </button>
