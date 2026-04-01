@@ -66,7 +66,10 @@ function PropPickerModal({
 
   // Reset local state when opened
   const handleOpenChange = (v: boolean) => {
-    if (v) setLocalSelected(new Set(selectedIds));
+    if (v) {
+      setLocalSelected(new Set(selectedIds));
+      setSearch('');
+    }
     onOpenChange(v);
   };
 

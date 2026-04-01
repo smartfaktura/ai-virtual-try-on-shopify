@@ -138,7 +138,7 @@ export function CatalogStepShots({
               <ChevronLeft className="w-4 h-4" /> Back
             </Button>
             <Button onClick={onNext} disabled={!canProceed || selectedShots.size === 0} className="gap-2">
-              Next: Review <ChevronRight className="w-4 h-4" />
+              Next: Props <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -157,6 +157,7 @@ function ShotCard({ shot, isSelected, isRecommended, onToggle }: {
           onClick={onToggle}
           className={cn(
             'relative rounded-xl border p-3.5 text-left transition-all duration-150 group',
+            'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
             isSelected
               ? 'border-primary ring-2 ring-primary/20 bg-card'
               : 'border-border hover:border-primary/30 bg-card hover:shadow-sm',
