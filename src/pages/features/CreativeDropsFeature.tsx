@@ -47,19 +47,19 @@ export default function CreativeDropsFeature() {
 
   return (
     <PageLayout>
-      <SEOHead title="Creative Drops — Automated Visual Content Delivery | VOVV AI" description="Fresh product visuals on autopilot. Schedule recurring Creative Drops and receive curated batches of AI-generated images monthly or biweekly." canonical={`${SITE_URL}/features/creative-drops`} />
+      <SEOHead title="Content Calendar — Automated Visual Content Delivery | VOVV AI" description="Fresh product visuals on autopilot. Schedule your Content Calendar and receive curated batches of AI-generated images monthly or biweekly." canonical={`${SITE_URL}/features/creative-drops`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            Creative Drops
+            Content Calendar
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-6">
             Fresh Product Visuals, Delivered on Schedule
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            Stop manually generating images. Set up a Creative Drop and receive curated batches of on-trend product visuals — automatically, on your schedule.
+            Stop manually generating images. Set up your Content Calendar and receive curated batches of on-trend product visuals — automatically, on your schedule.
           </p>
           <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
             Get Started Free
