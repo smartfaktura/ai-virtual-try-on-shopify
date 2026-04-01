@@ -74,6 +74,7 @@ const PerspectivesFeature = lazy(() => import('@/pages/features/PerspectivesFeat
 const RealEstateStagingFeature = lazy(() => import('@/pages/features/RealEstateStagingFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
+const AIProductPhotographyEcommerce = lazy(() => import('@/pages/seo/AIProductPhotographyEcommerce'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
