@@ -157,8 +157,7 @@ export default function AIProductPhotographyEcommerce() {
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 400, quality: 75 })}
                     alt={`AI product photography for ecommerce example – ${img.title}`}
-                    aspectRatio={img.aspect_ratio?.replace(':', '/') || '3/4'}
-                    className="w-full h-full object-contain"
+                    className="w-full h-auto block"
                     fetchPriority={i < 3 ? 'high' : 'low'}
                     loading={i < 3 ? 'eager' : 'lazy'}
                   />
