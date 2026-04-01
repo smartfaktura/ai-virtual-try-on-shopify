@@ -351,15 +351,15 @@ export default function AnimateVideo() {
     });
   }, [bulkImages, hasAnalyzed, analyzeImage]);
 
-  const handleGenerate = () => {
+  const motionCount = isPaidUser ? selectedCameraMotions.length : 1;
+
+  const handleGenerate = async () => {
     if (bulkMode && bulkImages.length > 0) {
       const readyImages = bulkImages.filter(img => img.url);
       if (readyImages.length === 0) { toast.error('Wait for images to finish uploading'); return; }
 
-      const { total } = estimateBulkCredits(
-        { workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion },
-        readyImages.length
-      );
+      const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+      const total = perVideoCost * readyImages.length * motionCount;
       if (total > creditsBalance) {
         toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
         return;
@@ -369,15 +369,51 @@ export default function AnimateVideo() {
           preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
           aspectRatio, duration, audioMode, userPrompt: userPrompt || undefined };
 
-      runBulkAnimatePipeline(
-        readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
-        sharedParams,
-        customizePerImage ? perImageSettings : undefined
-      );
+      // Multi-motion: run bulk pipeline once per camera motion
+      if (motionCount > 1) {
+        for (const motion of selectedCameraMotions) {
+          await runBulkAnimatePipeline(
+            readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
+            { ...sharedParams, cameraMotion: motion },
+            customizePerImage ? perImageSettings : undefined
+          );
+        }
+      } else {
+        runBulkAnimatePipeline(
+          readyImages.map(img => ({ id: img.id, url: img.url!, preview: img.preview })),
+          sharedParams,
+          customizePerImage ? perImageSettings : undefined
+        );
+      }
       return;
     }
 
     if (!imageUrl) { toast.error('Please upload an image first'); return; }
+
+    // Multi-motion for single image: generate one video per motion
+    if (motionCount > 1) {
+      const perVideoCost = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+      const total = perVideoCost * motionCount;
+      if (total > creditsBalance) {
+        toast.error(`Insufficient credits: need ${total}, have ${creditsBalance}`);
+        return;
+      }
+      for (let i = 0; i < selectedCameraMotions.length; i++) {
+        if (i > 0) {
+          resetPipeline();
+          await new Promise(r => setTimeout(r, 300));
+        }
+        await runAnimatePipeline({
+          imageUrl,
+          category, sceneType, motionGoalId,
+          cameraMotion: selectedCameraMotions[i], subjectMotion, realismLevel, loopStyle, motionIntensity,
+          preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
+          aspectRatio, duration, audioMode,
+          userPrompt: userPrompt || undefined,
+        });
+      }
+      return;
+    }
 
     runAnimatePipeline({
       imageUrl,
