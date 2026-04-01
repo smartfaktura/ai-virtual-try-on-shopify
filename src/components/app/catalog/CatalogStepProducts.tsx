@@ -94,6 +94,18 @@ export function CatalogStepProducts({
   // Track selection order for numbered badges
   const [selectionOrder, setSelectionOrder] = useState<string[]>([]);
 
+  // Sync selectionOrder when selectedProductIds changes externally (e.g. reset)
+  useEffect(() => {
+    setSelectionOrder(prev => {
+      const pruned = prev.filter(id => selectedProductIds.has(id));
+      // Add any IDs in selectedProductIds not yet tracked (e.g. from Select All)
+      const missing = Array.from(selectedProductIds).filter(id => !pruned.includes(id));
+      const merged = [...pruned, ...missing];
+      if (merged.length === prev.length && merged.every((id, i) => prev[i] === id)) return prev;
+      return merged;
+    });
+  }, [selectedProductIds]);
+
   const toggleProduct = (id: string) => {
     const next = new Set(selectedProductIds);
     const nextOrder = [...selectionOrder];
