@@ -267,12 +267,45 @@ serve(async (req) => {
         const tempVideoUrl = taskData.task_result.videos[0].url;
         let permanentUrl = tempVideoUrl;
 
+        // Extract Kling cover image for lightweight grid thumbnails
+        const coverImageUrl = taskData.task_result.videos[0].cover_image_url as string | undefined;
+        let savedPreviewUrl: string | undefined;
+
         try {
           permanentUrl = await saveVideoToStorage(serviceClient, tempVideoUrl, userId, task_id);
 
+          // Save cover image to storage as preview thumbnail
+          if (coverImageUrl) {
+            try {
+              const coverRes = await fetch(coverImageUrl);
+              if (coverRes.ok) {
+                const coverBytes = new Uint8Array(await coverRes.arrayBuffer());
+                const previewPath = `${userId}/${task_id}_preview.jpg`;
+                const { error: previewUploadErr } = await serviceClient.storage
+                  .from("generated-videos")
+                  .upload(previewPath, coverBytes, { contentType: "image/jpeg", upsert: true });
+                if (!previewUploadErr) {
+                  const { data: previewUrlData } = serviceClient.storage
+                    .from("generated-videos")
+                    .getPublicUrl(previewPath);
+                  savedPreviewUrl = previewUrlData.publicUrl;
+                }
+              }
+            } catch (previewErr) {
+              console.error("[generate-video] Preview save error:", previewErr);
+            }
+          }
+
+          const updateData: Record<string, unknown> = {
+            video_url: permanentUrl,
+            status: "complete",
+            completed_at: new Date().toISOString(),
+          };
+          if (savedPreviewUrl) updateData.preview_url = savedPreviewUrl;
+
           await serviceClient
             .from("generated_videos")
-            .update({ video_url: permanentUrl, status: "complete", completed_at: new Date().toISOString() })
+            .update(updateData)
             .eq("kling_task_id", task_id);
         } catch (saveErr) {
           console.error("[generate-video] Error saving video permanently:", saveErr);
@@ -372,13 +405,40 @@ serve(async (req) => {
           const taskData = statusResult.data;
           if (taskData.task_status === "succeed" && taskData.task_result?.videos?.length > 0) {
             let permanentUrl = taskData.task_result.videos[0].url;
+            let savedPreviewUrl: string | undefined;
             try {
               permanentUrl = await saveVideoToStorage(serviceClient, permanentUrl, userId, video.kling_task_id);
             } catch (_) { /* keep temp url */ }
 
+            // Capture cover image as preview
+            const coverImageUrl = taskData.task_result.videos[0].cover_image_url as string | undefined;
+            if (coverImageUrl) {
+              try {
+                const coverRes = await fetch(coverImageUrl);
+                if (coverRes.ok) {
+                  const coverBytes = new Uint8Array(await coverRes.arrayBuffer());
+                  const previewPath = `${userId}/${video.kling_task_id}_preview.jpg`;
+                  const { error: pErr } = await serviceClient.storage
+                    .from("generated-videos")
+                    .upload(previewPath, coverBytes, { contentType: "image/jpeg", upsert: true });
+                  if (!pErr) {
+                    const { data: pData } = serviceClient.storage.from("generated-videos").getPublicUrl(previewPath);
+                    savedPreviewUrl = pData.publicUrl;
+                  }
+                }
+              } catch (_) { /* ignore preview errors */ }
+            }
+
+            const updateData: Record<string, unknown> = {
+              video_url: permanentUrl,
+              status: "complete",
+              completed_at: new Date().toISOString(),
+            };
+            if (savedPreviewUrl) updateData.preview_url = savedPreviewUrl;
+
             await serviceClient
               .from("generated_videos")
-              .update({ video_url: permanentUrl, status: "complete", completed_at: new Date().toISOString() })
+              .update(updateData)
               .eq("kling_task_id", video.kling_task_id);
             recovered++;
           } else if (taskData.task_status === "failed") {

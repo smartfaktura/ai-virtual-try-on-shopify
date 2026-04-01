@@ -5,9 +5,8 @@ import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
 import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState, useRef, useCallback, useEffect, type CSSProperties } from 'react';
+import { useState, useCallback } from 'react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { downloadVideosAsZip } from '@/lib/dropDownload';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { toast } from 'sonner';
@@ -21,68 +20,12 @@ interface RecentVideoCardProps {
   onToggleSelect: () => void;
 }
 
-function getMediaFrameStyle(aspectRatio: string | null | undefined): CSSProperties {
-  if (!aspectRatio || !aspectRatio.includes(':')) {
-    return { width: '100%', height: '100%' };
-  }
-
-  const [width, height] = aspectRatio.split(':').map(Number);
-  if (!width || !height) {
-    return { width: '100%', height: '100%' };
-  }
-
-  const normalizedAspectRatio = `${width} / ${height}`;
-  const cardRatio = 3 / 4;
-  const mediaRatio = width / height;
-
-  return mediaRatio >= cardRatio
-    ? { width: '100%', aspectRatio: normalizedAspectRatio }
-    : { height: '100%', aspectRatio: normalizedAspectRatio };
-}
-
 function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const isMobile = useIsMobile();
   const isComplete = video.status === 'complete' && video.video_url;
-  const [hovering, setHovering] = useState(false);
-  const [canPlay, setCanPlay] = useState(false);
-  const thumbnailUrl = getOptimizedUrl(video.source_image_url, { width: 800, quality: 60 });
-  const displayAspectRatio =
-    typeof video.settings_json?.aspectRatio === 'string'
-      ? video.settings_json.aspectRatio
-      : video.aspect_ratio;
-  const mediaFrameStyle = getMediaFrameStyle(displayAspectRatio);
-
-  useEffect(() => {
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.removeAttribute('src');
-        videoRef.current.load();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!videoRef.current || !canPlay) return;
-    if (hovering) {
-      videoRef.current.play().catch(() => {});
-    } else {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  }, [hovering, canPlay]);
-
-  const handleMouseEnter = useCallback(() => {
-    if (!isMobile && isComplete && !selectMode) setHovering(true);
-  }, [isMobile, isComplete, selectMode]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (!isMobile && isComplete && !selectMode) {
-      setHovering(false);
-      setCanPlay(false);
-    }
-  }, [isMobile, isComplete, selectMode]);
+  const thumbnailUrl = getOptimizedUrl(
+    (video as any).preview_url || video.source_image_url,
+    { width: 800, quality: 60 },
+  );
 
   const handleClick = useCallback(() => {
     if (selectMode) {
@@ -93,17 +36,13 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
   }, [selectMode, onToggleSelect, onClick]);
 
   const showStatusBadge = video.status === 'processing' || video.status === 'queued';
-  const isPlaying = hovering && canPlay;
 
   return (
     <div
       className="group cursor-pointer"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {/* Select checkbox overlay */}
         {selectMode && (
           <div className="absolute top-2 left-2 z-20">
             <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -119,37 +58,10 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
         <img
           src={thumbnailUrl}
           alt=""
-          aria-hidden="true"
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover scale-105 blur-xl opacity-25"
+          className="absolute inset-0 w-full h-full object-cover"
         />
-
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative max-h-full max-w-full overflow-hidden" style={mediaFrameStyle}>
-            {hovering && isComplete && !selectMode && (
-              <video
-                ref={videoRef}
-                src={video.video_url!}
-                poster={thumbnailUrl}
-                loop
-                muted
-                playsInline
-                preload="none"
-                onCanPlay={() => setCanPlay(true)}
-                className="absolute inset-0 h-full w-full object-contain bg-transparent"
-                style={{ visibility: isPlaying ? 'visible' : 'hidden' }}
-              />
-            )}
-            <img
-              src={thumbnailUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className={`absolute inset-0 h-full w-full object-contain ${isPlaying ? 'invisible' : 'visible'}`}
-            />
-          </div>
-        </div>
 
         {showStatusBadge && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900 animate-pulse">
@@ -163,15 +75,9 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           </Badge>
         )}
 
-        {hovering && !canPlay && isComplete && !selectMode && (
-          <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 z-10">
-            <Loader2 className="h-6 w-6 text-background animate-spin" />
-          </div>
-        )}
-
-        {isComplete && !hovering && !selectMode && (
+        {isComplete && !selectMode && (
           <div className="absolute bottom-2 left-2 z-10">
-            <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
+            <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
               <Play className="h-3 w-3 text-foreground ml-0.5" />
             </div>
           </div>
