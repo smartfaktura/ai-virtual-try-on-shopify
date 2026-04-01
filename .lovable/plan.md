@@ -1,50 +1,51 @@
 
 
-# Fix Image Display on SEO Landing Page
+# Redesign SEO Landing Page — VOVV.ai Branded, 2026 Design
 
-## Problem
-Images show as narrow vertical strips because `object-contain` + forced `aspectRatio` containers create empty space. The screenshot shows the exact issue.
+## Image Fix
 
-## Solution
-Use the **exact same pattern** as `DiscoverCard` default rendering: no `aspectRatio` wrapper, just `w-full h-auto object-cover` letting images render at natural dimensions.
+The root cause: `ShimmerImage` without `aspectRatio` renders images at natural dimensions inside an `h-full` wrapper, causing tall images to dominate the viewport. The proven pattern from HeroSection uses `aspectRatio="3/4"` + `object-cover object-top` on `ShimmerImage` for controlled grids.
 
-## Changes — `src/pages/seo/AIProductPhotographyEcommerce.tsx`
+**Fix all three image sections:**
+- **Hero grid**: Use `aspectRatio="3/4"` + `className="w-full h-full object-cover object-top"` (exact HeroSection pattern)
+- **Outcome tabs**: Use `aspectRatio="3/4"` + `object-cover object-top`
+- **Discovery showcase**: Use `aspectRatio="3/4"` + `object-cover object-top` in a masonry-style grid
 
-### Hero Grid (~lines 156-165)
-Remove `aspectRatio` prop from `ShimmerImage`, change class to `w-full h-auto block`:
-```tsx
-<div key={img.id} className="rounded-xl overflow-hidden border border-border shadow-sm bg-muted">
-  <ShimmerImage
-    src={getOptimizedUrl(img.image_url, { width: 400, quality: 75 })}
-    alt={...}
-    className="w-full h-auto block"
-    fetchPriority={i < 3 ? 'high' : 'low'}
-    loading={i < 3 ? 'eager' : 'lazy'}
-  />
-</div>
-```
+This is what HeroSection does at line 318-327 — `aspectRatio="3/4"` inside a `div` with `aspect-[3/4]`, and `object-cover`. The `object-top` keeps faces/products visible instead of zooming into midsections.
 
-### Outcome Tabs Image (~lines 217-225)
-Same fix — remove `aspectRatio`, use `w-full h-auto block object-cover`:
-```tsx
-<ShimmerImage
-  src={getOptimizedUrl(img.image_url, { width: 600, quality: 80 })}
-  alt={...}
-  className="w-full h-auto block"
-  loading="lazy"
-/>
-```
+## Design Overhaul
 
-### Discovery Showcase Grid (~lines 370-377)
-Same fix — remove `aspectRatio`, use `w-full h-auto block`:
-```tsx
-<ShimmerImage
-  src={getOptimizedUrl(img.image_url, { width: 350, quality: 70 })}
-  alt={...}
-  className="w-full h-auto block group-hover:scale-105 transition-transform duration-500"
-  loading="lazy"
-/>
-```
+Rebuild the entire page to match VOVV.ai's premium aesthetic (HeroSection, HowItWorks, FinalCTA patterns):
 
-This matches the proven `DiscoverCard` pattern used throughout the app. One file changed.
+### Brand alignment changes:
+1. **Typography**: `font-semibold` max (not `font-bold`/`font-extrabold`) per brand memory. Use `tracking-tight` on headlines
+2. **Spacing**: Match `py-20 sm:py-28` section rhythm from landing components
+3. **Gradients**: Use `bg-gradient-to-b from-primary/5 via-background to-background` pattern from HeroSection
+4. **Blur orbs**: Add `bg-primary/8 rounded-full blur-3xl` ambient elements like HeroSection/FinalCTA
+5. **Animations**: Add `useInView` fade-in pattern from HowItWorks (`opacity-0 translate-y-8` → `opacity-100 translate-y-0`)
+6. **CTAs**: Rounded-full buttons with `shadow-lg shadow-primary/25` matching HeroSection
+7. **Cards**: Rounded-2xl with `border-border bg-card shadow-sm` matching HowItWorks cards
+8. **Sections**: Use `bg-muted/20` alternation instead of `bg-card border-y border-border`
+
+### Section-by-section redesign:
+- **Hero**: Add blur orb background, refined typography, rounded-full CTAs with shadow, better trust badge styling
+- **Proof bar**: Cleaner icon row with subtle separators
+- **Outcome tabs**: Premium tab styling, image with rounded-2xl container
+- **Why brands section**: Cards matching HowItWorks card style with animations
+- **Comparison**: Side-by-side with refined card styling, subtle gradient on VOVV side
+- **Shopify section**: Gradient background with blur orb like FinalCTA
+- **Discovery showcase**: Proper masonry grid with hover effects matching DiscoverCard
+- **How it works**: Step indicators with animated number badges
+- **Use cases**: Refined card grid
+- **SEO content**: Cleaner prose styling
+- **FAQ**: Existing accordion, refined spacing
+- **Final CTA**: Match FinalCTA component pattern exactly (gradient bg, blur orb, sparkles badge, team avatars if appropriate)
+
+## Files to modify
+
+| File | Action |
+|------|--------|
+| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Full rewrite with VOVV.ai design patterns |
+
+Single file change, ~550-600 lines.
 
