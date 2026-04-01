@@ -26,7 +26,7 @@ const faqs = [
   },
   {
     q: 'What are Creative Drops?',
-    a: 'Creative Drops are automated, recurring visual runs. You choose your products, select your Workflows, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+    a: 'Creative Drops are automated, recurring visual runs. You choose your products, select your Templates, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
   },
   {
     q: 'How does Brand Profile work?',
