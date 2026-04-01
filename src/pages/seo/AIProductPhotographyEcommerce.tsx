@@ -97,12 +97,12 @@ function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<s
   return scored.slice(0, count).map(s => s.preset);
 }
 
-/* EcommerceImageFrame removed – using simple ShimmerImage + object-cover */
-
 /* ─── COMPONENT ─── */
 
 export default function AIProductPhotographyEcommerce() {
   const { data: presets = [] } = useDiscoverPresets();
+  const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
 
   const usedIds = useMemo(() => new Set<string>(), []);
 
