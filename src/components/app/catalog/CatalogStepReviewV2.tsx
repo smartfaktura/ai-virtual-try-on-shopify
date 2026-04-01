@@ -40,7 +40,7 @@ interface CatalogStepReviewV2Props {
 function SectionEditButton({ onClick }: { onClick?: () => void }) {
   if (!onClick) return null;
   return (
-    <button onClick={onClick} className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5 transition-colors ml-auto">
+    <button onClick={onClick} className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5 transition-colors ml-auto rounded focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
       <Pencil className="w-2.5 h-2.5" /> Edit
     </button>
   );
