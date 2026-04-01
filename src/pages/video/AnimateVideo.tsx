@@ -63,6 +63,9 @@ export default function AnimateVideo() {
   const isPaidUser = plan !== 'free';
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkImages, setBulkImages] = useState<BulkImage[]>([]);
+  const [customizePerImage, setCustomizePerImage] = useState(false);
+  const [activeImageTab, setActiveImageTab] = useState<string | null>(null);
+  const [perImageSettings, setPerImageSettings] = useState<Map<string, Record<string, any>>>(new Map());
 
   // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
