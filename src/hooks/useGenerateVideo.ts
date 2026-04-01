@@ -382,5 +382,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     history,
     isLoadingHistory,
     refreshHistory: fetchHistory,
+    loadMore,
+    hasMore,
+    totalCount,
+    isLoadingMore,
   };
 }
