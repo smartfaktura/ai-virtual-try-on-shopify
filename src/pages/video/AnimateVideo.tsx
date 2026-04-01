@@ -201,6 +201,10 @@ export default function AnimateVideo() {
       newWarnings.push({ type: 'info', message: 'Transparent PNGs may produce edge artifacts. Consider JPG.' });
     }
 
+    // Capture original filename as source name
+    const baseName = file.name.replace(/\.[^.]+$/, '');
+    setSourceName(baseName);
+
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
