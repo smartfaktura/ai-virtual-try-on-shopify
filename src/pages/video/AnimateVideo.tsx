@@ -467,8 +467,21 @@ export default function AnimateVideo() {
       </PageHeader>
 
       {/* ──── PRE-UPLOAD: Premium First Screen ──── */}
-      {!isPipelineActive && !isComplete && !imageUrl && (
+      {!isPipelineActive && !isBulkRunning && !isComplete && !isBulkComplete && !imageUrl && bulkImages.length === 0 && (
         <>
+          {/* Bulk mode toggle for paid users */}
+          {isPaidUser && (
+            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-2">
+                <Images className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Batch Mode</p>
+                  <p className="text-xs text-muted-foreground">Animate up to 10 images with the same settings</p>
+                </div>
+              </div>
+              <Switch checked={bulkMode} onCheckedChange={setBulkMode} />
+            </div>
+          )}
           {/* Category Chips Row */}
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">Works across ecommerce categories</p>
