@@ -1,29 +1,31 @@
 
 
-# Fix Video Naming — Use Camera Motion in Titles and ZIP Filenames
+# Fix Bulk Video Generation UX — Single Loading Screen
 
-## Problem
-1. Video cards in Video Hub show generic hash-based names (e.g. `video-f743dd96.mp4`)
-2. ZIP download names files as `video_1.mp4`, `video_2.mp4` — no camera motion context
+## Problems
+
+1. **`/app/video-hub` route is 404** — `BulkProgressBanner` navigates to `/app/video-hub` but the actual route is `/app/video`
+2. **Multi-motion single image (lines 394-415)** calls `resetPipeline()` between each camera motion, causing multiple flash screens and toasts — needs to use the bulk pipeline instead
+3. **BulkProgressBanner** shows "Queueing X of Y" (enqueue progress) but not the actual video generation progress with estimated/elapsed time in VOVV.AI branded style as requested
 
 ## Changes
 
-### 1. `src/pages/VideoHub.tsx` — ZIP download naming
+### 1. `src/components/app/video/BulkProgressBanner.tsx` — Fix route + improve progress UX
 
-Update `handleDownloadZip` to build meaningful filenames from each video's `camera_type` field:
-- Pattern: `{camera_type}_{short_id}.mp4` (e.g. `slow_push_in_f743dd.mp4`)
-- Fallback to `video_{i+1}` if `camera_type` is null
+- Fix navigation: `/app/video-hub` → `/app/video`
+- Add two-phase display:
+  - **Phase 1 (enqueuing)**: Current "Queueing X of Y videos..." with progress bar
+  - **Phase 2 (processing)**: After all queued, show "X of Y videos generating" with estimated time (use ~90s per video constant), elapsed timer, and rotating VOVV.AI team avatars
+- Show "Estimated time: ~Xm" based on total videos × 90s
+- Show elapsed time counter throughout
 
-```ts
-// Before
-name: `video_${i + 1}`,
+### 2. `src/pages/video/AnimateVideo.tsx` — Multi-motion uses bulk pipeline
 
-// After
-name: v.camera_type
-  ? `${v.camera_type}_${v.id.slice(0, 6)}`
-  : `video_${i + 1}`,
-```
+- Refactor the single-image multi-motion path (lines 394-415) to use `runBulkAnimatePipeline` instead of looping `resetPipeline()` + `runAnimatePipeline()`
+- This converts the single image + N camera motions into N bulk items, all enqueued as a single batch with one loading screen
+- Remove the `resetPipeline()` / `await delay(300)` loop
 
 ### Files
-- **Update**: `src/pages/VideoHub.tsx` — use `camera_type` + short ID for ZIP filenames
+- **Update**: `src/components/app/video/BulkProgressBanner.tsx`
+- **Update**: `src/pages/video/AnimateVideo.tsx`
 
