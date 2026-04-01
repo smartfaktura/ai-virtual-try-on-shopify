@@ -233,7 +233,33 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
               </div>
             </div>
 
-            {/* Unified Details Grid */}
+            {/* Actions — primary, above details for mobile accessibility */}
+            <div className="space-y-2.5">
+              {isComplete && (
+                <Button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+                >
+                  {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  {downloading ? 'Preparing Download…' : 'Download Video'}
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                {deleting ? 'Deleting…' : 'Delete'}
+              </Button>
+            </div>
+
+            <Separator />
+
+            {/* Details Grid */}
             {details.length > 0 && (
               <div className="space-y-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
@@ -260,32 +286,6 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
                 </div>
               </div>
             )}
-
-            {/* Actions */}
-            <div className="space-y-2.5 pt-1">
-              {isComplete && (
-                <Button
-                  onClick={handleDownload}
-                  disabled={downloading}
-                  className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
-                >
-                  {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-                  {downloading ? 'Preparing Download…' : 'Download Video'}
-                </Button>
-              )}
-
-              <Separator className="my-1" />
-
-              <Button
-                variant="ghost"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                {deleting ? 'Deleting…' : 'Delete'}
-              </Button>
-            </div>
           </div>
         </div>
       </div>
