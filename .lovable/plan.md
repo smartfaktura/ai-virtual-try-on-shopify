@@ -1,63 +1,73 @@
 
-# /app/catalog Analysis — Issues & Improvements
+
+# /app/catalog — Fresh Audit Findings
+
+After a thorough re-examination of all step components in their current state, the previous round of fixes addressed the major issues well. Here are the **remaining** items worth addressing:
 
 ## Issues Found
 
-### 1. Mobile: Page header overflows
-**File: `CatalogGenerate.tsx` line 484-488**
-- `PageHeader` + `CatalogTeamStrip` are in a `flex justify-between` row. The team strip is `hidden md:block` (good), but the PageHeader subtitle text "Generate consistent product photography across your entire catalog" is long and may wrap awkwardly on 440px. Could truncate or shorten on mobile.
+### 1. State leak: `selectionOrder` not synced with `selectedProductIds`
+**File: `CatalogStepProducts.tsx`**
+- `selectionOrder` is local state, but `selectedProductIds` is controlled from the parent. If the parent resets `selectedProductIds` (e.g. via `handleNewGeneration`), `selectionOrder` retains stale entries. This causes numbered badges to show wrong numbers on re-entry.
+- **Fix**: Add a `useEffect` that prunes `selectionOrder` to only include IDs present in `selectedProductIds`.
 
-### 2. Mobile: `pb-32` excessive bottom padding
-**File: `CatalogGenerate.tsx` line 482**
-- `pb-32` (128px) is too much on mobile where screen real estate is limited. Should be `pb-16 sm:pb-32`.
+### 2. Import URL tab is a fake stub
+**File: `CatalogStepProducts.tsx` lines 401-430**
+- The "Import URL" button just does `setTimeout(() => setIsImporting(false), 2000)` — pure mock. It will confuse users who try to use it.
+- **Fix**: Either wire it to the existing `import-product` edge function, or hide the tab / show "Coming soon" badge.
 
-### 3. Products step: Floating selection bar can overflow on mobile
-**File: `CatalogStepProducts.tsx` line ~320+**
-- The floating bar contains thumbnails + text + button. Need to verify it has `overflow-hidden` and proper truncation on 440px. The tab gap is already `gap-3 sm:gap-6` which is fine.
+### 3. CSV tab likely also a stub
+**File: `CatalogStepProducts.tsx` line 433+**
+- Need to verify, but based on the pattern it's likely also non-functional.
+- **Fix**: Same approach — wire up or mark as coming soon.
 
-### 4. Shots step: "Next: Review" button text is wrong
-**File: `CatalogStepShots.tsx` line 141**
-- Button says "Next: Review" but the next step is actually **Props** (step 6), not Review (step 7). Should say "Next: Props".
-
-### 5. Props step: Combo list has no empty state when 0 combos
+### 4. Props step: combo list has no grouping
 **File: `CatalogStepProps.tsx`**
-- If `heroProducts` is empty or `selectedShots` is empty (shouldn't happen due to step validation, but defensive), the combo list renders nothing without explanation.
+- When you have 5 products × 3 models × 4 shots = 60 combos, scrolling through a flat list of 60 rows is painful. No grouping by product or model.
+- **Fix**: Group combos by product with a sticky product header. Each group shows the product image + name, then indented combo rows beneath it.
 
-### 6. Props step: Prop picker modal doesn't reset search on reopen
-**File: `CatalogStepProps.tsx` line 68-71**
-- `handleOpenChange` resets `localSelected` but not `search`. If user searched, closed, and reopened, old search text persists.
+### 5. Generation progress: no product image thumbnails
+**File: `CatalogGenerate.tsx` lines 411-438**
+- The per-product progress cards show name + percentage but no product thumbnail. Adding the image would make it much easier to identify which product is generating.
+- **Fix**: Pass product image data into the batch state or look it up from `products` array by `productId`.
 
-### 7. Review step: Props summary uses `totalImages` for denominator
-**File: `CatalogStepReviewV2.tsx` line 133**
-- `{combosWithProps}/{totalImages} shots` — but `totalImages` comes from the parent as `products × models × shots`, which IS the same as total combos. This is correct but the variable name is confusing.
+### 6. Review step: no way to go back and edit individual sections
+**File: `CatalogStepReviewV2.tsx`**
+- The review shows a summary but each section (Products, Models, Style, etc.) is not clickable to jump back to that step. Users must click Back repeatedly.
+- **Fix**: Make each summary section header clickable with an "Edit" link that calls `onStepClick(N)`.
 
-### 8. Stepper: Mobile connector lines could use `bg-primary/30` transition
-**File: `CatalogStepper.tsx` line 96-98**
-- Mobile connectors lack the `transition-colors` class that desktop connectors have. Minor visual inconsistency.
+### 7. Stepper: no visual distinction between "completed" and "can navigate to"
+**File: `CatalogStepper.tsx`**
+- Steps before current are all styled the same (`bg-primary/8 text-primary`), whether they have valid selections or the user just passed through. Minor but could be improved with a checkmark for fully-validated steps vs. a number for "visited but incomplete".
 
-### 9. Context Sidebar: Models count shows "1" text when exactly 1 or 2 models
-**File: `CatalogContextSidebar.tsx` line 99**
-- When `models.length <= 2`, it shows the number as text ("1" or "2") next to thumbnails. This is redundant since the thumbnails are already visible. Could remove.
+### 8. Mobile: floating selection bar on Products step has no `safe-area-inset-bottom`
+**File: `CatalogStepProducts.tsx` line ~460+**
+- On iOS with home indicator, the floating bar at `bottom-4` may be partially obscured.
+- **Fix**: Add `pb-safe` or `bottom-[calc(1rem+env(safe-area-inset-bottom))]`.
 
-### 10. No keyboard navigation for shot cards
-**File: `CatalogStepShots.tsx`**
-- Shot cards are `<button>` elements (good for a11y), but there's no focus ring styling. Same issue in Background cards.
+### 9. No loading state when clicking Generate on Review step
+**File: `CatalogStepReviewV2.tsx`**
+- The button shows a spinner when `isGenerating` is true, but there's a gap between clicking and `isGenerating` becoming true (async `handleGenerate`). Button should be disabled immediately on click.
+- **Fix**: Use local `clicked` state that disables the button immediately.
 
-### 11. Background step: Grid could use 3 columns on mobile
-**File: `CatalogStepBackgroundsV2.tsx` line 24**
-- Currently `grid-cols-2 sm:grid-cols-3`. Background swatches are simple color blocks — 3 columns would fit fine at 440px and show more options without scrolling.
+### 10. Accessibility: Background cards lack `aria-label`
+**File: `CatalogStepBackgroundsV2.tsx`**
+- Color swatch buttons have no accessible name. Screen readers would announce them as unlabeled buttons.
+- **Fix**: Add `aria-label={bg.label}` to each button.
 
-## Recommended Improvements
+## Recommended Priority
 
-| # | Fix | File | Effort |
-|---|-----|------|--------|
-| 1 | Reduce bottom padding on mobile | `CatalogGenerate.tsx` | Trivial |
-| 2 | Fix "Next: Review" → "Next: Props" | `CatalogStepShots.tsx` | Trivial |
-| 3 | Reset search on modal reopen | `CatalogStepProps.tsx` | Trivial |
-| 4 | Add `transition-colors` to mobile stepper connectors | `CatalogStepper.tsx` | Trivial |
-| 5 | Remove redundant model count text when ≤2 | `CatalogContextSidebar.tsx` | Trivial |
-| 6 | Use 3-col grid for backgrounds on mobile | `CatalogStepBackgroundsV2.tsx` | Trivial |
-| 7 | Shorten PageHeader subtitle on mobile | `CatalogGenerate.tsx` | Small |
-| 8 | Add focus-visible ring to shot/bg cards | `CatalogStepShots.tsx`, `CatalogStepBackgroundsV2.tsx` | Small |
+| # | Fix | Effort | Impact |
+|---|-----|--------|--------|
+| 1 | Sync selectionOrder with selectedProductIds | Small | Prevents stale numbered badges |
+| 2 | Fix or disable Import URL stub | Small | Prevents user confusion |
+| 3 | Fix or disable CSV stub | Small | Same |
+| 4 | Group props combos by product | Medium | Major UX win for large catalogs |
+| 5 | Add product thumbnails to generation progress | Small | Better visual identification |
+| 6 | Add "Edit" links in Review step sections | Small | Faster navigation |
+| 7 | iOS safe area for floating bar | Trivial | Mobile polish |
+| 8 | Immediate button disable on Generate click | Trivial | Prevents double-click |
+| 9 | Aria labels on background cards | Trivial | Accessibility |
 
-All are minor polish fixes. No breaking issues or critical bugs found — the flow is structurally sound.
+No critical bugs — the flow works. Items 1-3 are functional issues that should be fixed. Item 4 is the biggest UX improvement opportunity for users with many products.
+
