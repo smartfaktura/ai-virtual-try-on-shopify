@@ -265,11 +265,13 @@ export default function AIProductPhotographyEcommerce() {
                 return (
                   <TabsContent key={tab.id} value={tab.id}>
                     <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-border shadow-md bg-muted">
+                      <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-muted max-h-[520px]">
                         {img ? (
-                          <EcommerceImageFrame
+                          <ShimmerImage
                             src={getOptimizedUrl(img.image_url, { width: 600, quality: 80 })}
                             alt={`${tab.title} – ecommerce product image generator example`}
+                            className="w-full h-auto block"
+                            wrapperClassName="h-auto"
                             loading="lazy"
                           />
                         ) : (
