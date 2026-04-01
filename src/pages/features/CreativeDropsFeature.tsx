@@ -111,7 +111,7 @@ export default function CreativeDropsFeature() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-4">Never Run Out of Fresh Visuals</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Set up your first Creative Drop today and keep your product catalog looking fresh — automatically.
+            Set up your Content Calendar today and keep your product catalog looking fresh — automatically.
           </p>
           <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
             Start Creating

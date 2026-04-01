@@ -87,7 +87,7 @@ export function CreativeDropsSection() {
               className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
               onClick={() => navigate(user ? '/app/creative-drops' : '/auth')}
             >
-              Set Up Monthly Creative Drops
+              Set Up Your Content Calendar
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>

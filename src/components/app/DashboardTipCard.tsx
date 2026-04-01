@@ -18,7 +18,7 @@ interface Tip {
 const TIPS: Tip[] = [
   {
     icon: Calendar,
-    text: 'Schedule monthly Creative Drops to automate fresh visuals for your store.',
+    text: 'Schedule monthly content drops to automate fresh visuals for your store.',
     highlight: 'Automate your content',
     avatar: teamAvatar('avatar-kenji.jpg'),
     memberName: 'Kenji',

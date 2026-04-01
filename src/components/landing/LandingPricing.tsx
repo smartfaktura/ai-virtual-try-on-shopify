@@ -27,7 +27,7 @@ export function LandingPricing() {
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Start free. Automate as you grow. Creative Drops included on Growth and above.
+            Start free. Automate as you grow. Content Calendar included on Growth and above.
           </p>
 
           {/* Toggle */}

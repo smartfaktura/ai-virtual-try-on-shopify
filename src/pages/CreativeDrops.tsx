@@ -248,8 +248,8 @@ export default function CreativeDrops() {
 
   return (
     <PageHeader
-      title={wizardOpen ? '' : 'Creative Drops'}
-      subtitle={wizardOpen ? undefined : "Automate recurring visual creation. Set up drops and receive fresh assets on autopilot."}
+      title={wizardOpen ? '' : 'Content Calendar'}
+      subtitle={wizardOpen ? undefined : "Schedule recurring content and receive fresh assets on autopilot."}
       backAction={wizardOpen ? { content: 'Back', onAction: closeWizard } : undefined}
     >
       {wizardOpen ? (

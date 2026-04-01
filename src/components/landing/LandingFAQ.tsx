@@ -25,8 +25,8 @@ const faqs = [
     a: 'Upload a clothing item and choose from our library of 40+ diverse AI models across different ethnicities, body types, and ages. Select a pose, framing, and scene, and the AI generates realistic photos of the model wearing your product.',
   },
   {
-    q: 'What are Creative Drops?',
-    a: 'Creative Drops are automated, recurring visual runs. You choose your products, select your Templates, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+    q: 'What is the Content Calendar?',
+    a: 'The Content Calendar automates recurring visual runs. You choose your products, select your Templates, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
   },
   {
     q: 'How does Brand Profile work?',

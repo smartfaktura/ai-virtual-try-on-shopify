@@ -223,7 +223,7 @@ function buildSystemPrompt(pageUrl?: string): string {
     '/app/workflows': 'Templates page — they are browsing available templates.',
     '/app/freestyle': 'Freestyle generation — they are creating images with custom prompts.',
     '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
-    '/app/creative-drops': 'Creative Drops — they are managing scheduled content generation.',
+    '/app/creative-drops': 'Content Calendar — they are managing scheduled content generation.',
     '/app/products': 'Products page — they are managing their product catalog.',
     '/app/products/new': 'Add Product page — they are uploading a new product.',
     '/app/library': 'Library — they are reviewing their generated images.',

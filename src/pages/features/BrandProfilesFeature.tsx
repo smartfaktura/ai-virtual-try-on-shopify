@@ -33,7 +33,7 @@ const steps = [
   {
     number: '02',
     title: 'Attach to Workflows',
-    description: 'Link your Brand Profile to any workflow or Creative Drop. The AI incorporates your guidelines into every generation.',
+    description: 'Link your Brand Profile to any template or Content Calendar. The AI incorporates your guidelines into every generation.',
   },
   {
     number: '03',
