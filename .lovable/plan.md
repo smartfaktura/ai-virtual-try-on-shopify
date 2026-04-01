@@ -1,29 +1,41 @@
 
 
-# Fix SEO Ecommerce Page — Images, Layout, and Section Order
+# Change Hero Images to Fashion Featured Presets
 
-## Problems Identified
-1. **Email tab shows no image** — the `pickByCategory` fallback shows a camera icon placeholder when no preset matches the "campaign" category. Need a smarter fallback that picks any available featured image.
-2. **White space on scroll** — the `useInView` animation starts elements as `opacity-0 translate-y-8`. When scrolling back up, already-revealed sections stay visible but sections above the fold that were never observed can flash. The hidden state also causes layout shifts. Fix by ensuring all sections default to visible after first paint or use CSS-only animation.
-3. **"Explore Real Ecommerce Visual Styles" too far down** — currently section 7 (after Comparison and Shopify). Move it up to section 4, right after Proof Bar + Outcome Tabs.
-4. **Showcase images should be different/featured** — currently uses `pickProductLed` which may grab non-featured items. Switch to prioritize `is_featured` presets and use a different selection pool (not just product-led).
+## What
+Replace the hero grid images (the 6 images right after the hero headline/CTAs/team avatars) with **featured presets from the fashion category** instead of the current generic `pickProductLed` selection.
 
-## Changes to `src/pages/seo/AIProductPhotographyEcommerce.tsx`
+## Change in `src/pages/seo/AIProductPhotographyEcommerce.tsx`
 
-### 1. Fix tab image fallback
-In `tabImages` memo, when `pickByCategory` returns nothing for a tab, fall back to any featured preset not yet used. This eliminates the camera icon placeholder on Email and any other empty tab.
+Update the `heroImages` memo (~lines 146-151) to filter for fashion category + featured presets:
 
-### 2. Fix white space / scroll-back issue
-Replace the `useInView` + JS class toggle pattern with CSS `animation` triggered by a class. Once `inView` is set to `true` it never reverts, so sections that were revealed stay visible. The real issue is the initial `opacity-0 translate-y-8` — if sections above the fold never intersect (e.g. user scrolls down fast then back up), they stay hidden. Fix: add `once: true` behavior is already there, but also add a fallback — after 2s, force all sections visible. Simpler fix: just use the `animate-scale-in` keyframe approach already used in hero grid for all sections, removing the JS toggle entirely.
+```tsx
+const heroImages = useMemo(() => {
+  usedIds.clear();
+  // Pick featured fashion presets first, then any fashion preset
+  const fashionFeatured = presets.filter(
+    p => (p.category === 'fashion' || p.discover_categories?.includes('fashion')) && p.is_featured
+  ).slice(0, 6);
+  const picks = fashionFeatured.length >= 6
+    ? fashionFeatured
+    : [
+        ...fashionFeatured,
+        ...presets
+          .filter(p =>
+            (p.category === 'fashion' || p.discover_categories?.includes('fashion')) &&
+            !fashionFeatured.some(f => f.id === p.id)
+          )
+          .slice(0, 6 - fashionFeatured.length),
+      ];
+  picks.forEach(p => usedIds.add(p.id));
+  return picks;
+}, [presets, usedIds]);
+```
 
-### 3. Move showcase section up
-Reorder JSX: move the "Explore Real Ecommerce Visual Styles" section (currently section 7) to right after Outcome Tabs (new section 4). This puts visual proof higher in the page.
-
-### 4. Use featured images in showcase
-Change `showcaseImages` to prioritize `is_featured` presets, then fill remaining slots with product-led picks. Use 8 images instead of 12 to keep it tight.
+This prioritizes `is_featured` fashion presets, then fills remaining slots with any fashion-category preset.
 
 ## Files
 | File | Change |
 |------|--------|
-| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Fix tab fallback, fix white-space scroll issue, reorder sections, improve showcase image selection |
+| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Update `heroImages` memo to filter by fashion category |
 
