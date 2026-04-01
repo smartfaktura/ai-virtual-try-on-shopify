@@ -102,7 +102,10 @@ export function useCatalogGenerate() {
         allDone, aggregatedImages, anchorStatus, phase,
       });
 
-      if (allDone) stopPolling();
+      if (allDone) {
+        stopPolling();
+        setIsGenerating(false);
+      }
     };
 
     poll();

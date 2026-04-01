@@ -251,6 +251,7 @@ export function buildSupportWardrobePrompt(wardrobe: SupportWardrobe, category: 
     sunglasses: 'designed to keep focus on the eyewear',
     jewelry: 'designed to keep focus on the jewelry',
     shoes: 'designed to keep focus on the footwear',
+    swimwear: 'designed to keep focus on the swimwear, no additional clothing',
   }[category] || '';
 
   return `paired with ${pieces.join(' and ')}, understated styling${focus ? `, ${focus}` : ''}, no competing accessories`;

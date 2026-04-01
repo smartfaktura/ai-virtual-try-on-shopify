@@ -3,7 +3,7 @@
 export type ProductCategory =
   | 'top' | 'trousers' | 'skirt' | 'shorts' | 'dress' | 'jumpsuit'
   | 'jacket_coat' | 'shoes' | 'bag' | 'hat' | 'sunglasses'
-  | 'scarf' | 'belt' | 'jewelry' | 'accessory' | 'unknown';
+  | 'scarf' | 'belt' | 'jewelry' | 'accessory' | 'swimwear' | 'unknown';
 
 export type HeroSlot =
   | 'upper_body_slot' | 'lower_body_slot' | 'full_body_slot'
