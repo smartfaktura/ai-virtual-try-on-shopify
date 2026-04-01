@@ -732,28 +732,49 @@ serve(async (req) => {
       );
     }
 
-    if (!body.product || !body.model || !body.pose) {
-      console.error("[generate-tryon] Missing required fields", {
-        hasProduct: !!body.product,
-        hasModel: !!body.model,
-        hasPose: !!body.pose,
-        creative_drop_id: body.creative_drop_id || null,
-      });
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: product, model, or pose" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // ── Catalog mode bypass ──
+    const isCatalogMode = !!(body as any).catalog_mode;
+    let prompt: string;
+
+    if (isCatalogMode) {
+      const catalogBody = body as any;
+      if (!catalogBody.prompt_final || !catalogBody.product?.imageUrl) {
+        console.error("[generate-tryon] Catalog mode missing prompt_final or product image");
+        return new Response(
+          JSON.stringify({ error: "Catalog mode requires prompt_final and product image" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      prompt = catalogBody.prompt_final;
+      // Normalize body so downstream code can access product/model images
+      if (!body.model) body.model = catalogBody.model || { imageUrl: null, name: "catalog" };
+      if (!body.pose) body.pose = { imageUrl: null, name: "catalog" } as any;
+      console.log(`[generate-tryon] Catalog mode — render_path=${catalogBody.render_path}, shot=${catalogBody.shot_id}`);
+      console.log("Generating catalog shot with prompt:", prompt.slice(0, 300) + "...");
+    } else {
+      if (!body.product || !body.model || !body.pose) {
+        console.error("[generate-tryon] Missing required fields", {
+          hasProduct: !!body.product,
+          hasModel: !!body.model,
+          hasPose: !!body.pose,
+          creative_drop_id: body.creative_drop_id || null,
+        });
+        return new Response(
+          JSON.stringify({ error: "Missing required fields: product, model, or pose" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Only inject theme/brand context for creative drop jobs
+      const dropContext: DropContext | undefined = body.creative_drop_id ? {
+        theme: body.theme,
+        themeNotes: body.theme_notes,
+        brandProfile: body.brand_profile,
+      } : undefined;
+
+      prompt = buildPrompt(body, dropContext);
+      console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
     }
-
-    // Only inject theme/brand context for creative drop jobs
-    const dropContext: DropContext | undefined = body.creative_drop_id ? {
-      theme: body.theme,
-      themeNotes: body.theme_notes,
-      brandProfile: body.brand_profile,
-    } : undefined;
-
-    const prompt = buildPrompt(body, dropContext);
-    console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
 
     const imageCount = Math.min(body.imageCount || 4, 8);
     const images: string[] = [];
