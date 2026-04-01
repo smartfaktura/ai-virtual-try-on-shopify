@@ -34,7 +34,7 @@ import { StartWorkflowModal } from '@/components/app/StartWorkflowModal';
 import { EarnCreditsModal } from '@/components/app/EarnCreditsModal';
 
 /* ── Inline card with IntersectionObserver for animations ── */
-function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
+function DashboardWorkflowCard({ workflow, onNavigate, comingSoon }: { workflow: Workflow; onNavigate: (slug: string) => void; comingSoon?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const isMobile = useIsMobile();
@@ -55,10 +55,14 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
   return (
     <div
       ref={ref}
-      className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col"
+      className={`group rounded-xl border overflow-hidden transition-all duration-300 flex flex-col ${
+        comingSoon
+          ? 'opacity-75 border-dashed border-border/60 bg-card/80 cursor-default'
+          : 'border-border bg-card hover:shadow-lg hover:border-primary/30'
+      }`}
     >
       <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
-        {scene ? (
+        {scene && !comingSoon ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} mobileCompact={isMobile} />
         ) : (
           <img
@@ -68,7 +72,12 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
           />
         )}
-        {workflow.uses_tryon && (
+        {comingSoon && (
+          <Badge variant="outline" className="absolute top-2 right-2 z-20 text-[10px] font-medium text-muted-foreground border-border/60">
+            Coming Soon
+          </Badge>
+        )}
+        {!comingSoon && workflow.uses_tryon && (
           <Badge className="absolute top-2 right-2 z-20 text-[10px] px-2 py-0.5 bg-primary/90 text-primary-foreground border-0">
             Try-On
           </Badge>
@@ -77,14 +86,25 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
       <div className="p-4 flex flex-col flex-1">
         <h3 className="text-sm font-bold text-foreground truncate">{workflow.name}</h3>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{workflow.description}</p>
-        <Button
-          size="sm"
-          className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
-          onClick={() => onNavigate(workflow.slug || '')}
-        >
-          Create Set
-          <ArrowRight className="w-3 h-3" />
-        </Button>
+        {comingSoon ? (
+          <Button
+            size="sm"
+            className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
+            disabled
+            variant="secondary"
+          >
+            Coming Soon
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
+            onClick={() => onNavigate(workflow.slug || '')}
+          >
+            Create Set
+            <ArrowRight className="w-3 h-3" />
+          </Button>
+        )}
       </div>
     </div>
   );
