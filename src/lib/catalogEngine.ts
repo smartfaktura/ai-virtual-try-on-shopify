@@ -29,6 +29,7 @@ const CATEGORY_KEYWORDS: Record<ProductCategory, string[]> = {
   belt: ['belt', 'waist belt', 'chain belt'],
   jewelry: ['jewelry', 'jewellery', 'necklace', 'bracelet', 'ring', 'earring', 'pendant', 'anklet', 'brooch', 'cufflink', 'bangle', 'chain'],
   accessory: ['accessory', 'gloves', 'tie', 'bow tie', 'suspenders', 'watch', 'keychain'],
+  swimwear: ['bikini', 'swimsuit', 'swimwear', 'swim', 'bathing suit', 'one-piece', 'tankini', 'swim trunk', 'board short', 'swimming'],
   unknown: [],
 };
 
