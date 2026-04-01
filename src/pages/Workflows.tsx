@@ -513,7 +513,7 @@ export default function Workflows() {
           <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
 
           <div className="section-divider flex items-center gap-3">
-            <span className="section-label">Create a New Set</span>
+            <span className="section-label">Choose a Template</span>
           </div>
         </div>
       )}
