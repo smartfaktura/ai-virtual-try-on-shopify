@@ -440,7 +440,7 @@ export default function CatalogGenerate() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Keep going</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => { resetBatch(); setShowCancelDialog(false); }}>
+                    <AlertDialogAction onClick={() => { resetBatch(); setGenerationStartedAt(null); setElapsedSeconds(0); setShowCancelDialog(false); }}>
                       Cancel generation
                     </AlertDialogAction>
                   </AlertDialogFooter>
