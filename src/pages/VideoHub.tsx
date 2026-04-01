@@ -1,14 +1,26 @@
-import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Loader2 } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Loader2, Check, Download } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
 import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
 import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { downloadVideosAsZip } from '@/lib/dropDownload';
+import { toSignedUrl } from '@/lib/signedUrl';
+import { toast } from 'sonner';
 
-function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: () => void }) {
+interface RecentVideoCardProps {
+  video: GeneratedVideo;
+  onClick: () => void;
+  selectMode: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+}
+
+function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const isComplete = video.status === 'complete' && video.video_url;
@@ -25,7 +37,6 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
     };
   }, []);
 
-  // Auto-play/pause on hover
   useEffect(() => {
     if (!videoRef.current || !canPlay) return;
     if (hovering) {
@@ -37,15 +48,23 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
   }, [hovering, canPlay]);
 
   const handleMouseEnter = useCallback(() => {
-    if (!isMobile && isComplete) setHovering(true);
-  }, [isMobile, isComplete]);
+    if (!isMobile && isComplete && !selectMode) setHovering(true);
+  }, [isMobile, isComplete, selectMode]);
 
   const handleMouseLeave = useCallback(() => {
-    if (!isMobile && isComplete) {
+    if (!isMobile && isComplete && !selectMode) {
       setHovering(false);
       setCanPlay(false);
     }
-  }, [isMobile, isComplete]);
+  }, [isMobile, isComplete, selectMode]);
+
+  const handleClick = useCallback(() => {
+    if (selectMode) {
+      onToggleSelect();
+    } else {
+      onClick();
+    }
+  }, [selectMode, onToggleSelect, onClick]);
 
   const showStatusBadge = video.status === 'processing' || video.status === 'queued';
   const isPlaying = hovering && canPlay;
@@ -55,11 +74,23 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
       className="group cursor-pointer"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
-        {/* Mount video only on hover — poster prevents black flash */}
-        {hovering && isComplete && (
+        {/* Select checkbox overlay */}
+        {selectMode && (
+          <div className="absolute top-2 left-2 z-20">
+            <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+              selected
+                ? 'bg-primary border-primary text-primary-foreground'
+                : 'border-foreground/40 bg-background/60 backdrop-blur-sm'
+            }`}>
+              {selected && <Check className="h-3.5 w-3.5" />}
+            </div>
+          </div>
+        )}
+
+        {hovering && isComplete && !selectMode && (
           <video
             ref={videoRef}
             src={video.video_url!}
@@ -86,22 +117,19 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
           </Badge>
         )}
 
-        {/* Camera motion label */}
         {video.camera_type && !showStatusBadge && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground capitalize">
             {video.camera_type.replace(/_/g, ' ')}
           </Badge>
         )}
 
-        {/* Loading spinner while buffering on hover */}
-        {hovering && !canPlay && isComplete && (
+        {hovering && !canPlay && isComplete && !selectMode && (
           <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 z-10">
             <Loader2 className="h-6 w-6 text-background animate-spin" />
           </div>
         )}
 
-        {/* Play icon when idle */}
-        {isComplete && !hovering && (
+        {isComplete && !hovering && !selectMode && (
           <div className="absolute bottom-2 left-2 z-10">
             <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <Play className="h-3 w-3 text-foreground ml-0.5" />
@@ -116,6 +144,46 @@ function RecentVideoCard({ video, onClick }: { video: GeneratedVideo; onClick: (
 export default function VideoHub() {
   const { history, isLoadingHistory, refreshHistory } = useGenerateVideo();
   const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const toggleSelectMode = useCallback(() => {
+    setSelectMode(prev => {
+      if (prev) setSelectedIds(new Set());
+      return !prev;
+    });
+  }, []);
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleDownloadZip = useCallback(async () => {
+    const selected = history.filter(v => selectedIds.has(v.id) && v.video_url);
+    if (selected.length === 0) return;
+
+    setIsDownloading(true);
+    try {
+      const videos = await Promise.all(
+        selected.map(async (v, i) => ({
+          url: await toSignedUrl(v.video_url!),
+          name: `video_${i + 1}`,
+        }))
+      );
+      await downloadVideosAsZip(videos, 'videos');
+      toast.success(`Downloaded ${videos.length} video${videos.length > 1 ? 's' : ''}`);
+    } catch {
+      toast.error('Download failed. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [history, selectedIds]);
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -123,7 +191,8 @@ export default function VideoHub() {
         title="Create Videos"
         subtitle="Turn product shots, campaign visuals, and reference frames into polished short videos."
       >
-        <div /></PageHeader>
+        <div />
+      </PageHeader>
 
       {/* Workflow Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -174,7 +243,14 @@ export default function VideoHub() {
 
       {/* Recent Videos */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Recent Videos</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Recent Videos</h2>
+          {history.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
+              {selectMode ? 'Done' : 'Select'}
+            </Button>
+          )}
+        </div>
         {isLoadingHistory ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[...Array(4)].map((_, i) => (
@@ -184,7 +260,14 @@ export default function VideoHub() {
         ) : history.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {history.slice(0, 12).map((v) => (
-              <RecentVideoCard key={v.id} video={v} onClick={() => setSelectedVideo(v)} />
+              <RecentVideoCard
+                key={v.id}
+                video={v}
+                onClick={() => setSelectedVideo(v)}
+                selectMode={selectMode}
+                selected={selectedIds.has(v.id)}
+                onToggleSelect={() => toggleSelection(v.id)}
+              />
             ))}
           </div>
         ) : (
@@ -194,6 +277,17 @@ export default function VideoHub() {
           </div>
         )}
       </div>
+
+      {/* Sticky bulk download bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background border border-border rounded-full shadow-lg px-5 py-2.5 flex items-center gap-3">
+          <span className="text-sm font-medium text-foreground">{selectedIds.size} selected</span>
+          <Button size="sm" onClick={handleDownloadZip} disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Download ZIP
+          </Button>
+        </div>
+      )}
 
       <VideoDetailModal
         video={selectedVideo}

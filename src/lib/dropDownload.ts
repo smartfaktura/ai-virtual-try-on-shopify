@@ -56,6 +56,46 @@ export async function downloadDropAsZip(
   URL.revokeObjectURL(url);
 }
 
+function getVideoExtension(ct: string | null): string {
+  if (!ct) return '.mp4';
+  if (ct.includes('video/mp4')) return '.mp4';
+  if (ct.includes('video/webm')) return '.webm';
+  return '.mp4';
+}
+
+export async function downloadVideosAsZip(
+  videos: { url: string; name: string }[],
+  zipName: string,
+  onProgress?: (pct: number) => void
+): Promise<void> {
+  const zip = new JSZip();
+  const total = videos.length;
+
+  for (let i = 0; i < total; i++) {
+    const v = videos[i];
+    try {
+      const response = await fetch(v.url);
+      if (!response.ok) continue;
+      const contentType = response.headers.get('content-type');
+      const ext = getVideoExtension(contentType);
+      const arrayBuffer = await response.arrayBuffer();
+      const baseName = v.name.replace(/\.[^.]+$/, '');
+      zip.file(`${baseName}${ext}`, arrayBuffer, { binary: true });
+    } catch {
+      // skip failed downloads
+    }
+    onProgress?.(Math.round(((i + 1) / total) * 100));
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${zipName.replace(/\s+/g, '_')}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadSingleImage(imageUrl: string, fileName: string) {
   const response = await fetch(imageUrl);
   if (!response.ok) {
@@ -63,7 +103,6 @@ export async function downloadSingleImage(imageUrl: string, fileName: string) {
   }
   const contentType = response.headers.get('content-type');
   const ext = getExtensionFromContentType(contentType);
-  // Replace any existing extension in fileName with the correct one
   const baseName = fileName.replace(/\.[^.]+$/, '');
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);
