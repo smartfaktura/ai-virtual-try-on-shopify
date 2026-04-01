@@ -1,50 +1,29 @@
 
 
-# Fix Bulk Video Generation UX — Batch as Single Unit
+# Fix Video Naming — Use Camera Motion in Titles and ZIP Filenames
 
 ## Problem
+1. Video cards in Video Hub show generic hash-based names (e.g. `video-f743dd96.mp4`)
+2. ZIP download names files as `video_1.mp4`, `video_2.mp4` — no camera motion context
 
-When bulk-generating videos, each image is enqueued individually via `useBulkVideoProject` → `useVideoProject.runAnimatePipeline` → `useGenerateVideo.startGeneration`. This causes:
+## Changes
 
-1. **Individual toast per image** — "Video queued — it will start automatically" fires N times
-2. **Individual `generation_queue` entries without a shared `batch_id`** — the `batchGrouping.ts` fallback time-window grouping may or may not merge them, and even when it does, the GlobalGenerationBar shows separate "Leo is creating your video" cards
-3. **`resetPipeline()` called between images** — clears the previous job's polling, causing stale state
+### 1. `src/pages/VideoHub.tsx` — ZIP download naming
 
-## Solution
+Update `handleDownloadZip` to build meaningful filenames from each video's `camera_type` field:
+- Pattern: `{camera_type}_{short_id}.mp4` (e.g. `slow_push_in_f743dd.mp4`)
+- Fallback to `video_{i+1}` if `camera_type` is null
 
-Refactor `useBulkVideoProject` to enqueue all jobs as a proper batch (shared `batch_id`) and suppress per-image toasts/pipeline resets during bulk mode.
+```ts
+// Before
+name: `video_${i + 1}`,
 
-### Changes
-
-### 1. `src/hooks/useBulkVideoProject.ts` — Direct enqueue with batch_id
-
-Instead of calling `videoProject.runAnimatePipeline()` per image (which fires toasts, resets state, creates projects), refactor to:
-
-- Generate a single `batch_id = crypto.randomUUID()` for the entire bulk run
-- For each image: create the `video_project`, `video_input`, `video_shot` records directly (same logic as `useVideoProject.runAnimatePipeline`)
-- Call `enqueueWithRetry()` directly with `batch_id` in the payload, using `paceDelay()` between calls
-- Send a single `sendWake()` after all jobs are enqueued
-- Show only ONE summary toast at the end ("7 videos queued successfully")
-- No `resetPipeline()` between images
-
-### 2. `src/hooks/useGenerateVideo.ts` — Accept `isBulk` flag
-
-Add an optional `isBulk` parameter to `startGeneration()`:
-- When `isBulk === true`, suppress the "Video queued" toast
-- This prevents N individual toasts when called from bulk flow
-
-### 3. `src/lib/batchGrouping.ts` — Already supports `batch_id`
-
-No changes needed — the grouping logic already handles `batch_id` in its first pass, which will correctly merge all bulk video jobs into a single `BatchGroup` in the GlobalGenerationBar.
-
-### 4. `src/components/app/GlobalGenerationBar.tsx` — Video batch display
-
-Update the video branch in the expanded detail view:
-- When a video `BatchGroup` has `totalCount > 1`, show "Leo is creating N videos" instead of "Leo is creating your video"
-- Show progress as `completedCount/totalCount done`
+// After
+name: v.camera_type
+  ? `${v.camera_type}_${v.id.slice(0, 6)}`
+  : `video_${i + 1}`,
+```
 
 ### Files
-- **Update**: `src/hooks/useBulkVideoProject.ts` — enqueue directly with shared batch_id, no per-image pipeline resets/toasts
-- **Update**: `src/hooks/useGenerateVideo.ts` — add `isBulk` param to suppress toast
-- **Update**: `src/components/app/GlobalGenerationBar.tsx` — pluralize video batch display
+- **Update**: `src/pages/VideoHub.tsx` — use `camera_type` + short ID for ZIP filenames
 
