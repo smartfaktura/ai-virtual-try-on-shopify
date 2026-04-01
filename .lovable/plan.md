@@ -1,73 +1,83 @@
 
 
-# Catalog Studio Frontend Redesign
+# CatalogStepProducts — Complete Frontend Redesign
 
-## Overview
-Complete UI/UX overhaul of the `/app/catalog` wizard. Replace the current plain stepper and basic card layouts with a premium, branded experience featuring VOVV.AI team avatars, better visual hierarchy, and polished interactions across all 6 steps.
+## Problems with Current UI
+- Product cards are plain boxes with tiny text, no visual hierarchy
+- Toolbar feels cramped — search, select all, view toggle all jammed together
+- Selection state is weak — just a thin ring, no satisfying feedback
+- Empty placeholder cards look broken (no shimmer fallback visible)
+- Tab bar (My Products / Import URL / Upload CSV) is generic and flat
+- No visual delight — no micro-animations, no branded touches
+- "Add New" card blends in too much with product cards
+- Selection counter is tiny and easy to miss
 
-## Design Concept
+## Design Direction
+Premium editorial product picker with:
+- **Frosted glass toolbar** with rounded search, pill-style view toggle
+- **Taller product cards** with soft shadow on hover, smooth scale-up, gradient overlay on selection
+- **Prominent selection badge** — top-right numbered circle (not a generic checkmark)
+- **Floating selection bar** at bottom when products are selected — shows count + "Next" CTA (like a cart bar)
+- **Better empty state** with illustration and branded copy
+- **Refined tabs** with underline style instead of filled pills
+- **Skeleton loading cards** that match the final card dimensions
 
-```text
-┌─────────────────────────────────────────────────┐
-│  Catalog Studio                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ ○ Products ─── ○ Style ─── ○ Models ───  │  │
-│  │ ○ Background ─── ○ Shots ─── ○ Review    │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│  ┌──────────────────────┐  ┌─────────────────┐  │
-│  │    Step Content       │  │ Sidebar Summary │  │
-│  │    (full width)       │  │ + Team Avatar   │  │
-│  └──────────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
+## File to Modify
+`src/components/app/catalog/CatalogStepProducts.tsx` — full rewrite
 
-## Key Design Changes
+## Detailed Changes
 
-1. **New stepper bar**: Horizontal pill-style stepper with step labels, progress line fill animation, and icons — replacing the current plain numbered circles.
+### 1. Loading State
+Replace spinner with 8 skeleton cards matching the grid layout (4-col, aspect-square + text area).
 
-2. **Floating context sidebar**: A sticky right-side summary panel (hidden on mobile, collapsible) showing current selections as they're made — product count, style badge, model thumbnails, background swatch, shot count, and credit estimate. This gives users confidence at every step.
+### 2. Header
+Remove the plain h3/p. Replace with a more refined section:
+- "Choose your products" as text-lg font-medium
+- Subtle product count badge: "12 products available"
 
-3. **VOVV.AI Team Avatar integration**: A branded "Your Studio Team" strip at the top of the page showing 3 rotating team member avatars (Sophia for lighting, Zara for styling, Kenji for art direction) with hover cards. These contextualize the AI as a team effort.
+### 3. Tabs
+Switch from filled `TabsList` to an underline-style tab bar using border-bottom highlight. Cleaner, more editorial.
 
-4. **Step 1 (Products)**: Larger product cards (4-col grid), subtle hover lift, improved selection checkbox overlay, drag-to-select feel. Selected products get a subtle glow ring. Empty state with illustration.
+### 4. Toolbar
+- Search input: taller (h-10), rounded-xl, with subtle bg-muted/50 background, no visible border until focus
+- View toggle: pill-shaped with bg-muted background, smooth transition
+- Select All / Clear: move into a row below search, with "X of Y selected" inline text
+- Remove the cramped single-row layout
 
-5. **Step 2 (Style)**: Visual style cards with a color mood strip (gradient bar from the style's palette) at the top of each card, plus a "recommended" badge on the most popular style.
+### 5. Grid Cards (the main redesign)
+- **Aspect ratio**: Keep square but add 12px padding inside card for breathing room around the image
+- **Image container**: rounded-lg with bg-muted/30 fallback color (so empty loads look intentional)
+- **Hover**: `hover:shadow-lg hover:-translate-y-0.5` with `duration-200`
+- **Selected state**: `ring-2 ring-primary` + a gradient overlay at bottom-left with a numbered badge showing selection order (1, 2, 3...)
+- **Selection indicator**: Top-right corner, larger circle (w-6 h-6), shows check when selected, fades in on hover when not selected
+- **Product info**: Below image, text-xs font-medium for title (2-line clamp), product_type as a tiny pill badge instead of plain text
+- **Card background**: bg-card with subtle border
 
-6. **Step 3 (Models)**: Larger avatar previews (6-col), gender filter tabs, sticky product-only toggle card at top with better visual treatment.
+### 6. Add New Card
+- Same height as product cards but with a more prominent dashed border
+- Centered Plus icon with "Add Product" text
+- Subtle gradient background on hover
 
-7. **Step 4 (Background)**: Larger swatches in a 4-col grid with the color filling the full card, label overlay at bottom. Selected state uses a thick primary ring.
+### 7. Floating Selection Bar
+When `selectedProductIds.size > 0`, render a sticky bottom bar:
+- `fixed bottom-4 left-1/2 -translate-x-1/2` (or relative to container)
+- Frosted glass: `bg-card/95 backdrop-blur-xl border shadow-2xl rounded-2xl`
+- Shows: selected product thumbnails (mini avatar row), count text, "Next: Style →" button
+- Smooth slide-up animation with `animate-in slide-in-from-bottom`
 
-8. **Step 5 (Shots)**: Shot cards with descriptive icons/illustrations, grouped with collapsible sections, and a live credit calculator pinned at the bottom.
+### 8. List View
+- Taller rows (py-3), larger thumbnails (w-12 h-12), better spacing
+- Selection indicator aligned right with smooth transition
+- Alternating subtle row backgrounds
 
-9. **Step 6 (Review)**: Visual summary with product thumbnail strip, model avatar strip, style + background badge row, shot list, and a prominent "Generate" CTA with credit breakdown.
-
-## Files to Create / Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/pages/CatalogGenerate.tsx` | **Rewrite** | New stepper, layout with context sidebar, team avatar strip, all step wiring preserved |
-| `src/components/app/catalog/CatalogStepProducts.tsx` | **Rewrite** | Larger cards, better selection UX, improved empty state |
-| `src/components/app/catalog/CatalogStepFashionStyle.tsx` | **Rewrite** | Visual mood cards with color strip and recommended badge |
-| `src/components/app/catalog/CatalogStepModelsV2.tsx` | **Rewrite** | Larger avatars, gender filter, better product-only toggle |
-| `src/components/app/catalog/CatalogStepBackgroundsV2.tsx` | **Rewrite** | Full-bleed color swatches, 4-col grid, better selected state |
-| `src/components/app/catalog/CatalogStepShots.tsx` | **Rewrite** | Descriptive shot cards, collapsible groups, pinned credit calc |
-| `src/components/app/catalog/CatalogStepReviewV2.tsx` | **Rewrite** | Visual summary strips, prominent CTA |
-| `src/components/app/catalog/CatalogStepper.tsx` | **Create** | Extracted pill-style stepper component |
-| `src/components/app/catalog/CatalogContextSidebar.tsx` | **Create** | Floating right-side summary panel |
-| `src/components/app/catalog/CatalogTeamStrip.tsx` | **Create** | VOVV.AI team avatar strip with 3 rotating members + hover cards |
+### 9. Import URL / CSV tabs
+- Cleaner card styling with more padding
+- Import URL: add a small preview area showing "detecting product..." state
+- CSV: better drag-drop zone with animated border on hover
 
 ## What stays the same
-- All state management, hooks, types, and generation logic in `CatalogGenerate.tsx` — only the JSX/layout changes
-- `catalogEngine.ts` — untouched
-- `useCatalogGenerate.ts` — untouched
-- All prop interfaces between parent and step components — preserved (may add optional new props for sidebar data)
-- Progress/completion/lightbox rendering — refreshed visually but same logic
-
-## Technical Notes
-- Team avatars reuse `TEAM_MEMBERS` from `teamData.ts` and `TeamAvatarHoverCard` component
-- Context sidebar uses `position: sticky` with `top` offset, hidden below `lg` breakpoint
-- Stepper uses CSS `transition` on the progress line width for smooth animation
-- All components continue using shadcn/ui primitives (Button, Badge, Tabs, Tooltip, etc.)
-- Follows existing design system: Inter font, weights 300-600, backdrop-blur, `duration-150` transitions
+- All props interface — no changes
+- `toggleProduct`, `filtered`, `visible` logic — identical
+- Tab structure (library / url / csv) — same tabs, better styling
+- Pagination with "Load more" — preserved
 
