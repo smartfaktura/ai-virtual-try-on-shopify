@@ -1,28 +1,16 @@
 
 
-# Optimize Video Hub Grid Bandwidth
+# Fix Zoomed-In Thumbnails After Optimization
 
 ## Problem
-Grid thumbnails load full-resolution source images (only `quality: 60`, no width limit), and hover videos preload entire 20MB+ files immediately.
+The `width: 400` optimization is too aggressive — at 2x retina the grid cards need ~600px of image data. Supabase serves a 400px image, then `object-cover` upscales and crops it to fill the 3:4 container, making it look zoomed in compared to the original.
 
-## Changes — `src/pages/VideoHub.tsx` only
+## Fix — `src/pages/VideoHub.tsx`
+Increase the optimization width from `400` to `800` (covers 2x retina for ~400px CSS-wide cards). This keeps the bandwidth savings (800px vs original 2048px+) while preventing the zoom/crop artifact.
 
-### 1. Constrain thumbnail width
-The grid cards are ~300px CSS wide (600px at 2x retina). Change both the `<img>` and `<video poster>` calls from:
-```
-getOptimizedUrl(video.source_image_url, { quality: 60 })
-```
-to:
-```
-getOptimizedUrl(video.source_image_url, { width: 400, quality: 50 })
-```
-This uses the existing Supabase render/image transform endpoint to serve a ~400px thumbnail instead of the full-res original — drastically smaller file sizes.
+Change in two places:
+- Line 98 (video poster): `{ width: 400, quality: 50 }` → `{ width: 800, quality: 60 }`
+- Line 109 (img src): `{ width: 400, quality: 50 }` → `{ width: 800, quality: 60 }`
 
-### 2. Stop pre-fetching the full video
-Change `preload="auto"` → `preload="none"` on the `<video>` element. The 20MB file will only start downloading when `play()` is called on hover, not when the element mounts.
-
-### 3. Add `decoding="async"` to the thumbnail `<img>`
-Matches the `ShimmerImage` pattern used elsewhere — prevents main-thread blocking during image decode.
-
-**3 lines changed, 1 file. No backend or schema changes.**
+Two-line change, same file.
 
