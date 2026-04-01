@@ -18,8 +18,13 @@ export type CatalogShotId =
   // On-model shots
   | 'front_model' | 'back_view' | 'side_3q' | 'detail_closeup'
   | 'movement' | 'hands_detail' | 'sitting' | 'full_look'
+  // New on-model shots
+  | 'lifestyle_context' | 'over_shoulder' | 'waist_up_crop' | 'walking_motion'
+  | 'cross_body' | 'wrist_shot'
   // Product-only shots
   | 'ghost_mannequin' | 'front_flat' | 'back_flat' | 'zoom_detail'
+  // New product-only shots
+  | 'on_surface' | 'styled_flat_lay'
   // Category-specific
   | 'hand_carry' | 'shoulder_carry' | 'side_body'
   | 'standing_shoe_focus' | 'side_step' | 'walking_crop'
@@ -82,7 +87,7 @@ export interface BackgroundDefinition {
 
 export interface CatalogSessionLock {
   fashionStyle: FashionStyleId;
-  modelId: string | null; // null = no model / product-only
+  modelId: string | null;
   modelProfile: string;
   modelAudience: ModelAudienceType;
   backgroundId: string;
@@ -98,7 +103,7 @@ export interface ProductLookLock {
   heroSlot: HeroSlot;
   supportWardrobePrompt: string;
   anchorShotId: CatalogShotId;
-  anchorImageUrl: string | null; // filled after anchor completes
+  anchorImageUrl: string | null;
 }
 
 export interface CatalogModelEntry {

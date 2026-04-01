@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { Package, Palette, Users, Image, Camera, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
-import type { Product, ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
+import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
 const CATALOG_MAX_PRODUCTS = 50;
@@ -53,9 +53,6 @@ export default function CatalogGenerate() {
   const [selectedModelIds, setSelectedModelIds] = useState<Set<string>>(new Set());
   const [productOnlyMode, setProductOnlyMode] = useState(false);
   const [modelExplicitlyChosen, setModelExplicitlyChosen] = useState(false);
-  const [genderFilter, setGenderFilter] = useState<ModelGender | 'all'>('all');
-  const [bodyTypeFilter, setBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
-  const [ageFilter, setAgeFilter] = useState<ModelAgeRange | 'all'>('all');
 
   // Step 4
   const [selectedBackgroundId, setSelectedBackgroundId] = useState<string | null>(null);
@@ -215,7 +212,7 @@ export default function CatalogGenerate() {
 
     return (
       <div className="space-y-6 pb-32">
-        <PageHeader title="Catalog Shot Set" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
 
         {batchState.allDone ? (
           /* ── Completion State ── */
@@ -261,7 +258,6 @@ export default function CatalogGenerate() {
               </div>
             )}
 
-            {/* Per-job error indicators */}
             {batchState.failedJobs > 0 && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-destructive">
@@ -303,7 +299,6 @@ export default function CatalogGenerate() {
               <Progress value={progress} className="h-2 max-w-md mx-auto" />
             </div>
 
-            {/* Per-product progress */}
             {(() => {
               const productMap = new Map<string, { name: string; total: number; done: number; failed: number }>();
               for (const j of batchState.jobs) {
@@ -333,7 +328,6 @@ export default function CatalogGenerate() {
               );
             })()}
 
-            {/* Live image grid */}
             {batchState.aggregatedImages.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Generated so far</h3>
@@ -353,7 +347,6 @@ export default function CatalogGenerate() {
           </div>
         )}
 
-        {/* Lightbox */}
         <ImageLightbox
           images={batchState.aggregatedImages}
           currentIndex={lightboxIndex}
@@ -371,39 +364,42 @@ export default function CatalogGenerate() {
 
   return (
     <div className="space-y-6 pb-32">
-      <PageHeader title="Catalog Shot Set" subtitle="Generate consistent product photography across your entire catalog"><div /></PageHeader>
+      <PageHeader title="Catalog Studio" subtitle="Generate consistent product photography across your entire catalog"><div /></PageHeader>
 
-      <div className="rounded-xl border border-border bg-muted/30 p-4">
-        <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">How it works:</strong> Select products → choose fashion style → pick models → set background → select shots → generate a consistent set.
-        </p>
-      </div>
-
-      {/* 5-step breadcrumb */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      {/* Horizontal numbered stepper */}
+      <div className="flex items-center justify-center gap-0 py-4">
         {STEPS.map((s, i) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
           const canClick = canNavigateTo(s.number);
           return (
-            <div key={s.number} className="flex items-center gap-1 flex-shrink-0">
+            <div key={s.number} className="flex items-center">
               <button
                 onClick={() => canClick && setStep(s.number)}
                 disabled={!canClick}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all',
-                  isActive && 'bg-primary text-primary-foreground shadow-md',
-                  isDone && !isActive && 'bg-primary/10 text-primary cursor-pointer',
-                  !isActive && !isDone && canClick && 'bg-muted text-muted-foreground cursor-pointer hover:bg-muted/80',
-                  !isActive && !isDone && !canClick && 'bg-muted text-muted-foreground opacity-40',
-                )}
+                className="flex flex-col items-center gap-1.5 group"
               >
-                {isDone && !isActive ? <Check className="w-3.5 h-3.5" /> : <s.icon className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">{s.label}</span>
-                <span className="sm:hidden">{s.number}</span>
+                <div className={cn(
+                  'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2',
+                  isActive && 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25',
+                  isDone && !isActive && 'bg-primary/10 text-primary border-primary/30 cursor-pointer',
+                  !isActive && !isDone && canClick && 'bg-card text-muted-foreground border-border cursor-pointer hover:border-primary/40',
+                  !isActive && !isDone && !canClick && 'bg-muted text-muted-foreground/40 border-border/50',
+                )}>
+                  {isDone ? <Check className="w-5 h-5" /> : s.number}
+                </div>
+                <span className={cn(
+                  'text-[11px] font-medium transition-colors',
+                  isActive ? 'text-primary' : isDone ? 'text-primary/70' : 'text-muted-foreground',
+                )}>
+                  {s.label}
+                </span>
               </button>
               {i < STEPS.length - 1 && (
-                <div className={cn('w-4 h-0.5 rounded-full', isDone ? 'bg-primary/40' : 'bg-border')} />
+                <div className={cn(
+                  'w-12 sm:w-20 h-0.5 rounded-full mx-1 -mt-5',
+                  isDone ? 'bg-primary/40' : 'bg-border',
+                )} />
               )}
             </div>
           );
@@ -442,12 +438,6 @@ export default function CatalogGenerate() {
           productOnlyMode={productOnlyMode}
           onModelToggle={handleModelToggle}
           onProductOnlyToggle={handleProductOnlyToggle}
-          genderFilter={genderFilter}
-          bodyTypeFilter={bodyTypeFilter}
-          ageFilter={ageFilter}
-          onGenderChange={setGenderFilter}
-          onBodyTypeChange={setBodyTypeFilter}
-          onAgeChange={setAgeFilter}
           onBack={() => setStep(2)}
           onNext={() => setStep(4)}
           canProceed={canStep3}
@@ -479,6 +469,8 @@ export default function CatalogGenerate() {
           balance={balance}
           onOpenBuyModal={openBuyModal}
           onPreselectRecommended={handlePreselectRecommended}
+          productCount={selectedProductIds.size}
+          modelCount={modelCount}
         />
       )}
 
