@@ -185,6 +185,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
             source_image_url: await toSignedUrl(v.source_image_url),
             settings_json: (project?.settings_json as Record<string, unknown>) || null,
             workflow_type: v.workflow_type || (project?.workflow_type as string) || null,
+            project_title: (project?.title as string) || null,
             video_projects: undefined,
           } as GeneratedVideo;
         })
