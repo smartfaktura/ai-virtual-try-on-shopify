@@ -74,7 +74,7 @@ export function CameraMotionGrid({
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
         {CAMERA_MOTIONS.map((motion) => {
           const active = isSelected(motion.id);
           const previewUrl = motion.preview
@@ -89,13 +89,12 @@ export function CameraMotionGrid({
               onMouseEnter={() => handleHover(motion.id, true)}
               onMouseLeave={() => handleHover(motion.id, false)}
               className={cn(
-                'relative flex-shrink-0 w-[88px] rounded-lg border overflow-hidden transition-all duration-150 group focus:outline-none',
+                'relative rounded-xl border overflow-hidden transition-all duration-150 group focus:outline-none hover:scale-[1.03]',
                 active
                   ? 'border-primary ring-1 ring-primary/30'
                   : 'border-border hover:border-primary/40',
               )}
             >
-              {/* Video thumbnail */}
               <div className="relative w-full aspect-square bg-muted/40 overflow-hidden">
                 {previewUrl ? (
                   <video
@@ -113,7 +112,6 @@ export function CameraMotionGrid({
                   </div>
                 )}
 
-                {/* Selected overlay */}
                 {active && (
                   <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                     <Check className="h-2.5 w-2.5 text-primary-foreground" />
@@ -121,7 +119,6 @@ export function CameraMotionGrid({
                 )}
               </div>
 
-              {/* Label */}
               <div className="px-1 py-1.5">
                 <span
                   className={cn(
