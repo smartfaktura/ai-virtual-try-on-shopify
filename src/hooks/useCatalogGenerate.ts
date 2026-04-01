@@ -303,7 +303,7 @@ export function useCatalogGenerate() {
           if (!shotDef) continue;
 
           const renderPath = classifyRenderPath(effectiveAnchorId, shotId, product.detectedCategory);
-          const prompt = assemblePrompt({
+          const rawPrompt = assemblePrompt({
             productTitle: heroBlock,
             productCategory: product.detectedCategory,
             modelProfile: session.modelProfile,
@@ -313,6 +313,7 @@ export function useCatalogGenerate() {
             shotDef,
             renderPath,
           });
+          const prompt = appendPropsToPrompt(rawPrompt, config.stylingProps);
 
           const jobResult = await enqueueJob(
             token, productB64, product.title, product.id, product.imageUrl,
