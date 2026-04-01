@@ -103,6 +103,7 @@ export function useVideoProject() {
             aspectRatio: params.aspectRatio,
             duration: params.duration,
             audioMode: params.audioMode,
+            ...(params.sourceName ? { sourceName: params.sourceName } : {}),
           },
           status: 'processing',
           analysis_status: analysisResult ? 'complete' : 'pending',
