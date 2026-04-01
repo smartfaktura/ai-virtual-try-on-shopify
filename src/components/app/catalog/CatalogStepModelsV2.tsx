@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
