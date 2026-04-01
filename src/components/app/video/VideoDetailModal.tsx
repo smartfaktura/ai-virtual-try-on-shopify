@@ -179,7 +179,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
                   {dateStr}
                 </span>
                 {isProcessing && (
-                  <Badge variant="secondary" className="text-[10px] bg-amber-50 text-amber-900 animate-pulse">
+                  <Badge variant="secondary" className="text-[10px] bg-status-warning/10 text-status-warning animate-pulse">
                     {video.status === 'processing' ? 'Processing' : 'Queued'}
                   </Badge>
                 )}
