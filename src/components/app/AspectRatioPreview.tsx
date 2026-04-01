@@ -1,4 +1,6 @@
 import type { AspectRatio } from '@/types';
+import { AlertCircle, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AspectRatioPreviewProps {
   ratio: AspectRatio;
@@ -51,25 +53,38 @@ export function AspectRatioMultiSelector({ value, onChange }: AspectRatioMultiSe
   };
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div>
         <p className="text-sm font-semibold">Image Size</p>
-        {value.size === 0 && (
-          <p className="text-xs text-destructive font-medium">Select at least 1</p>
-        )}
-        {value.size > 1 && (
-          <p className="text-xs text-muted-foreground">{value.size} sizes × each scene</p>
-        )}
+        <p className="text-xs text-muted-foreground mt-0.5">Tap to select one or more sizes</p>
       </div>
+      {value.size > 1 && (
+        <p className="text-xs text-muted-foreground">{value.size} sizes × each scene</p>
+      )}
       <div className="flex gap-3 flex-wrap">
-        {ratios.map((ratio) => (
-          <button key={ratio} onClick={() => toggle(ratio)}
-            className={`p-4 rounded-lg border transition-all flex-1 min-w-[120px] ${
-              value.has(ratio) ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground'
-            }`}>
-            <AspectRatioPreview ratio={ratio} size="small" />
-          </button>
-        ))}
+        {ratios.map((ratio) => {
+          const selected = value.has(ratio);
+          return (
+            <button key={ratio} onClick={() => toggle(ratio)}
+              className={cn(
+                'relative p-4 rounded-xl border-2 transition-all flex-1 min-w-[120px]',
+                selected
+                  ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                  : 'border-border/60 hover:border-muted-foreground'
+              )}>
+              {selected && (
+                <Check className="absolute top-2 right-2 w-4 h-4 text-primary" />
+              )}
+              <AspectRatioPreview ratio={ratio} size="small" />
+            </button>
+          );
+        })}
       </div>
+      {value.size === 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          Select at least 1 image size
+        </div>
+      )}
     </div>
   );
 }
@@ -84,16 +99,28 @@ export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProp
   const ratios: AspectRatio[] = ['1:1', '4:5', '9:16', '16:9'];
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold">Image Size</p>
+      <div>
+        <p className="text-sm font-semibold">Image Size</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Choose a size for your images</p>
+      </div>
       <div className="flex gap-3 flex-wrap">
-        {ratios.map((ratio) => (
-          <button key={ratio} onClick={() => onChange(ratio)}
-            className={`p-4 rounded-lg border transition-all flex-1 min-w-[120px] ${
-              value === ratio ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground'
-            }`}>
-            <AspectRatioPreview ratio={ratio} size="small" />
-          </button>
-        ))}
+        {ratios.map((ratio) => {
+          const selected = value === ratio;
+          return (
+            <button key={ratio} onClick={() => onChange(ratio)}
+              className={cn(
+                'relative p-4 rounded-xl border-2 transition-all flex-1 min-w-[120px]',
+                selected
+                  ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                  : 'border-border/60 hover:border-muted-foreground'
+              )}>
+              {selected && (
+                <Check className="absolute top-2 right-2 w-4 h-4 text-primary" />
+              )}
+              <AspectRatioPreview ratio={ratio} size="small" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
