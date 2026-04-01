@@ -74,7 +74,10 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                 <button
                   onClick={() => canClick && onStepClick(s.number)}
                   disabled={!canClick}
-                  className="flex flex-col items-center gap-0.5 mx-auto"
+                  className={cn(
+                    "flex flex-col items-center gap-0.5 mx-auto",
+                    !canClick && 'opacity-50 cursor-default',
+                  )}
                 >
                   <div className={cn(
                     'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150',

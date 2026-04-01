@@ -28,8 +28,11 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { Package, Palette, Users, Image, Camera, Gem, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock } from 'lucide-react';
+import { downloadDropAsZip } from '@/lib/dropDownload';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Package, Palette, Users, Image, Camera, Gem, ClipboardCheck, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle, Loader2, Clock, Download, LayoutList } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
@@ -55,6 +58,7 @@ function formatTime(seconds: number): string {
 export default function CatalogGenerate() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { balance, refreshBalance, openBuyModal } = useCredits();
   const [step, setStep] = useState(1);
 
@@ -341,10 +345,25 @@ export default function CatalogGenerate() {
                 </div>
               </div>
               <p className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">VOVV.AI</p>
-              <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
                 <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm">
                   <RefreshCw className="w-3.5 h-3.5" /> New Set
                 </Button>
+                {batchState.aggregatedImages.length > 1 && (
+                  <Button variant="outline" onClick={() => {
+                    const images = batchState.jobs
+                      .filter(j => j.status === 'completed' && j.images.length > 0)
+                      .flatMap(j => j.images.map(url => ({
+                        url,
+                        workflow_name: j.productName || 'Catalog',
+                        scene_name: j.shotLabel || 'image',
+                        product_title: j.productName,
+                      })));
+                    downloadDropAsZip(images, 'Catalog-Export');
+                  }} className="gap-2 text-sm">
+                    <Download className="w-3.5 h-3.5" /> Download All
+                  </Button>
+                )}
                 <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm">
                   View in Library <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
@@ -496,10 +515,25 @@ export default function CatalogGenerate() {
           onDownload={(i) => {
             const url = batchState.aggregatedImages[i];
             if (!url) return;
+            // Find the job that produced this image for a descriptive filename
+            let filename = `catalog-${i + 1}.jpg`;
+            let imgIdx = 0;
+            for (const j of batchState.jobs) {
+              if (j.status === 'completed') {
+                for (const imgUrl of j.images) {
+                  if (imgIdx === i) {
+                    const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
+                    const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
+                    filename = `${safeName}_${safeShot}.jpg`;
+                  }
+                  imgIdx++;
+                }
+              }
+            }
             fetch(url).then(r => r.blob()).then(blob => {
               const a = document.createElement('a');
               a.href = URL.createObjectURL(blob);
-              a.download = `catalog-${i + 1}.jpg`;
+              a.download = filename;
               a.click();
               URL.revokeObjectURL(a.href);
             }).catch(() => window.open(url, '_blank'));
@@ -638,7 +672,7 @@ export default function CatalogGenerate() {
           )}
         </div>
 
-        {/* Context sidebar — hidden on mobile */}
+        {/* Context sidebar — desktop */}
         <div className="hidden lg:block w-64 flex-shrink-0">
           <CatalogContextSidebar
             selectedProducts={sidebarProducts}
@@ -655,6 +689,43 @@ export default function CatalogGenerate() {
             balance={balance}
           />
         </div>
+
+        {/* Mobile summary drawer */}
+        {isMobile && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="fixed bottom-20 right-4 z-40 rounded-full shadow-lg gap-1.5 text-xs lg:hidden"
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                Summary
+                {totalImages > 0 && (
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 ml-0.5">{totalImages} img</Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+              <div className="pt-2">
+                <CatalogContextSidebar
+                  selectedProducts={sidebarProducts}
+                  fashionStyleId={fashionStyle}
+                  models={sidebarModels}
+                  productOnlyMode={productOnlyMode}
+                  backgroundId={selectedBackgroundId}
+                  selectedShots={selectedShots}
+                  selectedPropCount={Object.values(propAssignments).filter(ids => ids.length > 0).length}
+                  totalCombos={selectedProductIds.size * Math.max(1, modelCount) * selectedShots.size}
+                  totalImages={totalImages}
+                  totalCredits={totalCredits}
+                  currentStep={step}
+                  balance={balance}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
 
       <BuyCreditsModal />
