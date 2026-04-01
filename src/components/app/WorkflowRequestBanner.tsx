@@ -69,7 +69,7 @@ export function WorkflowRequestBanner() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground leading-snug">
-                Missing a workflow for your brand?
+                Missing a template for your brand?
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Tell us what you need — we'll build it and add it to our lineup.
