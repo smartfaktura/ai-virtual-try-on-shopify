@@ -125,7 +125,7 @@ Available routes and when to use them:
 - [[Set Up Brand Profile|/app/brand-profiles]] — when talking about brand consistency or suggesting they define their brand
 - [[Upload Products|/app/products]] — when they need to add products first before generating
 - [[Add New Product|/app/products/new]] — when they want to upload a specific product right now
-- [[Creative Drops|/app/creative-drops]] — when suggesting automated scheduled content creation
+- [[Content Calendar|/app/creative-drops]] — when suggesting automated scheduled content creation
 - [[View Library|/app/library]] — when suggesting they review their generated images
 - [[Browse Discover|/app/discover]] — when suggesting inspiration or community presets
 - [[Generate Video|/app/video]] — when suggesting they turn images into video content
