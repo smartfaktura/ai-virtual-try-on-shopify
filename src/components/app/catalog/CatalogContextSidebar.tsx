@@ -35,7 +35,7 @@ interface CatalogContextSidebarProps {
 
 export function CatalogContextSidebar({
   selectedProducts, fashionStyleId, models, productOnlyMode,
-  backgroundId, selectedShots, selectedPropCount, totalCombos, totalImages, totalCredits, currentStep,
+  backgroundId, selectedShots, selectedPropCount, totalCombos, totalImages, totalCredits, currentStep, balance,
 }: CatalogContextSidebarProps) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
   const bg = backgroundId ? getBackground(backgroundId) : null;
