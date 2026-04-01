@@ -109,7 +109,7 @@ function EcommerceImageFrame({
     <div className="relative isolate h-full w-full overflow-hidden bg-muted">
       <div
         aria-hidden="true"
-        className="absolute inset-0 scale-110 bg-cover bg-center opacity-35 blur-2xl"
+        className="absolute inset-0 scale-110 bg-cover bg-center opacity-40 blur-2xl"
         style={{ backgroundImage: `url(${src})` }}
       />
       <div
@@ -119,8 +119,8 @@ function EcommerceImageFrame({
       <ShimmerImage
         src={src}
         alt={alt}
-        wrapperClassName="relative z-10 flex h-full items-center justify-center p-3"
-        className="h-full w-full object-contain"
+        wrapperClassName="relative z-10 h-full w-full"
+        className="h-full w-full scale-[0.84] object-cover object-center"
         loading={loading}
       />
     </div>
