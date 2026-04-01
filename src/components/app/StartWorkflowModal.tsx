@@ -28,7 +28,7 @@ const WORKFLOW_OPTIONS = [
   },
   {
     name: 'Virtual Try-On',
-    displayName: 'Virtual Try-On Workflow',
+    displayName: 'Virtual Try-On',
     slug: 'virtual-try-on-set',
     subtitle: 'See your product on real people',
     sampleId: 'sample_tryon_crop_top',
