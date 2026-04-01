@@ -21,6 +21,8 @@ export interface GeneratedVideo {
   created_at: string;
   completed_at: string | null;
   camera_type: string | null;
+  workflow_type: string | null;
+  settings_json: Record<string, unknown> | null;
 }
 
 interface UseGenerateVideoResult {
@@ -164,7 +166,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setIsLoadingHistory(true);
       const { data, error: fetchError } = await supabase
         .from('generated_videos')
-        .select('*')
+        .select('*, video_projects(settings_json, workflow_type)')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -174,11 +176,17 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       }
 
       const signedHistory = await Promise.all(
-        ((data as GeneratedVideo[]) || []).map(async (v) => ({
-          ...v,
-          video_url: v.video_url ? await toSignedUrl(v.video_url) : null,
-          source_image_url: await toSignedUrl(v.source_image_url),
-        }))
+        ((data || []) as any[]).map(async (v) => {
+          const project = v.video_projects as Record<string, unknown> | null;
+          return {
+            ...v,
+            video_url: v.video_url ? await toSignedUrl(v.video_url) : null,
+            source_image_url: await toSignedUrl(v.source_image_url),
+            settings_json: (project?.settings_json as Record<string, unknown>) || null,
+            workflow_type: v.workflow_type || (project?.workflow_type as string) || null,
+            video_projects: undefined,
+          } as GeneratedVideo;
+        })
       );
 
       // Deduplicate by kling_task_id (keep first = newest due to ORDER BY desc)
