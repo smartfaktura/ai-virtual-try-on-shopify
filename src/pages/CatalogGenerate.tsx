@@ -351,18 +351,24 @@ export default function CatalogGenerate() {
                   <RefreshCw className="w-3.5 h-3.5" /> New Set
                 </Button>
                 {batchState.aggregatedImages.length > 1 && (
-                  <Button variant="outline" onClick={() => {
-                    const images = batchState.jobs
-                      .filter(j => j.status === 'completed' && j.images.length > 0)
-                      .flatMap(j => j.images.map(url => ({
-                        url,
-                        workflow_name: j.productName || 'Catalog',
-                        scene_name: j.shotLabel || 'image',
-                        product_title: j.productName,
-                      })));
-                    downloadDropAsZip(images, 'Catalog-Export');
+                  <Button variant="outline" disabled={isDownloading} onClick={async () => {
+                    setIsDownloading(true);
+                    try {
+                      const images = batchState.jobs
+                        .filter(j => j.status === 'completed' && j.images.length > 0)
+                        .flatMap(j => j.images.map(url => ({
+                          url,
+                          workflow_name: j.productName || 'Catalog',
+                          scene_name: j.shotLabel || 'image',
+                          product_title: j.productName,
+                        })));
+                      await downloadDropAsZip(images, 'Catalog-Export');
+                    } finally {
+                      setIsDownloading(false);
+                    }
                   }} className="gap-2 text-sm">
-                    <Download className="w-3.5 h-3.5" /> Download All
+                    {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    {isDownloading ? 'Preparing...' : 'Download All'}
                   </Button>
                 )}
                 <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm">
