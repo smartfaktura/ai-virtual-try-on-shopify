@@ -200,7 +200,22 @@ export function resolveSupportWardrobe(
   heroSlot: HeroSlot,
   fashionStyle: FashionStyleId,
   audience: ModelAudienceType,
+  category?: ProductCategory,
 ): SupportWardrobe {
+  // Swimwear: the product IS the outfit — no support clothing at all
+  if (category === 'swimwear') {
+    return {
+      upper_body_slot: null,
+      lower_body_slot: null,
+      full_body_slot: null,
+      footwear_slot: null,
+      outerwear_slot: null,
+      headwear_slot: null,
+      bag_slot: null,
+      accessory_slot: null,
+    };
+  }
+
   const style = getFashionStyle(fashionStyle);
   const kit = { ...style.supportWardrobeKits[audience] };
 
