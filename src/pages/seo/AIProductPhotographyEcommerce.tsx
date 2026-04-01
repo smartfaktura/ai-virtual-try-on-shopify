@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
+import { PublicDiscoverDetailModal } from '@/components/app/PublicDiscoverDetailModal';
 import { SITE_URL } from '@/lib/constants';
 import {
   ArrowRight, Upload, Palette, Download, Zap, Camera, ShoppingBag,
