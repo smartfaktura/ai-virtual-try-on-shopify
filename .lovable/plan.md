@@ -1,34 +1,29 @@
 
 
-# Move Batch Mode Toggle Into Upload Section
+# Fix Bulk Video Generation Progress UX
 
 ## Problem
-The Batch Mode toggle sits above the upload card as a separate element, visually disconnected from the upload area it controls. It should be part of the upload card itself for better UX flow.
+When generating 10 videos in bulk mode, the single-video pipeline UI (`isPipelineActive` section) flashes on/off for each image as `runAnimatePipeline` cycles through analyze → build → generate stages per image. The bulk progress banner exists but the single-video progress card keeps interfering, causing chaotic flashing. There's no smooth "X of 10 queued" progress experience.
 
-## Change
+## Root Cause
+`isPipelineActive` is derived from the single-video `useVideoProject()` state. During bulk, each sequential `runAnimatePipeline()` call toggles this state, making the single-video progress card (lines 1351-1411) flash on/off repeatedly while the bulk banner sits below.
 
-### `src/pages/video/AnimateVideo.tsx`
+## Changes
 
-1. **Remove** the standalone Batch Mode toggle block (lines 542-581) from above the upload card
-2. **Move it inside** the upload card (the `rounded-2xl border` container starting at line 586), placing it as the first element — a compact row at the top of the card, above the heading text
-3. Style it as a subtle inline row with a thin bottom divider (`border-b`) separating it from the upload content below, rather than its own bordered card
-4. Keep all existing logic (paid/free gating, Sophia avatar, upgrade button) intact
+### 1. `src/pages/video/AnimateVideo.tsx`
+- **Hide single-video progress during bulk**: Change line 1351 condition from `isPipelineActive` to `isPipelineActive && !isBulkRunning` — prevents the single-video takeover card from showing during bulk runs
+- This single change eliminates all flashing
 
-### Layout result
-```text
-┌─────────────────────────────────┐  ┌──────────────┐
-│ [icon] Batch Mode    [Upgrade] [⊙] │  │ How it works │
-│ ─────────────────────────────── │  │ ...          │
-│ Upload your product image       │  │              │
-│ We'll detect category...        │  │              │
-│                                 │  │              │
-│   ┌─ - - - - - - - - - - ─┐   │  │              │
-│   │  Drop image here       │   │  │              │
-│   └─ - - - - - - - - - - ─┘   │  │              │
-│                                 │  │              │
-│  [Upload] [Library] [Paste]     │  │              │
-└─────────────────────────────────┘  └──────────────┘
-```
+### 2. `src/components/app/video/BulkProgressBanner.tsx`
+Enhance the banner to be a proper full-screen takeover experience (matching the single-video progress card style):
+- Add rotating team avatar + "VOVV.AI Studio" branding header (reuse `TEAM_MEMBERS` pattern from single-video progress)
+- Show "Queueing 3 of 10 videos…" as the main heading with a sub-message
+- Add elapsed timer
+- Add estimated time remaining (using ~15s per video queue submission)
+- Keep the image thumbnail grid with status icons
+- When complete: show "All 10 videos queued — they'll process automatically" with "View in Video Hub" button
 
-No other files affected.
+### Files
+- **Update**: `src/pages/video/AnimateVideo.tsx` — add `!isBulkRunning` guard to pipeline active UI
+- **Update**: `src/components/app/video/BulkProgressBanner.tsx` — redesign as branded takeover card with progress details
 
