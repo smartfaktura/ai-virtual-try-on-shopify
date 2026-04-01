@@ -78,7 +78,7 @@ export function useVideoProject() {
     try {
       // 1. Create video_project
       const cameraLabel = CAMERA_MOTIONS.find(c => c.id === params.cameraMotion)?.label || params.cameraMotion.replace(/_/g, ' ');
-      const productName = analysisResult?.subject_category || params.category.replace(/_/g, ' ');
+      const productName = params.sourceName || analysisResult?.subject_category || params.category.replace(/_/g, ' ');
 
       setPipelineStage('creating_project');
       const { data: project, error: projectError } = await supabase
