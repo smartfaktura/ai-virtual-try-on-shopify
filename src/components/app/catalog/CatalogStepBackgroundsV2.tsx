@@ -29,7 +29,7 @@ export function CatalogStepBackgroundsV2({
               key={bg.id}
               onClick={() => onBackgroundChange(bg.id)}
               className={cn(
-                'relative rounded-xl overflow-hidden transition-all duration-150 group',
+                'relative rounded-xl overflow-hidden transition-all duration-150 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 isSelected
                   ? 'ring-2 ring-primary shadow-md'
                   : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm',

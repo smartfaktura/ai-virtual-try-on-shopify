@@ -93,10 +93,8 @@ export function CatalogContextSidebar({
                   </div>
                 ))}
               </div>
-              {models.length > 2 ? (
+              {models.length > 2 && (
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-5 font-semibold">+{models.length - 2}</Badge>
-              ) : (
-                <span className="text-[10px] text-muted-foreground font-medium">{models.length}</span>
               )}
             </div>
           ) : (

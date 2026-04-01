@@ -93,7 +93,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                 </button>
                 {i < steps.length - 1 && (
                   <div className={cn(
-                    'flex-1 h-px mx-0.5',
+                    'flex-1 h-px mx-0.5 transition-colors',
                     isDone ? 'bg-primary/30' : 'bg-border',
                   )} />
                 )}
