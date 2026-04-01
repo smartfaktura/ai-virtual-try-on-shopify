@@ -86,6 +86,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
 
   const handleDownload = async () => {
     if (!video.video_url) return;
+    setDownloading(true);
     try {
       const res = await fetch(video.video_url);
       const blob = await res.blob();
@@ -105,6 +106,8 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       toast.success('Download started');
     } catch {
       toast.error('Failed to download video');
+    } finally {
+      setDownloading(false);
     }
   };
 
