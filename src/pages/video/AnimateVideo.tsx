@@ -1095,8 +1095,21 @@ export default function AnimateVideo() {
         </div>
       )}
 
-      {/* ──── COMPLETE: Results panel ──── */}
-      {isComplete && videoUrl && (
+      {/* ──── BULK PROGRESS ──── */}
+      {(isBulkRunning || isBulkComplete) && bulkItems.length > 0 && (
+        <div className="space-y-4">
+          <BulkProgressBanner items={bulkItems} isComplete={isBulkComplete} />
+          {isBulkComplete && (
+            <Button variant="outline" onClick={handleNewProject} className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Start New Batch
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* ──── COMPLETE: Results panel (single mode) ──── */}
+      {isComplete && videoUrl && !isBulkComplete && (
         <VideoResultsPanel
           videoUrl={videoUrl}
           sourceImageUrl={imagePreview || imageUrl || undefined}
