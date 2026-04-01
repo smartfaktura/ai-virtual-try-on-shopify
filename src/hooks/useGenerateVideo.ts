@@ -331,7 +331,6 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       });
       if (fnError) return;
       if (data?.recovered > 0) {
-        toast.info(`${data.recovered} video(s) updated from processing`);
         silentRefreshHistory();
       }
     } catch (_) { /* silent */ }

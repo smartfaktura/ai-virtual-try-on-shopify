@@ -507,10 +507,10 @@ export default function AnimateVideo() {
 
   const isPipelineActive = pipelineStage !== 'idle' && pipelineStage !== 'error' && !isComplete && (isGenerating || isAnalyzing || isBuildingPrompt || pipelineStage === 'creating_project');
 
-  const ASPECT_RATIOS: { value: AspectRatio; label: string }[] = [
-    { value: '9:16', label: '9:16' },
-    { value: '1:1', label: '1:1' },
-    { value: '16:9', label: '16:9' },
+  const ASPECT_RATIOS: { value: AspectRatio; label: string; iconW: string; iconH: string; desc: string }[] = [
+    { value: '9:16', label: '9:16', iconW: 'w-2.5', iconH: 'h-4', desc: 'Story' },
+    { value: '1:1', label: '1:1', iconW: 'w-3.5', iconH: 'h-3.5', desc: 'Square' },
+    { value: '16:9', label: '16:9', iconW: 'w-5', iconH: 'h-3', desc: 'Wide' },
   ];
 
   const getStageMessage = () => {
@@ -1250,10 +1250,16 @@ export default function AnimateVideo() {
                   <div className="flex gap-2">
                     {ASPECT_RATIOS.map((ar) => (
                       <button key={ar.value} onClick={() => setAspectRatio(ar.value)}
-                        className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
+                        className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border transition-colors',
                           aspectRatio === ar.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
                         )}>
-                        {ar.label}
+                        <span className={cn('rounded-[2px] border', ar.iconW, ar.iconH,
+                          aspectRatio === ar.value ? 'border-primary-foreground bg-primary-foreground/20' : 'border-current bg-current/10'
+                        )} />
+                        <span className="flex flex-col items-start leading-none">
+                          <span className="font-medium">{ar.label}</span>
+                          <span className="text-[10px] opacity-70">{ar.desc}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
