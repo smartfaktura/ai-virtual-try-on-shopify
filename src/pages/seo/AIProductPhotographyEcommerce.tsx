@@ -202,16 +202,13 @@ export default function AIProductPhotographyEcommerce() {
           {/* Hero visual grid */}
           {heroImages.length > 0 && (
             <div className="columns-2 md:columns-3 gap-3 md:gap-4 max-w-4xl mx-auto [&>div]:mb-3 md:[&>div]:mb-4">
-              {heroImages.map((img, i) => (
-                <div key={img.id} className="rounded-2xl overflow-hidden border border-border shadow-sm bg-muted break-inside-avoid max-h-[420px]">
-                  <ShimmerImage
-                    src={getOptimizedUrl(img.image_url, { width: 480, quality: 75 })}
-                    alt={`AI product photography for ecommerce example – ${img.title}`}
-                    className="w-full h-auto block"
-                    wrapperClassName="h-auto"
-                    loading={i < 3 ? 'eager' : 'lazy'}
-                  />
-                </div>
+              {heroImages.map((img) => (
+                <DiscoverCard
+                  key={img.id}
+                  item={{ type: 'preset', data: img }}
+                  onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                  hideLabels
+                />
               ))}
             </div>
           )}
