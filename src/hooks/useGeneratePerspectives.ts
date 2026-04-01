@@ -65,11 +65,13 @@ async function classifyScene(imageBase64: string, token: string): Promise<SceneM
 // Perspective category detection
 // ---------------------------------------------------------------------------
 
-type PerspectiveCategory = 'macro' | 'angle' | 'context';
+type PerspectiveCategory = 'macro' | 'angle' | 'context' | 'top_down';
 
 function detectCategory(label: string): PerspectiveCategory {
   const l = label.toLowerCase();
+  if (l.includes('super macro') || l.includes('texture')) return 'macro';
   if (l.includes('close') || l.includes('macro')) return 'macro';
+  if (l.includes('top-down') || l.includes('top down') || l.includes('flat lay') || l.includes('overhead') || l.includes('bird')) return 'top_down';
   if (l.includes('wide') || l.includes('environment')) return 'context';
   return 'angle';
 }

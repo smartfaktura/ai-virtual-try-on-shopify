@@ -63,6 +63,10 @@ const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
   'Left Side': ArrowLeft,
   'Right Side': ArrowRight,
   'Wide / Environment': Maximize,
+  'Super Macro / Texture': Focus,
+  '45° Front-Left': CornerUpLeft,
+  '45° Front-Right': CornerUpRight,
+  'Top-Down / Flat Lay': ArrowDown,
 };
 
 const ASPECT_RATIOS = ['1:1', '3:4', '4:5', '9:16'] as const;
