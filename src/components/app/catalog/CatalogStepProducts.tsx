@@ -430,13 +430,7 @@ export function CatalogStepProducts({
               Coming Soon
             </Button>
           </div>
-          {isImporting && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse text-primary" />
-              Scanning page for product data…
-            </div>
-          )}
-          <p className="text-[11px] text-muted-foreground">Supports Shopify, WooCommerce, and direct product pages.</p>
+          <p className="text-[11px] text-muted-foreground">URL import is coming soon. Use "My Products" to add items for now.</p>
         </div>
       )}
 
