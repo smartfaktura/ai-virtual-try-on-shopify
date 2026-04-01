@@ -450,7 +450,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Templates</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Pick a ready-made template — Try-On, Product Listing, UGC, Flat Lay — and get a complete visual set in one click.
+                  Pick a template like Try-On, Product Listing, UGC or Flat Lay and get a full visual set in one click.
                 </p>
               </div>
               <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
