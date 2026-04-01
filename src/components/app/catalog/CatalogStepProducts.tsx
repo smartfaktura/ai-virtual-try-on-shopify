@@ -154,7 +154,7 @@ export function CatalogStepProducts({
       </div>
 
       {/* ── Underline Tabs ───────────────────────────────── */}
-      <div className="flex gap-6 border-b border-border">
+      <div className="flex gap-3 sm:gap-6 border-b border-border overflow-x-auto">
         <UnderlineTab active={activeTab === 'library'} onClick={() => setActiveTab('library')} icon={Package} label="My Products" />
         <UnderlineTab active={activeTab === 'url'} onClick={() => setActiveTab('url')} icon={Globe} label="Import URL" />
         <UnderlineTab active={activeTab === 'csv'} onClick={() => setActiveTab('csv')} icon={Upload} label="Upload CSV" />
