@@ -1,51 +1,35 @@
 
+Fix `/ai-product-photography-for-ecommerce` by switching it to the same image behavior used in Discover, not the cropped landing-hero pattern.
 
-# Redesign SEO Landing Page — VOVV.ai Branded, 2026 Design
+1. Correct the image strategy on this page
+- Remove the current forced `aspect-[3/4]` + `aspectRatio="3/4"` + `object-cover` setup from the hero and tab preview areas.
+- Use the proven Discover-style rendering instead: natural-ratio images with `ShimmerImage` + `wrapperClassName="h-auto"` + `className="w-full h-auto block"`.
+- Keep compression/optimization, but size URLs per section so images stay sharp without overfetching.
 
-## Image Fix
+2. Fix all image sections consistently
+- Hero grid: replace the fixed crop cards with natural-ratio cards so originals stay visible and never look zoomed.
+- Outcome tabs: replace the forced portrait frame with a padded preview card that preserves original ratio; if height needs limiting, cap height without cropping.
+- Showcase gallery: align it with the Discover/PublicDiscover card behavior and keep the masonry layout stable while images load.
 
-The root cause: `ShimmerImage` without `aspectRatio` renders images at natural dimensions inside an `h-full` wrapper, causing tall images to dominate the viewport. The proven pattern from HeroSection uses `aspectRatio="3/4"` + `object-cover object-top` on `ShimmerImage` for controlled grids.
+3. Improve which presets the page selects
+- Stop using a raw “first featured items” pull for this ecommerce page.
+- Prefer presets that are clearly product-led: `product_name` / `product_image_url` present, and usually `model_name` absent.
+- Keep tab matching by category, but rank ecommerce-relevant presets first so the page stops surfacing face closeups and beauty portraits where product visuals should appear.
+- Deduplicate across hero, tabs, and showcase so the page feels curated instead of random.
 
-**Fix all three image sections:**
-- **Hero grid**: Use `aspectRatio="3/4"` + `className="w-full h-full object-cover object-top"` (exact HeroSection pattern)
-- **Outcome tabs**: Use `aspectRatio="3/4"` + `object-cover object-top`
-- **Discovery showcase**: Use `aspectRatio="3/4"` + `object-cover object-top` in a masonry-style grid
+4. Keep the design, but make it feel more like VOVV product discovery
+- Reuse the same card language as the app’s discovery feed: muted card backgrounds, subtle borders, cleaner badges, less decorative cropping.
+- Keep the current typography/spacing direction, but reduce visual noise until the image system is stable.
 
-This is what HeroSection does at line 318-327 — `aspectRatio="3/4"` inside a `div` with `aspect-[3/4]`, and `object-cover`. The `object-top` keeps faces/products visible instead of zooming into midsections.
+5. Small cleanup during implementation
+- Remove or adjust the current `fetchPriority` usage that is triggering the React warning on this page.
+- Keep above-the-fold images eager/preloaded, and leave the rest lazy.
 
-## Design Overhaul
+Files to update
+- `src/pages/seo/AIProductPhotographyEcommerce.tsx` — main fix: image selection, image rendering, hero/tabs/showcase layout
+- `src/components/ui/shimmer-image.tsx` — only if needed for the fetch priority warning; avoid changing global image behavior unless it’s a safe, isolated fix
 
-Rebuild the entire page to match VOVV.ai's premium aesthetic (HeroSection, HowItWorks, FinalCTA patterns):
-
-### Brand alignment changes:
-1. **Typography**: `font-semibold` max (not `font-bold`/`font-extrabold`) per brand memory. Use `tracking-tight` on headlines
-2. **Spacing**: Match `py-20 sm:py-28` section rhythm from landing components
-3. **Gradients**: Use `bg-gradient-to-b from-primary/5 via-background to-background` pattern from HeroSection
-4. **Blur orbs**: Add `bg-primary/8 rounded-full blur-3xl` ambient elements like HeroSection/FinalCTA
-5. **Animations**: Add `useInView` fade-in pattern from HowItWorks (`opacity-0 translate-y-8` → `opacity-100 translate-y-0`)
-6. **CTAs**: Rounded-full buttons with `shadow-lg shadow-primary/25` matching HeroSection
-7. **Cards**: Rounded-2xl with `border-border bg-card shadow-sm` matching HowItWorks cards
-8. **Sections**: Use `bg-muted/20` alternation instead of `bg-card border-y border-border`
-
-### Section-by-section redesign:
-- **Hero**: Add blur orb background, refined typography, rounded-full CTAs with shadow, better trust badge styling
-- **Proof bar**: Cleaner icon row with subtle separators
-- **Outcome tabs**: Premium tab styling, image with rounded-2xl container
-- **Why brands section**: Cards matching HowItWorks card style with animations
-- **Comparison**: Side-by-side with refined card styling, subtle gradient on VOVV side
-- **Shopify section**: Gradient background with blur orb like FinalCTA
-- **Discovery showcase**: Proper masonry grid with hover effects matching DiscoverCard
-- **How it works**: Step indicators with animated number badges
-- **Use cases**: Refined card grid
-- **SEO content**: Cleaner prose styling
-- **FAQ**: Existing accordion, refined spacing
-- **Final CTA**: Match FinalCTA component pattern exactly (gradient bg, blur orb, sparkles badge, team avatars if appropriate)
-
-## Files to modify
-
-| File | Action |
-|------|--------|
-| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Full rewrite with VOVV.ai design patterns |
-
-Single file change, ~550-600 lines.
-
+Technical details
+- The previous implementation copied the wrong pattern: `HeroSection` and some landing showcases intentionally crop to fixed ratios for editorial cards.
+- The correct reference for “original ratio, not zoomed” is `src/components/app/DiscoverCard.tsx` plus the stable multi-column approach in `src/pages/PublicDiscover.tsx`.
+- For this page I would follow that pattern exactly instead of introducing another custom image treatment.
