@@ -6,65 +6,60 @@ import { useCustomModels } from '@/hooks/useCustomModels';
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCredits } from '@/contexts/CreditContext';
 import { useCatalogGenerate } from '@/hooks/useCatalogGenerate';
+import { detectProductCategory } from '@/lib/catalogEngine';
 import { PageHeader } from '@/components/app/PageHeader';
-import { CatalogMatrixSummary } from '@/components/app/CatalogMatrixSummary';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { CatalogStepProducts } from '@/components/app/catalog/CatalogStepProducts';
-import { CatalogStepPoses } from '@/components/app/catalog/CatalogStepPoses';
-import { CatalogStepExpression } from '@/components/app/catalog/CatalogStepExpression';
-import { CatalogStepModels } from '@/components/app/catalog/CatalogStepModels';
-import { CatalogStepBackgrounds } from '@/components/app/catalog/CatalogStepBackgrounds';
-import { CatalogStepStyleShots } from '@/components/app/catalog/CatalogStepStyleShots';
-import { CatalogStepReview } from '@/components/app/catalog/CatalogStepReview';
+import { CatalogStepFashionStyle } from '@/components/app/catalog/CatalogStepFashionStyle';
+import { CatalogStepModelsV2 } from '@/components/app/catalog/CatalogStepModelsV2';
+import { CatalogStepBackgroundsV2 } from '@/components/app/catalog/CatalogStepBackgroundsV2';
+import { CatalogStepShots } from '@/components/app/catalog/CatalogStepShots';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
-import { allCatalogItems } from '@/data/catalogPoses';
+import { Progress } from '@/components/ui/progress';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-import { Package, Move, Smile, Users, Image, Wand2, Sparkles, Check } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, Check, Loader2, CheckCircle } from 'lucide-react';
 import type { Product, ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
-import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
+import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, ModelAudienceType } from '@/types/catalog';
 
 const CATALOG_MAX_PRODUCTS = 50;
-const CATALOG_MAX_MODELS = 10;
+const CREDITS_PER_IMAGE = 4;
 
 const STEPS = [
   { number: 1, label: 'Products', icon: Package },
-  { number: 2, label: 'Poses', icon: Move },
-  { number: 3, label: 'Expression', icon: Smile },
-  { number: 4, label: 'Models', icon: Users },
-  { number: 5, label: 'Backgrounds', icon: Image },
-  { number: 6, label: 'Style Shots', icon: Wand2 },
-  { number: 7, label: 'Review', icon: Sparkles },
+  { number: 2, label: 'Style', icon: Palette },
+  { number: 3, label: 'Model', icon: Users },
+  { number: 4, label: 'Background', icon: Image },
+  { number: 5, label: 'Shots', icon: Camera },
 ];
-
-const STEP_NEXT_LABELS: Record<number, string> = { 1: 'Poses', 2: 'Expression', 3: 'Models', 4: 'Backgrounds', 5: 'Style Shots', 6: 'Review' };
 
 export default function CatalogGenerate() {
   const { user } = useAuth();
   const { balance, refreshBalance, openBuyModal } = useCredits();
   const [step, setStep] = useState(1);
 
-  // Step 1 state
+  // Step 1
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [showAddProduct, setShowAddProduct] = useState(false);
 
-  // Step 2 state
-  const [selectedPoseIds, setSelectedPoseIds] = useState<Set<string>>(new Set());
+  // Step 2
+  const [fashionStyle, setFashionStyle] = useState<FashionStyleId | null>(null);
 
-  // Step 3 state
-  const [selectedMood, setSelectedMood] = useState('neutral');
-
-  // Step 4 state
-  const [selectedModelIds, setSelectedModelIds] = useState<Set<string>>(new Set());
+  // Step 3
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [modelExplicitlyChosen, setModelExplicitlyChosen] = useState(false);
   const [genderFilter, setGenderFilter] = useState<ModelGender | 'all'>('all');
   const [bodyTypeFilter, setBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
   const [ageFilter, setAgeFilter] = useState<ModelAgeRange | 'all'>('all');
 
-  // Step 5 state
-  const [selectedBackgroundIds, setSelectedBackgroundIds] = useState<Set<string>>(new Set());
+  // Step 4
+  const [selectedBackgroundId, setSelectedBackgroundId] = useState<string | null>(null);
 
-  // Step 6 state
-  const [extraItems, setExtraItems] = useState<Map<string, ExtraItem[]>>(new Map());
+  // Step 5
+  const [selectedShots, setSelectedShots] = useState<Set<CatalogShotId>>(new Set());
 
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
@@ -84,118 +79,169 @@ export default function CatalogGenerate() {
   });
 
   const products: Product[] = useMemo(() => userProducts.map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    vendor: p.product_type || '',
-    productType: p.product_type || '',
-    images: [
-      { url: p.image_url },
-      ...(p.product_images || [])
-        .sort((a: any, b: any) => a.position - b.position)
-        .map((img: any) => ({ url: img.image_url })),
-    ],
-    tags: p.tags || [],
-    description: p.description || '',
-    status: 'active' as const,
-    createdAt: p.created_at || '',
-    updatedAt: p.updated_at || '',
+    id: p.id, title: p.title, vendor: p.product_type || '', productType: p.product_type || '',
+    images: [{ url: p.image_url }, ...(p.product_images || []).sort((a: any, b: any) => a.position - b.position).map((img: any) => ({ url: img.image_url }))],
+    tags: p.tags || [], description: p.description || '', status: 'active' as const, createdAt: p.created_at || '', updatedAt: p.updated_at || '',
   })), [userProducts]);
 
   // Models
   const { asProfiles: customModels } = useCustomModels();
   const { asProfiles: userModelProfiles } = useUserModels();
-  const libraryModels = useMemo(() => {
-    return [...mockModels, ...customModels.filter(m => !mockModels.some(mm => mm.modelId === m.modelId))];
-  }, [customModels]);
-
+  const libraryModels = useMemo(() => [...mockModels, ...customModels.filter(m => !mockModels.some(mm => mm.modelId === m.modelId))], [customModels]);
   const allModels = useMemo(() => [...libraryModels, ...userModelProfiles], [libraryModels, userModelProfiles]);
-  const allPoses = useMemo(() => allCatalogItems, []);
 
-  const handleModelToggle = (modelId: string) => {
-    setSelectedModelIds(prev => {
+  // Detect primary category from first selected product
+  const primaryCategory: ProductCategory = useMemo(() => {
+    const firstId = Array.from(selectedProductIds)[0];
+    const p = products.find(pr => pr.id === firstId);
+    if (!p) return 'unknown';
+    return detectProductCategory(p.title, p.productType, p.description);
+  }, [selectedProductIds, products]);
+
+  const hasModel = selectedModelId !== null;
+
+  // Credits
+  const totalImages = selectedProductIds.size * selectedShots.size;
+  const totalCredits = totalImages * CREDITS_PER_IMAGE;
+
+  const handleModelSelect = (id: string | null) => {
+    setSelectedModelId(id);
+    setModelExplicitlyChosen(true);
+    // Reset shots when model changes since compatibility changes
+    setSelectedShots(new Set());
+  };
+
+  const handleShotToggle = (id: CatalogShotId) => {
+    setSelectedShots(prev => {
       const next = new Set(prev);
-      if (next.has(modelId)) next.delete(modelId);
-      else if (next.size < CATALOG_MAX_MODELS) next.add(modelId);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const handlePoseToggle = (poseId: string) => {
-    setSelectedPoseIds(prev => {
-      const next = new Set(prev);
-      if (next.has(poseId)) next.delete(poseId);
-      else next.add(poseId);
-      return next;
-    });
+  const handlePreselectRecommended = (ids: CatalogShotId[]) => {
+    setSelectedShots(new Set(ids));
   };
 
-  const handleBackgroundToggle = (bgId: string) => {
-    setSelectedBackgroundIds(prev => {
-      const next = new Set(prev);
-      if (next.has(bgId)) next.delete(bgId);
-      else next.add(bgId);
-      return next;
-    });
-  };
-
+  // Step validation
   const canStep1 = selectedProductIds.size >= 1;
-  const canStep2 = selectedPoseIds.size >= 1;
-  // Step 3 (expression) always passes — 'any' is default
-  const canStep4 = selectedModelIds.size >= 1;
-  const canStep5 = selectedBackgroundIds.size >= 1;
+  const canStep2 = fashionStyle !== null;
+  const canStep3 = modelExplicitlyChosen;
+  const canStep4 = selectedBackgroundId !== null;
+  const canStep5 = selectedShots.size >= 1;
 
   const canNavigateTo = (s: number) => {
     if (s <= step) return true;
     if (s === 2) return canStep1;
     if (s === 3) return canStep1 && canStep2;
-    if (s === 4) return canStep1 && canStep2;
-    if (s === 5) return canStep1 && canStep2 && canStep4;
-    if (s === 6) return canStep1 && canStep2 && canStep4 && canStep5;
-    if (s === 7) return canStep1 && canStep2 && canStep4 && canStep5;
+    if (s === 4) return canStep1 && canStep2 && canStep3;
+    if (s === 5) return canStep1 && canStep2 && canStep3 && canStep4;
     return false;
   };
 
-  const canProceedCurrent = step === 1 ? canStep1 : step === 2 ? canStep2 : step === 3 ? true : step === 4 ? canStep4 : step === 5 ? canStep5 : true;
-
   const handleGenerate = async () => {
+    if (!fashionStyle || !selectedBackgroundId) return;
+
     const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
-    const selectedModelsArr = allModels.filter(m => selectedModelIds.has(m.modelId));
+    const model = selectedModelId ? allModels.find(m => m.modelId === selectedModelId) : null;
 
-    await startGeneration({
-      products: selectedProducts,
-      models: selectedModelsArr,
-      poseIds: Array.from(selectedPoseIds),
-      backgroundIds: Array.from(selectedBackgroundIds),
-      allPoses,
-      extraItems,
-    });
+    const inferAudience = (m: ModelProfile | null): ModelAudienceType => {
+      if (!m) return 'adult_woman';
+      if (m.ageRange === 'young-adult' && m.gender === 'female') return 'adult_woman';
+      if (m.gender === 'male') return 'adult_man';
+      return 'adult_woman';
+    };
 
+    const config: CatalogSessionConfig = {
+      products: selectedProducts.map(p => ({
+        id: p.id, title: p.title, description: p.description,
+        productType: p.productType, imageUrl: p.images[0]?.url || '',
+        detectedCategory: detectProductCategory(p.title, p.productType, p.description),
+      })),
+      fashionStyle,
+      modelId: selectedModelId,
+      modelProfile: model ? `${model.ageRange} ${model.gender} model` : 'no model',
+      modelAudience: inferAudience(model),
+      modelImageUrl: model?.previewUrl || null,
+      backgroundId: selectedBackgroundId,
+      selectedShots: Array.from(selectedShots),
+    };
+
+    await startGeneration(config);
     refreshBalance();
   };
 
+  // If batch is active, show progress
+  if (batchState) {
+    const progress = batchState.totalJobs > 0
+      ? Math.round(((batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs) * 100) : 0;
+
+    return (
+      <div className="space-y-6 pb-32">
+        <PageHeader title="Catalog Shot Set" subtitle="Generating your consistent catalog set"><div /></PageHeader>
+        <div className="text-center space-y-3 py-8">
+          {batchState.allDone ? (
+            <>
+              <CheckCircle className="w-12 h-12 mx-auto text-primary" />
+              <h2 className="text-xl font-bold">Catalog Complete!</h2>
+              <p className="text-muted-foreground">
+                {batchState.completedJobs} of {batchState.totalJobs} images generated
+                {batchState.failedJobs > 0 && ` (${batchState.failedJobs} failed)`}
+              </p>
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline">Phase: {batchState.phase}</Badge>
+              </div>
+            </>
+          ) : (
+            <>
+              <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin" />
+              <h2 className="text-xl font-bold">
+                {batchState.phase === 'anchors' ? 'Creating Anchor Images...' : 'Generating Derivative Shots...'}
+              </h2>
+              <p className="text-muted-foreground">{batchState.completedJobs} of {batchState.totalJobs} complete</p>
+            </>
+          )}
+        </div>
+        <Progress value={progress} className="h-2" />
+        {batchState.aggregatedImages.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Generated Images</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+              {batchState.aggregatedImages.map((url, i) => (
+                <div key={i} className="aspect-[3/4] rounded-lg overflow-hidden bg-muted">
+                  <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {batchState.failedJobs > 0 && (
+          <Alert variant="destructive">
+            <AlertDescription className="text-xs">
+              {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed. Credits refunded automatically.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-32">
-      <PageHeader
-        title="Catalog Shot Set"
-        subtitle="Generate consistent product photography across your entire catalog"
-      >
-        <div />
-      </PageHeader>
+      <PageHeader title="Catalog Shot Set" subtitle="Generate consistent product photography across your entire catalog"><div /></PageHeader>
 
-      {/* Intro guidance */}
       <div className="rounded-xl border border-border bg-muted/30 p-4">
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">How it works:</strong> Select products → pick poses → choose expression → select models → set backgrounds → style individual shots → review &amp; generate.
+          <strong className="text-foreground">How it works:</strong> Select products → choose fashion style → pick a model → set background → select shots → generate a consistent set.
         </p>
       </div>
 
-      {/* 7-step breadcrumb */}
+      {/* 5-step breadcrumb */}
       <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {STEPS.map((s, i) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
           const canClick = canNavigateTo(s.number);
-
           return (
             <div key={s.number} className="flex items-center gap-1 flex-shrink-0">
               <button
@@ -209,11 +255,7 @@ export default function CatalogGenerate() {
                   !isActive && !isDone && !canClick && 'bg-muted text-muted-foreground opacity-40',
                 )}
               >
-                {isDone && !isActive ? (
-                  <Check className="w-3.5 h-3.5" />
-                ) : (
-                  <s.icon className="w-3.5 h-3.5" />
-                )}
+                {isDone && !isActive ? <Check className="w-3.5 h-3.5" /> : <s.icon className="w-3.5 h-3.5" />}
                 <span className="hidden sm:inline">{s.label}</span>
                 <span className="sm:hidden">{s.number}</span>
               </button>
@@ -240,9 +282,9 @@ export default function CatalogGenerate() {
       )}
 
       {step === 2 && (
-        <CatalogStepPoses
-          selectedPoseIds={selectedPoseIds}
-          onTogglePose={handlePoseToggle}
+        <CatalogStepFashionStyle
+          selectedStyle={fashionStyle}
+          onStyleChange={setFashionStyle}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
           canProceed={canStep2}
@@ -250,27 +292,27 @@ export default function CatalogGenerate() {
       )}
 
       {step === 3 && (
-        <CatalogStepExpression
-          selectedMood={selectedMood}
-          onMoodChange={setSelectedMood}
-          onBack={() => setStep(2)}
-          onNext={() => setStep(4)}
-        />
-      )}
-
-      {step === 4 && (
-        <CatalogStepModels
+        <CatalogStepModelsV2
           libraryModels={libraryModels}
           userModels={userModelProfiles}
-          selectedModelIds={selectedModelIds}
-          onModelToggle={handleModelToggle}
+          selectedModelId={selectedModelId}
+          onModelSelect={handleModelSelect}
           genderFilter={genderFilter}
           bodyTypeFilter={bodyTypeFilter}
           ageFilter={ageFilter}
           onGenderChange={setGenderFilter}
           onBodyTypeChange={setBodyTypeFilter}
           onAgeChange={setAgeFilter}
-          maxModels={CATALOG_MAX_MODELS}
+          onBack={() => setStep(2)}
+          onNext={() => setStep(4)}
+          canProceed={canStep3}
+        />
+      )}
+
+      {step === 4 && (
+        <CatalogStepBackgroundsV2
+          selectedBackgroundId={selectedBackgroundId}
+          onBackgroundChange={setSelectedBackgroundId}
           onBack={() => setStep(3)}
           onNext={() => setStep(5)}
           canProceed={canStep4}
@@ -278,59 +320,20 @@ export default function CatalogGenerate() {
       )}
 
       {step === 5 && (
-        <CatalogStepBackgrounds
-          selectedBackgroundIds={selectedBackgroundIds}
-          onToggleBackground={handleBackgroundToggle}
+        <CatalogStepShots
+          productCategory={primaryCategory}
+          hasModel={hasModel}
+          selectedShots={selectedShots}
+          onToggleShot={handleShotToggle}
           onBack={() => setStep(4)}
-          onNext={() => setStep(6)}
-          canProceed={canStep5}
-        />
-      )}
-
-      {step === 6 && (
-        <CatalogStepStyleShots
-          products={products}
-          selectedProductIds={selectedProductIds}
-          models={allModels}
-          selectedModelIds={selectedModelIds}
-          extraItems={extraItems}
-          onExtraItemsChange={setExtraItems}
-          onBack={() => setStep(5)}
-          onNext={() => setStep(7)}
-        />
-      )}
-
-      {step === 7 && (
-        <CatalogStepReview
-          products={products}
-          selectedProductIds={selectedProductIds}
-          models={allModels}
-          selectedModelIds={selectedModelIds}
-          selectedPoseIds={selectedPoseIds}
-          selectedBackgroundIds={selectedBackgroundIds}
-          allPoses={allPoses}
-          balance={balance}
-          onBack={() => setStep(6)}
           onGenerate={handleGenerate}
+          canGenerate={canStep5 && balance >= totalCredits}
           isGenerating={isGenerating}
-          batchState={batchState}
+          totalImages={totalImages}
+          totalCredits={totalCredits}
+          balance={balance}
           onOpenBuyModal={openBuyModal}
-        />
-      )}
-
-      {/* Sticky summary bar */}
-      {step < 7 && (
-        <CatalogMatrixSummary
-          productCount={selectedProductIds.size}
-          modelCount={selectedModelIds.size}
-          poseCount={selectedPoseIds.size}
-          backgroundCount={selectedBackgroundIds.size}
-          step={step}
-          totalSteps={6}
-          stepLabel={STEP_NEXT_LABELS[step] ?? 'Review'}
-          onBack={() => setStep(Math.max(1, step - 1))}
-          onNext={() => setStep(Math.min(7, step + 1))}
-          canProceed={canProceedCurrent}
+          onPreselectRecommended={handlePreselectRecommended}
         />
       )}
 

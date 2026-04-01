@@ -4,47 +4,28 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import {
+  detectProductCategory, buildSessionLock, buildProductLookLock,
+  getAnchorShotId, getShotDefinition, classifyRenderPath,
+  assemblePrompt, buildReferences, getHeroProductBlock,
+  getBackground, getLightingPrompt, getFashionStyle,
+  resolveSupportWardrobe, buildSupportWardrobePrompt,
+} from '@/lib/catalogEngine';
+import type {
+  CatalogSessionConfig, CatalogJobExtended, CatalogBatchStateV2,
+  CatalogShotId, RenderPath, ProductLookLock, CatalogSessionLock,
+} from '@/types/catalog';
 
-import type { Product, ModelProfile, TryOnPose } from '@/types';
-import type { ExtraItem } from '@/components/app/catalog/CatalogStepStyleShots';
+const CREDITS_PER_IMAGE = 4;
 
-const CREDITS_PER_IMAGE = 6;
-
-export interface CatalogJob {
-  jobId: string;
-  status: 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
-  images: string[];
-  error?: string;
-  productName: string;
-  modelName: string;
-  poseName: string;
-  bgName: string;
-}
-
-export interface CatalogBatchState {
-  jobs: CatalogJob[];
-  totalJobs: number;
-  completedJobs: number;
-  failedJobs: number;
-  allDone: boolean;
-  aggregatedImages: string[];
-}
-
-export interface CatalogGenerateParams {
-  products: Product[];
-  models: ModelProfile[];
-  poseIds: string[];
-  backgroundIds: string[];
-  allPoses: TryOnPose[];
-  extraItems?: Map<string, ExtraItem[]>;
-}
+export type { CatalogBatchStateV2 as CatalogBatchState };
 
 export function useCatalogGenerate() {
   const { user } = useAuth();
-  const [batchState, setBatchState] = useState<CatalogBatchState | null>(null);
+  const [batchState, setBatchState] = useState<CatalogBatchStateV2 | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const jobsRef = useRef<CatalogJob[]>([]);
+  const jobsRef = useRef<CatalogJobExtended[]>([]);
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
@@ -54,6 +35,7 @@ export function useCatalogGenerate() {
     if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
   }, []);
 
+  // ── Polling ──
   const pollJobs = useCallback(() => {
     stopPolling();
     const jobs = jobsRef.current;
@@ -93,9 +75,7 @@ export function useCatalogGenerate() {
         const row = rowMap.get(j.jobId) as any;
         if (!row) return j;
         const images: string[] = [];
-        if (row.status === 'completed' && row.result?.images) {
-          images.push(...row.result.images);
-        }
+        if (row.status === 'completed' && row.result?.images) images.push(...row.result.images);
         return { ...j, status: row.status, images, error: row.error_message || undefined };
       });
 
@@ -106,13 +86,20 @@ export function useCatalogGenerate() {
       const allDone = updated.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
       const aggregatedImages = updated.flatMap(j => j.images);
 
+      // Determine phase
+      const anchorJobs = updated.filter(j => j.isAnchor);
+      const anchorsAllDone = anchorJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
+      const derivativeJobs = updated.filter(j => !j.isAnchor);
+      const phase = allDone ? 'complete' as const : !anchorsAllDone ? 'anchors' as const : 'derivatives' as const;
+
+      const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
+      for (const aj of anchorJobs) {
+        anchorStatus[aj.productId] = aj.status === 'completed' ? 'completed' : aj.status === 'failed' ? 'failed' : aj.status === 'processing' ? 'generating' : 'pending';
+      }
+
       setBatchState({
-        jobs: updated,
-        totalJobs: updated.length,
-        completedJobs,
-        failedJobs,
-        allDone,
-        aggregatedImages,
+        jobs: updated, totalJobs: updated.length, completedJobs, failedJobs,
+        allDone, aggregatedImages, anchorStatus, phase,
       });
 
       if (allDone) stopPolling();
@@ -122,115 +109,195 @@ export function useCatalogGenerate() {
     pollingRef.current = setInterval(poll, 3000);
   }, [stopPolling]);
 
-  const startGeneration = useCallback(async (params: CatalogGenerateParams): Promise<boolean> => {
-    if (!user) { toast.error('Sign in to generate'); return false; }
+  // ── Enqueue a single job ──
+  const enqueueJob = async (
+    token: string,
+    productImageB64: string,
+    productTitle: string,
+    productId: string,
+    shotId: CatalogShotId,
+    shotLabel: string,
+    renderPath: RenderPath,
+    prompt: string,
+    modelImageB64: string | null,
+    modelProfile: string,
+    anchorImageUrl: string | null,
+    batchId: string,
+    enqueueCount: number,
+  ): Promise<CatalogJobExtended | null> => {
+    await paceDelay(enqueueCount);
 
-    const { products, models, poseIds, backgroundIds, allPoses, extraItems } = params;
-    const poseMap = new Map(allPoses.map(p => [p.poseId, p]));
+    const result = await enqueueWithRetry(
+      {
+        jobType: 'tryon',
+        payload: {
+          catalog_mode: true,
+          render_path: renderPath,
+          shot_id: shotId,
+          prompt_final: prompt,
+          product: { title: productTitle, imageUrl: productImageB64 },
+          ...(modelImageB64 && { model: { imageUrl: modelImageB64, name: modelProfile } }),
+          ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),
+          aspectRatio: '3:4',
+          imageCount: 1,
+          batch_id: batchId,
+        },
+        imageCount: 1,
+        quality: 'standard',
+        hasModel: !!modelImageB64,
+        hasScene: false,
+        skipWake: true,
+      },
+      token,
+    );
+
+    if (isEnqueueError(result)) {
+      if (result.type === 'insufficient_credits') {
+        toast.error('Insufficient credits');
+      }
+      return null;
+    }
+
+    return {
+      jobId: result.jobId,
+      status: 'queued',
+      images: [],
+      productId,
+      productName: productTitle,
+      shotId,
+      shotLabel,
+      renderPath,
+      isAnchor: renderPath === 'anchor_generate',
+    };
+  };
+
+  // ── Wait for a specific job to complete ──
+  const waitForJobCompletion = async (jobId: string, timeoutMs = 120000): Promise<string | null> => {
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const start = Date.now();
+
+    while (Date.now() - start < timeoutMs) {
+      await new Promise(r => setTimeout(r, 3000));
+      const token = await getAuthToken() || SUPABASE_KEY;
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=status,result,error_message`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) continue;
+      const rows = await res.json();
+      if (!rows?.[0]) continue;
+      const row = rows[0];
+      if (row.status === 'completed' && row.result?.images?.[0]) return row.result.images[0];
+      if (row.status === 'failed' || row.status === 'cancelled') return null;
+    }
+    return null;
+  };
+
+  // ── Main generation pipeline ──
+  const startGeneration = useCallback(async (config: CatalogSessionConfig): Promise<boolean> => {
+    if (!user) { toast.error('Sign in to generate'); return false; }
 
     const token = await getAuthToken();
     if (!token) { toast.error('Authentication required'); return false; }
 
     setIsGenerating(true);
     const batchId = crypto.randomUUID();
-    const jobs: CatalogJob[] = [];
+    const allJobs: CatalogJobExtended[] = [];
     let enqueueCount = 0;
 
-    for (const product of products) {
-      const sourceImageUrl = product.images[0]?.url;
-      if (!sourceImageUrl) continue;
+    // Stage 1: Build session lock
+    const session = buildSessionLock(
+      config.fashionStyle, config.modelId, config.modelProfile,
+      config.modelAudience, config.backgroundId,
+    );
 
-      const base64Product = await convertImageToBase64(sourceImageUrl);
+    // Prepare model image
+    const modelB64 = config.modelImageUrl ? await convertImageToBase64(config.modelImageUrl) : null;
 
-      for (const model of models) {
-        const base64Model = await convertImageToBase64(model.previewUrl);
-        const comboKey = `${product.id}_${model.modelId}`;
-        const extras = extraItems?.get(comboKey) || [];
+    for (const product of config.products) {
+      // Stage 2: Resolve look
+      const lookLock = buildProductLookLock(product, session, product.detectedCategory);
+      const productB64 = await convertImageToBase64(product.imageUrl);
+      const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
 
-        const extraPrompt = extras.length > 0
-          ? extras.map(e => `also wearing/holding ${e.productTitle}`).join(', ')
-          : '';
+      // Stage 3: Enqueue anchor
+      const anchorShotId = lookLock.anchorShotId;
+      const anchorShotDef = getShotDefinition(anchorShotId);
 
-        for (const poseId of poseIds) {
-          const pose = poseMap.get(poseId);
-          if (!pose) continue;
+      // Make sure anchor is in selected shots, if not use first selected
+      const effectiveAnchorId = config.selectedShots.includes(anchorShotId) ? anchorShotId : config.selectedShots[0];
+      const effectiveAnchorDef = getShotDefinition(effectiveAnchorId);
 
-          for (const bgId of backgroundIds) {
-            const bg = poseMap.get(bgId);
-            if (!bg) continue;
+      if (!effectiveAnchorDef) continue;
 
-            const base64Scene = bg.previewUrl ? await convertImageToBase64(bg.previewUrl) : undefined;
+      const anchorPrompt = assemblePrompt({
+        productTitle: heroBlock,
+        productCategory: product.detectedCategory,
+        modelProfile: session.modelProfile,
+        supportWardrobePrompt: lookLock.supportWardrobePrompt,
+        backgroundPrompt: session.backgroundPrompt,
+        lightingPrompt: session.lightingPrompt,
+        shotDef: effectiveAnchorDef,
+        renderPath: 'anchor_generate',
+      });
 
-            const customPrompt = extraPrompt || undefined;
+      const anchorJob = await enqueueJob(
+        token, productB64, product.title, product.id,
+        effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
+        anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
+      );
 
-            await paceDelay(enqueueCount);
+      if (anchorJob) allJobs.push(anchorJob);
 
-            const result = await enqueueWithRetry(
-              {
-                jobType: 'tryon',
-                payload: {
-                  product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64Product },
-                  model: { name: model.name, gender: model.gender, ethnicity: model.ethnicity, bodyType: model.bodyType, ageRange: model.ageRange, imageUrl: base64Model, originalImageUrl: model.previewUrl },
-                  pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64Scene, originalImageUrl: pose.previewUrl },
-                  background: { name: bg.name, description: bg.promptHint || bg.description, category: bg.category },
-                  aspectRatio: '3:4',
-                  imageCount: 1,
-                  batch_id: batchId,
-                  catalog_mode: true,
-                  ...(customPrompt && { custom_prompt: customPrompt }),
-                  ...(extras.length > 0 && { extra_items: extras }),
-                },
-                imageCount: 1,
-                quality: 'standard',
-                hasModel: true,
-                hasScene: true,
-                skipWake: true,
-              },
-              token,
-            );
+      // Enqueue remaining shots
+      const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
+      for (const shotId of remainingShots) {
+        const shotDef = getShotDefinition(shotId);
+        if (!shotDef) continue;
 
-            if (!isEnqueueError(result)) {
-              jobs.push({
-                jobId: result.jobId,
-                status: 'queued',
-                images: [],
-                productName: product.title,
-                modelName: model.name,
-                poseName: pose.name,
-                bgName: bg.name,
-              });
-            } else if (result.type === 'insufficient_credits') {
-              toast.error(`Insufficient credits after ${jobs.length} jobs queued`);
-              break;
-            }
-            enqueueCount++;
-          }
-        }
+        const renderPath = classifyRenderPath(effectiveAnchorId, shotId, product.detectedCategory);
+        const prompt = assemblePrompt({
+          productTitle: heroBlock,
+          productCategory: product.detectedCategory,
+          modelProfile: session.modelProfile,
+          supportWardrobePrompt: lookLock.supportWardrobePrompt,
+          backgroundPrompt: session.backgroundPrompt,
+          lightingPrompt: session.lightingPrompt,
+          shotDef,
+          renderPath,
+        });
+
+        const job = await enqueueJob(
+          token, productB64, product.title, product.id,
+          shotId, shotDef.label, renderPath, prompt,
+          modelB64, session.modelProfile, null, batchId, enqueueCount++,
+        );
+
+        if (job) allJobs.push(job);
       }
     }
 
-    if (jobs.length > 0) sendWake(token);
+    if (allJobs.length > 0) sendWake(token);
 
-    if (jobs.length === 0) {
+    if (allJobs.length === 0) {
       toast.error('Could not queue any jobs');
       setIsGenerating(false);
       return false;
     }
 
-    jobsRef.current = jobs;
+    jobsRef.current = allJobs;
+    const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
+    for (const j of allJobs.filter(j => j.isAnchor)) anchorStatus[j.productId] = 'pending';
+
     setBatchState({
-      jobs,
-      totalJobs: jobs.length,
-      completedJobs: 0,
-      failedJobs: 0,
-      allDone: false,
-      aggregatedImages: [],
+      jobs: allJobs, totalJobs: allJobs.length, completedJobs: 0, failedJobs: 0,
+      allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
     });
 
-    toast.info(`Queued ${jobs.length} catalog generation${jobs.length > 1 ? 's' : ''}`);
+    toast.info(`Queued ${allJobs.length} catalog image${allJobs.length > 1 ? 's' : ''} (anchor-first pipeline)`);
     pollJobs();
     setIsGenerating(false);
-
     return true;
   }, [user, pollJobs]);
 
@@ -240,7 +307,5 @@ export function useCatalogGenerate() {
     jobsRef.current = [];
   }, [stopPolling]);
 
-  const totalCreditsNeeded = 0;
-
-  return { startGeneration, batchState, isGenerating, resetBatch, totalCreditsNeeded };
+  return { startGeneration, batchState, isGenerating, resetBatch };
 }
