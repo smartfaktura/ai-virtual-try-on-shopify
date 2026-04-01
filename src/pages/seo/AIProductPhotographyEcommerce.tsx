@@ -6,7 +6,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
@@ -161,16 +161,22 @@ export default function AIProductPhotographyEcommerce() {
     return picks;
   }, [presets, usedIds]);
 
-  // Tab images with smart fallback — never show camera placeholder
+  const [activeTab, setActiveTab] = useState('white-bg');
+
+  // Tab images: 3 per tab with smart fallback
   const tabImages = useMemo(() => {
-    const map: Record<string, DiscoverPreset | null> = {};
+    const map: Record<string, DiscoverPreset[]> = {};
     for (const tab of OUTCOME_TABS) {
-      const picks = pickByCategory(presets, tab.category, 1, usedIds);
-      let pick = picks[0] ?? null;
-      // Fallback: grab any featured preset not yet used
-      if (!pick) pick = pickFeaturedFallback(presets, usedIds);
-      if (pick) usedIds.add(pick.id);
-      map[tab.id] = pick;
+      const picks = pickByCategory(presets, tab.category, 3, usedIds);
+      // Fill remaining slots with featured fallbacks
+      while (picks.length < 3) {
+        const fb = pickFeaturedFallback(presets, usedIds);
+        if (!fb) break;
+        picks.push(fb);
+        usedIds.add(fb.id);
+      }
+      picks.forEach(p => usedIds.add(p.id));
+      map[tab.id] = picks;
     }
     return map;
   }, [presets, usedIds]);
@@ -311,51 +317,73 @@ export default function AIProductPhotographyEcommerce() {
                 Generate the right visual for every ecommerce use case — from clean product cutouts to lifestyle scenes and ad creatives.
               </p>
             </div>
-            <Tabs defaultValue="white-bg" className="w-full">
-              <TabsList className="flex flex-wrap justify-center gap-1 h-auto bg-muted/50 p-1.5 rounded-xl mb-10">
-                {OUTCOME_TABS.map(tab => (
-                  <TabsTrigger key={tab.id} value={tab.id} className="text-sm px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {OUTCOME_TABS.map(tab => {
-                const img = tabImages[tab.id];
-                return (
-                  <TabsContent key={tab.id} value={tab.id}>
-                    <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="relative rounded-2xl overflow-hidden border border-border shadow-md bg-gradient-to-br from-muted to-muted/50 group">
-                        {img ? (
-                          <>
-                            <DiscoverCard
-                              item={{ type: 'preset', data: img }}
-                              onClick={() => setSelectedItem({ type: 'preset', data: img })}
-                              hideLabels
-                            />
-                            <div className="absolute inset-0 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                              <span className="text-xs font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
-                                Click to explore
-                              </span>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="w-full aspect-[4/3] flex items-center justify-center text-muted-foreground">
-                            <Camera className="h-12 w-12" />
-                          </div>
-                        )}
+            {/* Pill chips */}
+            <div className="flex flex-wrap justify-center gap-2 mb-12">
+              {OUTCOME_TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-2 rounded-full text-sm font-medium tracking-wide transition-all duration-200 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/30 text-muted-foreground/80 hover:bg-muted/60 hover:text-foreground'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Active tab content */}
+            {OUTCOME_TABS.filter(tab => tab.id === activeTab).map(tab => {
+              const imgs = tabImages[tab.id] ?? [];
+              return (
+                <div key={tab.id} className="grid md:grid-cols-2 gap-8 items-center">
+                  {/* Image grid: 2 top + 1 bottom spanning full */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {imgs[0] && (
+                      <div className="rounded-xl overflow-hidden">
+                        <DiscoverCard
+                          item={{ type: 'preset', data: imgs[0] }}
+                          onClick={() => setSelectedItem({ type: 'preset', data: imgs[0] })}
+                          hideLabels
+                          aspectRatioOverride="3/4"
+                        />
                       </div>
-                      <div className="space-y-5">
-                        <h3 className="text-2xl font-semibold text-foreground">{tab.title}</h3>
-                        <p className="text-muted-foreground leading-relaxed text-lg">{tab.desc}</p>
-                        <Button asChild variant="outline" size="sm" className="rounded-full">
-                          <Link to="/auth">Try This Style <ArrowRight className="ml-2 h-3.5 w-3.5" /></Link>
-                        </Button>
+                    )}
+                    {imgs[1] && (
+                      <div className="rounded-xl overflow-hidden">
+                        <DiscoverCard
+                          item={{ type: 'preset', data: imgs[1] }}
+                          onClick={() => setSelectedItem({ type: 'preset', data: imgs[1] })}
+                          hideLabels
+                          aspectRatioOverride="3/4"
+                        />
                       </div>
-                    </div>
-                  </TabsContent>
-                );
-              })}
-            </Tabs>
+                    )}
+                    {imgs[2] && (
+                      <div className="col-span-2 rounded-xl overflow-hidden">
+                        <DiscoverCard
+                          item={{ type: 'preset', data: imgs[2] }}
+                          onClick={() => setSelectedItem({ type: 'preset', data: imgs[2] })}
+                          hideLabels
+                          aspectRatioOverride="16/9"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Text content */}
+                  <div className="space-y-5">
+                    <h3 className="text-2xl sm:text-3xl font-semibold text-foreground">{tab.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed text-lg">{tab.desc}</p>
+                    <Button asChild size="sm" className="rounded-full px-6 gap-2">
+                      <Link to="/auth">Try This Style <ArrowRight className="h-3.5 w-3.5" /></Link>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       </RevealSection>
