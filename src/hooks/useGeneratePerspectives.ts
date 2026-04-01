@@ -97,6 +97,15 @@ function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string):
 - The human skin/body visible in frame must match the source image exactly — same skin tone, same body area.
 - Lighting: Raking light at 15–30° to reveal material texture. Skin should look natural, not over-smoothed.`;
 
+    case 'top_down':
+      return `PHOTOGRAPHY DNA — TOP-DOWN / FLAT LAY (ON-MODEL):
+- Lens: 50mm at f/8, camera mounted directly overhead at exact 90° perpendicular to the ground plane.
+- The model is lying down or the camera is positioned directly above looking straight down at the model and product.
+- Framing: Full product and relevant body area visible from above. Show the top silhouette and how the product sits on/against the body.
+- Lighting: Soft even overhead light with minimal shadows — dual strip softboxes flanking the camera from above.
+- The model's body, skin tone, and styling must match the source image exactly.
+- DO NOT tilt the camera — maintain perfectly perpendicular overhead angle.`;
+
     case 'context':
       return `PHOTOGRAPHY DNA — WIDE/ENVIRONMENT (ON-MODEL):
 - Lens: 35mm at f/5.6, natural perspective.
@@ -109,15 +118,20 @@ function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string):
 
     default: {
       const isBack = label.toLowerCase().includes('back');
-      const sideNote = label.toLowerCase().includes('left')
-        ? 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
-        : label.toLowerCase().includes('right')
-          ? 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
+      const l = label.toLowerCase();
+      const sideNote = l.includes('left')
+        ? l.includes('45')
+          ? 'Camera positioned at 45° to the model\'s front-left. Both the front face and left side of the body/garment are visible, creating a three-quarter view with natural depth.'
+          : 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
+        : l.includes('right')
+          ? l.includes('45')
+            ? 'Camera positioned at 45° to the model\'s front-right. Both the front face and right side of the body/garment are visible, creating a three-quarter view with natural depth.'
+            : 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
           : '';
 
       return `PHOTOGRAPHY DNA — ON-MODEL ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring both the model and product are tack-sharp.
-- Camera height: At the model's torso midpoint — straight-on, not looking down or up.
+- Camera height: At the model's torso midpoint — straight-on, not looking down or up.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic hero angle.' : ''}
 - Framing: Model fills 70–80% of the frame. Same body coverage as the source (full body, upper body, etc.).
 - The model rotates naturally to present the requested angle — the camera moves around the model.
 ${isBack ? '- Back-specific: Model\'s back is facing camera. Show rear construction of garment, back panel, any visible labels, the way fabric falls across the back and shoulders. The model\'s head may be slightly turned or facing away.' : ''}
