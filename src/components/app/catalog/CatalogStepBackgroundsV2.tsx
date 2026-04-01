@@ -21,7 +21,7 @@ export function CatalogStepBackgroundsV2({
         <p className="text-sm text-muted-foreground mt-1">Choose one studio background for your entire set.</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-4 gap-3">
         {BACKGROUNDS.map(bg => {
           const isSelected = selectedBackgroundId === bg.id;
           return (
