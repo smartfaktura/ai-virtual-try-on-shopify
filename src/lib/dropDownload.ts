@@ -112,19 +112,3 @@ export async function downloadSingleImage(imageUrl: string, fileName: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Download failed: ${response.status} ${response.statusText}`);
-  }
-  const contentType = response.headers.get('content-type');
-  const ext = getExtensionFromContentType(contentType);
-  // Replace any existing extension in fileName with the correct one
-  const baseName = fileName.replace(/\.[^.]+$/, '');
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${baseName}${ext}`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
