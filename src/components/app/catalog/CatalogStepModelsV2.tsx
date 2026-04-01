@@ -114,7 +114,7 @@ export function CatalogStepModelsV2({
           </div>
         ) : (
           <button
-            onClick={() => navigate('/app/brand-models')}
+            onClick={() => window.open('/app/brand-models', '_blank')}
             className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-5 transition-colors group"
           >
             <div className="flex items-center gap-3">

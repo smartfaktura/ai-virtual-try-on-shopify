@@ -280,7 +280,7 @@ export function CatalogStepProps({
             </div>
 
             {/* Combo list — grouped by product */}
-            <div className="space-y-4 max-h-[460px] overflow-y-auto pr-0.5">
+            <div className="space-y-4 max-h-[min(460px,50vh)] overflow-y-auto pr-0.5">
               {(() => {
                 // Group combos by product
                 const grouped = new Map<string, GenerationCombo[]>();

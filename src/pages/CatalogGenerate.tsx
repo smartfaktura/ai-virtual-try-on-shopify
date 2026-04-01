@@ -693,7 +693,7 @@ export default function CatalogGenerate() {
         </div>
 
         {/* Mobile summary drawer */}
-        {isMobile && (
+        {isMobile && !(step === 1 && selectedProductIds.size > 0) && (
           <Sheet>
             <SheetTrigger asChild>
               <Button

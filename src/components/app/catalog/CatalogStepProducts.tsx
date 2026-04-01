@@ -330,18 +330,20 @@ export function CatalogStepProducts({
                     })}
 
                     {/* Add New card */}
-                    <button
-                      type="button"
-                      onClick={onAddProduct}
-                      className="group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border hover:border-primary/40 bg-transparent hover:bg-primary/5 transition-all duration-200 min-h-[200px]"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-muted/50 group-hover:bg-primary/10 flex items-center justify-center mb-2 transition-colors duration-200">
-                        <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
-                      </div>
-                      <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-200">
-                        Add Product
-                      </span>
-                    </button>
+                    {selectedProductIds.size < maxProducts && (
+                      <button
+                        type="button"
+                        onClick={onAddProduct}
+                        className="group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border hover:border-primary/40 bg-transparent hover:bg-primary/5 transition-all duration-200 min-h-[200px]"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-muted/50 group-hover:bg-primary/10 flex items-center justify-center mb-2 transition-colors duration-200">
+                          <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+                          Add Product
+                        </span>
+                      </button>
+                    )}
                   </div>
 
                   {filtered.length > visibleCount && (

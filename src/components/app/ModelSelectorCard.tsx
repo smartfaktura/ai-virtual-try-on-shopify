@@ -39,6 +39,6 @@ export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = f
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
         <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
       </div>
-    </div>
+    </button>
   );
 }
