@@ -1,36 +1,30 @@
 
 
-# Fix: GlobalGenerationBar showing stale video processing status
+# Add Multi-Select & Bulk Download to Video Hub
 
-## Root Cause
-
-The video generation flow has a **polling gap in bulk mode**:
-
-1. Worker mode (`generate-video` edge function) submits the Kling task and returns — it does NOT wait for completion
-2. Client-side polling (`useGenerateVideo`) tracks only ONE `activeJob` at a time
-3. During bulk, `resetPipeline()` is called between each image, killing the previous job's Kling status polling
-4. Result: `generation_queue` entries stay stuck as "processing" forever because no one polls Kling to discover completion and update the queue
-5. The `recover` action fixes `generated_videos` but does NOT update corresponding `generation_queue` entries
-6. GlobalGenerationBar queries `generation_queue` for `queued`/`processing` jobs → shows stale "Leo is creating your video" indefinitely
+## Overview
+Add a "Select" toggle button to the Recent Videos header. When active, cards show checkboxes, and a sticky bottom bar appears with a "Download X as ZIP" action.
 
 ## Changes
 
-### 1. Fix `generate-video` edge function — `recover` action
-**File**: `supabase/functions/generate-video/index.ts`
+### 1. `src/pages/VideoHub.tsx`
+- Add state: `selectMode`, `selectedIds` (Set)
+- Add "Select" / "Done" button next to the "Recent Videos" heading
+- Pass `selectMode` and selection handlers to `RecentVideoCard`
+- In select mode: clicking a card toggles selection instead of opening the detail modal; show a checkbox overlay on each card
+- Render a sticky bottom action bar when `selectedIds.size > 0` with count + "Download as ZIP" button
+- Download handler: filter `history` by selected IDs, fetch each `.video_url`, zip using JSZip (reuse pattern from `dropDownload.ts` but for `.mp4` files), trigger download as `videos.zip`
 
-After recovering stuck `generated_videos`, also find and complete stuck `generation_queue` entries:
-- Query `generation_queue` for this user where `status = 'processing'` and `job_type = 'video'`
-- For each, extract `kling_task_id` from the `result` JSON column
-- Check if the corresponding `generated_videos` row is already `complete` or `failed`
-- If complete → mark queue job as `completed` with the video URL in result
-- If failed → mark queue job as `failed` and refund credits
+### 2. `RecentVideoCard` (in same file)
+- Accept new props: `selectMode`, `selected`, `onToggleSelect`
+- In select mode: show a checkbox circle overlay (top-left), suppress hover-play behavior
+- Click calls `onToggleSelect` instead of `onClick` when in select mode
 
-### 2. Hide GlobalGenerationBar on video pages
-**File**: `src/components/app/GlobalGenerationBar.tsx`
-
-Add `/app/video` to `HIDDEN_PATHS`. The Video Hub already shows video results directly, and AnimateVideo has its own BulkProgressBanner — the GlobalGenerationBar showing duplicate/stale video info there is redundant and confusing.
+### 3. `src/lib/dropDownload.ts`
+- Add `downloadVideosAsZip(videos: {url: string; name: string}[], zipName: string, onProgress?)` utility
+- Similar to `downloadDropAsZip` but defaults extension to `.mp4` for video content types
 
 ### Files
-- **Update**: `supabase/functions/generate-video/index.ts` — extend recover action to also resolve stuck queue entries
-- **Update**: `src/components/app/GlobalGenerationBar.tsx` — add `/app/video` to HIDDEN_PATHS
+- **Update**: `src/pages/VideoHub.tsx`
+- **Update**: `src/lib/dropDownload.ts`
 
