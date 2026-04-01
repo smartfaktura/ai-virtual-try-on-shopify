@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft, ChevronRight, UserX, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserX, Check, Crown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ModelProfile } from '@/types';
 
@@ -23,6 +24,7 @@ export function CatalogStepModelsV2({
   libraryModels, userModels, selectedModelIds, productOnlyMode, onModelToggle, onProductOnlyToggle,
   onBack, onNext, canProceed,
 }: CatalogStepModelsV2Props) {
+  const navigate = useNavigate();
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
 
   const filteredLibrary = useMemo(() => {
@@ -93,12 +95,15 @@ export function CatalogStepModelsV2({
         </Tabs>
       </div>
 
-      {/* Library Models */}
-      {filteredLibrary.length > 0 && (
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
+      {/* YOUR BRAND MODELS — shown first for upsell */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Crown className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
+        </div>
+        {filteredUser.length > 0 ? (
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-            {filteredLibrary.map(model => (
+            {filteredUser.map(model => (
               <ModelSelectorCard
                 key={model.modelId}
                 model={model}
@@ -107,15 +112,30 @@ export function CatalogStepModelsV2({
               />
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <button
+            onClick={() => navigate('/app/brand-models')}
+            className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-5 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Plus className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">Create Your Brand Model</p>
+                <p className="text-[11px] text-muted-foreground">Generate a unique AI model for your brand's identity</p>
+              </div>
+            </div>
+          </button>
+        )}
+      </div>
 
-      {/* User Models */}
-      {filteredUser.length > 0 && (
+      {/* Library Models */}
+      {filteredLibrary.length > 0 && (
         <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">My Models</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-            {filteredUser.map(model => (
+            {filteredLibrary.map(model => (
               <ModelSelectorCard
                 key={model.modelId}
                 model={model}

@@ -26,6 +26,7 @@ interface CatalogContextSidebarProps {
   backgroundId: string | null;
   selectedShots: Set<CatalogShotId>;
   selectedPropCount: number;
+  totalCombos: number;
   totalImages: number;
   totalCredits: number;
   currentStep: number;
@@ -33,7 +34,7 @@ interface CatalogContextSidebarProps {
 
 export function CatalogContextSidebar({
   selectedProducts, fashionStyleId, models, productOnlyMode,
-  backgroundId, selectedShots, selectedPropCount, totalImages, totalCredits, currentStep,
+  backgroundId, selectedShots, selectedPropCount, totalCombos, totalImages, totalCredits, currentStep,
 }: CatalogContextSidebarProps) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
   const bg = backgroundId ? getBackground(backgroundId) : null;
@@ -123,7 +124,7 @@ export function CatalogContextSidebar({
         {/* Props */}
         <SidebarRow icon={Gem} label="Props" done={selectedPropCount > 0}>
           {selectedPropCount > 0 ? (
-            <span className="text-[10px] text-foreground font-medium">{selectedPropCount} item{selectedPropCount !== 1 ? 's' : ''}</span>
+            <span className="text-[10px] text-foreground font-medium">{selectedPropCount}/{totalCombos} shots</span>
           ) : (
             <span className="text-[10px] text-muted-foreground/50">None</span>
           )}

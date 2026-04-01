@@ -75,8 +75,8 @@ export default function CatalogGenerate() {
   // Step 5
   const [selectedShots, setSelectedShots] = useState<Set<CatalogShotId>>(new Set());
 
-  // Step 6 — props
-  const [selectedPropIds, setSelectedPropIds] = useState<Set<string>>(new Set());
+  // Step 6 — per-combo prop assignments
+  const [propAssignments, setPropAssignments] = useState<Record<string, string[]>>({});
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -240,13 +240,17 @@ export default function CatalogGenerate() {
       models,
       backgroundId: selectedBackgroundId,
       selectedShots: Array.from(selectedShots),
-      stylingProps: Array.from(selectedPropIds).map(id => {
-        const p = products.find(pr => pr.id === id);
-        return p ? {
-          id: p.id, title: p.title, imageUrl: p.images[0]?.url || '',
-          detectedCategory: detectProductCategory(p.title, p.productType, p.description),
-        } : null;
-      }).filter(Boolean) as CatalogSessionConfig['stylingProps'],
+      propAssignments: Object.fromEntries(
+        Object.entries(propAssignments)
+          .filter(([, ids]) => ids.length > 0)
+          .map(([key, ids]) => [
+            key,
+            ids.map(id => {
+              const p = products.find(pr => pr.id === id);
+              return p ? { id: p.id, title: p.title, imageUrl: p.images[0]?.url || '' } : null;
+            }).filter(Boolean),
+          ]),
+      ),
     };
 
     await startGeneration(config);
@@ -263,7 +267,7 @@ export default function CatalogGenerate() {
     setModelExplicitlyChosen(false);
     setSelectedBackgroundId(null);
     setSelectedShots(new Set());
-    setSelectedPropIds(new Set());
+    setPropAssignments({});
     setGenerationStartedAt(null);
     setElapsedSeconds(0);
   };
@@ -566,8 +570,16 @@ export default function CatalogGenerate() {
             <CatalogStepProps
               allProducts={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
               heroProductIds={selectedProductIds}
-              selectedPropIds={selectedPropIds}
-              onPropSelectionChange={setSelectedPropIds}
+              heroProducts={products.filter(p => selectedProductIds.has(p.id)).map(p => ({
+                id: p.id, title: p.title, imageUrl: p.images[0]?.url || '',
+              }))}
+              models={allModels.filter(m => selectedModelIds.has(m.modelId)).map(m => ({
+                id: m.modelId, name: m.name, previewUrl: m.previewUrl,
+              }))}
+              productOnlyMode={productOnlyMode}
+              selectedShots={selectedShots}
+              propAssignments={propAssignments}
+              onPropAssignmentsChange={setPropAssignments}
               onBack={() => setStep(5)}
               onNext={() => setStep(7)}
             />
@@ -581,10 +593,8 @@ export default function CatalogGenerate() {
               fashionStyleId={fashionStyle}
               backgroundId={selectedBackgroundId}
               selectedShots={selectedShots}
-              stylingProps={Array.from(selectedPropIds).map(id => {
-                const p = products.find(pr => pr.id === id);
-                return p ? { id: p.id, title: p.title, imageUrl: p.images[0]?.url || '' } : null;
-              }).filter(Boolean) as { id: string; title: string; imageUrl: string }[]}
+              propAssignments={propAssignments}
+              allProducts={userProducts.map(p => ({ id: p.id, title: p.title, image_url: p.image_url, product_type: p.product_type || '' }))}
               totalImages={totalImages}
               totalCredits={totalCredits}
               balance={balance}
@@ -605,7 +615,8 @@ export default function CatalogGenerate() {
             productOnlyMode={productOnlyMode}
             backgroundId={selectedBackgroundId}
             selectedShots={selectedShots}
-            selectedPropCount={selectedPropIds.size}
+            selectedPropCount={Object.values(propAssignments).filter(ids => ids.length > 0).length}
+            totalCombos={selectedProductIds.size * Math.max(1, modelCount) * selectedShots.size}
             totalImages={totalImages}
             totalCredits={totalCredits}
             currentStep={step}
