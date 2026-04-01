@@ -74,6 +74,7 @@ const PerspectivesFeature = lazy(() => import('@/pages/features/PerspectivesFeat
 const RealEstateStagingFeature = lazy(() => import('@/pages/features/RealEstateStagingFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
+const AIProductPhotographyEcommerce = lazy(() => import('@/pages/seo/AIProductPhotographyEcommerce'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,6 +128,7 @@ const App = () => {
             <Route path="/features/real-estate-staging" element={<RealEstateStagingFeature />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/try" element={<TryFree />} />
+            <Route path="/ai-product-photography-for-ecommerce" element={<AIProductPhotographyEcommerce />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
