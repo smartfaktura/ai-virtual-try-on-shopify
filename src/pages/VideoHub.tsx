@@ -295,7 +295,9 @@ export default function VideoHub() {
         video={selectedVideo}
         open={!!selectedVideo}
         onClose={() => setSelectedVideo(null)}
-        onDeleted={refreshHistory}
+        onDeleted={() => {
+          if (selectedVideo) removeFromHistory(selectedVideo.id);
+        }}
       />
     </div>
   );
