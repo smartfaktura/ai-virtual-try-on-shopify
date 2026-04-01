@@ -418,23 +418,11 @@ export default function AIProductPhotographyEcommerce() {
             {showcaseImages.length > 0 && (
               <div className="columns-2 md:columns-3 lg:columns-4 gap-3 mb-12 [&>div]:mb-3">
                 {showcaseImages.map(img => (
-                  <div key={img.id} className="group relative rounded-2xl overflow-hidden border border-border bg-muted break-inside-avoid max-h-[380px]">
-                    <ShimmerImage
-                      src={getOptimizedUrl(img.image_url, { width: 350, quality: 70 })}
-                      alt={`Ecommerce product image example – ${img.title}`}
-                      className="w-full h-auto block [@media(hover:hover)]:group-hover:scale-[1.03] [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
-                      wrapperClassName="h-auto"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-xs font-medium text-white truncate">{img.title}</p>
-                      {img.category && (
-                        <Badge variant="secondary" className="mt-1 text-[10px] bg-white/20 text-white border-0 backdrop-blur-sm">
-                          {img.category}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  <DiscoverCard
+                    key={img.id}
+                    item={{ type: 'preset', data: img }}
+                    onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                  />
                 ))}
               </div>
             )}
