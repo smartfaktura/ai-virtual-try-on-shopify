@@ -127,6 +127,7 @@ export default function AnimateVideo() {
 
   // Refinements
   const [cameraMotion, setCameraMotion] = useState('slow_push_in');
+  const [selectedCameraMotions, setSelectedCameraMotions] = useState<string[]>(['slow_push_in']);
   const [subjectMotion, setSubjectMotion] = useState('minimal');
   const [realismLevel, setRealismLevel] = useState('realistic');
   const [loopStyle, setLoopStyle] = useState('none');
