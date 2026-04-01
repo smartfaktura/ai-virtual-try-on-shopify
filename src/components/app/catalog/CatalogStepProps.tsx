@@ -42,7 +42,7 @@ interface GenerationCombo {
   key: string;
   product: { id: string; title: string; imageUrl: string };
   model: { id: string; name: string } | null;
-  shot: { id: CatalogShotId; label: string; previewUrl?: string };
+  shot: { id: CatalogShotId; label: string };
 }
 
 // --- Prop Picker Modal ---
