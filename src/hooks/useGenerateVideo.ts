@@ -53,6 +53,10 @@ interface UseGenerateVideoResult {
   history: GeneratedVideo[];
   isLoadingHistory: boolean;
   refreshHistory: () => void;
+  loadMore: () => void;
+  hasMore: boolean;
+  totalCount: number;
+  isLoadingMore: boolean;
 }
 
 export function useGenerateVideo(): UseGenerateVideoResult {
@@ -162,50 +166,94 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     };
   }, [queue.activeJob?.id, queue.activeJob?.status]);
 
+  const PAGE_SIZE = 20;
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const mapVideos = useCallback(async (data: any[]): Promise<GeneratedVideo[]> => {
+    const signed = await Promise.all(
+      data.map(async (v) => {
+        const project = v.video_projects as Record<string, unknown> | null;
+        return {
+          ...v,
+          video_url: v.video_url ? await toSignedUrl(v.video_url) : null,
+          source_image_url: await toSignedUrl(v.source_image_url),
+          settings_json: (project?.settings_json as Record<string, unknown>) || null,
+          workflow_type: v.workflow_type || (project?.workflow_type as string) || null,
+          project_title: (project?.title as string) || null,
+          video_projects: undefined,
+        } as GeneratedVideo;
+      })
+    );
+    return signed;
+  }, []);
+
+  const deduplicateVideos = useCallback((videos: GeneratedVideo[]): GeneratedVideo[] => {
+    const seen = new Set<string>();
+    return videos.filter(v => {
+      if (!v.kling_task_id) return true;
+      if (seen.has(v.kling_task_id)) return false;
+      seen.add(v.kling_task_id);
+      return true;
+    });
+  }, []);
+
   const fetchHistory = useCallback(async () => {
     try {
       setIsLoadingHistory(true);
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError, count } = await supabase
         .from('generated_videos')
-        .select('*, video_projects(settings_json, workflow_type, title)')
+        .select('*, video_projects(settings_json, workflow_type, title)', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .limit(20);
+        .range(0, PAGE_SIZE - 1);
 
       if (fetchError) {
         console.error('[useGenerateVideo] History fetch error:', fetchError);
         return;
       }
 
-      const signedHistory = await Promise.all(
-        ((data || []) as any[]).map(async (v) => {
-          const project = v.video_projects as Record<string, unknown> | null;
-          return {
-            ...v,
-            video_url: v.video_url ? await toSignedUrl(v.video_url) : null,
-            source_image_url: await toSignedUrl(v.source_image_url),
-            settings_json: (project?.settings_json as Record<string, unknown>) || null,
-            workflow_type: v.workflow_type || (project?.workflow_type as string) || null,
-            project_title: (project?.title as string) || null,
-            video_projects: undefined,
-          } as GeneratedVideo;
-        })
-      );
-
-      // Deduplicate by kling_task_id (keep first = newest due to ORDER BY desc)
-      const seen = new Set<string>();
-      const deduped = signedHistory.filter(v => {
-        if (!v.kling_task_id) return true;
-        if (seen.has(v.kling_task_id)) return false;
-        seen.add(v.kling_task_id);
-        return true;
-      });
+      const total = count ?? 0;
+      setTotalCount(total);
+      const signed = await mapVideos(data || []);
+      const deduped = deduplicateVideos(signed);
       setHistory(deduped);
+      setHasMore(total > PAGE_SIZE);
     } catch (err) {
       console.error('[useGenerateVideo] History fetch error:', err);
     } finally {
       setIsLoadingHistory(false);
     }
-  }, []);
+  }, [mapVideos, deduplicateVideos]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    try {
+      setIsLoadingMore(true);
+      const from = history.length;
+      const { data, error: fetchError } = await supabase
+        .from('generated_videos')
+        .select('*, video_projects(settings_json, workflow_type, title)')
+        .order('created_at', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (fetchError) {
+        console.error('[useGenerateVideo] Load more error:', fetchError);
+        return;
+      }
+
+      const signed = await mapVideos(data || []);
+      setHistory(prev => {
+        const combined = [...prev, ...signed];
+        return deduplicateVideos(combined);
+      });
+      setHasMore((data || []).length >= PAGE_SIZE);
+    } catch (err) {
+      console.error('[useGenerateVideo] Load more error:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [history.length, isLoadingMore, hasMore, mapVideos, deduplicateVideos]);
 
   // Auto-recover stuck "processing" videos on mount
   const recoverStuckVideos = useCallback(async () => {
@@ -334,5 +382,9 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     history,
     isLoadingHistory,
     refreshHistory: fetchHistory,
+    loadMore,
+    hasMore,
+    totalCount,
+    isLoadingMore,
   };
 }

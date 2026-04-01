@@ -143,7 +143,7 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
 }
 
 export default function VideoHub() {
-  const { history, isLoadingHistory, refreshHistory } = useGenerateVideo();
+  const { history, isLoadingHistory, refreshHistory, loadMore, hasMore, totalCount, isLoadingMore } = useGenerateVideo();
   const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -250,7 +250,14 @@ export default function VideoHub() {
       {/* Recent Videos */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Recent Videos</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground">Recent Videos</h2>
+            {totalCount > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {history.length} / {totalCount}
+              </Badge>
+            )}
+          </div>
           {history.length > 0 && (
             <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
               {selectMode ? 'Done' : 'Select'}
@@ -264,18 +271,28 @@ export default function VideoHub() {
             ))}
           </div>
         ) : history.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {history.slice(0, 12).map((v) => (
-              <RecentVideoCard
-                key={v.id}
-                video={v}
-                onClick={() => setSelectedVideo(v)}
-                selectMode={selectMode}
-                selected={selectedIds.has(v.id)}
-                onToggleSelect={() => toggleSelection(v.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {history.map((v) => (
+                <RecentVideoCard
+                  key={v.id}
+                  video={v}
+                  onClick={() => setSelectedVideo(v)}
+                  selectMode={selectMode}
+                  selected={selectedIds.has(v.id)}
+                  onToggleSelect={() => toggleSelection(v.id)}
+                />
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center pt-2">
+                <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+                  {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Load More Videos
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="rounded-xl border border-dashed border-border p-8 text-center">
             <Film className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
