@@ -179,6 +179,7 @@ export function useCatalogGenerate() {
           prompt_final: prompt,
           product: { title: productTitle, imageUrl: productImageB64 },
           product_id: productId,
+          product_name: productTitle,
           product_image_url: productOriginalUrl,
           ...(modelImageB64 && { model: { imageUrl: modelImageB64, name: modelProfile } }),
           ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),

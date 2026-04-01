@@ -435,7 +435,14 @@ export default function CatalogGenerate() {
           onNavigate={setLightboxIndex}
           onDownload={(i) => {
             const url = batchState.aggregatedImages[i];
-            if (url) window.open(url, '_blank');
+            if (!url) return;
+            fetch(url).then(r => r.blob()).then(blob => {
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = `catalog-${i + 1}.jpg`;
+              a.click();
+              URL.revokeObjectURL(a.href);
+            }).catch(() => window.open(url, '_blank'));
           }}
         />
       </div>

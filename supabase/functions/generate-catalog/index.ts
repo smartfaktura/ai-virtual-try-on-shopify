@@ -240,7 +240,7 @@ async function completeQueueJob(
               jobType: "catalog",
               errorMessage: errors.join("; "),
               displayName: profile.display_name,
-              workflowName: "Catalog Shot Set",
+              workflowName: "Catalog Studio",
               productName: (payload.product_name as string) || undefined,
             },
           }),
@@ -380,7 +380,7 @@ serve(async (req) => {
         const storagePath = `${userId}/${jobId}/catalog-0.${fmt.ext}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("workflow-previews")
+          .from("catalog-previews")
           .upload(storagePath, imgBytes, {
             contentType: fmt.contentType,
             cacheControl: "3600",
@@ -388,7 +388,7 @@ serve(async (req) => {
 
         if (!uploadError) {
           const { data: publicUrlData } = supabase.storage
-            .from("workflow-previews")
+            .from("catalog-previews")
             .getPublicUrl(storagePath);
           finalUrl = publicUrlData.publicUrl;
           console.log(`[generate-catalog] Uploaded to storage: ${storagePath}`);
@@ -413,7 +413,7 @@ serve(async (req) => {
         images,
         generatedCount: 1,
         requestedCount: 1,
-        workflow_name: "Catalog Shot Set",
+        workflow_name: "Catalog Studio",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
