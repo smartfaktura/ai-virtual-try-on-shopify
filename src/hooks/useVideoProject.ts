@@ -26,6 +26,7 @@ interface AnimateParams {
   duration: '5' | '10';
   audioMode: 'silent' | 'ambient';
   userPrompt?: string;
+  sourceName?: string;
 }
 
 export function useVideoProject() {
@@ -77,7 +78,7 @@ export function useVideoProject() {
     try {
       // 1. Create video_project
       const cameraLabel = CAMERA_MOTIONS.find(c => c.id === params.cameraMotion)?.label || params.cameraMotion.replace(/_/g, ' ');
-      const productName = analysisResult?.subject_category || params.category.replace(/_/g, ' ');
+      const productName = params.sourceName || analysisResult?.subject_category || params.category.replace(/_/g, ' ');
 
       setPipelineStage('creating_project');
       const { data: project, error: projectError } = await supabase
@@ -102,6 +103,7 @@ export function useVideoProject() {
             aspectRatio: params.aspectRatio,
             duration: params.duration,
             audioMode: params.audioMode,
+            ...(params.sourceName ? { sourceName: params.sourceName } : {}),
           },
           status: 'processing',
           analysis_status: analysisResult ? 'complete' : 'pending',

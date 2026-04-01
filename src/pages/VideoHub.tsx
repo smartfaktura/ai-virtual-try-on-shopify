@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { downloadVideosAsZip } from '@/lib/dropDownload';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { toast } from 'sonner';
+import { buildVideoFileName } from '@/lib/videoFilename';
 
 interface RecentVideoCardProps {
   video: GeneratedVideo;
@@ -171,11 +172,14 @@ export default function VideoHub() {
     setIsDownloading(true);
     try {
       const videos = await Promise.all(
-        selected.map(async (v, i) => ({
+        selected.map(async (v) => ({
           url: await toSignedUrl(v.video_url!),
-          name: v.camera_type
-            ? `${v.camera_type}_${v.id.slice(0, 6)}`
-            : `video_${i + 1}`,
+          name: buildVideoFileName({
+            cameraType: v.camera_type,
+            settingsJson: v.settings_json,
+            projectTitle: v.project_title,
+            videoId: v.id,
+          }),
         }))
       );
       await downloadVideosAsZip(videos, 'videos');

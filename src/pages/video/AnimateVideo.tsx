@@ -70,6 +70,7 @@ export default function AnimateVideo() {
   // Upload state
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sourceName, setSourceName] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<ValidationWarning[]>([]);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
@@ -200,6 +201,10 @@ export default function AnimateVideo() {
       newWarnings.push({ type: 'info', message: 'Transparent PNGs may produce edge artifacts. Consider JPG.' });
     }
 
+    // Capture original filename as source name
+    const baseName = file.name.replace(/\.[^.]+$/, '');
+    setSourceName(baseName);
+
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -278,6 +283,7 @@ export default function AnimateVideo() {
   const removeImage = () => {
     setImageUrl(null);
     setImagePreview(null);
+    setSourceName(null);
     setWarnings([]);
     setHasAnalyzed(false);
     setDetectedCategory(null);
@@ -424,6 +430,7 @@ export default function AnimateVideo() {
       preserveScene, preserveProductDetails, preserveIdentity, preserveOutfit,
       aspectRatio, duration, audioMode,
       userPrompt: userPrompt || undefined,
+      sourceName: sourceName || undefined,
     });
   };
 

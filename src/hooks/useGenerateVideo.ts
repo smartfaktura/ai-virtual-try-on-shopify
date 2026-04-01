@@ -23,6 +23,7 @@ export interface GeneratedVideo {
   camera_type: string | null;
   workflow_type: string | null;
   settings_json: Record<string, unknown> | null;
+  project_title: string | null;
 }
 
 interface UseGenerateVideoResult {
@@ -166,7 +167,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setIsLoadingHistory(true);
       const { data, error: fetchError } = await supabase
         .from('generated_videos')
-        .select('*, video_projects(settings_json, workflow_type)')
+        .select('*, video_projects(settings_json, workflow_type, title)')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -184,6 +185,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
             source_image_url: await toSignedUrl(v.source_image_url),
             settings_json: (project?.settings_json as Record<string, unknown>) || null,
             workflow_type: v.workflow_type || (project?.workflow_type as string) || null,
+            project_title: (project?.title as string) || null,
             video_projects: undefined,
           } as GeneratedVideo;
         })

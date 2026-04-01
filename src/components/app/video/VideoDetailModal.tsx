@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import type { GeneratedVideo } from '@/hooks/useGenerateVideo';
+import { buildVideoFileName } from '@/lib/videoFilename';
 
 interface VideoDetailModalProps {
   video: GeneratedVideo | null;
@@ -55,7 +56,12 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `video-${video.camera_type || video.id.slice(0, 8)}.mp4`;
+      a.download = buildVideoFileName({
+        cameraType: video.camera_type,
+        settingsJson: video.settings_json,
+        projectTitle: video.project_title,
+        videoId: video.id,
+      });
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -83,7 +83,7 @@ export const VideoResultsPanel = React.forwardRef<HTMLDivElement, VideoResultsPa
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `video-${Date.now()}.mp4`;
+        a.download = `video-${generationContext?.cameraMotion || Date.now()}.mp4`;
         a.click();
         URL.revokeObjectURL(url);
       } catch {

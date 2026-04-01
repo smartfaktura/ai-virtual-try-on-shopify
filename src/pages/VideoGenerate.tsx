@@ -27,7 +27,7 @@ function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
     if (!video.video_url) return;
     const a = document.createElement('a');
     a.href = video.video_url;
-    a.download = `video-${video.id.slice(0, 8)}.mp4`;
+    a.download = `video-${video.camera_type || video.id.slice(0, 8)}.mp4`;
     a.target = '_blank';
     a.click();
   };
@@ -229,7 +229,7 @@ function VideoGenerateInner() {
     if (!videoUrl) return;
     const a = document.createElement('a');
     a.href = videoUrl;
-    a.download = `video-${Date.now()}.mp4`;
+    a.download = `video-${cameraPreset !== 'none' ? cameraPreset : Date.now()}.mp4`;
     a.target = '_blank';
     a.click();
   };
