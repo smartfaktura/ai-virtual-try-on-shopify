@@ -1,30 +1,32 @@
 
 
-# Fix Batch Mode: Multi-Select for Library + Upload
-
-## Problem
-In batch mode, the "Choose from Library" button opens a single-select picker (closes after one pick), and the upload flow only processes one image at a time despite `multiple` being set. Users can't effectively build a batch.
+# Improve Batch Mode UX with Free/Paid Gating
 
 ## Changes
 
-### 1. `LibraryPickerModal.tsx` — Add multi-select mode
-- Add `multiSelect?: boolean` and `onMultiSelect?: (urls: string[]) => void` props
-- When `multiSelect` is true, clicking an image toggles selection (checkmark overlay) instead of immediately closing
-- Add a "Done (N selected)" footer button that calls `onMultiSelect` with all selected URLs
-- Show selected count badge
+### 1. Remove "Works across ecommerce categories" chips section
+Delete lines 517-534 from `AnimateVideo.tsx` — the category chips row that clutters the pre-upload screen.
 
-### 2. `AnimateVideo.tsx` — Wire batch mode to multi-select library
-- When `bulkMode` is true, open `LibraryPickerModal` with `multiSelect={true}`
-- On multi-select callback, convert each selected URL into a `BulkImage` entry (no re-upload needed since they're already stored)
-- Trigger analysis on the first image in the batch
-- Ensure the file input `multiple` attribute works correctly — the handler already calls `handleBulkAddFiles` which processes multiple files sequentially
+### 2. Redesign Batch Mode toggle with free/paid messaging
+Replace the current simple toggle with a more prominent card that:
+- **Paid users**: Shows toggle as-is with "Animate up to 10 images" messaging
+- **Free users**: Shows a locked/disabled state with avatar-branded message like "Upgrade to any paid plan to animate multiple images at once" with a VOVV avatar (e.g., Sophia). The toggle is disabled.
 
-### 3. `BulkImageGrid.tsx` — Add "Choose from Library" button
-- Add an optional `onPickFromLibrary` callback prop
-- Show a small "Library" button next to the "Add" tile so users can add more images from library while in the grid view
+### 3. Unify upload area for both single and batch modes
+Currently: Single mode shows a big drop zone, batch mode shows the `BulkImageGrid` only after upload in the post-analysis section (lines 1017-1027).
 
-## Files
-- **Update**: `src/components/app/video/LibraryPickerModal.tsx`
-- **Update**: `src/pages/video/AnimateVideo.tsx`
-- **Update**: `src/components/app/video/BulkImageGrid.tsx`
+**New approach**: The pre-upload screen always shows the same upload card, but:
+- **Single mode (free)**: Upload zone accepts 1 image, buttons say "Upload image"
+- **Batch mode (paid)**: Upload zone accepts multiple, text says "Upload images (up to 10)", and the `BulkImageGrid` is shown directly inside the upload card once images start being added (not hidden below the settings section)
+
+Move the `BulkImageGrid` from the post-analysis section (line 1017) into the upload card area so users see their batch building in real-time, matching the screenshot where images appear in the grid alongside the Upload/Library buttons.
+
+### 4. Show BulkImageGrid in pre-upload screen when batch mode is on
+When `bulkMode` is true and `bulkImages.length > 0`, show the grid in the upload card area instead of the empty drop zone. Keep the Upload/Library buttons visible below the grid.
+
+### 5. Post-upload: show batch grid instead of single image preview
+In the post-upload form section (line 686+), when in batch mode, replace the single image preview (lines 689-704) with the `BulkImageGrid` component, so users always see and can manage their batch.
+
+## Files to modify
+- **`src/pages/video/AnimateVideo.tsx`** — Remove category chips, redesign batch toggle with free/paid UX and avatars, move BulkImageGrid to upload area, unify upload experience
 
