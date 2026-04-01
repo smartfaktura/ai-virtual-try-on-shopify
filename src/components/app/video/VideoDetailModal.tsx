@@ -42,6 +42,7 @@ interface VideoDetailModalProps {
 
 export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (open) {
