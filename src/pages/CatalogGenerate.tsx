@@ -15,15 +15,16 @@ import { CatalogStepModelsV2 } from '@/components/app/catalog/CatalogStepModelsV
 import { CatalogStepBackgroundsV2 } from '@/components/app/catalog/CatalogStepBackgroundsV2';
 import { CatalogStepShots } from '@/components/app/catalog/CatalogStepShots';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
+import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { Progress } from '@/components/ui/progress';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-import { Package, Palette, Users, Image, Camera, Check, Loader2, CheckCircle } from 'lucide-react';
+import { Package, Palette, Users, Image, Camera, Check, CheckCircle, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
 import type { Product, ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
-import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, ModelAudienceType } from '@/types/catalog';
+import type { FashionStyleId, CatalogShotId, ProductCategory, CatalogSessionConfig, CatalogModelEntry, ModelAudienceType } from '@/types/catalog';
 
 const CATALOG_MAX_PRODUCTS = 50;
 const CREDITS_PER_IMAGE = 4;
@@ -48,8 +49,9 @@ export default function CatalogGenerate() {
   // Step 2
   const [fashionStyle, setFashionStyle] = useState<FashionStyleId | null>(null);
 
-  // Step 3
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  // Step 3 — multi-model
+  const [selectedModelIds, setSelectedModelIds] = useState<Set<string>>(new Set());
+  const [productOnlyMode, setProductOnlyMode] = useState(false);
   const [modelExplicitlyChosen, setModelExplicitlyChosen] = useState(false);
   const [genderFilter, setGenderFilter] = useState<ModelGender | 'all'>('all');
   const [bodyTypeFilter, setBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
@@ -60,6 +62,10 @@ export default function CatalogGenerate() {
 
   // Step 5
   const [selectedShots, setSelectedShots] = useState<Set<CatalogShotId>>(new Set());
+
+  // Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
@@ -98,16 +104,28 @@ export default function CatalogGenerate() {
     return detectProductCategory(p.title, p.productType, p.description);
   }, [selectedProductIds, products]);
 
-  const hasModel = selectedModelId !== null;
+  const hasModel = selectedModelIds.size > 0 && !productOnlyMode;
+  const modelCount = productOnlyMode ? 0 : selectedModelIds.size;
 
-  // Credits
-  const totalImages = selectedProductIds.size * selectedShots.size;
+  // Credits — Products × max(1, Models) × Shots × 4
+  const totalImages = selectedProductIds.size * Math.max(1, modelCount) * selectedShots.size;
   const totalCredits = totalImages * CREDITS_PER_IMAGE;
 
-  const handleModelSelect = (id: string | null) => {
-    setSelectedModelId(id);
+  const handleModelToggle = (id: string) => {
     setModelExplicitlyChosen(true);
-    // Reset shots when model changes since compatibility changes
+    setProductOnlyMode(false);
+    setSelectedModelIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+    setSelectedShots(new Set());
+  };
+
+  const handleProductOnlyToggle = () => {
+    setModelExplicitlyChosen(true);
+    setProductOnlyMode(true);
+    setSelectedModelIds(new Set());
     setSelectedShots(new Set());
   };
 
@@ -139,18 +157,28 @@ export default function CatalogGenerate() {
     return false;
   };
 
+  const inferAudience = (m: ModelProfile): ModelAudienceType => {
+    if (m.ageRange === 'young-adult' && m.gender === 'female') return 'adult_woman';
+    if (m.gender === 'male') return 'adult_man';
+    return 'adult_woman';
+  };
+
   const handleGenerate = async () => {
     if (!fashionStyle || !selectedBackgroundId) return;
 
     const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
-    const model = selectedModelId ? allModels.find(m => m.modelId === selectedModelId) : null;
 
-    const inferAudience = (m: ModelProfile | null): ModelAudienceType => {
-      if (!m) return 'adult_woman';
-      if (m.ageRange === 'young-adult' && m.gender === 'female') return 'adult_woman';
-      if (m.gender === 'male') return 'adult_man';
-      return 'adult_woman';
-    };
+    const models: CatalogModelEntry[] = productOnlyMode
+      ? []
+      : Array.from(selectedModelIds).map(id => {
+          const m = allModels.find(mod => mod.modelId === id)!;
+          return {
+            id: m.modelId,
+            profile: `${m.ageRange} ${m.gender} model`,
+            audience: inferAudience(m),
+            imageUrl: m.previewUrl || null,
+          };
+        }).filter(Boolean);
 
     const config: CatalogSessionConfig = {
       products: selectedProducts.map(p => ({
@@ -159,10 +187,7 @@ export default function CatalogGenerate() {
         detectedCategory: detectProductCategory(p.title, p.productType, p.description),
       })),
       fashionStyle,
-      modelId: selectedModelId,
-      modelProfile: model ? `${model.ageRange} ${model.gender} model` : 'no model',
-      modelAudience: inferAudience(model),
-      modelImageUrl: model?.previewUrl || null,
+      models,
       backgroundId: selectedBackgroundId,
       selectedShots: Array.from(selectedShots),
     };
@@ -171,57 +196,175 @@ export default function CatalogGenerate() {
     refreshBalance();
   };
 
-  // If batch is active, show progress
+  const handleNewGeneration = () => {
+    resetBatch();
+    setStep(1);
+    setSelectedProductIds(new Set());
+    setFashionStyle(null);
+    setSelectedModelIds(new Set());
+    setProductOnlyMode(false);
+    setModelExplicitlyChosen(false);
+    setSelectedBackgroundId(null);
+    setSelectedShots(new Set());
+  };
+
+  // If batch is active, show progress / completion
   if (batchState) {
     const progress = batchState.totalJobs > 0
       ? Math.round(((batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs) * 100) : 0;
 
     return (
       <div className="space-y-6 pb-32">
-        <PageHeader title="Catalog Shot Set" subtitle="Generating your consistent catalog set"><div /></PageHeader>
-        <div className="text-center space-y-3 py-8">
-          {batchState.allDone ? (
-            <>
-              <CheckCircle className="w-12 h-12 mx-auto text-primary" />
-              <h2 className="text-xl font-bold">Catalog Complete!</h2>
-              <p className="text-muted-foreground">
-                {batchState.completedJobs} of {batchState.totalJobs} images generated
-                {batchState.failedJobs > 0 && ` (${batchState.failedJobs} failed)`}
-              </p>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="outline">Phase: {batchState.phase}</Badge>
+        <PageHeader title="Catalog Shot Set" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
+
+        {batchState.allDone ? (
+          /* ── Completion State ── */
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-8 h-8 text-primary" />
               </div>
-            </>
-          ) : (
-            <>
-              <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin" />
-              <h2 className="text-xl font-bold">
-                {batchState.phase === 'anchors' ? 'Creating Anchor Images...' : 'Generating Derivative Shots...'}
-              </h2>
-              <p className="text-muted-foreground">{batchState.completedJobs} of {batchState.totalJobs} complete</p>
-            </>
-          )}
-        </div>
-        <Progress value={progress} className="h-2" />
-        {batchState.aggregatedImages.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Generated Images</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-              {batchState.aggregatedImages.map((url, i) => (
-                <div key={i} className="aspect-[3/4] rounded-lg overflow-hidden bg-muted">
-                  <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
-                </div>
-              ))}
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight">Your Catalog is Ready</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {batchState.completedJobs} image{batchState.completedJobs !== 1 ? 's' : ''} generated successfully
+                  {batchState.failedJobs > 0 && (
+                    <span className="text-destructive"> · {batchState.failedJobs} failed (credits refunded)</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Button variant="outline" onClick={handleNewGeneration} className="gap-2">
+                  <RefreshCw className="w-4 h-4" /> Generate Another Set
+                </Button>
+                <Button onClick={() => window.location.href = '/app/library'} className="gap-2">
+                  View in Library <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
+
+            {batchState.aggregatedImages.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Generated Images</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                  {batchState.aggregatedImages.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/50 transition-all"
+                    >
+                      <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Per-job error indicators */}
+            {batchState.failedJobs > 0 && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+                  <AlertTriangle className="w-4 h-4" />
+                  {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed to generate
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Credits for failed images are automatically refunded to your balance.
+                </p>
+                {batchState.jobs.filter(j => j.status === 'failed').map(j => (
+                  <div key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-destructive/60 flex-shrink-0" />
+                    {j.productName} — {j.shotLabel}: {j.error || 'Generation failed'}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── In-Progress State ── */
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-border bg-gradient-to-b from-muted/50 to-transparent p-8 text-center space-y-4">
+              <div className="flex items-center justify-center gap-3">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">
+                  VOVV.AI is generating your catalog...
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {batchState.completedJobs} of {batchState.totalJobs} images complete
+                </p>
+              </div>
+              <Progress value={progress} className="h-2 max-w-md mx-auto" />
+            </div>
+
+            {/* Per-product progress */}
+            {(() => {
+              const productMap = new Map<string, { name: string; total: number; done: number; failed: number }>();
+              for (const j of batchState.jobs) {
+                const existing = productMap.get(j.productId) || { name: j.productName, total: 0, done: 0, failed: 0 };
+                existing.total++;
+                if (j.status === 'completed') existing.done++;
+                if (j.status === 'failed') existing.failed++;
+                productMap.set(j.productId, existing);
+              }
+              return (
+                <div className="space-y-2">
+                  {Array.from(productMap.entries()).map(([pid, info]) => (
+                    <div key={pid} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{info.name}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {info.done}/{info.total} complete
+                          {info.failed > 0 && <span className="text-destructive"> · {info.failed} failed</span>}
+                        </p>
+                      </div>
+                      <Badge variant={info.done === info.total ? 'default' : 'secondary'} className="text-[10px]">
+                        {info.done === info.total ? 'Done' : 'In progress'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Live image grid */}
+            {batchState.aggregatedImages.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Generated so far</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                  {batchState.aggregatedImages.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/50 transition-all"
+                    >
+                      <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
-        {batchState.failedJobs > 0 && (
-          <Alert variant="destructive">
-            <AlertDescription className="text-xs">
-              {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed. Credits refunded automatically.
-            </AlertDescription>
-          </Alert>
-        )}
+
+        {/* Lightbox */}
+        <ImageLightbox
+          images={batchState.aggregatedImages}
+          currentIndex={lightboxIndex}
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
+          onDownload={(i) => {
+            const url = batchState.aggregatedImages[i];
+            if (url) window.open(url, '_blank');
+          }}
+        />
       </div>
     );
   }
@@ -232,7 +375,7 @@ export default function CatalogGenerate() {
 
       <div className="rounded-xl border border-border bg-muted/30 p-4">
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">How it works:</strong> Select products → choose fashion style → pick a model → set background → select shots → generate a consistent set.
+          <strong className="text-foreground">How it works:</strong> Select products → choose fashion style → pick models → set background → select shots → generate a consistent set.
         </p>
       </div>
 
@@ -295,8 +438,10 @@ export default function CatalogGenerate() {
         <CatalogStepModelsV2
           libraryModels={libraryModels}
           userModels={userModelProfiles}
-          selectedModelId={selectedModelId}
-          onModelSelect={handleModelSelect}
+          selectedModelIds={selectedModelIds}
+          productOnlyMode={productOnlyMode}
+          onModelToggle={handleModelToggle}
+          onProductOnlyToggle={handleProductOnlyToggle}
           genderFilter={genderFilter}
           bodyTypeFilter={bodyTypeFilter}
           ageFilter={ageFilter}

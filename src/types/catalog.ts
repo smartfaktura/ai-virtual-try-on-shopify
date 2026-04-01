@@ -101,6 +101,13 @@ export interface ProductLookLock {
   anchorImageUrl: string | null; // filled after anchor completes
 }
 
+export interface CatalogModelEntry {
+  id: string;
+  profile: string;
+  audience: ModelAudienceType;
+  imageUrl: string | null;
+}
+
 export interface CatalogSessionConfig {
   products: Array<{
     id: string;
@@ -112,11 +119,8 @@ export interface CatalogSessionConfig {
     detectedCategory: ProductCategory;
   }>;
   fashionStyle: FashionStyleId;
-  modelId: string | null;
-  modelProfile: string;
-  modelAudience: ModelAudienceType;
-  modelImageUrl: string | null;
-  modelImageB64?: string;
+  /** Multi-model: empty array = product-only mode */
+  models: CatalogModelEntry[];
   backgroundId: string;
   selectedShots: CatalogShotId[];
 }

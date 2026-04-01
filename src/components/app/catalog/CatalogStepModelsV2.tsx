@@ -10,8 +10,10 @@ import type { ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/
 interface CatalogStepModelsV2Props {
   libraryModels: ModelProfile[];
   userModels: ModelProfile[];
-  selectedModelId: string | null;
-  onModelSelect: (id: string | null) => void;
+  selectedModelIds: Set<string>;
+  productOnlyMode: boolean;
+  onModelToggle: (id: string) => void;
+  onProductOnlyToggle: () => void;
   genderFilter: ModelGender | 'all';
   bodyTypeFilter: ModelBodyType | 'all';
   ageFilter: ModelAgeRange | 'all';
@@ -24,7 +26,7 @@ interface CatalogStepModelsV2Props {
 }
 
 export function CatalogStepModelsV2({
-  libraryModels, userModels, selectedModelId, onModelSelect,
+  libraryModels, userModels, selectedModelIds, productOnlyMode, onModelToggle, onProductOnlyToggle,
   genderFilter, bodyTypeFilter, ageFilter,
   onGenderChange, onBodyTypeChange, onAgeChange,
   onBack, onNext, canProceed,
@@ -39,32 +41,36 @@ export function CatalogStepModelsV2({
   const filteredLibrary = useMemo(() => libraryModels.filter(filterModel), [libraryModels, genderFilter, bodyTypeFilter, ageFilter]);
   const filteredUser = useMemo(() => userModels.filter(filterModel), [userModels, genderFilter, bodyTypeFilter, ageFilter]);
 
-  const isNoModel = selectedModelId === null;
+  const selectionLabel = productOnlyMode
+    ? 'Product Only'
+    : selectedModelIds.size === 0
+      ? 'None'
+      : `${selectedModelIds.size} selected`;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
         <Users className="w-4 h-4 text-muted-foreground" />
-        <h3 className="font-semibold text-sm">Select Model</h3>
-        <Badge variant="secondary" className="text-[10px]">
-          {isNoModel ? 'Product Only' : '1 selected'}
-        </Badge>
-        <span className="text-xs text-muted-foreground ml-1">Choose one model or product-only mode</span>
+        <h3 className="font-semibold text-sm">Select Models</h3>
+        <Badge variant="secondary" className="text-[10px]">{selectionLabel}</Badge>
+        <span className="text-xs text-muted-foreground ml-1">
+          Pick one or more models — each multiplies your shot count. Or choose product-only.
+        </span>
       </div>
 
       {/* No Model card */}
       <button
-        onClick={() => onModelSelect(null)}
+        onClick={onProductOnlyToggle}
         className={cn(
           'w-full rounded-xl border-2 p-4 text-left transition-all flex items-center gap-3',
-          isNoModel
+          productOnlyMode
             ? 'border-primary ring-2 ring-primary/30 bg-primary/5'
             : 'border-border hover:border-primary/50 bg-card',
         )}
       >
         <div className={cn(
           'w-10 h-10 rounded-full flex items-center justify-center',
-          isNoModel ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+          productOnlyMode ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
         )}>
           <UserX className="w-5 h-5" />
         </div>
@@ -72,7 +78,7 @@ export function CatalogStepModelsV2({
           <p className="text-sm font-semibold">No Model — Product Only</p>
           <p className="text-[11px] text-muted-foreground">Generate packshots, flat lays, and product-focused images only</p>
         </div>
-        {isNoModel && (
+        {productOnlyMode && (
           <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
             <Check className="w-3 h-3 text-primary-foreground" />
           </div>
@@ -96,8 +102,8 @@ export function CatalogStepModelsV2({
             <ModelSelectorCard
               key={model.modelId}
               model={model}
-              isSelected={selectedModelId === model.modelId}
-              onSelect={() => onModelSelect(model.modelId)}
+              isSelected={selectedModelIds.has(model.modelId)}
+              onSelect={() => onModelToggle(model.modelId)}
             />
           ))}
           {filteredLibrary.length === 0 && (
@@ -115,8 +121,8 @@ export function CatalogStepModelsV2({
               <ModelSelectorCard
                 key={model.modelId}
                 model={model}
-                isSelected={selectedModelId === model.modelId}
-                onSelect={() => onModelSelect(model.modelId)}
+                isSelected={selectedModelIds.has(model.modelId)}
+                onSelect={() => onModelToggle(model.modelId)}
               />
             ))}
           </div>
