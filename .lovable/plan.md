@@ -1,91 +1,59 @@
 
 
-# Catalog Studio Debug Report — Round 3
+# Catalog Studio Debug — Round 4
 
-## What's Working Correctly
-- **Queue routing**: `process-queue` maps `catalog` → `generate-catalog` ✓
-- **Credit pricing**: `enqueue-generation` charges 4 credits per catalog image ✓
-- **Prompt flow**: `generate-catalog` uses `prompt_final` when present ✓
-- **Product-only mode**: `generate-catalog` accepts missing `model` field ✓
-- **Retry logic**: Seedream transient errors retry once with 3s delay ✓
-- **Polling**: 10-minute hard timeout with force-completion ✓
-- **Base64 error handling**: `safeConvertBase64` wraps each conversion ✓
-- **Fail-fast on credits**: Stops enqueue loop on `insufficient_credits` ✓
-- **Timer effect**: Uses ref + `allDone`/`hasBatch` dependencies ✓
-- **Navigation**: Uses `useNavigate()` ✓
-- **Swimwear wardrobe**: Returns all-null support wardrobe ✓
-- **Ghost mannequin**: Shadowless prompt ✓
-- **Review step (Step 6)**: Shows credit breakdown, summary cards ✓
-- **Workflow slug**: `"catalog-studio"` ✓
-- **`product_id` and `product_image_url`**: Passed in payload ✓
+## Status: Pipeline is solid
+
+After reviewing all three files end-to-end, the catalog pipeline is in good shape. Queue routing, credit pricing, prompt flow, polling, base64 handling, timer logic, download, and metadata are all correct. Only two minor issues remain.
 
 ## Bugs Found
 
-### Bug 1: `product_image_url` still stored as base64 in `generation_jobs` (Severity: Medium)
-In `generate-catalog/index.ts` line 277, `product_image_url` reads from `payload.product_image_url`. But in `useCatalogGenerate.ts` line 182, the `product_image_url` field is set to `productOriginalUrl` — which is correct. However, the `completeQueueJob` function at line 261-278 also stores `model_image_url` from `payload.model.originalImageUrl` (line 274), but the client never sets `model.originalImageUrl` — it only sends `model.imageUrl` which is the base64 string. This means `model_image_url` in `generation_jobs` is always `null` (no `originalImageUrl` key), which is actually fine since we don't want base64 there. **No fix needed** — `model_image_url` being null is acceptable for catalog jobs.
+### Bug 1: Fatal error handler uses `req.clone().json()` after body already consumed (Severity: Medium)
 
-### Bug 2: Polling fetches wrong jobs when `jobsRef` is stale (Severity: Medium)
-In `pollJobs` (line 41-140), the `jobs` variable is captured from `jobsRef.current` at the time `pollJobs` is called (line 43). But `pollJobs` is wrapped in `useCallback` with only `[stopPolling]` as dependency. The `poll` closure at line 47 correctly reads `jobsRef.current` for updates (line 111), but the `jobIds` on line 78 uses the captured `jobs` variable which is fine since job IDs don't change. **No bug** — the polling logic is correct.
+In `generate-catalog/index.ts` line 423, the `catch` block tries `req.clone().json()` to recover `job_id` for cleanup. But the request body was already consumed at line 292 (`await req.json()`). In Deno, `req.clone()` after consumption will fail silently, meaning the `completeQueueJob` call never fires — the job stays stuck in `processing` until `cleanup_stale_jobs` catches it 5+ minutes later.
 
-### Bug 3: `workflow_name` in response still says "Catalog Shot Set" (Severity: Low)
-In `generate-catalog/index.ts` line 417, the response body still says `workflow_name: "Catalog Shot Set"`. This should match the slug rename. Not critical since the response isn't stored anywhere visible, but inconsistent.
+**Fix**: Capture the parsed `body` into a variable at the top of the `try` block, then reference it in the `catch`. No need for `req.clone()`.
 
-**Fix**: Change to `"Catalog Studio"`.
+### Bug 2: Dead code — `waitForJobCompletion` never called (Severity: Low)
 
-### Bug 4: `completeQueueJob` email uses "Catalog Shot Set" (Severity: Low)
-In `generate-catalog/index.ts` line 244, the failure email uses `workflowName: "Catalog Shot Set"`. Should be `"Catalog Studio"`.
+In `useCatalogGenerate.ts` lines 222-242, `waitForJobCompletion` is defined but never used anywhere. It was designed for anchor-then-derivative sequential flow but the current implementation fires all jobs in parallel and relies on polling. Dead code adds confusion.
 
-**Fix**: Change to `"Catalog Studio"`.
+**Fix**: Remove the function.
 
-### Bug 5: Storage upload uses `workflow-previews` bucket (Severity: Low)
-In `generate-catalog/index.ts` line 384, catalog images are uploaded to the `workflow-previews` bucket. There's a dedicated `catalog-previews` bucket already created. Using the wrong bucket clutters storage and makes cleanup harder.
-
-**Fix**: Change to `catalog-previews`.
-
-### Bug 6: No `product_name` in enqueue payload (Severity: Low)
-In `useCatalogGenerate.ts` the enqueue payload (line 175-188) doesn't include `product_name`. The `completeQueueJob` at line 276 falls back to `payload.product.title` which works, but is fragile — depends on the nested product object surviving the queue serialization.
-
-**Fix**: Add `product_name: productTitle` to the enqueue payload for explicit metadata.
-
-### Bug 7: Download action opens image in new tab instead of downloading (Severity: Low)
-In `CatalogGenerate.tsx` line 437, the download handler does `window.open(url, '_blank')` which just opens the image. Should trigger an actual download.
-
-**Fix**: Use proper download logic with `fetch` + blob + anchor click.
-
-## Plan
-
-### Files to Modify
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `supabase/functions/generate-catalog/index.ts` | Fix workflow_name to "Catalog Studio", email text, use `catalog-previews` bucket, add `product_name` from payload |
-| `src/hooks/useCatalogGenerate.ts` | Add `product_name` to enqueue payload |
-| `src/pages/CatalogGenerate.tsx` | Fix download handler to use proper blob download |
+| `supabase/functions/generate-catalog/index.ts` | Move body parsing before try, reference parsed body in catch for cleanup |
+| `src/hooks/useCatalogGenerate.ts` | Remove unused `waitForJobCompletion` function |
 
-### Detailed Changes
+## Detailed Changes
 
-**1. `generate-catalog/index.ts`**
-- Line 244: `workflowName: "Catalog Shot Set"` → `"Catalog Studio"`
-- Line 384: `"workflow-previews"` → `"catalog-previews"`
-- Line 391-392: `"workflow-previews"` → `"catalog-previews"`
-- Line 417: `workflow_name: "Catalog Shot Set"` → `"Catalog Studio"`
+**1. `generate-catalog/index.ts` — Fix fatal error cleanup**
 
-**2. `useCatalogGenerate.ts`**
-- Add `product_name: productTitle` to the enqueue payload object (after `product_image_url`)
+Restructure so that `body` is available in the catch block:
 
-**3. `CatalogGenerate.tsx`**
-- Replace the `onDownload` handler (line 436-439) with a proper blob download:
-  ```typescript
-  onDownload={(i) => {
-    const url = batchState.aggregatedImages[i];
-    if (!url) return;
-    fetch(url).then(r => r.blob()).then(blob => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `catalog-${i + 1}.jpg`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }).catch(() => window.open(url, '_blank'));
-  }}
-  ```
+```typescript
+serve(async (req) => {
+  if (req.method === "OPTIONS") { ... }
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+  let body: CatalogPayload = {} as CatalogPayload;
+  try {
+    body = await req.json();
+    // ... rest of logic unchanged ...
+  } catch (error) {
+    console.error("[generate-catalog] Fatal error:", error);
+    if (isQueueInternal && body.job_id) {
+      try {
+        await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [error instanceof Error ? error.message : "Unknown error"], body as unknown as Record<string, unknown>);
+      } catch { /* best effort */ }
+    }
+    return new Response(...);
+  }
+});
+```
+
+**2. `useCatalogGenerate.ts` — Remove dead code**
+
+Delete `waitForJobCompletion` (lines 221-242).
 
