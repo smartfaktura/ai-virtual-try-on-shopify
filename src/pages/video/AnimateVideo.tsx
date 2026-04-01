@@ -182,6 +182,7 @@ export default function AnimateVideo() {
     const goal = goals.find(g => g.id === motionGoalId);
     if (goal) {
       setCameraMotion(goal.defaultCameraMotion);
+      setSelectedCameraMotions([goal.defaultCameraMotion]);
       setSubjectMotion(goal.subjectMotion);
       setMotionIntensity(goal.defaultIntensity);
     }
