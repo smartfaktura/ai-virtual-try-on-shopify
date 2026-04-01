@@ -1,61 +1,61 @@
 
 
-# /app/catalog — Round 4 Audit
+# /app/catalog — Round 5 Audit
 
-The previous three rounds addressed all major functional bugs and most polish items. The flow is now solid. Here are the remaining items I found:
+The flow is well-polished after four rounds. Only minor items remain — no functional bugs.
 
-## Remaining Issues
+## Remaining Items
 
-### 1. `confirm()` used for cancel — should be a proper dialog
-**File: `CatalogGenerate.tsx` line 410**
-The cancel button uses `window.confirm()` which is a browser-native blocking dialog. It looks out of place in a polished app and can't be styled.
-**Fix**: Replace with an `AlertDialog` component (already available in the project's UI library) for a consistent cancel confirmation.
+### 1. Products step: Import URL and CSV tabs still show functional UI that does nothing
+**File: `CatalogStepProducts.tsx` lines ~420-500**
+Need to verify the current state of these tabs — they were supposed to show "Coming Soon" badges from a previous round but I need to confirm the implementation.
 
-### 2. Models step: no `focus-visible` ring on "Product Only" toggle or model cards
-**File: `CatalogStepModelsV2.tsx` line 63**
-The Product Only button and model cards lack focus-visible styling for keyboard navigation — same fix that was applied to Fashion Style and Shots cards but missed here.
-**Fix**: Add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2` to the Product Only button and verify `ModelSelectorCard` has it too.
+### 2. Stepper: mobile stepper buttons lack `disabled` attribute when `!canClick`
+**File: `CatalogStepper.tsx` line 76**
+Desktop stepper has `disabled={!canClick}` (line 33), but mobile stepper button has no `disabled` prop — it relies only on the `onClick` guard `canClick && onStepClick(s.number)`. This means mobile users can still focus/tap disabled steps (screen readers announce them as clickable).
+**Fix**: Add `disabled={!canClick}` to the mobile stepper button.
 
-### 3. Products step: list view has no "Load more" button
-**File: `CatalogStepProducts.tsx` line 361-406**
-Grid view has "Load more" when `filtered.length > visibleCount`, but list view renders the same `visible` slice without a load-more button. Users in list view can't see products beyond the first 24.
-**Fix**: Add the same "Load more" button after the list view's scrollable container.
+### 3. Generation results: no "Download All" option
+**File: `CatalogGenerate.tsx` lines 354-370**
+After batch completes, users see a grid of generated images and can click each for lightbox + individual download, but there's no bulk "Download All as ZIP" button. For catalogs with 20+ images this is tedious.
+**Fix**: Add a "Download All" button that creates a ZIP client-side using JSZip (or downloads sequentially). Medium effort — could be a follow-up.
 
-### 4. Products step: list view `max-h-[420px]` is arbitrary and may cut off on larger screens
-**File: `CatalogStepProducts.tsx` line 362**
-The `max-h-[420px]` on the list view container is fixed. On a desktop 1080p screen, this wastes vertical space. On a 440px mobile viewport, the actual available height is less.
-**Fix**: Use `max-h-[50vh]` or `max-h-[min(420px,50vh)]` for better responsiveness.
+### 4. Lightbox download filename is generic
+**File: `CatalogGenerate.tsx` line 503**
+Download filename is `catalog-${i + 1}.jpg` — doesn't include product name or shot type. Users can't identify images after downloading.
+**Fix**: Include product name and shot label in the filename. This requires enriching the `aggregatedImages` data to carry metadata alongside URLs.
 
-### 5. Generation progress: `confirm()` Cancel doesn't stop in-flight jobs
-**File: `CatalogGenerate.tsx` line 410-413**
-`resetBatch()` clears local state and stops polling, but already-queued jobs continue processing on the server and consume credits. The cancel is only cosmetic.
-**Fix**: This is acceptable behavior (server-side cancellation is complex), but the confirm message should clarify: "Already-queued images will still be processed. Credits for completed images will be used."
+### 5. No empty state for Props step when user has 0 extra products
+Already handled (line 256-261 of CatalogStepProps.tsx) — verified, this is fine.
 
-### 6. Sidebar credit estimate doesn't show balance comparison
-**File: `CatalogContextSidebar.tsx` line 137-148**
-The sidebar shows `totalCredits` and `totalImages` but doesn't show the user's current balance or whether they have enough. The Review step shows this, but having it earlier (from Step 5 onward when shots are selected) would catch insufficient credits sooner.
-**Fix**: Pass `balance` to `CatalogContextSidebar` and show a red/green indicator when `totalImages > 0`.
+### 6. Context sidebar not visible on the current 440px mobile viewport
+The sidebar is wrapped in `hidden lg:block` (CatalogGenerate.tsx line 642). At 440px, users have no visibility into their selections while navigating steps. This is by design (mobile space constraints), but a collapsible mobile summary drawer could help.
+**Fix**: Low priority — add a floating "Setup summary" chip on mobile that opens a Sheet with the sidebar content.
 
-### 7. No keyboard shortcut to advance steps
-Not a bug, but a nice-to-have. Power users generating multiple catalogs would benefit from Enter to advance and Escape to go back. Low priority.
+## Summary
 
-## Recommended Priority
+| # | Item | Effort | Impact |
+|---|------|--------|--------|
+| 1 | Verify Coming Soon tabs | Trivial | Confirm previous fix |
+| 2 | Mobile stepper `disabled` attr | Trivial | Accessibility |
+| 3 | Download All ZIP | Medium | Major convenience for large catalogs |
+| 4 | Better download filenames | Small | File organization |
+| 6 | Mobile summary drawer | Medium | Mobile UX |
 
-| # | Fix | Effort | Impact |
-|---|-----|--------|--------|
-| 1 | Replace `confirm()` with AlertDialog | Small | Visual consistency |
-| 2 | Focus ring on Models step | Trivial | Accessibility |
-| 3 | Add "Load more" to list view | Trivial | Functional gap |
-| 4 | Responsive list view max-height | Trivial | Layout polish |
-| 5 | Clarify cancel message | Trivial | User expectations |
-| 6 | Show balance in sidebar estimate | Small | Early credit awareness |
+Only item 2 is a clear fix worth implementing now. Items 3 and 4 are valuable feature additions. Item 6 is a nice-to-have.
 
-No functional bugs remain. These are polish and accessibility items. Items 1-3 are the most worthwhile.
+**Recommendation**: Implement item 2 (trivial a11y fix). Items 3-4 are worth doing as a follow-up batch. Item 6 is optional.
 
 ## Technical Details
 
-- **AlertDialog replacement** (item 1): Import `AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger` from `@/components/ui/alert-dialog`. Add `showCancelDialog` state, render the dialog, and trigger it from the Cancel button.
-- **Focus ring** (item 2): Add classes to the Product Only `<button>` in `CatalogStepModelsV2.tsx` line 63. Check if `ModelSelectorCard` already has focus styling.
-- **Load more in list view** (item 3): Copy the existing "Load more" `<Button>` from the grid view section (lines 347-356) and place it after the list view's closing `</div>` at line 405.
-- **Sidebar balance** (item 6): Add `balance` prop to `CatalogContextSidebarProps`, pass it from `CatalogGenerate.tsx`, and render a small indicator below the credit estimate showing `{balance} available` with conditional red/green coloring.
+**Item 2** — In `CatalogStepper.tsx` line 76, change:
+```tsx
+<button onClick={() => canClick && onStepClick(s.number)} className="...">
+```
+to:
+```tsx
+<button onClick={() => canClick && onStepClick(s.number)} disabled={!canClick} className="...">
+```
+
+**Item 4** — Requires changing `aggregatedImages` from `string[]` to `Array<{url: string; productName: string; shotLabel: string}>` in the batch state, then using that metadata in the download handler.
 
