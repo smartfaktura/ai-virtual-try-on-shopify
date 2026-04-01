@@ -119,7 +119,7 @@ When it makes sense to guide the user to take action, include inline CTA buttons
 
 Available routes and when to use them:
 - [[Go to Dashboard|/app/]] — when user asks "where do I start?" or wants an overview of their account
-- [[Browse Workflows|/app/workflows]] — when user is ready to create images or you're recommending a specific workflow
+- [[Browse Templates|/app/workflows]] — when user is ready to create images or you're recommending a specific template
 - [[Try Freestyle|/app/freestyle]] — when user wants open-ended creative control or custom prompts
 - [[Generate Perspectives|/app/perspectives]] — when user needs multi-angle product views for listings
 - [[Set Up Brand Profile|/app/brand-profiles]] — when talking about brand consistency or suggesting they define their brand
