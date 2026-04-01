@@ -10,6 +10,7 @@ const StudioTeamSection = lazy(() => import('@/components/landing/StudioTeamSect
 const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then(m => ({ default: m.HowItWorks })));
 const FreestyleShowcaseSection = lazy(() => import('@/components/landing/FreestyleShowcaseSection').then(m => ({ default: m.FreestyleShowcaseSection })));
 const ProductCategoryShowcase = lazy(() => import('@/components/landing/ProductCategoryShowcase').then(m => ({ default: m.ProductCategoryShowcase })));
+const VideoShowcaseSection = lazy(() => import('@/components/landing/VideoShowcaseSection').then(m => ({ default: m.VideoShowcaseSection })));
 const ModelShowcaseSection = lazy(() => import('@/components/landing/ModelShowcaseSection').then(m => ({ default: m.ModelShowcaseSection })));
 const EnvironmentShowcaseSection = lazy(() => import('@/components/landing/EnvironmentShowcaseSection').then(m => ({ default: m.EnvironmentShowcaseSection })));
 const CreativeDropsSection = lazy(() => import('@/components/landing/CreativeDropsSection').then(m => ({ default: m.CreativeDropsSection })));
@@ -58,6 +59,7 @@ export default function Landing() {
         <Suspense fallback={null}><StudioTeamSection /></Suspense>
         <Suspense fallback={null}><HowItWorks /></Suspense>
         <Suspense fallback={null}><FreestyleShowcaseSection /></Suspense>
+        <Suspense fallback={null}><VideoShowcaseSection /></Suspense>
         <Suspense fallback={null}><ModelShowcaseSection /></Suspense>
         <Suspense fallback={null}><EnvironmentShowcaseSection /></Suspense>
         <Suspense fallback={null}><CreativeDropsSection /></Suspense>
