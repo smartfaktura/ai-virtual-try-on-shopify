@@ -1,46 +1,33 @@
 
 
-# Bulk Video Generation Fixes & Enhancements
+# Multi Camera Motion Selection (Paid Only)
+
+## Concept
+Allow paid users to select **multiple camera motions** for the same image. Each selected motion generates a separate video job — so selecting 3 camera motions = 3 videos from 1 image.
 
 ## Changes
 
-### 1. Fix: Show image preview during bulk analysis
-**Problem**: When analyzing the first image in bulk mode, the analysis UI (lines 746-938) shows `imagePreview` which is only set for single-mode uploads. Bulk images use `bulkImages[0].preview` instead.
+### 1. `MotionRefinementPanel.tsx` — Multi-select camera motion chips
+- Add `multiSelect?: boolean` and `onMultiCameraMotionChange?: (ids: string[]) => void` props
+- When `multiSelect` is true, the Camera Motion `ChipRow` becomes a toggle — clicking a chip adds/removes it from a `string[]` instead of replacing a single value
+- Selected chips show checkmark or filled style; minimum 1 must stay selected
+- Show count badge like "3 motions × N credits each"
 
-**Fix**: In the analysis UI section, fall back to `bulkImages[0]?.preview` when `imagePreview` is null. Update the condition on line 752 and the source image preview on line 1133.
+### 2. `AnimateVideo.tsx` — Wire multi-motion to generation
+- Add `selectedCameraMotions: string[]` state (defaults to `[cameraMotion]`), synced when single `cameraMotion` changes
+- Pass `multiSelect={isPaidUser}` to `MotionRefinementPanel`
+- On generate: if multiple motions selected, loop through each motion and call `runAnimatePipeline` sequentially (reusing the same image + settings but swapping `cameraMotion`)
+- Update credit estimate: multiply per-video cost × number of selected motions (× bulk images if in batch mode)
+- Free users: single-select only (current behavior unchanged)
 
-### 2. Add "Customize per image" toggle (change settings per video)
-**Current**: All bulk images share the same settings.
+### 3. `useVideoProject.ts` — No changes needed
+The existing `runAnimatePipeline` already accepts `cameraMotion` as a param and names projects with the motion label. Each call with a different motion will create a separate project with the correct name.
 
-**New**: Add a "Customize per image" toggle below the BulkImageGrid in the post-upload form. When enabled:
-- Show a horizontal tab bar with image thumbnails (1, 2, 3...)
-- Selecting an image shows settings for that image
-- Store per-image overrides in a `Map<imageId, SettingsOverride>` state
-- When generating, pass per-image params to `runBulkAnimatePipeline`
-- Update `useBulkVideoProject` to accept an optional `perImageParams` map
+### 4. Credit display update
+- Show "N camera motions selected → N videos" messaging near the credit estimate
+- In batch mode: total = images × motions × per-video cost
 
-### 3. Improve video project naming
-**Current**: All video projects are titled `'Animate Image'` (line 84 in useVideoProject.ts).
-
-**New**: Change title to `{CameraMotionLabel}-{ProductName}-{shortId}` format:
-- Camera motion label from `CAMERA_MOTIONS` lookup
-- Product name from analysis `detected_product` or category label
-- Short ID = first 6 chars of project UUID
-- Example: `"Slow Push-in-Fashion-a3b2c1"`
-
-### 4. File changes
-
-**`src/pages/video/AnimateVideo.tsx`**:
-- Fix analysis image preview to use `bulkImages[0]?.preview` as fallback
-- Add `customizePerImage` toggle state
-- Add `perImageSettings` map state
-- Add image tab bar UI when customize is on
-- Wire per-image settings to generation call
-
-**`src/hooks/useBulkVideoProject.ts`**:
-- Accept optional `perImageParams: Map<string, Partial<BulkAnimateParams>>` in `runBulkAnimatePipeline`
-- Merge per-image overrides with shared params for each image
-
-**`src/hooks/useVideoProject.ts`**:
-- Update project title from `'Animate Image'` to `{CameraMotionLabel}-{ProductName}-{shortId}` using `CAMERA_MOTIONS` lookup and analysis data
+## Files
+- **Update**: `src/components/app/video/MotionRefinementPanel.tsx`
+- **Update**: `src/pages/video/AnimateVideo.tsx`
 
