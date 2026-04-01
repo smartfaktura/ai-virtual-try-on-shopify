@@ -138,7 +138,7 @@ export function CatalogStepShots({
               <ChevronLeft className="w-4 h-4" /> Back
             </Button>
             <Button onClick={onNext} disabled={!canProceed || selectedShots.size === 0} className="gap-2">
-              Next: Review <ChevronRight className="w-4 h-4" />
+              Next: Props <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
