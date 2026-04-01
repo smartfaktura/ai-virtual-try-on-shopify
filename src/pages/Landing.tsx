@@ -59,6 +59,7 @@ export default function Landing() {
         <Suspense fallback={null}><StudioTeamSection /></Suspense>
         <Suspense fallback={null}><HowItWorks /></Suspense>
         <Suspense fallback={null}><FreestyleShowcaseSection /></Suspense>
+        <Suspense fallback={null}><VideoShowcaseSection /></Suspense>
         <Suspense fallback={null}><ModelShowcaseSection /></Suspense>
         <Suspense fallback={null}><EnvironmentShowcaseSection /></Suspense>
         <Suspense fallback={null}><CreativeDropsSection /></Suspense>
