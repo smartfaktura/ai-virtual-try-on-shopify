@@ -20,7 +20,7 @@ import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/v
 import { BulkImageGrid, type BulkImage } from '@/components/app/video/BulkImageGrid';
 import { BulkProgressBanner } from '@/components/app/video/BulkProgressBanner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PRODUCT_CATEGORIES, SCENE_TYPES, CAMERA_MOTIONS, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
+import { PRODUCT_CATEGORIES, SCENE_TYPES, CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
 import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
 import { useVideoProject } from '@/hooks/useVideoProject';
@@ -819,7 +819,7 @@ export default function AnimateVideo() {
                             };
                             const imgIdx = bulkImages.findIndex(i => i.id === activeImageTab);
                             return (
-                              <div className="rounded-lg bg-muted/20 p-3 space-y-3">
+                              <div className="rounded-lg bg-muted/20 p-3 space-y-4">
                                 <div className="flex items-center justify-between">
                                   <p className="text-xs font-medium text-foreground">Image {imgIdx + 1} overrides</p>
                                   {Object.keys(imgOverrides).length > 0 && (
@@ -834,33 +834,116 @@ export default function AnimateVideo() {
                                   )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="space-y-1">
-                                    <label className="text-xs text-muted-foreground">Camera Motion</label>
-                                    <select
-                                      value={imgOverrides.cameraMotion || cameraMotion}
-                                      onChange={(e) => setOverride('cameraMotion', e.target.value)}
-                                      className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
-                                    >
-                                      {CAMERA_MOTIONS.map(cm => (
-                                        <option key={cm.id} value={cm.id}>{cm.label}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="text-xs text-muted-foreground">Motion Intensity</label>
-                                    <select
-                                      value={imgOverrides.motionIntensity || motionIntensity}
-                                      onChange={(e) => setOverride('motionIntensity', e.target.value)}
-                                      className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
-                                    >
-                                      <option value="low">Low</option>
-                                      <option value="medium">Medium</option>
-                                      <option value="high">High</option>
-                                    </select>
+                                {/* Product Context */}
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Product Context</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Category</label>
+                                      <select value={imgOverrides.category || category} onChange={(e) => setOverride('category', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        {PRODUCT_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Scene Type</label>
+                                      <select value={imgOverrides.sceneType || sceneType} onChange={(e) => setOverride('sceneType', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        {SCENE_TYPES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                      </select>
+                                    </div>
                                   </div>
                                 </div>
 
+                                {/* Motion */}
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Motion</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Camera Motion</label>
+                                      <select value={imgOverrides.cameraMotion || cameraMotion} onChange={(e) => setOverride('cameraMotion', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        {CAMERA_MOTIONS.map(cm => <option key={cm.id} value={cm.id}>{cm.label}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Subject Motion</label>
+                                      <select value={imgOverrides.subjectMotion || subjectMotion} onChange={(e) => setOverride('subjectMotion', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        {SUBJECT_MOTIONS.map(sm => <option key={sm.id} value={sm.id}>{sm.label}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Motion Intensity</label>
+                                      <select value={imgOverrides.motionIntensity || motionIntensity} onChange={(e) => setOverride('motionIntensity', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Realism Level</label>
+                                      <select value={imgOverrides.realismLevel || realismLevel} onChange={(e) => setOverride('realismLevel', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        {REALISM_LEVELS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Loop Style</label>
+                                      <select value={imgOverrides.loopStyle || loopStyle} onChange={(e) => setOverride('loopStyle', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        {LOOP_STYLES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Preservation */}
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Preservation</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                      { key: 'preserveScene', label: 'Scene', shared: preserveScene },
+                                      { key: 'preserveProductDetails', label: 'Product details', shared: preserveProductDetails },
+                                      { key: 'preserveIdentity', label: 'Identity', shared: preserveIdentity },
+                                      { key: 'preserveOutfit', label: 'Outfit', shared: preserveOutfit },
+                                    ].map(({ key, label, shared }) => (
+                                      <label key={key} className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                        {label}
+                                        <Switch
+                                          checked={imgOverrides[key] !== undefined ? imgOverrides[key] : shared}
+                                          onCheckedChange={(v) => setOverride(key, v)}
+                                          className="scale-75 origin-right"
+                                        />
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Output */}
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Output</p>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Aspect Ratio</label>
+                                      <select value={imgOverrides.aspectRatio || aspectRatio} onChange={(e) => setOverride('aspectRatio', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        <option value="9:16">9:16</option>
+                                        <option value="1:1">1:1</option>
+                                        <option value="16:9">16:9</option>
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Duration</label>
+                                      <select value={imgOverrides.duration || duration} onChange={(e) => setOverride('duration', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        <option value="5">5s</option>
+                                        <option value="10">10s</option>
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-xs text-muted-foreground">Audio</label>
+                                      <select value={imgOverrides.audioMode || audioMode} onChange={(e) => setOverride('audioMode', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
+                                        <option value="silent">Silent</option>
+                                        <option value="ambient">Ambient</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Prompt */}
                                 <div className="space-y-1">
                                   <label className="text-xs text-muted-foreground">Custom motion note</label>
                                   <Textarea
