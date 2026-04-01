@@ -26,6 +26,7 @@ interface AnimateParams {
   duration: '5' | '10';
   audioMode: 'silent' | 'ambient';
   userPrompt?: string;
+  sourceName?: string;
 }
 
 export function useVideoProject() {
