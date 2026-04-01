@@ -1348,7 +1348,7 @@ export default function AnimateVideo() {
         </div>
       )}
       {/* ──── PIPELINE ACTIVE: Generation in progress ──── */}
-      {isPipelineActive && (
+      {isPipelineActive && !isBulkRunning && (
         <div className="space-y-6">
           {/* Branded takeover card */}
           <div className="rounded-2xl border border-border bg-card shadow-sm p-8 space-y-6">
