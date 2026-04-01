@@ -18,6 +18,7 @@ import { CatalogStepFashionStyle } from '@/components/app/catalog/CatalogStepFas
 import { CatalogStepModelsV2 } from '@/components/app/catalog/CatalogStepModelsV2';
 import { CatalogStepBackgroundsV2 } from '@/components/app/catalog/CatalogStepBackgroundsV2';
 import { CatalogStepShots } from '@/components/app/catalog/CatalogStepShots';
+import { CatalogStepProps } from '@/components/app/catalog/CatalogStepProps';
 import { CatalogStepReviewV2 } from '@/components/app/catalog/CatalogStepReviewV2';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
