@@ -13,8 +13,8 @@ const faqs = [
     a: 'No. Our AI generates studio-quality images indistinguishable from professional photography. Combined with your Brand Profile, every image maintains consistent, realistic lighting and composition automatically.',
   },
   {
-    q: 'What are Workflows?',
-    a: 'Workflows are purpose-built generation pipelines. Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
+    q: 'What are Templates?',
+    a: 'Templates are purpose-built generation pipelines. Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
   },
   {
     q: 'What is Freestyle?',
