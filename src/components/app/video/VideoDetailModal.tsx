@@ -1,14 +1,37 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, X, Film } from 'lucide-react';
+import { Download, Trash2, X, Film, Clock, Monitor, Maximize, Video, Sparkles, Eye, RotateCcw, Volume2, Layers, Move, Target, Clapperboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import type { GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { buildVideoFileName } from '@/lib/videoFilename';
+
+const RESOLUTION_MAP: Record<string, string> = {
+  '1:1': '1080 × 1080',
+  '16:9': '1920 × 1080',
+  '9:16': '1080 × 1920',
+  '4:3': '1440 × 1080',
+  '3:4': '1080 × 1440',
+  '21:9': '2560 × 1080',
+};
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  Duration: Clock,
+  Format: Monitor,
+  Resolution: Maximize,
+  'Camera Motion': Video,
+  Style: Sparkles,
+  'Scene Type': Layers,
+  'Motion Goal': Target,
+  'Subject Motion': Move,
+  Realism: Eye,
+  'Loop Style': RotateCcw,
+  Audio: Volume2,
+  Model: Clapperboard,
+};
 
 interface VideoDetailModalProps {
   video: GeneratedVideo | null;
@@ -19,11 +42,7 @@ interface VideoDetailModalProps {
 
 export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
-  const [promptExpanded, setPromptExpanded] = useState(false);
 
-  useEffect(() => { setPromptExpanded(false); }, [video?.id]);
-
-  // Lock body scroll
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -33,7 +52,6 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -47,6 +65,23 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
 
   const isComplete = video.status === 'complete' && video.video_url;
   const isProcessing = video.status === 'processing' || video.status === 'queued';
+  const s = video.settings_json || {};
+  const fmt = (v: string) => v.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const details: [string, string][] = ([
+    ['Duration', video.duration ? `${video.duration}s` : ''],
+    ['Format', video.aspect_ratio || ''],
+    ['Resolution', RESOLUTION_MAP[video.aspect_ratio] || ''],
+    ['Camera Motion', video.camera_type || (s.cameraMotion as string) || ''],
+    ['Style', (s.category as string) || ''],
+    ['Scene Type', (s.sceneType as string) || ''],
+    ['Motion Goal', (s.motionGoalId as string) || ''],
+    ['Subject Motion', (s.subjectMotion as string) || ''],
+    ['Realism', (s.realismLevel as string) || ''],
+    ['Loop Style', (s.loopStyle as string) || ''],
+    ['Audio', (s.audioMode as string) || ''],
+    ['Model', video.model_name || ''],
+  ] as [string, string][]).filter(([, v]) => v && v !== 'silent');
 
   const handleDownload = async () => {
     if (!video.video_url) return;
@@ -94,10 +129,8 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       style={{ margin: 0, padding: 0 }}
       onClick={onClose}
     >
-      {/* Backdrop */}
       <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" />
 
-      {/* Split layout */}
       <div
         className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
         onClick={(e) => e.stopPropagation()}
@@ -124,30 +157,29 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
 
         {/* Right — Info panel */}
         <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
-          {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 z-20 text-foreground/70 hover:text-foreground transition-colors"
+            className="absolute top-5 right-5 z-20 text-muted-foreground hover:text-foreground transition-colors duration-150"
           >
-            <X className="w-7 h-7" strokeWidth={2} />
+            <X className="w-6 h-6" strokeWidth={1.8} />
           </button>
 
-          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
-            {/* Title */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+          <div className="flex flex-col gap-8 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
+            {/* Header */}
+            <div className="space-y-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">
                 Video Generation
               </p>
-              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
-                <Film className="w-6 h-6 text-muted-foreground/60" />
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2.5">
+                <Film className="w-5 h-5 text-muted-foreground/50" />
                 Generated Video
               </h2>
               <div className="flex items-center gap-2 pt-0.5">
-                <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                <span className="text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider">
                   {dateStr}
                 </span>
                 {isProcessing && (
-                  <Badge variant="secondary" className="text-[10px] bg-amber-50 text-amber-900 animate-pulse">
+                  <Badge variant="secondary" className="text-[10px] bg-status-warning/10 text-status-warning animate-pulse">
                     {video.status === 'processing' ? 'Processing' : 'Queued'}
                   </Badge>
                 )}
@@ -157,78 +189,36 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
               </div>
             </div>
 
-            {/* Prompt */}
-            {video.prompt && (() => {
-              const isLong = video.prompt.length > 150;
-              const displayText = isLong && !promptExpanded ? `${video.prompt.slice(0, 150)}…` : video.prompt;
-              return (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                    Prompt
-                  </p>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {displayText}
-                    {isLong && (
-                      <button
-                        onClick={() => setPromptExpanded(!promptExpanded)}
-                        className="ml-1 text-primary hover:text-primary/80 text-xs font-medium transition-colors"
+            {/* Unified Details Grid */}
+            {details.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                  Details
+                </p>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {details.map(([label, value]) => {
+                    const Icon = ICON_MAP[label] || Layers;
+                    return (
+                      <div
+                        key={label}
+                        className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors duration-150"
                       >
-                        {promptExpanded ? 'Show less' : 'Show more'}
-                      </button>
-                    )}
-                  </p>
-                </div>
-              );
-            })()}
-
-            {/* Metadata chips */}
-            <div className="flex flex-wrap gap-2">
-              <span className="px-2.5 py-1 rounded-md bg-muted/50 text-[11px] font-medium text-muted-foreground">
-                {video.duration}s
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-muted/50 text-[11px] font-medium text-muted-foreground">
-                {video.aspect_ratio}
-              </span>
-            </div>
-
-            {/* Settings metadata */}
-            {(() => {
-              const s = video.settings_json || {};
-              const entries = ([
-                ['Camera Motion', video.camera_type || (s.cameraMotion as string) || ''],
-                ['Style', (s.category as string) || ''],
-                ['Scene Type', (s.sceneType as string) || ''],
-                ['Motion Goal', (s.motionGoalId as string) || ''],
-                ['Subject Motion', (s.subjectMotion as string) || ''],
-                ['Realism', (s.realismLevel as string) || ''],
-                ['Loop Style', (s.loopStyle as string) || ''],
-                ['Audio', (s.audioMode as string) || ''],
-                ['Model', video.model_name || ''],
-              ] as [string, string][]).filter(([, v]) => v && v !== 'silent');
-
-              if (entries.length === 0) return null;
-
-              const fmt = (v: string) => v.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-              return (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                    Settings
-                  </p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                    {entries.map(([label, value]) => (
-                      <div key={label} className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground/50 font-medium">{label}</span>
-                        <span className="text-xs text-muted-foreground truncate">{fmt(value)}</span>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.8} />
+                          <span className="text-xs text-muted-foreground/60 font-medium">{label}</span>
+                        </div>
+                        <span className="text-xs font-medium text-foreground/80 truncate text-right">
+                          {label === 'Duration' || label === 'Format' || label === 'Resolution' ? value : fmt(value)}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })()}
+              </div>
+            )}
 
             {/* Actions */}
-            <div className="space-y-2.5 pt-2">
+            <div className="space-y-2.5 pt-1">
               {isComplete && (
                 <Button
                   onClick={handleDownload}
