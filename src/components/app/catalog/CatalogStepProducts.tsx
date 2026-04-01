@@ -374,7 +374,7 @@ export function CatalogStepProducts({
                           onClick={() => toggleProduct(up.id)}
                           disabled={isDisabled}
                           className={cn(
-                            'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left',
+                            'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                             isSelected
                               ? 'bg-primary/5 border border-primary/20'
                               : cn('border border-transparent hover:bg-muted/40', idx % 2 === 1 && 'bg-muted/20'),

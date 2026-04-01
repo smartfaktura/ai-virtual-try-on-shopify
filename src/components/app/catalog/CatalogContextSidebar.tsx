@@ -87,7 +87,7 @@ export function CatalogContextSidebar({
                 {models.slice(0, 2).map(m => (
                   <div key={m.modelId} className="w-5 h-5 rounded-full border border-card overflow-hidden bg-muted">
                     {m.previewUrl ? (
-                      <img src={getOptimizedUrl(m.previewUrl, { quality: 30 })} alt={m.name} className="w-full h-full object-cover" />
+                      <ShimmerImage src={getOptimizedUrl(m.previewUrl, { quality: 30 })} alt={m.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-muted" />
                     )}

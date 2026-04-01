@@ -96,6 +96,7 @@ export default function CatalogGenerate() {
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
+  const [isDownloading, setIsDownloading] = useState(false);
   const generationStartedAtRef = useRef<number | null>(null);
   const allDone = batchState?.allDone ?? false;
   const hasBatch = !!batchState;

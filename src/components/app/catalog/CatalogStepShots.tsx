@@ -41,7 +41,7 @@ export function CatalogStepShots({
   const recommendedSet = new Set(recommended);
 
   return (
-    <div className="space-y-6 pb-44">
+    <div className="space-y-6 pb-36">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold text-foreground">Select Shots</h3>
