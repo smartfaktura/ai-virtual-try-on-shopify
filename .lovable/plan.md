@@ -1,29 +1,36 @@
 
 
-# Fix Bulk Video Generation Progress UX
-
-## Problem
-When generating 10 videos in bulk mode, the single-video pipeline UI (`isPipelineActive` section) flashes on/off for each image as `runAnimatePipeline` cycles through analyze → build → generate stages per image. The bulk progress banner exists but the single-video progress card keeps interfering, causing chaotic flashing. There's no smooth "X of 10 queued" progress experience.
+# Fix: GlobalGenerationBar showing stale video processing status
 
 ## Root Cause
-`isPipelineActive` is derived from the single-video `useVideoProject()` state. During bulk, each sequential `runAnimatePipeline()` call toggles this state, making the single-video progress card (lines 1351-1411) flash on/off repeatedly while the bulk banner sits below.
+
+The video generation flow has a **polling gap in bulk mode**:
+
+1. Worker mode (`generate-video` edge function) submits the Kling task and returns — it does NOT wait for completion
+2. Client-side polling (`useGenerateVideo`) tracks only ONE `activeJob` at a time
+3. During bulk, `resetPipeline()` is called between each image, killing the previous job's Kling status polling
+4. Result: `generation_queue` entries stay stuck as "processing" forever because no one polls Kling to discover completion and update the queue
+5. The `recover` action fixes `generated_videos` but does NOT update corresponding `generation_queue` entries
+6. GlobalGenerationBar queries `generation_queue` for `queued`/`processing` jobs → shows stale "Leo is creating your video" indefinitely
 
 ## Changes
 
-### 1. `src/pages/video/AnimateVideo.tsx`
-- **Hide single-video progress during bulk**: Change line 1351 condition from `isPipelineActive` to `isPipelineActive && !isBulkRunning` — prevents the single-video takeover card from showing during bulk runs
-- This single change eliminates all flashing
+### 1. Fix `generate-video` edge function — `recover` action
+**File**: `supabase/functions/generate-video/index.ts`
 
-### 2. `src/components/app/video/BulkProgressBanner.tsx`
-Enhance the banner to be a proper full-screen takeover experience (matching the single-video progress card style):
-- Add rotating team avatar + "VOVV.AI Studio" branding header (reuse `TEAM_MEMBERS` pattern from single-video progress)
-- Show "Queueing 3 of 10 videos…" as the main heading with a sub-message
-- Add elapsed timer
-- Add estimated time remaining (using ~15s per video queue submission)
-- Keep the image thumbnail grid with status icons
-- When complete: show "All 10 videos queued — they'll process automatically" with "View in Video Hub" button
+After recovering stuck `generated_videos`, also find and complete stuck `generation_queue` entries:
+- Query `generation_queue` for this user where `status = 'processing'` and `job_type = 'video'`
+- For each, extract `kling_task_id` from the `result` JSON column
+- Check if the corresponding `generated_videos` row is already `complete` or `failed`
+- If complete → mark queue job as `completed` with the video URL in result
+- If failed → mark queue job as `failed` and refund credits
+
+### 2. Hide GlobalGenerationBar on video pages
+**File**: `src/components/app/GlobalGenerationBar.tsx`
+
+Add `/app/video` to `HIDDEN_PATHS`. The Video Hub already shows video results directly, and AnimateVideo has its own BulkProgressBanner — the GlobalGenerationBar showing duplicate/stale video info there is redundant and confusing.
 
 ### Files
-- **Update**: `src/pages/video/AnimateVideo.tsx` — add `!isBulkRunning` guard to pipeline active UI
-- **Update**: `src/components/app/video/BulkProgressBanner.tsx` — redesign as branded takeover card with progress details
+- **Update**: `supabase/functions/generate-video/index.ts` — extend recover action to also resolve stuck queue entries
+- **Update**: `src/components/app/GlobalGenerationBar.tsx` — add `/app/video` to HIDDEN_PATHS
 
