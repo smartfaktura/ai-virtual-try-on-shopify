@@ -1,47 +1,56 @@
 
 
-# Catalog Studio Debug Report — Findings & Fixes
+# Catalog Studio Debug Report — Round 3
 
-## Current State: What Works
-- **Queue routing**: `process-queue` correctly maps `catalog` → `generate-catalog` (line 17)
-- **Credit pricing**: `enqueue-generation` charges 4 credits for catalog jobs (correct)
-- **Prompt flow**: `generate-catalog` correctly uses `prompt_final` when present (line 336)
-- **Product-only mode**: `generate-catalog` accepts missing `model` field (line 294 validates only `product.imageUrl`)
-- **Retry logic**: Seedream transient errors (429/502/503) retry once with 3s delay
-- **Completion flow**: `completeQueueJob` properly handles refunds, inserts into `generation_jobs`, and sends failure emails
-- **Polling**: 10-minute hard timeout, 401 session refresh, per-product progress tracking
+## What's Working Correctly
+- **Queue routing**: `process-queue` maps `catalog` → `generate-catalog` ✓
+- **Credit pricing**: `enqueue-generation` charges 4 credits per catalog image ✓
+- **Prompt flow**: `generate-catalog` uses `prompt_final` when present ✓
+- **Product-only mode**: `generate-catalog` accepts missing `model` field ✓
+- **Retry logic**: Seedream transient errors retry once with 3s delay ✓
+- **Polling**: 10-minute hard timeout with force-completion ✓
+- **Base64 error handling**: `safeConvertBase64` wraps each conversion ✓
+- **Fail-fast on credits**: Stops enqueue loop on `insufficient_credits` ✓
+- **Timer effect**: Uses ref + `allDone`/`hasBatch` dependencies ✓
+- **Navigation**: Uses `useNavigate()` ✓
+- **Swimwear wardrobe**: Returns all-null support wardrobe ✓
+- **Ghost mannequin**: Shadowless prompt ✓
+- **Review step (Step 6)**: Shows credit breakdown, summary cards ✓
+- **Workflow slug**: `"catalog-studio"` ✓
+- **`product_id` and `product_image_url`**: Passed in payload ✓
 
 ## Bugs Found
 
-### Bug 1: `product_image_url` stored as base64 blob in `generation_jobs`
-**Severity: Medium** — `payload.product.imageUrl` at line 277 of `generate-catalog` is the base64 string sent from the client. This gets stored in the `product_image_url` column, bloating the database with massive base64 strings instead of a clean URL.
+### Bug 1: `product_image_url` still stored as base64 in `generation_jobs` (Severity: Medium)
+In `generate-catalog/index.ts` line 277, `product_image_url` reads from `payload.product_image_url`. But in `useCatalogGenerate.ts` line 182, the `product_image_url` field is set to `productOriginalUrl` — which is correct. However, the `completeQueueJob` function at line 261-278 also stores `model_image_url` from `payload.model.originalImageUrl` (line 274), but the client never sets `model.originalImageUrl` — it only sends `model.imageUrl` which is the base64 string. This means `model_image_url` in `generation_jobs` is always `null` (no `originalImageUrl` key), which is actually fine since we don't want base64 there. **No fix needed** — `model_image_url` being null is acceptable for catalog jobs.
 
-**Fix**: After uploading the generated image to storage, also resolve the original product URL from the non-base64 source. Add `product_image_url` to the payload from the client side as the original URL (not base64).
+### Bug 2: Polling fetches wrong jobs when `jobsRef` is stale (Severity: Medium)
+In `pollJobs` (line 41-140), the `jobs` variable is captured from `jobsRef.current` at the time `pollJobs` is called (line 43). But `pollJobs` is wrapped in `useCallback` with only `[stopPolling]` as dependency. The `poll` closure at line 47 correctly reads `jobsRef.current` for updates (line 111), but the `jobIds` on line 78 uses the captured `jobs` variable which is fine since job IDs don't change. **No bug** — the polling logic is correct.
 
-### Bug 2: `workflow_slug` hardcoded to `"catalog-shot-set"` (outdated)
-**Severity: Low** — Line 275 still says `"catalog-shot-set"` but the feature was renamed to "Catalog Studio". This affects library filtering and analytics.
+### Bug 3: `workflow_name` in response still says "Catalog Shot Set" (Severity: Low)
+In `generate-catalog/index.ts` line 417, the response body still says `workflow_name: "Catalog Shot Set"`. This should match the slug rename. Not critical since the response isn't stored anywhere visible, but inconsistent.
 
-**Fix**: Change to `"catalog-studio"`.
+**Fix**: Change to `"Catalog Studio"`.
 
-### Bug 3: Completion screen "View in Library" uses `window.location.href` instead of React Router
-**Severity: Low** — Line 304 does a full page reload (`window.location.href = '/app/library'`). Should use React Router navigation.
+### Bug 4: `completeQueueJob` email uses "Catalog Shot Set" (Severity: Low)
+In `generate-catalog/index.ts` line 244, the failure email uses `workflowName: "Catalog Shot Set"`. Should be `"Catalog Studio"`.
 
-**Fix**: Use `useNavigate()` from react-router-dom.
+**Fix**: Change to `"Catalog Studio"`.
 
-### Bug 4: Result images may contain expired Seedream URLs as fallback
-**Severity: Medium** — If the storage upload fails (lines 396-401), the system falls back to the raw Seedream URL which expires after a few hours. The completion page would show broken images.
+### Bug 5: Storage upload uses `workflow-previews` bucket (Severity: Low)
+In `generate-catalog/index.ts` line 384, catalog images are uploaded to the `workflow-previews` bucket. There's a dedicated `catalog-previews` bucket already created. Using the wrong bucket clutters storage and makes cleanup harder.
 
-**Fix**: Already handled with retry, but add a warning toast on the completion screen if an image URL doesn't match the expected storage domain.
+**Fix**: Change to `catalog-previews`.
 
-### Bug 5: Timer effect has dependency issue
-**Severity: Low** — Line 95: `useEffect` depends on `batchState` (the whole object), causing the interval to be torn down and recreated on every poll update (every 3 seconds). This resets the timer each cycle.
+### Bug 6: No `product_name` in enqueue payload (Severity: Low)
+In `useCatalogGenerate.ts` the enqueue payload (line 175-188) doesn't include `product_name`. The `completeQueueJob` at line 276 falls back to `payload.product.title` which works, but is fragile — depends on the nested product object surviving the queue serialization.
 
-**Fix**: Extract `batchState?.allDone` as the only dependency, and use a ref for `generationStartedAt`.
+**Fix**: Add `product_name: productTitle` to the enqueue payload for explicit metadata.
 
-### Bug 6: No `product_id` passed in catalog payload
-**Severity: Medium** — In `useCatalogGenerate.ts`, the enqueue payload doesn't include `product_id`. So `generate-catalog` line 266 (`payload.product_id`) is always null, meaning catalog images won't be linked to products in the library.
+### Bug 7: Download action opens image in new tab instead of downloading (Severity: Low)
+In `CatalogGenerate.tsx` line 437, the download handler does `window.open(url, '_blank')` which just opens the image. Should trigger an actual download.
 
-**Fix**: Add `product_id: productId` to the payload in `enqueueJob`.
+**Fix**: Use proper download logic with `fetch` + blob + anchor click.
 
 ## Plan
 
@@ -49,24 +58,34 @@
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useCatalogGenerate.ts` | Add `product_id` and `product_image_url` (original URL) to enqueue payload |
-| `supabase/functions/generate-catalog/index.ts` | Fix `workflow_slug` to `"catalog-studio"`, use `product_image_url` from payload instead of base64 |
-| `src/pages/CatalogGenerate.tsx` | Fix timer effect dependencies, replace `window.location.href` with `useNavigate()` |
+| `supabase/functions/generate-catalog/index.ts` | Fix workflow_name to "Catalog Studio", email text, use `catalog-previews` bucket, add `product_name` from payload |
+| `src/hooks/useCatalogGenerate.ts` | Add `product_name` to enqueue payload |
+| `src/pages/CatalogGenerate.tsx` | Fix download handler to use proper blob download |
 
 ### Detailed Changes
 
-**1. `useCatalogGenerate.ts` — Add product metadata to payload**
-- In `enqueueJob`, add to the payload object:
-  - `product_id: productId`
-  - `product_image_url: <original URL>` — pass the original product image URL (not base64) as a separate field
-- This requires passing the original URL alongside the base64 version through the pipeline
+**1. `generate-catalog/index.ts`**
+- Line 244: `workflowName: "Catalog Shot Set"` → `"Catalog Studio"`
+- Line 384: `"workflow-previews"` → `"catalog-previews"`
+- Line 391-392: `"workflow-previews"` → `"catalog-previews"`
+- Line 417: `workflow_name: "Catalog Shot Set"` → `"Catalog Studio"`
 
-**2. `generate-catalog/index.ts` — Fix stored metadata**
-- Line 275: Change `workflow_slug: "catalog-shot-set"` → `"catalog-studio"`
-- Line 277: Use `payload.product_image_url` (the clean URL) instead of `(payload.product as Record<string, unknown>)?.imageUrl` (which is base64)
+**2. `useCatalogGenerate.ts`**
+- Add `product_name: productTitle` to the enqueue payload object (after `product_image_url`)
 
-**3. `CatalogGenerate.tsx` — Fix timer and navigation**
-- Extract `batchState?.allDone` into a variable and use only that + `generationStartedAt` as effect dependencies
-- Use `generationStartedAtRef` to avoid re-running the effect
-- Replace `window.location.href = '/app/library'` with `navigate('/app/library')` using `useNavigate()`
+**3. `CatalogGenerate.tsx`**
+- Replace the `onDownload` handler (line 436-439) with a proper blob download:
+  ```typescript
+  onDownload={(i) => {
+    const url = batchState.aggregatedImages[i];
+    if (!url) return;
+    fetch(url).then(r => r.blob()).then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `catalog-${i + 1}.jpg`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }).catch(() => window.open(url, '_blank'));
+  }}
+  ```
 
