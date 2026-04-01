@@ -1,31 +1,38 @@
 
 
-# Fix Bulk Video Generation UX — Single Loading Screen
+# Show More Metadata in Video Detail Modal
 
-## Problems
-
-1. **`/app/video-hub` route is 404** — `BulkProgressBanner` navigates to `/app/video-hub` but the actual route is `/app/video`
-2. **Multi-motion single image (lines 394-415)** calls `resetPipeline()` between each camera motion, causing multiple flash screens and toasts — needs to use the bulk pipeline instead
-3. **BulkProgressBanner** shows "Queueing X of Y" (enqueue progress) but not the actual video generation progress with estimated/elapsed time in VOVV.AI branded style as requested
+## Current State
+The VideoDetailModal shows only: prompt, duration, aspect ratio. The `generated_videos` table has `camera_type` and `project_id` (FK to `video_projects`). The `video_projects.settings_json` contains all generation settings: category, sceneType, motionGoalId, cameraMotion, subjectMotion, realismLevel, loopStyle, motionIntensity, audioMode, etc.
 
 ## Changes
 
-### 1. `src/components/app/video/BulkProgressBanner.tsx` — Fix route + improve progress UX
+### 1. `src/hooks/useGenerateVideo.ts` — Fetch project settings alongside video
 
-- Fix navigation: `/app/video-hub` → `/app/video`
-- Add two-phase display:
-  - **Phase 1 (enqueuing)**: Current "Queueing X of Y videos..." with progress bar
-  - **Phase 2 (processing)**: After all queued, show "X of Y videos generating" with estimated time (use ~90s per video constant), elapsed timer, and rotating VOVV.AI team avatars
-- Show "Estimated time: ~Xm" based on total videos × 90s
-- Show elapsed time counter throughout
+- Expand `GeneratedVideo` interface to include `workflow_type` and `settings_json` (from the joined `video_projects` table)
+- Update the history query to join `video_projects` via `project_id`:
+  ```
+  .select('*, video_projects(settings_json, workflow_type)')
+  ```
+- Flatten the joined data into the `GeneratedVideo` object
 
-### 2. `src/pages/video/AnimateVideo.tsx` — Multi-motion uses bulk pipeline
+### 2. `src/components/app/video/VideoDetailModal.tsx` — Display metadata section
 
-- Refactor the single-image multi-motion path (lines 394-415) to use `runBulkAnimatePipeline` instead of looping `resetPipeline()` + `runAnimatePipeline()`
-- This converts the single image + N camera motions into N bulk items, all enqueued as a single batch with one loading screen
-- Remove the `resetPipeline()` / `await delay(300)` loop
+Add a "Settings" section between the prompt and action buttons showing:
+- **Camera Motion** — from `camera_type` or `settings_json.cameraMotion`, formatted (e.g. "Slow Push-in")
+- **Style / Category** — from `settings_json.category` (e.g. "Editorial", "Product Hero")
+- **Scene Type** — from `settings_json.sceneType`
+- **Motion Goal** — from `settings_json.motionGoalId`
+- **Subject Motion** — from `settings_json.subjectMotion`
+- **Realism** — from `settings_json.realismLevel`
+- **Loop Style** — from `settings_json.loopStyle`
+- **Audio** — from `settings_json.audioMode`
+
+Display as a compact two-column grid of label/value pairs, same style as the existing duration/aspect ratio chips but in a structured list. Only show fields that have values.
+
+Also update the download filename to use `camera_type` instead of generic hash (matching the ZIP naming fix).
 
 ### Files
-- **Update**: `src/components/app/video/BulkProgressBanner.tsx`
-- **Update**: `src/pages/video/AnimateVideo.tsx`
+- **Update**: `src/hooks/useGenerateVideo.ts` — expand interface + join query
+- **Update**: `src/components/app/video/VideoDetailModal.tsx` — render metadata grid
 
