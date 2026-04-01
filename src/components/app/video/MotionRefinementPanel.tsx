@@ -55,51 +55,6 @@ function ChipRow({ label, tooltip, items, value, onChange }: { label: string; to
   );
 }
 
-function MultiChipRow({ label, tooltip, items, selected, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; selected: string[]; onChange: (ids: string[]) => void }) {
-  const toggle = (id: string) => {
-    if (selected.includes(id)) {
-      // Don't allow deselecting the last one
-      if (selected.length <= 1) return;
-      onChange(selected.filter(s => s !== id));
-    } else {
-      onChange([...selected, id]);
-    }
-  };
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <label className="text-xs text-muted-foreground">{label}</label>
-        {tooltip && <InfoTooltip text={tooltip} />}
-        {selected.length > 1 && (
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-            {selected.length} selected → {selected.length} videos
-          </Badge>
-        )}
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {items.map((item) => {
-          const isSelected = selected.includes(item.id);
-          return (
-            <button
-              key={item.id}
-              onClick={() => toggle(item.id)}
-              className={cn(
-                'px-2.5 py-1 rounded-full text-xs border transition-colors flex items-center gap-1',
-                isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border text-muted-foreground hover:border-primary/40'
-              )}
-            >
-              {isSelected && selected.length > 1 && <Check className="h-3 w-3" />}
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 const INTENSITIES = [
   { id: 'low', label: 'Low' },
