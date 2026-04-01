@@ -279,90 +279,107 @@ export function CatalogStepProps({
               )}
             </div>
 
-            {/* Combo list */}
-            <div className="space-y-1.5 max-h-[460px] overflow-y-auto pr-0.5">
-              {combos.map((combo, idx) => {
-                const assignedIds = propAssignments[combo.key] || [];
-                const assignedProducts = assignedIds.map(id => availableProps.find(p => p.id === id)).filter(Boolean) as PropProduct[];
-
-                return (
-                  <div
-                    key={combo.key}
-                    className={cn(
-                      'rounded-lg border p-3 transition-colors',
-                      assignedIds.length > 0 ? 'border-primary/20 bg-primary/[0.02]' : 'border-border bg-card',
-                    )}
-                  >
-                    {/* Top row: index + product + shot + title */}
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <span className="text-[10px] font-mono text-muted-foreground/50 w-5 text-right flex-shrink-0">#{idx + 1}</span>
-
-                      <div className="w-8 h-8 rounded overflow-hidden bg-muted flex-shrink-0">
-                        <ShimmerImage
-                          src={getOptimizedUrl(combo.product.imageUrl, { width: 64, quality: 50 })}
-                          alt={combo.product.title}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className="text-[9px] cursor-help flex-shrink-0 gap-1">
-                            {combo.shot.label}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="p-1">
-                          <p className="text-xs font-medium">{combo.shot.label}</p>
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium text-foreground truncate">
-                          {combo.product.title}
-                          {combo.model && <span className="text-muted-foreground"> × {combo.model.name}</span>}
-                        </p>
-                      </div>
-
-                      {/* Add prop button — always visible */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground flex-shrink-0"
-                        onClick={() => setPickerTarget({ comboKey: combo.key, title: `#${idx + 1} ${combo.product.title}` })}
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span className="hidden sm:inline">{assignedIds.length > 0 ? 'Edit' : 'Add prop'}</span>
-                      </Button>
-                    </div>
-
-                    {/* Assigned props — stacked below on mobile */}
-                    {assignedProducts.length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap pl-7 sm:pl-10 mt-1.5">
-                        {assignedProducts.slice(0, 3).map(p => (
-                          <span
-                            key={p.id}
-                            className="inline-flex items-center gap-1 text-[9px] bg-primary/10 text-primary rounded-md pl-0.5 pr-1.5 py-0.5 font-medium"
-                          >
-                            <div className="w-4 h-4 rounded overflow-hidden bg-muted flex-shrink-0">
-                              <img src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
-                            </div>
-                            {p.title.length > 12 ? p.title.slice(0, 10) + '…' : p.title}
-                            <button
-                              onClick={() => handleRemoveProp(combo.key, p.id)}
-                              className="hover:text-destructive transition-colors ml-0.5"
-                            >
-                              <X className="w-2.5 h-2.5" />
-                            </button>
-                          </span>
-                        ))}
-                        {assignedProducts.length > 3 && (
-                          <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">+{assignedProducts.length - 3}</Badge>
+            {/* Combo list — grouped by product */}
+            <div className="space-y-4 max-h-[460px] overflow-y-auto pr-0.5">
+              {(() => {
+                // Group combos by product
+                const grouped = new Map<string, GenerationCombo[]>();
+                for (const combo of combos) {
+                  const existing = grouped.get(combo.product.id) || [];
+                  existing.push(combo);
+                  grouped.set(combo.product.id, existing);
+                }
+                let globalIdx = 0;
+                return Array.from(grouped.entries()).map(([productId, productCombos]) => {
+                  const product = productCombos[0].product;
+                  const productPropsCount = productCombos.filter(c => (propAssignments[c.key]?.length ?? 0) > 0).length;
+                  return (
+                    <div key={productId} className="space-y-1.5">
+                      {/* Product group header */}
+                      <div className="flex items-center gap-2 sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-1.5 -mx-0.5 px-0.5">
+                        <div className="w-7 h-7 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <ShimmerImage
+                            src={getOptimizedUrl(product.imageUrl, { width: 56, quality: 50 })}
+                            alt={product.title}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <span className="text-[11px] font-semibold text-foreground truncate flex-1">{product.title}</span>
+                        {productPropsCount > 0 && (
+                          <Badge variant="secondary" className="text-[9px]">{productPropsCount}/{productCombos.length}</Badge>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {productCombos.map(combo => {
+                        globalIdx++;
+                        const assignedIds = propAssignments[combo.key] || [];
+                        const assignedProducts = assignedIds.map(id => availableProps.find(p => p.id === id)).filter(Boolean) as PropProduct[];
+                        return (
+                          <div
+                            key={combo.key}
+                            className={cn(
+                              'rounded-lg border p-3 transition-colors ml-2',
+                              assignedIds.length > 0 ? 'border-primary/20 bg-primary/[0.02]' : 'border-border bg-card',
+                            )}
+                          >
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <span className="text-[10px] font-mono text-muted-foreground/50 w-5 text-right flex-shrink-0">#{globalIdx}</span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className="text-[9px] cursor-help flex-shrink-0 gap-1">
+                                    {combo.shot.label}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="p-1">
+                                  <p className="text-xs font-medium">{combo.shot.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-medium text-foreground truncate">
+                                  {combo.model && <span className="text-muted-foreground">{combo.model.name}</span>}
+                                  {!combo.model && <span className="text-muted-foreground">Product only</span>}
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground flex-shrink-0"
+                                onClick={() => setPickerTarget({ comboKey: combo.key, title: `#${globalIdx} ${combo.product.title}` })}
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span className="hidden sm:inline">{assignedIds.length > 0 ? 'Edit' : 'Add prop'}</span>
+                              </Button>
+                            </div>
+                            {assignedProducts.length > 0 && (
+                              <div className="flex items-center gap-1 flex-wrap pl-7 sm:pl-8 mt-1.5">
+                                {assignedProducts.slice(0, 3).map(p => (
+                                  <span
+                                    key={p.id}
+                                    className="inline-flex items-center gap-1 text-[9px] bg-primary/10 text-primary rounded-md pl-0.5 pr-1.5 py-0.5 font-medium"
+                                  >
+                                    <div className="w-4 h-4 rounded overflow-hidden bg-muted flex-shrink-0">
+                                      <img src={getOptimizedUrl(p.image_url, { width: 32, quality: 40 })} alt={p.title} className="w-full h-full object-cover" />
+                                    </div>
+                                    {p.title.length > 12 ? p.title.slice(0, 10) + '…' : p.title}
+                                    <button
+                                      onClick={() => handleRemoveProp(combo.key, p.id)}
+                                      className="hover:text-destructive transition-colors ml-0.5"
+                                    >
+                                      <X className="w-2.5 h-2.5" />
+                                    </button>
+                                  </span>
+                                ))}
+                                {assignedProducts.length > 3 && (
+                                  <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">+{assignedProducts.length - 3}</Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </>
         )}

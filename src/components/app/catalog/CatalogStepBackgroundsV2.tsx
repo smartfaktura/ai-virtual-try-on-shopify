@@ -28,6 +28,7 @@ export function CatalogStepBackgroundsV2({
             <button
               key={bg.id}
               onClick={() => onBackgroundChange(bg.id)}
+              aria-label={bg.label}
               className={cn(
                 'relative rounded-xl overflow-hidden transition-all duration-150 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 isSelected

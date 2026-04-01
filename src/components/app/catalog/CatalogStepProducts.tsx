@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -93,6 +93,18 @@ export function CatalogStepProducts({
 
   // Track selection order for numbered badges
   const [selectionOrder, setSelectionOrder] = useState<string[]>([]);
+
+  // Sync selectionOrder when selectedProductIds changes externally (e.g. reset)
+  useEffect(() => {
+    setSelectionOrder(prev => {
+      const pruned = prev.filter(id => selectedProductIds.has(id));
+      // Add any IDs in selectedProductIds not yet tracked (e.g. from Select All)
+      const missing = Array.from(selectedProductIds).filter(id => !pruned.includes(id));
+      const merged = [...pruned, ...missing];
+      if (merged.length === prev.length && merged.every((id, i) => prev[i] === id)) return prev;
+      return merged;
+    });
+  }, [selectedProductIds]);
 
   const toggleProduct = (id: string) => {
     const next = new Set(selectedProductIds);
@@ -412,20 +424,13 @@ export function CatalogStepProducts({
               className="flex-1 rounded-xl"
             />
             <Button
-              disabled={!importUrl.trim() || isImporting}
-              onClick={() => { setIsImporting(true); setTimeout(() => setIsImporting(false), 2000); }}
+              disabled
               className="rounded-xl"
             >
-              {isImporting ? 'Detecting…' : 'Import'}
+              Coming Soon
             </Button>
           </div>
-          {isImporting && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse text-primary" />
-              Scanning page for product data…
-            </div>
-          )}
-          <p className="text-[11px] text-muted-foreground">Supports Shopify, WooCommerce, and direct product pages.</p>
+          <p className="text-[11px] text-muted-foreground">URL import is coming soon. Use "My Products" to add items for now.</p>
         </div>
       )}
 
@@ -436,25 +441,19 @@ export function CatalogStepProducts({
             <h4 className="text-sm font-medium text-foreground">Upload Product CSV</h4>
             <p className="text-xs text-muted-foreground mt-1">Bulk-import products from a spreadsheet.</p>
           </div>
-          <div className="rounded-2xl border-2 border-dashed border-border hover:border-primary/40 transition-colors duration-200 p-12 text-center cursor-pointer group">
-            <div className="w-12 h-12 rounded-xl bg-muted/50 group-hover:bg-primary/10 flex items-center justify-center mx-auto mb-3 transition-colors duration-200">
-              <Upload className="w-5 h-5 text-muted-foreground/50 group-hover:text-primary transition-colors duration-200" />
+          <div className="rounded-2xl border-2 border-dashed border-border transition-colors duration-200 p-12 text-center">
+            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+              <Upload className="w-5 h-5 text-muted-foreground/50" />
             </div>
-            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Drag & drop your CSV here</p>
-            <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl">
-              <Download className="w-3.5 h-3.5" /> Download Template
-            </Button>
-            <p className="text-[11px] text-muted-foreground">Columns: title, image_url, product_type</p>
+            <p className="text-sm font-medium text-muted-foreground">CSV import coming soon</p>
+            <p className="text-xs text-muted-foreground mt-1">Use "My Products" to add items for now.</p>
           </div>
         </div>
       )}
 
       {/* ── Floating Selection Bar ────────────────────────── */}
       {selectedProductIds.size > 0 && (
-        <div className="sticky bottom-0 z-30 -mx-1 px-1">
+        <div className="sticky bottom-0 z-30 -mx-1 px-1 pb-[env(safe-area-inset-bottom)]">
           <div className="bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-3 sm:px-5 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
             {/* Mini thumbnails — hide on small screens */}
             <div className="hidden sm:flex -space-x-2">
