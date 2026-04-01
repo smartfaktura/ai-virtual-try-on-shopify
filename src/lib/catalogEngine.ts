@@ -70,6 +70,7 @@ const CATEGORY_TO_SLOT: Record<ProductCategory, HeroSlot> = {
   belt: 'accessory_slot',
   jewelry: 'jewelry_slot',
   accessory: 'accessory_slot',
+  swimwear: 'full_body_slot',
   unknown: 'upper_body_slot',
 };
 
