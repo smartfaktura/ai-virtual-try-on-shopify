@@ -197,8 +197,8 @@ export default function AIProductPhotographyEcommerce() {
 
       {/* ── 1. HERO ── */}
       <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28">
-        <div className="absolute top-24 inset-x-0 bottom-0 bg-gradient-to-b from-primary/5 via-background to-background" />
-        <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/8 rounded-full blur-3xl opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-background to-background" />
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/8 rounded-full blur-3xl opacity-30" />
 
         <div className="relative container mx-auto px-4 max-w-6xl">
           <div className="text-center max-w-3xl mx-auto mb-14">
