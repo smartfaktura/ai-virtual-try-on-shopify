@@ -369,8 +369,7 @@ export default function AIProductPhotographyEcommerce() {
                   <ShimmerImage
                     src={getOptimizedUrl(img.image_url, { width: 350, quality: 70 })}
                     alt={`Ecommerce product image example – ${img.title}`}
-                    aspectRatio={img.aspect_ratio?.replace(':', '/') || '3/4'}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-auto block group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
