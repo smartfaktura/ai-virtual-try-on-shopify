@@ -19,7 +19,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
   return (
     <div className="w-full">
       {/* Desktop stepper */}
-      <div className="hidden sm:flex items-center justify-center gap-0">
+      <div className="hidden sm:flex items-center justify-between w-full">
         {steps.map((s, i) => {
           const isActive = currentStep === s.number;
           const isDone = currentStep > s.number;
@@ -27,12 +27,12 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
           const Icon = s.icon;
 
           return (
-            <div key={s.number} className="flex items-center">
+            <div key={s.number} className="flex items-center flex-1 last:flex-none">
               <button
                 onClick={() => canClick && onStepClick(s.number)}
                 disabled={!canClick}
                 className={cn(
-                  'flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-full transition-all duration-150',
+                  'flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-150 flex-shrink-0',
                   isActive && 'bg-primary text-primary-foreground shadow-sm',
                   isDone && !isActive && 'bg-primary/8 text-primary cursor-pointer hover:bg-primary/12',
                   !isActive && !isDone && canClick && 'text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/60',
@@ -40,18 +40,18 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                 )}
               >
                 <div className={cn(
-                  'w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all flex-shrink-0',
+                  'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all flex-shrink-0',
                   isActive && 'bg-primary-foreground/20',
                   isDone && !isActive && 'bg-primary/15',
                   !isActive && !isDone && 'bg-muted',
                 )}>
                   {isDone ? <Check className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
                 </div>
-                <span className="text-[10px] font-medium tracking-wide hidden md:inline">{s.label}</span>
+                <span className="text-[11px] font-medium tracking-wide hidden md:inline">{s.label}</span>
               </button>
               {i < steps.length - 1 && (
                 <div className={cn(
-                  'w-3 lg:w-5 h-px mx-0.5 transition-colors duration-300',
+                  'flex-1 h-px mx-1 transition-colors duration-300 min-w-2',
                   isDone ? 'bg-primary/30' : 'bg-border',
                 )} />
               )}
