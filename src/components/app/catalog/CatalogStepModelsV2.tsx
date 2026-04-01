@@ -1,11 +1,9 @@
-import { useMemo } from 'react';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
-import { ModelFilterBar } from '@/components/app/ModelFilterBar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Users, UserX, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserX, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ModelProfile, ModelGender, ModelBodyType, ModelAgeRange } from '@/types';
+import type { ModelProfile } from '@/types';
 
 interface CatalogStepModelsV2Props {
   libraryModels: ModelProfile[];
@@ -14,12 +12,6 @@ interface CatalogStepModelsV2Props {
   productOnlyMode: boolean;
   onModelToggle: (id: string) => void;
   onProductOnlyToggle: () => void;
-  genderFilter: ModelGender | 'all';
-  bodyTypeFilter: ModelBodyType | 'all';
-  ageFilter: ModelAgeRange | 'all';
-  onGenderChange: (v: ModelGender | 'all') => void;
-  onBodyTypeChange: (v: ModelBodyType | 'all') => void;
-  onAgeChange: (v: ModelAgeRange | 'all') => void;
   onBack: () => void;
   onNext: () => void;
   canProceed: boolean;
@@ -27,35 +19,24 @@ interface CatalogStepModelsV2Props {
 
 export function CatalogStepModelsV2({
   libraryModels, userModels, selectedModelIds, productOnlyMode, onModelToggle, onProductOnlyToggle,
-  genderFilter, bodyTypeFilter, ageFilter,
-  onGenderChange, onBodyTypeChange, onAgeChange,
   onBack, onNext, canProceed,
 }: CatalogStepModelsV2Props) {
-  const filterModel = (m: ModelProfile) => {
-    if (genderFilter !== 'all' && m.gender !== genderFilter) return false;
-    if (bodyTypeFilter !== 'all' && m.bodyType !== bodyTypeFilter) return false;
-    if (ageFilter !== 'all' && m.ageRange !== ageFilter) return false;
-    return true;
-  };
-
-  const filteredLibrary = useMemo(() => libraryModels.filter(filterModel), [libraryModels, genderFilter, bodyTypeFilter, ageFilter]);
-  const filteredUser = useMemo(() => userModels.filter(filterModel), [userModels, genderFilter, bodyTypeFilter, ageFilter]);
-
   const selectionLabel = productOnlyMode
     ? 'Product Only'
     : selectedModelIds.size === 0
       ? 'None'
-      : `${selectedModelIds.size} selected`;
+      : `${selectedModelIds.size} model${selectedModelIds.size > 1 ? 's' : ''} selected`;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <Users className="w-4 h-4 text-muted-foreground" />
-        <h3 className="font-semibold text-sm">Select Models</h3>
-        <Badge variant="secondary" className="text-[10px]">{selectionLabel}</Badge>
-        <span className="text-xs text-muted-foreground ml-1">
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-base font-semibold text-foreground">Select Models</h3>
+        <p className="text-sm text-muted-foreground mt-1">
           Pick one or more models — each multiplies your shot count. Or choose product-only.
-        </span>
+        </p>
+        {selectedModelIds.size > 0 && !productOnlyMode && (
+          <Badge variant="default" className="mt-2">{selectionLabel}</Badge>
+        )}
       </div>
 
       {/* No Model card */}
@@ -85,20 +66,11 @@ export function CatalogStepModelsV2({
         )}
       </button>
 
-      <ModelFilterBar
-        genderFilter={genderFilter}
-        bodyTypeFilter={bodyTypeFilter}
-        ageFilter={ageFilter}
-        onGenderChange={onGenderChange}
-        onBodyTypeChange={onBodyTypeChange}
-        onAgeChange={onAgeChange}
-      />
-
       {/* Library Models */}
       <div className="space-y-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 rounded-xl border border-border p-2">
-          {filteredLibrary.map(model => (
+          {libraryModels.map(model => (
             <ModelSelectorCard
               key={model.modelId}
               model={model}
@@ -106,18 +78,15 @@ export function CatalogStepModelsV2({
               onSelect={() => onModelToggle(model.modelId)}
             />
           ))}
-          {filteredLibrary.length === 0 && (
-            <p className="col-span-full text-center text-sm text-muted-foreground py-8">No models match filters</p>
-          )}
         </div>
       </div>
 
       {/* User Models */}
-      {filteredUser.length > 0 && (
+      {userModels.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">My Models</span>
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 rounded-xl border border-border p-2">
-            {filteredUser.map(model => (
+            {userModels.map(model => (
               <ModelSelectorCard
                 key={model.modelId}
                 model={model}
