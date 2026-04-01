@@ -188,7 +188,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
             {/* Settings metadata */}
             {(() => {
               const s = video.settings_json || {};
-              const entries: [string, string][] = [
+              const entries = ([
                 ['Camera Motion', video.camera_type || (s.cameraMotion as string) || ''],
                 ['Style', (s.category as string) || ''],
                 ['Scene Type', (s.sceneType as string) || ''],
@@ -198,7 +198,7 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
                 ['Loop Style', (s.loopStyle as string) || ''],
                 ['Audio', (s.audioMode as string) || ''],
                 ['Model', video.model_name || ''],
-              ].filter(([, v]) => v && v !== 'silent');
+              ] as [string, string][]).filter(([, v]) => v && v !== 'silent');
 
               if (entries.length === 0) return null;
 
