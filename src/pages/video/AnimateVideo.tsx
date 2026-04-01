@@ -1021,6 +1021,7 @@ export default function AnimateVideo() {
                   onAddFiles={handleBulkAddFiles}
                   onRemoveImage={handleBulkRemoveImage}
                   disabled={isBulkRunning}
+                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
                 />
               )}
 
