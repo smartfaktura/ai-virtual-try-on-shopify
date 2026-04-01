@@ -1,39 +1,61 @@
 
 
-# Fix Image Rendering on SEO Ecommerce Page
+# Redesign `/ai-product-photography-for-ecommerce` — From Flat to Engaging
 
 ## Problem
-Images are rendering at natural dimensions inside a CSS `columns` masonry layout. Since the source images are tall portraits (likely 1024x1536), each image becomes a massive vertical strip spanning the full viewport height. The middle image isn't even a product — it's a scene/background.
+The page is currently a flat sequence of text blocks, icon grids, and basic card layouts. No team branding, no visual rhythm, no storytelling. It reads like a spec sheet, not a product landing page.
 
-## Root Cause
-The previous fix removed `object-cover` and forced aspect ratios, letting images render at natural ratio. But these AI-generated images are very tall portraits, so "natural ratio" = enormous vertical strips.
+## Design Direction
+Mirror the engaging patterns already used on the main landing page: team avatar social proof, staggered animations, gradient accent sections, hover cards, testimonial quotes, and visual storytelling with the Discover images. Make it feel like a VOVV product page, not a generic SEO template.
 
-## Solution
-Use a **standard CSS grid with controlled aspect-ratio cards** and `object-cover` — but use a less aggressive ratio than 3/4. Use `aspect-[4/5]` which works well for both portrait and landscape source images without extreme cropping. Add `object-top` to keep product/face visible.
+## Changes to `src/pages/seo/AIProductPhotographyEcommerce.tsx`
 
-Replace the CSS `columns` masonry layout with a regular `grid` for predictable, controlled sizing.
+### 1. Hero — Add team avatars + social proof below CTAs
+- Add the overlapping VOVV team avatar row (same pattern as `FinalCTA.tsx`) with `TeamAvatarHoverCard` wrappers right below the CTA buttons.
+- Add "Your studio team is ready" label beneath.
+- Import `TEAM_MEMBERS`, `TeamAvatarHoverCard`, `getOptimizedUrl`.
 
-### Changes in `src/pages/seo/AIProductPhotographyEcommerce.tsx`
+### 2. Hero grid — Staggered reveal animation
+- Add per-card staggered delay using inline `transition-delay` so cards fade in one-by-one instead of all at once (delays: 0ms, 100ms, 200ms, etc.).
+- Add a subtle scale-up animation on each card (from `scale-95 opacity-0` to `scale-100 opacity-100`).
 
-**Hero grid** (line ~201):
-- Replace `columns-2 md:columns-3` masonry → `grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4`
-- Remove `break-inside-avoid`, `space-y-*`
-- Each card: `aspect-[4/5] rounded-2xl overflow-hidden` wrapper
-- Image: remove `wrapperClassName="h-auto"`, add `className="w-full h-full object-cover object-top"`
+### 3. Proof bar — Upgrade to metrics with numbers
+- Replace the current 4 generic icon+text items with real stat-style metrics matching `SocialProofBar`: bold number, supporting label, icon.
+- Values: "50,000+" visuals generated, "12s" avg delivery, "2,000+" brands, "∞" visual styles.
+- Add a short testimonial quote below the stats (same pattern as `SocialProofBar`).
 
-**Outcome tabs** (line ~266-274):
-- Wrap image in `aspect-[4/5]` container
-- Image: `className="w-full h-full object-cover object-top"` instead of `h-auto`
+### 4. Outcome tabs — Left image gets a subtle card treatment
+- Add a soft gradient background behind the tab image (like `bg-gradient-to-br from-muted to-muted/50`).
+- Add a small "Click to explore" hint overlay on hover.
 
-**Showcase gallery** (line ~421):
-- Replace `columns-2 md:columns-3 lg:columns-4` → `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3`
-- Remove `space-y-3`, `break-inside-avoid`
-- Each card: `aspect-[4/5]` wrapper with `object-cover object-top`
+### 5. Why section — Staggered card entrance
+- Add per-card stagger delays (0, 100, 200, 300ms) so cards cascade in as they scroll into view.
+- Add `hover:-translate-y-1` for a lift effect.
 
-This is the standard ecommerce grid pattern — controlled card sizes with cover-fit images. No more viewport-height strips.
+### 6. Comparison section — Stronger visual contrast
+- Add a red-tinted left border on the "Traditional" card.
+- Add a primary-tinted left border + subtle glow on the "VOVV" card.
+- Makes the comparison immediately scannable.
+
+### 7. Shopify section — Add team avatars
+- Add the team avatar row here too with "Your creative team handles it" — reinforces the brand identity.
+
+### 8. How It Works — Connected step indicators
+- Add a horizontal connecting line between steps (hidden on mobile, visible on lg) to create a visual flow.
+- Use the numbered step badges as anchors on the line.
+
+### 9. Final CTA — Add team avatars + hover cards
+- Mirror `FinalCTA.tsx` exactly: add the overlapping team avatar row with hover cards and "Your studio team is ready" below the trust badges.
+
+### 10. Overall polish
+- Add `will-change-transform` to animated sections for smoother GPU rendering.
+- Ensure all section transitions use consistent easing.
+- Remove any leftover unused imports.
 
 ## Files
 | File | Change |
 |------|--------|
-| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Replace masonry columns with grid + aspect-[4/5] cards |
+| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | All changes above — team avatars, staggered animations, metrics bar, card effects, CTA branding |
+
+No new components needed — everything reuses existing patterns from the main landing page.
 
