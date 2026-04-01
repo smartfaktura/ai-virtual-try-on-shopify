@@ -1,61 +1,29 @@
 
 
-# Redesign `/ai-product-photography-for-ecommerce` — From Flat to Engaging
+# Fix SEO Ecommerce Page — Images, Layout, and Section Order
 
-## Problem
-The page is currently a flat sequence of text blocks, icon grids, and basic card layouts. No team branding, no visual rhythm, no storytelling. It reads like a spec sheet, not a product landing page.
-
-## Design Direction
-Mirror the engaging patterns already used on the main landing page: team avatar social proof, staggered animations, gradient accent sections, hover cards, testimonial quotes, and visual storytelling with the Discover images. Make it feel like a VOVV product page, not a generic SEO template.
+## Problems Identified
+1. **Email tab shows no image** — the `pickByCategory` fallback shows a camera icon placeholder when no preset matches the "campaign" category. Need a smarter fallback that picks any available featured image.
+2. **White space on scroll** — the `useInView` animation starts elements as `opacity-0 translate-y-8`. When scrolling back up, already-revealed sections stay visible but sections above the fold that were never observed can flash. The hidden state also causes layout shifts. Fix by ensuring all sections default to visible after first paint or use CSS-only animation.
+3. **"Explore Real Ecommerce Visual Styles" too far down** — currently section 7 (after Comparison and Shopify). Move it up to section 4, right after Proof Bar + Outcome Tabs.
+4. **Showcase images should be different/featured** — currently uses `pickProductLed` which may grab non-featured items. Switch to prioritize `is_featured` presets and use a different selection pool (not just product-led).
 
 ## Changes to `src/pages/seo/AIProductPhotographyEcommerce.tsx`
 
-### 1. Hero — Add team avatars + social proof below CTAs
-- Add the overlapping VOVV team avatar row (same pattern as `FinalCTA.tsx`) with `TeamAvatarHoverCard` wrappers right below the CTA buttons.
-- Add "Your studio team is ready" label beneath.
-- Import `TEAM_MEMBERS`, `TeamAvatarHoverCard`, `getOptimizedUrl`.
+### 1. Fix tab image fallback
+In `tabImages` memo, when `pickByCategory` returns nothing for a tab, fall back to any featured preset not yet used. This eliminates the camera icon placeholder on Email and any other empty tab.
 
-### 2. Hero grid — Staggered reveal animation
-- Add per-card staggered delay using inline `transition-delay` so cards fade in one-by-one instead of all at once (delays: 0ms, 100ms, 200ms, etc.).
-- Add a subtle scale-up animation on each card (from `scale-95 opacity-0` to `scale-100 opacity-100`).
+### 2. Fix white space / scroll-back issue
+Replace the `useInView` + JS class toggle pattern with CSS `animation` triggered by a class. Once `inView` is set to `true` it never reverts, so sections that were revealed stay visible. The real issue is the initial `opacity-0 translate-y-8` — if sections above the fold never intersect (e.g. user scrolls down fast then back up), they stay hidden. Fix: add `once: true` behavior is already there, but also add a fallback — after 2s, force all sections visible. Simpler fix: just use the `animate-scale-in` keyframe approach already used in hero grid for all sections, removing the JS toggle entirely.
 
-### 3. Proof bar — Upgrade to metrics with numbers
-- Replace the current 4 generic icon+text items with real stat-style metrics matching `SocialProofBar`: bold number, supporting label, icon.
-- Values: "50,000+" visuals generated, "12s" avg delivery, "2,000+" brands, "∞" visual styles.
-- Add a short testimonial quote below the stats (same pattern as `SocialProofBar`).
+### 3. Move showcase section up
+Reorder JSX: move the "Explore Real Ecommerce Visual Styles" section (currently section 7) to right after Outcome Tabs (new section 4). This puts visual proof higher in the page.
 
-### 4. Outcome tabs — Left image gets a subtle card treatment
-- Add a soft gradient background behind the tab image (like `bg-gradient-to-br from-muted to-muted/50`).
-- Add a small "Click to explore" hint overlay on hover.
-
-### 5. Why section — Staggered card entrance
-- Add per-card stagger delays (0, 100, 200, 300ms) so cards cascade in as they scroll into view.
-- Add `hover:-translate-y-1` for a lift effect.
-
-### 6. Comparison section — Stronger visual contrast
-- Add a red-tinted left border on the "Traditional" card.
-- Add a primary-tinted left border + subtle glow on the "VOVV" card.
-- Makes the comparison immediately scannable.
-
-### 7. Shopify section — Add team avatars
-- Add the team avatar row here too with "Your creative team handles it" — reinforces the brand identity.
-
-### 8. How It Works — Connected step indicators
-- Add a horizontal connecting line between steps (hidden on mobile, visible on lg) to create a visual flow.
-- Use the numbered step badges as anchors on the line.
-
-### 9. Final CTA — Add team avatars + hover cards
-- Mirror `FinalCTA.tsx` exactly: add the overlapping team avatar row with hover cards and "Your studio team is ready" below the trust badges.
-
-### 10. Overall polish
-- Add `will-change-transform` to animated sections for smoother GPU rendering.
-- Ensure all section transitions use consistent easing.
-- Remove any leftover unused imports.
+### 4. Use featured images in showcase
+Change `showcaseImages` to prioritize `is_featured` presets, then fill remaining slots with product-led picks. Use 8 images instead of 12 to keep it tight.
 
 ## Files
 | File | Change |
 |------|--------|
-| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | All changes above — team avatars, staggered animations, metrics bar, card effects, CTA branding |
-
-No new components needed — everything reuses existing patterns from the main landing page.
+| `src/pages/seo/AIProductPhotographyEcommerce.tsx` | Fix tab fallback, fix white-space scroll issue, reorder sections, improve showcase image selection |
 
