@@ -955,12 +955,40 @@ export default function AnimateVideo() {
                 </Alert>
               )}
 
+              {/* Bulk image grid (shown after analysis when bulk mode is on) */}
+              {bulkMode && isPaidUser && (
+                <BulkImageGrid
+                  images={bulkImages}
+                  maxImages={10}
+                  onAddFiles={handleBulkAddFiles}
+                  onRemoveImage={handleBulkRemoveImage}
+                  disabled={isBulkRunning}
+                />
+              )}
+
               {/* Generate */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
-                <Button onClick={handleGenerate} disabled={!imageUrl || isUploading} className="gap-2" size="lg">
+                {bulkMode && bulkImages.length > 1 ? (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Estimated cost:</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion })} × {bulkImages.filter(i => i.url).length} = {estimateBulkCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }, bulkImages.filter(i => i.url).length).total} credits
+                    </span>
+                  </div>
+                ) : (
+                  <CreditEstimateBox params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }} />
+                )}
+                <Button
+                  onClick={handleGenerate}
+                  disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
+                  className="gap-2"
+                  size="lg"
+                >
                   <Sparkles className="h-4 w-4" />
-                  Generate Video
+                  {bulkMode && bulkImages.length > 1
+                    ? `Generate ${bulkImages.filter(i => i.url).length} Videos`
+                    : 'Generate Video'}
                 </Button>
               </div>
             </>
