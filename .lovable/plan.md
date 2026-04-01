@@ -1,27 +1,28 @@
 
 
-# Match Video Showcase Section CTA and Spacing to Landing Page Style
+# Add Coming Soon state to Dashboard Workflow Card
 
 ## Problem
-The video section CTA button uses default styling (`size="lg" className="gap-2"`) while all other landing page CTAs use the rounded-full pill style with larger padding and shadow. Section spacing also needs alignment.
+`DashboardWorkflowCard` in `src/pages/Dashboard.tsx` has no `comingSoon` logic, so "Catalog Shot Set" renders as a fully interactive card instead of a placeholder.
 
-## Changes — `src/components/landing/VideoShowcaseSection.tsx`
+## Fix — `src/pages/Dashboard.tsx`
 
-### 1. Update CTA button to match other landing CTAs
-Current: `<Button asChild size="lg" className="gap-2">`
-New: `<Button asChild size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25">`
+### 1. Add `comingSoon` prop to `DashboardWorkflowCard`
+Accept a `comingSoon?: boolean` prop. When true:
+- Apply `opacity-75 border-dashed border-border/60 cursor-default` to the card container (remove hover effects)
+- Add a `<Badge variant="outline">Coming Soon</Badge>` in the top-right of the thumbnail area
+- Replace the "Create Set" button with a disabled/muted version (or hide it)
 
-This matches the exact pattern from FinalCTA and ChannelShowcase sections.
+### 2. Pass `comingSoon` when rendering
+At the usage site (~line 474), add the same condition used in `Workflows.tsx`:
+```tsx
+<DashboardWorkflowCard
+  key={workflow.id}
+  workflow={workflow}
+  onNavigate={handleNavigate}
+  comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
+/>
+```
 
-### 2. Adjust section and grid spacing
-- Section padding: keep `py-20 lg:py-28` (already matches)
-- Heading container: increase bottom margin from `mb-10` to `mb-12` for more breathing room
-- Grid: add `sm:px-2 lg:px-4` for slightly more edge padding on larger screens
-- CTA container: increase top margin from `mt-10` to `mt-14` to match ChannelShowcase's `mt-14`
-
-### 3. Refine heading weight
-Per design system, use `font-semibold` instead of `font-bold` on the h2 to match the premium editorial feel used site-wide.
-
-## Single file change
-`src/components/landing/VideoShowcaseSection.tsx`
+Single file change: `src/pages/Dashboard.tsx`
 
