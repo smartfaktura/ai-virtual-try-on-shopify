@@ -12,7 +12,7 @@ import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
   Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
-  Clock,
+  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
