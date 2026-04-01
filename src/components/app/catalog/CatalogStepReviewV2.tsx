@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getFashionStyle, getBackground, getShotDefinition } from '@/lib/catalogEngine';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, ArrowRight, Gem } from 'lucide-react';
+import { ChevronLeft, Sparkles, Loader2, Package, Users, Camera, Palette, Ban, ArrowRight, Gem, Pencil } from 'lucide-react';
 import type { Product, ModelProfile } from '@/types';
 import type { FashionStyleId, CatalogShotId } from '@/types/catalog';
 
@@ -34,17 +34,39 @@ interface CatalogStepReviewV2Props {
   onBack: () => void;
   onGenerate: () => void;
   onOpenBuyModal: () => void;
+  onStepClick?: (step: number) => void;
+}
+
+function SectionEditButton({ onClick }: { onClick?: () => void }) {
+  if (!onClick) return null;
+  return (
+    <button onClick={onClick} className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-0.5 transition-colors ml-auto">
+      <Pencil className="w-2.5 h-2.5" /> Edit
+    </button>
+  );
 }
 
 export function CatalogStepReviewV2({
   products, models, productOnlyMode, fashionStyleId, backgroundId,
   selectedShots, propAssignments, allProducts, totalImages, totalCredits, balance, isGenerating,
-  onBack, onGenerate, onOpenBuyModal,
+  onBack, onGenerate, onOpenBuyModal, onStepClick,
 }: CatalogStepReviewV2Props) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
   const bg = backgroundId ? getBackground(backgroundId) : null;
   const shots = useMemo(() => Array.from(selectedShots).map(id => getShotDefinition(id)).filter(Boolean), [selectedShots]);
   const hasEnoughCredits = balance >= totalCredits;
+  const [clicked, setClicked] = useState(false);
+
+  const handleGenerateClick = () => {
+    if (clicked || isGenerating) return;
+    setClicked(true);
+    if (hasEnoughCredits) {
+      onGenerate();
+    } else {
+      onOpenBuyModal();
+      setClicked(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -60,7 +82,8 @@ export function CatalogStepReviewV2({
           <div className="flex items-center gap-2 mb-3">
             <Package className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Products</span>
-            <Badge variant="secondary" className="text-[9px] ml-auto">{products.length}</Badge>
+            <Badge variant="secondary" className="text-[9px]">{products.length}</Badge>
+            <SectionEditButton onClick={onStepClick ? () => onStepClick(1) : undefined} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {products.map(p => (
@@ -83,7 +106,8 @@ export function CatalogStepReviewV2({
           <div className="flex items-center gap-2 mb-3">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">{productOnlyMode ? 'Product Only' : 'Models'}</span>
-            {!productOnlyMode && <Badge variant="secondary" className="text-[9px] ml-auto">{models.length}</Badge>}
+            {!productOnlyMode && <Badge variant="secondary" className="text-[9px]">{models.length}</Badge>}
+            <SectionEditButton onClick={onStepClick ? () => onStepClick(3) : undefined} />
           </div>
           {productOnlyMode ? (
             <p className="text-xs text-muted-foreground">Packshots and product-only images</p>
@@ -106,17 +130,20 @@ export function CatalogStepReviewV2({
         </div>
 
         {/* Style + Background row */}
-        <div className="p-4 border-b border-border flex items-center gap-4 sm:gap-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Palette className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-foreground">{style?.label || '—'}</span>
-          </div>
-          {bg && (
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: bg.hex }} />
-              <span className="text-xs font-medium text-foreground">{bg.label}</span>
+              <Palette className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-foreground">{style?.label || '—'}</span>
             </div>
-          )}
+            {bg && (
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: bg.hex }} />
+                <span className="text-xs font-medium text-foreground">{bg.label}</span>
+              </div>
+            )}
+            <SectionEditButton onClick={onStepClick ? () => onStepClick(2) : undefined} />
+          </div>
         </div>
 
         {/* Styling Props summary */}
@@ -130,7 +157,8 @@ export function CatalogStepReviewV2({
               <div className="flex items-center gap-2 mb-3">
                 <Gem className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-semibold text-foreground">Styling Props</span>
-                <Badge variant="secondary" className="text-[9px] ml-auto">{combosWithProps}/{totalImages} shots</Badge>
+                <Badge variant="secondary" className="text-[9px]">{combosWithProps}/{totalImages} shots</Badge>
+                <SectionEditButton onClick={onStepClick ? () => onStepClick(6) : undefined} />
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {propItems.map(p => (
@@ -151,7 +179,8 @@ export function CatalogStepReviewV2({
           <div className="flex items-center gap-2 mb-2">
             <Camera className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Shots</span>
-            <Badge variant="secondary" className="text-[9px] ml-auto">{shots.length}</Badge>
+            <Badge variant="secondary" className="text-[9px]">{shots.length}</Badge>
+            <SectionEditButton onClick={onStepClick ? () => onStepClick(5) : undefined} />
           </div>
           <div className="flex flex-wrap gap-1.5">
             {shots.map(s => (
@@ -204,18 +233,18 @@ export function CatalogStepReviewV2({
           <ChevronLeft className="w-4 h-4" /> Back
         </Button>
         <Button
-          onClick={hasEnoughCredits ? onGenerate : onOpenBuyModal}
-          disabled={isGenerating || totalImages === 0}
+          onClick={handleGenerateClick}
+          disabled={clicked || isGenerating || totalImages === 0}
           className="gap-2 px-6"
           size="lg"
         >
-          {isGenerating ? (
+          {(isGenerating || clicked) ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Sparkles className="w-4 h-4" />
           )}
           {hasEnoughCredits ? `Generate ${totalImages} Images` : 'Buy Credits'}
-          {hasEnoughCredits && <ArrowRight className="w-4 h-4" />}
+          {hasEnoughCredits && !clicked && !isGenerating && <ArrowRight className="w-4 h-4" />}
         </Button>
       </div>
     </div>

@@ -612,6 +612,7 @@ export default function CatalogGenerate() {
               onBack={() => setStep(6)}
               onGenerate={handleGenerate}
               onOpenBuyModal={openBuyModal}
+              onStepClick={setStep}
             />
           )}
         </div>
