@@ -531,7 +531,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide fade-scroll sm:overflow-visible sm:flex-wrap sm:[mask-image:none]">
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/workflows')}>
                 <Layers className="w-3.5 h-3.5" />
-                Create Visuals
+                Browse Templates
               </Button>
               <Button variant="outline" size="sm" className="shrink-0 rounded-full font-semibold gap-1.5" onClick={() => navigate('/app/discover')}>
                 <Compass className="w-3.5 h-3.5" />
