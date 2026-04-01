@@ -53,6 +53,7 @@ interface UseGenerateVideoResult {
   history: GeneratedVideo[];
   isLoadingHistory: boolean;
   refreshHistory: () => void;
+  removeFromHistory: (id: string) => void;
   loadMore: () => void;
   hasMore: boolean;
   totalCount: number;
