@@ -118,7 +118,7 @@ async function handleWorkerMode(body: Record<string, unknown>) {
 
     if (!imageUrl) throw new Error("image_url is required in payload");
 
-    console.log(`[generate-video:worker] Job ${jobId}, user ${userId}, model=${modelName}, duration=${duration}`);
+    console.log(`[generate-video:worker] Job ${jobId}, user ${userId}, model=${modelName}, duration=${duration}, aspect_ratio=${aspectRatio}`);
 
     // 1. Create Kling task
     const klingBody: Record<string, unknown> = {
