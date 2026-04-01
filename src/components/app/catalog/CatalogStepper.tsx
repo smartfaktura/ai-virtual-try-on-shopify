@@ -60,9 +60,9 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
         })}
       </div>
 
-      {/* Mobile stepper — compact */}
+      {/* Mobile stepper — icon-only, evenly spaced */}
       <div className="sm:hidden">
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between">
           {steps.map((s, i) => {
             const isActive = currentStep === s.number;
             const isDone = currentStep > s.number;
@@ -70,11 +70,11 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
             const Icon = s.icon;
 
             return (
-              <div key={s.number} className="flex items-center">
+              <div key={s.number} className="flex items-center flex-1 last:flex-none">
                 <button
                   onClick={() => canClick && onStepClick(s.number)}
                   disabled={!canClick}
-                  className="flex flex-col items-center gap-1"
+                  className="flex flex-col items-center gap-0.5 mx-auto"
                 >
                   <div className={cn(
                     'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150',
@@ -85,16 +85,15 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                   )}>
                     {isDone ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
                   </div>
-                  <span className={cn(
-                    'text-[9px] font-medium',
-                    isActive ? 'text-primary' : isDone ? 'text-primary/60' : 'text-muted-foreground/50',
-                  )}>
-                    {s.label}
-                  </span>
+                  {isActive && (
+                    <span className="text-[8px] font-semibold text-primary truncate max-w-[48px] text-center">
+                      {s.label}
+                    </span>
+                  )}
                 </button>
                 {i < steps.length - 1 && (
                   <div className={cn(
-                    'w-4 h-px mx-0.5 -mt-3',
+                    'flex-1 h-px mx-0.5',
                     isDone ? 'bg-primary/30' : 'bg-border',
                   )} />
                 )}
@@ -103,7 +102,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
           })}
         </div>
         {/* Progress bar */}
-        <div className="mt-3 h-1 bg-border rounded-full overflow-hidden">
+        <div className="mt-2 h-1.5 bg-border rounded-full overflow-hidden">
           <div
             className="h-full bg-primary transition-all duration-300 rounded-full"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}

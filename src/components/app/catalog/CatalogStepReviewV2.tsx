@@ -106,7 +106,7 @@ export function CatalogStepReviewV2({
         </div>
 
         {/* Style + Background row */}
-        <div className="p-4 border-b border-border flex items-center gap-6">
+        <div className="p-4 border-b border-border flex items-center gap-4 sm:gap-6 flex-wrap">
           <div className="flex items-center gap-2">
             <Palette className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-foreground">{style?.label || '—'}</span>

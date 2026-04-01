@@ -455,9 +455,9 @@ export function CatalogStepProducts({
       {/* ── Floating Selection Bar ────────────────────────── */}
       {selectedProductIds.size > 0 && (
         <div className="sticky bottom-0 z-30 -mx-1 px-1">
-          <div className="bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-5 py-3.5 flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-300">
-            {/* Mini thumbnails */}
-            <div className="flex -space-x-2">
+          <div className="bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-3 sm:px-5 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
+            {/* Mini thumbnails — hide on small screens */}
+            <div className="hidden sm:flex -space-x-2">
               {selectedProducts.slice(0, 5).map(p => (
                 <img
                   key={p.id}
@@ -476,12 +476,9 @@ export function CatalogStepProducts({
               <p className="text-sm font-medium text-foreground">
                 {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} selected
               </p>
-              <p className="text-[11px] text-muted-foreground">
-                {maxProducts - selectedProductIds.size} more available
-              </p>
             </div>
-            <Button onClick={onNext} disabled={!canProceed} className="gap-2 rounded-xl shadow-md">
-              Next: Style <ChevronRight className="w-4 h-4" />
+            <Button onClick={onNext} disabled={!canProceed} size="sm" className="gap-1.5 rounded-xl shadow-md flex-shrink-0">
+              Next <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
