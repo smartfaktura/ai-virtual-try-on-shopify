@@ -7,8 +7,8 @@ const videos = Array.from({ length: 10 }, (_, i) => `/videos/showcase/showcase-$
 export function VideoShowcaseSection() {
   return (
     <section className="py-20 lg:py-28 bg-background overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 text-center">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground">
           Your Products, In Motion
         </h2>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
