@@ -38,7 +38,7 @@ interface CatalogStepReviewV2Props {
 
 export function CatalogStepReviewV2({
   products, models, productOnlyMode, fashionStyleId, backgroundId,
-  selectedShots, stylingProps, totalImages, totalCredits, balance, isGenerating,
+  selectedShots, propAssignments, allProducts, totalImages, totalCredits, balance, isGenerating,
   onBack, onGenerate, onOpenBuyModal,
 }: CatalogStepReviewV2Props) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
