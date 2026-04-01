@@ -226,6 +226,28 @@ export default function VideoHub() {
         />
       </div>
 
+      {/* Showcase */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Showcase</h2>
+          <p className="text-sm text-muted-foreground">See what's possible</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {Array.from({ length: 10 }, (_, i) => (
+            <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden bg-muted">
+              <video
+                src={`/videos/showcase/showcase-${i + 1}.mp4`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* In Progress + Completed Videos */}
       {(() => {
         const processingVideos = history.filter(v => v.status === 'processing' || v.status === 'queued');
