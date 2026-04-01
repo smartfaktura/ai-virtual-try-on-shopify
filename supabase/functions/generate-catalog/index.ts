@@ -287,9 +287,10 @@ serve(async (req) => {
   }
 
   const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+  let body: CatalogPayload = {} as CatalogPayload;
 
   try {
-    const body: CatalogPayload = await req.json();
+    body = await req.json();
 
     // Validate: product.imageUrl is always required; model is optional for product-only mode
     if (!body.product?.imageUrl) {
@@ -419,12 +420,11 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("[generate-catalog] Fatal error:", error);
-    try {
-      const body = await req.clone().json().catch(() => ({}));
-      if (isQueueInternal && body.job_id) {
-        await completeQueueJob(body.job_id, body.user_id, body.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], body);
-      }
-    } catch { /* best effort */ }
+    if (isQueueInternal && body.job_id) {
+      try {
+        await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [error instanceof Error ? error.message : "Unknown error"], body as unknown as Record<string, unknown>);
+      } catch { /* best effort */ }
+    }
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -218,29 +218,6 @@ export function useCatalogGenerate() {
     };
   };
 
-  // ── Wait for a specific job to complete ──
-  const waitForJobCompletion = async (jobId: string, timeoutMs = 120000): Promise<string | null> => {
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const start = Date.now();
-
-    while (Date.now() - start < timeoutMs) {
-      await new Promise(r => setTimeout(r, 3000));
-      const token = await getAuthToken() || SUPABASE_KEY;
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=status,result,error_message`,
-        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
-      );
-      if (!res.ok) continue;
-      const rows = await res.json();
-      if (!rows?.[0]) continue;
-      const row = rows[0];
-      if (row.status === 'completed' && row.result?.images?.[0]) return row.result.images[0];
-      if (row.status === 'failed' || row.status === 'cancelled') return null;
-    }
-    return null;
-  };
-
   // ── Main generation pipeline (multi-model) ──
   const startGeneration = useCallback(async (config: CatalogSessionConfig): Promise<boolean> => {
     if (!user) { toast.error('Sign in to generate'); return false; }
