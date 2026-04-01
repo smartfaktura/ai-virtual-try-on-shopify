@@ -29,6 +29,7 @@ const CATEGORY_KEYWORDS: Record<ProductCategory, string[]> = {
   belt: ['belt', 'waist belt', 'chain belt'],
   jewelry: ['jewelry', 'jewellery', 'necklace', 'bracelet', 'ring', 'earring', 'pendant', 'anklet', 'brooch', 'cufflink', 'bangle', 'chain'],
   accessory: ['accessory', 'gloves', 'tie', 'bow tie', 'suspenders', 'watch', 'keychain'],
+  swimwear: ['bikini', 'swimsuit', 'swimwear', 'swim', 'bathing suit', 'one-piece', 'tankini', 'swim trunk', 'board short', 'swimming'],
   unknown: [],
 };
 
@@ -69,6 +70,7 @@ const CATEGORY_TO_SLOT: Record<ProductCategory, HeroSlot> = {
   belt: 'accessory_slot',
   jewelry: 'jewelry_slot',
   accessory: 'accessory_slot',
+  swimwear: 'full_body_slot',
   unknown: 'upper_body_slot',
 };
 
@@ -198,7 +200,22 @@ export function resolveSupportWardrobe(
   heroSlot: HeroSlot,
   fashionStyle: FashionStyleId,
   audience: ModelAudienceType,
+  category?: ProductCategory,
 ): SupportWardrobe {
+  // Swimwear: the product IS the outfit — no support clothing at all
+  if (category === 'swimwear') {
+    return {
+      upper_body_slot: null,
+      lower_body_slot: null,
+      full_body_slot: null,
+      footwear_slot: null,
+      outerwear_slot: null,
+      headwear_slot: null,
+      bag_slot: null,
+      accessory_slot: null,
+    };
+  }
+
   const style = getFashionStyle(fashionStyle);
   const kit = { ...style.supportWardrobeKits[audience] };
 
@@ -234,6 +251,7 @@ export function buildSupportWardrobePrompt(wardrobe: SupportWardrobe, category: 
     sunglasses: 'designed to keep focus on the eyewear',
     jewelry: 'designed to keep focus on the jewelry',
     shoes: 'designed to keep focus on the footwear',
+    swimwear: 'designed to keep focus on the swimwear, no additional clothing',
   }[category] || '';
 
   return `paired with ${pieces.join(' and ')}, understated styling${focus ? `, ${focus}` : ''}, no competing accessories`;
@@ -312,10 +330,10 @@ export function getLightingPrompt(lightingId: string): string {
 
 const ALL_CATEGORIES = new Set<ProductCategory>([
   'top', 'trousers', 'skirt', 'shorts', 'dress', 'jumpsuit', 'jacket_coat',
-  'shoes', 'bag', 'hat', 'sunglasses', 'scarf', 'belt', 'jewelry', 'accessory', 'unknown',
+  'shoes', 'bag', 'hat', 'sunglasses', 'scarf', 'belt', 'jewelry', 'accessory', 'swimwear', 'unknown',
 ]);
 
-const APPAREL = new Set<ProductCategory>(['top', 'trousers', 'skirt', 'shorts', 'dress', 'jumpsuit', 'jacket_coat', 'scarf', 'unknown']);
+const APPAREL = new Set<ProductCategory>(['top', 'trousers', 'skirt', 'shorts', 'dress', 'jumpsuit', 'jacket_coat', 'scarf', 'swimwear', 'unknown']);
 const APPAREL_PLUS_SHOES = new Set<ProductCategory>([...APPAREL, 'shoes']);
 const WEARABLE = new Set<ProductCategory>([...APPAREL, 'shoes', 'hat', 'sunglasses', 'belt']);
 const SMALL_ITEMS = new Set<ProductCategory>(['jewelry', 'sunglasses', 'scarf', 'belt', 'accessory']);
@@ -423,7 +441,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] isolated, ghost mannequin style, natural shape preserved, perfectly aligned, centered composition, soft shadow beneath product, ultra clean ecommerce packshot, sharp material details, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] isolated, ghost mannequin style, natural shape preserved, perfectly aligned, centered composition, no shadow, floating isolated product, pure clean background, shadowless, ultra clean ecommerce packshot, sharp material details, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'front_flat',
@@ -768,6 +786,7 @@ const HERO_PHRASING: Partial<Record<ProductCategory, string>> = {
   jewelry: 'worn as the hero jewelry piece',
   scarf: 'worn as the hero scarf/wrap',
   belt: 'worn as the hero belt',
+  swimwear: 'worn as the hero swimwear piece',
 };
 
 export function getHeroProductBlock(title: string, category: ProductCategory): string {
@@ -807,7 +826,7 @@ export function buildProductLookLock(
   detectedCategory: ProductCategory,
 ): ProductLookLock {
   const heroSlot = getHeroSlot(detectedCategory);
-  const wardrobe = resolveSupportWardrobe(heroSlot, session.fashionStyle, session.modelAudience);
+  const wardrobe = resolveSupportWardrobe(heroSlot, session.fashionStyle, session.modelAudience, detectedCategory);
   const wardrobePrompt = buildSupportWardrobePrompt(wardrobe, detectedCategory);
   const anchorShotId = getAnchorShotId(detectedCategory, !!session.modelId);
 

@@ -102,7 +102,10 @@ export function useCatalogGenerate() {
         allDone, aggregatedImages, anchorStatus, phase,
       });
 
-      if (allDone) stopPolling();
+      if (allDone) {
+        stopPolling();
+        setIsGenerating(false);
+      }
     };
 
     poll();
@@ -303,7 +306,7 @@ export function useCatalogGenerate() {
 
     toast.info(`Queued ${allJobs.length} catalog image${allJobs.length > 1 ? 's' : ''}`);
     pollJobs();
-    setIsGenerating(false);
+    // isGenerating stays true — cleared when batch completes or on reset
     return true;
   }, [user, pollJobs]);
 
