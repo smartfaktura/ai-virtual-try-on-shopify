@@ -283,6 +283,7 @@ export default function AnimateVideo() {
   const removeImage = () => {
     setImageUrl(null);
     setImagePreview(null);
+    setSourceName(null);
     setWarnings([]);
     setHasAnalyzed(false);
     setDetectedCategory(null);
