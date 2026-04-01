@@ -1,10 +1,13 @@
 import { cn } from '@/lib/utils';
 import { CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { InfoTooltip } from './InfoTooltip';
 import { Badge } from '@/components/ui/badge';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+
+const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
 
 interface MotionRefinementPanelProps {
   cameraMotion: string;
@@ -21,6 +24,8 @@ interface MotionRefinementPanelProps {
   multiSelect?: boolean;
   selectedCameraMotions?: string[];
   onMultiCameraMotionChange?: (ids: string[]) => void;
+  /** Controls upsell display for free users */
+  isPaidUser?: boolean;
 }
 
 function ChipRow({ label, tooltip, items, value, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
@@ -117,15 +122,32 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
         <CollapsibleContent>
           <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
             {props.multiSelect && props.selectedCameraMotions && props.onMultiCameraMotionChange ? (
-              <MultiChipRow
-                label="Camera Motion"
-                tooltip="Select multiple camera motions to generate a separate video for each. Controls how the virtual camera moves during the video."
-                items={CAMERA_MOTIONS}
-                selected={props.selectedCameraMotions}
-                onChange={props.onMultiCameraMotionChange}
-              />
+              <>
+                <MultiChipRow
+                  label="Camera Motion"
+                  tooltip="Select multiple camera motions to generate a separate video for each. Controls how the virtual camera moves during the video."
+                  items={CAMERA_MOTIONS}
+                  selected={props.selectedCameraMotions}
+                  onChange={props.onMultiCameraMotionChange}
+                />
+                <p className="text-[11px] text-muted-foreground -mt-2">Select multiple to generate one video per motion</p>
+              </>
             ) : (
-              <ChipRow label="Camera Motion" tooltip="Controls how the virtual camera moves during the video. Affects framing but not the subject." items={CAMERA_MOTIONS} value={props.cameraMotion} onChange={props.onCameraMotionChange} />
+              <>
+                <ChipRow label="Camera Motion" tooltip="Controls how the virtual camera moves during the video. Affects framing but not the subject." items={CAMERA_MOTIONS} value={props.cameraMotion} onChange={props.onCameraMotionChange} />
+                {props.isPaidUser === false && (
+                  <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 -mt-2">
+                    <img src={avatarSophia} alt="Sophia" className="h-5 w-5 rounded-full object-cover ring-1 ring-border" />
+                    <p className="text-[11px] text-muted-foreground flex-1">
+                      Select multiple camera motions with any paid plan
+                    </p>
+                    <a href="/pricing" className="text-[11px] font-medium text-primary hover:underline flex items-center gap-0.5">
+                      <Sparkles className="h-3 w-3" />
+                      Upgrade
+                    </a>
+                  </div>
+                )}
+              </>
             )}
             <ChipRow label="Subject Motion" tooltip="Defines how the main subject moves. 'Auto' uses AI analysis to pick the best motion type." items={SUBJECT_MOTIONS} value={props.subjectMotion} onChange={props.onSubjectMotionChange} />
             <ChipRow label="Realism Level" tooltip="Higher realism enforces stricter motion limits and preservation. Stylized allows more creative freedom." items={REALISM_LEVELS} value={props.realismLevel} onChange={props.onRealismLevelChange} />

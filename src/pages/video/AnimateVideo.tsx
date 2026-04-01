@@ -752,21 +752,135 @@ export default function AnimateVideo() {
         <div className="space-y-5">
           {/* Hide small upload preview during analysis — it's shown large in the analysis grid */}
           {!showAnalysisUI && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                {bulkMode ? `Images (${bulkImages.length})` : 'Upload Image'}
-              </label>
+            <>
               {bulkMode && isPaidUser ? (
-                <BulkImageGrid
-                  images={bulkImages}
-                  maxImages={10}
-                  onAddFiles={handleBulkAddFiles}
-                  onRemoveImage={handleBulkRemoveImage}
-                  disabled={isBulkRunning}
-                  onPickFromLibrary={() => setLibraryPickerOpen(true)}
-                />
-              ) : (
-                <>
+                <div className="rounded-xl border border-border bg-card">
+                  <div className="p-4">
+                    <BulkImageGrid
+                      images={bulkImages}
+                      maxImages={10}
+                      onAddFiles={handleBulkAddFiles}
+                      onRemoveImage={handleBulkRemoveImage}
+                      disabled={isBulkRunning}
+                      onPickFromLibrary={() => setLibraryPickerOpen(true)}
+                    />
+                  </div>
+
+                  {/* Per-image customization — integrated into the same card */}
+                  {bulkImages.length > 1 && (
+                    <>
+                      <div className="border-t border-border px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Settings2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Customize per image</span>
+                        </div>
+                        <Switch checked={customizePerImage} onCheckedChange={(v) => {
+                          setCustomizePerImage(v);
+                          if (v && !activeImageTab && bulkImages.length > 0) setActiveImageTab(bulkImages[0].id);
+                        }} />
+                      </div>
+
+                      {customizePerImage && (
+                        <div className="border-t border-border px-4 py-4 space-y-3">
+                          {/* Thumbnail tab bar */}
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {bulkImages.map((img, idx) => {
+                              const isActive = activeImageTab === img.id;
+                              const hasOverride = perImageSettings.has(img.id);
+                              return (
+                                <button
+                                  key={img.id}
+                                  onClick={() => setActiveImageTab(img.id)}
+                                  className={cn(
+                                    'relative shrink-0 w-12 h-12 rounded-lg border-2 overflow-hidden transition-all',
+                                    isActive ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/40'
+                                  )}
+                                >
+                                  <img src={img.preview} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
+                                  <span className="absolute bottom-0 left-0 right-0 text-[9px] font-bold text-primary-foreground bg-foreground/60 text-center">{idx + 1}</span>
+                                  {hasOverride && (
+                                    <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Per-image settings overrides */}
+                          {activeImageTab && (() => {
+                            const imgOverrides = perImageSettings.get(activeImageTab) || {};
+                            const setOverride = (key: string, value: any) => {
+                              setPerImageSettings(prev => {
+                                const next = new Map(prev);
+                                const current = next.get(activeImageTab!) || {};
+                                next.set(activeImageTab!, { ...current, [key]: value });
+                                return next;
+                              });
+                            };
+                            const imgIdx = bulkImages.findIndex(i => i.id === activeImageTab);
+                            return (
+                              <div className="rounded-lg bg-muted/20 p-3 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-xs font-medium text-foreground">Image {imgIdx + 1} overrides</p>
+                                  {Object.keys(imgOverrides).length > 0 && (
+                                    <button
+                                      onClick={() => {
+                                        setPerImageSettings(prev => { const next = new Map(prev); next.delete(activeImageTab!); return next; });
+                                      }}
+                                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                      Reset to shared
+                                    </button>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-muted-foreground">Camera Motion</label>
+                                    <select
+                                      value={imgOverrides.cameraMotion || cameraMotion}
+                                      onChange={(e) => setOverride('cameraMotion', e.target.value)}
+                                      className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
+                                    >
+                                      {CAMERA_MOTIONS.map(cm => (
+                                        <option key={cm.id} value={cm.id}>{cm.label}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-muted-foreground">Motion Intensity</label>
+                                    <select
+                                      value={imgOverrides.motionIntensity || motionIntensity}
+                                      onChange={(e) => setOverride('motionIntensity', e.target.value)}
+                                      className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
+                                    >
+                                      <option value="low">Low</option>
+                                      <option value="medium">Medium</option>
+                                      <option value="high">High</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <label className="text-xs text-muted-foreground">Custom motion note</label>
+                                  <Textarea
+                                    value={imgOverrides.userPrompt ?? ''}
+                                    onChange={(e) => setOverride('userPrompt', e.target.value)}
+                                    placeholder="Override motion note for this image..."
+                                    className="min-h-[60px] resize-none text-xs"
+                                    maxLength={500}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : !bulkMode && (
+                <div className="space-y-2">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
                   <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 max-w-xs">
                     <img src={imagePreview!} alt="Upload" className="w-full rounded-xl object-cover" />
@@ -779,125 +893,9 @@ export default function AnimateVideo() {
                       </div>
                     )}
                   </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Per-image customization toggle (bulk mode only) */}
-          {!showAnalysisUI && bulkMode && bulkImages.length > 1 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
-                <div className="flex items-center gap-2">
-                  <Settings2 className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Customize per image</p>
-                    <p className="text-xs text-muted-foreground">Override shared settings for individual images</p>
-                  </div>
-                </div>
-                <Switch checked={customizePerImage} onCheckedChange={(v) => {
-                  setCustomizePerImage(v);
-                  if (v && !activeImageTab && bulkImages.length > 0) setActiveImageTab(bulkImages[0].id);
-                }} />
-              </div>
-
-              {customizePerImage && (
-                <div className="space-y-3">
-                  {/* Thumbnail tab bar */}
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {bulkImages.map((img, idx) => {
-                      const isActive = activeImageTab === img.id;
-                      const hasOverride = perImageSettings.has(img.id);
-                      return (
-                        <button
-                          key={img.id}
-                          onClick={() => setActiveImageTab(img.id)}
-                          className={cn(
-                            'relative shrink-0 w-14 h-14 rounded-lg border-2 overflow-hidden transition-all',
-                            isActive ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/40'
-                          )}
-                        >
-                          <img src={img.preview} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-0 left-0 right-0 text-[9px] font-bold text-primary-foreground bg-foreground/60 text-center">{idx + 1}</span>
-                          {hasOverride && (
-                            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Per-image settings overrides */}
-                  {activeImageTab && (() => {
-                    const imgOverrides = perImageSettings.get(activeImageTab) || {};
-                    const setOverride = (key: string, value: any) => {
-                      setPerImageSettings(prev => {
-                        const next = new Map(prev);
-                        const current = next.get(activeImageTab!) || {};
-                        next.set(activeImageTab!, { ...current, [key]: value });
-                        return next;
-                      });
-                    };
-                    const imgIdx = bulkImages.findIndex(i => i.id === activeImageTab);
-                    return (
-                      <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-foreground">Image {imgIdx + 1} overrides</p>
-                          {Object.keys(imgOverrides).length > 0 && (
-                            <button
-                              onClick={() => {
-                                setPerImageSettings(prev => { const next = new Map(prev); next.delete(activeImageTab!); return next; });
-                              }}
-                              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              Reset to shared
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Camera Motion</label>
-                            <select
-                              value={imgOverrides.cameraMotion || cameraMotion}
-                              onChange={(e) => setOverride('cameraMotion', e.target.value)}
-                              className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
-                            >
-                              {CAMERA_MOTIONS.map(cm => (
-                                <option key={cm.id} value={cm.id}>{cm.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Motion Intensity</label>
-                            <select
-                              value={imgOverrides.motionIntensity || motionIntensity}
-                              onChange={(e) => setOverride('motionIntensity', e.target.value)}
-                              className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
-                            >
-                              <option value="low">Low</option>
-                              <option value="medium">Medium</option>
-                              <option value="high">High</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted-foreground">Custom motion note</label>
-                          <Textarea
-                            value={imgOverrides.userPrompt ?? ''}
-                            onChange={(e) => setOverride('userPrompt', e.target.value)}
-                            placeholder="Override motion note for this image..."
-                            className="min-h-[60px] resize-none text-xs"
-                            maxLength={500}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })()}
                 </div>
               )}
-            </div>
+            </>
           )}
 
           <ValidationWarnings warnings={warnings} />
@@ -1130,6 +1128,7 @@ export default function AnimateVideo() {
                 onLoopStyleChange={setLoopStyle}
                 onMotionIntensityChange={setMotionIntensity}
                 multiSelect={isPaidUser}
+                isPaidUser={isPaidUser}
                 selectedCameraMotions={selectedCameraMotions}
                 onMultiCameraMotionChange={(ids) => { setSelectedCameraMotions(ids); setCameraMotion(ids[0]); }}
               />
