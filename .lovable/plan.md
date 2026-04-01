@@ -1,61 +1,73 @@
 
 
-# /app/catalog — Round 5 Audit
+# /app/catalog — Round 6 Audit
 
-The flow is well-polished after four rounds. Only minor items remain — no functional bugs.
+The flow is mature and well-polished. No functional bugs remain. Here are minor issues I found:
 
-## Remaining Items
+## Findings
 
-### 1. Products step: Import URL and CSV tabs still show functional UI that does nothing
-**File: `CatalogStepProducts.tsx` lines ~420-500**
-Need to verify the current state of these tabs — they were supposed to show "Coming Soon" badges from a previous round but I need to confirm the implementation.
+### 1. `ModelSelectorCard` uses `div` with `onClick` — not keyboard accessible
+**File: `ModelSelectorCard.tsx` line 16-17**
+The card is a `<div>` with `onClick` and no `role`, `tabIndex`, or `onKeyDown`. Unlike all other selector cards in the catalog flow (shots, backgrounds, fashion style, product only toggle) which are `<button>` elements with focus-visible rings, this component is completely inaccessible via keyboard.
+**Fix**: Change the outer `<div>` to a `<button>` (or add `role="button" tabIndex={0} onKeyDown`) and add `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`.
 
-### 2. Stepper: mobile stepper buttons lack `disabled` attribute when `!canClick`
-**File: `CatalogStepper.tsx` line 76**
-Desktop stepper has `disabled={!canClick}` (line 33), but mobile stepper button has no `disabled` prop — it relies only on the `onClick` guard `canClick && onStepClick(s.number)`. This means mobile users can still focus/tap disabled steps (screen readers announce them as clickable).
-**Fix**: Add `disabled={!canClick}` to the mobile stepper button.
+### 2. Lightbox download loop doesn't `break` after finding the match
+**File: `CatalogGenerate.tsx` lines 519-532**
+The filename-resolution loop iterates through all completed jobs/images even after finding the matching index. It works because the last match wins and there's only one match per index, but it's wasteful for large batches.
+**Fix**: Add `break` after the match is found (inside the `if (imgIdx === i)` block and the outer loop).
 
-### 3. Generation results: no "Download All" option
-**File: `CatalogGenerate.tsx` lines 354-370**
-After batch completes, users see a grid of generated images and can click each for lightbox + individual download, but there's no bulk "Download All as ZIP" button. For catalogs with 20+ images this is tedious.
-**Fix**: Add a "Download All" button that creates a ZIP client-side using JSZip (or downloads sequentially). Medium effort — could be a follow-up.
+### 3. "Create Your Brand Model" button in Models step navigates away without warning
+**File: `CatalogStepModelsV2.tsx` line 117**
+Clicking this navigates to `/app/brand-models`, abandoning all catalog wizard state (products, style, etc.) without confirmation. Users lose all progress.
+**Fix**: Either open in a new tab (`window.open`), or show a confirmation dialog warning that wizard progress will be lost.
 
-### 4. Lightbox download filename is generic
-**File: `CatalogGenerate.tsx` line 503**
-Download filename is `catalog-${i + 1}.jpg` — doesn't include product name or shot type. Users can't identify images after downloading.
-**Fix**: Include product name and shot label in the filename. This requires enriching the `aggregatedImages` data to carry metadata alongside URLs.
+### 4. Mobile summary floating button may overlap the Products step floating selection bar
+**File: `CatalogGenerate.tsx` line 698-707**
+The mobile summary button is positioned at `fixed bottom-20 right-4`. The Products step's floating selection bar is `sticky bottom-0`. At 440px, both could be visible simultaneously — the summary chip floats over the selection bar's right side.
+**Fix**: Hide the summary chip when `step === 1 && selectedProductIds.size > 0`, or adjust its position.
 
-### 5. No empty state for Props step when user has 0 extra products
-Already handled (line 256-261 of CatalogStepProps.tsx) — verified, this is fine.
+### 5. Props step combo list uses fixed `max-h-[460px]` — not responsive
+**File: `CatalogStepProps.tsx` line 283**
+Same pattern as the Products list view issue that was already fixed. Should be `max-h-[min(460px,50vh)]` for consistency.
+**Fix**: Change to responsive max-height.
 
-### 6. Context sidebar not visible on the current 440px mobile viewport
-The sidebar is wrapped in `hidden lg:block` (CatalogGenerate.tsx line 642). At 440px, users have no visibility into their selections while navigating steps. This is by design (mobile space constraints), but a collapsible mobile summary drawer could help.
-**Fix**: Low priority — add a floating "Setup summary" chip on mobile that opens a Sheet with the sidebar content.
+### 6. Timer doesn't stop cleanly when user cancels generation
+**File: `CatalogGenerate.tsx` lines 107-120**
+When the user cancels via the AlertDialog, `resetBatch()` sets `batchState` to `null` and `isGenerating` to `false`. The timer effect depends on `hasBatch` and `allDone` — when `hasBatch` becomes false, the cleanup runs. This works, but `generationStartedAt` state is never cleared on cancel, leaving stale state.
+**Fix**: Call `setGenerationStartedAt(null)` alongside `resetBatch()` in the cancel handler (line 443).
+
+### 7. Products step: "Add Product" card in grid appears even when max products reached
+**File: `CatalogStepProducts.tsx` line 333-344**
+The "Add Product" card is always visible at the bottom of the grid. When the user has already selected `maxProducts`, clicking it opens the Add Product modal — they can add the product but won't be able to select it (capped). Not a bug, but slightly misleading.
+**Fix**: Optionally hide or dim the card when `selectedProductIds.size >= maxProducts` with a tooltip "Max products selected".
 
 ## Summary
 
 | # | Item | Effort | Impact |
 |---|------|--------|--------|
-| 1 | Verify Coming Soon tabs | Trivial | Confirm previous fix |
-| 2 | Mobile stepper `disabled` attr | Trivial | Accessibility |
-| 3 | Download All ZIP | Medium | Major convenience for large catalogs |
-| 4 | Better download filenames | Small | File organization |
-| 6 | Mobile summary drawer | Medium | Mobile UX |
+| 1 | ModelSelectorCard keyboard a11y | Small | Accessibility (used across app) |
+| 2 | Add break to lightbox filename loop | Trivial | Performance (minor) |
+| 3 | Brand Model nav loses wizard state | Small | Data loss risk |
+| 4 | Mobile button overlap on Step 1 | Trivial | Visual overlap |
+| 5 | Props list responsive height | Trivial | Layout consistency |
+| 6 | Clear timer state on cancel | Trivial | Clean state |
+| 7 | Add Product card when maxed | Trivial | UX clarity |
 
-Only item 2 is a clear fix worth implementing now. Items 3 and 4 are valuable feature additions. Item 6 is a nice-to-have.
-
-**Recommendation**: Implement item 2 (trivial a11y fix). Items 3-4 are worth doing as a follow-up batch. Item 6 is optional.
+Items 1 and 3 are the most impactful. The rest are minor polish.
 
 ## Technical Details
 
-**Item 2** — In `CatalogStepper.tsx` line 76, change:
+**Item 1** — In `ModelSelectorCard.tsx`, change:
 ```tsx
-<button onClick={() => canClick && onStepClick(s.number)} className="...">
+<div onClick={onSelect} className={`relative cursor-pointer ...`}>
 ```
 to:
 ```tsx
-<button onClick={() => canClick && onStepClick(s.number)} disabled={!canClick} className="...">
+<button type="button" onClick={onSelect} className={`relative cursor-pointer ... focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}>
 ```
+And close with `</button>`. Since it currently uses `ring-1 ring-border` etc. in styling, the switch is straightforward.
 
-**Item 4** — Requires changing `aggregatedImages` from `string[]` to `Array<{url: string; productName: string; shotLabel: string}>` in the batch state, then using that metadata in the download handler.
+**Item 3** — In `CatalogStepModelsV2.tsx` line 117, change `onClick={() => navigate(...)}` to `onClick={() => window.open('/app/brand-models', '_blank')}` so the wizard state is preserved.
+
+**Item 6** — In `CatalogGenerate.tsx` line 443, add `setGenerationStartedAt(null); setElapsedSeconds(0);` after `resetBatch()`.
 
