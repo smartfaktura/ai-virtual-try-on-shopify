@@ -23,6 +23,7 @@ export interface GeneratedVideo {
   camera_type: string | null;
   workflow_type: string | null;
   settings_json: Record<string, unknown> | null;
+  project_title: string | null;
 }
 
 interface UseGenerateVideoResult {
