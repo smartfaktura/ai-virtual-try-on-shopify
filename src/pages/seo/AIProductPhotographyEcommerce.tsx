@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
@@ -21,26 +21,9 @@ import {
   Sparkles, RefreshCw, Layers, Eye, Shield, Quote, Clock, TrendingUp
 } from 'lucide-react';
 
-/* ─── useInView hook ─── */
+/* ─── RevealSection — CSS transition, once-only ─── */
 
-function useInView(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.unobserve(el); } },
-      { threshold },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [threshold]);
-  return { ref, inView };
-}
-
-/* Section wrapper — CSS-only reveal to avoid white-space on scroll-back */
-function RevealSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function RevealSection({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
@@ -48,15 +31,17 @@ function RevealSection({ children, className = '', delay = 0 }: { children: Reac
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setRevealed(true); observer.unobserve(el); } },
-      { threshold: 0.1 },
+      { threshold: 0.08 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    // Fallback: force visible after 3s to prevent white-space
+    const timer = setTimeout(() => setRevealed(true), 3000);
+    return () => { observer.disconnect(); clearTimeout(timer); };
   }, []);
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}
+      className={`transition-all duration-700 ease-out will-change-transform ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}
       style={{ transitionDelay: revealed ? `${delay}ms` : '0ms' }}
     >
       {children}
@@ -145,6 +130,10 @@ function pickProductLed(presets: DiscoverPreset[], count: number, exclude: Set<s
   return scored.slice(0, count).map(s => s.preset);
 }
 
+function pickFeaturedFallback(presets: DiscoverPreset[], exclude: Set<string>): DiscoverPreset | null {
+  return presets.find(p => p.is_featured && !exclude.has(p.id)) ?? presets.find(p => !exclude.has(p.id)) ?? null;
+}
+
 /* ─── COMPONENT ─── */
 
 export default function AIProductPhotographyEcommerce() {
@@ -161,18 +150,29 @@ export default function AIProductPhotographyEcommerce() {
     return picks;
   }, [presets, usedIds]);
 
+  // Tab images with smart fallback — never show camera placeholder
   const tabImages = useMemo(() => {
     const map: Record<string, DiscoverPreset | null> = {};
     for (const tab of OUTCOME_TABS) {
       const picks = pickByCategory(presets, tab.category, 1, usedIds);
-      const pick = picks[0] ?? null;
+      let pick = picks[0] ?? null;
+      // Fallback: grab any featured preset not yet used
+      if (!pick) pick = pickFeaturedFallback(presets, usedIds);
       if (pick) usedIds.add(pick.id);
       map[tab.id] = pick;
     }
     return map;
   }, [presets, usedIds]);
 
-  const showcaseImages = useMemo(() => pickProductLed(presets, 12, usedIds), [presets, usedIds]);
+  // Showcase: prioritize is_featured, then fill with product-led
+  const showcaseImages = useMemo(() => {
+    const featured = presets.filter(p => p.is_featured && !usedIds.has(p.id)).slice(0, 8);
+    featured.forEach(p => usedIds.add(p.id));
+    if (featured.length >= 8) return featured;
+    const remaining = pickProductLed(presets, 8 - featured.length, usedIds);
+    remaining.forEach(p => usedIds.add(p.id));
+    return [...featured, ...remaining];
+  }, [presets, usedIds]);
 
   const faqSchema = useMemo(() => ({
     '@context': 'https://schema.org',
@@ -188,18 +188,6 @@ export default function AIProductPhotographyEcommerce() {
     url: CANONICAL,
     publisher: { '@type': 'Organization', name: 'VOVV AI', url: SITE_URL },
   }), []);
-
-  /* Section animation refs */
-  const proof = useInView();
-  const tabs = useInView();
-  const why = useInView();
-  const compare = useInView();
-  const shopify = useInView();
-  const showcase = useInView();
-  const howIt = useInView();
-  const useCases = useInView();
-  const seoBlock = useInView();
-  const faqBlock = useInView();
 
   return (
     <PageLayout>
@@ -244,12 +232,9 @@ export default function AIProductPhotographyEcommerce() {
                 </div>
               ))}
             </div>
-
-            {/* Team avatars social proof */}
             <TeamAvatarRow />
           </div>
 
-          {/* Hero visual grid — staggered reveal */}
           {heroImages.length > 0 && (
             <div className="columns-2 md:columns-3 gap-3 md:gap-4 max-w-4xl mx-auto [&>div]:mb-3 md:[&>div]:mb-4">
               {heroImages.map((img, index) => (
@@ -270,8 +255,8 @@ export default function AIProductPhotographyEcommerce() {
         </div>
       </section>
 
-      {/* ── 2. PROOF BAR — Metrics + Testimonial ── */}
-      <div ref={proof.ref} className={`${baseTransition} ${proof.inView ? visible : hidden}`}>
+      {/* ── 2. PROOF BAR ── */}
+      <RevealSection>
         <section className="py-14 border-y border-border bg-muted/30">
           <div className="container mx-auto px-4 max-w-5xl">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
@@ -290,8 +275,6 @@ export default function AIProductPhotographyEcommerce() {
                 </div>
               ))}
             </div>
-
-            {/* Testimonial */}
             <div className="max-w-xl mx-auto text-center">
               <Quote className="w-5 h-5 text-primary/40 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground italic leading-relaxed">
@@ -303,10 +286,10 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
       {/* ── 3. OUTCOME TABS ── */}
-      <div ref={tabs.ref} className={`${baseTransition} ${tabs.inView ? visible : hidden}`}>
+      <RevealSection>
         <section className="py-20 sm:py-28 bg-background">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-14">
@@ -364,11 +347,48 @@ export default function AIProductPhotographyEcommerce() {
             </Tabs>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
-      {/* ── 4. WHY ECOMMERCE BRANDS — Staggered cards ── */}
-      <div ref={why.ref} className={`${baseTransition} ${why.inView ? visible : hidden}`}>
+      {/* ── 4. DISCOVERY SHOWCASE — moved up ── */}
+      <RevealSection>
         <section className="py-20 sm:py-28 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground mb-4">
+                Explore Real Ecommerce Visual Styles
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                All examples below are pulled from our discovery library, showing how one product photo can become multiple ecommerce-ready creative directions.
+              </p>
+            </div>
+            {showcaseImages.length > 0 && (
+              <div className="columns-2 md:columns-3 lg:columns-4 gap-3 mb-12 [&>div]:mb-3">
+                {showcaseImages.map((img, index) => (
+                  <div
+                    key={img.id}
+                    className="animate-scale-in will-change-transform"
+                    style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
+                  >
+                    <DiscoverCard
+                      item={{ type: 'preset', data: img }}
+                      onClick={() => setSelectedItem({ type: 'preset', data: img })}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="text-center">
+              <Button asChild variant="outline" size="lg" className="rounded-full">
+                <Link to="/discover">Explore Discovery <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </RevealSection>
+
+      {/* ── 5. WHY ECOMMERCE BRANDS ── */}
+      <RevealSection>
+        <section className="py-20 sm:py-28 bg-background">
           <div className="container mx-auto px-4 max-w-6xl">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-center mb-14">
               Why Ecommerce Brands Use VOVV.ai
@@ -382,8 +402,8 @@ export default function AIProductPhotographyEcommerce() {
               ].map(({ icon: Icon, title, desc }, index) => (
                 <div
                   key={title}
-                  className={`rounded-2xl border border-border bg-card p-6 space-y-3 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 will-change-transform ${why.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-                  style={{ transitionDelay: `${index * 100}ms` }}
+                  className="rounded-2xl border border-border bg-card p-6 space-y-3 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 will-change-transform animate-scale-in"
+                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
                 >
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Icon className="h-5 w-5 text-primary" />
@@ -395,17 +415,16 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
-      {/* ── 5. COMPARISON — Stronger visual contrast ── */}
-      <div ref={compare.ref} className={`${baseTransition} ${compare.inView ? visible : hidden}`}>
-        <section className="py-20 sm:py-28 bg-background">
+      {/* ── 6. COMPARISON ── */}
+      <RevealSection>
+        <section className="py-20 sm:py-28 bg-muted/20">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-center mb-14">
               Faster Than Photoshoots. More Scalable Than Editing.
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Traditional — red-tinted left border */}
               <div className="rounded-2xl border border-border bg-card p-8 space-y-5 border-l-4 border-l-destructive/50">
                 <h3 className="text-lg font-semibold text-foreground">Traditional Photography</h3>
                 {[
@@ -422,7 +441,6 @@ export default function AIProductPhotographyEcommerce() {
                   </div>
                 ))}
               </div>
-              {/* VOVV — primary-tinted left border + glow */}
               <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-8 space-y-5 border-l-4 border-l-primary shadow-lg shadow-primary/10">
                 <h3 className="text-lg font-semibold text-foreground">VOVV.ai</h3>
                 {[
@@ -442,10 +460,10 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
-      {/* ── 6. SHOPIFY SECTION — With team avatars ── */}
-      <div ref={shopify.ref} className={`${baseTransition} ${shopify.inView ? visible : hidden}`}>
+      {/* ── 7. SHOPIFY SECTION ── */}
+      <RevealSection>
         <section className="relative py-20 sm:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-primary/10" />
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-primary/8 rounded-full blur-3xl opacity-30" />
@@ -471,12 +489,9 @@ export default function AIProductPhotographyEcommerce() {
                 </div>
               ))}
             </div>
-
-            {/* Team avatars */}
             <div className="mb-10">
               <TeamAvatarRow label="Your creative team handles it" />
             </div>
-
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button asChild size="lg" className="rounded-full px-8 shadow-lg shadow-primary/25">
                 <Link to="/auth">Start Creating <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -487,56 +502,17 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
-      {/* ── 7. DISCOVERY SHOWCASE ── */}
-      <div ref={showcase.ref} className={`${baseTransition} ${showcase.inView ? visible : hidden}`}>
+      {/* ── 8. HOW IT WORKS ── */}
+      <RevealSection>
         <section className="py-20 sm:py-28 bg-background">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground mb-4">
-                Explore Real Ecommerce Visual Styles
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                All examples below are pulled from our discovery library, showing how one product photo can become multiple ecommerce-ready creative directions.
-              </p>
-            </div>
-            {showcaseImages.length > 0 && (
-              <div className="columns-2 md:columns-3 lg:columns-4 gap-3 mb-12 [&>div]:mb-3">
-                {showcaseImages.map((img, index) => (
-                  <div
-                    key={img.id}
-                    className={`will-change-transform transition-all duration-500 ${showcase.inView ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
-                    style={{ transitionDelay: `${index * 60}ms` }}
-                  >
-                    <DiscoverCard
-                      item={{ type: 'preset', data: img }}
-                      onClick={() => setSelectedItem({ type: 'preset', data: img })}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="text-center">
-              <Button asChild variant="outline" size="lg" className="rounded-full">
-                <Link to="/discover">Explore Discovery <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* ── 8. HOW IT WORKS — Connected steps ── */}
-      <div ref={howIt.ref} className={`${baseTransition} ${howIt.inView ? visible : hidden}`}>
-        <section className="py-20 sm:py-28 bg-muted/20">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-center mb-14">
               How It Works
             </h2>
             <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Horizontal connector line — desktop only */}
               <div className="hidden lg:block absolute top-7 left-[12.5%] right-[12.5%] h-px bg-border" />
-
               {[
                 { icon: Upload, step: '01', title: 'Upload a Product Photo', desc: 'Start with a single product image from your existing catalog.' },
                 { icon: Palette, step: '02', title: 'Choose a Direction', desc: 'Select a visual style, scene, or use case for your ecommerce needs.' },
@@ -545,8 +521,8 @@ export default function AIProductPhotographyEcommerce() {
               ].map(({ icon: Icon, step, title, desc }, index) => (
                 <div
                   key={step}
-                  className={`relative text-center space-y-4 transition-all duration-500 ${howIt.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-                  style={{ transitionDelay: `${index * 120}ms` }}
+                  className="relative text-center space-y-4 animate-scale-in will-change-transform"
+                  style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'both' }}
                 >
                   <div className="relative mx-auto h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center z-10">
                     <Icon className="h-7 w-7 text-primary" />
@@ -559,11 +535,11 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
       {/* ── 9. USE CASES ── */}
-      <div ref={useCases.ref} className={`${baseTransition} ${useCases.inView ? visible : hidden}`}>
-        <section className="py-20 sm:py-28 bg-background">
+      <RevealSection>
+        <section className="py-20 sm:py-28 bg-muted/20">
           <div className="container mx-auto px-4 max-w-6xl">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-center mb-14">
               Built for Ecommerce Workflows
@@ -581,8 +557,8 @@ export default function AIProductPhotographyEcommerce() {
               ].map(({ icon: Icon, title, desc }, index) => (
                 <div
                   key={title}
-                  className={`rounded-2xl border border-border bg-card p-5 space-y-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 will-change-transform ${useCases.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-                  style={{ transitionDelay: `${index * 60}ms` }}
+                  className="rounded-2xl border border-border bg-card p-5 space-y-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 will-change-transform animate-scale-in"
+                  style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
                 >
                   <Icon className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold text-sm text-foreground">{title}</h3>
@@ -592,11 +568,11 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
       {/* ── 10. SEO CONTENT ── */}
-      <div ref={seoBlock.ref} className={`${baseTransition} ${seoBlock.inView ? visible : hidden}`}>
-        <section className="py-20 sm:py-28 bg-muted/20">
+      <RevealSection>
+        <section className="py-20 sm:py-28 bg-background">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-semibold tracking-tight text-foreground mb-6">
               What Is AI Product Photography for Ecommerce?
@@ -620,11 +596,11 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
       {/* ── 11. FAQ ── */}
-      <div ref={faqBlock.ref} className={`${baseTransition} ${faqBlock.inView ? visible : hidden}`}>
-        <section className="py-20 sm:py-28 bg-background">
+      <RevealSection>
+        <section className="py-20 sm:py-28 bg-muted/20">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-semibold tracking-tight text-foreground text-center mb-12">
               Frequently Asked Questions
@@ -643,9 +619,9 @@ export default function AIProductPhotographyEcommerce() {
             </Accordion>
           </div>
         </section>
-      </div>
+      </RevealSection>
 
-      {/* ── 12. FINAL CTA — With team avatars + hover cards ── */}
+      {/* ── 12. FINAL CTA ── */}
       <section className="relative py-20 sm:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-primary/10" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-primary/8 rounded-full blur-3xl opacity-40" />
@@ -683,7 +659,6 @@ export default function AIProductPhotographyEcommerce() {
             </div>
           </div>
 
-          {/* Team avatars */}
           <div className="mt-10">
             <TeamAvatarRow />
           </div>
