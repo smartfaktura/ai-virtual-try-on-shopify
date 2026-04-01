@@ -20,7 +20,7 @@ const benefits = [
   {
     icon: RefreshCw,
     title: 'Seasonal Themes',
-    description: 'From holiday campaigns to summer collections — Creative Drops keep your catalog visually fresh year-round.',
+    description: 'From holiday campaigns to summer collections — the Content Calendar keeps your catalog visually fresh year-round.',
   },
 ];
 
