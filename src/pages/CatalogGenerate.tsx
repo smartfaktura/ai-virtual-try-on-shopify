@@ -22,6 +22,7 @@ import { CatalogStepProps } from '@/components/app/catalog/CatalogStepProps';
 import { CatalogStepReviewV2 } from '@/components/app/catalog/CatalogStepReviewV2';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
