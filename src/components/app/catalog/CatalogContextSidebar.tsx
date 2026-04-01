@@ -33,7 +33,7 @@ interface CatalogContextSidebarProps {
 
 export function CatalogContextSidebar({
   selectedProducts, fashionStyleId, models, productOnlyMode,
-  backgroundId, selectedShots, totalImages, totalCredits, currentStep,
+  backgroundId, selectedShots, selectedPropCount, totalImages, totalCredits, currentStep,
 }: CatalogContextSidebarProps) {
   const style = fashionStyleId ? getFashionStyle(fashionStyleId) : null;
   const bg = backgroundId ? getBackground(backgroundId) : null;
