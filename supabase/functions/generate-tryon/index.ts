@@ -513,7 +513,8 @@ async function generateImageWithModel(
             await new Promise((r) => setTimeout(r, 3000 * (attempt + 1) + jitter));
             continue;
           }
-          throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
+          console.error(`[generate-tryon] All 429 retries exhausted, returning null for fallback`);
+          return null;
         }
         if (response.status === 402) throw { status: 402, message: "Payment required - please add credits" };
         const errorText = await response.text();
