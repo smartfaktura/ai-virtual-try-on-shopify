@@ -303,18 +303,8 @@ export default function CatalogGenerate() {
       <div className="space-y-6 pb-32">
         <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
         <div className="flex flex-col items-center justify-center py-24 space-y-6">
-          {/* Animated gradient ring */}
-          <div className="relative">
-            <div
-              className="absolute -inset-2 rounded-full opacity-60 blur-sm"
-              style={{
-                background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--primary) / 0.2), hsl(var(--primary)), hsl(var(--primary) / 0.2), hsl(var(--primary)))',
-                animation: 'spin 3s linear infinite',
-              }}
-            />
-            <div className="relative w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center">
-              <Loader2 className="w-7 h-7 text-primary animate-spin" />
-            </div>
+          <div className="w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
           {/* Phase badge */}
           <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-medium gap-1.5 px-3 py-1 rounded-full">
@@ -508,18 +498,8 @@ export default function CatalogGenerate() {
                   {isAnchoring ? 'Preparing' : 'Generating'}
                 </Badge>
 
-                {/* Animated gradient ring icon */}
-                <div className="relative mx-auto w-14 h-14">
-                  <div
-                    className="absolute -inset-1.5 rounded-full opacity-50 blur-sm"
-                    style={{
-                      background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--primary) / 0.15), hsl(var(--primary)), hsl(var(--primary) / 0.15), hsl(var(--primary)))',
-                      animation: 'spin 3s linear infinite',
-                    }}
-                  />
-                  <div className="relative w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
-                    <Camera className="w-5.5 h-5.5 text-primary" />
-                  </div>
+                <div className="mx-auto w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-primary" />
                 </div>
 
                 <div>
