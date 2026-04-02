@@ -364,6 +364,9 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     defaultRenderPath: 'reference_generate',
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, full back view, model standing straight facing away from camera, weight evenly distributed, feet hip-width apart, arms relaxed naturally at sides, shoulders level, straight-on eye-level camera, clearly showing back fit, length, seams, and construction of the hero product, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, full back view facing away from camera, upright stance, arms relaxed at sides, clearly showing the back panel, shoulder seams, collar from behind, back vent or split if present, yoke construction, and overall back silhouette of the jacket, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'side_3q',
