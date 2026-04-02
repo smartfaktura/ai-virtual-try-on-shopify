@@ -430,7 +430,9 @@ export function useCatalogGenerate() {
           const isProductOnlyShot = shotDef.group === 'product-only';
           const jobResult = await enqueueJob(
             token, productB64, product.title, product.id, product.imageUrl,
-            shotId, shotDef.label, renderPath, prompt,
+            shotId, shotDef.label, renderPath,
+            shotDef.group,
+            prompt,
             isProductOnlyShot ? null : modelB64, session.modelProfile, null, batchId, enqueueCount++,
           );
 
