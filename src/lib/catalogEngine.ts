@@ -776,11 +776,9 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
 
   // ── Determine if this is the faceless anchor shot ──
   const isAnchorShot = shotDef.id === 'identity_anchor';
-  // Derivative on-model shots: replace generic support wardrobe text with anchor-reference language
+  // Derivative on-model shots: use explicit wardrobe text (single-reference, no anchor image)
   const isDerivativeOnModel = !isAnchorShot && shotDef.needsModel && renderPath === 'reference_generate';
-  const effectiveWardrobe = isDerivativeOnModel
-    ? 'wearing the EXACT same complete outfit as shown in Image 2 (the anchor reference image) — same pants, same shoes, same top, same styling, same accessories, do NOT substitute or change any clothing item'
-    : supportWardrobePrompt;
+  const effectiveWardrobe = supportWardrobePrompt;
 
   // For edit paths, wrap differently
   if (renderPath === 'anchor_edit') {
