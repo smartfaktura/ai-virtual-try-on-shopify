@@ -196,16 +196,86 @@ export default function CatalogHub() {
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Recent Shoots</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {sessions.map(session => (
-              <SessionCard key={session.key} session={session} />
+              <SessionCard key={session.key} session={session} onOpen={setSelectedSession} />
             ))}
           </div>
         </div>
+      )}
+
+      {/* Session detail modal */}
+      <Dialog open={!!selectedSession} onOpenChange={(open) => { if (!open) setSelectedSession(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedSession && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 flex-wrap">
+                  {selectedSession.productNames.length > 0
+                    ? selectedSession.productNames.join(', ')
+                    : 'Catalog Shoot'}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {format(new Date(selectedSession.created_at), 'MMM d, yyyy')}
+                  </span>
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  {selectedSession.totalImages} image{selectedSession.totalImages !== 1 ? 's' : ''}
+                  {' · '}
+                  {selectedSession.allDone && selectedSession.failedCount === 0 ? 'Completed' :
+                   selectedSession.allDone && selectedSession.failedCount > 0 ? `Partial (${selectedSession.completedCount}/${selectedSession.jobs.length})` :
+                   !selectedSession.allDone ? 'Processing' : 'Failed'}
+                </p>
+              </DialogHeader>
+
+              {selectedSession.images.length === 0 ? (
+                <div className="py-12 text-center text-sm text-muted-foreground">
+                  No images generated yet
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {selectedSession.images.map((url, idx) => (
+                    <div key={idx} className="relative group rounded-xl overflow-hidden bg-muted aspect-[3/4]">
+                      <button
+                        onClick={() => setLightboxIndex(idx)}
+                        className="w-full h-full"
+                      >
+                        <ShimmerImage src={url} alt={`Shot ${idx + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); saveOrShareImage(url, `catalog-${idx + 1}`); }}
+                        className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Download className="w-3.5 h-3.5 text-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => { setSelectedSession(null); navigate('/app/library'); }}>
+                  View in Library
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox */}
+      {selectedSession && lightboxIndex !== null && (
+        <ImageLightbox
+          images={selectedSession.images}
+          currentIndex={lightboxIndex}
+          open
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+          onDownload={(idx) => saveOrShareImage(selectedSession.images[idx], `catalog-${idx + 1}`)}
+        />
       )}
     </div>
   );
 }
 
-function SessionCard({ session }: { session: CatalogSession }) {
+function SessionCard({ session, onOpen }: { session: CatalogSession; onOpen: (s: CatalogSession) => void }) {
   const navigate = useNavigate();
   const thumbs = session.images.slice(0, 4);
   const hasImages = thumbs.length > 0;
