@@ -1,20 +1,15 @@
 
 
-# Make Catalog Shot Set Active with BETA Label
+# Add Catalog Studio (BETA) to Sidebar Navigation
 
-## Changes
+## Changes — Single file: `src/components/app/AppShell.tsx`
 
-### 1. `src/pages/Workflows.tsx` — Remove `comingSoon` for Catalog Shot Set
-Replace `comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}` with a new `beta` prop on both `WorkflowCard` and `WorkflowCardCompact` (lines 564, 578).
+### 1. Add nav item after Library
+Insert `{ label: 'Catalog Studio', icon: LayoutTemplate, path: '/app/catalog' }` at line 60 (after Library, before Brand Models). The `LayoutTemplate` icon is already imported.
 
-### 2. `src/components/app/WorkflowCard.tsx` — Add `beta` prop
-- Add `beta?: boolean` to the props interface
-- Instead of rendering the disabled "Coming Soon" card, render the normal active card but with a "BETA" badge overlay (top-right corner, primary color)
-- The card remains fully clickable
+### 2. Add BETA badge to NavItemButton
+Add a `beta` check: if `item.label === 'Catalog Studio'`, render a small "BETA" badge next to the label text (only when sidebar is not collapsed). Style: `text-[9px] font-semibold uppercase bg-primary/20 text-primary px-1.5 py-0.5 rounded`.
 
-### 3. `src/components/app/WorkflowCardCompact.tsx` — Add `beta` prop
-- Same approach: add `beta?: boolean` prop
-- Render the normal active card with a "BETA" badge in the top-right corner
-
-The BETA badge will use: `<Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px]">BETA</Badge>`
+### 3. Add prefetch entry
+Add `'/app/catalog': () => { import('@/pages/CatalogHub'); }` to the `prefetchMap`.
 
