@@ -446,7 +446,15 @@ export default function CatalogGenerate() {
                   <span className="flex items-center gap-1">~{formatTime(estimatedRemaining)} remaining</span>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">VOVV.AI</p>
+              <div className="flex items-center justify-center gap-2.5 transition-opacity duration-500">
+                <Avatar className="w-7 h-7 border border-border">
+                  <AvatarImage src={TEAM_MEMBERS[teamIndex].avatar} alt={TEAM_MEMBERS[teamIndex].name} />
+                  <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[teamIndex].name[0]}</AvatarFallback>
+                </Avatar>
+                <p className="text-xs text-muted-foreground italic">
+                  {TEAM_MEMBERS[teamIndex].name} is {TEAM_MEMBERS[teamIndex].statusMessage.toLowerCase()}
+                </p>
+              </div>
               <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCancelDialog(true)}>
                 Cancel
               </Button>
