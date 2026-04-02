@@ -1,32 +1,23 @@
 
-# Add Sorting, Image Change & Delete for Workflow Variation Scenes
 
-## Changes (single file: `src/pages/AdminScenes.tsx`)
+# Rename Custom Scene & Add to Product Listing Set Workflow
 
-### 1. Drag/reorder buttons for workflow variations
-Add up/down arrow buttons to each variation row (same pattern as existing scene reorder). A new `handleWfVariationMove(wfId, fromIdx, direction)` function swaps adjacent items in the `wfVariationEdits` array and marks the workflow as dirty.
+## Changes
 
-### 2. Image upload for variation scenes
-Add an image upload button (camera/image icon) to each variation row. On file select:
-- Upload to `scratch-uploads` bucket (same pattern used for custom scene preview uploads)
-- Update the variation's `preview_url` field in `wfVariationEdits`
-- Mark workflow as dirty
+### 1. Database migration — Rename custom scene
+Update the `custom_scenes` row `56f9c5d7-0a4d-4f21-b6bf-a5ff2e36f576`:
+- Set `name` from "White Background Product Shot" to "Ghost Mannequin"
 
-This changes the actual scene image stored in the workflow's `generation_config`, not a separate preview.
+### 2. Database migration — Add variation to Product Listing Set workflow
+Add a new variation entry to the `generation_config.variation_strategy.variations` JSON array for workflow `bf124e8b-aabc-484a-bc81-d29a9ccec885` (Product Listing Set). The new variation will use:
+- **label**: "Ghost Mannequin"
+- **category**: "Studio Essentials"
+- **instruction**: The existing `prompt_hint` from the custom scene (the ghost mannequin / invisible mannequin product-only prompt)
+- **preview_url**: The scene's current `image_url`
 
-### 3. Delete button for individual variations
-Add a trash icon button per variation row. On click:
-- Remove the variation from the `wfVariationEdits` array at the given index
-- Mark the workflow as dirty
-- Show confirmation via a simple `window.confirm()` since deletion is destructive
+This will be done via a single SQL migration that:
+1. Renames the custom scene
+2. Uses `jsonb_set` to append the new variation to the Product Listing Set workflow's config
 
-### 4. Add "New Variation" button
-Add a `+ Add Variation` button at the bottom of each workflow's variation list. Creates a new empty variation `{ label: 'New Scene', instruction: '', preview_url: '' }` and appends it.
+Both changes in one migration file.
 
-### Summary of UI per variation row
-
-```text
-[thumbnail] [label input] [category badge] [ratio badge] [↑] [↓] [📷 upload] [🗑 delete]
-```
-
-All changes save when the existing per-workflow "Save" button is clicked — no new save flow needed.
