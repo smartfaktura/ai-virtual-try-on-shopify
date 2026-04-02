@@ -1180,9 +1180,9 @@ serve(async (req) => {
             }
           }
 
-          // Flash fallback: last resort for product-only if Seedream also failed
-          if (imageUrl === null && !body.model?.imageUrl) {
-            console.warn(`[generate-workflow] Seedream also failed — trying Flash fallback for "${variation.label}"`);
+          // Flash fallback: last resort if primary + Seedream both failed
+          if (imageUrl === null) {
+            console.warn(`[generate-workflow] Primary${body.model?.imageUrl ? '' : ' + Seedream'} failed — trying Flash fallback for "${variation.label}"`);
             imageUrl = await generateImage(
               prompt,
               referenceImages,
