@@ -276,18 +276,7 @@ export default function CatalogGenerate() {
 
   const handleNewGeneration = () => {
     resetBatch();
-    setStep(1);
-    setSelectedProductIds(new Set());
-    setFashionStyle(null);
-    setSelectedModelIds(new Set());
-    setProductOnlyMode(false);
-    setModelExplicitlyChosen(false);
-    setSelectedBackgroundId(null);
-    setSelectedShots(new Set());
-    setPropAssignments({});
-    setGenerationStartedAt(null);
-    setElapsedSeconds(0);
-    setShowCancelDialog(false);
+    navigate('/app/catalog');
   };
 
   // Estimated time remaining
