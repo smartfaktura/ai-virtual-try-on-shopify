@@ -592,7 +592,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL_PLUS_SHOES,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], viewed from behind over the right shoulder, head turned 30 degrees showing profile, showing back and side of the hero product, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], back toward camera, looking over shoulder toward camera, straight-on camera, clean studio framing, showing back and side of the hero product, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'waist_up_crop',
