@@ -361,14 +361,15 @@ serve(async (req) => {
       referenceImages.push(body.product.imageUrl);
       // Do NOT push anchor_image_url — it may contain a person from on-model anchor
     } else if (body.anchor_image_url) {
-      // Derivative on-model shots: anchor already has the locked face — do NOT
-      // also send the raw model identity or Seedream merges two faces together.
+      // Derivative on-model shots: anchor (Image 1) has locked face + outfit,
+      // product (Image 2) provides style source for the specific shot variation
       referenceImages.push(body.anchor_image_url);
       referenceImages.push(body.product.imageUrl);
     } else {
-      // Anchor (identity) shot: send model identity TWICE for stronger face lock
+      // Anchor (identity lock) shot: model FIRST as identity source (Image 1),
+      // product SECOND as style source (Image 2). No duplicate — the prompt
+      // now uses explicit image-role assignment to separate face from outfit.
       if (modelIdentityUrl) {
-        referenceImages.push(modelIdentityUrl);
         referenceImages.push(modelIdentityUrl);
       }
       referenceImages.push(body.product.imageUrl);
@@ -397,9 +398,11 @@ serve(async (req) => {
       imageStrength = 0.75;
       negativePrompt = FACE_NEGATIVE;
     } else {
-      // Anchor (identity lock): maximum fidelity
+      // Anchor (identity lock): lower image_strength so Seedream follows the
+      // prompt's role assignment (face from Image 1, outfit from Image 2)
+      // rather than raw pixel blending which causes face merging.
       guidanceScale = 10.0;
-      imageStrength = 0.85;
+      imageStrength = 0.70;
       negativePrompt = FACE_NEGATIVE;
     }
 

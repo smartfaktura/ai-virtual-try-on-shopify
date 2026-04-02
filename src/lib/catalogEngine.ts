@@ -657,13 +657,13 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: WEARABLE,
     defaultRenderPath: 'anchor_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, cropped at waist, face fills upper third of frame, sharp eye-level camera angle, relaxed confident expression, looking directly into camera, natural relaxed shoulders, arms at sides, the hero product clearly visible on the upper body, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'Apply the clothing shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain the exact facial features, hair, and skin of the person in Image 1. Use the outfit, fit, and styling from Image 2 ([HERO_PRODUCT]) only. Waist-up portrait, cropped at waist, face fills upper third of frame, sharp eye-level camera angle, relaxed confident expression, looking directly into camera, natural relaxed shoulders, arms at sides, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
-      shoes: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      bag: '[HERO_PRODUCT] held by [MODEL], waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      hat: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      sunglasses: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      jewelry: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      shoes: 'Apply the footwear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      bag: 'Apply the bag shown in Image 2 to be held by the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      hat: 'Apply the headwear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      sunglasses: 'Apply the eyewear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      jewelry: 'Apply the jewelry shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
   },
 ];
@@ -794,12 +794,15 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     .replace('[QUALITY]', QUALITY_BLOCK)
     .replace('[CONSISTENCY]', consistencyBlock);
 
-  // Append model identity directive when a model is involved
+  // Append style-transfer image role assignment when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
-    prompt += '\nMODEL IDENTITY ANCHOR: The model MUST be the EXACT person shown in the model reference image. Replicate their face structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions with absolute precision. Do NOT substitute a different person, do NOT alter any facial feature.';
+    prompt += '\nIMAGE ROLE ASSIGNMENT:';
+    prompt += '\n- Image 1 (MODEL IMAGE): This is the IDENTITY SOURCE. Maintain this person\'s exact face, facial structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions.';
+    prompt += '\n- Image 2 (PRODUCT IMAGE): This is the STYLE SOURCE. Apply ONLY the clothing/product from this image onto the person from Image 1.';
+    prompt += '\nDo NOT blend the faces. Do NOT average features between images. The output person must be IDENTICAL to the person in Image 1.';
     prompt += '\nFACE QUALITY: Render the model\'s face with maximum photorealistic resolution — sharp defined facial features, visible skin texture and pores, detailed iris with catchlights, natural lip detail, individual eyebrow hairs, realistic under-eye area. Do NOT blur, smooth, soften, airbrush, or distort any facial feature. The face must be indistinguishable from a real high-resolution photograph.';
-    prompt += '\nIDENTITY PRIORITY: The model reference image is the PRIMARY identity source. The product reference defines ONLY the garment. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
-    prompt += '\nSINGLE SUBJECT RULE: There is EXACTLY ONE person in this image — the model described above. Do NOT add a second person, do NOT show a reflection of the model, do NOT create a mirror image, do NOT split the frame into multiple exposures, do NOT duplicate the body or limbs. ONE single human subject, ONE single captured moment.';
+    prompt += '\nIDENTITY PRIORITY: Image 1 is the PRIMARY identity source. Image 2 defines ONLY the garment/product. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nSINGLE SUBJECT RULE: There is EXACTLY ONE person in this image — the person from Image 1. Do NOT add a second person, do NOT show a reflection, do NOT create a mirror image, do NOT split the frame into multiple exposures, do NOT duplicate the body or limbs. ONE single human subject, ONE single captured moment.';
   }
 
   // GLOBAL lighting rule — applied to ALL shots (model and product-only)
