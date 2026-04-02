@@ -1,50 +1,49 @@
 
 
-# Fix Catalog Session Recovery — Persist All Jobs from Start
+# Improve Catalog Shot Prompt Templates
 
-## Root Cause
+Replace all 30 catalog shot prompt templates and shared blocks in `src/lib/catalogEngine.ts` with the user's improved versions. Also rename two shots (`full_look` → `full_look_catalog`, `styled_flat_lay` → `clean_flat_lay`).
 
-`persistBatch(markedAnchors)` at line 565 only saves anchor jobs to `sessionStorage`. Placeholders (representing future derivatives) are not persisted. If the browser refreshes during phase 1, recovery loads only anchors → poll marks them complete → `allDone = true` with 0 visible images → "No Images Generated" error screen, even though the backend completed everything.
+## Changes in `src/lib/catalogEngine.ts`
 
-## Fix (single file: `src/hooks/useCatalogGenerate.ts`)
+### 1. Update shared blocks (lines 747-749)
 
-### Change 1: Persist anchors AND placeholders from the start (line 565)
+Replace `QUALITY_BLOCK` and `CONSISTENCY_BLOCK_*` with the improved versions:
 
-Replace:
-```typescript
-persistBatch(markedAnchors);
-```
-With:
-```typescript
-persistBatch(initialJobs);
-```
+- **QUALITY_BLOCK**: `ultra realistic ecommerce fashion photography, accurate garment construction, realistic fabric behavior, sharp textile detail, true-to-life proportions, premium catalog image quality, clean retouching, natural skin texture, commercially polished but not over-edited`
+- **CONSISTENCY_BLOCK_MODEL**: Add `preserve exact product identity from reference, maintain correct garment color, fabric, wash, print, stitching, silhouette, trim, hardware, proportions, and construction details, no redesign, no added embellishments, no missing details` + existing model identity matching text
+- **CONSISTENCY_BLOCK_PRODUCT**: Same product preservation text + existing no-people rules
 
-This ensures `sessionStorage` contains both anchor jobs and placeholder derivatives, so recovery knows the full scope.
+### 2. Update all 30 shot promptTemplates and categoryOverrides (lines 341-671)
 
-### Change 2: Persist `isUserVisible` and `isPlaceholder` fields (lines 46-54)
+Every shot gets its prompt replaced with the user's tighter, cleaner version. Key improvements across all shots:
 
-Update `persistBatch` to include `isUserVisible` and `isPlaceholder` in the serialized metadata, so recovery can correctly filter visible vs. hidden jobs.
+- Explicit `head to toe fully visible with feet entirely inside frame` on full-body shots
+- Specific pose instructions (weight distribution, arm position, camera angle)
+- Stricter anti-editorial language (`not dynamic fashion editorial`, `not candid, not cinematic, not outdoor`)
+- Cleaner product-only prompts with less repetition
+- Better category overrides for shoes, bags, hats, sunglasses, jewelry
 
-### Change 3: Restore `isUserVisible` and `isPlaceholder` on load (lines 72-76)
+### 3. Rename two shots
 
-Update `loadPersistedBatch` to read and restore these fields from the persisted data.
+- `full_look` → `full_look_catalog` (label: "Full Look Catalog") — removes editorial connotation
+- `styled_flat_lay` → `clean_flat_lay` (label: "Clean Flat Lay") — reflects single-product focus
 
-### Change 4: Handle placeholder-only recovery (lines 146-164)
+### 4. Update `buildSupportWardrobePrompt` (line 257)
 
-When recovery detects placeholder jobs exist (derivatives not yet enqueued), set `phase` to `'anchors'` (not `'derivatives'`) so the phase-aware `allDone` guard on line 282 prevents premature completion. The poll will wait for real derivatives to appear.
+Make the wardrobe directive stricter: `supporting wardrobe must stay minimal, commercially styled, color-coordinated, and secondary to the hero product, no distracting patterns, no competing hero items`
 
-Additionally: if ALL recovered jobs are anchors (no derivatives at all), and they're all terminal, show a graceful "Session expired — check your Library" message instead of "No Images Generated".
+### 5. Update references to renamed shot IDs
 
-### Change 5: Fallback UI in CatalogGenerate.tsx (line 369-377)
+Search for `full_look` and `styled_flat_lay` across the codebase and update to new IDs. Affected files:
+- `src/lib/catalogEngine.ts` (definition + any references in `EDIT_COMPATIBLE_FROM_ANCHOR`)
+- `src/types/catalog.ts` (CatalogShotId type union)
+- Any other files referencing these shot IDs
 
-When `allDone && visibleCompleted === 0 && visibleFailed === 0` (no visible jobs at all — likely a recovery edge case), show a softer message: "Session Interrupted — Your images may still be in your Library" with a direct link, instead of the harsh "No Images Generated / Something went wrong."
+### Impact
 
-## Summary
-
-| Change | File | Why |
-|--------|------|-----|
-| Persist all initial jobs | `useCatalogGenerate.ts` line 565 | Placeholders survive refresh |
-| Include visibility fields in persist/load | `useCatalogGenerate.ts` lines 46-76 | Correct filtering after recovery |
-| Phase-aware recovery | `useCatalogGenerate.ts` lines 146-164 | Prevent premature allDone |
-| Graceful fallback UI | `CatalogGenerate.tsx` lines 369-377 | Better UX for edge cases |
+- All prompt templates become more precise and ASOS/Zalando-aligned
+- Reduced hallucination risk from vague language
+- Ghost mannequin, flat lay, and macro shots get stricter isolation language
+- Category overrides are more complete and specific
 
