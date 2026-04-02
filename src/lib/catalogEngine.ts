@@ -700,7 +700,7 @@ export function classifyRenderPath(
 // ────────────────────────────────────────────────
 
 const QUALITY_BLOCK = 'ultra realistic ecommerce fashion photography, sharp focus, realistic fabric details, premium commercial finish, natural proportions, polished product visibility';
-const CONSISTENCY_BLOCK = 'same model identity, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
+const CONSISTENCY_BLOCK = 'same model identity matching the model reference image exactly — same face same hair color same hair style same skin tone same body proportions, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
 
 export interface PromptAssemblyInput {
   productTitle: string;
