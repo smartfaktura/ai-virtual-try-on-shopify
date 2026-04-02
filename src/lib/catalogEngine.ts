@@ -317,7 +317,7 @@ const LIGHTING_PROMPTS: Record<string, string> = {
   warm_studio_refined: 'warm refined studio lighting, soft warm tones, premium commercial lighting, NO sun flares, NO lens flares',
   soft_directional_editorial: 'soft directional editorial lighting, subtle contrast, polished fashion photography lighting',
   neutral_fashion_studio: 'neutral balanced studio lighting, even illumination, modern fashion photography lighting',
-  soft_warm_luxury: 'soft warm luxury lighting, gentle glow, high-end editorial warmth, elegant shadows',
+  soft_warm_luxury: 'soft warm luxury lighting, gentle glow, high-end editorial warmth, elegant shadows, NO sun flares, NO lens flares, ONLY controlled studio lighting',
 };
 
 export function getLightingPrompt(lightingId: string): string {

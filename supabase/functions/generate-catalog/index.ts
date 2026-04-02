@@ -340,9 +340,11 @@ serve(async (req) => {
     const logModel = hasModel ? `model="${body.model?.name}"` : "product-only";
     console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || body.pose?.name || 'default'}", ratio=${aspectRatio}`);
 
-    // Reference images: product first (hero), then model if available, then anchor if available
+    // Reference images: product first (hero), then model if available (skip for product-only), then anchor if available
     const referenceImages: string[] = [body.product.imageUrl];
-    if (body.model?.imageUrl) referenceImages.push(body.model.imageUrl);
+    if (body.model?.imageUrl && body.render_path !== 'product_only_generate') {
+      referenceImages.push(body.model.imageUrl);
+    }
     if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
 
     const seedreamResult = await generateImageSeedream(
