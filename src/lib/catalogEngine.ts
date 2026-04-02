@@ -364,6 +364,9 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     defaultRenderPath: 'reference_generate',
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, full back view, model standing straight facing away from camera, weight evenly distributed, feet hip-width apart, arms relaxed naturally at sides, shoulders level, straight-on eye-level camera, clearly showing back fit, length, seams, and construction of the hero product, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, full back view facing away from camera, upright stance, arms relaxed at sides, clearly showing the back panel, shoulder seams, collar from behind, back vent or split if present, yoke construction, and overall back silhouette of the jacket, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'side_3q',
@@ -374,6 +377,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, body angled 30 to 45 degrees toward camera, natural upright posture, subtle controlled weight shift, arms relaxed, straight-on studio camera, clearly showing shape, drape, and side structure of the hero product, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, body angled 30 to 45 degrees toward camera, natural upright posture, arms relaxed, clearly showing the jacket silhouette from the side — shoulder structure, sleeve drape, side seam line, lapel depth, collar profile, and fabric weight, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       bag: '[HERO_PRODUCT] worn by [MODEL], 3/4 angle full-body catalog photograph, bag clearly visible on shoulder or in hand as hero item, balanced styling, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       sunglasses: '[HERO_PRODUCT] worn by [MODEL], 3/4 portrait catalog photograph, eyewear clearly visible, calm confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       hat: '[HERO_PRODUCT] worn by [MODEL], 3/4 upper-body catalog photograph, headwear clearly visible, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
@@ -400,6 +404,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, subtle controlled walking pose, one foot slightly forward, gentle natural arm movement, upright posture, slight realistic fabric movement on the hero product, front-facing or slight 3/4 studio angle, neutral composed expression, commercially clean motion capture, not dynamic fashion editorial, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, controlled walking pose, one foot slightly forward, natural arm swing showing how the jacket moves — subtle fabric swing at hem, collar staying in position, sleeves following arm motion, upright posture, front-facing studio angle, commercially clean motion, not editorial, not dynamic, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       shoes: '[HERO_PRODUCT] worn by [MODEL], lower-body focused ecommerce photograph, subtle walking step with one foot lifting naturally, motion designed to clearly show footwear shape and sole profile, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
   },
@@ -598,6 +603,9 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     defaultRenderPath: 'reference_generate',
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], waist-up ecommerce catalog photograph, straight-on camera at chest height, centered composition, arms relaxed naturally, neutral composed expression, clear visibility of neckline, shoulders, fit, and upper garment construction, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], waist-up ecommerce catalog photograph, camera at chest height, centered composition, jacket fully visible from waist to collar — showing collar shape, lapels, shoulder construction, zipper or button closure, sleeve length, and fabric texture, arms relaxed naturally at sides, neutral composed expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'walking_motion',
@@ -634,7 +642,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] placed alone on a clean minimal studio surface, single product only, no props, no extra items, no model, subtle natural contact shadow beneath product, premium ecommerce product photography, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'Reproduce the EXACT product from the reference image — identical color, fabric, pattern, hardware, and construction. Do NOT invent, simplify, or alter any detail. [HERO_PRODUCT] placed alone on a clean minimal studio surface, single product only, no props, no extra items, no model, subtle natural contact shadow beneath product, premium ecommerce product photography, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: 'Reproduce the EXACT jacket from the reference image — identical color, fabric, pattern, zipper/buttons, seams, lining, and hardware. Do NOT invent or alter any detail. [HERO_PRODUCT] placed alone on a clean minimal studio surface, jacket naturally folded or draped to show collar, shoulders, and front closure, single product only, no props, no model, subtle contact shadow, premium ecommerce product photography, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'clean_flat_lay',
@@ -643,7 +655,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] alone in a top-down flat lay ecommerce photograph, centered in frame with clean negative space, no props, no accessories, no additional items, no model, premium clean commercial styling, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'Reproduce the EXACT product from the reference image — identical color, fabric, pattern, hardware, and construction. Do NOT invent, simplify, or alter any detail. [HERO_PRODUCT] alone in a top-down flat lay ecommerce photograph, centered in frame with clean negative space, no props, no accessories, no additional items, no model, premium clean commercial styling, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: 'Reproduce the EXACT jacket from the reference image — identical color, fabric, pattern, zipper/buttons, seams, and hardware. Do NOT invent or alter any detail. [HERO_PRODUCT] alone in a top-down flat lay ecommerce photograph, jacket laid flat showing full front with sleeves spread symmetrically, collar open naturally, centered in frame with clean negative space, no props, no model, premium clean commercial styling, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   // ── Internal Identity Anchor (not user-selectable) ──
   {
@@ -655,6 +671,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: true,
     promptTemplate: 'professional ecommerce fashion photograph showing a complete styled look from collarbone to feet, no head or face visible, [HERO_PRODUCT] worn as the hero item, [SUPPORT_WARDROBE], upright front-facing stance, arms relaxed naturally, centered composition, accurate fit and proportions, premium clean studio catalog quality, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
+      jacket_coat: 'Professional ecommerce fashion photograph showing a complete styled look from shoulders to feet — crop at upper shoulders so the full jacket collar, lapels, and shoulder seams sit naturally and are fully visible. NO head, NO face visible. [HERO_PRODUCT] worn as the hero item, jacket fully zipped or buttoned and sitting properly on the shoulders, [SUPPORT_WARDROBE], upright front-facing stance, arms relaxed naturally, centered composition, accurate fit and proportions, premium clean studio catalog quality, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       shoes: 'Professional catalog photograph from waist down — NO head, NO face visible. The body wears [HERO_PRODUCT] as the hero footwear, [SUPPORT_WARDROBE]. Standing straight, feet hip-width apart, footwear clearly visible, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       bag: 'Professional catalog photograph from neck down — NO head, NO face visible, cropped at collarbone. One hand holding [HERO_PRODUCT] naturally at side, the bag clearly visible as hero item, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       hat: 'Professional catalog photograph showing [HERO_PRODUCT] placed on a minimal display stand or form, NO human head, NO face, the headwear shown as a standalone product with styling context, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
