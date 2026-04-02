@@ -1,34 +1,34 @@
 
 
-# Fix: 429 Errors Must Trigger Fallback Instead of Throwing
+# Fix: generate-tryon 429 Must Trigger Fallback Chain
 
 ## Problem
-The Flash fallback code we added (line 1184) is correct, but it **never executes** for 429 errors. Here's why:
+Identical to the workflow bug we just fixed. In `generate-tryon`, when Gemini Pro hits a 429 rate limit:
 
-1. `generateImage()` retries 429 twice (lines 726-733)
-2. After retries exhausted, it **throws** `{ status: 429, message: "..." }` (line 733)
-3. The catch block at line 778 re-throws any error with a `status` property (line 784)
-4. The outer catch at line 1266 catches it and **immediately returns a failure response** (line 1276)
-5. The fallback code at lines 1165-1196 is never reached
+1. Line 516: `throw { status: 429, message: "..." }` 
+2. Line 544: catch re-throws errors with `status` property
+3. Line 871: outer catch returns error response immediately
+4. Lines 824-844 (Seedream + Flash fallbacks) are never reached
+
+The logs confirm this: "AI Gateway 429 (attempt 1/1) — backing off" → immediate refund, no fallback attempted.
 
 ## Solution
-Change `generateImage()` to **return null** on 429 exhaustion instead of throwing, matching how other errors (timeouts, gateway errors) already work. This lets the fallback chain execute.
+One-line change: line 516 — return `null` instead of throwing on 429 exhaustion, exactly like we did for generate-workflow.
 
-### `supabase/functions/generate-workflow/index.ts`
+### `supabase/functions/generate-tryon/index.ts`
 
-**Line 733** — Change throw to return null:
-```
+**Line 516** — Change:
+```typescript
 // Before:
 throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
 
 // After:
-console.error(`[generate-workflow] All 429 retries exhausted, returning null for fallback`);
+console.error(`[generate-tryon] All 429 retries exhausted, returning null for fallback`);
 return null;
 ```
 
-This is a one-line change. The fallback chain (Seedream for product-only, then Flash for all) will now properly activate when Gemini Pro hits rate limits.
-
 ## Result
-- 429 on Gemini Pro → returns null → Seedream fallback (if no model) → Flash fallback
-- The existing behavior for 402 (payment required) remains unchanged — that still throws immediately, which is correct since fallback won't help with billing issues.
+- 429 on Gemini Pro → returns null → Seedream 4.5 fallback → Gemini Flash fallback
+- 402 (payment required) still throws immediately (correct behavior)
+- All three fallback tiers now properly activate for try-on jobs
 
