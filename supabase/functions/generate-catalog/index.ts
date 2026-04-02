@@ -124,6 +124,8 @@ interface CatalogPayload {
     bodyType?: string;
     ageRange?: string;
     imageUrl?: string;
+    /** High-res identity source image for face replication */
+    identityImageUrl?: string;
   } | null;
   pose?: {
     name?: string;
@@ -139,6 +141,7 @@ interface CatalogPayload {
   catalog_mode?: boolean;
   render_path?: string;
   shot_id?: string;
+  shot_group?: 'on-model' | 'product-only';
   anchor_image_url?: string;
   // Queue metadata
   user_id?: string;
