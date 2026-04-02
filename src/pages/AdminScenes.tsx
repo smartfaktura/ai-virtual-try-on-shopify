@@ -751,7 +751,7 @@ function SceneRow({
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 8);
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `scene-previews/${timestamp}-${randomId}.${ext}`;
+      const path = `${userId}/scene-previews/${timestamp}-${randomId}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('product-uploads')
