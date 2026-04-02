@@ -349,7 +349,7 @@ type ProviderResult = {
 const PROVIDERS = {
   "nanobanana-flash": { gateway: "gemini-direct" as const, model: "gemini-3.1-flash-image-preview" },
   "nanobanana-pro":   { gateway: "gemini-direct" as const, model: "gemini-3-pro-image-preview" },
-  "seedream-4.5":     { gateway: "ark" as const, model: "seedream-4-5-251128", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
+  "seedream-4.5":     { gateway: "ark" as const, model: "Dola-Seedream-5.0-lite", apiKeyEnv: "BYTEPLUS_ARK_API_KEY" },
 } as const;
 
 // ── Seedream ARK image generation ────────────────────────────────────────
