@@ -390,9 +390,9 @@ serve(async (req) => {
       }
     }
 
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      const errMsg = "LOVABLE_API_KEY not configured";
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiApiKey) {
+      const errMsg = "GEMINI_API_KEY not configured";
       if (isQueueInternal && body.job_id) {
         await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
       }
@@ -459,11 +459,12 @@ serve(async (req) => {
     const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-face-lock' : 'fallback';
     console.log(`[generate-catalog] REF_STATE: shot="${body.shot_id}", mode=${refMode}, refs=${referenceImages.length}, hasModelIdentity=${!!modelIdentityUrl}, hasAnchor=${!!body.anchor_image_url}`);
 
-    // ── Generate with Nano Banana Flash ──
-    const result = await generateImageNanoBanana(
+    // ── Generate with Native Gemini API (2K quality) ──
+    const result = await generateImageNative(
       prompt,
       referenceImages,
-      lovableApiKey,
+      geminiApiKey,
+      aspectRatio,
       1,
     );
 
