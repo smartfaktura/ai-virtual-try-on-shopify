@@ -1,37 +1,34 @@
 
 
-# Add Fallback for Model Workflows
+# Fix: 429 Errors Must Trigger Fallback Instead of Throwing
 
 ## Problem
-The workflow generation has a 3-tier fallback chain (Gemini Pro → Seedream 4.5 → Gemini Flash), but it's **only active for product-only workflows**. When a model is attached (`body.model?.imageUrl` exists), Gemini Pro failure means immediate failure with no fallback — which is what happened in the recent failed generations (429 rate limits, credits refunded).
+The Flash fallback code we added (line 1184) is correct, but it **never executes** for 429 errors. Here's why:
+
+1. `generateImage()` retries 429 twice (lines 726-733)
+2. After retries exhausted, it **throws** `{ status: 429, message: "..." }` (line 733)
+3. The catch block at line 778 re-throws any error with a `status` property (line 784)
+4. The outer catch at line 1266 catches it and **immediately returns a failure response** (line 1276)
+5. The fallback code at lines 1165-1196 is never reached
 
 ## Solution
-Enable the Gemini Flash fallback for model workflows too. Seedream can't preserve model identity so it should remain skipped, but Gemini Flash can handle model reference images just like Gemini Pro.
-
-## Changes
+Change `generateImage()` to **return null** on 429 exhaustion instead of throwing, matching how other errors (timeouts, gateway errors) already work. This lets the fallback chain execute.
 
 ### `supabase/functions/generate-workflow/index.ts`
 
-**Line ~1165-1196** — Modify the fallback logic:
-
-1. **Keep Seedream fallback gated** to product-only (no change) — Seedream doesn't support model identity preservation.
-
-2. **Enable Flash fallback for ALL workflows** — Remove the `!body.model?.imageUrl` condition from the Flash fallback block (line 1184). Flash can handle model reference images the same way Pro does.
-
+**Line 733** — Change throw to return null:
 ```
-Before:
-  // Flash fallback: last resort for product-only if Seedream also failed
-  if (imageUrl === null && !body.model?.imageUrl) {
+// Before:
+throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
 
-After:
-  // Flash fallback: last resort if primary + Seedream both failed
-  if (imageUrl === null) {
+// After:
+console.error(`[generate-workflow] All 429 retries exhausted, returning null for fallback`);
+return null;
 ```
 
-This means the chain becomes:
-- **With model**: Gemini Pro (2 attempts) → Gemini Flash (2 attempts)
-- **Without model**: Gemini Pro (2 attempts) → Seedream 4.5 → Gemini Flash (2 attempts)
+This is a one-line change. The fallback chain (Seedream for product-only, then Flash for all) will now properly activate when Gemini Pro hits rate limits.
 
-## Risk
-Low — Flash is already proven as a fallback in freestyle. This just extends its use to model workflows where it was previously blocked.
+## Result
+- 429 on Gemini Pro → returns null → Seedream fallback (if no model) → Flash fallback
+- The existing behavior for 402 (payment required) remains unchanged — that still throws immediately, which is correct since fallback won't help with billing issues.
 
