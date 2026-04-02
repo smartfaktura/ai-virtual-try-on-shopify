@@ -516,8 +516,22 @@ export function useCatalogGenerate() {
       return false;
     }
 
-    // Start with anchor jobs visible
-    jobsRef.current = anchorJobs;
+    // Create placeholder jobs for derivatives so UI shows correct totals immediately
+    const placeholderJobs: CatalogJobExtended[] = derivativeSpecs.map((spec, i) => ({
+      jobId: `placeholder-${i}-${spec.shotId}-${spec.productId}`,
+      status: 'queued' as const,
+      images: [],
+      productId: spec.productId,
+      productName: spec.productTitle,
+      shotId: spec.shotId,
+      shotLabel: spec.shotLabel,
+      renderPath: spec.renderPath,
+      isAnchor: false,
+    }));
+
+    // Start with anchor jobs + placeholders visible
+    const initialJobs = [...anchorJobs, ...placeholderJobs];
+    jobsRef.current = anchorJobs; // Only track real jobs for polling
     persistBatch(anchorJobs);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
@@ -525,11 +539,12 @@ export function useCatalogGenerate() {
 
     const totalExpected = anchorJobs.length + derivativeSpecs.length;
     setBatchState({
-      jobs: anchorJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
+      jobs: initialJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
       allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
     });
 
-    toast.info(`Generating ${totalExpected} catalog image${totalExpected > 1 ? 's' : ''} (anchors first)…`);
+    const userImageCount = derivativeSpecs.length;
+    toast.info(`Generating ${userImageCount} catalog image${userImageCount > 1 ? 's' : ''}…`);
     sendWake(token);
 
     // If no derivatives, just poll anchors directly
@@ -539,9 +554,12 @@ export function useCatalogGenerate() {
     }
 
     // ── PHASE 2: Wait for anchors, then enqueue derivatives with anchor URLs ──
+    // Start polling anchors for UI feedback
+    pollJobs();
+
     (async () => {
       try {
-        console.log(`[catalog] Phase 1: Waiting for ${anchorJobs.length} anchor(s) to complete…`);
+        console.log(`[catalog] Phase 1: Waiting for ${anchorJobs.length} identity anchor(s) to complete…`);
 
         // Poll anchor jobs until done
         const anchorResults = await pollUntilDone(
@@ -590,7 +608,7 @@ export function useCatalogGenerate() {
 
         if (derivativeJobs.length > 0) sendWake(token);
 
-        // Merge all jobs and start polling the full set
+        // Merge all jobs (replace placeholders with real derivative jobs)
         const allJobs = [...updatedAnchors, ...derivativeJobs];
         jobsRef.current = allJobs;
         persistBatch(allJobs);
@@ -610,7 +628,7 @@ export function useCatalogGenerate() {
           phase: 'derivatives',
         });
 
-        // Now poll all remaining jobs
+        // Restart polling with full job set (pollJobs stops and restarts cleanly)
         pollJobs();
       } catch (err) {
         console.error('[catalog] Phase 2 error:', err);
@@ -619,8 +637,6 @@ export function useCatalogGenerate() {
       }
     })();
 
-    // Start polling anchors immediately for UI feedback
-    pollJobs();
     return true;
   }, [user, pollJobs]);
 
