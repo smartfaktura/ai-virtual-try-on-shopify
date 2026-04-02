@@ -35,6 +35,7 @@ async function generateImageSeedream(
   aspectRatio = "1:1",
   maxRetries = 1,
   seed?: number,
+  opts?: { guidanceScale?: number; imageStrength?: number; negativePrompt?: string },
 ): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const seedreamRatio = seedreamAspectRatio(aspectRatio);
@@ -47,9 +48,11 @@ async function generateImageSeedream(
         aspect_ratio: seedreamRatio,
         response_format: "url",
         watermark: false,
-        guidance_scale: 8.5,
+        guidance_scale: opts?.guidanceScale ?? 10.0,
         sequential_image_generation: "disabled",
         ...(seed !== undefined && { seed }),
+        ...(opts?.imageStrength !== undefined && { image_strength: opts.imageStrength }),
+        ...(opts?.negativePrompt && { negative_prompt: opts.negativePrompt }),
       };
       if (imageUrls.length === 1) {
         body.image = imageUrls[0];
