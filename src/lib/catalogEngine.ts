@@ -441,7 +441,10 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] invisible mannequin effect, product floating in pure white void, natural garment shape preserved as if worn, perfectly centered, absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface reflection, NO floor, pure white (#FFFFFF) infinite void background, ultra clean ecommerce packshot, sharp material details, ONLY this single product, NO people, NO model, NO human figure, [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] professional ghost mannequin / invisible mannequin ecommerce photograph. The garment maintains its natural 3D worn shape with hollow neck opening, hollow sleeve openings, and hollow hem — as if worn by an invisible body. Perfectly centered, front view. Pure white (#FFFFFF) infinite void background. Absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface, NO floor, NO reflection. NO people, NO model, NO human figure, NO skin, NO body parts, NO head, NO hands, NO feet. The garment interior is visible through the neck and arm openings. Ultra sharp textile detail, realistic fabric drape and construction, clean ecommerce packshot, [CONSISTENCY]',
+    categoryOverrides: {
+      top: '[HERO_PRODUCT] professional ghost mannequin photograph of this top/shirt. The garment maintains its natural 3D shape — hollow neck opening showing empty interior, hollow short/long sleeve openings, natural shoulder width. Front-facing, perfectly centered. Pure white (#FFFFFF) infinite void background. Absolutely NO shadow, NO surface, NO floor. NO people, NO model, NO skin, NO head, NO hands, NO torso shape visible — ONLY the fabric shell. Ultra sharp textile detail, realistic seams and stitching, clean ecommerce product shot, [CONSISTENCY]',
+    },
   },
   {
     id: 'front_flat',
@@ -450,7 +453,12 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] floating centered, perfectly symmetrical front view, no model, no mannequin, ONLY this single product, no other items, no accessories, no props, ultra clean ecommerce packshot, sharp details, realistic structure and material texture, minimal subtle shadow beneath product, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] laid perfectly flat, top-down front view, garment spread symmetrically on a clean surface, sleeves extended outward, no wrinkles, no folds. ONLY this single product — NO model, NO mannequin, NO human figure, NO torso shape, NO body form, NO hands, NO skin. The product must look like fabric laid flat on a table, NOT like it is being worn. Ultra clean ecommerce flat-lay packshot, sharp material details, realistic textile texture, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      top: '[HERO_PRODUCT] laid perfectly flat on a clean surface, top-down birds-eye view, sleeves spread outward symmetrically, collar or neckline laid flat, no wrinkles. ONLY the garment — NO model, NO mannequin, NO torso shape, NO body form, NO skin, NO human figure. Must look like fabric on a flat surface, NOT worn on a body. Sharp textile detail, realistic seams, clean ecommerce flat lay, [BACKGROUND], [CONSISTENCY]',
+      shoes: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow beneath product, [BACKGROUND], [CONSISTENCY]',
+      bag: '[HERO_PRODUCT] isolated, front view, laid flat or standing upright, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'back_flat',
@@ -459,7 +467,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set([...APPAREL, 'bag', 'shoes']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] floating centered, back view, perfectly aligned, showing full construction and shape, ONLY this single product, no other items, no accessories, ultra clean ecommerce packshot, sharp details, minimal subtle shadow beneath product, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] laid perfectly flat, top-down back view, garment flipped to show the back, spread symmetrically, sleeves extended outward. ONLY this single product — NO model, NO mannequin, NO torso shape, NO body form, NO hands, NO skin, NO human figure. Must look like fabric laid flat, NOT like it is being worn. Sharp construction details, seams, labels visible, ultra clean ecommerce flat-lay packshot, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      shoes: '[HERO_PRODUCT] isolated, back/heel view, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
+      bag: '[HERO_PRODUCT] isolated, back view, showing construction and back details, perfectly centered, clean product photography, no model, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'zoom_detail',
@@ -468,7 +480,12 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'extreme close-up of [HERO_PRODUCT], highlighting material, stitching, texture, construction, or finishing details, ultra sharp textures, shallow depth of field, premium editorial macro style, ONLY the hero product visible, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'extreme macro close-up photograph of [HERO_PRODUCT] textile surface ONLY — showing weave pattern, thread texture, stitching lines, material grain, and finishing details at fabric level. Fill the entire frame with fabric/material texture. Shallow depth of field, ultra sharp macro lens, premium editorial product photography. NO human body, NO skin, NO neckline-as-body-crop, NO mannequin, NO model, NO torso, NO hands. ONLY raw material and construction detail of the product itself, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jewelry: 'extreme macro close-up of [HERO_PRODUCT] surface — metal finish, gemstone facets, clasp mechanism, engraving detail. Fill frame with jewelry surface. Ultra sharp macro, premium product photography, NO human body, NO skin, NO fingers, ONLY the product, [BACKGROUND], [CONSISTENCY]',
+      shoes: 'extreme macro close-up of [HERO_PRODUCT] — sole tread pattern, leather grain, stitching, eyelets, material texture. Fill frame with shoe surface detail. Ultra sharp macro, NO human body, NO feet, ONLY the product, [BACKGROUND], [CONSISTENCY]',
+      bag: 'extreme macro close-up of [HERO_PRODUCT] — leather/fabric grain, stitching, hardware, zipper pull, material texture. Fill frame with bag surface detail. Ultra sharp macro, NO human body, NO hands, ONLY the product, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   // ── Category-specific shots ──
   {
