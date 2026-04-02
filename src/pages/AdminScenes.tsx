@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAuth } from '@/contexts/AuthContext';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder, useSaveSceneSortOrder } from '@/hooks/useSceneSortOrder';
