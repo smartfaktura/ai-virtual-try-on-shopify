@@ -276,18 +276,7 @@ export default function CatalogGenerate() {
 
   const handleNewGeneration = () => {
     resetBatch();
-    setStep(1);
-    setSelectedProductIds(new Set());
-    setFashionStyle(null);
-    setSelectedModelIds(new Set());
-    setProductOnlyMode(false);
-    setModelExplicitlyChosen(false);
-    setSelectedBackgroundId(null);
-    setSelectedShots(new Set());
-    setPropAssignments({});
-    setGenerationStartedAt(null);
-    setElapsedSeconds(0);
-    setShowCancelDialog(false);
+    navigate('/app/catalog');
   };
 
   // Estimated time remaining
@@ -312,7 +301,7 @@ export default function CatalogGenerate() {
   if (isGenerating && !batchState) {
     return (
       <div className="space-y-6 pb-32">
-        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
         <div className="flex flex-col items-center justify-center py-24 space-y-6">
           {/* Animated gradient ring */}
           <div className="relative">
@@ -362,7 +351,7 @@ export default function CatalogGenerate() {
 
     return (
       <div className="space-y-6 pb-32">
-        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
 
         {batchState.allDone ? (
           <div className="space-y-6">
@@ -729,7 +718,7 @@ export default function CatalogGenerate() {
     <div className="space-y-6 pb-16 sm:pb-32">
       {/* Header with team strip */}
       <div className="flex items-start justify-between gap-4">
-        <PageHeader title="Catalog Studio" subtitle="Generate consistent photography across your catalog"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Generate consistent photography across your catalog" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
         <div className="hidden md:block pt-1">
           <CatalogTeamStrip />
         </div>

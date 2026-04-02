@@ -37,7 +37,8 @@ const prefetchMap: Record<string, () => void> = {
   '/app/video': () => { import('@/pages/VideoHub'); },
   '/app/models': () => { import('@/pages/BrandModels'); },
   '/app/brand-profiles': () => { import('@/pages/BrandProfiles'); },
-  '/app/catalog': () => { import('@/pages/CatalogGenerate'); },
+  '/app/catalog': () => { import('@/pages/CatalogHub'); },
+  '/app/catalog/new': () => { import('@/pages/CatalogGenerate'); },
 };
 const prefetched = new Set<string>();
 const prefetchRoute = (path: string) => {
