@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAuth } from '@/contexts/AuthContext';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useSceneSortOrder, useSaveSceneSortOrder } from '@/hooks/useSceneSortOrder';
@@ -54,6 +55,7 @@ function getCategoryWorkflowHint(category: string): string {
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const { user } = useAuth();
   const { hiddenIds, hiddenBuiltInScenes, hideScene, unhideScene } = useHiddenScenes();
   const { asPoses: customPoses, scenes: customScenesRaw } = useCustomScenes();
   const { sortMap, categoryMap } = useSceneSortOrder();
@@ -595,6 +597,7 @@ export default function AdminScenes() {
                    togglePromptOnly={togglePromptOnly}
                    customScenesRaw={customScenesRaw}
                    workflows={workflows}
+                   userId={user?.id || ''}
                 />
               ))}
             </div>
@@ -639,6 +642,7 @@ export default function AdminScenes() {
                        togglePromptOnly={togglePromptOnly}
                        customScenesRaw={customScenesRaw}
                        workflows={workflows}
+                       userId={user?.id || ''}
                     />
                   ))}
                 </div>
@@ -716,6 +720,7 @@ interface SceneRowProps {
   togglePromptOnly: (poseId: string, value: boolean) => void;
   customScenesRaw: import('@/hooks/useCustomScenes').CustomScene[];
   workflows: WorkflowInfo[];
+  userId: string;
 }
 
 function SceneRow({
@@ -724,7 +729,7 @@ function SceneRow({
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
   handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
-  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw, workflows,
+  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw, workflows, userId,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
@@ -748,7 +753,7 @@ function SceneRow({
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 8);
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `scene-previews/${timestamp}-${randomId}.${ext}`;
+      const path = `${userId}/scene-previews/${timestamp}-${randomId}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('product-uploads')
@@ -991,6 +996,31 @@ function SceneRow({
 
       {/* Actions */}
       <div className="flex items-center gap-0.5 flex-shrink-0">
+        {/* Change preview for custom scenes */}
+        {isCustom && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 relative" disabled={isUploadingPreview}>
+                {isUploadingPreview ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ImageIcon className="w-3.5 h-3.5" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handlePreviewUpload(f);
+                    e.target.value = '';
+                  }}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">Change preview image</TooltipContent>
+          </Tooltip>
+        )}
         {/* Reset preview for custom scenes */}
         {isCustom && hasCustomPreview && (
           <Tooltip>
