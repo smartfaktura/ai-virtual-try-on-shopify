@@ -805,12 +805,20 @@ export function buildReferences(
   productImageUrl: string,
   anchorImageUrl: string | null,
   modelRefUrl?: string | null,
+  shotGroup?: 'on-model' | 'product-only',
 ): ImageRef[] {
-  const refs: ImageRef[] = [
-    { url: productImageUrl, role: 'product' },
-  ];
-  if (anchorImageUrl) refs.push({ url: anchorImageUrl, role: 'anchor' });
+  // Product-only shots: only product reference, no model
+  if (shotGroup === 'product-only') {
+    const refs: ImageRef[] = [{ url: productImageUrl, role: 'product' }];
+    if (anchorImageUrl) refs.push({ url: anchorImageUrl, role: 'anchor' });
+    return refs;
+  }
+
+  // On-model shots: identity image FIRST for stronger face locking, then product
+  const refs: ImageRef[] = [];
   if (modelRefUrl) refs.push({ url: modelRefUrl, role: 'model' });
+  refs.push({ url: productImageUrl, role: 'product' });
+  if (anchorImageUrl) refs.push({ url: anchorImageUrl, role: 'anchor' });
   // Keep under 4 references
   return refs.slice(0, 4);
 }
