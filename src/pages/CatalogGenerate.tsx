@@ -331,15 +331,15 @@ export default function CatalogGenerate() {
 
   // If batch is active, show progress / completion
   if (batchState) {
-    // Filter out internal identity_anchor jobs from visible results
-    // Keep placeholders for counting (they represent upcoming derivative jobs) but exclude identity_anchor
-    const visibleJobs = batchState.jobs.filter(j => j.shotId !== 'identity_anchor');
-    const realVisibleJobs = visibleJobs.filter(j => !j.jobId.startsWith('placeholder-'));
-    const visibleCompleted = realVisibleJobs.filter(j => j.status === 'completed').length;
-    const visibleFailed = realVisibleJobs.filter(j => j.status === 'failed').length;
-    const visibleTotal = visibleJobs.length;
+    // Filter: only show user-visible jobs (not anchors, not placeholders)
+    const visibleJobs = batchState.jobs.filter(j => j.isUserVisible !== false && j.shotId !== 'identity_anchor' && !j.isPlaceholder);
+    const visibleCompleted = visibleJobs.filter(j => j.status === 'completed').length;
+    const visibleFailed = visibleJobs.filter(j => j.status === 'failed').length;
+    const visibleTotal = Math.max(visibleJobs.length, batchState.totalJobs);
     const progress = visibleTotal > 0
       ? Math.round(((visibleCompleted + visibleFailed) / visibleTotal) * 100) : 0;
+    const isAnchoring = batchState.phase === 'anchors';
+    const allVisibleFailed = visibleJobs.length > 0 && visibleFailed === visibleJobs.length;
 
     return (
       <div className="space-y-6 pb-32">
@@ -348,20 +348,48 @@ export default function CatalogGenerate() {
         {batchState.allDone ? (
           <div className="space-y-6">
             <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-7 h-7 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
-                  {visibleFailed > 0 && (
-                    <span className="text-destructive"> · {visibleFailed} failed</span>
-                  )}
-                </p>
-                <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Total time: {formatTime(elapsedSeconds)}</span>
-                </div>
+              {allVisibleFailed ? (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-7 h-7 text-destructive" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">Generation Failed</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      All {visibleFailed} image{visibleFailed !== 1 ? 's' : ''} failed. Credits have been refunded.
+                    </p>
+                  </div>
+                </>
+              ) : visibleCompleted === 0 ? (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-7 h-7 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">No Images Generated</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Something went wrong. Please try again.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
+                      {visibleFailed > 0 && (
+                        <span className="text-destructive"> · {visibleFailed} failed</span>
+                      )}
+                    </p>
+                  </div>
+                </>
+              )}
+              <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Total time: {formatTime(elapsedSeconds)}</span>
               </div>
               <p className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">VOVV.AI</p>
               <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
@@ -372,7 +400,7 @@ export default function CatalogGenerate() {
                   <Button variant="outline" disabled={isDownloading} onClick={async () => {
                     setIsDownloading(true);
                     try {
-                      const images = realVisibleJobs
+                      const images = visibleJobs
                         .filter(j => j.status === 'completed' && j.images.length > 0)
                         .flatMap(j => j.images.map(url => ({
                           url,
@@ -396,7 +424,7 @@ export default function CatalogGenerate() {
             </div>
 
             {(() => {
-              const visibleImages = realVisibleJobs.filter(j => j.status === 'completed' && j.images.length > 0);
+              const visibleImages = visibleJobs.filter(j => j.status === 'completed' && j.images.length > 0);
               if (visibleImages.length === 0) return null;
               const imageJobMap = visibleImages.flatMap(j =>
                 j.images.map(img => ({ url: img, shotLabel: j.shotLabel, productName: j.productName }))
@@ -433,7 +461,7 @@ export default function CatalogGenerate() {
                 </div>
                 <p className="text-xs text-muted-foreground">Credits for failed images are automatically refunded.</p>
                 <ul role="list" className="space-y-1">
-                  {realVisibleJobs.filter(j => j.status === 'failed').map(j => (
+                  {visibleJobs.filter(j => j.status === 'failed').map(j => (
                     <li key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
                       <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
                       {j.productName} — {j.shotLabel}
@@ -453,12 +481,17 @@ export default function CatalogGenerate() {
                 <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
               </div>
               <div>
-                <h2 className="text-base font-semibold tracking-tight">Generating your catalog...</h2>
+                <h2 className="text-base font-semibold tracking-tight">
+                  {isAnchoring ? 'Locking consistency reference…' : 'Generating your catalog...'}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {visibleCompleted} of {visibleTotal} images
+                  {isAnchoring
+                    ? 'Preparing identity reference for consistent results'
+                    : `${visibleCompleted} of ${visibleTotal} images`
+                  }
                 </p>
               </div>
-              <Progress value={progress} className="h-1.5 max-w-md mx-auto" />
+              <Progress value={isAnchoring ? undefined : progress} className="h-1.5 max-w-md mx-auto" />
               <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Elapsed: {formatTime(elapsedSeconds)}</span>
                 {estimatedRemaining !== null && (
@@ -497,7 +530,7 @@ export default function CatalogGenerate() {
 
             {(() => {
               const productMap = new Map<string, { name: string; imageUrl: string; total: number; done: number; failed: number }>();
-              for (const j of realVisibleJobs) {
+              for (const j of visibleJobs) {
                 const existing = productMap.get(j.productId) || { name: j.productName, imageUrl: '', total: 0, done: 0, failed: 0 };
                 existing.total++;
                 if (j.status === 'completed') existing.done++;
@@ -537,7 +570,7 @@ export default function CatalogGenerate() {
 
             {(() => {
               const imageJobMap: { url: string; shotLabel: string }[] = [];
-              for (const j of realVisibleJobs) {
+              for (const j of visibleJobs) {
                 if (j.status !== 'completed') continue;
                 for (const img of j.images) {
                   imageJobMap.push({ url: img, shotLabel: j.shotLabel });
@@ -568,13 +601,13 @@ export default function CatalogGenerate() {
         )}
 
         <ImageLightbox
-          images={realVisibleJobs.flatMap(j => j.images)}
+          images={visibleJobs.flatMap(j => j.images)}
           currentIndex={lightboxIndex}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
           onDownload={(i) => {
-            const allImages = realVisibleJobs.flatMap(j => j.status === 'completed' ? j.images.map(url => ({ url, productName: j.productName, shotLabel: j.shotLabel })) : []);
+            const allImages = visibleJobs.flatMap(j => j.status === 'completed' ? j.images.map(url => ({ url, productName: j.productName, shotLabel: j.shotLabel })) : []);
             const item = allImages[i];
             if (!item) return;
             const safeName = (item.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');

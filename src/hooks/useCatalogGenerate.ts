@@ -139,6 +139,8 @@ export function useCatalogGenerate() {
   const pollingStartRef = useRef<number>(0);
   const jobsRef = useRef<CatalogJobExtended[]>([]);
   const lastWakeRef = useRef<number>(0);
+  /** Phase guard: prevents allDone from triggering during the anchor phase */
+  const phaseRef = useRef<'idle' | 'anchors' | 'derivatives' | 'complete'>('idle');
 
   // ── Session recovery on mount ──
   useEffect(() => {
@@ -146,6 +148,8 @@ export function useCatalogGenerate() {
     if (saved && saved.length > 0 && jobsRef.current.length === 0) {
       console.log(`[catalog] Recovering ${saved.length} jobs from session`);
       jobsRef.current = saved;
+      // Recovered sessions have real jobs (no placeholders), so they're in derivatives phase
+      phaseRef.current = 'derivatives';
       setIsGenerating(true);
 
       const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
@@ -252,7 +256,10 @@ export function useCatalogGenerate() {
 
         const rowMap = new Map(rows.map((r: any) => [r.id, r]));
 
-        const updated = jobs.map(j => {
+        // Merge polled data into existing jobs WITHOUT dropping placeholders
+        const currentJobs = jobsRef.current;
+        const updated = currentJobs.map(j => {
+          if (j.isPlaceholder) return j; // Keep placeholders untouched
           const row = rowMap.get(j.jobId) as any;
           if (!row) return j;
           const images: string[] = [];
@@ -262,15 +269,24 @@ export function useCatalogGenerate() {
 
         jobsRef.current = updated;
 
-        const completedJobs = updated.filter(j => j.status === 'completed').length;
-        const failedJobs = updated.filter(j => j.status === 'failed').length;
-        const allDone = updated.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
-        const aggregatedImages = updated.flatMap(j => j.images);
-        const anyQueued = updated.some(j => j.status === 'queued');
+        // Only count real (non-placeholder) jobs for completion
+        const realJobs = updated.filter(j => !j.isPlaceholder);
+        const completedJobs = realJobs.filter(j => j.status === 'completed').length;
+        const failedJobs = realJobs.filter(j => j.status === 'failed').length;
+        const aggregatedImages = realJobs.flatMap(j => j.images);
+        const anyQueued = realJobs.some(j => j.status === 'queued');
+
+        // Phase-aware allDone: NEVER complete during anchor phase
+        const currentPhase = phaseRef.current;
+        const realAllTerminal = realJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
+        const allDone = currentPhase === 'derivatives' && realAllTerminal && realJobs.length > 0;
 
         const anchorJobs = updated.filter(j => j.isAnchor);
-        const anchorsAllDone = anchorJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
-        const phase = allDone ? 'complete' as const : !anchorsAllDone ? 'anchors' as const : 'derivatives' as const;
+        const anchorsAllDone = anchorJobs.length > 0 && anchorJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
+        const phase = allDone ? 'complete' as const
+          : currentPhase === 'derivatives' ? 'derivatives' as const
+          : anchorsAllDone ? 'anchors' as const  // Still anchors until phase 2 starts
+          : 'anchors' as const;
 
         const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
         for (const aj of anchorJobs) {
@@ -278,11 +294,12 @@ export function useCatalogGenerate() {
         }
 
         setBatchState({
-          jobs: updated, totalJobs: updated.length, completedJobs, failedJobs,
+          jobs: updated, totalJobs: updated.filter(j => !j.isPlaceholder).length, completedJobs, failedJobs,
           allDone, aggregatedImages, anchorStatus, phase,
         });
 
         if (allDone) {
+          phaseRef.current = 'complete';
           stopPolling();
           setIsGenerating(false);
           clearPersistedBatch();
@@ -389,6 +406,7 @@ export function useCatalogGenerate() {
     if (!token) { toast.error('Authentication required'); return false; }
 
     setIsGenerating(true);
+    phaseRef.current = 'anchors';
     const batchId = crypto.randomUUID();
     const anchorJobs: CatalogJobExtended[] = [];
     let enqueueCount = 0;
@@ -533,17 +551,22 @@ export function useCatalogGenerate() {
       shotLabel: spec.shotLabel,
       renderPath: spec.renderPath,
       isAnchor: false,
+      isPlaceholder: true,
+      isUserVisible: true,
     }));
 
-    // Start with anchor jobs + placeholders visible
-    const initialJobs = [...anchorJobs, ...placeholderJobs];
-    jobsRef.current = anchorJobs; // Only track real jobs for polling
-    persistBatch(anchorJobs);
+    // Mark anchor jobs
+    const markedAnchors = anchorJobs.map(j => ({ ...j, isPlaceholder: false, isUserVisible: false }));
+
+    // Start with anchor jobs + placeholders — ALL in jobsRef so polling sees placeholders
+    const initialJobs = [...markedAnchors, ...placeholderJobs];
+    jobsRef.current = initialJobs;
+    persistBatch(markedAnchors);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
     for (const j of anchorJobs) anchorStatus[j.productId] = 'pending';
 
-    const totalExpected = anchorJobs.length + derivativeSpecs.length;
+    const totalExpected = derivativeSpecs.length; // Only count user-visible jobs
     setBatchState({
       jobs: initialJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
       allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
@@ -611,27 +634,34 @@ export function useCatalogGenerate() {
           );
 
           if (jobResult === 'insufficient_credits') { creditsFailed = true; break; }
-          if (jobResult) derivativeJobs.push(jobResult);
+          if (jobResult) derivativeJobs.push({ ...jobResult, isPlaceholder: false, isUserVisible: true });
         }
 
         if (derivativeJobs.length > 0) sendWake(token);
 
+        // Mark anchors as not user-visible
+        const markedAnchors = updatedAnchors.map(j => ({ ...j, isPlaceholder: false, isUserVisible: false }));
+
         // Merge all jobs (replace placeholders with real derivative jobs)
-        const allJobs = [...updatedAnchors, ...derivativeJobs];
+        const allJobs = [...markedAnchors, ...derivativeJobs];
         jobsRef.current = allJobs;
         persistBatch(allJobs);
+
+        // Transition to derivatives phase
+        phaseRef.current = 'derivatives';
 
         const newAnchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
         for (const aj of updatedAnchors) {
           newAnchorStatus[aj.productId] = aj.status === 'completed' ? 'completed' : aj.status === 'failed' ? 'failed' : 'pending';
         }
 
+        const derivativeCount = derivativeJobs.length;
         setBatchState({
-          jobs: allJobs, totalJobs: allJobs.length,
-          completedJobs: allJobs.filter(j => j.status === 'completed').length,
-          failedJobs: allJobs.filter(j => j.status === 'failed').length,
+          jobs: allJobs, totalJobs: derivativeCount,
+          completedJobs: 0,
+          failedJobs: 0,
           allDone: false,
-          aggregatedImages: allJobs.flatMap(j => j.images),
+          aggregatedImages: [],
           anchorStatus: newAnchorStatus,
           phase: 'derivatives',
         });
@@ -652,6 +682,7 @@ export function useCatalogGenerate() {
     stopPolling();
     setBatchState(null);
     jobsRef.current = [];
+    phaseRef.current = 'idle';
     setIsGenerating(false);
     clearPersistedBatch();
   }, [stopPolling]);
