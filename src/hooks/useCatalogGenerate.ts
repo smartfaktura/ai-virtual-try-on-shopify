@@ -490,7 +490,7 @@ export function useCatalogGenerate() {
             backgroundHex: session.backgroundHex,
           });
           const comboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${shotId}`;
-          const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
+          const prompt = appendPropsToPrompt(rawPrompt, comboKey, shotId, config.propAssignments);
 
           const isProductOnlyShot = shotDef.group === 'product-only';
 

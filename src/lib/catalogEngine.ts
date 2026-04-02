@@ -793,6 +793,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     prompt += '\nMODEL IDENTITY ANCHOR: The model MUST be the EXACT person shown in the model reference image. Replicate their face structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions with absolute precision. Do NOT substitute a different person, do NOT alter any facial feature.';
     prompt += '\nFACE QUALITY: Render the model\'s face with maximum photorealistic resolution — sharp defined facial features, visible skin texture and pores, detailed iris with catchlights, natural lip detail, individual eyebrow hairs, realistic under-eye area. Do NOT blur, smooth, soften, airbrush, or distort any facial feature. The face must be indistinguishable from a real high-resolution photograph.';
     prompt += '\nIDENTITY PRIORITY: The model reference image is the PRIMARY identity source. The product reference defines ONLY the garment. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nSINGLE SUBJECT RULE: There is EXACTLY ONE person in this image — the model described above. Do NOT add a second person, do NOT show a reflection of the model, do NOT create a mirror image, do NOT split the frame into multiple exposures, do NOT duplicate the body or limbs. ONE single human subject, ONE single captured moment.';
   }
 
   // GLOBAL lighting rule — applied to ALL shots (model and product-only)
@@ -805,7 +806,12 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
 
   // Product-only shots: enforce single-product + no-people rule
   if (shotDef.group === 'product-only') {
-    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described. NO people, NO model, NO human figure, NO hands, NO body parts.';
+    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described. NO people, NO model, NO human figure, NO face, NO hands, NO body parts, NO skin.';
+    // Category-aware: shoes can be a natural pair, everything else is single item
+    const pairCategories: ProductCategory[] = ['shoes'];
+    if (!pairCategories.includes(productCategory)) {
+      prompt += ' Show exactly ONE single copy of the product — do NOT duplicate it, do NOT show front and back together, do NOT merge two views into one image.';
+    }
   }
 
   return prompt;
