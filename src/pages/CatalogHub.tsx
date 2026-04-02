@@ -98,6 +98,8 @@ function groupIntoSessions(jobs: CatalogJob[]): CatalogSession[] {
 
 export default function CatalogHub() {
   const { user } = useAuth();
+  const [selectedSession, setSelectedSession] = useState<CatalogSession | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const { data: jobs, isLoading } = useQuery({
