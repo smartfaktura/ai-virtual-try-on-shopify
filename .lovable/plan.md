@@ -1,41 +1,30 @@
 
 
-# Fix Catalog Generation Failures
+# Fix Mismatched Image Count (14 vs 13)
 
-## Root Causes (from edge function logs)
+## Root Cause
 
-### Bug 1: Invalid `max_tokens` parameter
+Line 339 in `CatalogGenerate.tsx`:
+```typescript
+const visibleTotal = Math.max(visibleJobs.length, batchState.totalJobs);
 ```
-"Invalid JSON payload received. Unknown name "max_tokens" at 'generation_config': Cannot find field."
-```
-The native Gemini `generateContent` API does not accept `max_tokens`. This was left over from the gateway migration. Remove it from `generationConfig`.
 
-### Bug 2: Stack overflow in `fetchImageAsBase64`
-```
-fetchImageAsBase64 failed: Maximum call stack size exceeded
-```
-Line 32: `btoa(String.fromCharCode(...bytes))` spreads the entire image byte array as function arguments. Large images (>100KB) exceed the JS call stack limit. Fix: chunk the conversion.
+`batchState.totalJobs` sometimes includes the hidden `identity_anchor` job(s), giving 14. But `visibleJobs` correctly filters anchors out, giving 13. The `Math.max` picks 14, so the main progress says "0/14" while per-product cards (built from `visibleJobs`) say "0/13".
 
-## File: `supabase/functions/generate-catalog/index.ts`
+## Fix
 
-### Fix 1 — Remove `max_tokens` (line 103)
-Delete `max_tokens: 8192` from `generationConfig`. The native Gemini image endpoint doesn't support this parameter.
+**File: `src/pages/CatalogGenerate.tsx` — line 339**
 
-### Fix 2 — Chunk base64 encoding (line 32)
 Replace:
 ```typescript
-const b64 = btoa(String.fromCharCode(...bytes));
+const visibleTotal = Math.max(visibleJobs.length, batchState.totalJobs);
 ```
-With chunked conversion:
+With:
 ```typescript
-let binary = "";
-const chunkSize = 8192;
-for (let i = 0; i < bytes.length; i += chunkSize) {
-  binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-}
-const b64 = btoa(binary);
+const visibleTotal = visibleJobs.length;
 ```
 
-### No other changes needed
-Everything else (queue completion, storage upload, reference image logic) is correct.
+This ensures both the main progress display and the per-product breakdown use the same filtered count. The `Math.max` guard was originally there to handle placeholder expansion, but placeholders are already filtered in `visibleJobs`, so the guard is no longer needed and causes this mismatch.
+
+Single line change, no other files affected.
 
