@@ -453,7 +453,7 @@ export default function CatalogGenerate() {
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Generating your catalog...</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {batchState.completedJobs} of {batchState.totalJobs} images
+                  {visibleCompleted} of {visibleTotal} images
                 </p>
               </div>
               <Progress value={progress} className="h-1.5 max-w-md mx-auto" />
