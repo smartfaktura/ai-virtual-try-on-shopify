@@ -730,7 +730,8 @@ async function generateImage(
             await new Promise((r) => setTimeout(r, 3000 * (attempt + 1) + jitter));
             continue;
           }
-          throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
+          console.error(`[generate-workflow] All 429 retries exhausted, returning null for fallback`);
+          return null;
         }
         if (response.status === 402) {
           throw {
