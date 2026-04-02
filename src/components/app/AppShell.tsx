@@ -57,6 +57,7 @@ const navItems = [
   { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
+  { label: 'Catalog Studio', icon: LayoutTemplate, path: '/app/catalog' },
   { label: 'Brand Models', icon: Users, path: '/app/models' },
   { label: 'Earn Credits', icon: Gift, path: '#earn-credits' },
 ];
@@ -155,6 +156,11 @@ export function AppShell({ children }: AppShellProps) {
             {isComingSoon && (
               <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-white/[0.08] text-white/40">
                 Soon
+              </span>
+            )}
+            {item.label === 'Catalog Studio' && (
+              <span className="text-[9px] font-semibold uppercase bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                BETA
               </span>
             )}
           </span>
