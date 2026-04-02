@@ -1,47 +1,71 @@
 
 
-# Fix Catalog Results Page Refresh + Improve Shot Prompts
+# Fix Catalog Generation Issues: Sun Flares, Missing Legs, Shadow, Flat Lay Model Leak
 
-## Issue 1: Results Page Refreshing
+## Root Causes Found
 
-**Root cause**: `versionCheck.ts` runs on app mount. Every time code is deployed, `version.json` gets a new timestamp. The check detects a mismatch and calls `window.location.reload()`, which wipes all in-memory state (batch results, progress, generated images).
+### 1. Model image leaks into product-only shots (flat lay shows a person)
+In `useCatalogGenerate.ts` line 336, `modelB64` is passed to **every** shot — including flat lay, ghost mannequin, and other `product-only` shots. When Seedream receives a model reference image alongside a "flat lay, no people" prompt, it still renders the person because the image reference overrides the text.
 
-**Fix**: Skip the version check reload when the user is on the catalog generation page with an active batch. Add a guard in `versionCheck.ts` that checks if the current path is `/app/catalog` before reloading. This preserves generation results.
+**Fix**: In `useCatalogGenerate.ts`, check `shotDef.needsModel` before passing `modelB64`. For product-only shots, pass `null` instead.
 
-## Issue 2: Weak/Inconsistent Shot Prompts
+### 2. CONSISTENCY_BLOCK references "same model identity" in product-only shots
+The `CONSISTENCY_BLOCK` constant says "same model identity matching the model reference image exactly — same face same hair..." This text gets injected into product-only prompts via `[CONSISTENCY]`, confusing Seedream into adding a person.
 
-The current prompt templates are generic and lack the precision needed for consistent, high-quality catalog output. Key problems:
-- Ghost Mannequin adds shadow despite saying "no shadow" — needs stronger shadow suppression
-- Flat Lay includes "minimal curated props" which causes random unrelated products to appear — must explicitly forbid extra items
-- Many shots lack specific pose direction, leading to random/different results each time
-- Product-only shots need stronger "ONLY this product, nothing else" directives
+**Fix**: Split into two blocks in `catalogEngine.ts`:
+- `CONSISTENCY_BLOCK_MODEL` — current text with model identity references
+- `CONSISTENCY_BLOCK_PRODUCT` — stripped of all model/person references, focused on product consistency only
 
-**Fix**: Rewrite all shot `promptTemplate` values in `catalogEngine.ts` with:
+Use the appropriate block based on `shotDef.needsModel` in `assemblePrompt`.
 
-### Ghost Mannequin
-Remove all shadow references. Add: `"absolutely no shadow, no drop shadow, no surface, pure white void background, invisible mannequin effect, product floating in pure white space"`
+### 3. Sun flares / warm lighting bleed
+The `BACKGROUND RULE` directive was added in the previous fix, but the `CONSISTENCY_BLOCK` still says "same lighting" without specifying what lighting. When the model's reference photo has warm outdoor lighting, "same lighting" can reinforce it. Also, some lighting presets like `warm_studio_refined` and `soft_warm_luxury` use "golden tones" and "warmth" which can produce sun-flare effects.
 
-### Front Flat / Back Flat
-Add: `"ONLY this single product, no other items, no accessories, no props"`
+**Fix**: Strengthen the `BACKGROUND RULE` directive to explicitly say "NO sun flares, NO window light, NO natural outdoor lighting, ONLY controlled studio lighting." Also add "same STUDIO lighting" instead of just "same lighting" in the consistency block.
 
-### Styled Flat Lay
-Replace "minimal curated props" with: `"ONLY [HERO_PRODUCT] alone, NO other products, NO extra accessories, NO additional items, single product flat lay, clean negative space around product, top-down birds-eye perspective"`
+### 4. Missing legs (cropping issue)
+Some shots produce cropped compositions because the prompt lacks explicit "full body head to toe" framing. The `front_model` template says "full body front-facing pose" but doesn't enforce "head to toe, feet visible."
 
-### On Surface
-Remove "marble or linen or wood" ambiguity — use: `"placed on a clean minimal surface, single product only, no other items or accessories in frame"`
+**Fix**: Add "full body head to toe, feet fully visible in frame" to all full-body on-model shot templates that should show complete figure.
 
-### On-Model Shots (general improvements)
-- Add more specific pose language (e.g., "weight on left leg, right hand relaxed at side" for front model)
-- Add "confident neutral expression, looking directly at camera" to front-facing shots
-- Add "same exact model in every shot" reinforcement
-- Movement shot: add "slight fabric motion blur on garment edges only"
-- Sitting: specify "on a simple stool or bench, minimal furniture"
-
-### All product-only shots
-Append universal suffix: `"IMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described."`
+### 5. Ghost mannequin shadow
+The ghost mannequin prompt already says "NO shadow" but the `CONSISTENCY_BLOCK` says "same background" which can pull in shadow from other shots. The product-only consistency block will fix this since it won't reference the studio setup used for model shots.
 
 ## Files to Change
 
-1. **`src/lib/versionCheck.ts`** — Add path guard to skip reload on `/app/catalog`
-2. **`src/lib/catalogEngine.ts`** — Rewrite all ~20 shot `promptTemplate` values with stronger, more specific directions
+### 1. `src/hooks/useCatalogGenerate.ts` (~line 333-336)
+Pass `null` for model image on product-only shots:
+```typescript
+const isProductOnlyShot = shotDef.group === 'product-only';
+const jobResult = await enqueueJob(
+  token, productB64, product.title, product.id, product.imageUrl,
+  shotId, shotDef.label, renderPath, prompt,
+  isProductOnlyShot ? null : modelB64,  // ← Don't send model ref for product-only
+  session.modelProfile, null, batchId, enqueueCount++,
+);
+```
+
+### 2. `src/lib/catalogEngine.ts`
+**a)** Split `CONSISTENCY_BLOCK` into two versions:
+- Model version: keeps identity references + "same CONTROLLED STUDIO lighting"
+- Product version: "same product appearance, same background, same studio lighting setup, consistent color accuracy across the set"
+
+**b)** In `assemblePrompt`, use `CONSISTENCY_BLOCK_PRODUCT` for product-only shots and `CONSISTENCY_BLOCK_MODEL` for on-model shots by choosing the right block before template replacement.
+
+**c)** Add explicit "NO people, NO model, NO human figure" to flat lay, on-surface, and ghost mannequin templates.
+
+**d)** Add "full body head to toe, feet fully visible" to front_model, back_view, side_3q, movement, walking_motion, full_look templates.
+
+**e)** Strengthen BACKGROUND RULE: add "NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting."
+
+### 3. `supabase/functions/generate-catalog/index.ts`
+In the reference images section (~line 360), skip adding model image when `render_path` is `product_only_generate`:
+```typescript
+if (body.model?.imageUrl && body.render_path !== 'product_only_generate') {
+  referenceImages.push(body.model.imageUrl);
+}
+```
+
+## Summary
+Three-layer fix: (1) stop sending model reference images for product-only shots at both client and edge function levels, (2) use a product-focused consistency block without model references, (3) strengthen anti-flare and full-body directives in prompts.
 
