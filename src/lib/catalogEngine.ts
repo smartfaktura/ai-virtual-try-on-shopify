@@ -844,6 +844,7 @@ export function buildSessionLock(
     modelAudience,
     backgroundId,
     backgroundPrompt: bg.promptBlock,
+    backgroundHex: bg.hex,
     lightingPrompt: getLightingPrompt(style.lightingId),
     consistencyBlock: CONSISTENCY_BLOCK_MODEL,
   };
