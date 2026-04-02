@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getShotDefinition } from '@/lib/catalogEngine';
+import { getShotDefinition, isStrictIsolationShot } from '@/lib/catalogEngine';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ArrowRight, Plus, X, SkipForward, Gem, Search, Check } from 'lucide-react';
+import { ChevronLeft, ArrowRight, Plus, X, SkipForward, Gem, Search, Check, Ban } from 'lucide-react';
 import type { CatalogShotId } from '@/types/catalog';
 
 interface PropProduct {
