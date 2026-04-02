@@ -352,8 +352,9 @@ export default function CatalogGenerate() {
               <div>
                 <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {batchState.completedJobs} image{batchState.completedJobs !== 1 ? 's' : ''} generated
-                  {batchState.failedJobs > 0 && (
+                  {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
+                  {visibleFailed > 0 && (
+                    <span className="text-destructive"> · {visibleFailed} failed</span>
                     <span className="text-destructive"> · {batchState.failedJobs} failed</span>
                   )}
                 </p>
