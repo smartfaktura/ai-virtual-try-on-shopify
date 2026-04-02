@@ -28,7 +28,12 @@ async function fetchImageAsBase64(url: string): Promise<{ mimeType: string; data
     const buf = await res.arrayBuffer();
     const bytes = new Uint8Array(buf);
     const { contentType } = detectImageFormat(bytes);
-    const b64 = btoa(String.fromCharCode(...bytes));
+    let binary = "";
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    const b64 = btoa(binary);
     return { mimeType: contentType, data: b64 };
   } catch (e) {
     console.warn("[generate-catalog] fetchImageAsBase64 failed:", (e as Error).message);
@@ -100,7 +105,7 @@ async function generateImageNative(
             generationConfig: {
               responseModalities: ["IMAGE", "TEXT"],
               temperature: 1.0,
-              max_tokens: 8192,
+              
               imageConfig: {
                 imageSize: "2K",
                 aspectRatio,
