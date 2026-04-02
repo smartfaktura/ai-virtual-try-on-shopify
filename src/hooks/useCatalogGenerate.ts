@@ -397,6 +397,7 @@ export function useCatalogGenerate() {
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
           effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
+          effectiveAnchorDef.group,
           anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
         );
 
