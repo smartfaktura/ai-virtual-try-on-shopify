@@ -364,15 +364,16 @@ serve(async (req) => {
       // prevents Seedream from blending model face pixels with product pixels.
       referenceImages.push(body.product.imageUrl);
     } else if (body.anchor_image_url) {
-      // ── DERIVATIVE ON-MODEL: 3-image system ──
-      // Image 1 = model face (identity source)
-      // Image 2 = anchor outfit (styling/wardrobe lock)
-      // Image 3 = product (detail/color reference)
+      // ── DERIVATIVE ON-MODEL: SINGLE-REFERENCE (face lock) ──
+      // Send ONLY the model identity image so Seedream doesn't average
+      // face pixels with anchor/product pixels. Outfit consistency is
+      // handled entirely via explicit text in the prompt.
       if (modelIdentityUrl) {
         referenceImages.push(modelIdentityUrl);
+      } else {
+        // Fallback: if no model identity, use anchor for outfit continuity
+        referenceImages.push(body.anchor_image_url);
       }
-      referenceImages.push(body.anchor_image_url);
-      referenceImages.push(body.product.imageUrl);
     } else {
       // Fallback: model + product (shouldn't normally happen with new flow)
       if (modelIdentityUrl) {
