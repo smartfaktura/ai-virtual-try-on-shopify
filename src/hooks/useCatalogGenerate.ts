@@ -680,6 +680,7 @@ export function useCatalogGenerate() {
     stopPolling();
     setBatchState(null);
     jobsRef.current = [];
+    phaseRef.current = 'idle';
     setIsGenerating(false);
     clearPersistedBatch();
   }, [stopPolling]);
