@@ -774,6 +774,14 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     ? 'pure white (#FFFFFF) infinite void background, absolutely no shadow, no surface, no floor, no gradients'
     : backgroundPrompt;
 
+  // ── Determine if this is the faceless anchor shot ──
+  const isAnchorShot = shotDef.id === 'identity_anchor';
+  // Derivative on-model shots: replace generic support wardrobe text with anchor-reference language
+  const isDerivativeOnModel = !isAnchorShot && shotDef.needsModel && renderPath === 'reference_generate';
+  const effectiveWardrobe = isDerivativeOnModel
+    ? 'wearing the EXACT same complete outfit as shown in Image 2 (the anchor reference image) — same pants, same shoes, same top, same styling, same accessories, do NOT substitute or change any clothing item'
+    : supportWardrobePrompt;
+
   // For edit paths, wrap differently
   if (renderPath === 'anchor_edit') {
     return `Adjust the framing to show: ${template
@@ -791,20 +799,29 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   let prompt = template
     .replace('[HERO_PRODUCT]', productTitle)
     .replace('[MODEL]', modelProfile)
-    .replace('[SUPPORT_WARDROBE]', supportWardrobePrompt)
+    .replace('[SUPPORT_WARDROBE]', effectiveWardrobe)
     .replace('[BACKGROUND]', effectiveBackground)
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
     .replace('[CONSISTENCY]', consistencyBlock);
 
-  // Append style-transfer image role assignment when a model is involved
-  if (modelProfile && modelProfile !== 'no model') {
+  // ── IMAGE ROLE ASSIGNMENT — differs by phase ──
+  if (isAnchorShot) {
+    // FACELESS ANCHOR: product-only input, no face involved
     prompt += '\nIMAGE ROLE ASSIGNMENT:';
-    prompt += '\n- Image 1 (MODEL IMAGE): This is the IDENTITY SOURCE. Maintain this person\'s exact face, facial structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions.';
-    prompt += '\n- Image 2 (PRODUCT IMAGE): This is the STYLE SOURCE. Apply ONLY the clothing/product from this image onto the person from Image 1.';
+    prompt += '\n- Image 1 (PRODUCT IMAGE): This is the GARMENT/PRODUCT SOURCE. Apply this exact product onto a headless body form.';
+    prompt += '\nCRITICAL: Generate from collarbone/neck DOWN only. Absolutely NO head, NO face, NO hair visible. The image must be cropped at the collarbone with NO facial features whatsoever.';
+    prompt += '\nNO FACE RULE: This is a faceless outfit photograph. Do NOT generate any head, face, eyes, mouth, nose, chin, or hair. The top of the frame starts at the collarbone/shoulder line.';
+  } else if (modelProfile && modelProfile !== 'no model' && shotDef.needsModel) {
+    // DERIVATIVE ON-MODEL: 3-image system [face, anchor outfit, product]
+    prompt += '\nIMAGE ROLE ASSIGNMENT:';
+    prompt += '\n- Image 1 (MODEL FACE): This is the IDENTITY SOURCE. Use this person\'s exact face, facial structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions.';
+    prompt += '\n- Image 2 (ANCHOR OUTFIT): This is the OUTFIT/STYLING SOURCE. Replicate the EXACT outfit shown here — same trousers/pants, same shoes, same top styling, same support clothing. Do NOT change any clothing item.';
+    prompt += '\n- Image 3 (PRODUCT IMAGE): This is the PRODUCT DETAIL SOURCE. Use this for accurate color, texture, pattern, and material reference of the hero product.';
     prompt += '\nDo NOT blend the faces. Do NOT average features between images. The output person must be IDENTICAL to the person in Image 1.';
     prompt += '\nFACE QUALITY: Render the model\'s face with maximum photorealistic resolution — sharp defined facial features, visible skin texture and pores, detailed iris with catchlights, natural lip detail, individual eyebrow hairs, realistic under-eye area. Do NOT blur, smooth, soften, airbrush, or distort any facial feature. The face must be indistinguishable from a real high-resolution photograph.';
-    prompt += '\nIDENTITY PRIORITY: Image 1 is the PRIMARY identity source. Image 2 defines ONLY the garment/product. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nIDENTITY PRIORITY: Image 1 is the PRIMARY identity source. Image 2 defines the outfit styling. Image 3 provides product detail. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nOUTFIT LOCK: The model MUST wear the EXACT same support clothing (pants, shoes, top) as shown in Image 2. Do NOT substitute jeans for chinos, sneakers for heels, or any other clothing swap. The only change from Image 2 is the camera angle/pose — the outfit stays identical.';
     prompt += '\nSINGLE SUBJECT RULE: There is EXACTLY ONE person in this image — the person from Image 1. Do NOT add a second person, do NOT show a reflection, do NOT create a mirror image, do NOT split the frame into multiple exposures, do NOT duplicate the body or limbs. ONE single human subject, ONE single captured moment.';
     prompt += '\nSTUDIO CATALOG RULES: Camera is ALWAYS straight-on at chest height, perfectly level, never tilted up or down. Camera distance is fixed: full body = head to feet with 10% padding top and bottom. The model stands centered in frame on the same spot every shot. Pose is MINIMAL and CONTROLLED — this is e-commerce catalog photography like ASOS or Zalando, NOT editorial, NOT lifestyle, NOT fashion show. Expression: neutral composed or slight natural smile. NO dramatic gestures, NO fashion editorial energy, NO lifestyle mood, NO hand on hip, NO wind-blown hair, NO looking away from camera (unless back view). Background must be PERFECTLY UNIFORM with zero visible texture or gradient.';
   }
