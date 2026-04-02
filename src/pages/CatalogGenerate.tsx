@@ -301,7 +301,7 @@ export default function CatalogGenerate() {
   if (isGenerating && !batchState) {
     return (
       <div className="space-y-6 pb-32">
-        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
         <div className="flex flex-col items-center justify-center py-24 space-y-6">
           {/* Animated gradient ring */}
           <div className="relative">
