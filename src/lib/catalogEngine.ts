@@ -314,10 +314,10 @@ export function getBackground(id: string): BackgroundDefinition {
 
 const LIGHTING_PROMPTS: Record<string, string> = {
   soft_studio_clean: 'soft diffused studio lighting, clean ecommerce lighting, gentle controlled shadows',
-  warm_studio_refined: 'warm refined studio lighting, soft golden tones, premium commercial lighting',
+  warm_studio_refined: 'warm refined studio lighting, soft warm tones, premium commercial lighting, NO sun flares, NO lens flares',
   soft_directional_editorial: 'soft directional editorial lighting, subtle contrast, polished fashion photography lighting',
   neutral_fashion_studio: 'neutral balanced studio lighting, even illumination, modern fashion photography lighting',
-  soft_warm_luxury: 'soft warm luxury lighting, gentle glow, high-end editorial warmth, elegant shadows',
+  soft_warm_luxury: 'soft warm luxury lighting, gentle glow, high-end editorial warmth, elegant shadows, NO sun flares, NO lens flares, ONLY controlled studio lighting',
 };
 
 export function getLightingPrompt(lightingId: string): string {
@@ -347,7 +347,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: WEARABLE,
     defaultRenderPath: 'anchor_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body front-facing pose, weight on left leg, right hand relaxed at side, left arm slightly away from body, confident neutral expression, looking directly into camera, [SUPPORT_WARDROBE], focus on fit and silhouette, centered composition, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body head to toe feet fully visible in frame, front-facing pose, weight on left leg, right hand relaxed at side, left arm slightly away from body, confident neutral expression, looking directly into camera, [SUPPORT_WARDROBE], focus on fit and silhouette, centered composition, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
       shoes: '[HERO_PRODUCT] worn by [MODEL], lower-body focused standing pose, feet shoulder-width apart, the footwear clearly visible as the hero product, [SUPPORT_WARDROBE], sharp focus on shoes, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       hat: '[HERO_PRODUCT] worn by [MODEL], portrait or upper-body front-facing pose, confident neutral expression, the headwear clearly visible as the hero product, [SUPPORT_WARDROBE], sharp focus, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
@@ -363,7 +363,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL_PLUS_SHOES,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body back view, head turned slightly to the right, natural upright posture, arms relaxed at sides, showing full back fit and structure of the hero product, [SUPPORT_WARDROBE], sharp focus, realistic construction details, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body head to toe feet fully visible in frame, back view, head turned slightly to the right, natural upright posture, arms relaxed at sides, showing full back fit and structure of the hero product, [SUPPORT_WARDROBE], sharp focus, realistic construction details, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'side_3q',
@@ -372,7 +372,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: WEARABLE,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], 3/4 angle pose, body turned 45 degrees to the left, weight on back foot, natural relaxed arms, highlighting shape and drape of the hero product, [SUPPORT_WARDROBE], [QUALITY], sharp focus, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body head to toe feet fully visible in frame, 3/4 angle pose, body turned 45 degrees to the left, weight on back foot, natural relaxed arms, highlighting shape and drape of the hero product, [SUPPORT_WARDROBE], [QUALITY], sharp focus, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
       bag: '[HERO_PRODUCT] carried by [MODEL], 3/4 angle side view, bag clearly visible on shoulder or in hand, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       sunglasses: '[HERO_PRODUCT] worn by [MODEL], 3/4 portrait angle, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], sharp focus, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
@@ -398,7 +398,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL_PLUS_SHOES,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], mid-stride walking motion, one foot forward, slight fabric movement on the hero product, arms swinging naturally, confident forward gaze, [SUPPORT_WARDROBE], [QUALITY], sharp motion capture, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body head to toe feet fully visible in frame, mid-stride walking motion, one foot forward, slight fabric movement on the hero product, arms swinging naturally, confident forward gaze, [SUPPORT_WARDROBE], [QUALITY], sharp motion capture, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
       shoes: '[HERO_PRODUCT] worn by [MODEL], subtle walking step, one foot lifting off ground, motion focused on footwear visibility, lower-body framing, [SUPPORT_WARDROBE], sharp focus, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
@@ -428,7 +428,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set([...APPAREL, 'shoes', 'bag']),
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body editorial pose, slight weight shift to one hip, one hand on hip, confident neutral expression, the hero product clearly visible, [SUPPORT_WARDROBE], [QUALITY], sharp focus, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body head to toe feet fully visible in frame, editorial pose, slight weight shift to one hip, one hand on hip, confident neutral expression, the hero product clearly visible, [SUPPORT_WARDROBE], [QUALITY], sharp focus, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
       bag: '[HERO_PRODUCT] carried by [MODEL], relaxed full-body pose, one hand holding bag naturally, the bag clearly the hero item, [SUPPORT_WARDROBE], clean studio styling, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
@@ -441,7 +441,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] invisible mannequin effect, product floating in pure white void, natural garment shape preserved as if worn, perfectly centered, absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface reflection, NO floor, pure white (#FFFFFF) infinite void background, ultra clean ecommerce packshot, sharp material details, ONLY this single product, [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] invisible mannequin effect, product floating in pure white void, natural garment shape preserved as if worn, perfectly centered, absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface reflection, NO floor, pure white (#FFFFFF) infinite void background, ultra clean ecommerce packshot, sharp material details, ONLY this single product, NO people, NO model, NO human figure, [CONSISTENCY]',
   },
   {
     id: 'front_flat',
@@ -587,7 +587,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL_PLUS_SHOES,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], natural walking stride, full body, right foot forward mid-step, arms swinging naturally, slight fabric motion on the hero product, [SUPPORT_WARDROBE], [QUALITY], sharp motion capture, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], natural walking stride, full body head to toe feet fully visible in frame, right foot forward mid-step, arms swinging naturally, slight fabric motion on the hero product, [SUPPORT_WARDROBE], [QUALITY], sharp motion capture, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'cross_body',
@@ -624,7 +624,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, NO people, NO model, NO human figure, NO hands, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
   },
 ];
 
@@ -700,7 +700,8 @@ export function classifyRenderPath(
 // ────────────────────────────────────────────────
 
 const QUALITY_BLOCK = 'ultra realistic ecommerce fashion photography, sharp focus, realistic fabric details, premium commercial finish, natural proportions, polished product visibility';
-const CONSISTENCY_BLOCK = 'same model identity matching the model reference image exactly — same face same hair color same hair style same skin tone same body proportions, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
+const CONSISTENCY_BLOCK_MODEL = 'same model identity matching the model reference image exactly — same face same hair color same hair style same skin tone same body proportions, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same controlled studio lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
+const CONSISTENCY_BLOCK_PRODUCT = 'same product appearance, same colors, same textures, same materials, same background, same controlled studio lighting setup, consistent color accuracy across the entire set, NO people, NO model, NO human figure';
 
 export interface PromptAssemblyInput {
   productTitle: string;
@@ -719,6 +720,9 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   // Pick the right template — category override or default
   let template = shotDef.categoryOverrides?.[productCategory] || shotDef.promptTemplate;
 
+  // Choose the right consistency block based on whether this shot needs a model
+  const consistencyBlock = shotDef.needsModel ? CONSISTENCY_BLOCK_MODEL : CONSISTENCY_BLOCK_PRODUCT;
+
   // For edit paths, wrap differently
   if (renderPath === 'anchor_edit') {
     // Seedream edit format: Action + Object + Characteristic + keep unchanged
@@ -729,7 +733,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
       .replace('[BACKGROUND]', backgroundPrompt)
       .replace('[LIGHTING]', lightingPrompt)
       .replace('[QUALITY]', QUALITY_BLOCK)
-      .replace('[CONSISTENCY]', CONSISTENCY_BLOCK)
+      .replace('[CONSISTENCY]', consistencyBlock)
     }. Keep the model identity, outfit, background, and lighting exactly the same.`;
   }
 
@@ -741,17 +745,17 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     .replace('[BACKGROUND]', backgroundPrompt)
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
-    .replace('[CONSISTENCY]', CONSISTENCY_BLOCK);
+    .replace('[CONSISTENCY]', consistencyBlock);
 
   // Append model identity & background isolation directives when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
     prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
-    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo.';
+    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo. NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting, ONLY controlled studio lighting.';
   }
 
-  // Product-only shots: enforce single-product rule
+  // Product-only shots: enforce single-product + no-people rule
   if (shotDef.group === 'product-only') {
-    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described.';
+    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described. NO people, NO model, NO human figure, NO hands, NO body parts.';
   }
 
   return prompt;
@@ -829,7 +833,7 @@ export function buildSessionLock(
     backgroundId,
     backgroundPrompt: bg.promptBlock,
     lightingPrompt: getLightingPrompt(style.lightingId),
-    consistencyBlock: CONSISTENCY_BLOCK,
+    consistencyBlock: CONSISTENCY_BLOCK_MODEL,
   };
 }
 

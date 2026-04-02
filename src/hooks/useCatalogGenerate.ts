@@ -330,10 +330,12 @@ export function useCatalogGenerate() {
           const comboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${shotId}`;
           const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
 
+          // Don't send model reference for product-only shots
+          const isProductOnlyShot = shotDef.group === 'product-only';
           const jobResult = await enqueueJob(
             token, productB64, product.title, product.id, product.imageUrl,
             shotId, shotDef.label, renderPath, prompt,
-            modelB64, session.modelProfile, null, batchId, enqueueCount++,
+            isProductOnlyShot ? null : modelB64, session.modelProfile, null, batchId, enqueueCount++,
           );
 
           if (jobResult === 'insufficient_credits') { creditsFailed = true; break; }
