@@ -104,6 +104,13 @@ export default function CatalogGenerate() {
   const allDone = batchState?.allDone ?? false;
   const hasBatch = !!batchState;
 
+  // Rotating team avatar
+  useEffect(() => {
+    if (!hasBatch || allDone) return;
+    const iv = setInterval(() => setTeamIndex(i => (i + 1) % TEAM_MEMBERS.length), 4000);
+    return () => clearInterval(iv);
+  }, [hasBatch, allDone]);
+
   // Keep ref in sync
   useEffect(() => { generationStartedAtRef.current = generationStartedAt; }, [generationStartedAt]);
 
