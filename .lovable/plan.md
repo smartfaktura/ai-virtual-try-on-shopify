@@ -1,64 +1,32 @@
 
+# Add Sorting, Image Change & Delete for Workflow Variation Scenes
 
-# Add Workflow Variation Scenes to Admin Scenes Control
+## Changes (single file: `src/pages/AdminScenes.tsx`)
 
-## Problem
-The Admin Scenes page (`/app/admin/scenes`) currently only shows:
-- Built-in scenes from `mockTryOnPoses` (30 on-model + 30 product scenes)
-- Custom scenes from `custom_scenes` DB table
+### 1. Drag/reorder buttons for workflow variations
+Add up/down arrow buttons to each variation row (same pattern as existing scene reorder). A new `handleWfVariationMove(wfId, fromIdx, direction)` function swaps adjacent items in the `wfVariationEdits` array and marks the workflow as dirty.
 
-But 6 workflows contain **120+ variation scenes** stored in `workflows.generation_config.variation_strategy.variations` that are invisible to admins. These include Product Listing Set (31), Selfie/UGC Set (12), Flat Lay Set (12), Mirror Selfie Set (30), Interior/Exterior Staging (22), and Picture Perspectives (9).
+### 2. Image upload for variation scenes
+Add an image upload button (camera/image icon) to each variation row. On file select:
+- Upload to `scratch-uploads` bucket (same pattern used for custom scene preview uploads)
+- Update the variation's `preview_url` field in `wfVariationEdits`
+- Mark workflow as dirty
 
-## Approach
-Add a **separate collapsible section per workflow** below the existing scene categories. Each section lists that workflow's variations with inline editing of `label`, `instruction`, `category`, and `preview_url`. Changes save back to the workflow's `generation_config` JSON via a Supabase update.
+This changes the actual scene image stored in the workflow's `generation_config`, not a separate preview.
 
-This keeps the existing scene management untouched (no mixing of data models) while giving full visibility and edit access to workflow-specific scenes.
+### 3. Delete button for individual variations
+Add a trash icon button per variation row. On click:
+- Remove the variation from the `wfVariationEdits` array at the given index
+- Mark the workflow as dirty
+- Show confirmation via a simple `window.confirm()` since deletion is destructive
 
-## Changes
+### 4. Add "New Variation" button
+Add a `+ Add Variation` button at the bottom of each workflow's variation list. Creates a new empty variation `{ label: 'New Scene', instruction: '', preview_url: '' }` and appends it.
 
-### 1. Add admin RLS policy for workflow updates
-Currently the `workflows` table only allows `SELECT` for authenticated users. Need an admin-only `UPDATE` policy.
+### Summary of UI per variation row
 
-**Migration SQL:**
-```sql
-CREATE POLICY "Admins can update workflows"
-ON public.workflows FOR UPDATE
-TO authenticated
-USING (has_role(auth.uid(), 'admin'::app_role))
-WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
+```text
+[thumbnail] [label input] [category badge] [ratio badge] [↑] [↓] [📷 upload] [🗑 delete]
 ```
 
-### 2. `src/pages/AdminScenes.tsx` — Add workflow variations section
-
-**New component: `WorkflowVariationsSection`** (inside AdminScenes or extracted)
-- Fetch workflows (already done via `useQuery(['workflows-admin'])`)
-- For each workflow with variations > 0, render a collapsible section
-- Each variation row shows:
-  - Preview thumbnail (from `preview_url` if available)
-  - Label (editable inline)
-  - Category chip (editable)
-  - Instruction text (editable textarea, collapsible)
-  - Preview URL upload button (reuse existing upload pattern)
-- "Save Workflow Scenes" button per workflow that patches `generation_config` JSON back to DB
-- Filter by the same search query already in use
-
-### 3. Wire up save logic
-
-On save, construct the updated `generation_config` JSON with modified variations and call:
-```typescript
-supabase.from('workflows').update({ generation_config: updatedConfig }).eq('id', workflowId)
-```
-
-## What stays the same
-- Existing built-in + custom scene management is untouched
-- Sort order, hide/unhide, category overrides all remain as-is
-- Workflow variations remain stored in workflow JSON (no new tables)
-
-## Summary
-
-| What | Where |
-|------|-------|
-| Admin UPDATE policy for workflows | New migration |
-| Workflow variations section UI | `src/pages/AdminScenes.tsx` (new section at bottom) |
-| Save handler for workflow variation edits | Same file, writes back to `workflows.generation_config` |
-
+All changes save when the existing per-workflow "Save" button is clicked — no new save flow needed.
