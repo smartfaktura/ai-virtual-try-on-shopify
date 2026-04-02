@@ -1,54 +1,91 @@
 
 
-# Modernize Catalog Studio Generation UI
+# Catalog Studio Hub Page — `/app/catalog`
 
-## What changes
+## Overview
 
-The current generation/progress screen feels basic — plain card with a camera icon, simple progress bar, and generic layout. We'll upgrade it to a polished, branded VOVV.AI experience.
+Create a new landing page at `/app/catalog` that shows past catalog generations and a prominent "New Generation" CTA. The current wizard/generate flow moves to `/app/catalog/new`. This gives users an easy way to track past catalog runs before starting a new one.
 
-### 1. In-Progress State Redesign (lines 474-529)
+## Architecture
 
-**Replace** the current plain card with a premium generation experience:
-- **Animated gradient ring** around the camera icon instead of a ping animation — subtle rotating conic gradient in primary tones
-- **Phase pill badge** at the top: "PREPARING" / "GENERATING" / "COMPLETE" with animated dot indicator
-- **Larger, bolder progress bar** with gradient fill and percentage label inline
-- **Stats row** redesigned as pill chips: `⏱ 0:09` · `3 of 8 images` · `~2 min left`
-- **Team avatar** gets a subtle glow ring and the message moves next to it in a frosted card
-- **VOVV.AI watermark** at bottom of the generation card
-- Cancel button styled as ghost with muted text, bottom-right aligned
+```text
+/app/catalog          →  CatalogHub.tsx (NEW — history + new CTA)
+/app/catalog/new      →  CatalogGenerate.tsx (existing wizard, renamed route)
+```
 
-### 2. Product Progress Cards (lines 546-568)
+## What gets built
 
-**Upgrade** per-product rows:
-- Add a subtle left border accent color (primary) on active product
-- Shimmer skeleton placeholder for products still queued
-- Checkmark animation on completion (scale-in)
-- Tighter spacing, font refinements
+### 1. New page: `src/pages/CatalogHub.tsx`
 
-### 3. Completion State Redesign (lines 349-424)
+**Header section:**
+- PageHeader "Catalog Studio" with subtitle
+- Primary CTA button: "New Photoshoot" → navigates to `/app/catalog/new`
 
-**Upgrade** the success/failure cards:
-- Success: confetti-like gradient background wash, larger icon with subtle animation
-- Stats displayed as inline metric chips: "8 images · 2m 14s · 4 products"
-- Action buttons elevated: primary CTA "View in Library" gets full-width on mobile, "Download All" and "New Set" as secondary
-- Failed/empty states get clearer iconography and actionable retry button
+**Recent Generations section:**
+- Query `generation_jobs` where `workflow_slug = 'catalog-studio'`, ordered by `created_at desc`, limit 50
+- Group results into "sessions" by proximity (jobs created within 30s of each other = one session) — similar to `batchGrouping.ts` logic
+- Each session card shows:
+  - Thumbnail grid (first 4 images from `results` JSON)
+  - Product name(s) involved
+  - Image count, date/time, status summary
+  - Click → opens a detail view or navigates to library filtered by those images
 
-### 4. Preparing State (lines 312-330)
+**Empty state:**
+- Branded empty card: "No catalog shoots yet" with illustration and CTA to start first shoot
 
-- Add pulsing dots animation below the spinner text
-- Branded gradient background wash behind the card
+**Active generation banner:**
+- If there's an active catalog session in `sessionStorage` (`catalog_batch`), show a "Generation in progress" banner at top that links to `/app/catalog/new` to resume
 
-### 5. Live Image Grid (lines 571-599)
+### 2. Route changes in `src/App.tsx`
 
-- Images fade in with `animate-fade-in` on appearance
-- Add subtle scale-up hover effect
-- Shot label badges get semi-transparent frosted glass style
+- Add route: `/catalog` → `CatalogHub` (lazy loaded)
+- Change existing: `/catalog/new` → `CatalogGenerate` (existing page)
 
-## Files to update
+### 3. Navigation update in `src/components/app/AppShell.tsx`
 
-- `src/pages/CatalogGenerate.tsx` — All generation UI states (preparing, in-progress, completion)
+- Update sidebar link for Catalog Studio to point to `/app/catalog` instead of the wizard directly
+- Add prefetch entry for the new hub page
 
-## Technical approach
+### 4. Update `CatalogGenerate.tsx`
 
-Pure CSS/Tailwind styling changes with minor structural JSX updates. No logic changes. Uses existing design tokens from `index.css` (primary, muted, surface colors). Adds a couple of keyframe animations via Tailwind arbitrary values or inline styles for the gradient ring.
+- "New Set" and back buttons navigate to `/app/catalog` (hub) instead of resetting in-place
+- Add a back arrow in the PageHeader linking to `/app/catalog`
+
+### 5. Session card design (VOVV.AI branded)
+
+Each past session card:
+- Rounded-2xl card with subtle border
+- 2×2 thumbnail grid (aspect-[3/4], rounded-lg, object-cover) from the session's result images
+- Right side: product names as pills, "8 images · Apr 2, 2026" metadata, status badge (completed/partial)
+- Hover: subtle lift + ring effect
+- Click: opens lightbox or navigates to library with those images
+
+## Data flow
+
+```text
+CatalogHub
+  └─ useQuery(['catalog-sessions'])
+       └─ supabase.from('generation_jobs')
+            .select('id, results, created_at, product_name, status, scene_name')
+            .eq('workflow_slug', 'catalog-studio')
+            .order('created_at', { descending: true })
+            .limit(200)
+       └─ Group by time proximity → session objects
+       └─ Extract image URLs from results JSON
+```
+
+## Files to create/modify
+
+| File | Action |
+|------|--------|
+| `src/pages/CatalogHub.tsx` | **Create** — new hub page |
+| `src/App.tsx` | **Modify** — add `/catalog` route, move existing to `/catalog/new` |
+| `src/components/app/AppShell.tsx` | **Modify** — update sidebar nav + prefetch |
+| `src/pages/CatalogGenerate.tsx` | **Modify** — add back link to hub, update "New Set" navigation |
+
+## Technical notes
+
+- `generation_jobs.results` is JSON — contains array of image URLs. Parse with `(results as string[])` pattern already used in `useLibraryItems.ts`
+- Session grouping: sort by `created_at`, group jobs within 30s window sharing same user — reuse pattern from `batchGrouping.ts`
+- No new database tables needed — all data already exists in `generation_jobs`
 
