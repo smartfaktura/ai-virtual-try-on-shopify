@@ -504,43 +504,90 @@ export default function CatalogGenerate() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-              <div className="relative mx-auto w-12 h-12">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-primary" />
+            {/* Main generation card */}
+            <div className="relative rounded-2xl border border-border bg-card p-8 text-center space-y-5 overflow-hidden">
+              {/* Subtle gradient wash */}
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] via-transparent to-transparent pointer-events-none" />
+
+              <div className="relative space-y-5">
+                {/* Phase badge */}
+                <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-medium gap-1.5 px-3 py-1 rounded-full">
+                  <span className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    isAnchoring ? "bg-muted-foreground animate-pulse" : "bg-primary animate-pulse"
+                  )} />
+                  {isAnchoring ? 'Preparing' : 'Generating'}
+                </Badge>
+
+                {/* Animated gradient ring icon */}
+                <div className="relative mx-auto w-14 h-14">
+                  <div
+                    className="absolute -inset-1.5 rounded-full opacity-50 blur-sm"
+                    style={{
+                      background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--primary) / 0.15), hsl(var(--primary)), hsl(var(--primary) / 0.15), hsl(var(--primary)))',
+                      animation: 'spin 3s linear infinite',
+                    }}
+                  />
+                  <div className="relative w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
+                    <Camera className="w-5.5 h-5.5 text-primary" />
+                  </div>
                 </div>
-                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
+
+                <div>
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    {isAnchoring ? 'Locking consistency reference…' : 'Generating your catalog'}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isAnchoring
+                      ? 'Preparing identity reference for consistent results'
+                      : `${visibleCompleted} of ${visibleTotal} images complete`
+                    }
+                  </p>
+                </div>
+
+                {/* Progress bar */}
+                <div className="max-w-md mx-auto space-y-2">
+                  <Progress value={isAnchoring ? undefined : Math.max(progress, 3)} className="h-2" />
+                  {!isAnchoring && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{visibleCompleted}/{visibleTotal} images</span>
+                      <span className="font-mono">{progress}%</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats chips */}
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted border border-border px-3 py-1 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" /> {formatTime(elapsedSeconds)}
+                  </span>
+                  {estimatedRemaining !== null && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted border border-border px-3 py-1 text-xs text-muted-foreground">
+                      ~{formatTime(estimatedRemaining)} left
+                    </span>
+                  )}
+                </div>
+
+                {/* Team avatar in frosted card */}
+                <div className="inline-flex items-center gap-2.5 rounded-full bg-muted/60 backdrop-blur-sm border border-border/50 px-3 py-1.5 mx-auto transition-opacity duration-500">
+                  <Avatar className="w-6 h-6 border border-primary/20 ring-1 ring-primary/10">
+                    <AvatarImage src={TEAM_MEMBERS[teamIndex].avatar} alt={TEAM_MEMBERS[teamIndex].name} />
+                    <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[teamIndex].name[0]}</AvatarFallback>
+                  </Avatar>
+                  <p className="text-xs text-muted-foreground italic">
+                    {TEAM_MEMBERS[teamIndex].name} is {TEAM_MEMBERS[teamIndex].statusMessage.toLowerCase()}
+                  </p>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground/40 tracking-[0.2em] uppercase font-light">VOVV.AI Studio</p>
+
+                {/* Cancel */}
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setShowCancelDialog(true)}>
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div>
-                <h2 className="text-base font-semibold tracking-tight">
-                  {isAnchoring ? 'Locking consistency reference…' : 'Generating your catalog...'}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {isAnchoring
-                    ? 'Preparing identity reference for consistent results'
-                    : `${visibleCompleted} of ${visibleTotal} images`
-                  }
-                </p>
-              </div>
-              <Progress value={isAnchoring ? undefined : progress} className="h-1.5 max-w-md mx-auto" />
-              <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Elapsed: {formatTime(elapsedSeconds)}</span>
-                {estimatedRemaining !== null && (
-                  <span className="flex items-center gap-1">~{formatTime(estimatedRemaining)} remaining</span>
-                )}
-              </div>
-              <div className="flex items-center justify-center gap-2.5 transition-opacity duration-500">
-                <Avatar className="w-7 h-7 border border-border">
-                  <AvatarImage src={TEAM_MEMBERS[teamIndex].avatar} alt={TEAM_MEMBERS[teamIndex].name} />
-                  <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[teamIndex].name[0]}</AvatarFallback>
-                </Avatar>
-                <p className="text-xs text-muted-foreground italic">
-                  {TEAM_MEMBERS[teamIndex].name} is {TEAM_MEMBERS[teamIndex].statusMessage.toLowerCase()}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCancelDialog(true)}>
-                Cancel
-              </Button>
               <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -559,6 +606,7 @@ export default function CatalogGenerate() {
               </AlertDialog>
             </div>
 
+            {/* Product progress cards */}
             {(() => {
               const productMap = new Map<string, { name: string; imageUrl: string; total: number; done: number; failed: number }>();
               for (const j of visibleJobs) {
@@ -566,7 +614,6 @@ export default function CatalogGenerate() {
                 existing.total++;
                 if (j.status === 'completed') existing.done++;
                 if (j.status === 'failed') existing.failed++;
-                // Try to find product image
                 if (!existing.imageUrl) {
                   const prod = products.find(p => p.id === j.productId);
                   if (prod?.images[0]?.url) existing.imageUrl = prod.images[0].url;
@@ -574,31 +621,52 @@ export default function CatalogGenerate() {
                 productMap.set(j.productId, existing);
               }
               return (
-                <div className="space-y-1.5">
-                  {Array.from(productMap.entries()).map(([pid, info]) => (
-                    <div key={pid} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-                      {info.imageUrl && (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                          <ShimmerImage src={info.imageUrl} alt={info.name} className="w-full h-full object-cover" />
+                <div className="space-y-2">
+                  {Array.from(productMap.entries()).map(([pid, info]) => {
+                    const isDone = info.done === info.total;
+                    const isActive = !isDone && info.done > 0;
+                    return (
+                      <div
+                        key={pid}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl border bg-card p-3 transition-all duration-200",
+                          isDone ? "border-primary/20 bg-primary/[0.02]" :
+                          isActive ? "border-primary/30 shadow-sm" :
+                          "border-border"
+                        )}
+                      >
+                        {info.imageUrl ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                            <ShimmerImage src={info.imageUrl} alt={info.name} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-muted flex-shrink-0 animate-pulse" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{info.name}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {info.done}/{info.total} images
+                            {info.failed > 0 && <span className="text-destructive"> · {info.failed} failed</span>}
+                          </p>
+                          <Progress value={Math.round(((info.done + info.failed) / info.total) * 100)} className="h-1 mt-1.5" />
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{info.name}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {info.done}/{info.total}
-                          {info.failed > 0 && <span className="text-destructive"> · {info.failed} failed</span>}
-                        </p>
-                        <Progress value={Math.round(((info.done + info.failed) / info.total) * 100)} className="h-1 mt-1" />
+                        {isDone ? (
+                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 animate-scale-in">
+                            <Check className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px] rounded-full">
+                            {Math.round((info.done / info.total) * 100)}%
+                          </Badge>
+                        )}
                       </div>
-                      <Badge variant={info.done === info.total ? 'default' : 'secondary'} className="text-[10px]">
-                        {info.done === info.total ? 'Done' : `${Math.round((info.done / info.total) * 100)}%`}
-                      </Badge>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })()}
 
+            {/* Live image grid */}
             {(() => {
               const imageJobMap: { url: string; shotLabel: string }[] = [];
               for (const j of visibleJobs) {
@@ -609,23 +677,23 @@ export default function CatalogGenerate() {
               }
               if (imageJobMap.length === 0) return null;
               return (
-              <div className="space-y-3">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated so far</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                  {imageJobMap.map((item, i) => (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated so far</h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {imageJobMap.map((item, i) => (
                       <button
                         key={i}
                         onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                        className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 hover:scale-[1.03] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 animate-fade-in"
                       >
                         <ShimmerImage src={item.url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
-                        <span className="absolute bottom-1 left-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded truncate text-center">
+                        <span className="absolute bottom-1.5 left-1.5 right-1.5 text-[10px] leading-tight font-medium backdrop-blur-md bg-black/40 text-white rounded-md px-2 py-1 truncate text-center">
                           {item.shotLabel}
                         </span>
                       </button>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
               );
             })()}
           </div>
