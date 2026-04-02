@@ -643,10 +643,29 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: false,
     promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, NO people, NO model, NO human figure, NO hands, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
   },
+  // ── Internal Identity Anchor (not user-selectable) ──
+  {
+    id: 'identity_anchor',
+    label: 'Identity Anchor',
+    group: 'on-model',
+    compatibleCategories: WEARABLE,
+    defaultRenderPath: 'anchor_generate',
+    needsModel: true,
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, cropped at waist, face fills upper third of frame, sharp eye-level camera angle, relaxed confident expression, looking directly into camera, natural relaxed shoulders, arms at sides, the hero product clearly visible on the upper body, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      shoes: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      bag: '[HERO_PRODUCT] held by [MODEL], waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      hat: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      sunglasses: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      jewelry: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    },
+  },
 ];
 
 export function getCompatibleShots(category: ProductCategory, hasModel: boolean): ShotDefinition[] {
   return SHOT_DEFINITIONS.filter(shot => {
+    // Never show identity_anchor in the shot picker — it's internal-only
+    if (shot.id === 'identity_anchor') return false;
     if (!shot.compatibleCategories.has(category)) return false;
     if (shot.needsModel && !hasModel) return false;
     return true;
@@ -671,15 +690,8 @@ export function getShotDefinition(id: CatalogShotId): ShotDefinition | undefined
 
 export function getAnchorShotId(category: ProductCategory, hasModel: boolean): CatalogShotId {
   if (!hasModel) return 'front_flat';
-
-  const ANCHOR_MAP: Partial<Record<ProductCategory, CatalogShotId>> = {
-    shoes: 'standing_shoe_focus',
-    bag: 'hand_carry',
-    hat: 'front_model',
-    sunglasses: 'front_model',
-    jewelry: 'close_portrait',
-  };
-  return ANCHOR_MAP[category] || 'front_model';
+  // Always use the internal identity anchor for on-model — face-first strategy
+  return 'identity_anchor';
 }
 
 // ────────────────────────────────────────────────
@@ -687,6 +699,7 @@ export function getAnchorShotId(category: ProductCategory, hasModel: boolean): C
 // ────────────────────────────────────────────────
 
 const EDIT_COMPATIBLE_FROM_ANCHOR: Record<string, Set<CatalogShotId>> = {
+  identity_anchor: new Set(['detail_closeup', 'hands_detail', 'zoom_detail']),
   front_model: new Set(['detail_closeup', 'hands_detail', 'zoom_detail']),
   standing_shoe_focus: new Set(['detail_closeup', 'zoom_detail']),
   hand_carry: new Set(['detail_closeup', 'hands_detail', 'hardware_detail', 'zoom_detail']),

@@ -413,7 +413,7 @@ export function useCatalogGenerate() {
     }
     const derivativeSpecs: DerivativeSpec[] = [];
 
-    // ── PHASE 1: Enqueue anchor jobs ──
+    // ── PHASE 1: Enqueue identity anchor jobs (one per product × model) ──
     for (const model of modelsToUse) {
       if (creditsFailed) break;
 
@@ -428,24 +428,21 @@ export function useCatalogGenerate() {
       );
 
       // Pass model image URL directly — no base64 conversion
-      // This preserves full resolution for face identity locking
       const modelUrl: string | null = model.imageUrl || null;
 
       for (const product of config.products) {
         if (creditsFailed) break;
 
         const lookLock = buildProductLookLock(product, session, product.detectedCategory);
-        // Convert product image to base64 for the payload
         const productB64 = await safeConvertBase64(product.imageUrl, product.title);
         if (!productB64) continue;
 
         const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
 
+        // The anchor is always identity_anchor for on-model, front_flat for product-only
         const anchorShotId = lookLock.anchorShotId;
-        const effectiveAnchorId = config.selectedShots.includes(anchorShotId) ? anchorShotId : config.selectedShots[0];
-        const effectiveAnchorDef = getShotDefinition(effectiveAnchorId);
-
-        if (!effectiveAnchorDef) continue;
+        const anchorDef = getShotDefinition(anchorShotId);
+        if (!anchorDef) continue;
 
         const rawAnchorPrompt = assemblePrompt({
           productTitle: heroBlock,
@@ -454,30 +451,29 @@ export function useCatalogGenerate() {
           supportWardrobePrompt: lookLock.supportWardrobePrompt,
           backgroundPrompt: session.backgroundPrompt,
           lightingPrompt: session.lightingPrompt,
-          shotDef: effectiveAnchorDef,
+          shotDef: anchorDef,
           renderPath: 'anchor_generate',
           backgroundHex: session.backgroundHex,
         });
-        const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${effectiveAnchorId}`;
+        const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${anchorShotId}`;
         const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, config.propAssignments);
 
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
-          effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
-          effectiveAnchorDef.group,
+          anchorShotId, anchorDef.label, 'anchor_generate',
+          anchorDef.group,
           anchorPrompt, modelUrl, session.modelProfile, null, batchId, enqueueCount++,
         );
 
         if (anchorResult === 'insufficient_credits') { creditsFailed = true; break; }
         if (anchorResult) anchorJobs.push(anchorResult);
 
-        // Collect remaining shots as derivative specs
-        const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
-        for (const shotId of remainingShots) {
+        // ALL user-selected shots are derivatives (identity_anchor is not user-selectable)
+        for (const shotId of config.selectedShots) {
           const shotDef = getShotDefinition(shotId);
           if (!shotDef) continue;
 
-          const renderPath = classifyRenderPath(effectiveAnchorId, shotId, product.detectedCategory);
+          const renderPath = classifyRenderPath(anchorShotId, shotId, product.detectedCategory);
           const rawPrompt = assemblePrompt({
             productTitle: heroBlock,
             productCategory: product.detectedCategory,
@@ -520,8 +516,22 @@ export function useCatalogGenerate() {
       return false;
     }
 
-    // Start with anchor jobs visible
-    jobsRef.current = anchorJobs;
+    // Create placeholder jobs for derivatives so UI shows correct totals immediately
+    const placeholderJobs: CatalogJobExtended[] = derivativeSpecs.map((spec, i) => ({
+      jobId: `placeholder-${i}-${spec.shotId}-${spec.productId}`,
+      status: 'queued' as const,
+      images: [],
+      productId: spec.productId,
+      productName: spec.productTitle,
+      shotId: spec.shotId,
+      shotLabel: spec.shotLabel,
+      renderPath: spec.renderPath,
+      isAnchor: false,
+    }));
+
+    // Start with anchor jobs + placeholders visible
+    const initialJobs = [...anchorJobs, ...placeholderJobs];
+    jobsRef.current = anchorJobs; // Only track real jobs for polling
     persistBatch(anchorJobs);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
@@ -529,11 +539,12 @@ export function useCatalogGenerate() {
 
     const totalExpected = anchorJobs.length + derivativeSpecs.length;
     setBatchState({
-      jobs: anchorJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
+      jobs: initialJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
       allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
     });
 
-    toast.info(`Generating ${totalExpected} catalog image${totalExpected > 1 ? 's' : ''} (anchors first)…`);
+    const userImageCount = derivativeSpecs.length;
+    toast.info(`Generating ${userImageCount} catalog image${userImageCount > 1 ? 's' : ''}…`);
     sendWake(token);
 
     // If no derivatives, just poll anchors directly
@@ -543,9 +554,12 @@ export function useCatalogGenerate() {
     }
 
     // ── PHASE 2: Wait for anchors, then enqueue derivatives with anchor URLs ──
+    // Start polling anchors for UI feedback
+    pollJobs();
+
     (async () => {
       try {
-        console.log(`[catalog] Phase 1: Waiting for ${anchorJobs.length} anchor(s) to complete…`);
+        console.log(`[catalog] Phase 1: Waiting for ${anchorJobs.length} identity anchor(s) to complete…`);
 
         // Poll anchor jobs until done
         const anchorResults = await pollUntilDone(
@@ -594,7 +608,7 @@ export function useCatalogGenerate() {
 
         if (derivativeJobs.length > 0) sendWake(token);
 
-        // Merge all jobs and start polling the full set
+        // Merge all jobs (replace placeholders with real derivative jobs)
         const allJobs = [...updatedAnchors, ...derivativeJobs];
         jobsRef.current = allJobs;
         persistBatch(allJobs);
@@ -614,7 +628,7 @@ export function useCatalogGenerate() {
           phase: 'derivatives',
         });
 
-        // Now poll all remaining jobs
+        // Restart polling with full job set (pollJobs stops and restarts cleanly)
         pollJobs();
       } catch (err) {
         console.error('[catalog] Phase 2 error:', err);
@@ -623,8 +637,6 @@ export function useCatalogGenerate() {
       }
     })();
 
-    // Start polling anchors immediately for UI feedback
-    pollJobs();
     return true;
   }, [user, pollJobs]);
 

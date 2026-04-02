@@ -331,8 +331,13 @@ export default function CatalogGenerate() {
 
   // If batch is active, show progress / completion
   if (batchState) {
-    const progress = batchState.totalJobs > 0
-      ? Math.round(((batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs) * 100) : 0;
+    // Filter out internal identity_anchor jobs from visible results
+    const visibleJobs = batchState.jobs.filter(j => j.shotId !== 'identity_anchor' && !j.jobId.startsWith('placeholder-'));
+    const visibleCompleted = visibleJobs.filter(j => j.status === 'completed').length;
+    const visibleFailed = visibleJobs.filter(j => j.status === 'failed').length;
+    const visibleTotal = visibleJobs.length;
+    const progress = visibleTotal > 0
+      ? Math.round(((visibleCompleted + visibleFailed) / visibleTotal) * 100) : 0;
 
     return (
       <div className="space-y-6 pb-32">
@@ -347,9 +352,9 @@ export default function CatalogGenerate() {
               <div>
                 <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {batchState.completedJobs} image{batchState.completedJobs !== 1 ? 's' : ''} generated
-                  {batchState.failedJobs > 0 && (
-                    <span className="text-destructive"> · {batchState.failedJobs} failed</span>
+                  {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
+                  {visibleFailed > 0 && (
+                    <span className="text-destructive"> · {visibleFailed} failed</span>
                   )}
                 </p>
                 <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
@@ -365,7 +370,7 @@ export default function CatalogGenerate() {
                   <Button variant="outline" disabled={isDownloading} onClick={async () => {
                     setIsDownloading(true);
                     try {
-                      const images = batchState.jobs
+                      const images = visibleJobs
                         .filter(j => j.status === 'completed' && j.images.length > 0)
                         .flatMap(j => j.images.map(url => ({
                           url,
@@ -388,8 +393,10 @@ export default function CatalogGenerate() {
               </div>
             </div>
 
-            {batchState.aggregatedImages.length > 0 && (() => {
-              const imageJobMap = batchState.jobs.flatMap(j =>
+            {(() => {
+              const visibleImages = visibleJobs.filter(j => j.status === 'completed' && j.images.length > 0);
+              if (visibleImages.length === 0) return null;
+              const imageJobMap = visibleImages.flatMap(j =>
                 j.images.map(img => ({ url: img, shotLabel: j.shotLabel, productName: j.productName }))
               );
               return (
@@ -416,15 +423,15 @@ export default function CatalogGenerate() {
               );
             })()}
 
-            {batchState.failedJobs > 0 && (
+            {visibleFailed > 0 && (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-destructive">
                   <AlertTriangle className="w-4 h-4" />
-                  {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed
+                  {visibleFailed} image{visibleFailed > 1 ? 's' : ''} failed
                 </div>
                 <p className="text-xs text-muted-foreground">Credits for failed images are automatically refunded.</p>
                 <ul role="list" className="space-y-1">
-                  {batchState.jobs.filter(j => j.status === 'failed').map(j => (
+                  {visibleJobs.filter(j => j.status === 'failed').map(j => (
                     <li key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
                       <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
                       {j.productName} — {j.shotLabel}
@@ -446,7 +453,7 @@ export default function CatalogGenerate() {
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Generating your catalog...</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {batchState.completedJobs} of {batchState.totalJobs} images
+                  {visibleCompleted} of {visibleTotal} images
                 </p>
               </div>
               <Progress value={progress} className="h-1.5 max-w-md mx-auto" />
@@ -488,7 +495,7 @@ export default function CatalogGenerate() {
 
             {(() => {
               const productMap = new Map<string, { name: string; imageUrl: string; total: number; done: number; failed: number }>();
-              for (const j of batchState.jobs) {
+              for (const j of visibleJobs) {
                 const existing = productMap.get(j.productId) || { name: j.productName, imageUrl: '', total: 0, done: 0, failed: 0 };
                 existing.total++;
                 if (j.status === 'completed') existing.done++;
@@ -526,18 +533,20 @@ export default function CatalogGenerate() {
               );
             })()}
 
-            {batchState.aggregatedImages.length > 0 && (
+            {(() => {
+              const imageJobMap: { url: string; shotLabel: string }[] = [];
+              for (const j of visibleJobs) {
+                if (j.status !== 'completed') continue;
+                for (const img of j.images) {
+                  imageJobMap.push({ url: img, shotLabel: j.shotLabel });
+                }
+              }
+              if (imageJobMap.length === 0) return null;
+              return (
               <div className="space-y-3">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated so far</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                  {(() => {
-                    const imageJobMap: { url: string; shotLabel: string }[] = [];
-                    for (const j of batchState.jobs) {
-                      for (const img of j.images) {
-                        imageJobMap.push({ url: img, shotLabel: j.shotLabel });
-                      }
-                    }
-                    return imageJobMap.map((item, i) => (
+                  {imageJobMap.map((item, i) => (
                       <button
                         key={i}
                         onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
@@ -548,49 +557,34 @@ export default function CatalogGenerate() {
                           {item.shotLabel}
                         </span>
                       </button>
-                    ));
-                  })()}
+                  ))}
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
         <ImageLightbox
-          images={batchState.aggregatedImages}
+          images={visibleJobs.flatMap(j => j.images)}
           currentIndex={lightboxIndex}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
           onDownload={(i) => {
-            const url = batchState.aggregatedImages[i];
-            if (!url) return;
-            // Find the job that produced this image for a descriptive filename
-            let filename = `catalog-${i + 1}.jpg`;
-            let found = false;
-            let imgIdx = 0;
-            for (const j of batchState.jobs) {
-              if (found) break;
-              if (j.status === 'completed') {
-                for (const imgUrl of j.images) {
-                  if (imgIdx === i) {
-                    const safeName = (j.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
-                    const safeShot = (j.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
-                    filename = `${safeName}_${safeShot}.jpg`;
-                    found = true;
-                    break;
-                  }
-                  imgIdx++;
-                }
-              }
-            }
-            fetch(url).then(r => r.blob()).then(blob => {
+            const allImages = visibleJobs.flatMap(j => j.status === 'completed' ? j.images.map(url => ({ url, productName: j.productName, shotLabel: j.shotLabel })) : []);
+            const item = allImages[i];
+            if (!item) return;
+            const safeName = (item.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
+            const safeShot = (item.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
+            const filename = `${safeName}_${safeShot}.jpg`;
+            fetch(item.url).then(r => r.blob()).then(blob => {
               const a = document.createElement('a');
               a.href = URL.createObjectURL(blob);
               a.download = filename;
               a.click();
               URL.revokeObjectURL(a.href);
-            }).catch(() => window.open(url, '_blank'));
+            }).catch(() => window.open(item.url, '_blank'));
           }}
         />
       </div>
