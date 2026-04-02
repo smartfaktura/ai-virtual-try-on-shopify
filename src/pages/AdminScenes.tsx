@@ -55,6 +55,7 @@ function getCategoryWorkflowHint(category: string): string {
 
 export default function AdminScenes() {
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const { user } = useAuth();
   const { hiddenIds, hiddenBuiltInScenes, hideScene, unhideScene } = useHiddenScenes();
   const { asPoses: customPoses, scenes: customScenesRaw } = useCustomScenes();
   const { sortMap, categoryMap } = useSceneSortOrder();
