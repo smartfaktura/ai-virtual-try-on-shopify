@@ -377,6 +377,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, body angled 30 to 45 degrees toward camera, natural upright posture, subtle controlled weight shift, arms relaxed, straight-on studio camera, clearly showing shape, drape, and side structure of the hero product, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, body angled 30 to 45 degrees toward camera, natural upright posture, arms relaxed, clearly showing the jacket silhouette from the side — shoulder structure, sleeve drape, side seam line, lapel depth, collar profile, and fabric weight, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       bag: '[HERO_PRODUCT] worn by [MODEL], 3/4 angle full-body catalog photograph, bag clearly visible on shoulder or in hand as hero item, balanced styling, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       sunglasses: '[HERO_PRODUCT] worn by [MODEL], 3/4 portrait catalog photograph, eyewear clearly visible, calm confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       hat: '[HERO_PRODUCT] worn by [MODEL], 3/4 upper-body catalog photograph, headwear clearly visible, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
