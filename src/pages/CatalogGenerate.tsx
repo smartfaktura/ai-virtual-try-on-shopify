@@ -468,12 +468,12 @@ export default function CatalogGenerate() {
                       <button
                         key={i}
                         onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                        className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 hover:scale-[1.03] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 animate-fade-in"
                       >
                         <ShimmerImage src={item.url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                         {item.shotLabel && (
-                          <span className="absolute bottom-1 left-1 right-1 text-[10px] leading-tight font-medium bg-black/60 text-white rounded px-1.5 py-0.5 truncate text-center">
+                          <span className="absolute bottom-1.5 left-1.5 right-1.5 text-[10px] leading-tight font-medium backdrop-blur-md bg-black/40 text-white rounded-md px-2 py-1 truncate text-center">
                             {item.shotLabel}
                           </span>
                         )}
