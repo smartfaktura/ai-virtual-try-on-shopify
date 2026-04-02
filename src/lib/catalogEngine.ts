@@ -386,7 +386,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'anchor_edit',
     needsModel: false,
-    promptTemplate: 'macro close-up of [HERO_PRODUCT], focusing on texture, stitching, material quality, and finishing details, ultra sharp details, shallow depth of field, soft diffused lighting, premium ecommerce macro photography, ONLY the hero product visible, no other items, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'macro close-up of [HERO_PRODUCT], focusing on texture, stitching, material quality, and finishing details. Reproduce the EXACT product from the reference image — same colors, same textures, same patterns, same stitching, same material. Do NOT invent or alter any product detail. Do NOT change colors or fabric appearance. Ultra sharp details, shallow depth of field, soft diffused lighting, premium ecommerce macro photography, ONLY the hero product visible, no other items, [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
       jewelry: 'macro close-up of [HERO_PRODUCT] worn by [MODEL], focus on jewelry placement, texture, shine, and construction, minimal competing styling, soft controlled lighting, [BACKGROUND], [CONSISTENCY]',
     },
