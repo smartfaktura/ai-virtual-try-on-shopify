@@ -865,13 +865,11 @@ export function buildReferences(
     return refs;
   }
 
-  // On-model shots: identity image FIRST for stronger face locking, then product
+  // On-model shots: ONLY the model identity image for face lock
+  // Outfit consistency comes from text prompts, not image references
   const refs: ImageRef[] = [];
   if (modelRefUrl) refs.push({ url: modelRefUrl, role: 'model' });
-  refs.push({ url: productImageUrl, role: 'product' });
-  if (anchorImageUrl) refs.push({ url: anchorImageUrl, role: 'anchor' });
-  // Keep under 4 references
-  return refs.slice(0, 4);
+  return refs;
 }
 
 // ────────────────────────────────────────────────
