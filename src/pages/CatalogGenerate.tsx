@@ -372,7 +372,7 @@ export default function CatalogGenerate() {
                   <Button variant="outline" disabled={isDownloading} onClick={async () => {
                     setIsDownloading(true);
                     try {
-                      const images = realVisibleJobs
+                      const images = visibleJobs
                         .filter(j => j.status === 'completed' && j.images.length > 0)
                         .flatMap(j => j.images.map(url => ({
                           url,
@@ -396,7 +396,7 @@ export default function CatalogGenerate() {
             </div>
 
             {(() => {
-              const visibleImages = realVisibleJobs.filter(j => j.status === 'completed' && j.images.length > 0);
+              const visibleImages = visibleJobs.filter(j => j.status === 'completed' && j.images.length > 0);
               if (visibleImages.length === 0) return null;
               const imageJobMap = visibleImages.flatMap(j =>
                 j.images.map(img => ({ url: img, shotLabel: j.shotLabel, productName: j.productName }))
@@ -433,7 +433,7 @@ export default function CatalogGenerate() {
                 </div>
                 <p className="text-xs text-muted-foreground">Credits for failed images are automatically refunded.</p>
                 <ul role="list" className="space-y-1">
-                  {realVisibleJobs.filter(j => j.status === 'failed').map(j => (
+                  {visibleJobs.filter(j => j.status === 'failed').map(j => (
                     <li key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
                       <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
                       {j.productName} — {j.shotLabel}
@@ -497,7 +497,7 @@ export default function CatalogGenerate() {
 
             {(() => {
               const productMap = new Map<string, { name: string; imageUrl: string; total: number; done: number; failed: number }>();
-              for (const j of realVisibleJobs) {
+              for (const j of visibleJobs) {
                 const existing = productMap.get(j.productId) || { name: j.productName, imageUrl: '', total: 0, done: 0, failed: 0 };
                 existing.total++;
                 if (j.status === 'completed') existing.done++;
@@ -537,7 +537,7 @@ export default function CatalogGenerate() {
 
             {(() => {
               const imageJobMap: { url: string; shotLabel: string }[] = [];
-              for (const j of realVisibleJobs) {
+              for (const j of visibleJobs) {
                 if (j.status !== 'completed') continue;
                 for (const img of j.images) {
                   imageJobMap.push({ url: img, shotLabel: j.shotLabel });
@@ -568,13 +568,13 @@ export default function CatalogGenerate() {
         )}
 
         <ImageLightbox
-          images={realVisibleJobs.flatMap(j => j.images)}
+          images={visibleJobs.flatMap(j => j.images)}
           currentIndex={lightboxIndex}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
           onDownload={(i) => {
-            const allImages = realVisibleJobs.flatMap(j => j.status === 'completed' ? j.images.map(url => ({ url, productName: j.productName, shotLabel: j.shotLabel })) : []);
+            const allImages = visibleJobs.flatMap(j => j.status === 'completed' ? j.images.map(url => ({ url, productName: j.productName, shotLabel: j.shotLabel })) : []);
             const item = allImages[i];
             if (!item) return;
             const safeName = (item.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
