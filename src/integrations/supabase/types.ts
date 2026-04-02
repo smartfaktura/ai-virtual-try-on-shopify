@@ -1682,6 +1682,7 @@ export type Database = {
           is_active: boolean
           name: string
           optimized_image_url: string
+          preview_image_url: string
           prompt_hint: string
           prompt_only: boolean
         }[]
