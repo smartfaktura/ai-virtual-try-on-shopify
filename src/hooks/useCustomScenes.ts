@@ -11,6 +11,7 @@ export interface CustomScene {
   category: string;
   image_url: string;
   optimized_image_url: string | null;
+  preview_image_url: string | null;
   created_by: string;
   is_active: boolean;
   created_at: string;
@@ -34,7 +35,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     category: scene.category as PoseCategory,
     description: scene.description,
     promptHint: scene.prompt_hint || scene.description,
-    previewUrl: scene.image_url,
+    previewUrl: scene.preview_image_url || scene.image_url,
     optimizedImageUrl: scene.optimized_image_url || undefined,
     created_at: scene.created_at,
     promptOnly: scene.prompt_only || false,
@@ -93,7 +94,7 @@ export function useDeleteCustomScene() {
 export function useUpdateCustomScene() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string; discover_categories?: string[] }) => {
+    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string; discover_categories?: string[]; preview_image_url?: string | null }) => {
       const { id, ...updates } = params;
       const { error } = await supabase.from('custom_scenes' as any).update(updates).eq('id', id);
       if (error) throw error;
