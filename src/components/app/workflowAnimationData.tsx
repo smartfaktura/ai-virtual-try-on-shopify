@@ -223,9 +223,21 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Catalog Studio': {
     mode: 'carousel',
-    background: tryonShowcase1,
+    background: '/images/catalog-studio/VOVVAI-Catalog-Studio-1.jpg',
     objectPosition: 'center',
-    backgrounds: [tryonShowcase1, tryonShowcase2, showcase1, showcase2, tryonShowcase3, showcase3],
+    interval: 500,
+    backgrounds: [
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-1.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-2.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-3.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-4.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-5.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-6.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-7.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-8.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-9.jpg',
+      '/images/catalog-studio/VOVVAI-Catalog-Studio-10.jpg',
+    ],
     elements: [
       {
         type: 'badge', label: 'Bulk Generation', icon: <Layers className="w-3 h-3" />,
