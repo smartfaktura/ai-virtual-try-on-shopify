@@ -712,6 +712,7 @@ export interface PromptAssemblyInput {
   lightingPrompt: string;
   shotDef: ShotDefinition;
   renderPath: RenderPath;
+  backgroundHex?: string;
 }
 
 export function assemblePrompt(input: PromptAssemblyInput): string {
