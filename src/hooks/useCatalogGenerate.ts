@@ -295,6 +295,7 @@ export function useCatalogGenerate() {
           lightingPrompt: session.lightingPrompt,
           shotDef: effectiveAnchorDef,
           renderPath: 'anchor_generate',
+          backgroundHex: session.backgroundHex,
         });
         const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${effectiveAnchorId}`;
         const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, config.propAssignments);

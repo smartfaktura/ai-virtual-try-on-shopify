@@ -92,6 +92,7 @@ export interface CatalogSessionLock {
   modelAudience: ModelAudienceType;
   backgroundId: string;
   backgroundPrompt: string;
+  backgroundHex: string;
   lightingPrompt: string;
   consistencyBlock: string;
 }
