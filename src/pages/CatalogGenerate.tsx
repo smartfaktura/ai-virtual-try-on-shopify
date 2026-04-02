@@ -423,15 +423,15 @@ export default function CatalogGenerate() {
               );
             })()}
 
-            {batchState.failedJobs > 0 && (
+            {visibleFailed > 0 && (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-destructive">
                   <AlertTriangle className="w-4 h-4" />
-                  {batchState.failedJobs} image{batchState.failedJobs > 1 ? 's' : ''} failed
+                  {visibleFailed} image{visibleFailed > 1 ? 's' : ''} failed
                 </div>
                 <p className="text-xs text-muted-foreground">Credits for failed images are automatically refunded.</p>
                 <ul role="list" className="space-y-1">
-                  {batchState.jobs.filter(j => j.status === 'failed').map(j => (
+                  {visibleJobs.filter(j => j.status === 'failed').map(j => (
                     <li key={j.jobId} className="text-xs text-destructive/80 flex items-center gap-2">
                       <span className="w-1 h-1 rounded-full bg-destructive/60 flex-shrink-0" />
                       {j.productName} — {j.shotLabel}
