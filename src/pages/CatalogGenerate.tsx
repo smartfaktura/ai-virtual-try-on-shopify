@@ -355,7 +355,7 @@ export default function CatalogGenerate() {
                   {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
                   {visibleFailed > 0 && (
                     <span className="text-destructive"> · {visibleFailed} failed</span>
-                    <span className="text-destructive"> · {batchState.failedJobs} failed</span>
+                    <span className="text-destructive"> · {visibleFailed} failed</span>
                   )}
                 </p>
                 <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
