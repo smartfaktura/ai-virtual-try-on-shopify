@@ -38,6 +38,7 @@ const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
 const VideoHub = lazy(() => import('@/pages/VideoHub'));
 const AnimateVideo = lazy(() => import('@/pages/video/AnimateVideo'));
 const Freestyle = lazy(() => import('@/pages/Freestyle'));
+const CatalogHub = lazy(() => import('@/pages/CatalogHub'));
 const CatalogGenerate = lazy(() => import('@/pages/CatalogGenerate'));
 const AdminScenes = lazy(() => import('@/pages/AdminScenes'));
 const AdminSceneUpload = lazy(() => import('@/pages/AdminSceneUpload'));
