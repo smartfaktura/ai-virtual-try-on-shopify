@@ -393,8 +393,10 @@ export default function CatalogGenerate() {
               </div>
             </div>
 
-            {batchState.aggregatedImages.length > 0 && (() => {
-              const imageJobMap = batchState.jobs.flatMap(j =>
+            {(() => {
+              const visibleImages = visibleJobs.filter(j => j.status === 'completed' && j.images.length > 0);
+              if (visibleImages.length === 0) return null;
+              const imageJobMap = visibleImages.flatMap(j =>
                 j.images.map(img => ({ url: img, shotLabel: j.shotLabel, productName: j.productName }))
               );
               return (
