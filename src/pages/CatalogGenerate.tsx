@@ -348,20 +348,48 @@ export default function CatalogGenerate() {
         {batchState.allDone ? (
           <div className="space-y-6">
             <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-7 h-7 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
-                  {visibleFailed > 0 && (
-                    <span className="text-destructive"> · {visibleFailed} failed</span>
-                  )}
-                </p>
-                <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Total time: {formatTime(elapsedSeconds)}</span>
-                </div>
+              {allVisibleFailed ? (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-7 h-7 text-destructive" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">Generation Failed</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      All {visibleFailed} image{visibleFailed !== 1 ? 's' : ''} failed. Credits have been refunded.
+                    </p>
+                  </div>
+                </>
+              ) : visibleCompleted === 0 ? (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-7 h-7 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">No Images Generated</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Something went wrong. Please try again.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
+                      {visibleFailed > 0 && (
+                        <span className="text-destructive"> · {visibleFailed} failed</span>
+                      )}
+                    </p>
+                  </div>
+                </>
+              )}
+              <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Total time: {formatTime(elapsedSeconds)}</span>
               </div>
               <p className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">VOVV.AI</p>
               <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
