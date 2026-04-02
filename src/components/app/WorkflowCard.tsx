@@ -19,6 +19,7 @@ interface WorkflowRowProps {
   reversed?: boolean;
   id?: string;
   comingSoon?: boolean;
+  beta?: boolean;
 }
 
 const featureMap: Record<string, string[]> = {
