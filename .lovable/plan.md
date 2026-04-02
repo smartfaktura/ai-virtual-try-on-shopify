@@ -1,55 +1,49 @@
 
 
-# Fix Face Quality & Cross-Shot Consistency in Catalog Studio
+# Fix Catalog Studio: "0 of 1" UX Bug + Face Quality via Face-First Anchor
 
-## Root Cause
+## Problems Identified
 
-The system fires ALL jobs (anchor + derivatives) simultaneously with `anchorImageUrl: null`. The anchor-then-derivatives architecture exists in the code but **never actually chains** — derivative shots never receive the anchor result as a consistency reference. Each shot generates independently, causing:
+1. **"0 of 1 images" then jumping to 19**: During Phase 1, `batchState.jobs` only contains anchor jobs (1 job). The per-product progress card counts from `batchState.jobs`, so it shows "0/1". After Phase 2 completes, derivatives are added and it jumps to "0/19". The header `totalJobs` is correct but the per-product breakdown is misleading.
 
-- Face drift between shots (Seedream reinvents the face each time)
-- The "two faces" artifact in your screenshots — without an anchor to lock identity, Seedream interprets the model + product references inconsistently
+2. **Bad face quality**: The anchor shot (`front_model`) is a full-body shot. Seedream receives the model identity image + product image as two separate references. For full-body shots, the face is small in the output, so Seedream doesn't lock onto facial details well. The result: blurry/merged faces. Close-ups work better because the face is dominant.
 
-Additionally, the model reference image is converted to base64 client-side (`safeConvertBase64`), which can degrade the image before it even reaches Seedream.
+3. **Two-phase polling conflict**: `pollJobs()` is called on line 627 (immediate UI feedback) AND again inside the async IIFE on line 618 (after derivatives enqueue). Both call `stopPolling()` + `setInterval`, which can cause race conditions.
 
-## Fix: Two-Phase Generation Pipeline
+## Solution
 
-### 1. Two-phase enqueue in `useCatalogGenerate.ts`
+### 1. Face-First Anchor Strategy
+Instead of using `front_model` (full body) as the anchor, generate a **waist-up portrait** as an invisible "identity anchor" first. This shot has a large, dominant face that Seedream can lock onto accurately. Then use that result as the consistency reference for ALL other shots including the full-body `front_model`.
 
-Instead of firing all jobs at once, split into two phases:
+- Add a new internal-only shot `identity_anchor` to the engine — a tight waist-up portrait focused on face + outfit. This shot is NOT shown in the shot picker; it's automatically prepended as the first job.
+- The anchor prompt will heavily emphasize face detail and outfit accuracy.
+- All user-selected shots (including `front_model`) become derivatives that receive the identity anchor result as `anchor_image_url`.
 
-**Phase 1 — Anchor jobs**: Enqueue only anchor shots. Start polling. Wait until all anchors complete.
+### 2. Fix "0 of 1" UX
+- During Phase 1, set `totalJobs` to the full expected count (already done) but also add placeholder derivative jobs to `batchState.jobs` with status `'waiting'` so the per-product progress cards show the correct total from the start.
 
-**Phase 2 — Derivative jobs**: Once an anchor completes, read its result image URL from the poll data. Enqueue derivative shots for that product/model combo WITH `anchor_image_url` set to the completed anchor's storage URL.
-
-This means derivatives get a real generated image as their consistency reference — Seedream can then match the exact face, lighting, and styling from the anchor.
-
-### 2. Skip base64 conversion for model images — pass URL directly
-
-Currently: `modelB64 = await safeConvertBase64(model.imageUrl)` → sends a potentially degraded base64 blob.
-
-Change: Pass the original URL string directly in the payload. The edge function already accepts URLs (Seedream takes URLs natively). Only convert the product image to base64 if needed for the enqueue payload, or better yet, pass URLs for both.
-
-This preserves full resolution of the model's face reference.
-
-### 3. Edge function: stronger single-identity instruction
-
-In `generate-catalog/index.ts`, when building the Seedream request body for on-model shots, add an explicit `seed` parameter derived from the batch_id. This ensures Seedream uses the same random seed across all shots in a batch, improving face consistency.
+### 3. Fix polling race condition
+- Remove the `pollJobs()` call on line 627. Only start polling inside the async IIFE — first for anchor status feedback, then for all jobs after derivatives are enqueued.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useCatalogGenerate.ts` | Two-phase pipeline: enqueue anchors first, wait for completion, then enqueue derivatives with anchor URL. Skip base64 for model images — pass URL directly. |
-| `supabase/functions/generate-catalog/index.ts` | Add deterministic `seed` from batch_id for cross-shot consistency. |
+| `src/lib/catalogEngine.ts` | Add `identity_anchor` shot definition (internal, waist-up face-priority portrait). Update `getAnchorShotId` to always return `identity_anchor` for on-model categories. |
+| `src/hooks/useCatalogGenerate.ts` | (a) ALL user-selected shots become derivatives — the auto-generated identity anchor is the only Phase 1 job. (b) Add placeholder derivative jobs to `batchState.jobs` during Phase 1 so product cards show full counts. (c) Remove duplicate `pollJobs()` call on line 627. (d) Start a lightweight anchor-only poll inside the async IIFE for UI feedback during Phase 1. |
+| `src/pages/CatalogGenerate.tsx` | Filter out `identity_anchor` jobs from the results gallery (user shouldn't see the intermediate portrait). Add a `'waiting'` status styling for placeholder jobs in the per-product progress cards. |
+| `supabase/functions/generate-catalog/index.ts` | No changes needed — it already handles `anchor_image_url` and reference ordering correctly. |
 
 ## How It Works After the Fix
 
 ```text
-Phase 1: Enqueue anchor jobs (1 per product×model)
-         ↓ poll until anchors complete
-Phase 2: Read anchor result URLs
-         ↓ enqueue derivatives WITH anchor_image_url = anchor result
-         ↓ Seedream gets: [model_identity, product, anchor_result]
-         → Face locked from anchor, consistent across all shots
+Phase 1: Generate 1 identity anchor (waist-up portrait, face-dominant)
+         → Seedream nails the face because it's large in frame
+         → UI shows "0 of 19 images" with correct per-product totals
+
+Phase 2: All user-selected shots enqueued as derivatives
+         → Each receives identity anchor URL as anchor_image_url
+         → Seedream uses the clean face from anchor for consistency
+         → Full-body shots get accurate face because anchor locks it
 ```
 
