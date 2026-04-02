@@ -17,14 +17,14 @@ export type FashionStyleId =
 export type CatalogShotId =
   // On-model shots
   | 'front_model' | 'back_view' | 'side_3q' | 'detail_closeup'
-  | 'movement' | 'hands_detail' | 'sitting' | 'full_look'
+  | 'movement' | 'hands_detail' | 'sitting' | 'full_look_catalog'
   // New on-model shots
   | 'lifestyle_context' | 'over_shoulder' | 'waist_up_crop' | 'walking_motion'
   | 'cross_body' | 'wrist_shot'
   // Product-only shots
   | 'ghost_mannequin' | 'front_flat' | 'back_flat' | 'zoom_detail'
   // New product-only shots
-  | 'on_surface' | 'styled_flat_lay'
+  | 'on_surface' | 'clean_flat_lay'
   // Category-specific
   | 'hand_carry' | 'shoulder_carry' | 'side_body'
   | 'standing_shoe_focus' | 'side_step' | 'walking_crop'
