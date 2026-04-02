@@ -35,6 +35,7 @@ async function generateImageSeedream(
   aspectRatio = "1:1",
   maxRetries = 1,
   seed?: number,
+  opts?: { guidanceScale?: number; imageStrength?: number; negativePrompt?: string },
 ): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const seedreamRatio = seedreamAspectRatio(aspectRatio);
@@ -47,9 +48,11 @@ async function generateImageSeedream(
         aspect_ratio: seedreamRatio,
         response_format: "url",
         watermark: false,
-        guidance_scale: 8.5,
+        guidance_scale: opts?.guidanceScale ?? 10.0,
         sequential_image_generation: "disabled",
         ...(seed !== undefined && { seed }),
+        ...(opts?.imageStrength !== undefined && { image_strength: opts.imageStrength }),
+        ...(opts?.negativePrompt && { negative_prompt: opts.negativePrompt }),
       };
       if (imageUrls.length === 1) {
         body.image = imageUrls[0];
@@ -376,14 +379,39 @@ serve(async (req) => {
       ? Array.from(body.batch_id).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 2147483647
       : undefined;
 
+    // ── Per-phase generation parameters ──────────────────────────────────
+    const FACE_NEGATIVE = "two faces, merged face, blended face, double exposure, morphed features, distorted face, two people, split face, composite face, ghost face overlay, transparent face, face swap artifact, extra limbs, extra fingers";
+
+    let guidanceScale: number;
+    let imageStrength: number | undefined;
+    let negativePrompt: string | undefined;
+
+    if (isProductOnly) {
+      // Product-only: standard guidance, no face negatives needed
+      guidanceScale = 8.5;
+      imageStrength = undefined;
+      negativePrompt = undefined;
+    } else if (body.anchor_image_url) {
+      // Derivative on-model: slightly relaxed for pose variation, keep identity
+      guidanceScale = 9.5;
+      imageStrength = 0.75;
+      negativePrompt = FACE_NEGATIVE;
+    } else {
+      // Anchor (identity lock): maximum fidelity
+      guidanceScale = 10.0;
+      imageStrength = 0.85;
+      negativePrompt = FACE_NEGATIVE;
+    }
+
     const seedreamResult = await generateImageSeedream(
       prompt,
       referenceImages,
       "seedream-4-5-251128",
       arkApiKey,
       aspectRatio,
-      1, // 1 retry for transient errors
+      1,
       batchSeed,
+      { guidanceScale, imageStrength, negativePrompt },
     );
 
     if (!seedreamResult.ok || !seedreamResult.imageUrl) {
