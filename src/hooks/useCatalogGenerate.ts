@@ -625,6 +625,26 @@ export function useCatalogGenerate() {
           const isProductOnlyDerivative = spec.shotGroup === 'product-only';
           const anchorUrl = isProductOnlyDerivative ? null : (anchorImageMap.get(spec.anchorJobId) || null);
 
+          // ── FACE GUARD: skip on-model derivatives when anchor is missing ──
+          if (!isProductOnlyDerivative && spec.modelImageUrl && !anchorUrl) {
+            console.warn(`[catalog] FACE GUARD: skipping on-model derivative "${spec.shotId}" for "${spec.productTitle}" — anchor missing, would cause face blending`);
+            derivativeJobs.push({
+              jobId: `skipped-${spec.shotId}-${spec.productId}`,
+              status: 'failed',
+              images: [],
+              error: 'Anchor missing — skipped to protect face consistency',
+              productId: spec.productId,
+              productName: spec.productTitle,
+              shotId: spec.shotId,
+              shotLabel: spec.shotLabel,
+              renderPath: spec.renderPath,
+              isAnchor: false,
+              isPlaceholder: false,
+              isUserVisible: true,
+            });
+            continue;
+          }
+
           const jobResult = await enqueueJob(
             spec.token, spec.productImageUrl, spec.productTitle, spec.productId,
             spec.productOriginalUrl, spec.shotId, spec.shotLabel, spec.renderPath,
