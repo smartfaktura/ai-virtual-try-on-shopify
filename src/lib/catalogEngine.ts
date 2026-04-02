@@ -643,6 +643,23 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: false,
     promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, NO people, NO model, NO human figure, NO hands, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
   },
+  // ── Internal Identity Anchor (not user-selectable) ──
+  {
+    id: 'identity_anchor',
+    label: 'Identity Anchor',
+    group: 'on-model',
+    compatibleCategories: WEARABLE,
+    defaultRenderPath: 'anchor_generate',
+    needsModel: true,
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, cropped at waist, face fills upper third of frame, sharp eye-level camera angle, relaxed confident expression, looking directly into camera, natural relaxed shoulders, arms at sides, the hero product clearly visible on the upper body, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      shoes: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      bag: '[HERO_PRODUCT] held by [MODEL], waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      hat: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      sunglasses: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      jewelry: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    },
+  },
 ];
 
 export function getCompatibleShots(category: ProductCategory, hasModel: boolean): ShotDefinition[] {
