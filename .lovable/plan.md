@@ -1,90 +1,124 @@
 
+## Findings
 
-# Fix Face Consistency: Architectural Approach
+Yes — there are still 2 real paths in `/catalog` where Seedream can drift to a different face or produce a “brand-model-like but not exact” face in non-close shots.
 
-## Root Cause
+### 1. Fallback path can reintroduce face blending
+In `supabase/functions/generate-catalog/index.ts`:
 
-Seedream's multi-image `image` parameter blends ALL input images at the pixel level via `image_strength`. Sending 3 images (face + anchor + product) means the face is diluted to ~33% signal strength. No prompt text can override this pixel-level interpolation. This is why the face changes — it's not a prompt problem, it's a reference architecture problem.
+- Normal derivative flow is now good: if `anchor_image_url` exists, the function sends only `modelIdentityUrl`.
+- But if `anchor_image_url` is missing, it falls into the fallback branch and sends:
+  - model identity image
+  - product image
 
-## Solution: Two-Pass Derivative Generation
+That means Seedream gets multiple visual references again, which can dilute identity and create a blended/new face.
 
-Split each derivative shot into two sequential API calls, each with a single clear visual reference:
+This can happen because `src/hooks/useCatalogGenerate.ts` still enqueues derivative jobs even when the anchor did not produce an image:
+- anchor URL is resolved from `anchorImageMap`
+- if missing, derivative still gets queued with `anchorImage_url = null`
+- then the edge function uses the fallback multi-image path
 
-### Pass 1: Generate the Shot (outfit + pose + background)
-- Send ONLY the anchor outfit image (1 reference image)
-- High `image_strength` (0.80) to lock outfit/styling
-- Prompt focuses on pose, camera angle, background
-- Result: correct outfit + pose + background, but generic/wrong face
+So yes: there is still a code path where blended faces can happen.
 
-### Pass 2: Face Swap via Inpainting
-- Send the Pass 1 result as the base image
-- Send the model identity photo as the reference
-- Use Seedream's inpainting/edit capability to replace ONLY the face region
-- Prompt: "Replace the face with the exact person from the reference image, keep everything else identical"
-- Very high `image_strength` (0.90+) to preserve everything except the face
+### 2. Built-in models are weaker identity sources than custom/user models
+In `src/pages/CatalogGenerate.tsx`, selected catalog models use:
 
-This guarantees:
-- The outfit is locked from the anchor (Pass 1)
-- The face comes from ONE source only — the model photo (Pass 2)
-- No pixel averaging between unrelated images
+- `m.sourceImageUrl || m.previewUrl || null`
 
-## Alternative: If Seedream Lacks Inpainting
+For built-in models in `src/data/mockData.ts`, they only have `previewUrl`, not a dedicated high-res identity source.
 
-If Seedream doesn't support regional inpainting, use a simpler approach:
+That means:
+- custom/user models often use a better source image
+- built-in models use a single preview asset only
+- in wide/full-body shots, Seedream has less facial detail to lock onto, so it can synthesize a similar-but-different face
 
-### Approach B: Single-Reference Per Call
-- **Derivative call**: Send ONLY the model identity image (1 reference)
-- Remove anchor and product from reference images entirely
-- Rely purely on prompt text for outfit consistency (anchor is text-described)
-- `image_strength: 0.85` — very high to lock the face
-- Add the anchor outfit description as explicit text: "wearing beige straight trousers, white tank top, white sneakers"
+This is not classic multi-image blending, but it absolutely can look like “another face matched to our brand model”.
 
-This sacrifices some outfit precision but guarantees face lock.
+## Conclusion
 
-## Implementation
+The current system is improved, but it is not fully safe yet.
 
-### File: `supabase/functions/generate-catalog/index.ts`
+There is still a real chance of wrong face identity when:
+1. an anchor fails or times out and derivatives still proceed
+2. a built-in model only provides a lower-fidelity preview image for identity locking
+3. the shot is distant enough that Seedream has little facial information to preserve
 
-**For derivative on-model shots (where `body.anchor_image_url` exists):**
+## Recommended Fix
 
-**Option A (two-pass):**
-1. First Seedream call: `referenceImages = [anchor_image_url]`, prompt = shot pose + outfit + background
-2. Second Seedream call: `referenceImages = [model_identity_url]`, base image = Pass 1 result, prompt = "Apply the exact face, hair, and skin from the reference person onto this image, keep outfit, pose, background, and body identical"
-3. Use the Pass 2 result as final output
+### A. Remove the unsafe fallback completely
+In `supabase/functions/generate-catalog/index.ts`:
+- delete the fallback branch that sends `[modelIdentityUrl, product.imageUrl]`
+- on on-model derivatives, allow only:
+  - single model identity reference, or
+  - fail fast if required reference state is missing
 
-**Option B (single-reference fallback):**
-1. Single Seedream call: `referenceImages = [model_identity_url]` only
-2. Prompt includes explicit outfit text from anchor wardrobe (not just "Image 2")
-3. `image_strength: 0.85`, `guidance_scale: 10.0`
+Result:
+- no hidden return to multi-image blending
 
-### File: `src/lib/catalogEngine.ts`
+### B. Do not enqueue on-model derivatives when anchor is missing
+In `src/hooks/useCatalogGenerate.ts`:
+- if an on-model derivative does not have a completed anchor image, do not enqueue it
+- mark that shot failed/skipped with a clear error like:
+  - “Anchor missing — derivative not generated to protect face consistency”
 
-- Update `assemblePrompt` derivative section: embed the full support wardrobe as explicit text rather than referencing "Image 2"
-- Remove IMAGE ROLE ASSIGNMENT for multi-image — since we're now single-reference
-- Add explicit wardrobe description: "The model wears [exact wardrobe items from anchor] — do NOT deviate from this outfit"
+Result:
+- prevents accidental fallback behavior
+- protects identity consistency over batch completion
 
-### File: `src/hooks/useCatalogGenerate.ts`
+### C. Split model reference into preview vs identity source explicitly
+In `src/types/catalog.ts` and the catalog page/hook flow:
+- add a dedicated `identityImageUrl` field to `CatalogModelEntry`
+- keep `imageUrl` only for UI preview
+- pass `identityImageUrl` separately to the edge function
 
-- For Option A: pass a `twoPass: true` flag in the payload so the edge function knows to run two sequential calls
-- Credits stay the same (we absorb the second API call cost)
+Result:
+- cleaner contract
+- avoids accidental use of thumbnail/preview assets as identity source
 
-## Recommended Path
+### D. Upgrade built-in models to true identity assets
+In `src/data/mockData.ts` or model-loading layer:
+- provide a dedicated higher-quality identity image for built-in models
+- do not rely on the same preview card image for face locking
 
-Start with **Option B** (single-reference) because:
-- Simpler implementation (no two-pass orchestration)
-- Guaranteed face consistency (only 1 image = face)
-- Outfit text from anchor wardrobe definitions is already very specific
-- Can upgrade to two-pass later if outfit drift becomes an issue
+Result:
+- much stronger identity retention in long shots
 
-## Files to Modify
+### E. Add server logs for actual reference behavior
+In `supabase/functions/generate-catalog/index.ts`, log for each job:
+- shot id
+- whether it is anchor / derivative / product-only
+- whether `anchor_image_url` exists
+- number of reference images actually sent
+- whether the request used model-only, product-only, or fallback mode
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/generate-catalog/index.ts` | Derivative shots: send ONLY model identity as reference image; bump `image_strength` to 0.85 |
-| `src/lib/catalogEngine.ts` | Update derivative prompt: remove "Image 2/Image 3" references, embed full wardrobe text inline, single IMAGE ROLE ASSIGNMENT for face-only reference |
+Result:
+- makes future debugging immediate
+- confirms whether bad outputs came from a protected path or fallback path
 
-## Expected Results
-- Face stays identical across all shots (only 1 reference image = the model)
-- Outfit consistency maintained via explicit text prompts
-- No more pixel averaging between face and product/anchor images
+## Files to update
 
+- `supabase/functions/generate-catalog/index.ts`
+  - remove multi-image fallback for on-model derivatives
+  - fail fast instead of sending model + product
+  - add stronger runtime logging
+
+- `src/hooks/useCatalogGenerate.ts`
+  - do not enqueue on-model derivatives if anchor image is missing
+  - surface a clear skipped/failed reason in batch state
+
+- `src/types/catalog.ts`
+  - add explicit `identityImageUrl` to catalog model entries
+
+- `src/pages/CatalogGenerate.tsx`
+  - build model entries with separate preview image and identity image
+
+- `src/data/mockData.ts`
+  - optionally add dedicated identity assets for built-in models
+
+## Expected outcome
+
+After these changes:
+- Seedream will no longer be able to silently fall back into a multi-reference face-blending path
+- distant shots should stop switching to a different “similar” face because the identity source becomes stricter
+- built-in and custom models will behave more consistently
+- if identity cannot be protected, the job will fail safely instead of generating a wrong face
