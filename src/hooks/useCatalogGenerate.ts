@@ -327,6 +327,7 @@ export function useCatalogGenerate() {
             lightingPrompt: session.lightingPrompt,
             shotDef,
             renderPath,
+            backgroundHex: session.backgroundHex,
           });
           const comboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${shotId}`;
           const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
