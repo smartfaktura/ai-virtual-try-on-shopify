@@ -1,34 +1,50 @@
 
 
-# Fix Admin Scene Preview Upload
+# Fix Catalog Session Recovery — Persist All Jobs from Start
 
-## Problem 1: Storage RLS Policy Violation
-The `product-uploads` bucket requires paths to start with `{user_id}/` (enforced by RLS). But `handlePreviewUpload` uploads to `scene-previews/{timestamp}-{randomId}.{ext}` — no user ID prefix, so the INSERT is rejected.
+## Root Cause
 
-**Fix in `src/pages/AdminScenes.tsx` (line 752):**
-Change the upload path from:
+`persistBatch(markedAnchors)` at line 565 only saves anchor jobs to `sessionStorage`. Placeholders (representing future derivatives) are not persisted. If the browser refreshes during phase 1, recovery loads only anchors → poll marks them complete → `allDone = true` with 0 visible images → "No Images Generated" error screen, even though the backend completed everything.
+
+## Fix (single file: `src/hooks/useCatalogGenerate.ts`)
+
+### Change 1: Persist anchors AND placeholders from the start (line 565)
+
+Replace:
+```typescript
+persistBatch(markedAnchors);
 ```
-scene-previews/${timestamp}-${randomId}.${ext}
+With:
+```typescript
+persistBatch(initialJobs);
 ```
-to:
-```
-${user.id}/scene-previews/${timestamp}-${randomId}.${ext}
-```
-This requires passing the user ID into the SceneRow component. Add `userId: string` to `SceneRowProps`, thread it from the parent (which already has `useAuth`), and use it in the path.
 
-## Problem 2: No Visible UI Buttons for Preview Upload
-The current UI only shows an upload overlay on hover over the tiny 40×48px thumbnail — easy to miss. Add an explicit small button next to the reset button.
+This ensures `sessionStorage` contains both anchor jobs and placeholder derivatives, so recovery knows the full scope.
 
-**Fix in `src/pages/AdminScenes.tsx` (lines 993-1004):**
-Add an explicit "Change preview" button (ImageIcon) in the actions area for custom scenes, visible alongside the existing reset button. This button triggers a hidden file input.
+### Change 2: Persist `isUserVisible` and `isPlaceholder` fields (lines 46-54)
 
-## Summary of Changes
+Update `persistBatch` to include `isUserVisible` and `isPlaceholder` in the serialized metadata, so recovery can correctly filter visible vs. hidden jobs.
 
-| What | Where |
-|------|-------|
-| Prefix upload path with `user.id` | `handlePreviewUpload` in SceneRow (~line 752) |
-| Thread `userId` prop to SceneRow | Parent render + SceneRowProps interface |
-| Add explicit preview upload button | Actions area in SceneRow (~line 993) |
+### Change 3: Restore `isUserVisible` and `isPlaceholder` on load (lines 72-76)
 
-Single file change: `src/pages/AdminScenes.tsx`
+Update `loadPersistedBatch` to read and restore these fields from the persisted data.
+
+### Change 4: Handle placeholder-only recovery (lines 146-164)
+
+When recovery detects placeholder jobs exist (derivatives not yet enqueued), set `phase` to `'anchors'` (not `'derivatives'`) so the phase-aware `allDone` guard on line 282 prevents premature completion. The poll will wait for real derivatives to appear.
+
+Additionally: if ALL recovered jobs are anchors (no derivatives at all), and they're all terminal, show a graceful "Session expired — check your Library" message instead of "No Images Generated".
+
+### Change 5: Fallback UI in CatalogGenerate.tsx (line 369-377)
+
+When `allDone && visibleCompleted === 0 && visibleFailed === 0` (no visible jobs at all — likely a recovery edge case), show a softer message: "Session Interrupted — Your images may still be in your Library" with a direct link, instead of the harsh "No Images Generated / Something went wrong."
+
+## Summary
+
+| Change | File | Why |
+|--------|------|-----|
+| Persist all initial jobs | `useCatalogGenerate.ts` line 565 | Placeholders survive refresh |
+| Include visibility fields in persist/load | `useCatalogGenerate.ts` lines 46-76 | Correct filtering after recovery |
+| Phase-aware recovery | `useCatalogGenerate.ts` lines 146-164 | Prevent premature allDone |
+| Graceful fallback UI | `CatalogGenerate.tsx` lines 369-377 | Better UX for edge cases |
 
