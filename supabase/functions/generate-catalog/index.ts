@@ -340,16 +340,25 @@ serve(async (req) => {
     // Use prompt_final from catalog engine if present; fall back to legacy buildCatalogPrompt
     const prompt = body.prompt_final || buildCatalogPrompt(body);
 
-    const hasModel = !!body.model?.imageUrl;
+    const hasModel = !!(body.model?.imageUrl || body.model?.identityImageUrl);
     const logModel = hasModel ? `model="${body.model?.name}"` : "product-only";
     console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || body.pose?.name || 'default'}", ratio=${aspectRatio}`);
 
-    // Reference images: product first (hero), then model if available (skip for product-only), then anchor if available
-    const referenceImages: string[] = [body.product.imageUrl];
-    if (body.model?.imageUrl && body.render_path !== 'product_only_generate') {
-      referenceImages.push(body.model.imageUrl);
+    // Build reference images with shot-type-aware ordering
+    const isProductOnly = body.render_path === 'product_only_generate' || body.shot_group === 'product-only';
+    const modelIdentityUrl = body.model?.identityImageUrl || body.model?.imageUrl;
+
+    const referenceImages: string[] = [];
+    if (isProductOnly) {
+      // Product-only shots: only product reference, no model contamination
+      referenceImages.push(body.product.imageUrl);
+      if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
+    } else {
+      // On-model shots: identity image FIRST for stronger face locking
+      if (modelIdentityUrl) referenceImages.push(modelIdentityUrl);
+      referenceImages.push(body.product.imageUrl);
+      if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
     }
-    if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
 
     const seedreamResult = await generateImageSeedream(
       prompt,
