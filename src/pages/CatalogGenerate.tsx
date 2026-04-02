@@ -313,17 +313,36 @@ export default function CatalogGenerate() {
     return (
       <div className="space-y-6 pb-32">
         <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot"><div /></PageHeader>
-        <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="flex flex-col items-center justify-center py-24 space-y-6">
+          {/* Animated gradient ring */}
           <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div
+              className="absolute -inset-2 rounded-full opacity-60 blur-sm"
+              style={{
+                background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--primary) / 0.2), hsl(var(--primary)), hsl(var(--primary) / 0.2), hsl(var(--primary)))',
+                animation: 'spin 3s linear infinite',
+              }}
+            />
+            <div className="relative w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center">
+              <Loader2 className="w-7 h-7 text-primary animate-spin" />
             </div>
           </div>
-          <div className="text-center space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight">Preparing your photoshoot...</h2>
-            <p className="text-sm text-muted-foreground">Queuing images. This may take a moment.</p>
+          {/* Phase badge */}
+          <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-medium gap-1.5 px-3 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Preparing
+          </Badge>
+          <div className="text-center space-y-1.5">
+            <h2 className="text-lg font-semibold tracking-tight">Setting up your photoshoot</h2>
+            <p className="text-sm text-muted-foreground">Queuing images and preparing consistency references…</p>
           </div>
-          <p className="text-[10px] text-muted-foreground/60 tracking-widest uppercase">VOVV.AI</p>
+          {/* Pulsing dots */}
+          <div className="flex items-center gap-1">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground/40 tracking-[0.2em] uppercase font-light">VOVV.AI Studio</p>
         </div>
       </div>
     );
