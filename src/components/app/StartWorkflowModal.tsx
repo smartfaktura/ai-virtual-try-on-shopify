@@ -189,7 +189,7 @@ export function StartWorkflowModal({ open, onOpenChange }: StartWorkflowModalPro
     name: wf.slug === 'product-listing-set' ? 'Product Listing Set'
       : wf.slug === 'virtual-try-on-set' ? 'Virtual Try-On Set'
       : wf.slug === 'selfie-ugc-set' ? 'Selfie / UGC Set'
-      : 'Catalog Shot Set',
+      : 'Catalog Studio',
     slug: wf.slug,
     description: wf.subtitle,
     default_image_count: 4,

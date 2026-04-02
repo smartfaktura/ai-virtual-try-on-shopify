@@ -495,7 +495,7 @@ export default function Dashboard() {
                   key={workflow.id}
                   workflow={workflow}
                   onNavigate={(slug) => navigate(slug ? `/app/generate/${slug}` : `/app/workflows`)}
-                  comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
+                  comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
                 />
               ))}
             </div>

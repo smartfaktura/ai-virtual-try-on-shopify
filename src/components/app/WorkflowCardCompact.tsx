@@ -100,7 +100,7 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
           <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{workflow.description}</p>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
-          {['Bulk generation', 'Matrix mode'].map((tag) => (
+          {['Bulk generation', 'Catalog Ready'].map((tag) => (
             <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{tag}</span>
           ))}
         </div>

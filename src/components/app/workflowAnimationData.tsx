@@ -221,7 +221,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
-  'Catalog Shot Set': {
+  'Catalog Studio': {
     mode: 'carousel',
     background: tryonShowcase1,
     objectPosition: 'center',
@@ -232,7 +232,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
-        type: 'badge', label: 'Matrix Mode', icon: <Star className="w-3 h-3" />,
+        type: 'badge', label: 'Catalog Ready', icon: <Star className="w-3 h-3" />,
         position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
