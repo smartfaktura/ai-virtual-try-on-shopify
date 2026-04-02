@@ -597,6 +597,7 @@ export default function AdminScenes() {
                    togglePromptOnly={togglePromptOnly}
                    customScenesRaw={customScenesRaw}
                    workflows={workflows}
+                   userId={user?.id || ''}
                 />
               ))}
             </div>
