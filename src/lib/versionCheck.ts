@@ -6,8 +6,10 @@ export async function checkAppVersion() {
     if (!res.ok) return;
 
     const { v } = await res.json();
-    if (v && v !== __BUILD_VERSION__) {
+      if (v && v !== __BUILD_VERSION__) {
       if (sessionStorage.getItem('v_reloaded')) return;
+      // Don't reload while user is on catalog page — preserves in-memory generation results
+      if (window.location.pathname.startsWith('/app/catalog')) return;
       sessionStorage.setItem('v_reloaded', '1');
       window.location.reload();
     } else {
