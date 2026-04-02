@@ -716,7 +716,7 @@ export interface PromptAssemblyInput {
 }
 
 export function assemblePrompt(input: PromptAssemblyInput): string {
-  const { productTitle, productCategory, modelProfile, supportWardrobePrompt, backgroundPrompt, lightingPrompt, shotDef, renderPath } = input;
+  const { productTitle, productCategory, modelProfile, supportWardrobePrompt, backgroundPrompt, lightingPrompt, shotDef, renderPath, backgroundHex } = input;
 
   // Pick the right template — category override or default
   let template = shotDef.categoryOverrides?.[productCategory] || shotDef.promptTemplate;
@@ -724,14 +724,18 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   // Choose the right consistency block based on whether this shot needs a model
   const consistencyBlock = shotDef.needsModel ? CONSISTENCY_BLOCK_MODEL : CONSISTENCY_BLOCK_PRODUCT;
 
+  // Ghost mannequin override: force pure white void, strip all shadow language
+  const effectiveBackground = shotDef.id === 'ghost_mannequin'
+    ? 'pure white (#FFFFFF) infinite void background, absolutely no shadow, no surface, no floor, no gradients'
+    : backgroundPrompt;
+
   // For edit paths, wrap differently
   if (renderPath === 'anchor_edit') {
-    // Seedream edit format: Action + Object + Characteristic + keep unchanged
     return `Adjust the framing to show: ${template
       .replace('[HERO_PRODUCT]', productTitle)
       .replace('[MODEL]', modelProfile)
       .replace('[SUPPORT_WARDROBE]', supportWardrobePrompt)
-      .replace('[BACKGROUND]', backgroundPrompt)
+      .replace('[BACKGROUND]', effectiveBackground)
       .replace('[LIGHTING]', lightingPrompt)
       .replace('[QUALITY]', QUALITY_BLOCK)
       .replace('[CONSISTENCY]', consistencyBlock)
@@ -743,15 +747,22 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     .replace('[HERO_PRODUCT]', productTitle)
     .replace('[MODEL]', modelProfile)
     .replace('[SUPPORT_WARDROBE]', supportWardrobePrompt)
-    .replace('[BACKGROUND]', backgroundPrompt)
+    .replace('[BACKGROUND]', effectiveBackground)
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
     .replace('[CONSISTENCY]', consistencyBlock);
 
-  // Append model identity & background isolation directives when a model is involved
+  // Append model identity directive when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
     prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
-    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo. NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting, ONLY controlled studio lighting.';
+  }
+
+  // GLOBAL lighting rule — applied to ALL shots (model and product-only)
+  prompt += '\nLIGHTING RULE: Use ONLY controlled even studio lighting. NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting, NO warm color casts, NO golden hour effects.';
+
+  // Background color enforcement for all shots
+  if (backgroundHex) {
+    prompt += `\nBACKGROUND COLOR: The background MUST be exactly ${backgroundHex} — uniform, seamless, no gradients, no color shifts, no hue variation.`;
   }
 
   // Product-only shots: enforce single-product + no-people rule
