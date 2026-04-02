@@ -495,7 +495,7 @@ export default function CatalogGenerate() {
 
             {(() => {
               const productMap = new Map<string, { name: string; imageUrl: string; total: number; done: number; failed: number }>();
-              for (const j of batchState.jobs) {
+              for (const j of visibleJobs) {
                 const existing = productMap.get(j.productId) || { name: j.productName, imageUrl: '', total: 0, done: 0, failed: 0 };
                 existing.total++;
                 if (j.status === 'completed') existing.done++;
