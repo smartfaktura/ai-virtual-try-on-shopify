@@ -419,7 +419,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL_PLUS_SHOES,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL] seated on a simple minimal stool, back straight, legs crossed at ankles, hands resting on thighs, focus on silhouette and structure of the hero product, [SUPPORT_WARDROBE], [QUALITY], sharp focus, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL] seated on a minimal stool, back straight, feet flat on floor, hands resting on knees or lap, relaxed upright posture, straight-on camera, focus on silhouette and structure of the hero product, [SUPPORT_WARDROBE], [QUALITY], sharp focus, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'full_look',
