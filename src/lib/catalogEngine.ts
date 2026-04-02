@@ -347,7 +347,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: WEARABLE,
     defaultRenderPath: 'anchor_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body front-facing pose, weight on left leg, right hand relaxed at side, left arm slightly away from body, confident neutral expression, looking directly into camera, [SUPPORT_WARDROBE], focus on fit and silhouette, centered composition, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body head to toe feet fully visible in frame, front-facing pose, weight on left leg, right hand relaxed at side, left arm slightly away from body, confident neutral expression, looking directly into camera, [SUPPORT_WARDROBE], focus on fit and silhouette, centered composition, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
       shoes: '[HERO_PRODUCT] worn by [MODEL], lower-body focused standing pose, feet shoulder-width apart, the footwear clearly visible as the hero product, [SUPPORT_WARDROBE], sharp focus on shoes, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       hat: '[HERO_PRODUCT] worn by [MODEL], portrait or upper-body front-facing pose, confident neutral expression, the headwear clearly visible as the hero product, [SUPPORT_WARDROBE], sharp focus, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
