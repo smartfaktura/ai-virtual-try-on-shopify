@@ -700,7 +700,7 @@ export function classifyRenderPath(
 // ────────────────────────────────────────────────
 
 const QUALITY_BLOCK = 'ultra realistic ecommerce fashion photography, sharp focus, realistic fabric details, premium commercial finish, natural proportions, polished product visibility';
-const CONSISTENCY_BLOCK = 'same model identity, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
+const CONSISTENCY_BLOCK = 'same model identity matching the model reference image exactly — same face same hair color same hair style same skin tone same body proportions, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
 
 export interface PromptAssemblyInput {
   productTitle: string;
@@ -734,7 +734,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   }
 
   // Standard generation prompt (structured: Subject + Action + Environment + Aesthetics)
-  return template
+  let prompt = template
     .replace('[HERO_PRODUCT]', productTitle)
     .replace('[MODEL]', modelProfile)
     .replace('[SUPPORT_WARDROBE]', supportWardrobePrompt)
@@ -742,6 +742,14 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
     .replace('[CONSISTENCY]', CONSISTENCY_BLOCK);
+
+  // Append model identity & background isolation directives when a model is involved
+  if (modelProfile && modelProfile !== 'no model') {
+    prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
+    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo.';
+  }
+
+  return prompt;
 }
 
 // ────────────────────────────────────────────────

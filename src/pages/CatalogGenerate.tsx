@@ -241,7 +241,7 @@ export default function CatalogGenerate() {
           const m = allModels.find(mod => mod.modelId === id)!;
           return {
             id: m.modelId,
-            profile: `${m.ageRange} ${m.gender} model`,
+            profile: `${m.name}, ${m.ethnicity || ''} ${m.ageRange} ${m.gender} model, ${m.bodyType || 'average'} build`.replace(/\s+/g, ' ').trim(),
             audience: inferAudience(m),
             imageUrl: m.previewUrl || null,
           };
