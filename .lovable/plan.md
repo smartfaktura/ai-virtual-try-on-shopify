@@ -1,31 +1,20 @@
 
 
-# Switch Catalog to Seedream 5.0 Lite as Primary Model
+# Make Catalog Shot Set Active with BETA Label
 
-## What Changes
+## Changes
 
-**Single file**: `supabase/functions/generate-tryon/index.ts`
+### 1. `src/pages/Workflows.tsx` — Remove `comingSoon` for Catalog Shot Set
+Replace `comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}` with a new `beta` prop on both `WorkflowCard` and `WorkflowCardCompact` (lines 564, 578).
 
-### 1. Make Seedream 5.0 Lite the primary model for catalog mode
+### 2. `src/components/app/WorkflowCard.tsx` — Add `beta` prop
+- Add `beta?: boolean` to the props interface
+- Instead of rendering the disabled "Coming Soon" card, render the normal active card but with a "BETA" badge overlay (top-right corner, primary color)
+- The card remains fully clickable
 
-In the generation loop (~line 799), when `isCatalogMode` is true, call `generateImageSeedream()` with model `"Dola-Seedream-5.0-lite"` as the **first** attempt instead of Gemini Pro.
+### 3. `src/components/app/WorkflowCardCompact.tsx` — Add `beta` prop
+- Same approach: add `beta?: boolean` prop
+- Render the normal active card with a "BETA" badge in the top-right corner
 
-### 2. Adjust fallback chain for catalog mode
-
-```text
-Catalog mode fallback order:
-  1. Seedream 5.0 Lite (NEW primary)
-  2. Gemini Pro (current primary becomes fallback)
-  3. Gemini Flash (unchanged last resort)
-```
-
-Non-catalog (regular try-on) stays unchanged — Gemini Pro remains primary there.
-
-### 3. No other changes needed
-
-The existing `generateImageSeedream()` function already supports arbitrary model strings and handles ARK API calls, timeouts, moderation codes, and error handling. The `BYTEPLUS_ARK_API_KEY` secret is already configured.
-
-## Technical Detail
-
-The change is ~10 lines in the generation loop: wrap the existing `generateImage()` call in an `if (isCatalogMode)` branch that calls Seedream first, then falls back to the existing Gemini chain if Seedream returns no result.
+The BETA badge will use: `<Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px]">BETA</Badge>`
 
