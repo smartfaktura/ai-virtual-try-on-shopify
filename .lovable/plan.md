@@ -1,45 +1,72 @@
 
+Fix `/app/catalog` so Generate never shows false completion or misleading counts.
 
-# Boost Guidance Scale & Strengthen Face Fidelity
+Problem
+- Catalog Studio currently runs in 2 client phases:
+  1. hidden anchor jobs
+  2. user-visible derivative shots
+- `useCatalogGenerate.ts` starts the UI with `[anchors + placeholders]`, but polling only tracks real anchor jobs.
+- On every poll, `batchState.jobs` is replaced with the anchor-only list, so placeholders disappear from the UI.
+- `allDone` is then computed against anchors only. When anchors finish, the page can flip to `allDone=true` before derivative jobs even exist.
+- `CatalogGenerate.tsx` filters out internal anchors and placeholders, so that premature completion state becomes: “Your Catalog is Ready” and `0 images generated`.
+- The page already has `batchState.phase`, but the UI does not use it.
 
-## What changes
+Implementation plan
+1. Fix the completion logic in `src/hooks/useCatalogGenerate.ts`.
+   - Add an explicit phase guard/ref so `allDone` can never become `true` during the anchor phase.
+   - Only allow completion after derivative jobs have been enqueued and all real user-visible jobs are terminal.
+   - Keep phase transitions strict: `anchors -> derivatives -> complete`.
 
-### 1. Raise `guidance_scale` from 8.5 → 10.0
-In `supabase/functions/generate-catalog/index.ts` line 50, change the value. This tells Seedream to follow the prompt more strictly, reducing hallucination drift.
+2. Separate display state from polled state.
+   - Keep placeholders visible during phase 1 instead of replacing the whole batch with anchor-only jobs.
+   - Merge polled anchor updates into the displayed batch list.
+   - When phase 2 starts, replace placeholders with the real derivative job records.
+   - Add explicit metadata like `isPlaceholder` / `isUserVisible` in `src/types/catalog.ts` so the UI no longer depends on `jobId.startsWith('placeholder-')` or `shotId !== 'identity_anchor'`.
 
-**Important caveat:** Seedream's `guidance_scale` max is typically 10.0. Values above ~9.5 can sometimes cause over-saturation or artifacts. 10.0 is the ceiling — it won't guarantee 100% match but will maximize prompt adherence.
+3. Remove phantom hidden work for pure product-only runs.
+   - Finish the product-only pipeline cleanup by making the anchor optional/null when no model is selected.
+   - Skip the hidden `front_flat` anchor entirely for product-only-only sessions.
+   - This keeps packshot runs single-phase and avoids fake “preparing invisible anchor” behavior.
 
-### 2. Add `image_strength` parameter for anchor shots
-Seedream supports an `image_strength` parameter (0.0–1.0) that controls how strongly reference images influence the output. Setting it higher (e.g., 0.85 for anchors) forces Seedream to replicate the reference face more faithfully.
+4. Make the `/app/catalog` UI honest in `src/pages/CatalogGenerate.tsx`.
+   - Use `batchState.phase` to render phase-specific messaging:
+     - `anchors`: “Locking consistency reference…”
+     - `derivatives`: “Generating your selected shots…”
+     - `complete`: success / partial success / failed
+   - Never show “Your Catalog is Ready” when `visibleCompleted === 0`.
+   - If all visible jobs fail, show a failure state instead of a success card.
+   - Base progress and ETA on the correct phase so hidden anchors do not distort user-facing numbers.
 
-### 3. Strengthen negative prompt for face merge prevention
-Add an explicit negative prompt block to the Seedream API call. Currently no `negative_prompt` is sent. Adding one with anti-merge directives will actively suppress the hallucination:
+5. Tighten start-state handling.
+   - In `handleGenerate()`, only keep timer/start UI state if `startGeneration()` actually succeeds.
+   - Keep session recovery compatible with the new metadata so restored batches do not instantly look complete or empty.
 
+Files to update
+- `src/hooks/useCatalogGenerate.ts`
+- `src/pages/CatalogGenerate.tsx`
+- `src/types/catalog.ts`
+- `src/lib/catalogEngine.ts` (only for optional/no-anchor product-only flow)
+
+Expected result
+- Clicking Generate always shows a truthful in-progress state.
+- No more premature “ready” screen with `0 images generated`.
+- Product-only sessions begin directly with real shots.
+- The final completion card appears only after actual user-visible outputs are done.
+
+Technical details
+```text
+Current:
+UI starts with [anchors + placeholders]
+polling only knows about [anchors]
+poll update overwrites UI with [anchors]
+anchors finish -> allDone=true
+UI hides anchors/placeholders -> 0 visible images
+=> false success state
+
+After fix:
+UI keeps [anchors + placeholders] during phase 1
+polling updates anchors without dropping placeholders
+anchors finishing switches to derivatives, not complete
+placeholders are replaced by real jobs
+complete=true only after real visible jobs are terminal
 ```
-negative_prompt: "two faces, merged face, blended face, double exposure, 
-morphed features, distorted face, two people, split face, composite face, 
-ghost face overlay, transparent face, face swap artifact"
-```
-
-### 4. Per-phase guidance tuning
-- **Anchor shots** (identity lock): `guidance_scale: 10.0` + `image_strength: 0.85` — maximum face fidelity
-- **Derivative shots**: `guidance_scale: 9.5` + `image_strength: 0.75` — slightly relaxed to allow pose variation while keeping identity
-- **Product-only shots**: `guidance_scale: 8.5` — standard, no face involved
-
-## File to update
-- `supabase/functions/generate-catalog/index.ts` — the `generateImageSeedream` function and the caller
-
-## How Seedream face injection actually works (explainer)
-
-Seedream does NOT have a dedicated "face lock" feature. Here's what actually happens:
-
-1. **Reference images** (`body.image`): Seedream treats these as visual context. It tries to reproduce visual elements from them based on prompt instructions.
-
-2. **Prompt correlation**: When the prompt says "the model shown in [MODEL IMAGE]", Seedream maps the first reference image(s) to the person description and tries to replicate facial features.
-
-3. **Why faces merge**: When you send `[model_photo, anchor_result, product]` — both `model_photo` and `anchor_result` contain faces. Seedream averages/blends them because it sees two "person" references. Our previous fix (sending only anchor for derivatives) already addresses this.
-
-4. **Why faces still drift**: Even with one face reference, `guidance_scale: 8.5` gives Seedream 15% creative freedom. At 10.0, it follows the reference more tightly. Adding `negative_prompt` actively suppresses merge artifacts.
-
-5. **The seed trick**: The deterministic seed from `batch_id` helps maintain consistency across shots in the same batch, but it's not a face-lock — it just makes the random noise pattern identical.
-
