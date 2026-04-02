@@ -991,7 +991,17 @@ function SceneRow({
 
       {/* Actions */}
       <div className="flex items-center gap-0.5 flex-shrink-0">
-        {/* Duplicate to category */}
+        {/* Reset preview for custom scenes */}
+        {isCustom && hasCustomPreview && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleResetPreview} title="Reset to original preview">
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">Reset preview to original</TooltipContent>
+          </Tooltip>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7" title="Duplicate to category">
