@@ -51,6 +51,8 @@ function persistBatch(jobs: CatalogJobExtended[]) {
       shotLabel: j.shotLabel,
       renderPath: j.renderPath,
       isAnchor: j.isAnchor,
+      isUserVisible: j.isUserVisible ?? !j.isAnchor,
+      isPlaceholder: j.isPlaceholder ?? false,
     }));
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(meta));
   } catch { /* quota exceeded — non-critical */ }
