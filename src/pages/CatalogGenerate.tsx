@@ -578,13 +578,13 @@ export default function CatalogGenerate() {
             const safeName = (item.productName || 'product').replace(/[^a-zA-Z0-9]+/g, '-');
             const safeShot = (item.shotLabel || 'shot').replace(/[^a-zA-Z0-9]+/g, '-');
             const filename = `${safeName}_${safeShot}.jpg`;
-            fetch(url).then(r => r.blob()).then(blob => {
+            fetch(item.url).then(r => r.blob()).then(blob => {
               const a = document.createElement('a');
               a.href = URL.createObjectURL(blob);
               a.download = filename;
               a.click();
               URL.revokeObjectURL(a.href);
-            }).catch(() => window.open(url, '_blank'));
+            }).catch(() => window.open(item.url, '_blank'));
           }}
         />
       </div>
