@@ -505,9 +505,11 @@ export function useCatalogGenerate() {
             renderPath,
             shotGroup: shotDef.group,
             prompt,
+            // Product-only shots: NO model reference, NO anchor reference (prevent face leak)
             modelImageUrl: isProductOnlyShot ? null : modelUrl,
             modelProfile: session.modelProfile,
-            anchorJobId: anchorResult ? anchorResult.jobId : '',
+            // Only on-model derivatives get the anchor reference
+            anchorJobId: isProductOnlyShot ? '' : (anchorResult ? anchorResult.jobId : ''),
             batchId,
           });
         }
