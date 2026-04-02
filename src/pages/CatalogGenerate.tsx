@@ -557,11 +557,11 @@ export default function CatalogGenerate() {
                           {item.shotLabel}
                         </span>
                       </button>
-                    ));
-                  })()}
+                  ))}
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
