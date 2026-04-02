@@ -371,14 +371,29 @@ serve(async (req) => {
       if (modelIdentityUrl) {
         referenceImages.push(modelIdentityUrl);
       } else {
-        // Fallback: if no model identity, use anchor for outfit continuity
-        referenceImages.push(body.anchor_image_url);
+        // NO FALLBACK: fail fast to protect face consistency
+        console.error(`[generate-catalog] FACE GUARD: derivative on-model shot "${body.shot_id}" has anchor but NO model identity URL — failing to prevent face blending`);
+        const errMsg = "Model identity image missing — derivative skipped to protect face consistency";
+        if (isQueueInternal && body.job_id) {
+          await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
+        }
+        return new Response(JSON.stringify({ error: errMsg }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
+    } else if (modelIdentityUrl && !isProductOnly) {
+      // On-model shot WITHOUT anchor (anchor failed/missing) — FAIL FAST
+      // Do NOT send model + product together as that causes face blending
+      console.error(`[generate-catalog] FACE GUARD: on-model shot "${body.shot_id}" has no anchor_image_url — failing to prevent face blending`);
+      const errMsg = "Anchor image missing — derivative skipped to protect face consistency";
+      if (isQueueInternal && body.job_id) {
+        await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
+      }
+      return new Response(JSON.stringify({ error: errMsg }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else {
-      // Fallback: model + product (shouldn't normally happen with new flow)
-      if (modelIdentityUrl) {
-        referenceImages.push(modelIdentityUrl);
-      }
+      // Product-only fallback (no model involved)
       referenceImages.push(body.product.imageUrl);
     }
 
