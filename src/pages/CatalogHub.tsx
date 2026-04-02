@@ -276,13 +276,12 @@ export default function CatalogHub() {
 }
 
 function SessionCard({ session, onOpen }: { session: CatalogSession; onOpen: (s: CatalogSession) => void }) {
-  const navigate = useNavigate();
   const thumbs = session.images.slice(0, 4);
   const hasImages = thumbs.length > 0;
 
   return (
     <button
-      onClick={() => navigate('/app/library')}
+      onClick={() => onOpen(session)}
       className={cn(
         'w-full rounded-2xl border border-border bg-card p-4 text-left transition-all duration-200',
         'hover:shadow-lg hover:shadow-primary/[0.04] hover:border-primary/20 hover:-translate-y-0.5',
