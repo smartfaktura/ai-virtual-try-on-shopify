@@ -148,6 +148,8 @@ export function useCatalogGenerate() {
     if (saved && saved.length > 0 && jobsRef.current.length === 0) {
       console.log(`[catalog] Recovering ${saved.length} jobs from session`);
       jobsRef.current = saved;
+      // Recovered sessions have real jobs (no placeholders), so they're in derivatives phase
+      phaseRef.current = 'derivatives';
       setIsGenerating(true);
 
       const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
