@@ -130,11 +130,11 @@ function PropPickerModal({
                         <Check className="w-3 h-3 text-primary-foreground" />
                       </div>
                     )}
-                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-muted/30">
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-white flex items-center justify-center p-2">
                       <ShimmerImage
-                        src={getOptimizedUrl(p.image_url, { width: 160, quality: 60 })}
+                        src={p.image_url}
                         alt={p.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     <div className="px-1 py-2">
