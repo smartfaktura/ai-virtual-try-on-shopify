@@ -69,12 +69,15 @@ function loadPersistedBatch(): CatalogJobExtended[] | null {
     const meta = JSON.parse(raw) as Array<{
       jobId: string; productId: string; productName: string;
       shotId: CatalogShotId; shotLabel: string; renderPath: RenderPath; isAnchor: boolean;
+      isUserVisible?: boolean; isPlaceholder?: boolean;
     }>;
     if (!Array.isArray(meta) || meta.length === 0) return null;
     return meta.map(m => ({
       ...m,
       status: 'queued' as const,
       images: [],
+      isUserVisible: m.isUserVisible ?? !m.isAnchor,
+      isPlaceholder: m.isPlaceholder ?? false,
     }));
   } catch {
     clearPersistedBatch();
