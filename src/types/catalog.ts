@@ -115,7 +115,10 @@ export interface CatalogModelEntry {
   id: string;
   profile: string;
   audience: ModelAudienceType;
+  /** UI preview thumbnail */
   imageUrl: string | null;
+  /** High-res identity source for face replication (falls back to imageUrl) */
+  identityImageUrl?: string | null;
 }
 
 export interface CatalogSessionConfig {

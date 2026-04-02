@@ -361,7 +361,7 @@ export function useCatalogGenerate() {
           product_id: productId,
           product_name: productTitle,
           product_image_url: productOriginalUrl,
-          ...(modelImageUrl && { model: { imageUrl: modelImageUrl, identityImageUrl: modelImageUrl, name: modelProfile } }),
+          ...(modelImageUrl && { model: { imageUrl: modelImageUrl, identityImageUrl: modelImageUrl, name: modelProfile, originalImageUrl: modelImageUrl } }),
           ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),
           aspectRatio: '3:4',
           imageCount: 1,
