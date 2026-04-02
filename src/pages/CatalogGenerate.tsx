@@ -520,15 +520,26 @@ export default function CatalogGenerate() {
               <div className="space-y-3">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated so far</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                  {batchState.aggregatedImages.map((url, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                      <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
-                    </button>
-                  ))}
+                  {(() => {
+                    const imageJobMap: { url: string; shotLabel: string }[] = [];
+                    for (const j of batchState.jobs) {
+                      for (const img of j.images) {
+                        imageJobMap.push({ url: img, shotLabel: j.shotLabel });
+                      }
+                    }
+                    return imageJobMap.map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
+                        className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        <ShimmerImage src={item.url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
+                        <span className="absolute bottom-1 left-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded truncate text-center">
+                          {item.shotLabel}
+                        </span>
+                      </button>
+                    ));
+                  })()}
                 </div>
               </div>
             )}
