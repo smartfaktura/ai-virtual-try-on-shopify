@@ -407,9 +407,9 @@ serve(async (req) => {
       imageStrength = 0.65;
       negativePrompt = ANCHOR_NEGATIVE;
     } else if (body.anchor_image_url) {
-      // Derivative on-model: 3 images, balanced for identity + outfit lock
-      guidanceScale = 9.5;
-      imageStrength = 0.75;
+      // Derivative on-model: single model-identity reference, high strength to lock face
+      guidanceScale = 10.0;
+      imageStrength = 0.85;
       negativePrompt = FACE_NEGATIVE;
     } else {
       // Fallback
