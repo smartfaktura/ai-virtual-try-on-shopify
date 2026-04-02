@@ -362,6 +362,11 @@ serve(async (req) => {
       if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
     }
 
+    // Derive deterministic seed from batch_id for cross-shot face consistency
+    const batchSeed = body.batch_id
+      ? Array.from(body.batch_id).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 2147483647
+      : undefined;
+
     const seedreamResult = await generateImageSeedream(
       prompt,
       referenceImages,
@@ -369,6 +374,7 @@ serve(async (req) => {
       arkApiKey,
       aspectRatio,
       1, // 1 retry for transient errors
+      batchSeed,
     );
 
     if (!seedreamResult.ok || !seedreamResult.imageUrl) {
