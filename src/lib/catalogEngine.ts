@@ -690,6 +690,12 @@ export function getShotDefinition(id: CatalogShotId): ShotDefinition | undefined
   return SHOT_DEFINITIONS.find(s => s.id === id);
 }
 
+/** Check if a shot has strict isolation (no props allowed) */
+export function isStrictIsolationShot(id: CatalogShotId): boolean {
+  const def = getShotDefinition(id);
+  return def?.strictIsolation === true;
+}
+
 // ────────────────────────────────────────────────
 // 8. Anchor Shot Resolver
 // ────────────────────────────────────────────────

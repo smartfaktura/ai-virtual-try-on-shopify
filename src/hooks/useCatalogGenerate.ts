@@ -598,13 +598,15 @@ export function useCatalogGenerate() {
           if (creditsFailed) break;
 
           // Look up anchor result for this derivative
-          const anchorUrl = anchorImageMap.get(spec.anchorJobId) || null;
+          // Product-only shots: never pass anchor URL (it may contain a person)
+          const isProductOnlyDerivative = spec.shotGroup === 'product-only';
+          const anchorUrl = isProductOnlyDerivative ? null : (anchorImageMap.get(spec.anchorJobId) || null);
 
           const jobResult = await enqueueJob(
             spec.token, spec.productImageUrl, spec.productTitle, spec.productId,
             spec.productOriginalUrl, spec.shotId, spec.shotLabel, spec.renderPath,
             spec.shotGroup, spec.prompt, spec.modelImageUrl, spec.modelProfile,
-            anchorUrl, // NOW we pass the real anchor result URL
+            anchorUrl,
             spec.batchId, derivEnqueueCount++,
           );
 
