@@ -655,7 +655,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] alone in a top-down flat lay ecommerce photograph, centered in frame with clean negative space, no props, no accessories, no additional items, no model, premium clean commercial styling, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'Reproduce the EXACT product from the reference image — identical color, fabric, pattern, hardware, and construction. Do NOT invent, simplify, or alter any detail. [HERO_PRODUCT] alone in a top-down flat lay ecommerce photograph, centered in frame with clean negative space, no props, no accessories, no additional items, no model, premium clean commercial styling, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: 'Reproduce the EXACT jacket from the reference image — identical color, fabric, pattern, zipper/buttons, seams, and hardware. Do NOT invent or alter any detail. [HERO_PRODUCT] alone in a top-down flat lay ecommerce photograph, jacket laid flat showing full front with sleeves spread symmetrically, collar open naturally, centered in frame with clean negative space, no props, no model, premium clean commercial styling, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   // ── Internal Identity Anchor (not user-selectable) ──
   {
