@@ -749,6 +749,11 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo.';
   }
 
+  // Product-only shots: enforce single-product rule
+  if (shotDef.group === 'product-only') {
+    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described.';
+  }
+
   return prompt;
 }
 
