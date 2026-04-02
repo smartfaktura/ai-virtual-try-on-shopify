@@ -827,7 +827,7 @@ serve(async (req) => {
             console.warn(`Pro model returned null — falling back to Seedream 4.5 via ARK API for image ${i + 1}`);
             const refImages = [body.product.imageUrl, body.model.imageUrl, body.pose?.imageUrl].filter(Boolean) as string[];
             const seedreamResult = await generateImageSeedream(
-              variationPrompt, refImages, "seedream-4-5-251128", arkApiKey, body.aspectRatio || "1:1"
+              variationPrompt, refImages, "Dola-Seedream-5.0-lite", arkApiKey, body.aspectRatio || "1:1"
             );
             if (seedreamResult.ok && seedreamResult.imageUrl) {
               base64Url = await fetchImageAsBase64(seedreamResult.imageUrl);
