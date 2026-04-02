@@ -1,21 +1,21 @@
 
 
-# Upgrade Seedream Fallback to 5.0 Lite
+# Revert Seedream Fallback to 4.5
 
 ## Overview
-Replace all remaining `seedream-4-5-251128` references with `Dola-Seedream-5.0-lite` across the three edge functions that use it as a fallback engine.
+Roll back the three edge functions from `Dola-Seedream-5.0-lite` to the previous `seedream-4-5-251128` model, since 5.0 Lite is returning server errors.
 
 ## Changes
 
 ### 1. `supabase/functions/generate-freestyle/index.ts`
-- Line ~352: Change `"seedream-4-5-251128"` → `"Dola-Seedream-5.0-lite"` in the provider config map
+- Change `"Dola-Seedream-5.0-lite"` → `"seedream-4-5-251128"` in the provider config map
 
 ### 2. `supabase/functions/generate-workflow/index.ts`
-- Line ~1172: Change `"seedream-4-5-251128"` → `"Dola-Seedream-5.0-lite"` in the Seedream fallback call
+- Change `"Dola-Seedream-5.0-lite"` → `"seedream-4-5-251128"` in the Seedream fallback call
 
 ### 3. `supabase/functions/generate-tryon/index.ts`
-- Line ~830: Change the remaining `"seedream-4-5-251128"` → `"Dola-Seedream-5.0-lite"` (the other reference on line ~808 is already upgraded)
+- Change `"Dola-Seedream-5.0-lite"` → `"seedream-4-5-251128"` (the second reference that was upgraded)
 
 ## Risk
-Minimal — same API endpoint and request format, just a model ID string swap. No schema or client-side changes needed.
+None — this is a straight revert to the previously working model ID.
 
