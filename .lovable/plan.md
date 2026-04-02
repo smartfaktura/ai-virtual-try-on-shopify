@@ -1,72 +1,64 @@
 
-Fix `/app/catalog` so Generate never shows false completion or misleading counts.
 
-Problem
-- Catalog Studio currently runs in 2 client phases:
-  1. hidden anchor jobs
-  2. user-visible derivative shots
-- `useCatalogGenerate.ts` starts the UI with `[anchors + placeholders]`, but polling only tracks real anchor jobs.
-- On every poll, `batchState.jobs` is replaced with the anchor-only list, so placeholders disappear from the UI.
-- `allDone` is then computed against anchors only. When anchors finish, the page can flip to `allDone=true` before derivative jobs even exist.
-- `CatalogGenerate.tsx` filters out internal anchors and placeholders, so that premature completion state becomes: “Your Catalog is Ready” and `0 images generated`.
-- The page already has `batchState.phase`, but the UI does not use it.
+# Rethink Anchor Strategy: Style Transfer Instead of Face Injection
 
-Implementation plan
-1. Fix the completion logic in `src/hooks/useCatalogGenerate.ts`.
-   - Add an explicit phase guard/ref so `allDone` can never become `true` during the anchor phase.
-   - Only allow completion after derivative jobs have been enqueued and all real user-visible jobs are terminal.
-   - Keep phase transitions strict: `anchors -> derivatives -> complete`.
+## Core Insight
 
-2. Separate display state from polled state.
-   - Keep placeholders visible during phase 1 instead of replacing the whole batch with anchor-only jobs.
-   - Merge polled anchor updates into the displayed batch list.
-   - When phase 2 starts, replace placeholders with the real derivative job records.
-   - Add explicit metadata like `isPlaceholder` / `isUserVisible` in `src/types/catalog.ts` so the UI no longer depends on `jobId.startsWith('placeholder-')` or `shotId !== 'identity_anchor'`.
+Current approach sends the model photo as a "face reference" and hopes Seedream replicates it. This causes merged faces because Seedream treats all reference images as visual context to blend.
 
-3. Remove phantom hidden work for pure product-only runs.
-   - Finish the product-only pipeline cleanup by making the anchor optional/null when no model is selected.
-   - Skip the hidden `front_flat` anchor entirely for product-only-only sessions.
-   - This keeps packshot runs single-phase and avoids fake “preparing invisible anchor” behavior.
+**New approach** (proven to work): Use Seedream's style-transfer capability. The prompt explicitly tells Seedream:
+- **Image 1** (model photo) = the person whose face/hair/identity to KEEP
+- **Image 2** (anchor result or product) = the style/pose/clothes/lighting to APPLY
 
-4. Make the `/app/catalog` UI honest in `src/pages/CatalogGenerate.tsx`.
-   - Use `batchState.phase` to render phase-specific messaging:
-     - `anchors`: “Locking consistency reference…”
-     - `derivatives`: “Generating your selected shots…”
-     - `complete`: success / partial success / failed
-   - Never show “Your Catalog is Ready” when `visibleCompleted === 0`.
-   - If all visible jobs fail, show a failure state instead of a success card.
-   - Base progress and ETA on the correct phase so hidden anchors do not distort user-facing numbers.
+This is the "Apply style of Image 2 to Image 1" paradigm — clear attribute segregation prevents face merging.
 
-5. Tighten start-state handling.
-   - In `handleGenerate()`, only keep timer/start UI state if `startGeneration()` actually succeeds.
-   - Keep session recovery compatible with the new metadata so restored batches do not instantly look complete or empty.
+## What Changes
 
-Files to update
-- `src/hooks/useCatalogGenerate.ts`
-- `src/pages/CatalogGenerate.tsx`
-- `src/types/catalog.ts`
-- `src/lib/catalogEngine.ts` (only for optional/no-anchor product-only flow)
+### 1. Rewrite the prompt strategy in `src/lib/catalogEngine.ts`
 
-Expected result
-- Clicking Generate always shows a truthful in-progress state.
-- No more premature “ready” screen with `0 images generated`.
-- Product-only sessions begin directly with real shots.
-- The final completion card appears only after actual user-visible outputs are done.
+**Anchor shot prompt** (identity_anchor):
+Instead of: "Model wearing product, replicate face..."
+New: "Apply the clothing shown in [PRODUCT IMAGE] onto the person in [MODEL IMAGE]. Maintain the exact facial features, hair, and skin of the person in [MODEL IMAGE]. Use the outfit, fit, and styling from [PRODUCT IMAGE] only."
 
-Technical details
-```text
-Current:
-UI starts with [anchors + placeholders]
-polling only knows about [anchors]
-poll update overwrites UI with [anchors]
-anchors finish -> allDone=true
-UI hides anchors/placeholders -> 0 visible images
-=> false success state
+**Derivative shot prompts** (all on-model):
+Instead of: generic template + model identity anchor block
+New: "Apply the style, lighting, pose described below to the person in [REFERENCE IMAGE], maintaining their exact facial features and hair. The person wears [PRODUCT]..."
 
-After fix:
-UI keeps [anchors + placeholders] during phase 1
-polling updates anchors without dropping placeholders
-anchors finishing switches to derivatives, not complete
-placeholders are replaced by real jobs
-complete=true only after real visible jobs are terminal
+### 2. Change reference image ordering in `generate-catalog/index.ts`
+
+**Anchor phase** (currently: `[model, model, product]`):
+New: `[model, product]` — model FIRST as the identity source (Image 1), product SECOND as the style source (Image 2). No need to send model twice — the prompt now explicitly separates roles.
+
+**Derivative phase** (currently: `[anchor_result, product]`):
+Keep as-is but change the prompt to explicitly say "maintain the face/hair of the person in Image 1" (the anchor result already has the correct face locked).
+
+### 3. Replace the MODEL IDENTITY ANCHOR block in `assemblePrompt()`
+
+Current block (lines 798-803) says "replicate face structure, jawline..." — this is a description-based approach that Seedream ignores in favor of visual blending.
+
+New block uses **explicit image-role assignment**:
 ```
+IMAGE ROLE ASSIGNMENT:
+- [MODEL IMAGE] (Image 1): This is the IDENTITY SOURCE. Maintain this person's 
+  exact face, hair color, hair style, skin tone, and body proportions.
+- [PRODUCT IMAGE] (Image 2): This is the STYLE SOURCE. Apply ONLY the clothing/product 
+  from this image onto the person from Image 1.
+Do NOT blend the faces. Do NOT average features between images.
+The output person must be IDENTICAL to the person in Image 1.
+```
+
+### 4. Adjust `image_strength` for the new paradigm
+
+- **Anchor**: Lower `image_strength` from 0.85 → 0.70. We want Seedream to follow the prompt's role assignment more than raw pixel blending.
+- **Derivatives**: Keep 0.75 — the anchor already has the correct face, so higher reference fidelity is fine.
+
+## Files to update
+- `src/lib/catalogEngine.ts` — Replace MODEL IDENTITY ANCHOR block with image-role-assignment paradigm; update identity_anchor prompt template
+- `supabase/functions/generate-catalog/index.ts` — Change anchor reference array from `[model, model, product]` to `[model, product]`; adjust `image_strength`
+
+## Expected result
+- Seedream receives clear instructions: "this image = face, that image = outfit"
+- No face merging because the prompt explicitly forbids blending
+- Model face stays sharp and consistent because it's treated as the immutable identity source
+- Anchor locks the outfit-on-face combination; derivatives extend it to different poses
+
