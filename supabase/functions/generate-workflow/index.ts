@@ -1169,7 +1169,7 @@ serve(async (req) => {
               console.warn(`[generate-workflow] Gemini returned null — falling back to Seedream 4.5 for "${variation.label}"`);
               const refImageUrls = referenceImages.map(r => r.url);
               const seedreamResult = await generateImageSeedream(
-                prompt, refImageUrls, "Dola-Seedream-5.0-lite", arkApiKey, aspectRatio || "1:1"
+                prompt, refImageUrls, "seedream-4-5-251128", arkApiKey, aspectRatio || "1:1"
               );
               if (seedreamResult.ok && seedreamResult.imageUrl) {
                 imageUrl = seedreamResult.imageUrl;
