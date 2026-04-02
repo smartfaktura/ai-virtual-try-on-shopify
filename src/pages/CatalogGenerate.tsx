@@ -351,7 +351,7 @@ export default function CatalogGenerate() {
 
     return (
       <div className="space-y-6 pb-32">
-        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot" backHref="/app/catalog"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Your AI-powered product photoshoot" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
 
         {batchState.allDone ? (
           <div className="space-y-6">
