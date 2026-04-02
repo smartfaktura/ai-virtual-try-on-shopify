@@ -601,7 +601,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set([...APPAREL, 'hat', 'sunglasses', 'scarf', 'jewelry']),
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], cropped at waist, upper-body focus, natural relaxed pose, arms at sides, confident neutral expression, the hero product clearly visible, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], cropped at waist, upper-body focus, straight-on camera at chest height, centered frame, arms at sides, neutral composed expression, the hero product clearly visible, catalog crop, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'walking_motion',
