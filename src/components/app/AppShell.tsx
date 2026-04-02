@@ -158,8 +158,8 @@ export function AppShell({ children }: AppShellProps) {
                 Soon
               </span>
             )}
-            {item.label === 'Catalog Studio' && (
-              <span className="text-[9px] font-semibold uppercase bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+            {item.label === 'Catalog Studio' && !isComingSoon && (
+              <span className="text-[9px] font-semibold uppercase tracking-wide bg-white/[0.08] text-white/40 px-1.5 py-0.5 rounded">
                 BETA
               </span>
             )}
