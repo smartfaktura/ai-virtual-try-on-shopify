@@ -31,10 +31,20 @@ import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomSce
 const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
 
 interface WorkflowInfo {
+  id: string;
   name: string;
   slug: string;
   uses_tryon: boolean;
   generation_config: any;
+}
+
+interface WorkflowVariation {
+  label: string;
+  instruction: string;
+  aspect_ratio?: string;
+  preview_url?: string;
+  category?: string;
+  scope?: string;
 }
 
 function getWorkflowsForScene(category: string, workflows: WorkflowInfo[]): WorkflowInfo[] {
