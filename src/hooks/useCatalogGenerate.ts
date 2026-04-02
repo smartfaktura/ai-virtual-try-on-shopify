@@ -139,6 +139,8 @@ export function useCatalogGenerate() {
   const pollingStartRef = useRef<number>(0);
   const jobsRef = useRef<CatalogJobExtended[]>([]);
   const lastWakeRef = useRef<number>(0);
+  /** Phase guard: prevents allDone from triggering during the anchor phase */
+  const phaseRef = useRef<'idle' | 'anchors' | 'derivatives' | 'complete'>('idle');
 
   // ── Session recovery on mount ──
   useEffect(() => {

@@ -149,6 +149,10 @@ export interface CatalogJobExtended {
   shotLabel: string;
   renderPath: RenderPath;
   isAnchor: boolean;
+  /** True for placeholder jobs that will be replaced by real derivative jobs */
+  isPlaceholder?: boolean;
+  /** True for jobs that should be visible to the user in results */
+  isUserVisible?: boolean;
 }
 
 export interface CatalogBatchStateV2 {
