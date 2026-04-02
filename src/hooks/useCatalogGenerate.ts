@@ -10,6 +10,7 @@ import {
   assemblePrompt, buildReferences, getHeroProductBlock,
   getBackground, getLightingPrompt, getFashionStyle,
   resolveSupportWardrobe, buildSupportWardrobePrompt,
+  isStrictIsolationShot,
 } from '@/lib/catalogEngine';
 import type {
   CatalogSessionConfig, CatalogJobExtended, CatalogBatchStateV2,
