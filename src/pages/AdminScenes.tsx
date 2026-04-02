@@ -31,10 +31,20 @@ import { useDeleteCustomScene, useUpdateCustomScene } from '@/hooks/useCustomSce
 const ON_MODEL_CATEGORIES = ['studio', 'lifestyle', 'editorial', 'streetwear'];
 
 interface WorkflowInfo {
+  id: string;
   name: string;
   slug: string;
   uses_tryon: boolean;
   generation_config: any;
+}
+
+interface WorkflowVariation {
+  label: string;
+  instruction: string;
+  aspect_ratio?: string;
+  preview_url?: string;
+  category?: string;
+  scope?: string;
 }
 
 function getWorkflowsForScene(category: string, workflows: WorkflowInfo[]): WorkflowInfo[] {
@@ -74,7 +84,7 @@ export default function AdminScenes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('workflows')
-        .select('name, slug, uses_tryon, generation_config')
+        .select('id, name, slug, uses_tryon, generation_config')
         .eq('is_system', true)
         .order('sort_order', { ascending: true });
       if (error) throw error;
@@ -96,6 +106,13 @@ export default function AdminScenes() {
   // Track prompt_hint and prompt_only edits for custom scenes
   const [promptEdits, setPromptEdits] = useState<Record<string, { prompt_hint?: string; prompt_only?: boolean }>>({});
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+
+  // Workflow variation edits
+  const [wfVariationEdits, setWfVariationEdits] = useState<Record<string, WorkflowVariation[]>>({});
+  const [wfDirty, setWfDirty] = useState<Set<string>>(new Set());
+  const [savingWfId, setSavingWfId] = useState<string | null>(null);
+  const [expandedWf, setExpandedWf] = useState<Set<string>>(new Set());
+  const [editingWfVariation, setEditingWfVariation] = useState<string | null>(null);
 
   // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
@@ -651,7 +668,177 @@ export default function AdminScenes() {
           })
         )}
 
-        {/* ── RESTORE HIDDEN SCENES ── */}
+        {/* ── WORKFLOW VARIATION SCENES ── */}
+        {workflows.filter(wf => {
+          const vars = wf.generation_config?.variation_strategy?.variations;
+          return Array.isArray(vars) && vars.length > 0;
+        }).length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Workflow Variation Scenes
+            </h2>
+            {workflows
+              .filter(wf => {
+                const vars = wf.generation_config?.variation_strategy?.variations;
+                return Array.isArray(vars) && vars.length > 0;
+              })
+              .map(wf => {
+                const variations: WorkflowVariation[] = wf.generation_config.variation_strategy.variations;
+                const editedVariations = wfVariationEdits[wf.id] ?? variations;
+                const isExpanded = expandedWf.has(wf.id);
+                const isDirty = wfDirty.has(wf.id);
+                const isSaving = savingWfId === wf.id;
+
+                const filteredVariations = isSearching
+                  ? editedVariations.filter(v =>
+                      v.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      v.instruction?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                  : editedVariations;
+
+                if (isSearching && filteredVariations.length === 0) return null;
+
+                const handleWfVariationChange = (idx: number, field: keyof WorkflowVariation, value: string) => {
+                  const current = wfVariationEdits[wf.id] ?? [...variations];
+                  const updated = current.map((v, i) => i === idx ? { ...v, [field]: value } : v);
+                  setWfVariationEdits(prev => ({ ...prev, [wf.id]: updated }));
+                  setWfDirty(prev => new Set(prev).add(wf.id));
+                };
+
+                const handleSaveWfVariations = async () => {
+                  setSavingWfId(wf.id);
+                  try {
+                    const updatedConfig = {
+                      ...wf.generation_config,
+                      variation_strategy: {
+                        ...wf.generation_config.variation_strategy,
+                        variations: wfVariationEdits[wf.id] ?? variations,
+                      },
+                    };
+                    const { error } = await supabase
+                      .from('workflows')
+                      .update({ generation_config: updatedConfig } as any)
+                      .eq('id', wf.id);
+                    if (error) throw error;
+                    toast.success(`Saved ${wf.name} variations`);
+                    setWfDirty(prev => { const n = new Set(prev); n.delete(wf.id); return n; });
+                  } catch (err: any) {
+                    toast.error(err?.message || 'Failed to save');
+                  } finally {
+                    setSavingWfId(null);
+                  }
+                };
+
+                return (
+                  <Collapsible
+                    key={wf.id}
+                    open={isExpanded || isSearching}
+                    onOpenChange={() => setExpandedWf(prev => {
+                      const n = new Set(prev);
+                      n.has(wf.id) ? n.delete(wf.id) : n.add(wf.id);
+                      return n;
+                    })}
+                  >
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5 flex-1 text-left">
+                          {isExpanded || isSearching ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                          {wf.name}
+                          <span className="font-normal text-muted-foreground/60">({variations.length} variations)</span>
+                        </button>
+                      </CollapsibleTrigger>
+                      {isDirty && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={handleSaveWfVariations}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                          Save
+                        </Button>
+                      )}
+                    </div>
+                    <CollapsibleContent>
+                      <div className="border border-border rounded-lg divide-y divide-border bg-card mt-1">
+                        {filteredVariations.map((variation, vIdx) => {
+                          // Find actual index in full array for editing
+                          const actualIdx = editedVariations.indexOf(variation);
+                          const isEditingInstruction = editingWfVariation === `${wf.id}-${actualIdx}`;
+
+                          return (
+                            <div key={`${wf.id}-${actualIdx}`} className="px-3 py-2 space-y-1.5 group">
+                              <div className="flex items-center gap-2">
+                                {/* Preview thumbnail */}
+                                <div className="w-8 h-10 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+                                  {variation.preview_url ? (
+                                    <img
+                                      src={getOptimizedUrl(variation.preview_url, { quality: 50 })}
+                                      alt={variation.label}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <span className="text-[9px] text-muted-foreground">{vIdx + 1}</span>
+                                  )}
+                                </div>
+                                {/* Label (editable) */}
+                                <Input
+                                  value={variation.label}
+                                  onChange={e => handleWfVariationChange(actualIdx, 'label', e.target.value)}
+                                  className="h-7 text-sm flex-1 min-w-0"
+                                />
+                                {/* Category chip */}
+                                {variation.category && (
+                                  <Badge variant="secondary" className="text-[9px] h-5 px-1.5 flex-shrink-0">
+                                    {variation.category}
+                                  </Badge>
+                                )}
+                                {/* Aspect ratio */}
+                                {variation.aspect_ratio && (
+                                  <Badge variant="outline" className="text-[9px] h-5 px-1.5 flex-shrink-0 font-mono">
+                                    {variation.aspect_ratio}
+                                  </Badge>
+                                )}
+                              </div>
+                              {/* Instruction (collapsible editor) */}
+                              {isEditingInstruction ? (
+                                <div className="space-y-1">
+                                  <Textarea
+                                    value={variation.instruction}
+                                    onChange={e => handleWfVariationChange(actualIdx, 'instruction', e.target.value)}
+                                    className="text-xs min-h-[60px] resize-y bg-muted/30 border-border/50"
+                                    rows={3}
+                                  />
+                                  <button
+                                    onClick={() => setEditingWfVariation(null)}
+                                    className="text-[10px] text-primary hover:underline"
+                                  >
+                                    Done editing
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setEditingWfVariation(`${wf.id}-${actualIdx}`)}
+                                  className="text-left w-full"
+                                >
+                                  <p className="text-[10px] text-muted-foreground/70 italic line-clamp-2 hover:text-foreground transition-colors">
+                                    <span className="not-italic text-muted-foreground/40 mr-1">Instruction:</span>
+                                    {variation.instruction?.slice(0, 120)}{(variation.instruction?.length || 0) > 120 ? '…' : ''}
+                                  </p>
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
+          </div>
+        )}
+
         {hiddenBuiltInScenes.length > 0 && (
           <Collapsible open={showHidden} onOpenChange={setShowHidden}>
             <CollapsibleTrigger asChild>
