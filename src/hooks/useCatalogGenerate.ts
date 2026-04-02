@@ -18,6 +18,8 @@ import type {
 
 const CREDITS_PER_IMAGE = 4;
 const POLLING_HARD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const REWAKE_THROTTLE_MS = 30_000; // 30 seconds between re-wakes
+const SESSION_KEY = 'catalog_batch';
 
 /** Append per-combo styling props to the assembled prompt */
 function appendPropsToPrompt(
@@ -32,6 +34,46 @@ function appendPropsToPrompt(
   return `${prompt}\nAdditionally, include these styling accessories visible in the scene: ${items}.`;
 }
 
+/** Persist minimal batch info to sessionStorage for crash recovery */
+function persistBatch(jobs: CatalogJobExtended[]) {
+  try {
+    const meta = jobs.map(j => ({
+      jobId: j.jobId,
+      productId: j.productId,
+      productName: j.productName,
+      shotId: j.shotId,
+      shotLabel: j.shotLabel,
+      renderPath: j.renderPath,
+      isAnchor: j.isAnchor,
+    }));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(meta));
+  } catch { /* quota exceeded — non-critical */ }
+}
+
+function clearPersistedBatch() {
+  try { sessionStorage.removeItem(SESSION_KEY); } catch { /* noop */ }
+}
+
+function loadPersistedBatch(): CatalogJobExtended[] | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const meta = JSON.parse(raw) as Array<{
+      jobId: string; productId: string; productName: string;
+      shotId: CatalogShotId; shotLabel: string; renderPath: RenderPath; isAnchor: boolean;
+    }>;
+    if (!Array.isArray(meta) || meta.length === 0) return null;
+    return meta.map(m => ({
+      ...m,
+      status: 'queued' as const,
+      images: [],
+    }));
+  } catch {
+    clearPersistedBatch();
+    return null;
+  }
+}
+
 export type { CatalogBatchStateV2 as CatalogBatchState };
 
 export function useCatalogGenerate() {
@@ -41,13 +83,53 @@ export function useCatalogGenerate() {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingStartRef = useRef<number>(0);
   const jobsRef = useRef<CatalogJobExtended[]>([]);
+  const lastWakeRef = useRef<number>(0);
 
+  // ── Session recovery on mount ──
   useEffect(() => {
+    const saved = loadPersistedBatch();
+    if (saved && saved.length > 0 && jobsRef.current.length === 0) {
+      console.log(`[catalog] Recovering ${saved.length} jobs from session`);
+      jobsRef.current = saved;
+      setIsGenerating(true);
+
+      const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
+      for (const j of saved.filter(j => j.isAnchor)) anchorStatus[j.productId] = 'pending';
+      setBatchState({
+        jobs: saved, totalJobs: saved.length, completedJobs: 0, failedJobs: 0,
+        allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
+      });
+      // pollJobs will be called via the effect below
+    }
+
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, []);
 
+  // ── Auto-start polling when isGenerating + jobs exist but no active poll ──
+  useEffect(() => {
+    if (isGenerating && jobsRef.current.length > 0 && !pollingRef.current) {
+      pollJobs();
+    }
+  }, [isGenerating]);
+
   const stopPolling = useCallback(() => {
     if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+  }, []);
+
+  // ── Re-wake throttled ──
+  const maybeRewake = useCallback(async (hasQueued: boolean) => {
+    if (!hasQueued) return;
+    if (Date.now() - lastWakeRef.current < REWAKE_THROTTLE_MS) return;
+    lastWakeRef.current = Date.now();
+    try {
+      const token = await getAuthToken();
+      if (token) {
+        console.log('[catalog] Re-waking queue for remaining queued jobs');
+        supabase.functions.invoke('retry-queue', {
+          body: { wakeOnly: true },
+        }).catch(() => { /* fire-and-forget */ });
+      }
+    } catch { /* non-critical */ }
   }, []);
 
   // ── Polling ──
@@ -58,99 +140,110 @@ export function useCatalogGenerate() {
     pollingStartRef.current = Date.now();
 
     const poll = async () => {
-      // Hard timeout: force-complete after 10 minutes
-      if (Date.now() - pollingStartRef.current > POLLING_HARD_TIMEOUT_MS) {
-        console.warn('[catalog] Polling hard timeout reached (10m), force-completing batch');
-        const updated = jobsRef.current.map(j =>
-          ['queued', 'processing'].includes(j.status)
-            ? { ...j, status: 'failed' as const, error: 'Timed out after 10 minutes' }
-            : j
-        );
-        jobsRef.current = updated;
-        const aggregatedImages = updated.flatMap(j => j.images);
-        setBatchState({
-          jobs: updated, totalJobs: updated.length,
-          completedJobs: updated.filter(j => j.status === 'completed').length,
-          failedJobs: updated.filter(j => j.status === 'failed').length,
-          allDone: true, aggregatedImages, anchorStatus: {}, phase: 'complete',
-        });
-        stopPolling();
-        setIsGenerating(false);
-        if (aggregatedImages.length > 0) {
-          toast.warning(`Completed with ${aggregatedImages.length} image(s) — some jobs timed out`);
-        } else {
-          toast.error('Generation timed out');
-        }
-        return;
-      }
-
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      let token = await getAuthToken() || SUPABASE_KEY;
-
-      const jobIds = jobs.map(j => j.jobId);
-      const idsFilter = jobIds.map(id => `"${id}"`).join(',');
-      let res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
-        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.status === 401) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const freshToken = sessionData?.session?.access_token;
-        if (freshToken) {
-          token = freshToken;
-          res = await fetch(
-            `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
-            { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+      try {
+        // Hard timeout: force-complete after 10 minutes
+        if (Date.now() - pollingStartRef.current > POLLING_HARD_TIMEOUT_MS) {
+          console.warn('[catalog] Polling hard timeout reached (10m), force-completing batch');
+          const updated = jobsRef.current.map(j =>
+            ['queued', 'processing'].includes(j.status)
+              ? { ...j, status: 'failed' as const, error: 'Timed out after 10 minutes' }
+              : j
           );
+          jobsRef.current = updated;
+          const aggregatedImages = updated.flatMap(j => j.images);
+          setBatchState({
+            jobs: updated, totalJobs: updated.length,
+            completedJobs: updated.filter(j => j.status === 'completed').length,
+            failedJobs: updated.filter(j => j.status === 'failed').length,
+            allDone: true, aggregatedImages, anchorStatus: {}, phase: 'complete',
+          });
+          stopPolling();
+          setIsGenerating(false);
+          clearPersistedBatch();
+          if (aggregatedImages.length > 0) {
+            toast.warning(`Completed with ${aggregatedImages.length} image(s) — some jobs timed out`);
+          } else {
+            toast.error('Generation timed out');
+          }
+          return;
         }
-      }
 
-      if (!res.ok) return;
-      const rows = await res.json();
-      if (!rows?.length) return;
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        let token = await getAuthToken() || SUPABASE_KEY;
 
-      const rowMap = new Map(rows.map((r: any) => [r.id, r]));
+        const jobIds = jobs.map(j => j.jobId);
+        const idsFilter = jobIds.map(id => `"${id}"`).join(',');
+        let res = await fetch(
+          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+        );
 
-      const updated = jobs.map(j => {
-        const row = rowMap.get(j.jobId) as any;
-        if (!row) return j;
-        const images: string[] = [];
-        if (row.status === 'completed' && row.result?.images) images.push(...row.result.images);
-        return { ...j, status: row.status, images, error: row.error_message || undefined };
-      });
+        if (res.status === 401) {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const freshToken = sessionData?.session?.access_token;
+          if (freshToken) {
+            token = freshToken;
+            res = await fetch(
+              `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
+              { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+            );
+          }
+        }
 
-      jobsRef.current = updated;
+        if (!res.ok) return;
+        const rows = await res.json();
+        if (!rows?.length) return;
 
-      const completedJobs = updated.filter(j => j.status === 'completed').length;
-      const failedJobs = updated.filter(j => j.status === 'failed').length;
-      const allDone = updated.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
-      const aggregatedImages = updated.flatMap(j => j.images);
+        const rowMap = new Map(rows.map((r: any) => [r.id, r]));
 
-      const anchorJobs = updated.filter(j => j.isAnchor);
-      const anchorsAllDone = anchorJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
-      const phase = allDone ? 'complete' as const : !anchorsAllDone ? 'anchors' as const : 'derivatives' as const;
+        const updated = jobs.map(j => {
+          const row = rowMap.get(j.jobId) as any;
+          if (!row) return j;
+          const images: string[] = [];
+          if (row.status === 'completed' && row.result?.images) images.push(...row.result.images);
+          return { ...j, status: row.status, images, error: row.error_message || undefined };
+        });
 
-      const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
-      for (const aj of anchorJobs) {
-        anchorStatus[aj.productId] = aj.status === 'completed' ? 'completed' : aj.status === 'failed' ? 'failed' : aj.status === 'processing' ? 'generating' : 'pending';
-      }
+        jobsRef.current = updated;
 
-      setBatchState({
-        jobs: updated, totalJobs: updated.length, completedJobs, failedJobs,
-        allDone, aggregatedImages, anchorStatus, phase,
-      });
+        const completedJobs = updated.filter(j => j.status === 'completed').length;
+        const failedJobs = updated.filter(j => j.status === 'failed').length;
+        const allDone = updated.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
+        const aggregatedImages = updated.flatMap(j => j.images);
+        const anyQueued = updated.some(j => j.status === 'queued');
 
-      if (allDone) {
-        stopPolling();
-        setIsGenerating(false);
+        const anchorJobs = updated.filter(j => j.isAnchor);
+        const anchorsAllDone = anchorJobs.every(j => ['completed', 'failed', 'cancelled'].includes(j.status));
+        const phase = allDone ? 'complete' as const : !anchorsAllDone ? 'anchors' as const : 'derivatives' as const;
+
+        const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
+        for (const aj of anchorJobs) {
+          anchorStatus[aj.productId] = aj.status === 'completed' ? 'completed' : aj.status === 'failed' ? 'failed' : aj.status === 'processing' ? 'generating' : 'pending';
+        }
+
+        setBatchState({
+          jobs: updated, totalJobs: updated.length, completedJobs, failedJobs,
+          allDone, aggregatedImages, anchorStatus, phase,
+        });
+
+        if (allDone) {
+          stopPolling();
+          setIsGenerating(false);
+          clearPersistedBatch();
+        } else {
+          // Re-wake the queue if there are still queued jobs (throttled to 30s)
+          maybeRewake(anyQueued);
+        }
+      } catch (err) {
+        // Never crash the polling interval — log and continue
+        console.error('[catalog] Poll error (will retry):', err);
       }
     };
 
     poll();
     pollingRef.current = setInterval(poll, 3000);
-  }, [stopPolling]);
+  }, [stopPolling, maybeRewake]);
 
   // ── Safe base64 conversion ──
   const safeConvertBase64 = async (url: string, label: string): Promise<string | null> => {
@@ -265,7 +358,6 @@ export function useCatalogGenerate() {
       if (model.imageUrl) {
         modelB64 = await safeConvertBase64(model.imageUrl, model.profile || 'model');
         if (!modelB64 && !isProductOnly) {
-          // Model image failed but we need it for on-model shots — skip this model
           console.warn(`[catalog] Skipping model "${model.profile}" — image conversion failed`);
           continue;
         }
@@ -276,7 +368,7 @@ export function useCatalogGenerate() {
 
         const lookLock = buildProductLookLock(product, session, product.detectedCategory);
         const productB64 = await safeConvertBase64(product.imageUrl, product.title);
-        if (!productB64) continue; // Skip product if image fails
+        if (!productB64) continue;
 
         const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
 
@@ -332,7 +424,6 @@ export function useCatalogGenerate() {
           const comboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${shotId}`;
           const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
 
-          // Don't send model reference for product-only shots
           const isProductOnlyShot = shotDef.group === 'product-only';
           const jobResult = await enqueueJob(
             token, productB64, product.title, product.id, product.imageUrl,
@@ -359,6 +450,8 @@ export function useCatalogGenerate() {
     }
 
     jobsRef.current = allJobs;
+    persistBatch(allJobs);
+
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
     for (const j of allJobs.filter(j => j.isAnchor)) anchorStatus[j.productId] = 'pending';
 
@@ -377,6 +470,7 @@ export function useCatalogGenerate() {
     setBatchState(null);
     jobsRef.current = [];
     setIsGenerating(false);
+    clearPersistedBatch();
   }, [stopPolling]);
 
   return { startGeneration, batchState, isGenerating, resetBatch };
