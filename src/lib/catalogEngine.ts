@@ -410,7 +410,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set([...APPAREL, 'bag', 'jewelry', 'accessory', 'belt', 'scarf']),
     defaultRenderPath: 'anchor_edit',
     needsModel: true,
-    promptTemplate: 'close-up of [MODEL] hands interacting naturally with [HERO_PRODUCT], adjusting collar or hem or holding the product, focus on usability and material detail, sharp product focus, ONLY the hero product visible, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'close-up of [MODEL] hands interacting with [HERO_PRODUCT], adjusting collar, cuff, or hem, tight crop on hands and product detail, sharp product focus, ONLY the hero product visible, [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'sitting',
