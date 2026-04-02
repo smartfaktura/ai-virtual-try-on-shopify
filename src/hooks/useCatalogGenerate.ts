@@ -266,6 +266,7 @@ export function useCatalogGenerate() {
     shotId: CatalogShotId,
     shotLabel: string,
     renderPath: RenderPath,
+    shotGroup: 'on-model' | 'product-only',
     prompt: string,
     modelImageB64: string | null,
     modelProfile: string,
