@@ -996,6 +996,31 @@ function SceneRow({
 
       {/* Actions */}
       <div className="flex items-center gap-0.5 flex-shrink-0">
+        {/* Change preview for custom scenes */}
+        {isCustom && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 relative" disabled={isUploadingPreview}>
+                {isUploadingPreview ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ImageIcon className="w-3.5 h-3.5" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handlePreviewUpload(f);
+                    e.target.value = '';
+                  }}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">Change preview image</TooltipContent>
+          </Tooltip>
+        )}
         {/* Reset preview for custom scenes */}
         {isCustom && hasCustomPreview && (
           <Tooltip>
