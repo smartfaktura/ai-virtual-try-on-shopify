@@ -239,11 +239,14 @@ export default function CatalogGenerate() {
       ? []
       : Array.from(selectedModelIds).map(id => {
           const m = allModels.find(mod => mod.modelId === id)!;
+          // Use sourceImageUrl (high-res) for identity; fall back to previewUrl for UI
+          const identityUrl = m.sourceImageUrl || m.previewUrl || null;
           return {
             id: m.modelId,
             profile: `${m.name}, ${m.ethnicity || ''} ${m.ageRange} ${m.gender} model, ${m.bodyType || 'average'} build`.replace(/\s+/g, ' ').trim(),
             audience: inferAudience(m),
-            imageUrl: m.sourceImageUrl || m.previewUrl || null,
+            imageUrl: identityUrl,
+            identityImageUrl: identityUrl,
           };
         }).filter(Boolean);
 

@@ -361,7 +361,7 @@ export function useCatalogGenerate() {
           product_id: productId,
           product_name: productTitle,
           product_image_url: productOriginalUrl,
-          ...(modelImageUrl && { model: { imageUrl: modelImageUrl, identityImageUrl: modelImageUrl, name: modelProfile } }),
+          ...(modelImageUrl && { model: { imageUrl: modelImageUrl, identityImageUrl: modelImageUrl, name: modelProfile, originalImageUrl: modelImageUrl } }),
           ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),
           aspectRatio: '3:4',
           imageCount: 1,
@@ -450,7 +450,8 @@ export function useCatalogGenerate() {
       );
 
       // Pass model image URL directly — no base64 conversion
-      const modelUrl: string | null = model.imageUrl || null;
+      // Use identityImageUrl (high-res) for face replication; fall back to imageUrl
+      const modelUrl: string | null = model.identityImageUrl || model.imageUrl || null;
 
       for (const product of config.products) {
         if (creditsFailed) break;
@@ -624,6 +625,26 @@ export function useCatalogGenerate() {
           // Product-only shots: never pass anchor URL (it may contain a person)
           const isProductOnlyDerivative = spec.shotGroup === 'product-only';
           const anchorUrl = isProductOnlyDerivative ? null : (anchorImageMap.get(spec.anchorJobId) || null);
+
+          // ── FACE GUARD: skip on-model derivatives when anchor is missing ──
+          if (!isProductOnlyDerivative && spec.modelImageUrl && !anchorUrl) {
+            console.warn(`[catalog] FACE GUARD: skipping on-model derivative "${spec.shotId}" for "${spec.productTitle}" — anchor missing, would cause face blending`);
+            derivativeJobs.push({
+              jobId: `skipped-${spec.shotId}-${spec.productId}`,
+              status: 'failed',
+              images: [],
+              error: 'Anchor missing — skipped to protect face consistency',
+              productId: spec.productId,
+              productName: spec.productTitle,
+              shotId: spec.shotId,
+              shotLabel: spec.shotLabel,
+              renderPath: spec.renderPath,
+              isAnchor: false,
+              isPlaceholder: false,
+              isUserVisible: true,
+            });
+            continue;
+          }
 
           const jobResult = await enqueueJob(
             spec.token, spec.productImageUrl, spec.productTitle, spec.productId,

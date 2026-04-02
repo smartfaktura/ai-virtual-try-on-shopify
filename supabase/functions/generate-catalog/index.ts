@@ -347,7 +347,10 @@ serve(async (req) => {
 
     const hasModel = !!(body.model?.imageUrl || body.model?.identityImageUrl);
     const logModel = hasModel ? `model="${body.model?.name}"` : "product-only";
-    console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || body.pose?.name || 'default'}", ratio=${aspectRatio}`);
+    const logAnchor = body.anchor_image_url ? 'has_anchor' : 'no_anchor';
+    const logRenderPath = body.render_path || 'unknown';
+    const logShotGroup = body.shot_group || 'unknown';
+    console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || 'default'}", render=${logRenderPath}, group=${logShotGroup}, anchor=${logAnchor}, ratio=${aspectRatio}`);
 
     // Build reference images with shot-type-aware ordering
     const isProductOnly = body.render_path === 'product_only_generate' || body.shot_group === 'product-only';
@@ -371,14 +374,29 @@ serve(async (req) => {
       if (modelIdentityUrl) {
         referenceImages.push(modelIdentityUrl);
       } else {
-        // Fallback: if no model identity, use anchor for outfit continuity
-        referenceImages.push(body.anchor_image_url);
+        // NO FALLBACK: fail fast to protect face consistency
+        console.error(`[generate-catalog] FACE GUARD: derivative on-model shot "${body.shot_id}" has anchor but NO model identity URL — failing to prevent face blending`);
+        const errMsg = "Model identity image missing — derivative skipped to protect face consistency";
+        if (isQueueInternal && body.job_id) {
+          await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
+        }
+        return new Response(JSON.stringify({ error: errMsg }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
+    } else if (modelIdentityUrl && !isProductOnly) {
+      // On-model shot WITHOUT anchor (anchor failed/missing) — FAIL FAST
+      // Do NOT send model + product together as that causes face blending
+      console.error(`[generate-catalog] FACE GUARD: on-model shot "${body.shot_id}" has no anchor_image_url — failing to prevent face blending`);
+      const errMsg = "Anchor image missing — derivative skipped to protect face consistency";
+      if (isQueueInternal && body.job_id) {
+        await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
+      }
+      return new Response(JSON.stringify({ error: errMsg }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else {
-      // Fallback: model + product (shouldn't normally happen with new flow)
-      if (modelIdentityUrl) {
-        referenceImages.push(modelIdentityUrl);
-      }
+      // Product-only fallback (no model involved)
       referenceImages.push(body.product.imageUrl);
     }
 
@@ -417,6 +435,10 @@ serve(async (req) => {
       imageStrength = 0.70;
       negativePrompt = FACE_NEGATIVE;
     }
+
+    // ── Log actual reference state for debugging ──
+    const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-face-lock' : 'fallback';
+    console.log(`[generate-catalog] REF_STATE: shot="${body.shot_id}", mode=${refMode}, refs=${referenceImages.length}, hasModelIdentity=${!!modelIdentityUrl}, hasAnchor=${!!body.anchor_image_url}`);
 
     const seedreamResult = await generateImageSeedream(
       prompt,
