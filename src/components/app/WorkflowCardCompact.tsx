@@ -23,9 +23,10 @@ interface Props {
   displayName?: string;
   subtitle?: string;
   comingSoon?: boolean;
+  beta?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon, beta }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
@@ -112,10 +113,13 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       id={id}
       ref={ref}
       className={cn(
-        "group overflow-hidden transition-shadow duration-300 flex flex-col",
+        "group relative overflow-hidden transition-shadow duration-300 flex flex-col",
         modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
       )}
     >
+      {beta && (
+        <Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px]">BETA</Badge>
+      )}
       {/* Thumbnail */}
       <div className={cn(
         "relative w-full overflow-hidden",
