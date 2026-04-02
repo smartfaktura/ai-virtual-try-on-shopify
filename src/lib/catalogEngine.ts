@@ -720,6 +720,9 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   // Pick the right template — category override or default
   let template = shotDef.categoryOverrides?.[productCategory] || shotDef.promptTemplate;
 
+  // Choose the right consistency block based on whether this shot needs a model
+  const consistencyBlock = shotDef.needsModel ? CONSISTENCY_BLOCK_MODEL : CONSISTENCY_BLOCK_PRODUCT;
+
   // For edit paths, wrap differently
   if (renderPath === 'anchor_edit') {
     // Seedream edit format: Action + Object + Characteristic + keep unchanged
@@ -730,7 +733,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
       .replace('[BACKGROUND]', backgroundPrompt)
       .replace('[LIGHTING]', lightingPrompt)
       .replace('[QUALITY]', QUALITY_BLOCK)
-      .replace('[CONSISTENCY]', CONSISTENCY_BLOCK)
+      .replace('[CONSISTENCY]', consistencyBlock)
     }. Keep the model identity, outfit, background, and lighting exactly the same.`;
   }
 
@@ -742,7 +745,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     .replace('[BACKGROUND]', backgroundPrompt)
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
-    .replace('[CONSISTENCY]', CONSISTENCY_BLOCK);
+    .replace('[CONSISTENCY]', consistencyBlock);
 
   // Append model identity & background isolation directives when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
