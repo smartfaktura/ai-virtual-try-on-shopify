@@ -498,18 +498,8 @@ export default function CatalogGenerate() {
                   {isAnchoring ? 'Preparing' : 'Generating'}
                 </Badge>
 
-                {/* Animated gradient ring icon */}
-                <div className="relative mx-auto w-14 h-14">
-                  <div
-                    className="absolute -inset-1.5 rounded-full opacity-50 blur-sm"
-                    style={{
-                      background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--primary) / 0.15), hsl(var(--primary)), hsl(var(--primary) / 0.15), hsl(var(--primary)))',
-                      animation: 'spin 3s linear infinite',
-                    }}
-                  />
-                  <div className="relative w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
-                    <Camera className="w-5.5 h-5.5 text-primary" />
-                  </div>
+                <div className="mx-auto w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-primary" />
                 </div>
 
                 <div>
