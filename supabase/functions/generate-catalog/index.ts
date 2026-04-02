@@ -431,9 +431,14 @@ serve(async (req) => {
       // ── FACELESS ANCHOR: product image ONLY — no model face ──
       referenceImages.push(body.product.imageUrl);
     } else if (body.anchor_image_url) {
-      // ── DERIVATIVE ON-MODEL: SINGLE-REFERENCE (face lock) ──
-      if (modelIdentityUrl) {
-        referenceImages.push(modelIdentityUrl);
+      // ── DERIVATIVE ON-MODEL: DUAL-REFERENCE (anchor outfit + identity backup) ──
+      const TEXTURE_ONLY_SHOTS = ['detail_closeup', 'zoom_detail', 'hands_detail'];
+      if (TEXTURE_ONLY_SHOTS.includes(body.shot_id || '')) {
+        // Texture/detail shots: product image only, no face needed
+        referenceImages.push(body.product.imageUrl);
+      } else if (modelIdentityUrl) {
+        referenceImages.push(body.anchor_image_url);  // Image 1: anchor (correct outfit + model)
+        referenceImages.push(modelIdentityUrl);         // Image 2: identity backup for face
       } else {
         // NO FALLBACK: fail fast to protect face consistency
         console.error(`[generate-catalog] FACE GUARD: derivative on-model shot "${body.shot_id}" has anchor but NO model identity URL — failing`);
@@ -461,7 +466,7 @@ serve(async (req) => {
     }
 
     // ── Log actual reference state for debugging ──
-    const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-face-lock' : 'fallback';
+    const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-dual-ref' : 'fallback';
     console.log(`[generate-catalog] REF_STATE: shot="${body.shot_id}", mode=${refMode}, refs=${referenceImages.length}, hasModelIdentity=${!!modelIdentityUrl}, hasAnchor=${!!body.anchor_image_url}`);
 
     // ── Generate with Native Gemini API (2K quality) ──
