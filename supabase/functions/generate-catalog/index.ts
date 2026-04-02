@@ -14,56 +14,40 @@ function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: strin
   return { ext: 'png', contentType: 'image/png' };
 }
 
-// ── Seedream aspect ratio mapping ────────────────────────────────────────
-function seedreamAspectRatio(appRatio: string): string {
-  const map: Record<string, string> = {
-    "1:1": "1:1", "9:16": "9:16", "16:9": "16:9",
-    "4:3": "4:3", "3:4": "3:4", "4:5": "4:5",
-    "5:4": "5:4", "3:2": "3:2", "2:3": "2:3",
-  };
-  return map[appRatio] || "1:1";
-}
-
-const SEEDREAM_MODERATION_CODES = [1301, 1302, 1303, 1304, 1305, 1024];
-
-// ── Seedream generation with retry ───────────────────────────────────────
-async function generateImageSeedream(
+// ── Nano Banana Flash generation via Lovable AI Gateway ─────────────────
+async function generateImageNanoBanana(
   prompt: string,
-  imageUrls: string[],
-  model: string,
+  referenceImageUrls: string[],
   apiKey: string,
-  aspectRatio = "1:1",
   maxRetries = 1,
-  seed?: number,
-  opts?: { guidanceScale?: number; imageStrength?: number; negativePrompt?: string },
-): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
-  const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
-  const seedreamRatio = seedreamAspectRatio(aspectRatio);
-  const timeoutMs = 90_000;
+): Promise<{ ok: boolean; imageBase64?: string; error?: string }> {
+  const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const timeoutMs = 100_000;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const body: Record<string, unknown> = {
-        model, prompt, size: "4K",
-        aspect_ratio: seedreamRatio,
-        response_format: "url",
-        watermark: false,
-        guidance_scale: opts?.guidanceScale ?? 10.0,
-        sequential_image_generation: "disabled",
-        ...(seed !== undefined && { seed }),
-        ...(opts?.imageStrength !== undefined && { image_strength: opts.imageStrength }),
-        ...(opts?.negativePrompt && { negative_prompt: opts.negativePrompt }),
-      };
-      if (imageUrls.length === 1) {
-        body.image = imageUrls[0];
-      } else if (imageUrls.length > 1) {
-        body.image = imageUrls;
+      // Build multimodal content: text prompt + reference images
+      const content: Array<Record<string, unknown>> = [
+        { type: "text", text: prompt },
+      ];
+      for (const url of referenceImageUrls) {
+        content.push({
+          type: "image_url",
+          image_url: { url },
+        });
       }
 
-      const response = await fetch(ARK_BASE, {
+      const response = await fetch(GATEWAY_URL, {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3.1-flash-image-preview",
+          messages: [{ role: "user", content }],
+          modalities: ["image", "text"],
+        }),
         signal: AbortSignal.timeout(timeoutMs),
       });
 
@@ -71,44 +55,49 @@ async function generateImageSeedream(
         let errorText = "";
         try { errorText = await response.text(); } catch (_) { /* ignore */ }
 
-        // Check moderation
-        try {
-          const errJson = JSON.parse(errorText);
-          const errCode = errJson?.error?.code || errJson?.code;
-          if (errCode && SEEDREAM_MODERATION_CODES.includes(Number(errCode))) {
-            return { ok: false, error: `Content moderated: ${errJson?.error?.message || errJson?.message}` };
+        if (response.status === 429) {
+          if (attempt < maxRetries) {
+            console.warn(`[generate-catalog] NanoBanana rate limited, retrying in 5s...`);
+            await new Promise(r => setTimeout(r, 5000));
+            continue;
           }
-        } catch (_) { /* not JSON */ }
+          return { ok: false, error: "Rate limited by AI gateway, please try again later" };
+        }
+        if (response.status === 402) {
+          return { ok: false, error: "AI credits exhausted" };
+        }
 
-        // Transient errors: retry
-        const isTransient = response.status === 429 || response.status === 502 || response.status === 503;
+        const isTransient = response.status === 500 || response.status === 502 || response.status === 503;
         if (isTransient && attempt < maxRetries) {
-          console.warn(`[generate-catalog] Seedream transient ${response.status}, retrying in 3s...`);
+          console.warn(`[generate-catalog] NanoBanana transient ${response.status}, retrying in 3s...`);
           await new Promise(r => setTimeout(r, 3000));
           continue;
         }
-        return { ok: false, error: `ARK API error ${response.status}: ${errorText.slice(0, 200)}` };
+        return { ok: false, error: `AI gateway error ${response.status}: ${errorText.slice(0, 300)}` };
       }
 
       const data = await response.json();
-      const respCode = data?.error?.code || data?.code;
-      if (respCode && SEEDREAM_MODERATION_CODES.includes(Number(respCode))) {
-        return { ok: false, error: `Content moderated: ${data?.error?.message || data?.message}` };
+      const imageUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+      if (!imageUrl) {
+        console.error("[generate-catalog] No image in NanoBanana response:", JSON.stringify(data).slice(0, 500));
+        if (attempt < maxRetries) {
+          console.warn("[generate-catalog] Retrying after empty image response...");
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        return { ok: false, error: "No image generated by AI model" };
       }
 
-      const imageUrl = data?.data?.[0]?.url;
-      if (!imageUrl) {
-        return { ok: false, error: "No URL in Seedream response" };
-      }
-      return { ok: true, imageUrl };
+      return { ok: true, imageBase64: imageUrl };
     } catch (error: unknown) {
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
       if (!isTimeout && attempt < maxRetries) {
-        console.warn(`[generate-catalog] Seedream error, retrying in 3s...`, error);
+        console.warn(`[generate-catalog] NanoBanana error, retrying in 3s...`, error);
         await new Promise(r => setTimeout(r, 3000));
         continue;
       }
-      return { ok: false, error: isTimeout ? "Seedream request timed out (90s)" : (error instanceof Error ? error.message : "Unknown error") };
+      return { ok: false, error: isTimeout ? "AI generation timed out (100s)" : (error instanceof Error ? error.message : "Unknown error") };
     }
   }
   return { ok: false, error: "Max retries exceeded" };
@@ -161,18 +150,23 @@ interface CatalogPayload {
 }
 
 function buildCatalogPrompt(p: CatalogPayload): string {
+  const aspectRatio = p.aspectRatio || "4:5";
   const model = p.model;
+
   if (!model?.gender) {
     // Product-only mode
-    return `A professional e-commerce catalog photograph of ${p.product.title || "the product"} shown in [PRODUCT IMAGE].
+    return `Generate a professional e-commerce catalog photograph of ${p.product.title || "the product"} shown in the reference image.
 ${p.pose?.instruction ? `\nSHOT: ${p.pose.instruction}` : ""}
 ${p.background?.instruction ? `\nENVIRONMENT: ${p.background.instruction}` : ""}
 
 STYLE: Clean e-commerce catalog photography. Even, professional studio lighting. Sharp focus on the product. Ultra high resolution, 8K detail.
 
+OUTPUT ASPECT RATIO: ${aspectRatio}.
+
 CONSTRAINTS:
-- Preserve all colors, textures, patterns, labels, and branding with 100% fidelity.
-- No text overlays, watermarks, or logos added to the image.`;
+- Reproduce the product EXACTLY as shown in the reference image — preserve all colors, textures, patterns, labels, and branding with 100% fidelity.
+- No text overlays, watermarks, or logos added to the image.
+- Do NOT hallucinate or invent product details not visible in the reference.`;
   }
 
   const ageDescMap: Record<string, string> = {
@@ -182,9 +176,9 @@ CONSTRAINTS:
   };
   const ageDesc = ageDescMap[model.ageRange || "adult"] || "adult";
 
-  return `A professional e-commerce catalog photograph of a ${model.gender} model, ${model.ethnicity}, ${ageDesc}, ${model.bodyType} build.
+  return `Generate a professional e-commerce catalog photograph of a ${model.gender} model, ${model.ethnicity}, ${ageDesc}, ${model.bodyType} build.
 
-The model is wearing the EXACT ${p.product.productType || "product"} shown in [PRODUCT IMAGE] — preserve all colors, textures, patterns, labels, and branding with 100% fidelity.${p.product.description ? ` Product: ${p.product.description}.` : ""}
+The model is wearing the EXACT ${p.product.productType || "product"} shown in the product reference image — preserve all colors, textures, patterns, labels, and branding with 100% fidelity.${p.product.description ? ` Product: ${p.product.description}.` : ""}
 
 POSE: ${p.pose?.instruction || "Natural standing pose, looking at camera"}
 
@@ -192,11 +186,15 @@ ENVIRONMENT: ${p.background?.instruction || "Clean studio background, soft neutr
 
 STYLE: Clean e-commerce catalog photography. Even, professional studio lighting. Sharp focus on the product. Ultra high resolution, 8K detail.
 
+OUTPUT ASPECT RATIO: ${aspectRatio}.
+
 CONSTRAINTS:
-- Do NOT change the product's appearance, colors, or branding from [PRODUCT IMAGE].
-- Do NOT alter the model's facial features or skin tone from [MODEL IMAGE].
+- Reproduce the product EXACTLY as shown in the product reference image. Do NOT change colors, patterns, or branding.
+- If a model reference image is provided, preserve that person's exact facial features, skin tone, and appearance. Do NOT generate a different face.
 - Maintain realistic fabric draping and body proportions.
-- No text overlays, watermarks, or logos added to the image.`;
+- No text overlays, watermarks, or logos added to the image.
+- Do NOT hallucinate details. Only reproduce what is visible in the references.
+- NEVER blend or merge faces from multiple reference images. Use ONLY ONE face identity.`;
 }
 
 // ── Complete queue job helper ────────────────────────────────────────────
@@ -329,9 +327,9 @@ serve(async (req) => {
       }
     }
 
-    const arkApiKey = Deno.env.get("BYTEPLUS_ARK_API_KEY");
-    if (!arkApiKey) {
-      const errMsg = "BYTEPLUS_ARK_API_KEY not configured";
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableApiKey) {
+      const errMsg = "LOVABLE_API_KEY not configured";
       if (isQueueInternal && body.job_id) {
         await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
       }
@@ -363,19 +361,14 @@ serve(async (req) => {
       referenceImages.push(body.product.imageUrl);
     } else if (isAnchorShot) {
       // ── FACELESS ANCHOR: product image ONLY — no model face ──
-      // The anchor generates a neck-down outfit shot. Sending only the product
-      // prevents Seedream from blending model face pixels with product pixels.
       referenceImages.push(body.product.imageUrl);
     } else if (body.anchor_image_url) {
       // ── DERIVATIVE ON-MODEL: SINGLE-REFERENCE (face lock) ──
-      // Send ONLY the model identity image so Seedream doesn't average
-      // face pixels with anchor/product pixels. Outfit consistency is
-      // handled entirely via explicit text in the prompt.
       if (modelIdentityUrl) {
         referenceImages.push(modelIdentityUrl);
       } else {
         // NO FALLBACK: fail fast to protect face consistency
-        console.error(`[generate-catalog] FACE GUARD: derivative on-model shot "${body.shot_id}" has anchor but NO model identity URL — failing to prevent face blending`);
+        console.error(`[generate-catalog] FACE GUARD: derivative on-model shot "${body.shot_id}" has anchor but NO model identity URL — failing`);
         const errMsg = "Model identity image missing — derivative skipped to protect face consistency";
         if (isQueueInternal && body.job_id) {
           await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
@@ -385,9 +378,8 @@ serve(async (req) => {
         });
       }
     } else if (modelIdentityUrl && !isProductOnly) {
-      // On-model shot WITHOUT anchor (anchor failed/missing) — FAIL FAST
-      // Do NOT send model + product together as that causes face blending
-      console.error(`[generate-catalog] FACE GUARD: on-model shot "${body.shot_id}" has no anchor_image_url — failing to prevent face blending`);
+      // On-model shot WITHOUT anchor — FAIL FAST
+      console.error(`[generate-catalog] FACE GUARD: on-model shot "${body.shot_id}" has no anchor_image_url — failing`);
       const errMsg = "Anchor image missing — derivative skipped to protect face consistency";
       if (isQueueInternal && body.job_id) {
         await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
@@ -400,59 +392,20 @@ serve(async (req) => {
       referenceImages.push(body.product.imageUrl);
     }
 
-    // Derive deterministic seed from batch_id for cross-shot face consistency
-    const batchSeed = body.batch_id
-      ? Array.from(body.batch_id).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 2147483647
-      : undefined;
-
-    // ── Per-phase generation parameters ──────────────────────────────────
-    const FACE_NEGATIVE = "two faces, merged face, blended face, double exposure, morphed features, distorted face, two people, split face, composite face, ghost face overlay, transparent face, face swap artifact, extra limbs, extra fingers";
-    const ANCHOR_NEGATIVE = "face, head, hair, eyes, mouth, nose, chin, forehead, ears, portrait, headshot, " + FACE_NEGATIVE;
-
-    let guidanceScale: number;
-    let imageStrength: number | undefined;
-    let negativePrompt: string | undefined;
-
-    if (isProductOnly) {
-      // Product-only: standard guidance, no face negatives needed
-      guidanceScale = 8.5;
-      imageStrength = undefined;
-      negativePrompt = undefined;
-    } else if (isAnchorShot) {
-      // Faceless anchor: product-only input, lower image_strength to let
-      // prompt control the headless body form, strong negative against faces
-      guidanceScale = 9.0;
-      imageStrength = 0.65;
-      negativePrompt = ANCHOR_NEGATIVE;
-    } else if (body.anchor_image_url) {
-      // Derivative on-model: single model-identity reference, high strength to lock face
-      guidanceScale = 10.0;
-      imageStrength = 0.85;
-      negativePrompt = FACE_NEGATIVE;
-    } else {
-      // Fallback
-      guidanceScale = 10.0;
-      imageStrength = 0.70;
-      negativePrompt = FACE_NEGATIVE;
-    }
-
     // ── Log actual reference state for debugging ──
     const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-face-lock' : 'fallback';
     console.log(`[generate-catalog] REF_STATE: shot="${body.shot_id}", mode=${refMode}, refs=${referenceImages.length}, hasModelIdentity=${!!modelIdentityUrl}, hasAnchor=${!!body.anchor_image_url}`);
 
-    const seedreamResult = await generateImageSeedream(
+    // ── Generate with Nano Banana Flash ──
+    const result = await generateImageNanoBanana(
       prompt,
       referenceImages,
-      "seedream-4-5-251128",
-      arkApiKey,
-      aspectRatio,
+      lovableApiKey,
       1,
-      batchSeed,
-      { guidanceScale, imageStrength, negativePrompt },
     );
 
-    if (!seedreamResult.ok || !seedreamResult.imageUrl) {
-      const errMsg = seedreamResult.error || "Seedream generation failed";
+    if (!result.ok || !result.imageBase64) {
+      const errMsg = result.error || "AI generation failed";
       console.error(`[generate-catalog] Generation failed: ${errMsg}`);
       if (isQueueInternal && body.job_id) {
         await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
@@ -462,40 +415,42 @@ serve(async (req) => {
       });
     }
 
-    // Download the Seedream URL and upload to our storage
-    let finalUrl = seedreamResult.imageUrl;
+    // ── Decode base64 and upload to storage ──
+    let finalUrl = "";
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
-      const imgResp = await fetch(seedreamResult.imageUrl);
-      if (imgResp.ok) {
-        const imgBytes = new Uint8Array(await imgResp.arrayBuffer());
-        const fmt = detectImageFormat(imgBytes);
-        const userId = body.user_id || "anonymous";
-        const jobId = body.job_id || crypto.randomUUID();
-        const storagePath = `${userId}/${jobId}/catalog-0.${fmt.ext}`;
+      // Strip data URI prefix if present
+      const base64Data = result.imageBase64.replace(/^data:image\/\w+;base64,/, "");
+      const imgBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+      const fmt = detectImageFormat(imgBytes);
+      const userId = body.user_id || "anonymous";
+      const jobId = body.job_id || crypto.randomUUID();
+      const storagePath = `${userId}/${jobId}/catalog-0.${fmt.ext}`;
 
-        const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
+        .from("catalog-previews")
+        .upload(storagePath, imgBytes, {
+          contentType: fmt.contentType,
+          cacheControl: "3600",
+        });
+
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage
           .from("catalog-previews")
-          .upload(storagePath, imgBytes, {
-            contentType: fmt.contentType,
-            cacheControl: "3600",
-          });
-
-        if (!uploadError) {
-          const { data: publicUrlData } = supabase.storage
-            .from("catalog-previews")
-            .getPublicUrl(storagePath);
-          finalUrl = publicUrlData.publicUrl;
-          console.log(`[generate-catalog] Uploaded to storage: ${storagePath}`);
-        } else {
-          console.error("[generate-catalog] Storage upload failed, using Seedream URL:", uploadError.message);
-        }
+          .getPublicUrl(storagePath);
+        finalUrl = publicUrlData.publicUrl;
+        console.log(`[generate-catalog] Uploaded to storage: ${storagePath}`);
+      } else {
+        console.error("[generate-catalog] Storage upload failed:", uploadError.message);
+        // Use inline base64 as last resort (not ideal for large images)
+        finalUrl = result.imageBase64;
       }
     } catch (uploadErr) {
       console.error("[generate-catalog] Storage upload error:", uploadErr);
+      finalUrl = result.imageBase64;
     }
 
     const images = [finalUrl];
