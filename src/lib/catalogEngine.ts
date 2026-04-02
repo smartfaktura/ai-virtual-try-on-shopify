@@ -755,6 +755,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   // Append model identity directive when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
     prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
+    prompt += '\nFACE QUALITY: Render the model\'s face with high-resolution photorealistic detail — sharp facial features, realistic skin texture and pores, detailed eyes with catchlights, natural lip detail. Do NOT blur, smooth, soften, or distort facial features. The face must look like a real photograph, not AI-generated.';
   }
 
   // GLOBAL lighting rule — applied to ALL shots (model and product-only)
