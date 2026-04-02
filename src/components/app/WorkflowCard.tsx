@@ -107,7 +107,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
           <p className="text-sm text-muted-foreground leading-relaxed">{workflow.description}</p>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-auto pt-2">
-          {['Bulk generation', 'Matrix mode', 'Multi-product'].map((tag) => (
+          {['Bulk generation', 'Catalog Ready', 'Multi-product'].map((tag) => (
             <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{tag}</span>
           ))}
         </div>

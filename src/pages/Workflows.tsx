@@ -462,7 +462,7 @@ export default function Workflows() {
       navigate('/app/perspectives');
       return;
     }
-    if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set') {
+    if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio') {
       navigate('/app/catalog');
       return;
     }
@@ -561,7 +561,7 @@ export default function Workflows() {
               workflow={workflow}
               onSelect={() => handleCreateVisualSet(workflow)}
               reversed={index % 2 !== 0}
-              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
+              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
             />
           ))}
           <WorkflowRequestBanner />
@@ -575,7 +575,7 @@ export default function Workflows() {
               workflow={workflow}
               onSelect={() => handleCreateVisualSet(workflow)}
               mobileCompact={isMobile && effectiveLayout === '2col'}
-              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
+              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
             />
           ))}
           <WorkflowRequestBanner />
