@@ -404,6 +404,7 @@ export function useCatalogGenerate() {
     if (!token) { toast.error('Authentication required'); return false; }
 
     setIsGenerating(true);
+    phaseRef.current = 'anchors';
     const batchId = crypto.randomUUID();
     const anchorJobs: CatalogJobExtended[] = [];
     let enqueueCount = 0;
