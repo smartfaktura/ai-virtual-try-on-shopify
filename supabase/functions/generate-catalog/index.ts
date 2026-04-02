@@ -48,6 +48,7 @@ async function generateImageSeedream(
         watermark: false,
         guidance_scale: 8.5,
         sequential_image_generation: "disabled",
+        ...(seed !== undefined && { seed }),
       };
       if (imageUrls.length === 1) {
         body.image = imageUrls[0];
