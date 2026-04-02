@@ -583,7 +583,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: WEARABLE,
     defaultRenderPath: 'reference_generate',
     needsModel: true,
-    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], relaxed natural lifestyle pose, weight shifted casually, one hand in pocket or touching hair, candid energy, [SUPPORT_WARDROBE], focus on the hero product in a real-life context, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] worn by [MODEL], relaxed standing pose, slight weight shift, one hand in pocket, composed studio catalog feel, NOT candid NOT outdoor, [SUPPORT_WARDROBE], focus on the hero product, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'over_shoulder',
