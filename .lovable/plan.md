@@ -1,34 +1,28 @@
 
 
-# Catalog Session Detail Modal
+# Use Uploaded Images for Catalog Studio Carousel (0.5s interval)
 
-## Problem
-Clicking a session card navigates to `/app/library` showing all images — not just the images from that specific shoot.
-
-## Solution
-Add a session detail modal directly in `CatalogHub.tsx` that opens when a session card is clicked, displaying only that session's images in a grid with download/lightbox support.
+## Overview
+Replace the current Catalog Studio carousel backgrounds with the 10 uploaded Filippa K jacket images, and make the carousel cycle every 500ms instead of 2500ms.
 
 ## Changes
 
-### 1. `src/pages/CatalogHub.tsx` — Add session modal + state
+### 1. Copy 10 images to `public/images/catalog-studio/`
+Copy all uploaded `VOVVAI-Catalog-Studio-{1..10}.jpg` files to `public/images/catalog-studio/`.
 
-- Add `useState<CatalogSession | null>` for the selected session
-- Replace `navigate('/app/library')` in `SessionCard` with an `onOpen(session)` callback
-- Add a `Dialog` modal that shows:
-  - Header with product names, date, status, image count
-  - Scrollable image grid (3 columns on desktop, 2 on mobile) showing all session images
-  - Each image is clickable to open the existing `ImageLightbox` for full-screen viewing with navigation
-  - Download button per image (reuse existing `saveOrShareImage` utility)
-- Footer with a "View in Library" link for users who want the full library
+### 2. Add `interval` to `WorkflowScene` type
+In `WorkflowAnimatedThumbnail.tsx`, add optional `interval?: number` to the `WorkflowScene` interface.
 
-### 2. Components reused
-- `Dialog` / `DialogContent` / `DialogHeader` from existing UI
-- `ImageLightbox` for full-screen image viewing with arrow navigation
-- `ShimmerImage` for lazy-loaded thumbnails
-- `saveOrShareImage` from `@/lib/mobileImageSave` for downloads
+### 3. Use `scene.interval` in `CarouselThumbnail`
+Change line 240 from `const INTERVAL = 2500;` to `const INTERVAL = scene.interval ?? 2500;` — pass the scene's custom interval through. The progress bar animation duration already references `INTERVAL` so it will auto-adjust.
 
-### Technical details
-- No new files needed — all changes in `CatalogHub.tsx`
-- The modal receives the full `CatalogSession` object (already has `images[]`, `productNames[]`, metadata)
-- Lightbox state: `lightboxIndex: number | null` — when set, opens `ImageLightbox` overlay on top of the modal
+### 4. Update `workflowAnimationData.tsx` — Catalog Studio entry
+- Replace `backgrounds` array with paths to the 10 new images in `/images/catalog-studio/`
+- Set `interval: 500` for fast cycling
+- Keep existing badge elements (Bulk Generation, Catalog Ready)
+
+### Files modified
+- `src/components/app/WorkflowAnimatedThumbnail.tsx` — add `interval` to type + use it
+- `src/components/app/workflowAnimationData.tsx` — new image paths + interval
+- 10 images copied to `public/images/catalog-studio/`
 
