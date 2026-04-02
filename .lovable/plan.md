@@ -1,44 +1,41 @@
 
 
-# Switch Catalog to Native Gemini API (Nano Banana 2, 2K quality)
+# Fix Catalog Generation Failures
 
-## What changes
+## Root Causes (from edge function logs)
 
-Replace the Lovable AI Gateway call in `generate-catalog` with the native Gemini `generateContent` endpoint — the same pattern used in `generate-freestyle`, `generate-tryon`, and `generate-workflow`.
+### Bug 1: Invalid `max_tokens` parameter
+```
+"Invalid JSON payload received. Unknown name "max_tokens" at 'generation_config': Cannot find field."
+```
+The native Gemini `generateContent` API does not accept `max_tokens`. This was left over from the gateway migration. Remove it from `generationConfig`.
 
-## Why
-
-- Native API supports `imageConfig.imageSize: "2K"` for higher resolution output
-- Native API supports `aspectRatio` as a proper parameter (not just a text hint)
-- Matches the proven pattern already working across all other generation functions
-- Uses `GEMINI_API_KEY` (already configured in secrets)
+### Bug 2: Stack overflow in `fetchImageAsBase64`
+```
+fetchImageAsBase64 failed: Maximum call stack size exceeded
+```
+Line 32: `btoa(String.fromCharCode(...bytes))` spreads the entire image byte array as function arguments. Large images (>100KB) exceed the JS call stack limit. Fix: chunk the conversion.
 
 ## File: `supabase/functions/generate-catalog/index.ts`
 
-### 1. Replace `generateImageNanoBanana` function entirely
+### Fix 1 — Remove `max_tokens` (line 103)
+Delete `max_tokens: 8192` from `generationConfig`. The native Gemini image endpoint doesn't support this parameter.
 
-Remove the current Lovable AI Gateway implementation (lines 17-104) and replace with native Gemini implementation:
+### Fix 2 — Chunk base64 encoding (line 32)
+Replace:
+```typescript
+const b64 = btoa(String.fromCharCode(...bytes));
+```
+With chunked conversion:
+```typescript
+let binary = "";
+const chunkSize = 8192;
+for (let i = 0; i < bytes.length; i += chunkSize) {
+  binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+}
+const b64 = btoa(binary);
+```
 
-- Add `urlToInlineDataPart()` helper (same as freestyle) — fetches URLs and converts to `{ inlineData: { mimeType, data } }` format
-- Add `extractImageFromGeminiResponse()` helper — extracts base64 data URI from native response
-- Add content-block detection helpers (`isContentBlocked`, `extractBlockReason`)
-- New `generateImageNative()` function that:
-  - Converts reference image URLs to `inlineData` parts
-  - Calls `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent`
-  - Uses `x-goog-api-key` header with `GEMINI_API_KEY`
-  - Sets `generationConfig.imageConfig.imageSize = "2K"` and `aspectRatio`
-  - Sets `responseModalities: ["IMAGE", "TEXT"]`
-  - Returns base64 data URI on success
-
-### 2. Update main handler
-
-- Read `GEMINI_API_KEY` instead of `LOVABLE_API_KEY`
-- Map aspect ratio string (e.g. `"4:5"` → native format if needed)
-- Call `generateImageNative()` instead of `generateImageNanoBanana()`
-- Rest of the flow (storage upload, queue completion) stays identical — it already handles base64
-
-### No other files change
-
-- All face-lock logic, reference image selection, prompt building, queue completion — unchanged
-- Hook, types, UI — unchanged
+### No other changes needed
+Everything else (queue completion, storage upload, reference image logic) is correct.
 
