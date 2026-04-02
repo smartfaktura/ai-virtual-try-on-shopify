@@ -34,6 +34,7 @@ async function generateImageSeedream(
   apiKey: string,
   aspectRatio = "1:1",
   maxRetries = 1,
+  seed?: number,
 ): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const seedreamRatio = seedreamAspectRatio(aspectRatio);
