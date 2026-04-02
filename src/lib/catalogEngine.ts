@@ -441,7 +441,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] invisible mannequin effect, product floating in pure white void, natural garment shape preserved as if worn, perfectly centered, absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface reflection, NO floor, pure white (#FFFFFF) infinite void background, ultra clean ecommerce packshot, sharp material details, ONLY this single product, [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] invisible mannequin effect, product floating in pure white void, natural garment shape preserved as if worn, perfectly centered, absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface reflection, NO floor, pure white (#FFFFFF) infinite void background, ultra clean ecommerce packshot, sharp material details, ONLY this single product, NO people, NO model, NO human figure, [CONSISTENCY]',
   },
   {
     id: 'front_flat',
