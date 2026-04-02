@@ -351,24 +351,30 @@ serve(async (req) => {
 
     // Build reference images with shot-type-aware ordering
     const isProductOnly = body.render_path === 'product_only_generate' || body.shot_group === 'product-only';
+    const isAnchorShot = body.shot_id === 'identity_anchor';
     const modelIdentityUrl = body.model?.identityImageUrl || body.model?.imageUrl;
 
     const referenceImages: string[] = [];
     if (isProductOnly) {
       // ── HARD ISOLATION: Product-only shots get ONLY the product image ──
-      // No model identity, no anchor (which may contain a person) — prevents
-      // face/body leaking into ghost mannequin, flat lay, on-surface, etc.
       referenceImages.push(body.product.imageUrl);
-      // Do NOT push anchor_image_url — it may contain a person from on-model anchor
+    } else if (isAnchorShot) {
+      // ── FACELESS ANCHOR: product image ONLY — no model face ──
+      // The anchor generates a neck-down outfit shot. Sending only the product
+      // prevents Seedream from blending model face pixels with product pixels.
+      referenceImages.push(body.product.imageUrl);
     } else if (body.anchor_image_url) {
-      // Derivative on-model shots: anchor (Image 1) has locked face + outfit,
-      // product (Image 2) provides style source for the specific shot variation
+      // ── DERIVATIVE ON-MODEL: 3-image system ──
+      // Image 1 = model face (identity source)
+      // Image 2 = anchor outfit (styling/wardrobe lock)
+      // Image 3 = product (detail/color reference)
+      if (modelIdentityUrl) {
+        referenceImages.push(modelIdentityUrl);
+      }
       referenceImages.push(body.anchor_image_url);
       referenceImages.push(body.product.imageUrl);
     } else {
-      // Anchor (identity lock) shot: model FIRST as identity source (Image 1),
-      // product SECOND as style source (Image 2). No duplicate — the prompt
-      // now uses explicit image-role assignment to separate face from outfit.
+      // Fallback: model + product (shouldn't normally happen with new flow)
       if (modelIdentityUrl) {
         referenceImages.push(modelIdentityUrl);
       }
@@ -382,6 +388,7 @@ serve(async (req) => {
 
     // ── Per-phase generation parameters ──────────────────────────────────
     const FACE_NEGATIVE = "two faces, merged face, blended face, double exposure, morphed features, distorted face, two people, split face, composite face, ghost face overlay, transparent face, face swap artifact, extra limbs, extra fingers";
+    const ANCHOR_NEGATIVE = "face, head, hair, eyes, mouth, nose, chin, forehead, ears, portrait, headshot, " + FACE_NEGATIVE;
 
     let guidanceScale: number;
     let imageStrength: number | undefined;
@@ -392,15 +399,19 @@ serve(async (req) => {
       guidanceScale = 8.5;
       imageStrength = undefined;
       negativePrompt = undefined;
+    } else if (isAnchorShot) {
+      // Faceless anchor: product-only input, lower image_strength to let
+      // prompt control the headless body form, strong negative against faces
+      guidanceScale = 9.0;
+      imageStrength = 0.65;
+      negativePrompt = ANCHOR_NEGATIVE;
     } else if (body.anchor_image_url) {
-      // Derivative on-model: slightly relaxed for pose variation, keep identity
+      // Derivative on-model: 3 images, balanced for identity + outfit lock
       guidanceScale = 9.5;
       imageStrength = 0.75;
       negativePrompt = FACE_NEGATIVE;
     } else {
-      // Anchor (identity lock): lower image_strength so Seedream follows the
-      // prompt's role assignment (face from Image 1, outfit from Image 2)
-      // rather than raw pixel blending which causes face merging.
+      // Fallback
       guidanceScale = 10.0;
       imageStrength = 0.70;
       negativePrompt = FACE_NEGATIVE;

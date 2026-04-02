@@ -650,6 +650,9 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, NO people, NO model, NO human figure, NO face, NO skin, NO hands, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
   },
   // ── Internal Identity Anchor (not user-selectable) ──
+  // FACELESS ANCHOR: Generates a neck-down outfit shot WITHOUT any face.
+  // This prevents face blending between model and product images.
+  // Derivatives will separately reference the model face photo for identity.
   {
     id: 'identity_anchor',
     label: 'Identity Anchor',
@@ -657,13 +660,13 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: WEARABLE,
     defaultRenderPath: 'anchor_generate',
     needsModel: true,
-    promptTemplate: 'Apply the clothing shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain the exact facial features, hair, and skin of the person in Image 1. Use the outfit, fit, and styling from Image 2 ([HERO_PRODUCT]) only. Waist-up portrait, cropped at waist, face fills upper third of frame, straight-on eye-level camera angle, neutral composed expression, looking directly into camera, natural relaxed shoulders, arms at sides, centered in frame, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'Professional fashion catalog photograph showing a complete outfit from neck down — NO head, NO face visible, cropped at collarbone. The body wears [HERO_PRODUCT] as the hero garment, [SUPPORT_WARDROBE]. Full body from collarbone to feet, feet fully visible, standing straight, arms naturally at sides, centered in frame. [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
-      shoes: 'Apply the footwear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      bag: 'Apply the bag shown in Image 2 to be held by the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      hat: 'Apply the headwear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      sunglasses: 'Apply the eyewear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      jewelry: 'Apply the jewelry shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      shoes: 'Professional catalog photograph from waist down — NO head, NO face visible. The body wears [HERO_PRODUCT] as the hero footwear, [SUPPORT_WARDROBE]. Standing straight, feet hip-width apart, footwear clearly visible, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      bag: 'Professional catalog photograph from neck down — NO head, NO face visible, cropped at collarbone. One hand holding [HERO_PRODUCT] naturally at side, the bag clearly visible as hero item, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      hat: 'Professional catalog photograph showing [HERO_PRODUCT] placed on a minimal display stand or form, NO human head, NO face, the headwear shown as a standalone product with styling context, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      sunglasses: 'Professional catalog photograph showing [HERO_PRODUCT] placed on a minimal display or flat surface, NO human face, NO head, the eyewear shown as a standalone product, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      jewelry: 'Professional catalog close-up of [HERO_PRODUCT] on a minimal display form or surface, NO face, NO head, NO skin beyond what is needed for context, the jewelry clearly visible, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
   },
 ];
@@ -771,6 +774,14 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     ? 'pure white (#FFFFFF) infinite void background, absolutely no shadow, no surface, no floor, no gradients'
     : backgroundPrompt;
 
+  // ── Determine if this is the faceless anchor shot ──
+  const isAnchorShot = shotDef.id === 'identity_anchor';
+  // Derivative on-model shots: replace generic support wardrobe text with anchor-reference language
+  const isDerivativeOnModel = !isAnchorShot && shotDef.needsModel && renderPath === 'reference_generate';
+  const effectiveWardrobe = isDerivativeOnModel
+    ? 'wearing the EXACT same complete outfit as shown in Image 2 (the anchor reference image) — same pants, same shoes, same top, same styling, same accessories, do NOT substitute or change any clothing item'
+    : supportWardrobePrompt;
+
   // For edit paths, wrap differently
   if (renderPath === 'anchor_edit') {
     return `Adjust the framing to show: ${template
@@ -788,20 +799,29 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   let prompt = template
     .replace('[HERO_PRODUCT]', productTitle)
     .replace('[MODEL]', modelProfile)
-    .replace('[SUPPORT_WARDROBE]', supportWardrobePrompt)
+    .replace('[SUPPORT_WARDROBE]', effectiveWardrobe)
     .replace('[BACKGROUND]', effectiveBackground)
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
     .replace('[CONSISTENCY]', consistencyBlock);
 
-  // Append style-transfer image role assignment when a model is involved
-  if (modelProfile && modelProfile !== 'no model') {
+  // ── IMAGE ROLE ASSIGNMENT — differs by phase ──
+  if (isAnchorShot) {
+    // FACELESS ANCHOR: product-only input, no face involved
     prompt += '\nIMAGE ROLE ASSIGNMENT:';
-    prompt += '\n- Image 1 (MODEL IMAGE): This is the IDENTITY SOURCE. Maintain this person\'s exact face, facial structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions.';
-    prompt += '\n- Image 2 (PRODUCT IMAGE): This is the STYLE SOURCE. Apply ONLY the clothing/product from this image onto the person from Image 1.';
+    prompt += '\n- Image 1 (PRODUCT IMAGE): This is the GARMENT/PRODUCT SOURCE. Apply this exact product onto a headless body form.';
+    prompt += '\nCRITICAL: Generate from collarbone/neck DOWN only. Absolutely NO head, NO face, NO hair visible. The image must be cropped at the collarbone with NO facial features whatsoever.';
+    prompt += '\nNO FACE RULE: This is a faceless outfit photograph. Do NOT generate any head, face, eyes, mouth, nose, chin, or hair. The top of the frame starts at the collarbone/shoulder line.';
+  } else if (modelProfile && modelProfile !== 'no model' && shotDef.needsModel) {
+    // DERIVATIVE ON-MODEL: 3-image system [face, anchor outfit, product]
+    prompt += '\nIMAGE ROLE ASSIGNMENT:';
+    prompt += '\n- Image 1 (MODEL FACE): This is the IDENTITY SOURCE. Use this person\'s exact face, facial structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions.';
+    prompt += '\n- Image 2 (ANCHOR OUTFIT): This is the OUTFIT/STYLING SOURCE. Replicate the EXACT outfit shown here — same trousers/pants, same shoes, same top styling, same support clothing. Do NOT change any clothing item.';
+    prompt += '\n- Image 3 (PRODUCT IMAGE): This is the PRODUCT DETAIL SOURCE. Use this for accurate color, texture, pattern, and material reference of the hero product.';
     prompt += '\nDo NOT blend the faces. Do NOT average features between images. The output person must be IDENTICAL to the person in Image 1.';
     prompt += '\nFACE QUALITY: Render the model\'s face with maximum photorealistic resolution — sharp defined facial features, visible skin texture and pores, detailed iris with catchlights, natural lip detail, individual eyebrow hairs, realistic under-eye area. Do NOT blur, smooth, soften, airbrush, or distort any facial feature. The face must be indistinguishable from a real high-resolution photograph.';
-    prompt += '\nIDENTITY PRIORITY: Image 1 is the PRIMARY identity source. Image 2 defines ONLY the garment/product. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nIDENTITY PRIORITY: Image 1 is the PRIMARY identity source. Image 2 defines the outfit styling. Image 3 provides product detail. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nOUTFIT LOCK: The model MUST wear the EXACT same support clothing (pants, shoes, top) as shown in Image 2. Do NOT substitute jeans for chinos, sneakers for heels, or any other clothing swap. The only change from Image 2 is the camera angle/pose — the outfit stays identical.';
     prompt += '\nSINGLE SUBJECT RULE: There is EXACTLY ONE person in this image — the person from Image 1. Do NOT add a second person, do NOT show a reflection, do NOT create a mirror image, do NOT split the frame into multiple exposures, do NOT duplicate the body or limbs. ONE single human subject, ONE single captured moment.';
     prompt += '\nSTUDIO CATALOG RULES: Camera is ALWAYS straight-on at chest height, perfectly level, never tilted up or down. Camera distance is fixed: full body = head to feet with 10% padding top and bottom. The model stands centered in frame on the same spot every shot. Pose is MINIMAL and CONTROLLED — this is e-commerce catalog photography like ASOS or Zalando, NOT editorial, NOT lifestyle, NOT fashion show. Expression: neutral composed or slight natural smile. NO dramatic gestures, NO fashion editorial energy, NO lifestyle mood, NO hand on hip, NO wind-blown hair, NO looking away from camera (unless back view). Background must be PERFECTLY UNIFORM with zero visible texture or gradient.';
   }
