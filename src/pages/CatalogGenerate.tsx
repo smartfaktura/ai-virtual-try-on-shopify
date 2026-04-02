@@ -336,7 +336,7 @@ export default function CatalogGenerate() {
     const visibleJobs = batchState.jobs.filter(j => j.isUserVisible !== false && j.shotId !== 'identity_anchor' && !j.isPlaceholder);
     const visibleCompleted = visibleJobs.filter(j => j.status === 'completed').length;
     const visibleFailed = visibleJobs.filter(j => j.status === 'failed').length;
-    const visibleTotal = Math.max(visibleJobs.length, batchState.totalJobs);
+    const visibleTotal = visibleJobs.length;
     const progress = visibleTotal > 0
       ? Math.round(((visibleCompleted + visibleFailed) / visibleTotal) * 100) : 0;
     const isAnchoring = batchState.phase === 'anchors';
