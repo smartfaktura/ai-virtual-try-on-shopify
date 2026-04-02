@@ -370,7 +370,7 @@ export default function CatalogGenerate() {
                   <Button variant="outline" disabled={isDownloading} onClick={async () => {
                     setIsDownloading(true);
                     try {
-                      const images = batchState.jobs
+                      const images = visibleJobs
                         .filter(j => j.status === 'completed' && j.images.length > 0)
                         .flatMap(j => j.images.map(url => ({
                           url,
