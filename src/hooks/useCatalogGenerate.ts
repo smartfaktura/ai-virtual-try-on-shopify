@@ -632,27 +632,34 @@ export function useCatalogGenerate() {
           );
 
           if (jobResult === 'insufficient_credits') { creditsFailed = true; break; }
-          if (jobResult) derivativeJobs.push(jobResult);
+          if (jobResult) derivativeJobs.push({ ...jobResult, isPlaceholder: false, isUserVisible: true });
         }
 
         if (derivativeJobs.length > 0) sendWake(token);
 
+        // Mark anchors as not user-visible
+        const markedAnchors = updatedAnchors.map(j => ({ ...j, isPlaceholder: false, isUserVisible: false }));
+
         // Merge all jobs (replace placeholders with real derivative jobs)
-        const allJobs = [...updatedAnchors, ...derivativeJobs];
+        const allJobs = [...markedAnchors, ...derivativeJobs];
         jobsRef.current = allJobs;
         persistBatch(allJobs);
+
+        // Transition to derivatives phase
+        phaseRef.current = 'derivatives';
 
         const newAnchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
         for (const aj of updatedAnchors) {
           newAnchorStatus[aj.productId] = aj.status === 'completed' ? 'completed' : aj.status === 'failed' ? 'failed' : 'pending';
         }
 
+        const derivativeCount = derivativeJobs.length;
         setBatchState({
-          jobs: allJobs, totalJobs: allJobs.length,
-          completedJobs: allJobs.filter(j => j.status === 'completed').length,
-          failedJobs: allJobs.filter(j => j.status === 'failed').length,
+          jobs: allJobs, totalJobs: derivativeCount,
+          completedJobs: 0,
+          failedJobs: 0,
           allDone: false,
-          aggregatedImages: allJobs.flatMap(j => j.images),
+          aggregatedImages: [],
           anchorStatus: newAnchorStatus,
           phase: 'derivatives',
         });
