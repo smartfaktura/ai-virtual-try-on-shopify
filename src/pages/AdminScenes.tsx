@@ -113,6 +113,7 @@ export default function AdminScenes() {
   const [savingWfId, setSavingWfId] = useState<string | null>(null);
   const [expandedWf, setExpandedWf] = useState<Set<string>>(new Set());
   const [editingWfVariation, setEditingWfVariation] = useState<string | null>(null);
+  const [uploadingWfVar, setUploadingWfVar] = useState<string | null>(null);
 
   // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
