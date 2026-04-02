@@ -254,7 +254,7 @@ export function buildSupportWardrobePrompt(wardrobe: SupportWardrobe, category: 
     swimwear: 'designed to keep focus on the swimwear, no additional clothing',
   }[category] || '';
 
-  return `paired with ${pieces.join(' and ')}, understated styling${focus ? `, ${focus}` : ''}, no competing accessories`;
+  return `paired with ${pieces.join(' and ')}, supporting wardrobe must stay minimal, commercially styled, color-coordinated, and secondary to the hero product${focus ? `, ${focus}` : ''}, no distracting patterns, no competing hero items`;
 }
 
 // ────────────────────────────────────────────────
