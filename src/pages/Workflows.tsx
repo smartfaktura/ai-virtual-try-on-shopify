@@ -575,7 +575,7 @@ export default function Workflows() {
               workflow={workflow}
               onSelect={() => handleCreateVisualSet(workflow)}
               mobileCompact={isMobile && effectiveLayout === '2col'}
-              comingSoon={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
+              beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set'}
             />
           ))}
           <WorkflowRequestBanner />
