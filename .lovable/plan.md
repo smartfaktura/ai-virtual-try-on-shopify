@@ -1,21 +1,37 @@
 
 
-# Revert Seedream Fallback to 4.5
+# Add Fallback for Model Workflows
 
-## Overview
-Roll back the three edge functions from `Dola-Seedream-5.0-lite` to the previous `seedream-4-5-251128` model, since 5.0 Lite is returning server errors.
+## Problem
+The workflow generation has a 3-tier fallback chain (Gemini Pro → Seedream 4.5 → Gemini Flash), but it's **only active for product-only workflows**. When a model is attached (`body.model?.imageUrl` exists), Gemini Pro failure means immediate failure with no fallback — which is what happened in the recent failed generations (429 rate limits, credits refunded).
+
+## Solution
+Enable the Gemini Flash fallback for model workflows too. Seedream can't preserve model identity so it should remain skipped, but Gemini Flash can handle model reference images just like Gemini Pro.
 
 ## Changes
 
-### 1. `supabase/functions/generate-freestyle/index.ts`
-- Change `"Dola-Seedream-5.0-lite"` → `"seedream-4-5-251128"` in the provider config map
+### `supabase/functions/generate-workflow/index.ts`
 
-### 2. `supabase/functions/generate-workflow/index.ts`
-- Change `"Dola-Seedream-5.0-lite"` → `"seedream-4-5-251128"` in the Seedream fallback call
+**Line ~1165-1196** — Modify the fallback logic:
 
-### 3. `supabase/functions/generate-tryon/index.ts`
-- Change `"Dola-Seedream-5.0-lite"` → `"seedream-4-5-251128"` (the second reference that was upgraded)
+1. **Keep Seedream fallback gated** to product-only (no change) — Seedream doesn't support model identity preservation.
+
+2. **Enable Flash fallback for ALL workflows** — Remove the `!body.model?.imageUrl` condition from the Flash fallback block (line 1184). Flash can handle model reference images the same way Pro does.
+
+```
+Before:
+  // Flash fallback: last resort for product-only if Seedream also failed
+  if (imageUrl === null && !body.model?.imageUrl) {
+
+After:
+  // Flash fallback: last resort if primary + Seedream both failed
+  if (imageUrl === null) {
+```
+
+This means the chain becomes:
+- **With model**: Gemini Pro (2 attempts) → Gemini Flash (2 attempts)
+- **Without model**: Gemini Pro (2 attempts) → Seedream 4.5 → Gemini Flash (2 attempts)
 
 ## Risk
-None — this is a straight revert to the previously working model ID.
+Low — Flash is already proven as a fallback in freestyle. This just extends its use to model workflows where it was previously blocked.
 
