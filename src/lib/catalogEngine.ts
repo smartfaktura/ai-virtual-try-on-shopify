@@ -544,7 +544,8 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['jewelry', 'sunglasses', 'accessory', 'belt']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'extreme macro close-up of [HERO_PRODUCT], sharp focus on craftsmanship, texture, shine, material quality, shallow depth of field, premium product photography, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'extreme macro close-up of [HERO_PRODUCT], sharp focus on craftsmanship, texture, shine, material quality, shallow depth of field, premium product photography, ONLY this single product, NO people, NO face, NO skin, NO hands, NO body parts, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'product_front',
@@ -553,7 +554,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['shoes', 'bag', 'hat', 'sunglasses', 'jewelry', 'accessory']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, no face, no skin, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'product_angle',
@@ -562,7 +563,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['shoes', 'bag', 'hat', 'sunglasses', 'jewelry', 'accessory']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] isolated, 3/4 angled view, showing depth and dimension, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] isolated, 3/4 angled view, showing depth and dimension, clean product photography, sharp details, no model, no face, no skin, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'hardware_detail',
@@ -571,7 +572,8 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['bag', 'belt', 'jewelry']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'extreme close-up of hardware and metal details on [HERO_PRODUCT], zippers, clasps, buckles, or chains, ultra sharp macro, premium product photography, ONLY this product, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'extreme close-up of hardware and metal details on [HERO_PRODUCT], zippers, clasps, buckles, or chains, ultra sharp macro, premium product photography, ONLY this product, NO people, NO face, NO skin, NO hands, [BACKGROUND], [CONSISTENCY]',
   },
   // ── New On-Model Shots ──
   {
