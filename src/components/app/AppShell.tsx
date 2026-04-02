@@ -39,7 +39,6 @@ const prefetchMap: Record<string, () => void> = {
   '/app/brand-profiles': () => { import('@/pages/BrandProfiles'); },
   '/app/catalog': () => { import('@/pages/CatalogHub'); },
   '/app/catalog/new': () => { import('@/pages/CatalogGenerate'); },
-  '/app/catalog/new': () => { import('@/pages/CatalogGenerate'); },
 };
 const prefetched = new Set<string>();
 const prefetchRoute = (path: string) => {
