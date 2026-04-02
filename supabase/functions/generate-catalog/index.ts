@@ -34,6 +34,7 @@ async function generateImageSeedream(
   apiKey: string,
   aspectRatio = "1:1",
   maxRetries = 1,
+  seed?: number,
 ): Promise<{ ok: boolean; imageUrl?: string; error?: string }> {
   const ARK_BASE = "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations";
   const seedreamRatio = seedreamAspectRatio(aspectRatio);
@@ -48,6 +49,7 @@ async function generateImageSeedream(
         watermark: false,
         guidance_scale: 8.5,
         sequential_image_generation: "disabled",
+        ...(seed !== undefined && { seed }),
       };
       if (imageUrls.length === 1) {
         body.image = imageUrls[0];
@@ -360,6 +362,11 @@ serve(async (req) => {
       if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
     }
 
+    // Derive deterministic seed from batch_id for cross-shot face consistency
+    const batchSeed = body.batch_id
+      ? Array.from(body.batch_id).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 2147483647
+      : undefined;
+
     const seedreamResult = await generateImageSeedream(
       prompt,
       referenceImages,
@@ -367,6 +374,7 @@ serve(async (req) => {
       arkApiKey,
       aspectRatio,
       1, // 1 retry for transient errors
+      batchSeed,
     );
 
     if (!seedreamResult.ok || !seedreamResult.imageUrl) {

@@ -20,6 +20,8 @@ const CREDITS_PER_IMAGE = 4;
 const POLLING_HARD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 const REWAKE_THROTTLE_MS = 30_000; // 30 seconds between re-wakes
 const SESSION_KEY = 'catalog_batch';
+const ANCHOR_POLL_INTERVAL_MS = 3000;
+const ANCHOR_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 min max wait for anchors
 
 /** Append per-combo styling props to the assembled prompt */
 function appendPropsToPrompt(
@@ -74,6 +76,55 @@ function loadPersistedBatch(): CatalogJobExtended[] | null {
   }
 }
 
+/** Poll specific job IDs until they reach a terminal state */
+async function pollUntilDone(
+  jobIds: string[],
+  timeoutMs: number,
+): Promise<Map<string, { status: string; images: string[]; error?: string }>> {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const start = Date.now();
+  const results = new Map<string, { status: string; images: string[]; error?: string }>();
+
+  while (Date.now() - start < timeoutMs) {
+    let token = await getAuthToken() || SUPABASE_KEY;
+    const idsFilter = jobIds.map(id => `"${id}"`).join(',');
+    let res = await fetch(
+      `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+    );
+
+    if (res.status === 401) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      token = sessionData?.session?.access_token || SUPABASE_KEY;
+      res = await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,result,error_message`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+      );
+    }
+
+    if (res.ok) {
+      const rows = await res.json();
+      for (const row of rows) {
+        const images: string[] = [];
+        if (row.status === 'completed' && row.result?.images) images.push(...row.result.images);
+        results.set(row.id, { status: row.status, images, error: row.error_message || undefined });
+      }
+
+      const allTerminal = jobIds.every(id => {
+        const r = results.get(id);
+        return r && ['completed', 'failed', 'cancelled'].includes(r.status);
+      });
+      if (allTerminal) return results;
+    }
+
+    await new Promise(r => setTimeout(r, ANCHOR_POLL_INTERVAL_MS));
+  }
+
+  // Timeout — return whatever we have
+  return results;
+}
+
 export type { CatalogBatchStateV2 as CatalogBatchState };
 
 export function useCatalogGenerate() {
@@ -99,7 +150,6 @@ export function useCatalogGenerate() {
         jobs: saved, totalJobs: saved.length, completedJobs: 0, failedJobs: 0,
         allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
       });
-      // pollJobs will be called via the effect below
     }
 
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
@@ -172,6 +222,7 @@ export function useCatalogGenerate() {
         const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         let token = await getAuthToken() || SUPABASE_KEY;
 
+        const jobs = jobsRef.current;
         const jobIds = jobs.map(j => j.jobId);
         const idsFilter = jobIds.map(id => `"${id}"`).join(',');
         let res = await fetch(
@@ -259,7 +310,7 @@ export function useCatalogGenerate() {
   // ── Enqueue a single job ──
   const enqueueJob = async (
     token: string,
-    productImageB64: string,
+    productImageUrl: string,
     productTitle: string,
     productId: string,
     productOriginalUrl: string,
@@ -268,7 +319,7 @@ export function useCatalogGenerate() {
     renderPath: RenderPath,
     shotGroup: 'on-model' | 'product-only',
     prompt: string,
-    modelImageB64: string | null,
+    modelImageUrl: string | null,
     modelProfile: string,
     anchorImageUrl: string | null,
     batchId: string,
@@ -285,11 +336,11 @@ export function useCatalogGenerate() {
           shot_id: shotId,
           shot_group: shotGroup,
           prompt_final: prompt,
-          product: { title: productTitle, imageUrl: productImageB64 },
+          product: { title: productTitle, imageUrl: productImageUrl },
           product_id: productId,
           product_name: productTitle,
           product_image_url: productOriginalUrl,
-          ...(modelImageB64 && { model: { imageUrl: modelImageB64, identityImageUrl: modelImageB64, name: modelProfile } }),
+          ...(modelImageUrl && { model: { imageUrl: modelImageUrl, identityImageUrl: modelImageUrl, name: modelProfile } }),
           ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),
           aspectRatio: '3:4',
           imageCount: 1,
@@ -297,7 +348,7 @@ export function useCatalogGenerate() {
         },
         imageCount: 1,
         quality: 'standard',
-        hasModel: !!modelImageB64,
+        hasModel: !!modelImageUrl,
         hasScene: false,
         skipWake: true,
       },
@@ -326,7 +377,7 @@ export function useCatalogGenerate() {
     };
   };
 
-  // ── Main generation pipeline (multi-model) ──
+  // ── Main generation pipeline (two-phase: anchors first, then derivatives) ──
   const startGeneration = useCallback(async (config: CatalogSessionConfig): Promise<boolean> => {
     if (!user) { toast.error('Sign in to generate'); return false; }
 
@@ -335,7 +386,7 @@ export function useCatalogGenerate() {
 
     setIsGenerating(true);
     const batchId = crypto.randomUUID();
-    const allJobs: CatalogJobExtended[] = [];
+    const anchorJobs: CatalogJobExtended[] = [];
     let enqueueCount = 0;
     let creditsFailed = false;
 
@@ -343,6 +394,26 @@ export function useCatalogGenerate() {
       ? config.models
       : [{ id: '__product_only__', profile: 'no model', audience: 'adult_woman' as const, imageUrl: null }];
 
+    // Collect derivative job specs for phase 2
+    interface DerivativeSpec {
+      token: string;
+      productImageUrl: string;
+      productTitle: string;
+      productId: string;
+      productOriginalUrl: string;
+      shotId: CatalogShotId;
+      shotLabel: string;
+      renderPath: RenderPath;
+      shotGroup: 'on-model' | 'product-only';
+      prompt: string;
+      modelImageUrl: string | null;
+      modelProfile: string;
+      anchorJobId: string; // to look up anchor result
+      batchId: string;
+    }
+    const derivativeSpecs: DerivativeSpec[] = [];
+
+    // ── PHASE 1: Enqueue anchor jobs ──
     for (const model of modelsToUse) {
       if (creditsFailed) break;
 
@@ -356,19 +427,15 @@ export function useCatalogGenerate() {
         config.backgroundId,
       );
 
-      let modelB64: string | null = null;
-      if (model.imageUrl) {
-        modelB64 = await safeConvertBase64(model.imageUrl, model.profile || 'model');
-        if (!modelB64 && !isProductOnly) {
-          console.warn(`[catalog] Skipping model "${model.profile}" — image conversion failed`);
-          continue;
-        }
-      }
+      // Pass model image URL directly — no base64 conversion
+      // This preserves full resolution for face identity locking
+      const modelUrl: string | null = model.imageUrl || null;
 
       for (const product of config.products) {
         if (creditsFailed) break;
 
         const lookLock = buildProductLookLock(product, session, product.detectedCategory);
+        // Convert product image to base64 for the payload
         const productB64 = await safeConvertBase64(product.imageUrl, product.title);
         if (!productB64) continue;
 
@@ -398,17 +465,15 @@ export function useCatalogGenerate() {
           token, productB64, product.title, product.id, product.imageUrl,
           effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
           effectiveAnchorDef.group,
-          anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
+          anchorPrompt, modelUrl, session.modelProfile, null, batchId, enqueueCount++,
         );
 
         if (anchorResult === 'insufficient_credits') { creditsFailed = true; break; }
-        if (anchorResult) allJobs.push(anchorResult);
+        if (anchorResult) anchorJobs.push(anchorResult);
 
-        // Remaining shots
+        // Collect remaining shots as derivative specs
         const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
         for (const shotId of remainingShots) {
-          if (creditsFailed) break;
-
           const shotDef = getShotDefinition(shotId);
           if (!shotDef) continue;
 
@@ -428,44 +493,137 @@ export function useCatalogGenerate() {
           const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
 
           const isProductOnlyShot = shotDef.group === 'product-only';
-          const jobResult = await enqueueJob(
-            token, productB64, product.title, product.id, product.imageUrl,
-            shotId, shotDef.label, renderPath,
-            shotDef.group,
-            prompt,
-            isProductOnlyShot ? null : modelB64, session.modelProfile, null, batchId, enqueueCount++,
-          );
 
-          if (jobResult === 'insufficient_credits') { creditsFailed = true; break; }
-          if (jobResult) allJobs.push(jobResult);
+          derivativeSpecs.push({
+            token,
+            productImageUrl: productB64,
+            productTitle: product.title,
+            productId: product.id,
+            productOriginalUrl: product.imageUrl,
+            shotId,
+            shotLabel: shotDef.label,
+            renderPath,
+            shotGroup: shotDef.group,
+            prompt,
+            modelImageUrl: isProductOnlyShot ? null : modelUrl,
+            modelProfile: session.modelProfile,
+            anchorJobId: anchorResult ? anchorResult.jobId : '',
+            batchId,
+          });
         }
       }
     }
 
-    if (allJobs.length > 0) sendWake(token);
-
-    if (allJobs.length === 0) {
+    if (anchorJobs.length === 0) {
       toast.error(creditsFailed ? 'Insufficient credits to start generation' : 'Could not queue any jobs');
       setIsGenerating(false);
       return false;
     }
 
-    if (creditsFailed && allJobs.length > 0) {
-      toast.warning(`Queued ${allJobs.length} job(s) before running out of credits`);
-    }
-
-    jobsRef.current = allJobs;
-    persistBatch(allJobs);
+    // Start with anchor jobs visible
+    jobsRef.current = anchorJobs;
+    persistBatch(anchorJobs);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
-    for (const j of allJobs.filter(j => j.isAnchor)) anchorStatus[j.productId] = 'pending';
+    for (const j of anchorJobs) anchorStatus[j.productId] = 'pending';
 
+    const totalExpected = anchorJobs.length + derivativeSpecs.length;
     setBatchState({
-      jobs: allJobs, totalJobs: allJobs.length, completedJobs: 0, failedJobs: 0,
+      jobs: anchorJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
       allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
     });
 
-    toast.info(`Queued ${allJobs.length} catalog image${allJobs.length > 1 ? 's' : ''}`);
+    toast.info(`Generating ${totalExpected} catalog image${totalExpected > 1 ? 's' : ''} (anchors first)…`);
+    sendWake(token);
+
+    // If no derivatives, just poll anchors directly
+    if (derivativeSpecs.length === 0) {
+      pollJobs();
+      return true;
+    }
+
+    // ── PHASE 2: Wait for anchors, then enqueue derivatives with anchor URLs ──
+    (async () => {
+      try {
+        console.log(`[catalog] Phase 1: Waiting for ${anchorJobs.length} anchor(s) to complete…`);
+
+        // Poll anchor jobs until done
+        const anchorResults = await pollUntilDone(
+          anchorJobs.map(j => j.jobId),
+          ANCHOR_POLL_TIMEOUT_MS,
+        );
+
+        // Build a map: anchorJobId → first result image URL
+        const anchorImageMap = new Map<string, string>();
+        for (const [jobId, result] of anchorResults) {
+          if (result.status === 'completed' && result.images.length > 0) {
+            anchorImageMap.set(jobId, result.images[0]);
+          }
+        }
+
+        // Update anchor jobs in our state
+        const updatedAnchors = anchorJobs.map(j => {
+          const r = anchorResults.get(j.jobId);
+          if (!r) return j;
+          return { ...j, status: r.status as any, images: r.images, error: r.error };
+        });
+
+        console.log(`[catalog] Phase 2: Enqueuing ${derivativeSpecs.length} derivative(s) with anchor references…`);
+
+        // Enqueue derivative jobs WITH anchor image URLs
+        const derivativeJobs: CatalogJobExtended[] = [];
+        let derivEnqueueCount = anchorJobs.length;
+
+        for (const spec of derivativeSpecs) {
+          if (creditsFailed) break;
+
+          // Look up anchor result for this derivative
+          const anchorUrl = anchorImageMap.get(spec.anchorJobId) || null;
+
+          const jobResult = await enqueueJob(
+            spec.token, spec.productImageUrl, spec.productTitle, spec.productId,
+            spec.productOriginalUrl, spec.shotId, spec.shotLabel, spec.renderPath,
+            spec.shotGroup, spec.prompt, spec.modelImageUrl, spec.modelProfile,
+            anchorUrl, // NOW we pass the real anchor result URL
+            spec.batchId, derivEnqueueCount++,
+          );
+
+          if (jobResult === 'insufficient_credits') { creditsFailed = true; break; }
+          if (jobResult) derivativeJobs.push(jobResult);
+        }
+
+        if (derivativeJobs.length > 0) sendWake(token);
+
+        // Merge all jobs and start polling the full set
+        const allJobs = [...updatedAnchors, ...derivativeJobs];
+        jobsRef.current = allJobs;
+        persistBatch(allJobs);
+
+        const newAnchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
+        for (const aj of updatedAnchors) {
+          newAnchorStatus[aj.productId] = aj.status === 'completed' ? 'completed' : aj.status === 'failed' ? 'failed' : 'pending';
+        }
+
+        setBatchState({
+          jobs: allJobs, totalJobs: allJobs.length,
+          completedJobs: allJobs.filter(j => j.status === 'completed').length,
+          failedJobs: allJobs.filter(j => j.status === 'failed').length,
+          allDone: false,
+          aggregatedImages: allJobs.flatMap(j => j.images),
+          anchorStatus: newAnchorStatus,
+          phase: 'derivatives',
+        });
+
+        // Now poll all remaining jobs
+        pollJobs();
+      } catch (err) {
+        console.error('[catalog] Phase 2 error:', err);
+        // Fall back to polling whatever we have
+        pollJobs();
+      }
+    })();
+
+    // Start polling anchors immediately for UI feedback
     pollJobs();
     return true;
   }, [user, pollJobs]);
