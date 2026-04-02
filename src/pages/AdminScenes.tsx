@@ -107,6 +107,13 @@ export default function AdminScenes() {
   const [promptEdits, setPromptEdits] = useState<Record<string, { prompt_hint?: string; prompt_only?: boolean }>>({});
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
 
+  // Workflow variation edits
+  const [wfVariationEdits, setWfVariationEdits] = useState<Record<string, WorkflowVariation[]>>({});
+  const [wfDirty, setWfDirty] = useState<Set<string>>(new Set());
+  const [savingWfId, setSavingWfId] = useState<string | null>(null);
+  const [expandedWf, setExpandedWf] = useState<Set<string>>(new Set());
+  const [editingWfVariation, setEditingWfVariation] = useState<string | null>(null);
+
   // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
   const sortKey = JSON.stringify([...sortMap.entries()]);
