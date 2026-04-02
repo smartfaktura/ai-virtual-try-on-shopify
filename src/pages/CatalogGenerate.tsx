@@ -366,6 +366,21 @@ export default function CatalogGenerate() {
                       </p>
                     </div>
                   </>
+                ) : visibleCompleted === 0 && visibleFailed === 0 ? (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                      <AlertTriangle className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold tracking-tight">Session Interrupted</h2>
+                      <p className="text-sm text-muted-foreground mt-1.5">
+                        Your images may still be available.{' '}
+                        <button onClick={() => navigate('/app/freestyle')} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                          Check your Library
+                        </button>
+                      </p>
+                    </div>
+                  </>
                 ) : visibleCompleted === 0 ? (
                   <>
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">

@@ -51,6 +51,8 @@ function persistBatch(jobs: CatalogJobExtended[]) {
       shotLabel: j.shotLabel,
       renderPath: j.renderPath,
       isAnchor: j.isAnchor,
+      isUserVisible: j.isUserVisible ?? !j.isAnchor,
+      isPlaceholder: j.isPlaceholder ?? false,
     }));
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(meta));
   } catch { /* quota exceeded — non-critical */ }
@@ -67,12 +69,15 @@ function loadPersistedBatch(): CatalogJobExtended[] | null {
     const meta = JSON.parse(raw) as Array<{
       jobId: string; productId: string; productName: string;
       shotId: CatalogShotId; shotLabel: string; renderPath: RenderPath; isAnchor: boolean;
+      isUserVisible?: boolean; isPlaceholder?: boolean;
     }>;
     if (!Array.isArray(meta) || meta.length === 0) return null;
     return meta.map(m => ({
       ...m,
       status: 'queued' as const,
       images: [],
+      isUserVisible: m.isUserVisible ?? !m.isAnchor,
+      isPlaceholder: m.isPlaceholder ?? false,
     }));
   } catch {
     clearPersistedBatch();
@@ -146,17 +151,19 @@ export function useCatalogGenerate() {
   useEffect(() => {
     const saved = loadPersistedBatch();
     if (saved && saved.length > 0 && jobsRef.current.length === 0) {
-      console.log(`[catalog] Recovering ${saved.length} jobs from session`);
+      const hasPlaceholders = saved.some(j => j.isPlaceholder);
+      const visibleJobs = saved.filter(j => j.isUserVisible);
+      console.log(`[catalog] Recovering ${saved.length} jobs (${hasPlaceholders ? 'has' : 'no'} placeholders, ${visibleJobs.length} visible)`);
       jobsRef.current = saved;
-      // Recovered sessions have real jobs (no placeholders), so they're in derivatives phase
-      phaseRef.current = 'derivatives';
+      // If placeholders exist, anchors may not be done yet — stay in anchors phase
+      phaseRef.current = hasPlaceholders ? 'anchors' : 'derivatives';
       setIsGenerating(true);
 
       const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
       for (const j of saved.filter(j => j.isAnchor)) anchorStatus[j.productId] = 'pending';
       setBatchState({
-        jobs: saved, totalJobs: saved.length, completedJobs: 0, failedJobs: 0,
-        allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
+        jobs: saved, totalJobs: visibleJobs.length || saved.length, completedJobs: 0, failedJobs: 0,
+        allDone: false, aggregatedImages: [], anchorStatus, phase: hasPlaceholders ? 'anchors' : 'derivatives',
       });
     }
 
@@ -562,7 +569,7 @@ export function useCatalogGenerate() {
     // Start with anchor jobs + placeholders — ALL in jobsRef so polling sees placeholders
     const initialJobs = [...markedAnchors, ...placeholderJobs];
     jobsRef.current = initialJobs;
-    persistBatch(markedAnchors);
+    persistBatch(initialJobs);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
     for (const j of anchorJobs) anchorStatus[j.productId] = 'pending';
