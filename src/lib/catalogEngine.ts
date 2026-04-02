@@ -833,7 +833,7 @@ export function buildSessionLock(
     backgroundId,
     backgroundPrompt: bg.promptBlock,
     lightingPrompt: getLightingPrompt(style.lightingId),
-    consistencyBlock: CONSISTENCY_BLOCK,
+    consistencyBlock: CONSISTENCY_BLOCK_MODEL,
   };
 }
 
