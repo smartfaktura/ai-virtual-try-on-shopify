@@ -318,6 +318,7 @@ export type Database = {
           is_active: boolean
           name: string
           optimized_image_url: string | null
+          preview_image_url: string | null
           prompt_hint: string | null
           prompt_only: boolean | null
         }
@@ -332,6 +333,7 @@ export type Database = {
           is_active?: boolean
           name: string
           optimized_image_url?: string | null
+          preview_image_url?: string | null
           prompt_hint?: string | null
           prompt_only?: boolean | null
         }
@@ -346,6 +348,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           optimized_image_url?: string | null
+          preview_image_url?: string | null
           prompt_hint?: string | null
           prompt_only?: boolean | null
         }
