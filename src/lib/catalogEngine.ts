@@ -734,7 +734,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   }
 
   // Standard generation prompt (structured: Subject + Action + Environment + Aesthetics)
-  return template
+  let prompt = template
     .replace('[HERO_PRODUCT]', productTitle)
     .replace('[MODEL]', modelProfile)
     .replace('[SUPPORT_WARDROBE]', supportWardrobePrompt)
@@ -742,6 +742,14 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     .replace('[LIGHTING]', lightingPrompt)
     .replace('[QUALITY]', QUALITY_BLOCK)
     .replace('[CONSISTENCY]', CONSISTENCY_BLOCK);
+
+  // Append model identity & background isolation directives when a model is involved
+  if (modelProfile && modelProfile !== 'no model') {
+    prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
+    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo.';
+  }
+
+  return prompt;
 }
 
 // ────────────────────────────────────────────────
