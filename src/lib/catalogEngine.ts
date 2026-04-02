@@ -688,15 +688,8 @@ export function getShotDefinition(id: CatalogShotId): ShotDefinition | undefined
 
 export function getAnchorShotId(category: ProductCategory, hasModel: boolean): CatalogShotId {
   if (!hasModel) return 'front_flat';
-
-  const ANCHOR_MAP: Partial<Record<ProductCategory, CatalogShotId>> = {
-    shoes: 'standing_shoe_focus',
-    bag: 'hand_carry',
-    hat: 'front_model',
-    sunglasses: 'front_model',
-    jewelry: 'close_portrait',
-  };
-  return ANCHOR_MAP[category] || 'front_model';
+  // Always use the internal identity anchor for on-model — face-first strategy
+  return 'identity_anchor';
 }
 
 // ────────────────────────────────────────────────
