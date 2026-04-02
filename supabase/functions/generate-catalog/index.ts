@@ -352,9 +352,11 @@ serve(async (req) => {
 
     const referenceImages: string[] = [];
     if (isProductOnly) {
-      // Product-only shots: only product reference, no model contamination
+      // ── HARD ISOLATION: Product-only shots get ONLY the product image ──
+      // No model identity, no anchor (which may contain a person) — prevents
+      // face/body leaking into ghost mannequin, flat lay, on-surface, etc.
       referenceImages.push(body.product.imageUrl);
-      if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
+      // Do NOT push anchor_image_url — it may contain a person from on-model anchor
     } else if (body.anchor_image_url) {
       // Derivative on-model shots: anchor already has the locked face — do NOT
       // also send the raw model identity or Seedream merges two faces together.

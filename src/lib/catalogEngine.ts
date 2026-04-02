@@ -441,9 +441,10 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: APPAREL,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] professional ghost mannequin / invisible mannequin ecommerce photograph. The garment maintains its natural 3D worn shape with hollow neck opening, hollow sleeve openings, and hollow hem — as if worn by an invisible body. Perfectly centered, front view. Pure white (#FFFFFF) infinite void background. Absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface, NO floor, NO reflection. NO people, NO model, NO human figure, NO skin, NO body parts, NO head, NO hands, NO feet. The garment interior is visible through the neck and arm openings. Ultra sharp textile detail, realistic fabric drape and construction, clean ecommerce packshot, [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: '[HERO_PRODUCT] professional ghost mannequin / invisible mannequin ecommerce photograph. The garment maintains its natural 3D worn shape with hollow neck opening, hollow sleeve openings, and hollow hem — as if worn by an invisible body. Perfectly centered, front view. Pure white (#FFFFFF) infinite void background. Absolutely NO shadow, NO drop shadow, NO cast shadow, NO surface, NO floor, NO reflection. NO people, NO model, NO human figure, NO skin, NO body parts, NO head, NO face, NO neck, NO shoulders, NO hands, NO feet. The garment interior is visible through the neck and arm openings. There is NO mannequin head or mannequin face — ONLY the empty fabric shell. Ultra sharp textile detail, realistic fabric drape and construction, clean ecommerce packshot, [CONSISTENCY]',
     categoryOverrides: {
-      top: '[HERO_PRODUCT] professional ghost mannequin photograph of this top/shirt. The garment maintains its natural 3D shape — hollow neck opening showing empty interior, hollow short/long sleeve openings, natural shoulder width. Front-facing, perfectly centered. Pure white (#FFFFFF) infinite void background. Absolutely NO shadow, NO surface, NO floor. NO people, NO model, NO skin, NO head, NO hands, NO torso shape visible — ONLY the fabric shell. Ultra sharp textile detail, realistic seams and stitching, clean ecommerce product shot, [CONSISTENCY]',
+      top: '[HERO_PRODUCT] professional ghost mannequin photograph of this top/shirt. The garment maintains its natural 3D shape — hollow neck opening showing empty interior, hollow short/long sleeve openings, natural shoulder width. Front-facing, perfectly centered. Pure white (#FFFFFF) infinite void background. Absolutely NO shadow, NO surface, NO floor. NO people, NO model, NO skin, NO head, NO face, NO neck, NO shoulders, NO hands, NO torso shape visible — ONLY the fabric shell. There is NO mannequin head or mannequin face. Ultra sharp textile detail, realistic seams and stitching, clean ecommerce product shot, [CONSISTENCY]',
     },
   },
   {
@@ -453,11 +454,12 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] laid perfectly flat, top-down front view, garment spread symmetrically on a clean surface, sleeves extended outward, no wrinkles, no folds. ONLY this single product — NO model, NO mannequin, NO human figure, NO torso shape, NO body form, NO hands, NO skin. The product must look like fabric laid flat on a table, NOT like it is being worn. Ultra clean ecommerce flat-lay packshot, sharp material details, realistic textile texture, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: '[HERO_PRODUCT] laid perfectly flat, top-down front view, garment spread symmetrically on a clean surface, sleeves extended outward, no wrinkles, no folds. ONLY this single product — NO model, NO mannequin, NO human figure, NO torso shape, NO body form, NO hands, NO skin, NO face. The product must look like fabric laid flat on a table, NOT like it is being worn. Do NOT show the back side — front side ONLY. Ultra clean ecommerce flat-lay packshot, sharp material details, realistic textile texture, [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
-      top: '[HERO_PRODUCT] laid perfectly flat on a clean surface, top-down birds-eye view, sleeves spread outward symmetrically, collar or neckline laid flat, no wrinkles. ONLY the garment — NO model, NO mannequin, NO torso shape, NO body form, NO skin, NO human figure. Must look like fabric on a flat surface, NOT worn on a body. Sharp textile detail, realistic seams, clean ecommerce flat lay, [BACKGROUND], [CONSISTENCY]',
-      shoes: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow beneath product, [BACKGROUND], [CONSISTENCY]',
-      bag: '[HERO_PRODUCT] isolated, front view, laid flat or standing upright, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
+      top: '[HERO_PRODUCT] laid perfectly flat on a clean surface, top-down birds-eye view, sleeves spread outward symmetrically, collar or neckline laid flat, no wrinkles. ONLY the garment front side — NO model, NO mannequin, NO torso shape, NO body form, NO skin, NO face, NO human figure. Must look like fabric on a flat surface, NOT worn on a body. Do NOT show the back side. Sharp textile detail, realistic seams, clean ecommerce flat lay, [BACKGROUND], [CONSISTENCY]',
+      shoes: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, no face, no skin, ONLY this single product, no other items, minimal subtle shadow beneath product, [BACKGROUND], [CONSISTENCY]',
+      bag: '[HERO_PRODUCT] isolated, front view, laid flat or standing upright, perfectly centered, clean product photography, sharp details, no model, no face, no skin, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
     },
   },
   {
@@ -467,10 +469,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set([...APPAREL, 'bag', 'shoes']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] laid perfectly flat, top-down back view, garment flipped to show the back, spread symmetrically, sleeves extended outward. ONLY this single product — NO model, NO mannequin, NO torso shape, NO body form, NO hands, NO skin, NO human figure. Must look like fabric laid flat, NOT like it is being worn. Sharp construction details, seams, labels visible, ultra clean ecommerce flat-lay packshot, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: '[HERO_PRODUCT] laid perfectly flat, top-down back view ONLY, garment flipped to show ONLY the back side, spread symmetrically, sleeves extended outward. Show exactly ONE copy of the garment — the BACK side only. Do NOT show the front side. Do NOT show both front and back together. Do NOT merge two views. ONLY this single product — NO model, NO mannequin, NO torso shape, NO body form, NO hands, NO skin, NO face, NO human figure. Must look like fabric laid flat, NOT like it is being worn. Sharp construction details, seams, labels visible, ultra clean ecommerce flat-lay packshot, [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
-      shoes: '[HERO_PRODUCT] isolated, back/heel view, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
-      bag: '[HERO_PRODUCT] isolated, back view, showing construction and back details, perfectly centered, clean product photography, no model, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
+      shoes: '[HERO_PRODUCT] isolated, back/heel view ONLY, single product, perfectly centered, clean product photography, sharp details, no model, no face, no skin, ONLY this single product showing ONLY the back/heel, [BACKGROUND], [CONSISTENCY]',
+      bag: '[HERO_PRODUCT] isolated, back view ONLY, single product showing ONLY construction and back details, perfectly centered, clean product photography, no model, no face, no skin, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
     },
   },
   {
@@ -480,11 +483,12 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'extreme macro close-up photograph of [HERO_PRODUCT] textile surface ONLY — showing weave pattern, thread texture, stitching lines, material grain, and finishing details at fabric level. Fill the entire frame with fabric/material texture. Shallow depth of field, ultra sharp macro lens, premium editorial product photography. NO human body, NO skin, NO neckline-as-body-crop, NO mannequin, NO model, NO torso, NO hands. ONLY raw material and construction detail of the product itself, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'extreme macro close-up photograph of [HERO_PRODUCT] textile surface ONLY — showing weave pattern, thread texture, stitching lines, material grain, and finishing details at fabric level. Fill the entire frame with fabric/material texture. Shallow depth of field, ultra sharp macro lens, premium editorial product photography. NO human body, NO skin, NO face, NO neckline-as-body-crop, NO mannequin, NO model, NO torso, NO hands. ONLY raw material and construction detail of the product itself, [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
-      jewelry: 'extreme macro close-up of [HERO_PRODUCT] surface — metal finish, gemstone facets, clasp mechanism, engraving detail. Fill frame with jewelry surface. Ultra sharp macro, premium product photography, NO human body, NO skin, NO fingers, ONLY the product, [BACKGROUND], [CONSISTENCY]',
-      shoes: 'extreme macro close-up of [HERO_PRODUCT] — sole tread pattern, leather grain, stitching, eyelets, material texture. Fill frame with shoe surface detail. Ultra sharp macro, NO human body, NO feet, ONLY the product, [BACKGROUND], [CONSISTENCY]',
-      bag: 'extreme macro close-up of [HERO_PRODUCT] — leather/fabric grain, stitching, hardware, zipper pull, material texture. Fill frame with bag surface detail. Ultra sharp macro, NO human body, NO hands, ONLY the product, [BACKGROUND], [CONSISTENCY]',
+      jewelry: 'extreme macro close-up of [HERO_PRODUCT] surface — metal finish, gemstone facets, clasp mechanism, engraving detail. Fill frame with jewelry surface. Ultra sharp macro, premium product photography, NO human body, NO skin, NO face, NO fingers, ONLY the product, [BACKGROUND], [CONSISTENCY]',
+      shoes: 'extreme macro close-up of [HERO_PRODUCT] — sole tread pattern, leather grain, stitching, eyelets, material texture. Fill frame with shoe surface detail. Ultra sharp macro, NO human body, NO face, NO feet, ONLY the product, [BACKGROUND], [CONSISTENCY]',
+      bag: 'extreme macro close-up of [HERO_PRODUCT] — leather/fabric grain, stitching, hardware, zipper pull, material texture. Fill frame with bag surface detail. Ultra sharp macro, NO human body, NO face, NO hands, ONLY the product, [BACKGROUND], [CONSISTENCY]',
     },
   },
   // ── Category-specific shots ──
@@ -540,7 +544,8 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['jewelry', 'sunglasses', 'accessory', 'belt']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'extreme macro close-up of [HERO_PRODUCT], sharp focus on craftsmanship, texture, shine, material quality, shallow depth of field, premium product photography, ONLY this single product, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'extreme macro close-up of [HERO_PRODUCT], sharp focus on craftsmanship, texture, shine, material quality, shallow depth of field, premium product photography, ONLY this single product, NO people, NO face, NO skin, NO hands, NO body parts, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'product_front',
@@ -549,7 +554,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['shoes', 'bag', 'hat', 'sunglasses', 'jewelry', 'accessory']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] isolated, front view, perfectly centered, clean product photography, sharp details, no model, no face, no skin, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'product_angle',
@@ -558,7 +563,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['shoes', 'bag', 'hat', 'sunglasses', 'jewelry', 'accessory']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] isolated, 3/4 angled view, showing depth and dimension, clean product photography, sharp details, no model, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] isolated, 3/4 angled view, showing depth and dimension, clean product photography, sharp details, no model, no face, no skin, ONLY this single product, no other items, minimal subtle shadow, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'hardware_detail',
@@ -567,7 +572,8 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: new Set(['bag', 'belt', 'jewelry']),
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'extreme close-up of hardware and metal details on [HERO_PRODUCT], zippers, clasps, buckles, or chains, ultra sharp macro, premium product photography, ONLY this product, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'extreme close-up of hardware and metal details on [HERO_PRODUCT], zippers, clasps, buckles, or chains, ultra sharp macro, premium product photography, ONLY this product, NO people, NO face, NO skin, NO hands, [BACKGROUND], [CONSISTENCY]',
   },
   // ── New On-Model Shots ──
   {
@@ -632,7 +638,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] placed on a clean minimal surface, single product only, NO other items, NO accessories, NO props in frame, subtle natural shadow beneath product, premium product photography, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: '[HERO_PRODUCT] placed on a clean minimal surface, single product only, NO other items, NO accessories, NO props in frame, NO people, NO model, NO face, NO skin, NO hands, NO human figure, subtle natural shadow beneath product, premium product photography, [BACKGROUND], [CONSISTENCY]',
   },
   {
     id: 'styled_flat_lay',
@@ -641,7 +647,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, NO people, NO model, NO human figure, NO hands, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
+    promptTemplate: 'ONLY [HERO_PRODUCT] alone in a flat lay, top-down birds-eye perspective, centered in frame, clean negative space around product, NO other products, NO extra accessories, NO additional items, NO props, NO people, NO model, NO human figure, NO face, NO skin, NO hands, single product flat lay, premium editorial flat lay photography, [BACKGROUND], [CONSISTENCY]',
   },
   // ── Internal Identity Anchor (not user-selectable) ──
   {
@@ -682,6 +688,12 @@ export function getRecommendedShotIds(category: ProductCategory, hasModel: boole
 
 export function getShotDefinition(id: CatalogShotId): ShotDefinition | undefined {
   return SHOT_DEFINITIONS.find(s => s.id === id);
+}
+
+/** Check if a shot has strict isolation (no props allowed) */
+export function isStrictIsolationShot(id: CatalogShotId): boolean {
+  const def = getShotDefinition(id);
+  return def?.strictIsolation === true;
 }
 
 // ────────────────────────────────────────────────
@@ -787,6 +799,7 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
     prompt += '\nMODEL IDENTITY ANCHOR: The model MUST be the EXACT person shown in the model reference image. Replicate their face structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions with absolute precision. Do NOT substitute a different person, do NOT alter any facial feature.';
     prompt += '\nFACE QUALITY: Render the model\'s face with maximum photorealistic resolution — sharp defined facial features, visible skin texture and pores, detailed iris with catchlights, natural lip detail, individual eyebrow hairs, realistic under-eye area. Do NOT blur, smooth, soften, airbrush, or distort any facial feature. The face must be indistinguishable from a real high-resolution photograph.';
     prompt += '\nIDENTITY PRIORITY: The model reference image is the PRIMARY identity source. The product reference defines ONLY the garment. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
+    prompt += '\nSINGLE SUBJECT RULE: There is EXACTLY ONE person in this image — the model described above. Do NOT add a second person, do NOT show a reflection of the model, do NOT create a mirror image, do NOT split the frame into multiple exposures, do NOT duplicate the body or limbs. ONE single human subject, ONE single captured moment.';
   }
 
   // GLOBAL lighting rule — applied to ALL shots (model and product-only)
@@ -799,7 +812,12 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
 
   // Product-only shots: enforce single-product + no-people rule
   if (shotDef.group === 'product-only') {
-    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described. NO people, NO model, NO human figure, NO hands, NO body parts.';
+    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described. NO people, NO model, NO human figure, NO face, NO hands, NO body parts, NO skin.';
+    // Category-aware: shoes can be a natural pair, everything else is single item
+    const pairCategories: ProductCategory[] = ['shoes'];
+    if (!pairCategories.includes(productCategory)) {
+      prompt += ' Show exactly ONE single copy of the product — do NOT duplicate it, do NOT show front and back together, do NOT merge two views into one image.';
+    }
   }
 
   return prompt;

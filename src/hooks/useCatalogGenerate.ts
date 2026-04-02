@@ -10,6 +10,7 @@ import {
   assemblePrompt, buildReferences, getHeroProductBlock,
   getBackground, getLightingPrompt, getFashionStyle,
   resolveSupportWardrobe, buildSupportWardrobePrompt,
+  isStrictIsolationShot,
 } from '@/lib/catalogEngine';
 import type {
   CatalogSessionConfig, CatalogJobExtended, CatalogBatchStateV2,
@@ -23,13 +24,16 @@ const SESSION_KEY = 'catalog_batch';
 const ANCHOR_POLL_INTERVAL_MS = 3000;
 const ANCHOR_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 min max wait for anchors
 
-/** Append per-combo styling props to the assembled prompt */
+/** Append per-combo styling props to the assembled prompt (skips strict-isolation shots) */
 function appendPropsToPrompt(
   prompt: string,
   comboKey: string,
+  shotId: CatalogShotId,
   propAssignments?: CatalogSessionConfig['propAssignments'],
 ): string {
   if (!propAssignments) return prompt;
+  // Never inject props into strict isolation shots (ghost mannequin, back_flat, zoom_detail, etc.)
+  if (isStrictIsolationShot(shotId)) return prompt;
   const props = propAssignments[comboKey];
   if (!props || !Array.isArray(props) || props.length === 0) return prompt;
   const items = props.map((p: any) => p.title || p).join(', ');
@@ -456,7 +460,7 @@ export function useCatalogGenerate() {
           backgroundHex: session.backgroundHex,
         });
         const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${anchorShotId}`;
-        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, config.propAssignments);
+        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, anchorShotId, config.propAssignments);
 
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
@@ -486,7 +490,7 @@ export function useCatalogGenerate() {
             backgroundHex: session.backgroundHex,
           });
           const comboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${shotId}`;
-          const prompt = appendPropsToPrompt(rawPrompt, comboKey, config.propAssignments);
+          const prompt = appendPropsToPrompt(rawPrompt, comboKey, shotId, config.propAssignments);
 
           const isProductOnlyShot = shotDef.group === 'product-only';
 
@@ -501,9 +505,11 @@ export function useCatalogGenerate() {
             renderPath,
             shotGroup: shotDef.group,
             prompt,
+            // Product-only shots: NO model reference, NO anchor reference (prevent face leak)
             modelImageUrl: isProductOnlyShot ? null : modelUrl,
             modelProfile: session.modelProfile,
-            anchorJobId: anchorResult ? anchorResult.jobId : '',
+            // Only on-model derivatives get the anchor reference
+            anchorJobId: isProductOnlyShot ? '' : (anchorResult ? anchorResult.jobId : ''),
             batchId,
           });
         }
@@ -592,13 +598,15 @@ export function useCatalogGenerate() {
           if (creditsFailed) break;
 
           // Look up anchor result for this derivative
-          const anchorUrl = anchorImageMap.get(spec.anchorJobId) || null;
+          // Product-only shots: never pass anchor URL (it may contain a person)
+          const isProductOnlyDerivative = spec.shotGroup === 'product-only';
+          const anchorUrl = isProductOnlyDerivative ? null : (anchorImageMap.get(spec.anchorJobId) || null);
 
           const jobResult = await enqueueJob(
             spec.token, spec.productImageUrl, spec.productTitle, spec.productId,
             spec.productOriginalUrl, spec.shotId, spec.shotLabel, spec.renderPath,
             spec.shotGroup, spec.prompt, spec.modelImageUrl, spec.modelProfile,
-            anchorUrl, // NOW we pass the real anchor result URL
+            anchorUrl,
             spec.batchId, derivEnqueueCount++,
           );
 

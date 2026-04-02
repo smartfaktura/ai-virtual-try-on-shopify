@@ -52,6 +52,8 @@ export interface ShotDefinition {
   promptTemplate: string;
   /** Category-specific prompt overrides */
   categoryOverrides?: Partial<Record<ProductCategory, string>>;
+  /** If true, props are forbidden for this shot (strict packshot isolation) */
+  strictIsolation?: boolean;
 }
 
 export type ModelAudienceType = 'adult_woman' | 'adult_man' | 'child';
