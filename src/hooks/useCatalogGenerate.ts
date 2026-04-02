@@ -460,7 +460,7 @@ export function useCatalogGenerate() {
           backgroundHex: session.backgroundHex,
         });
         const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${anchorShotId}`;
-        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, config.propAssignments);
+        const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, anchorShotId, config.propAssignments);
 
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
