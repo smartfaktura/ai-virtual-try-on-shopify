@@ -1,64 +1,61 @@
 
 
-# Rethink Anchor Strategy: Style Transfer Instead of Face Injection
+# Rewrite On-Model Shot Prompts for ASOS/Zalando Studio Catalog Standard
 
-## Core Insight
+## Problem
 
-Current approach sends the model photo as a "face reference" and hopes Seedream replicates it. This causes merged faces because Seedream treats all reference images as visual context to blend.
+Current prompts describe poses loosely ("relaxed natural lifestyle pose", "candid energy", "touching hair"). Real catalog photography (ASOS, Zalando, H&M) uses very specific, repeatable camera and body positions — straight-on camera, fixed distance, consistent framing, minimal pose variation. The current prompts produce editorial/lifestyle results instead of clean e-commerce catalog shots.
 
-**New approach** (proven to work): Use Seedream's style-transfer capability. The prompt explicitly tells Seedream:
-- **Image 1** (model photo) = the person whose face/hair/identity to KEEP
-- **Image 2** (anchor result or product) = the style/pose/clothes/lighting to APPLY
+## What ASOS/Zalando catalog shots actually look like
 
-This is the "Apply style of Image 2 to Image 1" paradigm — clear attribute segregation prevents face merging.
+- **Camera**: Always straight-on at chest height, never angled up/down
+- **Distance**: Fixed — full body shows head to ankles with ~10% padding
+- **Background**: Perfectly uniform, zero texture
+- **Pose energy**: Minimal — slight weight shift at most, no dramatic gestures
+- **Arms**: Always visible, never hidden behind body
+- **Expression**: Neutral or slight smile, always looking at camera (front shots)
+- **Lighting**: Flat, even, shadowless on background — only subtle body shadow
 
-## What Changes
+## Changes per shot
 
-### 1. Rewrite the prompt strategy in `src/lib/catalogEngine.ts`
+### On-Model Shots — rewrite all `promptTemplate` values:
 
-**Anchor shot prompt** (identity_anchor):
-Instead of: "Model wearing product, replicate face..."
-New: "Apply the clothing shown in [PRODUCT IMAGE] onto the person in [MODEL IMAGE]. Maintain the exact facial features, hair, and skin of the person in [MODEL IMAGE]. Use the outfit, fit, and styling from [PRODUCT IMAGE] only."
+| Shot | Current Issue | New Direction |
+|------|--------------|---------------|
+| `front_model` | "weight on left leg, right hand relaxed" — too specific about which leg/hand | "Standing straight facing camera, feet hip-width apart, arms naturally at sides, straight-on eye-level camera angle, flat e-commerce catalog pose" |
+| `back_view` | "head turned slightly to the right" — arbitrary direction | "Standing straight facing away from camera, feet hip-width apart, head facing forward (away), arms at sides, straight-on camera" |
+| `side_3q` | "body turned 45 degrees to the left" — could be either way | "Standing in 3/4 turn, body angled 30-45 degrees, near arm visible, far arm partially visible, straight-on camera at chest height" |
+| `movement` | "mid-stride walking motion, arms swinging" — too dynamic | "Mid-stride walking pose, one foot slightly ahead, subtle natural arm swing, controlled movement, NOT running, NOT jumping" |
+| `sitting` | "legs crossed at ankles, hands resting on thighs" — too posed | "Seated on minimal stool, back straight, feet flat on floor, hands on knees or lap, relaxed upright posture" |
+| `full_look` | "editorial pose, slight weight shift to one hip, one hand on hip" — editorial not catalog | "Full outfit view, standing straight, arms at sides or one hand lightly at side, clean catalog pose showing complete styling" |
+| `lifestyle_context` | "candid energy, one hand in pocket or touching hair" — lifestyle, not studio | "Relaxed standing pose, slight weight shift, one hand in pocket, composed studio catalog feel, NOT candid, NOT outdoor" |
+| `over_shoulder` | "head turned 30 degrees showing profile" — fine but needs studio framing | "Back toward camera, looking over shoulder toward camera, straight-on camera, clean studio framing" |
+| `waist_up_crop` | Mostly fine | Add "straight-on camera at chest height, centered frame, catalog crop" |
+| `walking_motion` | Duplicate of `movement` | "Natural walking step, subtle stride, front-facing camera, clean studio motion capture" |
+| `hands_detail` | "adjusting collar or hem" — vague | "Hands interacting with product — adjusting collar, cuff, or hem — tight crop on hands and product detail" |
 
-**Derivative shot prompts** (all on-model):
-Instead of: generic template + model identity anchor block
-New: "Apply the style, lighting, pose described below to the person in [REFERENCE IMAGE], maintaining their exact facial features and hair. The person wears [PRODUCT]..."
+### Key prompt additions for ALL on-model shots:
 
-### 2. Change reference image ordering in `generate-catalog/index.ts`
-
-**Anchor phase** (currently: `[model, model, product]`):
-New: `[model, product]` — model FIRST as the identity source (Image 1), product SECOND as the style source (Image 2). No need to send model twice — the prompt now explicitly separates roles.
-
-**Derivative phase** (currently: `[anchor_result, product]`):
-Keep as-is but change the prompt to explicitly say "maintain the face/hair of the person in Image 1" (the anchor result already has the correct face locked).
-
-### 3. Replace the MODEL IDENTITY ANCHOR block in `assemblePrompt()`
-
-Current block (lines 798-803) says "replicate face structure, jawline..." — this is a description-based approach that Seedream ignores in favor of visual blending.
-
-New block uses **explicit image-role assignment**:
 ```
-IMAGE ROLE ASSIGNMENT:
-- [MODEL IMAGE] (Image 1): This is the IDENTITY SOURCE. Maintain this person's 
-  exact face, hair color, hair style, skin tone, and body proportions.
-- [PRODUCT IMAGE] (Image 2): This is the STYLE SOURCE. Apply ONLY the clothing/product 
-  from this image onto the person from Image 1.
-Do NOT blend the faces. Do NOT average features between images.
-The output person must be IDENTICAL to the person in Image 1.
+STUDIO CATALOG RULES:
+- Camera is ALWAYS straight-on at chest height, perfectly level, never tilted
+- Camera distance is fixed: full body = head to feet with 10% padding top/bottom
+- The model stands on the SAME spot every shot — centered in frame
+- Pose is MINIMAL and CONTROLLED — this is e-commerce catalog, NOT editorial
+- Expression: neutral composed or slight natural smile
+- NO dramatic gestures, NO fashion editorial energy, NO lifestyle mood
+- Background must be PERFECTLY UNIFORM with zero visible texture or gradient
 ```
 
-### 4. Adjust `image_strength` for the new paradigm
-
-- **Anchor**: Lower `image_strength` from 0.85 → 0.70. We want Seedream to follow the prompt's role assignment more than raw pixel blending.
-- **Derivatives**: Keep 0.75 — the anchor already has the correct face, so higher reference fidelity is fine.
+### Identity anchor — also tighten:
+Add studio catalog framing rules to the anchor prompt so the anchor itself looks like a catalog waist-up shot, not an editorial portrait.
 
 ## Files to update
-- `src/lib/catalogEngine.ts` — Replace MODEL IDENTITY ANCHOR block with image-role-assignment paradigm; update identity_anchor prompt template
-- `supabase/functions/generate-catalog/index.ts` — Change anchor reference array from `[model, model, product]` to `[model, product]`; adjust `image_strength`
+
+- `src/lib/catalogEngine.ts` — Rewrite all on-model `promptTemplate` strings + add a shared `STUDIO_CATALOG_RULES` block appended to every on-model prompt in `assemblePrompt()`
 
 ## Expected result
-- Seedream receives clear instructions: "this image = face, that image = outfit"
-- No face merging because the prompt explicitly forbids blending
-- Model face stays sharp and consistent because it's treated as the immutable identity source
-- Anchor locks the outfit-on-face combination; derivatives extend it to different poses
+- Every on-model shot produces ASOS/Zalando-grade straight-on studio catalog photography
+- Consistent camera angle, distance, and framing across all shots in a batch
+- No more lifestyle/editorial drift in catalog mode
 
