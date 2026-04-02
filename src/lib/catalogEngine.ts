@@ -404,6 +404,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, subtle controlled walking pose, one foot slightly forward, gentle natural arm movement, upright posture, slight realistic fabric movement on the hero product, front-facing or slight 3/4 studio angle, neutral composed expression, commercially clean motion capture, not dynamic fashion editorial, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], full body ecommerce catalog photograph, head to toe fully visible with feet entirely inside frame, controlled walking pose, one foot slightly forward, natural arm swing showing how the jacket moves — subtle fabric swing at hem, collar staying in position, sleeves following arm motion, upright posture, front-facing studio angle, commercially clean motion, not editorial, not dynamic, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
       shoes: '[HERO_PRODUCT] worn by [MODEL], lower-body focused ecommerce photograph, subtle walking step with one foot lifting naturally, motion designed to clearly show footwear shape and sole profile, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
   },
