@@ -549,17 +549,22 @@ export function useCatalogGenerate() {
       shotLabel: spec.shotLabel,
       renderPath: spec.renderPath,
       isAnchor: false,
+      isPlaceholder: true,
+      isUserVisible: true,
     }));
 
-    // Start with anchor jobs + placeholders visible
-    const initialJobs = [...anchorJobs, ...placeholderJobs];
-    jobsRef.current = anchorJobs; // Only track real jobs for polling
-    persistBatch(anchorJobs);
+    // Mark anchor jobs
+    const markedAnchors = anchorJobs.map(j => ({ ...j, isPlaceholder: false, isUserVisible: false }));
+
+    // Start with anchor jobs + placeholders — ALL in jobsRef so polling sees placeholders
+    const initialJobs = [...markedAnchors, ...placeholderJobs];
+    jobsRef.current = initialJobs;
+    persistBatch(markedAnchors);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
     for (const j of anchorJobs) anchorStatus[j.productId] = 'pending';
 
-    const totalExpected = anchorJobs.length + derivativeSpecs.length;
+    const totalExpected = derivativeSpecs.length; // Only count user-visible jobs
     setBatchState({
       jobs: initialJobs, totalJobs: totalExpected, completedJobs: 0, failedJobs: 0,
       allDone: false, aggregatedImages: [], anchorStatus, phase: 'anchors',
