@@ -642,7 +642,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     compatibleCategories: ALL_CATEGORIES,
     defaultRenderPath: 'product_only_generate',
     needsModel: false,
-    promptTemplate: '[HERO_PRODUCT] placed alone on a clean minimal studio surface, single product only, no props, no extra items, no model, subtle natural contact shadow beneath product, premium ecommerce product photography, [BACKGROUND], [CONSISTENCY]',
+    strictIsolation: true,
+    promptTemplate: 'Reproduce the EXACT product from the reference image — identical color, fabric, pattern, hardware, and construction. Do NOT invent, simplify, or alter any detail. [HERO_PRODUCT] placed alone on a clean minimal studio surface, single product only, no props, no extra items, no model, subtle natural contact shadow beneath product, premium ecommerce product photography, [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: 'Reproduce the EXACT jacket from the reference image — identical color, fabric, pattern, zipper/buttons, seams, lining, and hardware. Do NOT invent or alter any detail. [HERO_PRODUCT] placed alone on a clean minimal studio surface, jacket naturally folded or draped to show collar, shoulders, and front closure, single product only, no props, no model, subtle contact shadow, premium ecommerce product photography, [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'clean_flat_lay',
