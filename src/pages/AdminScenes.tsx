@@ -113,6 +113,7 @@ export default function AdminScenes() {
   const [savingWfId, setSavingWfId] = useState<string | null>(null);
   const [expandedWf, setExpandedWf] = useState<Set<string>>(new Set());
   const [editingWfVariation, setEditingWfVariation] = useState<string | null>(null);
+  const [uploadingWfVar, setUploadingWfVar] = useState<string | null>(null);
 
   // Stable deps
   const hiddenKey = JSON.stringify(hiddenIds);
@@ -705,6 +706,53 @@ export default function AdminScenes() {
                   setWfDirty(prev => new Set(prev).add(wf.id));
                 };
 
+                const handleWfVariationMove = (fromIdx: number, direction: 'up' | 'down') => {
+                  const current = wfVariationEdits[wf.id] ?? [...variations];
+                  const toIdx = direction === 'up' ? fromIdx - 1 : fromIdx + 1;
+                  if (toIdx < 0 || toIdx >= current.length) return;
+                  const updated = [...current];
+                  [updated[fromIdx], updated[toIdx]] = [updated[toIdx], updated[fromIdx]];
+                  setWfVariationEdits(prev => ({ ...prev, [wf.id]: updated }));
+                  setWfDirty(prev => new Set(prev).add(wf.id));
+                };
+
+                const handleWfVariationDelete = (idx: number) => {
+                  if (!window.confirm(`Delete "${editedVariations[idx]?.label || 'this variation'}"?`)) return;
+                  const current = wfVariationEdits[wf.id] ?? [...variations];
+                  const updated = current.filter((_, i) => i !== idx);
+                  setWfVariationEdits(prev => ({ ...prev, [wf.id]: updated }));
+                  setWfDirty(prev => new Set(prev).add(wf.id));
+                };
+
+                const handleWfVariationAdd = () => {
+                  const current = wfVariationEdits[wf.id] ?? [...variations];
+                  const updated = [...current, { label: 'New Scene', instruction: '', preview_url: '' }];
+                  setWfVariationEdits(prev => ({ ...prev, [wf.id]: updated }));
+                  setWfDirty(prev => new Set(prev).add(wf.id));
+                };
+
+                const handleWfVariationImageUpload = async (idx: number, file: File) => {
+                  const varKey = `${wf.id}-${idx}`;
+                  setUploadingWfVar(varKey);
+                  try {
+                    const timestamp = Date.now();
+                    const randomId = Math.random().toString(36).substring(2, 8);
+                    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                    const path = `workflow-variations/${wf.slug}/${timestamp}-${randomId}.${ext}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from('scratch-uploads')
+                      .upload(path, file, { cacheControl: '3600', upsert: false });
+                    if (uploadError) throw uploadError;
+                    const { data: urlData } = supabase.storage.from('scratch-uploads').getPublicUrl(path);
+                    handleWfVariationChange(idx, 'preview_url', urlData.publicUrl);
+                    toast.success('Image updated');
+                  } catch (err: any) {
+                    toast.error(err?.message || 'Failed to upload image');
+                  } finally {
+                    setUploadingWfVar(null);
+                  }
+                };
+
                 const handleSaveWfVariations = async () => {
                   setSavingWfId(wf.id);
                   try {
@@ -744,7 +792,7 @@ export default function AdminScenes() {
                         <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5 flex-1 text-left">
                           {isExpanded || isSearching ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                           {wf.name}
-                          <span className="font-normal text-muted-foreground/60">({variations.length} variations)</span>
+                          <span className="font-normal text-muted-foreground/60">({editedVariations.length} variations)</span>
                         </button>
                       </CollapsibleTrigger>
                       {isDirty && (
@@ -762,15 +810,15 @@ export default function AdminScenes() {
                     <CollapsibleContent>
                       <div className="border border-border rounded-lg divide-y divide-border bg-card mt-1">
                         {filteredVariations.map((variation, vIdx) => {
-                          // Find actual index in full array for editing
                           const actualIdx = editedVariations.indexOf(variation);
                           const isEditingInstruction = editingWfVariation === `${wf.id}-${actualIdx}`;
+                          const isUploadingThis = uploadingWfVar === `${wf.id}-${actualIdx}`;
 
                           return (
                             <div key={`${wf.id}-${actualIdx}`} className="px-3 py-2 space-y-1.5 group">
                               <div className="flex items-center gap-2">
-                                {/* Preview thumbnail */}
-                                <div className="w-8 h-10 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+                                {/* Preview thumbnail with upload overlay */}
+                                <div className="relative w-8 h-10 rounded bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
                                   {variation.preview_url ? (
                                     <img
                                       src={getOptimizedUrl(variation.preview_url, { quality: 50 })}
@@ -781,6 +829,23 @@ export default function AdminScenes() {
                                   ) : (
                                     <span className="text-[9px] text-muted-foreground">{vIdx + 1}</span>
                                   )}
+                                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                    {isUploadingThis ? (
+                                      <Loader2 className="w-3 h-3 animate-spin text-white" />
+                                    ) : (
+                                      <ImageIcon className="w-3 h-3 text-white" />
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const f = e.target.files?.[0];
+                                        if (f) handleWfVariationImageUpload(actualIdx, f);
+                                        e.target.value = '';
+                                      }}
+                                    />
+                                  </label>
                                 </div>
                                 {/* Label (editable) */}
                                 <Input
@@ -800,6 +865,41 @@ export default function AdminScenes() {
                                     {variation.aspect_ratio}
                                   </Badge>
                                 )}
+                                {/* Reorder buttons */}
+                                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={actualIdx === 0} onClick={() => handleWfVariationMove(actualIdx, 'up')}>
+                                  <ArrowUp className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={actualIdx === editedVariations.length - 1} onClick={() => handleWfVariationMove(actualIdx, 'down')}>
+                                  <ArrowDown className="w-3.5 h-3.5" />
+                                </Button>
+                                {/* Image upload button */}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 relative" disabled={isUploadingThis}>
+                                      {isUploadingThis ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        onChange={(e) => {
+                                          const f = e.target.files?.[0];
+                                          if (f) handleWfVariationImageUpload(actualIdx, f);
+                                          e.target.value = '';
+                                        }}
+                                      />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-xs">Change scene image</TooltipContent>
+                                </Tooltip>
+                                {/* Delete button */}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleWfVariationDelete(actualIdx)}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
                               </div>
                               {/* Instruction (collapsible editor) */}
                               {isEditingInstruction ? (
@@ -832,6 +932,16 @@ export default function AdminScenes() {
                           );
                         })}
                       </div>
+                      {/* Add Variation button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 h-7 text-xs gap-1"
+                        onClick={handleWfVariationAdd}
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add Variation
+                      </Button>
                     </CollapsibleContent>
                   </Collapsible>
                 );
