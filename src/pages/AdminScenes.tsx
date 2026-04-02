@@ -728,13 +728,58 @@ function SceneRow({
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
   const isCustom = isCustomScene(pose.poseId);
+  const [isUploadingPreview, setIsUploadingPreview] = useState(false);
 
   // Get the current prompt_hint value (edited or from DB)
   const rawScene = isCustom ? customScenesRaw.find(s => `custom-${s.id}` === pose.poseId) : null;
+  const hasCustomPreview = !!(rawScene?.preview_image_url);
   const currentPromptHint = promptEdits[pose.poseId]?.prompt_hint ?? rawScene?.prompt_hint ?? pose.promptHint ?? '';
   const currentPromptOnly = promptEdits[pose.poseId]?.prompt_only ?? pose.promptOnly ?? false;
   const isEditingPrompt = editingPromptId === pose.poseId;
   const sceneWorkflows = useMemo(() => getWorkflowsForScene(pose.category, workflows), [pose.category, workflows]);
+
+  const updateSceneMutation = useUpdateCustomScene();
+
+  const handlePreviewUpload = async (file: File) => {
+    if (!rawScene) return;
+    setIsUploadingPreview(true);
+    try {
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `scene-previews/${timestamp}-${randomId}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('product-uploads').getPublicUrl(path);
+
+      await updateSceneMutation.mutateAsync({
+        id: rawScene.id,
+        preview_image_url: urlData.publicUrl,
+      });
+      toast.success('Preview image updated');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to upload preview');
+    } finally {
+      setIsUploadingPreview(false);
+    }
+  };
+
+  const handleResetPreview = async () => {
+    if (!rawScene) return;
+    try {
+      await updateSceneMutation.mutateAsync({
+        id: rawScene.id,
+        preview_image_url: null,
+      });
+      toast.success('Preview reset to original');
+    } catch {
+      toast.error('Failed to reset preview');
+    }
+  };
 
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 group">
@@ -747,6 +792,31 @@ function SceneRow({
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <span className="absolute text-[10px] font-medium text-muted-foreground pointer-events-none">{pose.name.charAt(0)}</span>
+        {/* Preview upload overlay for custom scenes */}
+        {isCustom && (
+          <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            {isUploadingPreview ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : (
+              <ImageIcon className="w-4 h-4 text-white" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handlePreviewUpload(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        )}
+        {hasCustomPreview && (
+          <Badge variant="secondary" className="absolute -top-1 -right-1 text-[7px] h-3 px-1 bg-primary text-primary-foreground border-0 leading-none">
+            P
+          </Badge>
+        )}
       </div>
 
       {/* Name + metadata */}
