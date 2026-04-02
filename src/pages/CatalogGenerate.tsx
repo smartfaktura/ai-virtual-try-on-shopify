@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,10 +98,18 @@ export default function CatalogGenerate() {
   // Generation
   const { startGeneration, batchState, isGenerating, resetBatch } = useCatalogGenerate();
 
+  const [teamIndex, setTeamIndex] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const generationStartedAtRef = useRef<number | null>(null);
   const allDone = batchState?.allDone ?? false;
   const hasBatch = !!batchState;
+
+  // Rotating team avatar
+  useEffect(() => {
+    if (!hasBatch || allDone) return;
+    const iv = setInterval(() => setTeamIndex(i => (i + 1) % TEAM_MEMBERS.length), 4000);
+    return () => clearInterval(iv);
+  }, [hasBatch, allDone]);
 
   // Keep ref in sync
   useEffect(() => { generationStartedAtRef.current = generationStartedAt; }, [generationStartedAt]);
@@ -436,7 +446,15 @@ export default function CatalogGenerate() {
                   <span className="flex items-center gap-1">~{formatTime(estimatedRemaining)} remaining</span>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">VOVV.AI</p>
+              <div className="flex items-center justify-center gap-2.5 transition-opacity duration-500">
+                <Avatar className="w-7 h-7 border border-border">
+                  <AvatarImage src={TEAM_MEMBERS[teamIndex].avatar} alt={TEAM_MEMBERS[teamIndex].name} />
+                  <AvatarFallback className="text-[10px]">{TEAM_MEMBERS[teamIndex].name[0]}</AvatarFallback>
+                </Avatar>
+                <p className="text-xs text-muted-foreground italic">
+                  {TEAM_MEMBERS[teamIndex].name} is {TEAM_MEMBERS[teamIndex].statusMessage.toLowerCase()}
+                </p>
+              </div>
               <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCancelDialog(true)}>
                 Cancel
               </Button>
