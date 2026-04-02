@@ -466,7 +466,7 @@ serve(async (req) => {
     }
 
     // ── Log actual reference state for debugging ──
-    const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-face-lock' : 'fallback';
+    const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-dual-ref' : 'fallback';
     console.log(`[generate-catalog] REF_STATE: shot="${body.shot_id}", mode=${refMode}, refs=${referenceImages.length}, hasModelIdentity=${!!modelIdentityUrl}, hasAnchor=${!!body.anchor_image_url}`);
 
     // ── Generate with Native Gemini API (2K quality) ──
