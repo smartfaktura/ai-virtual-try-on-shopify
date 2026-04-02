@@ -1,61 +1,54 @@
 
 
-# Rewrite On-Model Shot Prompts for ASOS/Zalando Studio Catalog Standard
+# Modernize Catalog Studio Generation UI
 
-## Problem
+## What changes
 
-Current prompts describe poses loosely ("relaxed natural lifestyle pose", "candid energy", "touching hair"). Real catalog photography (ASOS, Zalando, H&M) uses very specific, repeatable camera and body positions — straight-on camera, fixed distance, consistent framing, minimal pose variation. The current prompts produce editorial/lifestyle results instead of clean e-commerce catalog shots.
+The current generation/progress screen feels basic — plain card with a camera icon, simple progress bar, and generic layout. We'll upgrade it to a polished, branded VOVV.AI experience.
 
-## What ASOS/Zalando catalog shots actually look like
+### 1. In-Progress State Redesign (lines 474-529)
 
-- **Camera**: Always straight-on at chest height, never angled up/down
-- **Distance**: Fixed — full body shows head to ankles with ~10% padding
-- **Background**: Perfectly uniform, zero texture
-- **Pose energy**: Minimal — slight weight shift at most, no dramatic gestures
-- **Arms**: Always visible, never hidden behind body
-- **Expression**: Neutral or slight smile, always looking at camera (front shots)
-- **Lighting**: Flat, even, shadowless on background — only subtle body shadow
+**Replace** the current plain card with a premium generation experience:
+- **Animated gradient ring** around the camera icon instead of a ping animation — subtle rotating conic gradient in primary tones
+- **Phase pill badge** at the top: "PREPARING" / "GENERATING" / "COMPLETE" with animated dot indicator
+- **Larger, bolder progress bar** with gradient fill and percentage label inline
+- **Stats row** redesigned as pill chips: `⏱ 0:09` · `3 of 8 images` · `~2 min left`
+- **Team avatar** gets a subtle glow ring and the message moves next to it in a frosted card
+- **VOVV.AI watermark** at bottom of the generation card
+- Cancel button styled as ghost with muted text, bottom-right aligned
 
-## Changes per shot
+### 2. Product Progress Cards (lines 546-568)
 
-### On-Model Shots — rewrite all `promptTemplate` values:
+**Upgrade** per-product rows:
+- Add a subtle left border accent color (primary) on active product
+- Shimmer skeleton placeholder for products still queued
+- Checkmark animation on completion (scale-in)
+- Tighter spacing, font refinements
 
-| Shot | Current Issue | New Direction |
-|------|--------------|---------------|
-| `front_model` | "weight on left leg, right hand relaxed" — too specific about which leg/hand | "Standing straight facing camera, feet hip-width apart, arms naturally at sides, straight-on eye-level camera angle, flat e-commerce catalog pose" |
-| `back_view` | "head turned slightly to the right" — arbitrary direction | "Standing straight facing away from camera, feet hip-width apart, head facing forward (away), arms at sides, straight-on camera" |
-| `side_3q` | "body turned 45 degrees to the left" — could be either way | "Standing in 3/4 turn, body angled 30-45 degrees, near arm visible, far arm partially visible, straight-on camera at chest height" |
-| `movement` | "mid-stride walking motion, arms swinging" — too dynamic | "Mid-stride walking pose, one foot slightly ahead, subtle natural arm swing, controlled movement, NOT running, NOT jumping" |
-| `sitting` | "legs crossed at ankles, hands resting on thighs" — too posed | "Seated on minimal stool, back straight, feet flat on floor, hands on knees or lap, relaxed upright posture" |
-| `full_look` | "editorial pose, slight weight shift to one hip, one hand on hip" — editorial not catalog | "Full outfit view, standing straight, arms at sides or one hand lightly at side, clean catalog pose showing complete styling" |
-| `lifestyle_context` | "candid energy, one hand in pocket or touching hair" — lifestyle, not studio | "Relaxed standing pose, slight weight shift, one hand in pocket, composed studio catalog feel, NOT candid, NOT outdoor" |
-| `over_shoulder` | "head turned 30 degrees showing profile" — fine but needs studio framing | "Back toward camera, looking over shoulder toward camera, straight-on camera, clean studio framing" |
-| `waist_up_crop` | Mostly fine | Add "straight-on camera at chest height, centered frame, catalog crop" |
-| `walking_motion` | Duplicate of `movement` | "Natural walking step, subtle stride, front-facing camera, clean studio motion capture" |
-| `hands_detail` | "adjusting collar or hem" — vague | "Hands interacting with product — adjusting collar, cuff, or hem — tight crop on hands and product detail" |
+### 3. Completion State Redesign (lines 349-424)
 
-### Key prompt additions for ALL on-model shots:
+**Upgrade** the success/failure cards:
+- Success: confetti-like gradient background wash, larger icon with subtle animation
+- Stats displayed as inline metric chips: "8 images · 2m 14s · 4 products"
+- Action buttons elevated: primary CTA "View in Library" gets full-width on mobile, "Download All" and "New Set" as secondary
+- Failed/empty states get clearer iconography and actionable retry button
 
-```
-STUDIO CATALOG RULES:
-- Camera is ALWAYS straight-on at chest height, perfectly level, never tilted
-- Camera distance is fixed: full body = head to feet with 10% padding top/bottom
-- The model stands on the SAME spot every shot — centered in frame
-- Pose is MINIMAL and CONTROLLED — this is e-commerce catalog, NOT editorial
-- Expression: neutral composed or slight natural smile
-- NO dramatic gestures, NO fashion editorial energy, NO lifestyle mood
-- Background must be PERFECTLY UNIFORM with zero visible texture or gradient
-```
+### 4. Preparing State (lines 312-330)
 
-### Identity anchor — also tighten:
-Add studio catalog framing rules to the anchor prompt so the anchor itself looks like a catalog waist-up shot, not an editorial portrait.
+- Add pulsing dots animation below the spinner text
+- Branded gradient background wash behind the card
+
+### 5. Live Image Grid (lines 571-599)
+
+- Images fade in with `animate-fade-in` on appearance
+- Add subtle scale-up hover effect
+- Shot label badges get semi-transparent frosted glass style
 
 ## Files to update
 
-- `src/lib/catalogEngine.ts` — Rewrite all on-model `promptTemplate` strings + add a shared `STUDIO_CATALOG_RULES` block appended to every on-model prompt in `assemblePrompt()`
+- `src/pages/CatalogGenerate.tsx` — All generation UI states (preparing, in-progress, completion)
 
-## Expected result
-- Every on-model shot produces ASOS/Zalando-grade straight-on studio catalog photography
-- Consistent camera angle, distance, and framing across all shots in a batch
-- No more lifestyle/editorial drift in catalog mode
+## Technical approach
+
+Pure CSS/Tailwind styling changes with minor structural JSX updates. No logic changes. Uses existing design tokens from `index.css` (primary, muted, surface colors). Adds a couple of keyframe animations via Tailwind arbitrary values or inline styles for the gradient ring.
 
