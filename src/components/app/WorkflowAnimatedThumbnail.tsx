@@ -54,6 +54,7 @@ export interface WorkflowScene {
   objectPosition?: string;
   recipe?: { image: string; label: string }[];
   recipeResult?: string;
+  interval?: number;
 }
 
 interface Props {
