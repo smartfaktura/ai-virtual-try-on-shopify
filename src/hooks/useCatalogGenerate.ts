@@ -24,13 +24,16 @@ const SESSION_KEY = 'catalog_batch';
 const ANCHOR_POLL_INTERVAL_MS = 3000;
 const ANCHOR_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 min max wait for anchors
 
-/** Append per-combo styling props to the assembled prompt */
+/** Append per-combo styling props to the assembled prompt (skips strict-isolation shots) */
 function appendPropsToPrompt(
   prompt: string,
   comboKey: string,
+  shotId: CatalogShotId,
   propAssignments?: CatalogSessionConfig['propAssignments'],
 ): string {
   if (!propAssignments) return prompt;
+  // Never inject props into strict isolation shots (ghost mannequin, back_flat, zoom_detail, etc.)
+  if (isStrictIsolationShot(shotId)) return prompt;
   const props = propAssignments[comboKey];
   if (!props || !Array.isArray(props) || props.length === 0) return prompt;
   const items = props.map((p: any) => p.title || p).join(', ');
