@@ -462,7 +462,7 @@ export default function Workflows() {
       navigate('/app/perspectives');
       return;
     }
-    if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Shot Set') {
+    if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio') {
       navigate('/app/catalog');
       return;
     }
