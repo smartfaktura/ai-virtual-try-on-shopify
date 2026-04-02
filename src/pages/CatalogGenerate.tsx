@@ -481,12 +481,17 @@ export default function CatalogGenerate() {
                 <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
               </div>
               <div>
-                <h2 className="text-base font-semibold tracking-tight">Generating your catalog...</h2>
+                <h2 className="text-base font-semibold tracking-tight">
+                  {isAnchoring ? 'Locking consistency reference…' : 'Generating your catalog...'}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {visibleCompleted} of {visibleTotal} images
+                  {isAnchoring
+                    ? 'Preparing identity reference for consistent results'
+                    : `${visibleCompleted} of ${visibleTotal} images`
+                  }
                 </p>
               </div>
-              <Progress value={progress} className="h-1.5 max-w-md mx-auto" />
+              <Progress value={isAnchoring ? undefined : progress} className="h-1.5 max-w-md mx-auto" />
               <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Elapsed: {formatTime(elapsedSeconds)}</span>
                 {estimatedRemaining !== null && (
