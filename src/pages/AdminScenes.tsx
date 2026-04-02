@@ -718,6 +718,7 @@ interface SceneRowProps {
   togglePromptOnly: (poseId: string, value: boolean) => void;
   customScenesRaw: import('@/hooks/useCustomScenes').CustomScene[];
   workflows: WorkflowInfo[];
+  userId: string;
 }
 
 function SceneRow({
