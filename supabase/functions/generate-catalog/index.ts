@@ -42,10 +42,11 @@ async function generateImageSeedream(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const body: Record<string, unknown> = {
-        model, prompt, size: "2K",
+        model, prompt, size: "4K",
         aspect_ratio: seedreamRatio,
         response_format: "url",
         watermark: false,
+        guidance_scale: 8.5,
         sequential_image_generation: "disabled",
       };
       if (imageUrls.length === 1) {
