@@ -366,79 +366,91 @@ export default function CatalogGenerate() {
 
         {batchState.allDone ? (
           <div className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-              {allVisibleFailed ? (
-                <>
-                  <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-                    <AlertTriangle className="w-7 h-7 text-destructive" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold tracking-tight">Generation Failed</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      All {visibleFailed} image{visibleFailed !== 1 ? 's' : ''} failed. Credits have been refunded.
-                    </p>
-                  </div>
-                </>
-              ) : visibleCompleted === 0 ? (
-                <>
-                  <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto">
-                    <AlertTriangle className="w-7 h-7 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold tracking-tight">No Images Generated</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Something went wrong. Please try again.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <CheckCircle className="w-7 h-7 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold tracking-tight">Your Catalog is Ready</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''} generated
-                      {visibleFailed > 0 && (
-                        <span className="text-destructive"> · {visibleFailed} failed</span>
-                      )}
-                    </p>
-                  </div>
-                </>
+            <div className="relative rounded-2xl border border-border bg-card p-8 text-center space-y-5 overflow-hidden">
+              {/* Subtle gradient wash behind success */}
+              {!allVisibleFailed && visibleCompleted > 0 && (
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent pointer-events-none" />
               )}
-              <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Total time: {formatTime(elapsedSeconds)}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">VOVV.AI</p>
-              <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
-                <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm">
-                  <RefreshCw className="w-3.5 h-3.5" /> New Set
-                </Button>
-                {batchState.aggregatedImages.length > 1 && (
-                  <Button variant="outline" disabled={isDownloading} onClick={async () => {
-                    setIsDownloading(true);
-                    try {
-                      const images = visibleJobs
-                        .filter(j => j.status === 'completed' && j.images.length > 0)
-                        .flatMap(j => j.images.map(url => ({
-                          url,
-                          workflow_name: j.productName || 'Catalog',
-                          scene_name: j.shotLabel || 'image',
-                          product_title: j.productName,
-                        })));
-                      await downloadDropAsZip(images, 'Catalog-Export');
-                    } finally {
-                      setIsDownloading(false);
-                    }
-                  }} className="gap-2 text-sm">
-                    {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                    {isDownloading ? 'Preparing...' : 'Download All'}
-                  </Button>
+              <div className="relative space-y-5">
+                {allVisibleFailed ? (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                      <AlertTriangle className="w-8 h-8 text-destructive" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold tracking-tight">Generation Failed</h2>
+                      <p className="text-sm text-muted-foreground mt-1.5">
+                        All {visibleFailed} image{visibleFailed !== 1 ? 's' : ''} failed. Credits have been refunded.
+                      </p>
+                    </div>
+                  </>
+                ) : visibleCompleted === 0 ? (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                      <AlertTriangle className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold tracking-tight">No Images Generated</h2>
+                      <p className="text-sm text-muted-foreground mt-1.5">Something went wrong. Please try again.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-scale-in">
+                      <CheckCircle className="w-8 h-8 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold tracking-tight">Your Catalog is Ready</h2>
+                    </div>
+                  </>
                 )}
-                <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm">
-                  View in Library <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                {/* Metric chips */}
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  {visibleCompleted > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/5 border border-primary/10 px-3 py-1 text-xs font-medium text-foreground">
+                      <Image className="w-3 h-3 text-primary" /> {visibleCompleted} image{visibleCompleted !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
+                    <Clock className="w-3 h-3" /> {formatTime(elapsedSeconds)}
+                  </span>
+                  {visibleFailed > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/5 border border-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
+                      <AlertTriangle className="w-3 h-3" /> {visibleFailed} failed
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground/40 tracking-[0.2em] uppercase font-light">VOVV.AI Studio</p>
+                {/* Action buttons */}
+                <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
+                  <Button variant="outline" onClick={handleNewGeneration} className="gap-2 text-sm rounded-full">
+                    <RefreshCw className="w-3.5 h-3.5" /> New Set
+                  </Button>
+                  {batchState.aggregatedImages.length > 1 && (
+                    <Button variant="outline" disabled={isDownloading} onClick={async () => {
+                      setIsDownloading(true);
+                      try {
+                        const images = visibleJobs
+                          .filter(j => j.status === 'completed' && j.images.length > 0)
+                          .flatMap(j => j.images.map(url => ({
+                            url,
+                            workflow_name: j.productName || 'Catalog',
+                            scene_name: j.shotLabel || 'image',
+                            product_title: j.productName,
+                          })));
+                        await downloadDropAsZip(images, 'Catalog-Export');
+                      } finally {
+                        setIsDownloading(false);
+                      }
+                    }} className="gap-2 text-sm rounded-full">
+                      {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                      {isDownloading ? 'Preparing...' : 'Download All'}
+                    </Button>
+                  )}
+                  <Button onClick={() => navigate('/app/library')} className="gap-2 text-sm rounded-full">
+                    View in Library <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
