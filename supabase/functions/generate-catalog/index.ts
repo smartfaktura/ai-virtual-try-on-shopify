@@ -379,14 +379,39 @@ serve(async (req) => {
       ? Array.from(body.batch_id).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 2147483647
       : undefined;
 
+    // ── Per-phase generation parameters ──────────────────────────────────
+    const FACE_NEGATIVE = "two faces, merged face, blended face, double exposure, morphed features, distorted face, two people, split face, composite face, ghost face overlay, transparent face, face swap artifact, extra limbs, extra fingers";
+
+    let guidanceScale: number;
+    let imageStrength: number | undefined;
+    let negativePrompt: string | undefined;
+
+    if (isProductOnly) {
+      // Product-only: standard guidance, no face negatives needed
+      guidanceScale = 8.5;
+      imageStrength = undefined;
+      negativePrompt = undefined;
+    } else if (body.anchor_image_url) {
+      // Derivative on-model: slightly relaxed for pose variation, keep identity
+      guidanceScale = 9.5;
+      imageStrength = 0.75;
+      negativePrompt = FACE_NEGATIVE;
+    } else {
+      // Anchor (identity lock): maximum fidelity
+      guidanceScale = 10.0;
+      imageStrength = 0.85;
+      negativePrompt = FACE_NEGATIVE;
+    }
+
     const seedreamResult = await generateImageSeedream(
       prompt,
       referenceImages,
       "seedream-4-5-251128",
       arkApiKey,
       aspectRatio,
-      1, // 1 retry for transient errors
+      1,
       batchSeed,
+      { guidanceScale, imageStrength, negativePrompt },
     );
 
     if (!seedreamResult.ok || !seedreamResult.imageUrl) {
