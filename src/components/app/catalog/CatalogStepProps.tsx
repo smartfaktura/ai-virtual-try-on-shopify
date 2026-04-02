@@ -315,14 +315,15 @@ export function CatalogStepProps({
                       </div>
                       {productCombos.map(combo => {
                         globalIdx++;
-                        const assignedIds = propAssignments[combo.key] || [];
+                        const isStrict = isStrictIsolationShot(combo.shot.id);
+                        const assignedIds = isStrict ? [] : (propAssignments[combo.key] || []);
                         const assignedProducts = assignedIds.map(id => availableProps.find(p => p.id === id)).filter(Boolean) as PropProduct[];
                         return (
                           <div
                             key={combo.key}
                             className={cn(
                               'rounded-lg border p-3 transition-colors ml-2',
-                              assignedIds.length > 0 ? 'border-primary/20 bg-primary/[0.02]' : 'border-border bg-card',
+                              isStrict ? 'border-border bg-muted/20 opacity-60' : assignedIds.length > 0 ? 'border-primary/20 bg-primary/[0.02]' : 'border-border bg-card',
                             )}
                           >
                             <div className="flex items-center gap-2 sm:gap-3">
@@ -335,6 +336,7 @@ export function CatalogStepProps({
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="p-1">
                                   <p className="text-xs font-medium">{combo.shot.label}</p>
+                                  {isStrict && <p className="text-[10px] text-muted-foreground">Props disabled — strict packshot</p>}
                                 </TooltipContent>
                               </Tooltip>
                               <div className="flex-1 min-w-0">
@@ -343,15 +345,21 @@ export function CatalogStepProps({
                                   {!combo.model && <span className="text-muted-foreground">Product only</span>}
                                 </p>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground flex-shrink-0"
-                                onClick={() => setPickerTarget({ comboKey: combo.key, title: `#${globalIdx} ${combo.product.title}` })}
-                              >
-                                <Plus className="w-3 h-3" />
-                                <span className="hidden sm:inline">{assignedIds.length > 0 ? 'Edit' : 'Add prop'}</span>
-                              </Button>
+                              {isStrict ? (
+                                <span className="flex items-center gap-1 text-[9px] text-muted-foreground/50 flex-shrink-0">
+                                  <Ban className="w-3 h-3" /> No props
+                                </span>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground flex-shrink-0"
+                                  onClick={() => setPickerTarget({ comboKey: combo.key, title: `#${globalIdx} ${combo.product.title}` })}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span className="hidden sm:inline">{assignedIds.length > 0 ? 'Edit' : 'Add prop'}</span>
+                                </Button>
+                              )}
                             </div>
                             {assignedProducts.length > 0 && (
                               <div className="flex items-center gap-1 flex-wrap pl-7 sm:pl-8 mt-1.5">
