@@ -697,6 +697,7 @@ export function getAnchorShotId(category: ProductCategory, hasModel: boolean): C
 // ────────────────────────────────────────────────
 
 const EDIT_COMPATIBLE_FROM_ANCHOR: Record<string, Set<CatalogShotId>> = {
+  identity_anchor: new Set(['detail_closeup', 'hands_detail', 'zoom_detail']),
   front_model: new Set(['detail_closeup', 'hands_detail', 'zoom_detail']),
   standing_shoe_focus: new Set(['detail_closeup', 'zoom_detail']),
   hand_carry: new Set(['detail_closeup', 'hands_detail', 'hardware_detail', 'zoom_detail']),
