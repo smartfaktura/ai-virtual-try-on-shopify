@@ -1,49 +1,64 @@
 
 
-# Improve Catalog Shot Prompt Templates
+# Add Workflow Variation Scenes to Admin Scenes Control
 
-Replace all 30 catalog shot prompt templates and shared blocks in `src/lib/catalogEngine.ts` with the user's improved versions. Also rename two shots (`full_look` → `full_look_catalog`, `styled_flat_lay` → `clean_flat_lay`).
+## Problem
+The Admin Scenes page (`/app/admin/scenes`) currently only shows:
+- Built-in scenes from `mockTryOnPoses` (30 on-model + 30 product scenes)
+- Custom scenes from `custom_scenes` DB table
 
-## Changes in `src/lib/catalogEngine.ts`
+But 6 workflows contain **120+ variation scenes** stored in `workflows.generation_config.variation_strategy.variations` that are invisible to admins. These include Product Listing Set (31), Selfie/UGC Set (12), Flat Lay Set (12), Mirror Selfie Set (30), Interior/Exterior Staging (22), and Picture Perspectives (9).
 
-### 1. Update shared blocks (lines 747-749)
+## Approach
+Add a **separate collapsible section per workflow** below the existing scene categories. Each section lists that workflow's variations with inline editing of `label`, `instruction`, `category`, and `preview_url`. Changes save back to the workflow's `generation_config` JSON via a Supabase update.
 
-Replace `QUALITY_BLOCK` and `CONSISTENCY_BLOCK_*` with the improved versions:
+This keeps the existing scene management untouched (no mixing of data models) while giving full visibility and edit access to workflow-specific scenes.
 
-- **QUALITY_BLOCK**: `ultra realistic ecommerce fashion photography, accurate garment construction, realistic fabric behavior, sharp textile detail, true-to-life proportions, premium catalog image quality, clean retouching, natural skin texture, commercially polished but not over-edited`
-- **CONSISTENCY_BLOCK_MODEL**: Add `preserve exact product identity from reference, maintain correct garment color, fabric, wash, print, stitching, silhouette, trim, hardware, proportions, and construction details, no redesign, no added embellishments, no missing details` + existing model identity matching text
-- **CONSISTENCY_BLOCK_PRODUCT**: Same product preservation text + existing no-people rules
+## Changes
 
-### 2. Update all 30 shot promptTemplates and categoryOverrides (lines 341-671)
+### 1. Add admin RLS policy for workflow updates
+Currently the `workflows` table only allows `SELECT` for authenticated users. Need an admin-only `UPDATE` policy.
 
-Every shot gets its prompt replaced with the user's tighter, cleaner version. Key improvements across all shots:
+**Migration SQL:**
+```sql
+CREATE POLICY "Admins can update workflows"
+ON public.workflows FOR UPDATE
+TO authenticated
+USING (has_role(auth.uid(), 'admin'::app_role))
+WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
+```
 
-- Explicit `head to toe fully visible with feet entirely inside frame` on full-body shots
-- Specific pose instructions (weight distribution, arm position, camera angle)
-- Stricter anti-editorial language (`not dynamic fashion editorial`, `not candid, not cinematic, not outdoor`)
-- Cleaner product-only prompts with less repetition
-- Better category overrides for shoes, bags, hats, sunglasses, jewelry
+### 2. `src/pages/AdminScenes.tsx` — Add workflow variations section
 
-### 3. Rename two shots
+**New component: `WorkflowVariationsSection`** (inside AdminScenes or extracted)
+- Fetch workflows (already done via `useQuery(['workflows-admin'])`)
+- For each workflow with variations > 0, render a collapsible section
+- Each variation row shows:
+  - Preview thumbnail (from `preview_url` if available)
+  - Label (editable inline)
+  - Category chip (editable)
+  - Instruction text (editable textarea, collapsible)
+  - Preview URL upload button (reuse existing upload pattern)
+- "Save Workflow Scenes" button per workflow that patches `generation_config` JSON back to DB
+- Filter by the same search query already in use
 
-- `full_look` → `full_look_catalog` (label: "Full Look Catalog") — removes editorial connotation
-- `styled_flat_lay` → `clean_flat_lay` (label: "Clean Flat Lay") — reflects single-product focus
+### 3. Wire up save logic
 
-### 4. Update `buildSupportWardrobePrompt` (line 257)
+On save, construct the updated `generation_config` JSON with modified variations and call:
+```typescript
+supabase.from('workflows').update({ generation_config: updatedConfig }).eq('id', workflowId)
+```
 
-Make the wardrobe directive stricter: `supporting wardrobe must stay minimal, commercially styled, color-coordinated, and secondary to the hero product, no distracting patterns, no competing hero items`
+## What stays the same
+- Existing built-in + custom scene management is untouched
+- Sort order, hide/unhide, category overrides all remain as-is
+- Workflow variations remain stored in workflow JSON (no new tables)
 
-### 5. Update references to renamed shot IDs
+## Summary
 
-Search for `full_look` and `styled_flat_lay` across the codebase and update to new IDs. Affected files:
-- `src/lib/catalogEngine.ts` (definition + any references in `EDIT_COMPATIBLE_FROM_ANCHOR`)
-- `src/types/catalog.ts` (CatalogShotId type union)
-- Any other files referencing these shot IDs
-
-### Impact
-
-- All prompt templates become more precise and ASOS/Zalando-aligned
-- Reduced hallucination risk from vague language
-- Ghost mannequin, flat lay, and macro shots get stricter isolation language
-- Category overrides are more complete and specific
+| What | Where |
+|------|-------|
+| Admin UPDATE policy for workflows | New migration |
+| Workflow variations section UI | `src/pages/AdminScenes.tsx` (new section at bottom) |
+| Save handler for workflow variation edits | Same file, writes back to `workflows.generation_config` |
 
