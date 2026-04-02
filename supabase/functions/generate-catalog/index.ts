@@ -398,9 +398,11 @@ serve(async (req) => {
       imageStrength = 0.75;
       negativePrompt = FACE_NEGATIVE;
     } else {
-      // Anchor (identity lock): maximum fidelity
+      // Anchor (identity lock): lower image_strength so Seedream follows the
+      // prompt's role assignment (face from Image 1, outfit from Image 2)
+      // rather than raw pixel blending which causes face merging.
       guidanceScale = 10.0;
-      imageStrength = 0.85;
+      imageStrength = 0.70;
       negativePrompt = FACE_NEGATIVE;
     }
 
