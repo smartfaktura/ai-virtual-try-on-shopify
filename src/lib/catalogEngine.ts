@@ -603,6 +603,9 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     defaultRenderPath: 'reference_generate',
     needsModel: true,
     promptTemplate: '[HERO_PRODUCT] worn by [MODEL], waist-up ecommerce catalog photograph, straight-on camera at chest height, centered composition, arms relaxed naturally, neutral composed expression, clear visibility of neckline, shoulders, fit, and upper garment construction, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    categoryOverrides: {
+      jacket_coat: '[HERO_PRODUCT] worn by [MODEL], waist-up ecommerce catalog photograph, camera at chest height, centered composition, jacket fully visible from waist to collar — showing collar shape, lapels, shoulder construction, zipper or button closure, sleeve length, and fabric texture, arms relaxed naturally at sides, neutral composed expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+    },
   },
   {
     id: 'walking_motion',
