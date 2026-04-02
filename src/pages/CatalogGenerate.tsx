@@ -533,18 +533,20 @@ export default function CatalogGenerate() {
               );
             })()}
 
-            {batchState.aggregatedImages.length > 0 && (
+            {(() => {
+              const imageJobMap: { url: string; shotLabel: string }[] = [];
+              for (const j of visibleJobs) {
+                if (j.status !== 'completed') continue;
+                for (const img of j.images) {
+                  imageJobMap.push({ url: img, shotLabel: j.shotLabel });
+                }
+              }
+              if (imageJobMap.length === 0) return null;
+              return (
               <div className="space-y-3">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated so far</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                  {(() => {
-                    const imageJobMap: { url: string; shotLabel: string }[] = [];
-                    for (const j of batchState.jobs) {
-                      for (const img of j.images) {
-                        imageJobMap.push({ url: img, shotLabel: j.shotLabel });
-                      }
-                    }
-                    return imageJobMap.map((item, i) => (
+                  {imageJobMap.map((item, i) => (
                       <button
                         key={i}
                         onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
