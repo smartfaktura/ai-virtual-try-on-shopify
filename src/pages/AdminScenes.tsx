@@ -727,7 +727,7 @@ function SceneRow({
   startEditName, commitEditName, cancelEditName,
   movePose, movePoseToTop, changePoseCategory, duplicateToCategory,
   handleDelete, defaultCategoryOrder, categoryLabels, showReorderButtons,
-  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw, workflows,
+  promptEdits, editingPromptId, setEditingPromptId, updatePromptHint, togglePromptOnly, customScenesRaw, workflows, userId,
 }: SceneRowProps) {
   const isEditing = editingNameId === pose.poseId;
   const isDuplicate = pose.poseId.includes('__dup_');
