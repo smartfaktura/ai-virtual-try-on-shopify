@@ -1,28 +1,21 @@
 
 
-# Use Uploaded Images for Catalog Studio Carousel (0.5s interval)
+# Upgrade Seedream Fallback to 5.0 Lite
 
 ## Overview
-Replace the current Catalog Studio carousel backgrounds with the 10 uploaded Filippa K jacket images, and make the carousel cycle every 500ms instead of 2500ms.
+Replace all remaining `seedream-4-5-251128` references with `Dola-Seedream-5.0-lite` across the three edge functions that use it as a fallback engine.
 
 ## Changes
 
-### 1. Copy 10 images to `public/images/catalog-studio/`
-Copy all uploaded `VOVVAI-Catalog-Studio-{1..10}.jpg` files to `public/images/catalog-studio/`.
+### 1. `supabase/functions/generate-freestyle/index.ts`
+- Line ~352: Change `"seedream-4-5-251128"` → `"Dola-Seedream-5.0-lite"` in the provider config map
 
-### 2. Add `interval` to `WorkflowScene` type
-In `WorkflowAnimatedThumbnail.tsx`, add optional `interval?: number` to the `WorkflowScene` interface.
+### 2. `supabase/functions/generate-workflow/index.ts`
+- Line ~1172: Change `"seedream-4-5-251128"` → `"Dola-Seedream-5.0-lite"` in the Seedream fallback call
 
-### 3. Use `scene.interval` in `CarouselThumbnail`
-Change line 240 from `const INTERVAL = 2500;` to `const INTERVAL = scene.interval ?? 2500;` — pass the scene's custom interval through. The progress bar animation duration already references `INTERVAL` so it will auto-adjust.
+### 3. `supabase/functions/generate-tryon/index.ts`
+- Line ~830: Change the remaining `"seedream-4-5-251128"` → `"Dola-Seedream-5.0-lite"` (the other reference on line ~808 is already upgraded)
 
-### 4. Update `workflowAnimationData.tsx` — Catalog Studio entry
-- Replace `backgrounds` array with paths to the 10 new images in `/images/catalog-studio/`
-- Set `interval: 500` for fast cycling
-- Keep existing badge elements (Bulk Generation, Catalog Ready)
-
-### Files modified
-- `src/components/app/WorkflowAnimatedThumbnail.tsx` — add `interval` to type + use it
-- `src/components/app/workflowAnimationData.tsx` — new image paths + interval
-- 10 images copied to `public/images/catalog-studio/`
+## Risk
+Minimal — same API endpoint and request format, just a model ID string swap. No schema or client-side changes needed.
 
