@@ -569,7 +569,7 @@ export function useCatalogGenerate() {
     // Start with anchor jobs + placeholders — ALL in jobsRef so polling sees placeholders
     const initialJobs = [...markedAnchors, ...placeholderJobs];
     jobsRef.current = initialJobs;
-    persistBatch(markedAnchors);
+    persistBatch(initialJobs);
 
     const anchorStatus: Record<string, 'pending' | 'generating' | 'completed' | 'failed'> = {};
     for (const j of anchorJobs) anchorStatus[j.productId] = 'pending';
