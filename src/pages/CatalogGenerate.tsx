@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
