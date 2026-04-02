@@ -347,7 +347,10 @@ serve(async (req) => {
 
     const hasModel = !!(body.model?.imageUrl || body.model?.identityImageUrl);
     const logModel = hasModel ? `model="${body.model?.name}"` : "product-only";
-    console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || body.pose?.name || 'default'}", ratio=${aspectRatio}`);
+    const logAnchor = body.anchor_image_url ? 'has_anchor' : 'no_anchor';
+    const logRenderPath = body.render_path || 'unknown';
+    const logShotGroup = body.shot_group || 'unknown';
+    console.log(`[generate-catalog] Generating: product="${body.product.title}", ${logModel}, shot="${body.shot_id || 'default'}", render=${logRenderPath}, group=${logShotGroup}, anchor=${logAnchor}, ratio=${aspectRatio}`);
 
     // Build reference images with shot-type-aware ordering
     const isProductOnly = body.render_path === 'product_only_generate' || body.shot_group === 'product-only';
