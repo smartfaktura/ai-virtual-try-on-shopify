@@ -94,7 +94,7 @@ export function useDeleteCustomScene() {
 export function useUpdateCustomScene() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string; discover_categories?: string[] }) => {
+    mutationFn: async (params: { id: string; prompt_hint?: string; prompt_only?: boolean; name?: string; category?: string; discover_categories?: string[]; preview_image_url?: string | null }) => {
       const { id, ...updates } = params;
       const { error } = await supabase.from('custom_scenes' as any).update(updates).eq('id', id);
       if (error) throw error;
