@@ -121,24 +121,28 @@ function PropPickerModal({
                     key={p.id}
                     onClick={() => toggleItem(p.id)}
                     className={cn(
-                      'relative rounded-lg border p-2 text-left transition-all hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+                      'relative rounded-2xl border p-2.5 pb-0 text-left transition-all hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
                       checked ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'border-border hover:border-foreground/20',
                     )}
                   >
                     {checked && (
-                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                         <Check className="w-3 h-3 text-primary-foreground" />
                       </div>
                     )}
-                    <div className="w-full aspect-square rounded-md overflow-hidden bg-muted mb-1.5">
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-muted/30">
                       <ShimmerImage
                         src={getOptimizedUrl(p.image_url, { width: 160, quality: 60 })}
                         alt={p.title}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover"
                       />
                     </div>
-                    <p className="text-[10px] font-medium text-foreground truncate">{p.title}</p>
-                    <p className="text-[9px] text-muted-foreground truncate">{p.product_type}</p>
+                    <div className="px-1 py-2">
+                      <p className="text-[11px] font-medium text-foreground line-clamp-2 leading-tight">{p.title}</p>
+                      {p.product_type && (
+                        <span className="inline-block mt-1 text-[9px] text-muted-foreground bg-muted/60 rounded-full px-2 py-0.5">{p.product_type}</span>
+                      )}
+                    </div>
                   </button>
                 );
               })}
