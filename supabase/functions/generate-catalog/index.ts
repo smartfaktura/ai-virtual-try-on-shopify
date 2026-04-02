@@ -355,11 +355,18 @@ serve(async (req) => {
       // Product-only shots: only product reference, no model contamination
       referenceImages.push(body.product.imageUrl);
       if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
-    } else {
-      // On-model shots: identity image FIRST for stronger face locking
-      if (modelIdentityUrl) referenceImages.push(modelIdentityUrl);
+    } else if (body.anchor_image_url) {
+      // Derivative on-model shots: anchor already has the locked face — do NOT
+      // also send the raw model identity or Seedream merges two faces together.
+      referenceImages.push(body.anchor_image_url);
       referenceImages.push(body.product.imageUrl);
-      if (body.anchor_image_url) referenceImages.push(body.anchor_image_url);
+    } else {
+      // Anchor (identity) shot: send model identity TWICE for stronger face lock
+      if (modelIdentityUrl) {
+        referenceImages.push(modelIdentityUrl);
+        referenceImages.push(modelIdentityUrl);
+      }
+      referenceImages.push(body.product.imageUrl);
     }
 
     // Derive deterministic seed from batch_id for cross-shot face consistency
