@@ -331,8 +331,13 @@ export default function CatalogGenerate() {
 
   // If batch is active, show progress / completion
   if (batchState) {
-    const progress = batchState.totalJobs > 0
-      ? Math.round(((batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs) * 100) : 0;
+    // Filter out internal identity_anchor jobs from visible results
+    const visibleJobs = batchState.jobs.filter(j => j.shotId !== 'identity_anchor' && !j.jobId.startsWith('placeholder-'));
+    const visibleCompleted = visibleJobs.filter(j => j.status === 'completed').length;
+    const visibleFailed = visibleJobs.filter(j => j.status === 'failed').length;
+    const visibleTotal = visibleJobs.length;
+    const progress = visibleTotal > 0
+      ? Math.round(((visibleCompleted + visibleFailed) / visibleTotal) * 100) : 0;
 
     return (
       <div className="space-y-6 pb-32">
