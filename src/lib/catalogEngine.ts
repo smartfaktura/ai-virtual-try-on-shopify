@@ -659,11 +659,11 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
     needsModel: true,
     promptTemplate: 'Apply the clothing shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain the exact facial features, hair, and skin of the person in Image 1. Use the outfit, fit, and styling from Image 2 ([HERO_PRODUCT]) only. Waist-up portrait, cropped at waist, face fills upper third of frame, sharp eye-level camera angle, relaxed confident expression, looking directly into camera, natural relaxed shoulders, arms at sides, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     categoryOverrides: {
-      shoes: '[HERO_PRODUCT] worn by [MODEL], waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      bag: '[HERO_PRODUCT] held by [MODEL], waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      hat: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      sunglasses: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
-      jewelry: '[HERO_PRODUCT] worn by [MODEL], close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      shoes: 'Apply the footwear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Waist-up portrait, face clearly visible, confident expression, standing naturally, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      bag: 'Apply the bag shown in Image 2 to be held by the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Waist-up portrait, face clearly visible, confident expression, one hand holding the bag, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      hat: 'Apply the headwear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, headwear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      sunglasses: 'Apply the eyewear shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, eyewear clearly visible, confident expression, [SUPPORT_WARDROBE], [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
+      jewelry: 'Apply the jewelry shown in Image 2 onto the person in Image 1. The person in Image 1 is [MODEL]. Maintain exact facial features and hair of Image 1. Close portrait, face dominant in frame, jewelry clearly visible, confident expression, [QUALITY], [LIGHTING], [BACKGROUND], [CONSISTENCY]',
     },
   },
 ];
