@@ -243,7 +243,7 @@ export default function CatalogGenerate() {
             id: m.modelId,
             profile: `${m.name}, ${m.ethnicity || ''} ${m.ageRange} ${m.gender} model, ${m.bodyType || 'average'} build`.replace(/\s+/g, ' ').trim(),
             audience: inferAudience(m),
-            imageUrl: m.previewUrl || null,
+            imageUrl: m.sourceImageUrl || m.previewUrl || null,
           };
         }).filter(Boolean);
 

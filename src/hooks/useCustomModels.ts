@@ -38,6 +38,7 @@ function toModelProfile(m: CustomModel): ModelProfile {
     ageRange: (m.age_range || 'adult') as any,
     previewUrl: m.image_url,
     optimizedImageUrl: m.optimized_image_url || undefined,
+    sourceImageUrl: m.image_url,
   };
 }
 
