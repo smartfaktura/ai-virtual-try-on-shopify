@@ -151,6 +151,8 @@ export interface ModelProfile {
   ageRange: ModelAgeRange;
   previewUrl: string;
   optimizedImageUrl?: string;
+  /** Original high-res source image for identity replication */
+  sourceImageUrl?: string;
 }
 
 export interface TryOnPose {

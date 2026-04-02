@@ -266,6 +266,7 @@ export function useCatalogGenerate() {
     shotId: CatalogShotId,
     shotLabel: string,
     renderPath: RenderPath,
+    shotGroup: 'on-model' | 'product-only',
     prompt: string,
     modelImageB64: string | null,
     modelProfile: string,
@@ -282,12 +283,13 @@ export function useCatalogGenerate() {
           catalog_mode: true,
           render_path: renderPath,
           shot_id: shotId,
+          shot_group: shotGroup,
           prompt_final: prompt,
           product: { title: productTitle, imageUrl: productImageB64 },
           product_id: productId,
           product_name: productTitle,
           product_image_url: productOriginalUrl,
-          ...(modelImageB64 && { model: { imageUrl: modelImageB64, name: modelProfile } }),
+          ...(modelImageB64 && { model: { imageUrl: modelImageB64, identityImageUrl: modelImageB64, name: modelProfile } }),
           ...(anchorImageUrl && { anchor_image_url: anchorImageUrl }),
           aspectRatio: '3:4',
           imageCount: 1,
@@ -395,6 +397,7 @@ export function useCatalogGenerate() {
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
           effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
+          effectiveAnchorDef.group,
           anchorPrompt, modelB64, session.modelProfile, null, batchId, enqueueCount++,
         );
 
@@ -427,7 +430,9 @@ export function useCatalogGenerate() {
           const isProductOnlyShot = shotDef.group === 'product-only';
           const jobResult = await enqueueJob(
             token, productB64, product.title, product.id, product.imageUrl,
-            shotId, shotDef.label, renderPath, prompt,
+            shotId, shotDef.label, renderPath,
+            shotDef.group,
+            prompt,
             isProductOnlyShot ? null : modelB64, session.modelProfile, null, batchId, enqueueCount++,
           );
 

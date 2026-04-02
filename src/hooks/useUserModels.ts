@@ -28,6 +28,7 @@ function toModelProfile(m: UserModel): ModelProfile {
     ethnicity: m.ethnicity,
     ageRange: (m.age_range || 'adult') as any,
     previewUrl: m.image_url,
+    sourceImageUrl: m.source_image_url || m.image_url,
   };
 }
 
