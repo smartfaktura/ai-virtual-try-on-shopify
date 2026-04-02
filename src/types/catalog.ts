@@ -30,7 +30,9 @@ export type CatalogShotId =
   | 'standing_shoe_focus' | 'side_step' | 'walking_crop'
   | 'close_portrait' | 'placement_detail' | 'macro_detail'
   | 'product_front' | 'product_side' | 'product_angle'
-  | 'hardware_detail';
+  | 'hardware_detail'
+  // Internal-only (not user-selectable)
+  | 'identity_anchor';
 
 export type RenderPath =
   | 'anchor_generate'

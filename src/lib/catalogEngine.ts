@@ -664,6 +664,8 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
 
 export function getCompatibleShots(category: ProductCategory, hasModel: boolean): ShotDefinition[] {
   return SHOT_DEFINITIONS.filter(shot => {
+    // Never show identity_anchor in the shot picker — it's internal-only
+    if (shot.id === 'identity_anchor') return false;
     if (!shot.compatibleCategories.has(category)) return false;
     if (shot.needsModel && !hasModel) return false;
     return true;
