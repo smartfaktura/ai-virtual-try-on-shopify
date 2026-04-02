@@ -1,71 +1,75 @@
 
 
-# Fix Catalog Generation Issues: Sun Flares, Missing Legs, Shadow, Flat Lay Model Leak
+# Fix Shot Labels, Background Consistency, and Ghost Mannequin Shadows
 
-## Root Causes Found
+## Issues Found
 
-### 1. Model image leaks into product-only shots (flat lay shows a person)
-In `useCatalogGenerate.ts` line 336, `modelB64` is passed to **every** shot — including flat lay, ghost mannequin, and other `product-only` shots. When Seedream receives a model reference image alongside a "flat lay, no people" prompt, it still renders the person because the image reference overrides the text.
+### 1. No shot label on generated images
+The gallery grid at line 523 renders raw images without any overlay showing which shot produced them. The data is available — each job in `batchState.jobs` has a `shotLabel` property and the images are aggregated via `flatMap(j => j.images)`. We need to map each image index back to its parent job to display the label.
 
-**Fix**: In `useCatalogGenerate.ts`, check `shotDef.needsModel` before passing `modelB64`. For product-only shots, pass `null` instead.
+### 2. Ghost mannequin still has big floor shadows
+**Root cause**: The `[BACKGROUND]` placeholder is replaced with the selected background's `promptBlock`, which includes phrases like `"subtle natural shadow beneath subject"` or `"gentle warm shadow beneath subject"`. This directly contradicts the ghost mannequin's "NO shadow" directive. The background shadow instruction wins because it's more specific about what kind of shadow to add.
 
-### 2. CONSISTENCY_BLOCK references "same model identity" in product-only shots
-The `CONSISTENCY_BLOCK` constant says "same model identity matching the model reference image exactly — same face same hair..." This text gets injected into product-only prompts via `[CONSISTENCY]`, confusing Seedream into adding a person.
+**Fix**: In `assemblePrompt`, when the shot is `ghost_mannequin`, override the background prompt to strip shadow references and force pure white void — don't inject the user's selected background at all for this shot type.
 
-**Fix**: Split into two blocks in `catalogEngine.ts`:
-- `CONSISTENCY_BLOCK_MODEL` — current text with model identity references
-- `CONSISTENCY_BLOCK_PRODUCT` — stripped of all model/person references, focused on product consistency only
+### 3. Sun flares / lighting inconsistency still appearing
+**Root cause**: The `BACKGROUND RULE` (which says "NO sun flares, NO lens flares") is only appended when `modelProfile !== 'no model'` (line 751). Product-only shots using the `'no model'` profile skip this directive entirely. Additionally, the `warm_beige_studio` background and `warm_studio_refined` / `soft_warm_luxury` lighting presets can produce warm hue variation between shots.
 
-Use the appropriate block based on `shotDef.needsModel` in `assemblePrompt`.
+**Fix**: Move the anti-flare directive out of the model-only block so ALL shots get it. Also strengthen all background `promptBlock` values to include explicit hex color enforcement.
 
-### 3. Sun flares / warm lighting bleed
-The `BACKGROUND RULE` directive was added in the previous fix, but the `CONSISTENCY_BLOCK` still says "same lighting" without specifying what lighting. When the model's reference photo has warm outdoor lighting, "same lighting" can reinforce it. Also, some lighting presets like `warm_studio_refined` and `soft_warm_luxury` use "golden tones" and "warmth" which can produce sun-flare effects.
+## Changes
 
-**Fix**: Strengthen the `BACKGROUND RULE` directive to explicitly say "NO sun flares, NO window light, NO natural outdoor lighting, ONLY controlled studio lighting." Also add "same STUDIO lighting" instead of just "same lighting" in the consistency block.
+### File 1: `src/pages/CatalogGenerate.tsx` (~line 523-531)
+Add a shot label badge overlay on each generated image. Build a mapping from image index to job by iterating `batchState.jobs` in order (mirroring the `flatMap` logic):
 
-### 4. Missing legs (cropping issue)
-Some shots produce cropped compositions because the prompt lacks explicit "full body head to toe" framing. The `front_model` template says "full body front-facing pose" but doesn't enforce "head to toe, feet visible."
-
-**Fix**: Add "full body head to toe, feet fully visible in frame" to all full-body on-model shot templates that should show complete figure.
-
-### 5. Ghost mannequin shadow
-The ghost mannequin prompt already says "NO shadow" but the `CONSISTENCY_BLOCK` says "same background" which can pull in shadow from other shots. The product-only consistency block will fix this since it won't reference the studio setup used for model shots.
-
-## Files to Change
-
-### 1. `src/hooks/useCatalogGenerate.ts` (~line 333-336)
-Pass `null` for model image on product-only shots:
-```typescript
-const isProductOnlyShot = shotDef.group === 'product-only';
-const jobResult = await enqueueJob(
-  token, productB64, product.title, product.id, product.imageUrl,
-  shotId, shotDef.label, renderPath, prompt,
-  isProductOnlyShot ? null : modelB64,  // ← Don't send model ref for product-only
-  session.modelProfile, null, batchId, enqueueCount++,
-);
+```tsx
+{(() => {
+  // Build image-to-job mapping
+  const imageJobMap: { url: string; shotLabel: string }[] = [];
+  for (const j of batchState.jobs) {
+    for (const img of j.images) {
+      imageJobMap.push({ url: img, shotLabel: j.shotLabel });
+    }
+  }
+  return imageJobMap.map((item, i) => (
+    <button key={i} ...>
+      <ShimmerImage ... />
+      <span className="absolute bottom-1 left-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded truncate">
+        {item.shotLabel}
+      </span>
+    </button>
+  ));
+})()}
 ```
 
-### 2. `src/lib/catalogEngine.ts`
-**a)** Split `CONSISTENCY_BLOCK` into two versions:
-- Model version: keeps identity references + "same CONTROLLED STUDIO lighting"
-- Product version: "same product appearance, same background, same studio lighting setup, consistent color accuracy across the set"
+### File 2: `src/lib/catalogEngine.ts` — `assemblePrompt` function
+Three changes:
 
-**b)** In `assemblePrompt`, use `CONSISTENCY_BLOCK_PRODUCT` for product-only shots and `CONSISTENCY_BLOCK_MODEL` for on-model shots by choosing the right block before template replacement.
+**a)** Ghost mannequin background override: Before template replacement, if `shotDef.id === 'ghost_mannequin'`, replace `backgroundPrompt` with a hardcoded pure white void prompt that has NO shadow language.
 
-**c)** Add explicit "NO people, NO model, NO human figure" to flat lay, on-surface, and ghost mannequin templates.
-
-**d)** Add "full body head to toe, feet fully visible" to front_model, back_view, side_3q, movement, walking_motion, full_look templates.
-
-**e)** Strengthen BACKGROUND RULE: add "NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting."
-
-### 3. `supabase/functions/generate-catalog/index.ts`
-In the reference images section (~line 360), skip adding model image when `render_path` is `product_only_generate`:
-```typescript
-if (body.model?.imageUrl && body.render_path !== 'product_only_generate') {
-  referenceImages.push(body.model.imageUrl);
-}
+**b)** Move anti-flare directive to apply to ALL shots (not just model shots). Extract from the `if (modelProfile !== 'no model')` block and append unconditionally:
 ```
+prompt += '\nLIGHTING RULE: NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting, ONLY controlled even studio lighting.';
+```
+
+**c)** Add explicit hex color reinforcement to the background directive for all shots:
+```
+prompt += `\nBACKGROUND COLOR: The background MUST be exactly ${backgroundHex} — uniform, seamless, no gradients, no color shifts.`;
+```
+Pass the hex from the background definition through the `PromptAssemblyInput` interface.
+
+### File 3: `src/lib/catalogEngine.ts` — Background definitions
+Remove "shadow beneath subject" from ALL background `promptBlock` values for the ghost mannequin case (handled by the override above). No change to the actual definitions needed — the override in `assemblePrompt` handles it.
+
+### File 4: `src/lib/catalogEngine.ts` — Types
+Add `backgroundHex?: string` to `PromptAssemblyInput` interface.
+
+### File 5: `src/hooks/useCatalogGenerate.ts`
+Pass `backgroundHex` from the session's background definition when calling `assemblePrompt`.
 
 ## Summary
-Three-layer fix: (1) stop sending model reference images for product-only shots at both client and edge function levels, (2) use a product-focused consistency block without model references, (3) strengthen anti-flare and full-body directives in prompts.
+- Shot label badges on each generated image thumbnail
+- Ghost mannequin gets a hardcoded pure-white-void background with zero shadow language
+- Anti-flare lighting rule applied to ALL shots (not just model shots)
+- Background hex color enforcement appended to every prompt
 
