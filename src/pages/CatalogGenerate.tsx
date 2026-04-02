@@ -718,7 +718,7 @@ export default function CatalogGenerate() {
     <div className="space-y-6 pb-16 sm:pb-32">
       {/* Header with team strip */}
       <div className="flex items-start justify-between gap-4">
-        <PageHeader title="Catalog Studio" subtitle="Generate consistent photography across your catalog"><div /></PageHeader>
+        <PageHeader title="Catalog Studio" subtitle="Generate consistent photography across your catalog" backAction={{ content: 'Back', onAction: () => navigate('/app/catalog') }}><div /></PageHeader>
         <div className="hidden md:block pt-1">
           <CatalogTeamStrip />
         </div>
