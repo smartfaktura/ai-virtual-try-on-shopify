@@ -1,18 +1,20 @@
 
 
-# Fix Prop Picker Modal — Match Product Card Style
+# Add Branded Team Avatars to Catalog Generation Screen
 
-The prop picker modal shows product images with `object-contain`, causing tall/narrow product photos to appear as thin vertical stripes. The Products step uses `object-cover` with a padded card layout that looks much better.
+## What
+Add the rotating VOVV.AI team avatar strip (already used in `QueuePositionIndicator` and `MultiProductProgressBanner`) to the catalog generation progress screen, between the progress bar/elapsed time and the "VOVV.AI" branding text.
 
 ## Changes
 
-**File: `src/components/app/catalog/CatalogStepProps.tsx`** — Update the prop picker modal grid cards (lines 120-142) to match the Products step card style:
+**File: `src/pages/CatalogGenerate.tsx`**
 
-1. Change card styling from `p-2` flat layout to `rounded-2xl` with inner padding (`p-2.5 pb-0`) and a proper info section below
-2. Change image from `object-contain` to `object-cover` so products fill the thumbnail properly
-3. Add the inner `rounded-xl` image wrapper with `bg-muted/30` background
-4. Move title/type text into a proper `px-3 py-2.5` info section with `line-clamp-2` instead of `truncate`
-5. Add product type as a pill badge (`bg-muted/60 rounded-full px-2 py-0.5`) matching the Products step
+Insert a rotating team member avatar + status message block after the elapsed/remaining time display (line 438) and before the "VOVV.AI" text (line 439). Reuse the same pattern from `QueuePositionIndicator`:
 
-This brings the prop picker visual treatment in line with how products appear in the selection grid.
+1. Add `useState` for `teamIndex` with a 4-second rotating interval (same as other workflows)
+2. Import `TEAM_MEMBERS` from `@/data/teamData`, `Avatar`/`AvatarImage`/`AvatarFallback` from UI, and `getOptimizedUrl`
+3. Render a centered row: avatar (w-7 h-7) + "{Name} is {statusMessage}" in italic muted text
+4. Place it right above the "VOVV.AI" watermark text, replacing the static watermark since the avatars themselves are branded
+
+This matches the exact pattern already used in `QueuePositionIndicator` (lines 101-108) and `MultiProductProgressBanner`.
 
