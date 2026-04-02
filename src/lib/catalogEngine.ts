@@ -750,12 +750,12 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
   // Append model identity & background isolation directives when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
     prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
-    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo.';
+    prompt += '\nBACKGROUND RULE: Use ONLY the specified studio background. IGNORE any background, environment, or lighting from the model reference photo. NO sun flares, NO lens flares, NO window light, NO natural outdoor lighting, ONLY controlled studio lighting.';
   }
 
-  // Product-only shots: enforce single-product rule
+  // Product-only shots: enforce single-product + no-people rule
   if (shotDef.group === 'product-only') {
-    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described.';
+    prompt += '\nIMPORTANT: Show ONLY the specified hero product. Do NOT add any other clothing, accessories, shoes, bags, or items that are not explicitly described. NO people, NO model, NO human figure, NO hands, NO body parts.';
   }
 
   return prompt;
