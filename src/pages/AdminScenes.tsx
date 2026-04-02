@@ -84,7 +84,7 @@ export default function AdminScenes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('workflows')
-        .select('name, slug, uses_tryon, generation_config')
+        .select('id, name, slug, uses_tryon, generation_config')
         .eq('is_system', true)
         .order('sort_order', { ascending: true });
       if (error) throw error;
