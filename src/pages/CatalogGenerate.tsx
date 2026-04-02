@@ -388,23 +388,33 @@ export default function CatalogGenerate() {
               </div>
             </div>
 
-            {batchState.aggregatedImages.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated Images</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                  {batchState.aggregatedImages.map((url, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                      <ShimmerImage src={url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                    </button>
-                  ))}
+            {batchState.aggregatedImages.length > 0 && (() => {
+              const imageJobMap = batchState.jobs.flatMap(j =>
+                j.images.map(img => ({ url: img, shotLabel: j.shotLabel, productName: j.productName }))
+              );
+              return (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated Images</h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {imageJobMap.map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
+                        className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted cursor-pointer ring-1 ring-border hover:ring-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        <ShimmerImage src={item.url} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" aspectRatio="3/4" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                        {item.shotLabel && (
+                          <span className="absolute bottom-1 left-1 right-1 text-[10px] leading-tight font-medium bg-black/60 text-white rounded px-1.5 py-0.5 truncate text-center">
+                            {item.shotLabel}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {batchState.failedJobs > 0 && (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
