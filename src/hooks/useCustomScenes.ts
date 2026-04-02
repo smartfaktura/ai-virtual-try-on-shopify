@@ -35,7 +35,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     category: scene.category as PoseCategory,
     description: scene.description,
     promptHint: scene.prompt_hint || scene.description,
-    previewUrl: scene.image_url,
+    previewUrl: scene.preview_image_url || scene.image_url,
     optimizedImageUrl: scene.optimized_image_url || undefined,
     created_at: scene.created_at,
     promptOnly: scene.prompt_only || false,
