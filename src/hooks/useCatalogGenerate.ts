@@ -450,7 +450,8 @@ export function useCatalogGenerate() {
       );
 
       // Pass model image URL directly — no base64 conversion
-      const modelUrl: string | null = model.imageUrl || null;
+      // Use identityImageUrl (high-res) for face replication; fall back to imageUrl
+      const modelUrl: string | null = model.identityImageUrl || model.imageUrl || null;
 
       for (const product of config.products) {
         if (creditsFailed) break;
