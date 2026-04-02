@@ -737,9 +737,9 @@ export function classifyRenderPath(
 // 10. Prompt Assembly
 // ────────────────────────────────────────────────
 
-const QUALITY_BLOCK = 'ultra realistic ecommerce fashion photography, sharp focus, realistic fabric details, premium commercial finish, natural proportions, polished product visibility';
-const CONSISTENCY_BLOCK_MODEL = 'same model identity matching the model reference image exactly — same face same hair color same hair style same skin tone same body proportions, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same controlled studio lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
-const CONSISTENCY_BLOCK_PRODUCT = 'same product appearance, same colors, same textures, same materials, same background, same controlled studio lighting setup, consistent color accuracy across the entire set, NO people, NO model, NO human figure';
+const QUALITY_BLOCK = 'ultra realistic ecommerce fashion photography, accurate garment construction, realistic fabric behavior, sharp textile detail, true-to-life proportions, premium catalog image quality, clean retouching, natural skin texture, commercially polished but not over-edited';
+const CONSISTENCY_BLOCK_MODEL = 'preserve exact product identity from reference, maintain correct garment color, fabric, wash, print, stitching, silhouette, trim, hardware, proportions, and construction details, no redesign, no added embellishments, no missing details, same model identity matching the model reference image exactly — same face same hair color same hair style same skin tone same body proportions, same styling, same support wardrobe, same shoes, same proportions, same background, same studio setup, same controlled studio lighting, consistent across the entire set, no variation between images beyond shot angle and pose';
+const CONSISTENCY_BLOCK_PRODUCT = 'preserve exact product identity from reference, maintain correct garment color, fabric, wash, print, stitching, silhouette, trim, hardware, proportions, and construction details, no redesign, no added embellishments, no missing details, same product appearance, same colors, same textures, same materials, same background, same controlled studio lighting setup, consistent color accuracy across the entire set, NO people, NO model, NO human figure';
 
 export interface PromptAssemblyInput {
   productTitle: string;
