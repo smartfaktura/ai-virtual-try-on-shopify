@@ -105,7 +105,7 @@ async function generateImageNative(
             generationConfig: {
               responseModalities: ["IMAGE", "TEXT"],
               temperature: 1.0,
-              max_tokens: 8192,
+              
               imageConfig: {
                 imageSize: "2K",
                 aspectRatio,
