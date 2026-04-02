@@ -14,42 +14,102 @@ function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: strin
   return { ext: 'png', contentType: 'image/png' };
 }
 
-// ── Nano Banana Flash generation via Lovable AI Gateway ─────────────────
-async function generateImageNanoBanana(
+// ── Native Gemini helpers ────────────────────────────────────────────────
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const GEMINI_MODEL = "gemini-3.1-flash-image-preview";
+
+async function fetchImageAsBase64(url: string): Promise<{ mimeType: string; data: string } | null> {
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 15_000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(tid);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    const { contentType } = detectImageFormat(bytes);
+    const b64 = btoa(String.fromCharCode(...bytes));
+    return { mimeType: contentType, data: b64 };
+  } catch (e) {
+    console.warn("[generate-catalog] fetchImageAsBase64 failed:", (e as Error).message);
+    return null;
+  }
+}
+
+function isContentBlocked(data: Record<string, unknown>): boolean {
+  const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+  if (!candidates?.length) {
+    const blockReason = (data.promptFeedback as Record<string, unknown>)?.blockReason;
+    return !!blockReason;
+  }
+  return candidates[0]?.finishReason === "SAFETY" || candidates[0]?.finishReason === "RECITATION";
+}
+
+function extractBlockReason(data: Record<string, unknown>): string {
+  const pfb = (data.promptFeedback as Record<string, unknown>)?.blockReason;
+  if (pfb) return `Blocked by safety filter: ${pfb}`;
+  const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+  if (candidates?.[0]?.finishReason) return `Blocked: ${candidates[0].finishReason}`;
+  return "Content blocked by safety filter";
+}
+
+function extractImageFromGeminiResponse(data: Record<string, unknown>): string | null {
+  const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+  if (!candidates?.length) return null;
+  const parts = (candidates[0]?.content as Record<string, unknown>)?.parts as Array<Record<string, unknown>> | undefined;
+  if (!parts) return null;
+  for (const part of parts) {
+    const inline = part.inlineData as { mimeType: string; data: string } | undefined;
+    if (inline?.data) return `data:${inline.mimeType};base64,${inline.data}`;
+  }
+  return null;
+}
+
+async function generateImageNative(
   prompt: string,
   referenceImageUrls: string[],
   apiKey: string,
+  aspectRatio: string,
   maxRetries = 1,
 ): Promise<{ ok: boolean; imageBase64?: string; error?: string }> {
-  const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
   const timeoutMs = 100_000;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      // Build multimodal content: text prompt + reference images
-      const content: Array<Record<string, unknown>> = [
-        { type: "text", text: prompt },
-      ];
+      // Convert reference URLs to inlineData parts
+      const imageParts: Array<Record<string, unknown>> = [];
       for (const url of referenceImageUrls) {
-        content.push({
-          type: "image_url",
-          image_url: { url },
-        });
+        const img = await fetchImageAsBase64(url);
+        if (img) {
+          imageParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+        } else {
+          console.warn(`[generate-catalog] Skipping unreachable ref image: ${url.slice(0, 80)}`);
+        }
       }
 
-      const response = await fetch(GATEWAY_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${GEMINI_BASE}/models/${GEMINI_MODEL}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": apiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [...imageParts, { text: prompt }] }],
+            generationConfig: {
+              responseModalities: ["IMAGE", "TEXT"],
+              temperature: 1.0,
+              max_tokens: 8192,
+              imageConfig: {
+                imageSize: "2K",
+                aspectRatio,
+              },
+            },
+          }),
+          signal: AbortSignal.timeout(timeoutMs),
         },
-        body: JSON.stringify({
-          model: "google/gemini-3.1-flash-image-preview",
-          messages: [{ role: "user", content }],
-          modalities: ["image", "text"],
-        }),
-        signal: AbortSignal.timeout(timeoutMs),
-      });
+      );
 
       if (!response.ok) {
         let errorText = "";
@@ -57,30 +117,33 @@ async function generateImageNanoBanana(
 
         if (response.status === 429) {
           if (attempt < maxRetries) {
-            console.warn(`[generate-catalog] NanoBanana rate limited, retrying in 5s...`);
+            console.warn(`[generate-catalog] Native Gemini rate limited, retrying in 5s...`);
             await new Promise(r => setTimeout(r, 5000));
             continue;
           }
-          return { ok: false, error: "Rate limited by AI gateway, please try again later" };
-        }
-        if (response.status === 402) {
-          return { ok: false, error: "AI credits exhausted" };
+          return { ok: false, error: "Rate limited by AI, please try again later" };
         }
 
         const isTransient = response.status === 500 || response.status === 502 || response.status === 503;
         if (isTransient && attempt < maxRetries) {
-          console.warn(`[generate-catalog] NanoBanana transient ${response.status}, retrying in 3s...`);
+          console.warn(`[generate-catalog] Native Gemini transient ${response.status}, retrying in 3s...`);
           await new Promise(r => setTimeout(r, 3000));
           continue;
         }
-        return { ok: false, error: `AI gateway error ${response.status}: ${errorText.slice(0, 300)}` };
+        return { ok: false, error: `Gemini API error ${response.status}: ${errorText.slice(0, 300)}` };
       }
 
       const data = await response.json();
-      const imageUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-      if (!imageUrl) {
-        console.error("[generate-catalog] No image in NanoBanana response:", JSON.stringify(data).slice(0, 500));
+      if (isContentBlocked(data)) {
+        const reason = extractBlockReason(data);
+        console.warn(`[generate-catalog] Content blocked: ${reason}`);
+        return { ok: false, error: reason };
+      }
+
+      const imageDataUrl = extractImageFromGeminiResponse(data);
+      if (!imageDataUrl) {
+        console.error("[generate-catalog] No image in Gemini response:", JSON.stringify(data).slice(0, 500));
         if (attempt < maxRetries) {
           console.warn("[generate-catalog] Retrying after empty image response...");
           await new Promise(r => setTimeout(r, 2000));
@@ -89,11 +152,11 @@ async function generateImageNanoBanana(
         return { ok: false, error: "No image generated by AI model" };
       }
 
-      return { ok: true, imageBase64: imageUrl };
+      return { ok: true, imageBase64: imageDataUrl };
     } catch (error: unknown) {
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
       if (!isTimeout && attempt < maxRetries) {
-        console.warn(`[generate-catalog] NanoBanana error, retrying in 3s...`, error);
+        console.warn(`[generate-catalog] Native Gemini error, retrying in 3s...`, error);
         await new Promise(r => setTimeout(r, 3000));
         continue;
       }
@@ -327,9 +390,9 @@ serve(async (req) => {
       }
     }
 
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      const errMsg = "LOVABLE_API_KEY not configured";
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiApiKey) {
+      const errMsg = "GEMINI_API_KEY not configured";
       if (isQueueInternal && body.job_id) {
         await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], 1, [errMsg], body as unknown as Record<string, unknown>);
       }
@@ -396,11 +459,12 @@ serve(async (req) => {
     const refMode = isProductOnly ? 'product-only' : isAnchorShot ? 'anchor-faceless' : body.anchor_image_url ? 'derivative-face-lock' : 'fallback';
     console.log(`[generate-catalog] REF_STATE: shot="${body.shot_id}", mode=${refMode}, refs=${referenceImages.length}, hasModelIdentity=${!!modelIdentityUrl}, hasAnchor=${!!body.anchor_image_url}`);
 
-    // ── Generate with Nano Banana Flash ──
-    const result = await generateImageNanoBanana(
+    // ── Generate with Native Gemini API (2K quality) ──
+    const result = await generateImageNative(
       prompt,
       referenceImages,
-      lovableApiKey,
+      geminiApiKey,
+      aspectRatio,
       1,
     );
 
