@@ -771,8 +771,9 @@ export function assemblePrompt(input: PromptAssemblyInput): string {
 
   // Append model identity directive when a model is involved
   if (modelProfile && modelProfile !== 'no model') {
-    prompt += '\nCRITICAL: The model MUST be the EXACT person shown in the model reference image — replicate their face, skin tone, hair color, hair style, and body proportions precisely. Do NOT substitute a different person.';
-    prompt += '\nFACE QUALITY: Render the model\'s face with high-resolution photorealistic detail — sharp facial features, realistic skin texture and pores, detailed eyes with catchlights, natural lip detail. Do NOT blur, smooth, soften, or distort facial features. The face must look like a real photograph, not AI-generated.';
+    prompt += '\nMODEL IDENTITY ANCHOR: The model MUST be the EXACT person shown in the model reference image. Replicate their face structure, jawline, cheekbones, nose shape, eye shape, eye color, eyebrows, lip shape, skin tone, skin texture, hair color, hair style, hair length, and body proportions with absolute precision. Do NOT substitute a different person, do NOT alter any facial feature.';
+    prompt += '\nFACE QUALITY: Render the model\'s face with maximum photorealistic resolution — sharp defined facial features, visible skin texture and pores, detailed iris with catchlights, natural lip detail, individual eyebrow hairs, realistic under-eye area. Do NOT blur, smooth, soften, airbrush, or distort any facial feature. The face must be indistinguishable from a real high-resolution photograph.';
+    prompt += '\nIDENTITY PRIORITY: The model reference image is the PRIMARY identity source. The product reference defines ONLY the garment. Never let garment colors or patterns influence the model\'s skin tone, hair color, or facial features.';
   }
 
   // GLOBAL lighting rule — applied to ALL shots (model and product-only)
