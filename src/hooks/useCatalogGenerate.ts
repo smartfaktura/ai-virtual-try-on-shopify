@@ -413,7 +413,7 @@ export function useCatalogGenerate() {
     }
     const derivativeSpecs: DerivativeSpec[] = [];
 
-    // ── PHASE 1: Enqueue anchor jobs ──
+    // ── PHASE 1: Enqueue identity anchor jobs (one per product × model) ──
     for (const model of modelsToUse) {
       if (creditsFailed) break;
 
@@ -428,24 +428,21 @@ export function useCatalogGenerate() {
       );
 
       // Pass model image URL directly — no base64 conversion
-      // This preserves full resolution for face identity locking
       const modelUrl: string | null = model.imageUrl || null;
 
       for (const product of config.products) {
         if (creditsFailed) break;
 
         const lookLock = buildProductLookLock(product, session, product.detectedCategory);
-        // Convert product image to base64 for the payload
         const productB64 = await safeConvertBase64(product.imageUrl, product.title);
         if (!productB64) continue;
 
         const heroBlock = getHeroProductBlock(product.title, product.detectedCategory);
 
+        // The anchor is always identity_anchor for on-model, front_flat for product-only
         const anchorShotId = lookLock.anchorShotId;
-        const effectiveAnchorId = config.selectedShots.includes(anchorShotId) ? anchorShotId : config.selectedShots[0];
-        const effectiveAnchorDef = getShotDefinition(effectiveAnchorId);
-
-        if (!effectiveAnchorDef) continue;
+        const anchorDef = getShotDefinition(anchorShotId);
+        if (!anchorDef) continue;
 
         const rawAnchorPrompt = assemblePrompt({
           productTitle: heroBlock,
@@ -454,30 +451,29 @@ export function useCatalogGenerate() {
           supportWardrobePrompt: lookLock.supportWardrobePrompt,
           backgroundPrompt: session.backgroundPrompt,
           lightingPrompt: session.lightingPrompt,
-          shotDef: effectiveAnchorDef,
+          shotDef: anchorDef,
           renderPath: 'anchor_generate',
           backgroundHex: session.backgroundHex,
         });
-        const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${effectiveAnchorId}`;
+        const anchorComboKey = `${product.id}__${isProductOnly ? '__none__' : model.id}__${anchorShotId}`;
         const anchorPrompt = appendPropsToPrompt(rawAnchorPrompt, anchorComboKey, config.propAssignments);
 
         const anchorResult = await enqueueJob(
           token, productB64, product.title, product.id, product.imageUrl,
-          effectiveAnchorId, effectiveAnchorDef.label, 'anchor_generate',
-          effectiveAnchorDef.group,
+          anchorShotId, anchorDef.label, 'anchor_generate',
+          anchorDef.group,
           anchorPrompt, modelUrl, session.modelProfile, null, batchId, enqueueCount++,
         );
 
         if (anchorResult === 'insufficient_credits') { creditsFailed = true; break; }
         if (anchorResult) anchorJobs.push(anchorResult);
 
-        // Collect remaining shots as derivative specs
-        const remainingShots = config.selectedShots.filter(s => s !== effectiveAnchorId);
-        for (const shotId of remainingShots) {
+        // ALL user-selected shots are derivatives (identity_anchor is not user-selectable)
+        for (const shotId of config.selectedShots) {
           const shotDef = getShotDefinition(shotId);
           if (!shotDef) continue;
 
-          const renderPath = classifyRenderPath(effectiveAnchorId, shotId, product.detectedCategory);
+          const renderPath = classifyRenderPath(anchorShotId, shotId, product.detectedCategory);
           const rawPrompt = assemblePrompt({
             productTitle: heroBlock,
             productCategory: product.detectedCategory,
