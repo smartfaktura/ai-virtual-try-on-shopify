@@ -103,7 +103,7 @@ function MarqueeCard({ label, images, cardIndex }: { label: string; images: stri
   const rotates = ROTATING_INDICES.has(cardIndex);
   const idx = useRotatingIndex(images.length, 1000, rotates);
   return (
-    <div className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
+    <div className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] bg-[hsl(var(--muted))]">
       {rotates ? (
         <CrossfadeStack images={images} activeIndex={idx} />
       ) : (
