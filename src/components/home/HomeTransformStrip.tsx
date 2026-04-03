@@ -105,7 +105,7 @@ function ImageCard({
           <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
         )}
         <img
-          src={getOptimizedUrl(src, { width: 440, quality: 55 })}
+          src={getOptimizedUrl(src, { width: 440, quality: 75 })}
           alt={label}
           loading="lazy"
           decoding="async"
