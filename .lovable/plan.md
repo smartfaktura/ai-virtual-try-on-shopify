@@ -1,47 +1,42 @@
 
 
-# Revised Hero & TransformStrip — Marquee Ticker Approach
+# Hero Banner Fixes — Category Pills + Better "Your Photo" + Mobile
 
-## The Problem with 3x3
-At ~150×200px per card, the images become thumbnails. The whole point is showing off visual quality — tiny cards defeat that.
+## What's Wrong Now
+- "Your photo" card is tiny (64x80px) and awkwardly overlaps the marquee — hard to notice
+- Mobile has massive blank space between nav and the marquee cards (copy section takes full height before images appear)
+- No way for users to see different product types — all images are mixed
 
-## Better Idea: Double-Row Marquee
+## Plan
 
-Two rows of cards **continuously auto-scrolling in opposite directions**, like a film strip. Cards are much larger because they only need to fit 2 rows (not 3). The infinite scroll means all 9 categories cycle through naturally — the user sees everything without clicking or scrolling.
+### 1. Add Product Category Pills
+Add clickable pills above the marquee: **Beauty & Skincare**, **Fashion & Accessories**, **Jewelry**, **Home & Lifestyle**
 
-```text
-Desktop hero right side:
+- Each category maps to a different set of images for the 9 output-type cards (Product page, Social Media, Editorial, etc.)
+- Default: show current mixed set (or start with "Fashion & Accessories")
+- On click: swap the image URLs in the marquee cards — images load on demand (no preload for inactive categories)
+- Active pill gets a filled/highlighted style, others are outlined
+- Pills sit in a row between the "Your photo" area and the marquee rows
 
-  ← ← ← [Product page] [Social Media] [Editorial] [Ad Creatives] [UGC Style] ← ← ←
-  → → → [Selfie] [Flat Lay] [Video] [Perspectives] [Product page] → → → 
-```
+The existing hero image filenames already map naturally:
+- **Fashion & Accessories**: `hero-croptop-*` images
+- **Jewelry**: `hero-ring-*` images  
+- **Home & Lifestyle**: `hero-hp-*` images (headphones/home products)
+- **Beauty & Skincare**: mix or reuse lifestyle shots
 
-- **Row 1**: scrolls left slowly (~30s loop)
-- **Row 2**: scrolls right slowly (~35s loop, slight speed difference for organic feel)
-- Each card: ~200×267px on desktop (aspect 3/4), large enough to see detail
-- Each card still crossfades its images every 1s — so there's movement both within cards AND across the strip
-- Category label on each card
-- Pauses on hover so user can look closely
-- CSS `@keyframes` animation — no JS scroll needed, very performant
+### 2. Reposition "Your Photo"
+- Move from awkward absolute-positioned overlay to a **dedicated row above the marquee**
+- Make it bigger: ~80x100px on desktop
+- Place it inline with the category pills: `[YOUR PHOTO thumbnail] [pill] [pill] [pill] [pill]`
+- Clear "YOUR PHOTO" label below it
+- On mobile: show centered above the marquee rows
 
-### With "Original" anchor
-A static "Your photo" Original card floats at the left edge or top-left corner, visually anchoring the "1 photo" input. The marquee rows flow out from it to the right.
-
-### Mobile
-Same concept but single row marquee, cards slightly smaller (~140×187px). Still big enough to read. Continuous scroll keeps it dynamic.
-
-## TransformStrip Section
-
-Replace the cramped grid with the same marquee concept but wider (full-width section). Two rows scrolling opposite directions. Larger cards (~220×293px). The section title "From one product photo to every asset you need" already explains the concept, so the marquee just needs to look impressive.
-
-## Why This Works
-- Cards are 2-3x larger than a 3x3 grid
-- User sees all 9 categories without any interaction
-- Constant motion draws the eye — feels alive and premium
-- No scrolling, no clicking, no tabs needed
-- Scales perfectly to any screen width (marquee just wraps)
+### 3. Fix Mobile Layout
+- Reduce top padding so content appears sooner
+- Show "Your photo" card centered between copy and marquee
+- Category pills wrap into 2x2 grid on small screens
+- Marquee cards use current mobile sizing (160x213px)
 
 ## Files Modified
-- `src/components/home/HomeHero.tsx` — marquee ticker layout
-- `src/components/home/HomeTransformStrip.tsx` — same marquee approach, full-width
+- `src/components/home/HomeHero.tsx` — add category state, pills row, reposition original card, fix mobile spacing
 
