@@ -80,7 +80,7 @@ const CATEGORIES: CategoryData[] = [
 /* ── Shimmer card ── */
 function ShimmerCard() {
   return (
-    <div className="flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden">
+    <div className="flex-shrink-0 w-[160px] sm:w-[240px] lg:w-[260px] rounded-2xl overflow-hidden">
       <div className="aspect-[3/4] bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
     </div>
   );
