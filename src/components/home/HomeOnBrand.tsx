@@ -63,18 +63,23 @@ export function HomeOnBrand() {
             </div>
           </div>
 
-          {/* Right — Consistent output grid */}
+          {/* Right — Consistent output grid with faux product silhouettes */}
           <div className="grid grid-cols-2 gap-3">
             {[
               'from-amber-50 to-orange-50',
-              'from-rose-50 to-pink-50',
               'from-amber-50 to-yellow-50',
-              'from-orange-50 to-amber-50',
+              'from-amber-50/80 to-orange-50/80',
+              'from-yellow-50 to-amber-50',
             ].map((c, i) => (
               <div
                 key={i}
-                className={`aspect-[3/4] rounded-2xl bg-gradient-to-br ${c} shadow-sm`}
-              />
+                className={`aspect-[3/4] rounded-2xl bg-gradient-to-br ${c} shadow-sm border border-white/60 flex items-center justify-center relative overflow-hidden`}
+              >
+                {/* Faux product silhouette — all match to prove consistency */}
+                <div className="w-12 h-20 rounded-xl bg-gradient-to-b from-[#d4cfc8]/50 to-[#c4bfb7]/40 shadow-inner" />
+                {/* Subtle warm overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-100/10 to-transparent pointer-events-none" />
+              </div>
             ))}
           </div>
         </div>

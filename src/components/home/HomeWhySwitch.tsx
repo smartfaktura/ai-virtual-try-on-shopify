@@ -38,12 +38,14 @@ export function HomeWhySwitch() {
           {cards.map((card, i) => (
             <div
               key={card.title}
-              className={`bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 transition-all duration-700 hover:bg-white/10 ${
+              className={`bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 transition-all duration-700 hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${i * 150}ms` }}
             >
-              <card.icon size={24} className="text-[#94a3b8] mb-5" />
+              <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                <card.icon size={20} className="text-[#94a3b8]" />
+              </div>
               <h3 className="text-white text-lg font-semibold mb-3">{card.title}</h3>
               <p className="text-[#9ca3af] text-sm leading-relaxed">{card.text}</p>
             </div>
