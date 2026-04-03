@@ -86,10 +86,10 @@ function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex
       {images.map((src, i) => (
         <img
           key={src}
-          src={getOptimizedUrl(src, { width: 400, quality: 55 })}
+          src={getOptimizedUrl(src, { width: 800, quality: 55 })}
           alt=""
           loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${
             i === activeIndex ? 'opacity-100' : 'opacity-0'
           }`}
         />
