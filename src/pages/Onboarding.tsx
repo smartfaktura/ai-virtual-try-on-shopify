@@ -5,31 +5,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/brandedToast';
 import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
 import { ArrowRight, Check } from 'lucide-react';
 import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
 
-const REFERRAL_OPTIONS = [
-  'Social media post',
-  'Article, blog, or review',
-  'Friend or colleague',
-  'Searching online for a tool like this',
-  'Ad on Google or YouTube',
-  'Content creator or influencer',
-  'Ad on social media (Instagram, TikTok, etc.)',
-  'Online community (Slack, Discord, Reddit, etc.)',
-  'Other',
-];
-
 const PRODUCT_CATEGORIES = SHARED_CATEGORIES.map((c) =>
   c.id === 'any' ? { ...c, label: 'Any Product' } : c
 );
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 2;
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -41,13 +27,10 @@ export default function Onboarding() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [companyUrl, setCompanyUrl] = useState('');
-
-  // Step 2: About
-  const [referralSource, setReferralSource] = useState('');
-
-  // Step 3: Categories
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [marketingOptIn, setMarketingOptIn] = useState(true);
+
+  // Step 2: Categories
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   if (!isLoading && !user) {
     return <Navigate to="/auth" replace />;
@@ -65,8 +48,6 @@ export default function Onboarding() {
         return firstName.trim().length > 0;
       case 2:
         return selectedCategories.length > 0;
-      case 3:
-        return referralSource.length > 0;
       default:
         return true;
     }
@@ -88,7 +69,6 @@ export default function Onboarding() {
         first_name: firstName.trim(),
         last_name: lastName.trim() || null,
         company_url: companyUrl.trim() || null,
-        referral_source: referralSource,
         product_categories: selectedCategories,
         marketing_emails_opted_in: marketingOptIn,
         onboarding_completed: true,
@@ -240,36 +220,6 @@ export default function Onboarding() {
                     </button>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: How did you find us */}
-          {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-                  How did you find us?
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  This helps us understand how people discover VOVV.AI
-                </p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Where did you hear about VOVV.AI? *</Label>
-                <Select value={referralSource} onValueChange={setReferralSource}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REFERRAL_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           )}
