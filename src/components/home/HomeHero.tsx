@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -6,12 +6,8 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
-/* ── Asset maps ── */
-const centerProducts = [
-  { img: h('hero-product-croptop.jpg'), label: 'Crop Top' },
-  { img: h('hero-product-ring-new.png'), label: 'Ring' },
-  { img: h('hero-product-headphones.png'), label: 'Headphones' },
-];
+/* ── Assets ── */
+const centerProductImg = h('hero-product-croptop.jpg');
 
 const cardSets: { label: string; images: string[] }[] = [
   {
@@ -52,6 +48,16 @@ const cardSets: { label: string; images: string[] }[] = [
       h('hero-hp-studio-seated.png'),
       h('hero-ring-floating.png'),
       h('hero-croptop-basketball-court.png'),
+    ],
+  },
+  {
+    label: 'Video',
+    images: [
+      h('hero-croptop-golden-hour.png'),
+      h('hero-hp-desert.png'),
+      h('hero-ring-hand.png'),
+      h('hero-croptop-pilates-studio.png'),
+      h('hero-ring-golden-light.png'),
     ],
   },
 ];
@@ -105,21 +111,19 @@ function CrossfadeStack({ images, activeIndex, className = '' }: { images: strin
 function OutputCard({
   label,
   images,
-  intervalMs,
   delay,
   rotate,
 }: {
   label: string;
   images: string[];
-  intervalMs: number;
   delay: number;
   rotate: string;
 }) {
-  const idx = useRotatingIndex(images.length, intervalMs, delay);
+  const idx = useRotatingIndex(images.length, 1000, delay);
 
   return (
     <div
-    className={`group relative w-full rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
+      className={`group relative w-full rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
       style={{ aspectRatio: '3/4' }}
     >
       <CrossfadeStack images={images} activeIndex={idx} />
@@ -134,14 +138,18 @@ function OutputCard({
 
 /* ── Main component ── */
 export function HomeHero() {
-  const centerIdx = useRotatingIndex(centerProducts.length, 2000);
-
   // Preload all images
   const allImages = [
-    ...centerProducts.map((p) => p.img),
+    centerProductImg,
     ...cardSets.flatMap((c) => c.images),
   ];
   usePreload(allImages);
+
+  // Layout: left column 2 cards, center original, right column 3 cards
+  const leftCards = cardSets.slice(0, 2);
+  const rightCards = cardSets.slice(2);
+  const rotationsLeft = ['-rotate-2', 'rotate-1'];
+  const rotationsRight = ['rotate-2', '-rotate-1', 'rotate-1'];
 
   return (
     <section className="pt-28 pb-16 lg:pt-36 lg:pb-28 bg-[#FAFAF8]">
@@ -187,13 +195,27 @@ export function HomeHero() {
         </div>
 
         {/* ── Right — Bento grid ── */}
-        <div className="relative grid grid-cols-3 grid-rows-2 gap-3 lg:gap-4 min-h-[380px] lg:min-h-[520px]">
-          {/* Center "Original" card — spans middle column, both rows */}
-          <div className="col-start-2 row-span-2 flex items-center justify-center">
+        <div className="relative grid grid-cols-[1fr_1.2fr_1fr] gap-3 lg:gap-4 min-h-[420px] lg:min-h-[520px]">
+          {/* Left column — 2 cards */}
+          <div className="flex flex-col gap-3 justify-center">
+            {leftCards.map((card, i) => (
+              <OutputCard
+                key={card.label}
+                label={card.label}
+                images={card.images}
+                delay={i * 150}
+                rotate={rotationsLeft[i]}
+              />
+            ))}
+          </div>
+
+          {/* Center "Original" card */}
+          <div className="flex items-center justify-center">
             <div className="relative w-full rounded-3xl overflow-hidden border border-border/70 shadow-xl shadow-foreground/[0.06]" style={{ aspectRatio: '3/4.5' }}>
-              <CrossfadeStack
-                images={centerProducts.map((p) => p.img)}
-                activeIndex={centerIdx}
+              <img
+                src={getOptimizedUrl(centerProductImg, { width: 400, quality: 55 })}
+                alt="Original product"
+                className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute bottom-4 left-4 right-4 z-10">
                 <span className="text-xs font-medium text-white/90 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg">
@@ -203,27 +225,18 @@ export function HomeHero() {
             </div>
           </div>
 
-          {/* 4 output cards in corners */}
-          {cardSets.map((card, i) => {
-            const isLeft = i % 2 === 0;
-            const isTop = i < 2;
-            const col = isLeft ? 'col-start-1' : 'col-start-3';
-            const row = isTop ? 'row-start-1' : 'row-start-2';
-            const rotations = ['-rotate-2', 'rotate-2', '-rotate-1', 'rotate-1'];
-            const delays = [0, 150, 300, 450];
-
-            return (
-              <div key={card.label} className={`${col} ${row} flex items-center w-full`}>
-                <OutputCard
-                  label={card.label}
-                  images={card.images}
-                  intervalMs={500}
-                  delay={delays[i]}
-                  rotate={rotations[i]}
-                />
-              </div>
-            );
-          })}
+          {/* Right column — 3 cards */}
+          <div className="flex flex-col gap-3 justify-center">
+            {rightCards.map((card, i) => (
+              <OutputCard
+                key={card.label}
+                label={card.label}
+                images={card.images}
+                delay={300 + i * 150}
+                rotate={rotationsRight[i]}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
