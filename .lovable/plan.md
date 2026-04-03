@@ -1,33 +1,47 @@
 
 
-# Improve "From one product photo to every asset you need" Section
+# Fix HomeHero — Output Cards Not Rendering
 
 ## Problem
-The section still shows placeholder gradient cards with generic icons — no real imagery. It looks like a wireframe, not a finished product. The hero above it uses real rotating images which makes this section feel disconnected and unfinished.
+The 4 output cards (Product page, Social ad, Lifestyle, Editorial) are invisible. Only the center "Original" card displays. The bento grid layout collapses the corner cards.
 
-## Solution
-Replace placeholder cards with real product images using the same crossfade rotation pattern from the hero. Show a clear visual flow: one original product photo transforms into multiple output types.
+## Root Cause
+The `OutputCard` component uses `style={{ aspectRatio: '3/4' }}` on the inner div, but the wrapping grid cell `<div className="flex items-center">` has no width constraint. The `aspect-ratio` property needs a defined width to compute height — without it, the element collapses to zero size.
 
-## Changes to `src/components/home/HomeTransformStrip.tsx`
+## Fix in `src/components/home/HomeHero.tsx`
 
-### Visual Approach
-- **Original card**: Show a real product photo (rotating between 3 products every 2s, same as hero center card)
-- **Output cards** (Product page, Social ad, Lifestyle, Video): Each gets 5 real images rotating at 500ms with crossfade, reusing the same `hero/` assets from the hero section
-- **Flow arrows**: Replace the dotted connector lines with a single subtle animated arrow or thin line between Original → outputs to show the transformation concept
-- **Card styling**: Replace gradient backgrounds with the actual images filling the card, rounded corners, subtle border and shadow — matching the hero card aesthetic
+1. **Give output card wrappers `w-full`** — each grid cell wrapping an OutputCard needs `w-full` so the card fills its grid column
+2. **Add `w-full` to the OutputCard root div** — ensure the card stretches to fill its container
+3. **Verify the `useRotatingIndex` cleanup** — the current hook has a bug: the `setTimeout` callback returns a cleanup function from `setInterval`, but that return value is ignored inside `setTimeout`. Fix by storing the interval ID in a ref or variable and clearing it in the timeout's cleanup.
 
-### Layout
-- **Desktop**: Original card on the left (slightly larger, `aspect-[3/4]`), then 4 output cards in a row to the right, connected by a subtle dashed line
-- **Tablet**: Same horizontal row but smaller cards
-- **Mobile**: Original card centered on top, output cards in a 2×2 grid below
+### useRotatingIndex fix
+```typescript
+function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const timeout = setTimeout(() => {
+      intervalId = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
+    }, delay);
+    return () => {
+      clearTimeout(timeout);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [length, intervalMs, delay]);
+  return idx;
+}
+```
 
-### Technical
-- Import `getLandingAssetUrl`, `getOptimizedUrl` from existing utils
-- Reuse the `useRotatingIndex` hook pattern (or import from a shared location)
-- Reuse the same image arrays from hero assets
-- Remove all lucide icon imports (Camera, ShoppingBag, etc.)
-- Keep `useScrollReveal` for the staggered fade-in entrance
+### Grid cell fix
+Change the output card wrapper from:
+```tsx
+<div className={`${col} ${row} flex items-center`}>
+```
+to:
+```tsx
+<div className={`${col} ${row} flex items-center w-full`}>
+```
 
 ## File Modified
-- `src/components/home/HomeTransformStrip.tsx` — full rewrite
+- `src/components/home/HomeHero.tsx`
 
