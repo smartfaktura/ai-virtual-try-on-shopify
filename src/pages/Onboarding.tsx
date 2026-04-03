@@ -11,9 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/brandedToast';
 import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
 import { ArrowRight, Check } from 'lucide-react';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-const authHero = getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 });
+import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
 
 const REFERRAL_OPTIONS = [
   'Social media post',
