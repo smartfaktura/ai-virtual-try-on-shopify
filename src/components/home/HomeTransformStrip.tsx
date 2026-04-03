@@ -227,7 +227,7 @@ export function HomeTransformStrip() {
               style={{ aspectRatio: '3/4' }}
             >
               <img
-                src={getOptimizedUrl(active.original, { width: 200, quality: 55 })}
+                src={getOptimizedUrl(active.original, { width: 200, quality: 75 })}
                 alt="Original product"
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
