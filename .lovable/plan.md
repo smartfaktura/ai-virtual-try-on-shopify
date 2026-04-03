@@ -1,33 +1,32 @@
 
 
-# Add Category Selector to Transform Strip Section
+# Fix Muted Look & Modernize Category Tabs
 
-## What Changes
+## Problems
+1. **Section background `bg-[hsl(var(--muted)/0.35)]`** — adds a washed-out grey tint over the whole section, making everything look muted/dull
+2. **Category pills use `rounded-full` with faint ring** — looks like generic 2020-era filter buttons, not modern tabs
+3. **Image quality param `quality: 55`** — too low, contributing to the muted/washed appearance
+4. **Card border `border-border/60`** — adds grey framing that dulls the images further
 
-### HomeTransformStrip.tsx — full rework
+## Changes (all in `HomeTransformStrip.tsx`)
 
-**1. Category pills below the heading**
-Add four selectable pills: "Beauty & Skincare", "Fashion & Accessories", "Jewelry", "Home & Lifestyle". Clicking one swaps the marquee images AND the "Original" product photo to match that category.
+### 1. Remove muted section background
+- Change `bg-[hsl(var(--muted)/0.35)]` → `bg-background` — clean white background, images pop
 
-Data structure — define per-category image sets:
-- Each category has: `original` image path, and an array of 9 marquee cards with category-appropriate images (reusing existing hero/ assets that match)
-- Default selected: "Fashion & Accessories" (since most existing images are fashion)
+### 2. Modern underline-style tabs instead of pills
+- Replace `rounded-full` pill buttons with a clean inline tab bar:
+  - Active: `text-foreground font-semibold` with an animated bottom border/underline (2px)
+  - Inactive: `text-muted-foreground hover:text-foreground`
+  - No background fill, no ring — just clean text tabs with underline indicator
+  - Wrap in a horizontal scrollable container with a subtle bottom border line
 
-**2. Pill styling**
-- Active: `bg-foreground/10 text-foreground font-semibold ring-1 ring-foreground/15` — clearly selected but NOT looking like a CTA button
-- Inactive: `text-muted-foreground hover:text-foreground hover:bg-muted/40`
+### 3. Boost image quality
+- Increase `quality` from `55` to `75` for marquee cards
+- Increase original thumbnail quality from `55` to `75`
 
-**3. CTA button below the marquee**
-Add a "Try it on my product" CTA (Link to `/auth`) centered below the marquee rows, matching the hero button style.
-
-**4. Shimmer loading state**
-- Track image load state per category with a simple counter
-- On first category switch, show shimmer placeholders (animated gradient) on each card until images load
-- Use `onLoad` callbacks to flip loaded state
-- Only start loading a category's images when that category is selected (lazy per-category)
-
-**5. Crossfade on category switch**
-When user clicks a new category, fade out current images (opacity 0) → swap src → fade in (opacity 1) over 300ms for a smooth transition instead of a jarring swap.
+### 4. Clean up card borders
+- Remove `border border-border/60` from ImageCard — let the rounded corners and shadow define the card edge
+- Keep `shadow-md` for subtle depth without the grey border dulling the image
 
 ## File Modified
 - `src/components/home/HomeTransformStrip.tsx`
