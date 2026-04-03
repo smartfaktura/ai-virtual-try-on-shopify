@@ -1,142 +1,216 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 
 const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
-const staticOriginal = h('hero-product-croptop.jpg');
+interface CategoryData {
+  label: string;
+  original: string;
+  cards: { label: string; image: string }[];
+}
 
-const marqueeCards: { label: string; images: string[] }[] = [
+const CATEGORIES: CategoryData[] = [
   {
-    label: 'Product page',
-    images: [h('hero-croptop-studio-lookbook.png'), h('hero-ring-fabric.png'), h('hero-hp-desert.png')],
+    label: 'Fashion & Accessories',
+    original: h('hero-product-croptop.jpg'),
+    cards: [
+      { label: 'Product page', image: h('hero-croptop-studio-lookbook.png') },
+      { label: 'Social Media', image: h('hero-croptop-cafe-lifestyle.png') },
+      { label: 'Editorial', image: h('hero-croptop-studio-dark.png') },
+      { label: 'Ad Creative', image: h('hero-croptop-golden-hour.png') },
+      { label: 'UGC Style', image: h('hero-croptop-pilates-studio.png') },
+      { label: 'Flat Lay', image: h('hero-croptop-basketball-court.png') },
+      { label: 'Lookbook', image: h('hero-croptop-studio-lounge.png') },
+      { label: 'Video', image: h('hero-croptop-urban-edge.png') },
+      { label: 'Lifestyle', image: h('hero-croptop-golden-hour.png') },
+    ],
   },
   {
-    label: 'Social Media',
-    images: [h('hero-croptop-cafe-lifestyle.png'), h('hero-ring-hand.png'), h('hero-hp-elevator.png')],
+    label: 'Jewelry',
+    original: h('hero-ring-fabric.png'),
+    cards: [
+      { label: 'Product page', image: h('hero-ring-hand.png') },
+      { label: 'Social Media', image: h('hero-ring-golden-light.png') },
+      { label: 'Editorial', image: h('hero-ring-portrait.png') },
+      { label: 'Ad Creative', image: h('hero-ring-ugc.png') },
+      { label: 'UGC Style', image: h('hero-ring-concrete.png') },
+      { label: 'Flat Lay', image: h('hero-ring-floating.png') },
+      { label: 'Lookbook', image: h('hero-ring-eucalyptus.png') },
+      { label: 'Close-up', image: h('hero-ring-fabric.png') },
+      { label: 'Lifestyle', image: h('hero-ring-hand.png') },
+    ],
   },
   {
-    label: 'Editorial',
-    images: [h('hero-croptop-studio-dark.png'), h('hero-ring-golden-light.png'), h('hero-hp-studio-seated.png')],
+    label: 'Beauty & Skincare',
+    original: h('hero-hp-desert.png'),
+    cards: [
+      { label: 'Product page', image: h('hero-hp-elevator.png') },
+      { label: 'Social Media', image: h('hero-hp-linen.png') },
+      { label: 'Editorial', image: h('hero-hp-studio-seated.png') },
+      { label: 'Ad Creative', image: h('hero-hp-desert.png') },
+      { label: 'UGC Style', image: h('hero-hp-elevator.png') },
+      { label: 'Flat Lay', image: h('hero-hp-linen.png') },
+      { label: 'Lookbook', image: h('hero-hp-studio-seated.png') },
+      { label: 'Video', image: h('hero-hp-desert.png') },
+      { label: 'Lifestyle', image: h('hero-hp-elevator.png') },
+    ],
   },
   {
-    label: 'Ad Creatives',
-    images: [h('hero-croptop-golden-hour.png'), h('hero-ring-portrait.png'), h('hero-croptop-urban-edge.png')],
-  },
-  {
-    label: 'UGC Style',
-    images: [h('hero-ring-ugc.png'), h('hero-croptop-pilates-studio.png'), h('hero-ring-concrete.png')],
-  },
-  {
-    label: 'Selfie',
-    images: [h('hero-hp-linen.png'), h('hero-croptop-studio-lounge.png'), h('hero-ring-eucalyptus.png')],
-  },
-  {
-    label: 'Flat Lay',
-    images: [h('hero-ring-floating.png'), h('hero-croptop-basketball-court.png'), h('hero-ring-fabric.png')],
-  },
-  {
-    label: 'Video',
-    images: [h('hero-croptop-golden-hour.png'), h('hero-hp-desert.png'), h('hero-ring-hand.png')],
-  },
-  {
-    label: 'Perspectives',
-    images: [h('hero-croptop-studio-lookbook.png'), h('hero-ring-golden-light.png'), h('hero-hp-elevator.png')],
+    label: 'Home & Lifestyle',
+    original: h('hero-croptop-studio-lookbook.png'),
+    cards: [
+      { label: 'Product page', image: h('hero-croptop-studio-dark.png') },
+      { label: 'Social Media', image: h('hero-ring-golden-light.png') },
+      { label: 'Editorial', image: h('hero-hp-studio-seated.png') },
+      { label: 'Ad Creative', image: h('hero-croptop-golden-hour.png') },
+      { label: 'UGC Style', image: h('hero-ring-concrete.png') },
+      { label: 'Flat Lay', image: h('hero-ring-floating.png') },
+      { label: 'Lookbook', image: h('hero-hp-linen.png') },
+      { label: 'Video', image: h('hero-croptop-urban-edge.png') },
+      { label: 'Lifestyle', image: h('hero-hp-desert.png') },
+    ],
   },
 ];
 
-const row1 = marqueeCards.slice(0, 5);
-const row2 = marqueeCards.slice(4);
-
-function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval>;
-    const timeout = setTimeout(() => {
-      intervalId = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
-    }, delay);
-    return () => {
-      clearTimeout(timeout);
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [length, intervalMs, delay]);
-  return idx;
-}
-
-function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex: number }) {
+/* ── Shimmer card ── */
+function ShimmerCard() {
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      {images.map((src, i) => (
-        <img
-          key={src}
-          src={getOptimizedUrl(src, { width: 440, quality: 55 })}
-          alt=""
-          loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            i === activeIndex ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      ))}
+    <div className="flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden border border-border/60">
+      <div className="aspect-[3/4] bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
     </div>
   );
 }
 
-function MarqueeCard({ label, images, delay }: { label: string; images: string[]; delay: number }) {
-  const idx = useRotatingIndex(images.length, 1200, delay);
+/* ── Single image card ── */
+function ImageCard({
+  label,
+  src,
+  onLoad,
+}: {
+  label: string;
+  src: string;
+  onLoad?: () => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+
   return (
-    <div className="relative flex-shrink-0 w-[180px] h-[240px] sm:w-[220px] sm:h-[293px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
-      <CrossfadeStack images={images} activeIndex={idx} />
+    <div className="relative flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
+      <div className="aspect-[3/4] relative">
+        {!loaded && (
+          <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+        )}
+        <img
+          src={getOptimizedUrl(src, { width: 440, quality: 55 })}
+          alt={label}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => {
+            setLoaded(true);
+            onLoad?.();
+          }}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        />
+      </div>
       <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent z-10">
-        <span className="text-[11px] font-medium tracking-wide text-white/90">
-          {label}
-        </span>
+        <span className="text-[11px] font-medium tracking-wide text-white/90">{label}</span>
       </div>
     </div>
   );
 }
 
+/* ── Marquee row ── */
 function MarqueeRow({
   cards,
   direction,
   duration,
+  fadeKey,
 }: {
-  cards: { label: string; images: string[] }[];
+  cards: { label: string; image: string }[];
   direction: 'left' | 'right';
   duration: string;
+  fadeKey: string;
 }) {
   const doubled = [...cards, ...cards];
   return (
     <div className="overflow-hidden w-full group/marquee">
       <div
+        key={fadeKey}
         className={`flex gap-3 lg:gap-4 w-max ${
           direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'
-        } group-hover/marquee:[animation-play-state:paused]`}
+        } group-hover/marquee:[animation-play-state:paused] animate-fade-in`}
         style={{ animationDuration: duration }}
       >
         {doubled.map((card, i) => (
-          <MarqueeCard key={`${card.label}-${i}`} label={card.label} images={card.images} delay={i * 200} />
+          <ImageCard key={`${card.label}-${i}`} label={card.label} src={card.image} />
         ))}
       </div>
     </div>
   );
 }
 
+/* ── Main section ── */
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [fadeIn, setFadeIn] = useState(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const active = CATEGORIES[activeIdx];
+
+  const switchCategory = useCallback(
+    (idx: number) => {
+      if (idx === activeIdx) return;
+      setFadeIn(false);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setActiveIdx(idx);
+        setFadeIn(true);
+      }, 200);
+    },
+    [activeIdx],
+  );
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  const row1 = active.cards.slice(0, 5);
+  const row2 = active.cards.slice(4);
 
   return (
-    <section className="py-16 lg:py-32 bg-[#f5f5f3] overflow-hidden" id="examples">
+    <section className="py-16 lg:py-32 bg-[hsl(var(--muted)/0.35)] overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+        {/* Heading */}
+        <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-10">
           <h2 className="text-foreground text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             From one product photo to every asset you need
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Use the same product to create store images, social creatives, campaign visuals, and short videos.
+            Select a category to preview the kind of visuals you can create.
           </p>
         </div>
 
+        {/* Category pills */}
+        <div className="flex flex-wrap justify-center gap-2 mb-10 lg:mb-14">
+          {CATEGORIES.map((cat, idx) => (
+            <button
+              key={cat.label}
+              onClick={() => switchCategory(idx)}
+              className={`px-4 py-2 rounded-full text-sm transition-all duration-200 ${
+                idx === activeIdx
+                  ? 'bg-foreground/10 text-foreground font-semibold ring-1 ring-foreground/15'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Strip */}
         <div
           ref={ref}
           className={`flex items-center gap-4 lg:gap-6 transition-all duration-700 ${
@@ -145,9 +219,12 @@ export function HomeTransformStrip() {
         >
           {/* Original card */}
           <div className="hidden sm:block shrink-0">
-            <div className="relative w-20 lg:w-24 rounded-2xl overflow-hidden border border-border/60 shadow-xl shadow-foreground/[0.06]" style={{ aspectRatio: '3/4' }}>
+            <div
+              className={`relative w-20 lg:w-24 rounded-2xl overflow-hidden border border-border/60 shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+              style={{ aspectRatio: '3/4' }}
+            >
               <img
-                src={getOptimizedUrl(staticOriginal, { width: 200, quality: 55 })}
+                src={getOptimizedUrl(active.original, { width: 200, quality: 55 })}
                 alt="Original product"
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
@@ -169,10 +246,22 @@ export function HomeTransformStrip() {
           </div>
 
           {/* Marquee rows */}
-          <div className="flex-1 flex flex-col gap-3 min-w-0">
-            <MarqueeRow cards={row1} direction="left" duration="32s" />
-            <MarqueeRow cards={row2} direction="right" duration="38s" />
+          <div
+            className={`flex-1 flex flex-col gap-3 min-w-0 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <MarqueeRow cards={row1} direction="left" duration="32s" fadeKey={`r1-${activeIdx}`} />
+            <MarqueeRow cards={row2} direction="right" duration="38s" fadeKey={`r2-${activeIdx}`} />
           </div>
+        </div>
+
+        {/* CTA */}
+        <div className="flex justify-center mt-10 lg:mt-14">
+          <Button asChild size="lg" className="rounded-full px-8 text-base">
+            <Link to="/auth">
+              Try it on my product
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
