@@ -6,61 +6,66 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
-/* ── Assets ── */
-const centerProductImg = h('hero-product-croptop.jpg');
+/* ── Category definitions ── */
+type CategoryKey = 'fashion' | 'jewelry' | 'home' | 'beauty';
 
-const marqueeCards: { label: string; images: string[] }[] = [
-  {
-    label: 'Product page',
-    images: [h('hero-croptop-studio-lookbook.png'), h('hero-ring-fabric.png'), h('hero-hp-desert.png')],
-  },
-  {
-    label: 'Social Media',
-    images: [h('hero-croptop-cafe-lifestyle.png'), h('hero-ring-hand.png'), h('hero-hp-elevator.png')],
-  },
-  {
-    label: 'Editorial',
-    images: [h('hero-croptop-studio-dark.png'), h('hero-ring-golden-light.png'), h('hero-hp-studio-seated.png')],
-  },
-  {
-    label: 'Ad Creatives',
-    images: [h('hero-croptop-golden-hour.png'), h('hero-ring-portrait.png'), h('hero-croptop-urban-edge.png')],
-  },
-  {
-    label: 'UGC Style',
-    images: [h('hero-ring-ugc.png'), h('hero-croptop-pilates-studio.png'), h('hero-ring-concrete.png')],
-  },
-  {
-    label: 'Selfie',
-    images: [h('hero-hp-linen.png'), h('hero-croptop-studio-lounge.png'), h('hero-ring-eucalyptus.png')],
-  },
-  {
-    label: 'Flat Lay',
-    images: [h('hero-ring-floating.png'), h('hero-croptop-basketball-court.png'), h('hero-ring-fabric.png')],
-  },
-  {
-    label: 'Video',
-    images: [h('hero-croptop-golden-hour.png'), h('hero-hp-desert.png'), h('hero-ring-hand.png')],
-  },
-  {
-    label: 'Perspectives',
-    images: [h('hero-croptop-studio-lookbook.png'), h('hero-ring-golden-light.png'), h('hero-hp-elevator.png')],
-  },
+const categories: { key: CategoryKey; label: string; productImg: string }[] = [
+  { key: 'fashion', label: 'Fashion & Accessories', productImg: h('hero-product-croptop.jpg') },
+  { key: 'jewelry', label: 'Jewelry', productImg: h('hero-ring-fabric.png') },
+  { key: 'home', label: 'Home & Lifestyle', productImg: h('hero-hp-desert.png') },
+  { key: 'beauty', label: 'Beauty & Skincare', productImg: h('hero-croptop-cafe-lifestyle.png') },
 ];
 
-const row1 = marqueeCards.slice(0, 5);
-const row2 = marqueeCards.slice(4);
+const outputLabels = ['Product page', 'Social Media', 'Editorial', 'Ad Creatives', 'UGC Style', 'Selfie', 'Flat Lay', 'Video', 'Perspectives'] as const;
+
+const categoryImages: Record<CategoryKey, string[][]> = {
+  fashion: [
+    [h('hero-croptop-studio-lookbook.png'), h('hero-croptop-cafe-lifestyle.png')],
+    [h('hero-croptop-cafe-lifestyle.png'), h('hero-croptop-golden-hour.png')],
+    [h('hero-croptop-studio-dark.png'), h('hero-croptop-studio-lounge.png')],
+    [h('hero-croptop-golden-hour.png'), h('hero-croptop-urban-edge.png')],
+    [h('hero-croptop-pilates-studio.png'), h('hero-croptop-studio-lookbook.png')],
+    [h('hero-croptop-studio-lounge.png'), h('hero-croptop-studio-dark.png')],
+    [h('hero-croptop-basketball-court.png'), h('hero-croptop-golden-hour.png')],
+    [h('hero-croptop-golden-hour.png'), h('hero-croptop-urban-edge.png')],
+    [h('hero-croptop-studio-lookbook.png'), h('hero-croptop-cafe-lifestyle.png')],
+  ],
+  jewelry: [
+    [h('hero-ring-fabric.png'), h('hero-ring-hand.png')],
+    [h('hero-ring-hand.png'), h('hero-ring-golden-light.png')],
+    [h('hero-ring-golden-light.png'), h('hero-ring-portrait.png')],
+    [h('hero-ring-portrait.png'), h('hero-ring-ugc.png')],
+    [h('hero-ring-ugc.png'), h('hero-ring-concrete.png')],
+    [h('hero-ring-concrete.png'), h('hero-ring-eucalyptus.png')],
+    [h('hero-ring-floating.png'), h('hero-ring-fabric.png')],
+    [h('hero-ring-eucalyptus.png'), h('hero-ring-hand.png')],
+    [h('hero-ring-golden-light.png'), h('hero-ring-floating.png')],
+  ],
+  home: [
+    [h('hero-hp-desert.png'), h('hero-hp-elevator.png')],
+    [h('hero-hp-elevator.png'), h('hero-hp-linen.png')],
+    [h('hero-hp-studio-seated.png'), h('hero-hp-desert.png')],
+    [h('hero-hp-desert.png'), h('hero-hp-elevator.png')],
+    [h('hero-hp-linen.png'), h('hero-hp-studio-seated.png')],
+    [h('hero-hp-linen.png'), h('hero-hp-desert.png')],
+    [h('hero-hp-elevator.png'), h('hero-hp-linen.png')],
+    [h('hero-hp-desert.png'), h('hero-hp-studio-seated.png')],
+    [h('hero-hp-studio-seated.png'), h('hero-hp-elevator.png')],
+  ],
+  beauty: [
+    [h('hero-croptop-cafe-lifestyle.png'), h('hero-ring-eucalyptus.png')],
+    [h('hero-ring-eucalyptus.png'), h('hero-croptop-studio-lounge.png')],
+    [h('hero-croptop-studio-lounge.png'), h('hero-hp-linen.png')],
+    [h('hero-hp-linen.png'), h('hero-croptop-pilates-studio.png')],
+    [h('hero-croptop-pilates-studio.png'), h('hero-ring-concrete.png')],
+    [h('hero-ring-concrete.png'), h('hero-croptop-cafe-lifestyle.png')],
+    [h('hero-croptop-golden-hour.png'), h('hero-ring-eucalyptus.png')],
+    [h('hero-ring-portrait.png'), h('hero-croptop-studio-dark.png')],
+    [h('hero-croptop-studio-dark.png'), h('hero-hp-linen.png')],
+  ],
+};
 
 /* ── Hooks ── */
-function usePreload(urls: string[]) {
-  useEffect(() => {
-    urls.forEach((u) => {
-      const img = new Image();
-      img.src = getOptimizedUrl(u, { width: 400, quality: 50 });
-    });
-  }, []);
-}
-
 function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
@@ -99,14 +104,10 @@ function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex
 function MarqueeCard({ label, images, delay }: { label: string; images: string[]; delay: number }) {
   const idx = useRotatingIndex(images.length, 1200, delay);
   return (
-    <div
-      className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]"
-    >
+    <div className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
       <CrossfadeStack images={images} activeIndex={idx} />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
-        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">
-          {label}
-        </span>
+        <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">{label}</span>
       </div>
     </div>
   );
@@ -122,7 +123,6 @@ function MarqueeRow({
   direction: 'left' | 'right';
   duration: string;
 }) {
-  // Duplicate cards for seamless loop
   const doubled = [...cards, ...cards];
   return (
     <div className="overflow-hidden w-full group/marquee">
@@ -142,12 +142,22 @@ function MarqueeRow({
 
 /* ── Main component ── */
 export function HomeHero() {
-  const allImages = [centerProductImg, ...marqueeCards.flatMap((c) => c.images)];
-  usePreload(allImages);
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>('fashion');
+
+  const activeCat = categories.find((c) => c.key === activeCategory)!;
+  const images = categoryImages[activeCategory];
+
+  const marqueeCards = outputLabels.map((label, i) => ({
+    label,
+    images: images[i],
+  }));
+
+  const row1 = marqueeCards.slice(0, 5);
+  const row2 = marqueeCards.slice(4);
 
   return (
-    <section className="pt-28 pb-16 lg:pt-36 lg:pb-28 bg-[#FAFAF8] overflow-hidden">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+    <section className="pt-24 pb-12 lg:pt-32 lg:pb-24 bg-[#FAFAF8] overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
         {/* ── Left — Copy ── */}
         <div className="max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
           <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 mb-7">
@@ -188,24 +198,47 @@ export function HomeHero() {
           </p>
         </div>
 
-        {/* ── Right — Marquee ── */}
-        <div className="relative flex flex-col gap-3">
-          {/* Original photo anchor */}
-          <div className="absolute -left-2 top-1/2 -translate-y-1/2 z-20 hidden lg:block">
-            <div className="w-16 h-20 rounded-xl overflow-hidden border-2 border-background shadow-xl shadow-foreground/10">
-              <img
-                src={getOptimizedUrl(centerProductImg, { width: 128, quality: 60 })}
-                alt="Original product"
-                className="w-full h-full object-cover"
-              />
+        {/* ── Right — Marquee with controls ── */}
+        <div className="flex flex-col gap-4">
+          {/* Your photo + category pills */}
+          <div className="flex items-end gap-4 flex-wrap justify-center lg:justify-start">
+            {/* Your photo card */}
+            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+              <div className="w-[72px] h-[90px] sm:w-20 sm:h-[100px] rounded-xl overflow-hidden border-2 border-background shadow-xl shadow-foreground/10">
+                <img
+                  src={getOptimizedUrl(activeCat.productImg, { width: 160, quality: 60 })}
+                  alt="Original product"
+                  className="w-full h-full object-cover transition-opacity duration-300"
+                />
+              </div>
+              <span className="text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/70">
+                Your photo
+              </span>
             </div>
-            <span className="block text-[8px] font-semibold tracking-widest uppercase text-muted-foreground/70 text-center mt-1">
-              Your photo
-            </span>
+
+            {/* Category pills */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => setActiveCategory(cat.key)}
+                  className={`px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-200 border ${
+                    activeCategory === cat.key
+                      ? 'bg-foreground text-background border-foreground shadow-sm'
+                      : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <MarqueeRow cards={row1} direction="left" duration="30s" />
-          <MarqueeRow cards={row2} direction="right" duration="35s" />
+          {/* Marquee rows */}
+          <div className="flex flex-col gap-3">
+            <MarqueeRow cards={row1} direction="left" duration="30s" />
+            <MarqueeRow cards={row2} direction="right" duration="35s" />
+          </div>
         </div>
       </div>
     </section>
