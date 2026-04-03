@@ -119,7 +119,7 @@ function OutputCard({
 
   return (
     <div
-      className={`group relative rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
+    className={`group relative w-full rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
       style={{ aspectRatio: '3/4' }}
     >
       <CrossfadeStack images={images} activeIndex={idx} />
