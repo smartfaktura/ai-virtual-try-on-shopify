@@ -99,7 +99,7 @@ function ImageCard({
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <div className="relative flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.06]">
+    <div className="relative flex-shrink-0 w-[160px] sm:w-[240px] lg:w-[260px] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.06]">
       <div className="aspect-[3/4] relative">
         {!loaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
