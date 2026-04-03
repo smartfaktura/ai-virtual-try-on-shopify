@@ -1,0 +1,55 @@
+import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { Zap, Layers, TrendingUp } from 'lucide-react';
+
+const cards = [
+  {
+    icon: Zap,
+    title: 'Faster than organizing a new shoot',
+    text: 'No studio booking, no reshoots, no waiting weeks for final assets.',
+  },
+  {
+    icon: Layers,
+    title: 'Easier than building everything manually',
+    text: 'Generate multiple directions quickly instead of editing each visual from scratch.',
+  },
+  {
+    icon: TrendingUp,
+    title: 'More scalable for launches and campaigns',
+    text: 'Create fresh content across product pages, ads, and social from the same product image.',
+  },
+];
+
+export function HomeWhySwitch() {
+  const { ref, visible } = useScrollReveal();
+
+  return (
+    <section className="py-24 lg:py-32 bg-[#1a1a2e]">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <h2 className="text-white text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
+            Why brands are replacing slow content production
+          </h2>
+          <p className="text-[#9ca3af] text-lg leading-relaxed">
+            Create new product visuals in minutes instead of waiting on shoots, edits, and endless revisions.
+          </p>
+        </div>
+
+        <div ref={ref} className="grid md:grid-cols-3 gap-6">
+          {cards.map((card, i) => (
+            <div
+              key={card.title}
+              className={`bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 transition-all duration-700 hover:bg-white/10 ${
+                visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: `${i * 150}ms` }}
+            >
+              <card.icon size={24} className="text-[#94a3b8] mb-5" />
+              <h3 className="text-white text-lg font-semibold mb-3">{card.title}</h3>
+              <p className="text-[#9ca3af] text-sm leading-relaxed">{card.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
