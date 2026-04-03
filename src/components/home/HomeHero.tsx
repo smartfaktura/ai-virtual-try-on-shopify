@@ -108,10 +108,10 @@ function MarqueeCard({ label, images, cardIndex }: { label: string; images: stri
         <CrossfadeStack images={images} activeIndex={idx} />
       ) : (
         <img
-          src={getOptimizedUrl(images[0], { width: 400, quality: 55 })}
+          src={getOptimizedUrl(images[0], { width: 800, quality: 55 })}
           alt=""
           loading="lazy"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       )}
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
