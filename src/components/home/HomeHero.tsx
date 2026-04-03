@@ -70,11 +70,14 @@ function usePreload(urls: string[]) {
 function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
     const timeout = setTimeout(() => {
-      const id = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
-      return () => clearInterval(id);
+      intervalId = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
     }, delay);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [length, intervalMs, delay]);
   return idx;
 }
@@ -116,7 +119,7 @@ function OutputCard({
 
   return (
     <div
-      className={`group relative rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
+    className={`group relative w-full rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
       style={{ aspectRatio: '3/4' }}
     >
       <CrossfadeStack images={images} activeIndex={idx} />
@@ -210,7 +213,7 @@ export function HomeHero() {
             const delays = [0, 150, 300, 450];
 
             return (
-              <div key={card.label} className={`${col} ${row} flex items-center`}>
+              <div key={card.label} className={`${col} ${row} flex items-center w-full`}>
                 <OutputCard
                   label={card.label}
                   images={card.images}
