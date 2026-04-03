@@ -217,20 +217,41 @@ export function HomeTransformStrip() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
         >
-          {/* Original card */}
-          <div className="hidden sm:block shrink-0">
+          {/* Mobile: original card above marquee */}
+          <div className={`flex sm:hidden items-center justify-center gap-3 mb-4 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
             <div
-              className={`relative w-20 lg:w-24 rounded-2xl overflow-hidden shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+              className="relative w-16 rounded-xl overflow-hidden shadow-lg"
               style={{ aspectRatio: '3/4' }}
             >
               <img
                 src={getOptimizedUrl(active.original, { width: 200, quality: 75 })}
                 alt="Original product"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 inset-x-0 p-1 bg-gradient-to-t from-black/50 to-transparent">
+                <span className="text-[7px] font-semibold tracking-widest uppercase text-white/90">Original</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="text-xs font-medium">Your photo</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </div>
+
+          {/* Desktop: original card on left */}
+          <div className="hidden sm:block shrink-0">
+            <div
+              className={`relative w-24 lg:w-32 rounded-2xl overflow-hidden shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+              style={{ aspectRatio: '3/4' }}
+            >
+              <img
+                src={getOptimizedUrl(active.original, { width: 300, quality: 75 })}
+                alt="Original product"
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent z-10">
-                <span className="text-[8px] font-semibold tracking-widest uppercase text-white/90">
+              <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/50 to-transparent z-10">
+                <span className="text-[9px] font-semibold tracking-widest uppercase text-white/90">
                   Original
                 </span>
               </div>
@@ -239,7 +260,7 @@ export function HomeTransformStrip() {
 
           {/* Arrow */}
           <div className="hidden sm:flex flex-col items-center gap-1 shrink-0">
-            <div className="w-6 lg:w-10 h-px bg-border" />
+            <div className="w-8 lg:w-12 h-px bg-border" />
             <svg width="8" height="8" viewBox="0 0 8 8" className="text-border">
               <path d="M0 0 L8 4 L0 8 Z" fill="currentColor" />
             </svg>
@@ -247,7 +268,7 @@ export function HomeTransformStrip() {
 
           {/* Marquee rows */}
           <div
-            className={`flex-1 flex flex-col gap-3 min-w-0 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+            className={`flex-1 flex flex-col gap-3 sm:gap-4 min-w-0 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
           >
             <MarqueeRow cards={row1} direction="left" duration="32s" fadeKey={`r1-${activeIdx}`} />
             <MarqueeRow cards={row2} direction="right" duration="38s" fadeKey={`r2-${activeIdx}`} />
