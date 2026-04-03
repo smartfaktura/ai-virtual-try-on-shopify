@@ -1,92 +1,226 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const outputCards = [
-  { label: 'Product page', x: '-left-10 lg:-left-14', y: 'top-4', color: 'from-amber-100/80 to-orange-50/60', rotate: '-rotate-6', delay: '0s' },
-  { label: 'Social ad', x: '-right-8 lg:-right-12', y: 'top-0', color: 'from-rose-100/80 to-pink-50/60', rotate: 'rotate-4', delay: '0.5s' },
-  { label: 'Lifestyle', x: '-left-6 lg:-left-10', y: 'bottom-6', color: 'from-emerald-100/80 to-teal-50/60', rotate: '-rotate-3', delay: '1s' },
-  { label: 'Video', x: '-right-10 lg:-right-14', y: 'bottom-2', color: 'from-sky-100/80 to-blue-50/60', rotate: 'rotate-6', delay: '1.5s' },
+const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
+
+/* ── Asset maps ── */
+const centerProducts = [
+  { img: h('hero-product-croptop.jpg'), label: 'Crop Top' },
+  { img: h('hero-product-ring-new.png'), label: 'Ring' },
+  { img: h('hero-product-headphones.png'), label: 'Headphones' },
 ];
 
-export function HomeHero() {
+const cardSets: { label: string; images: string[] }[] = [
+  {
+    label: 'Product page',
+    images: [
+      h('hero-croptop-studio-lookbook.png'),
+      h('hero-ring-fabric.png'),
+      h('hero-hp-desert.png'),
+      h('hero-croptop-golden-hour.png'),
+      h('hero-ring-portrait.png'),
+    ],
+  },
+  {
+    label: 'Social ad',
+    images: [
+      h('hero-croptop-cafe-lifestyle.png'),
+      h('hero-ring-hand.png'),
+      h('hero-hp-elevator.png'),
+      h('hero-croptop-urban-edge.png'),
+      h('hero-ring-ugc.png'),
+    ],
+  },
+  {
+    label: 'Lifestyle',
+    images: [
+      h('hero-croptop-pilates-studio.png'),
+      h('hero-ring-concrete.png'),
+      h('hero-hp-linen.png'),
+      h('hero-croptop-studio-lounge.png'),
+      h('hero-ring-eucalyptus.png'),
+    ],
+  },
+  {
+    label: 'Editorial',
+    images: [
+      h('hero-croptop-studio-dark.png'),
+      h('hero-ring-golden-light.png'),
+      h('hero-hp-studio-seated.png'),
+      h('hero-ring-floating.png'),
+      h('hero-croptop-basketball-court.png'),
+    ],
+  },
+];
+
+/* ── Preload images ── */
+function usePreload(urls: string[]) {
+  useEffect(() => {
+    urls.forEach((u) => {
+      const img = new Image();
+      img.src = getOptimizedUrl(u, { width: 400, quality: 50 });
+    });
+  }, []);
+}
+
+/* ── Rotating index hook ── */
+function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const id = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
+      return () => clearInterval(id);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [length, intervalMs, delay]);
+  return idx;
+}
+
+/* ── Crossfade image stack ── */
+function CrossfadeStack({ images, activeIndex, className = '' }: { images: string[]; activeIndex: number; className?: string }) {
   return (
-    <section className="pt-28 pb-12 lg:pt-36 lg:pb-24">
-      <style>{`
-        @keyframes heroFloat {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-      `}</style>
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left — Copy */}
+    <div className={`relative w-full h-full overflow-hidden ${className}`}>
+      {images.map((src, i) => (
+        <img
+          key={src}
+          src={getOptimizedUrl(src, { width: 400, quality: 55 })}
+          alt=""
+          loading="lazy"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+            i === activeIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ── Output card ── */
+function OutputCard({
+  label,
+  images,
+  intervalMs,
+  delay,
+  rotate,
+}: {
+  label: string;
+  images: string[];
+  intervalMs: number;
+  delay: number;
+  rotate: string;
+}) {
+  const idx = useRotatingIndex(images.length, intervalMs, delay);
+
+  return (
+    <div
+      className={`group relative rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] ${rotate} transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg`}
+      style={{ aspectRatio: '3/4' }}
+    >
+      <CrossfadeStack images={images} activeIndex={idx} />
+      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent">
+        <span className="text-[11px] font-medium tracking-wide text-white/90">
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main component ── */
+export function HomeHero() {
+  const centerIdx = useRotatingIndex(centerProducts.length, 2000);
+
+  // Preload all images
+  const allImages = [
+    ...centerProducts.map((p) => p.img),
+    ...cardSets.flatMap((c) => c.images),
+  ];
+  usePreload(allImages);
+
+  return (
+    <section className="pt-28 pb-16 lg:pt-36 lg:pb-28 bg-[#FAFAF8]">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        {/* ── Left — Copy ── */}
         <div className="max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
-          <span className="inline-block text-[11px] font-semibold tracking-[0.15em] uppercase text-[#94a3b8] bg-[#f1f0ee] px-3 py-1.5 rounded-full mb-6">
+          <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 mb-7">
             AI product visuals
           </span>
-          <h1 className="text-[#1a1a2e] text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.08] font-semibold tracking-tight mb-5">
-            One product photo.<br />
-            Every visual you need.
+
+          <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.05] font-semibold tracking-[-0.03em] mb-5">
+            One product photo.
+            <br />
+            <span className="bg-gradient-to-r from-[hsl(var(--foreground))] via-[hsl(215,25%,40%)] to-[hsl(var(--foreground))] bg-clip-text text-transparent">
+              Every visual you need.
+            </span>
           </h1>
-          <p className="text-[#6b7280] text-lg leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">
-            Create product images, social creatives, and short videos — without another photoshoot.
+
+          <p className="text-[17px] leading-relaxed text-muted-foreground mb-9 max-w-md mx-auto lg:mx-0">
+            Create product images, social creatives, and short videos — without
+            another photoshoot.
           </p>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-4 justify-center lg:justify-start">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-5 justify-center lg:justify-start">
             <Link
               to="/auth"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-[#1a1a2e] text-white text-[15px] font-medium hover:bg-[#2a2a3e] transition-colors w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-[15px] font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/15 w-full sm:w-auto"
             >
               Try it on my product
               <ArrowRight size={16} />
             </Link>
             <a
               href="#examples"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full border border-[#d4d4d4] text-[#1a1a2e] text-[15px] font-medium hover:bg-[#f5f5f3] transition-colors w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-[15px] font-medium hover:bg-secondary transition-colors w-full sm:w-auto"
             >
               See examples
             </a>
           </div>
-          <p className="text-[13px] text-[#9ca3af]">
+
+          <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
             20 free credits · No credit card required
           </p>
         </div>
 
-        {/* Right — Visual composition */}
-        <div className="relative flex items-center justify-center min-h-[380px] lg:min-h-[520px]">
-          {/* Ambient glow */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-80 h-80 lg:w-[28rem] lg:h-[28rem] rounded-full bg-gradient-to-br from-amber-100/40 to-rose-100/30 blur-3xl" />
-          </div>
-
-          {/* Center card — Original product */}
-          <div
-            className="relative z-10 w-60 h-76 sm:w-64 sm:h-80 lg:w-72 lg:h-96 rounded-3xl shadow-2xl shadow-black/10 border border-white/60 overflow-hidden"
-            style={{ background: 'linear-gradient(145deg, #f5f0eb 0%, #e8e3dd 50%, #ddd8d0 100%)' }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-36 sm:w-24 sm:h-36 lg:w-28 lg:h-44 rounded-2xl bg-gradient-to-b from-[#d4cfc8] to-[#c4bfb7] shadow-inner opacity-60" />
-              <div className="absolute w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gradient-to-br from-[#c8c3bb] to-[#b8b3ab] shadow-inner opacity-40 -top-2 right-1/4" style={{ filter: 'blur(0.5px)' }} />
-            </div>
-            <div className="absolute bottom-4 left-4 right-4 z-10">
-              <span className="text-xs font-medium text-[#6b7280] bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm">
-                Original
-              </span>
+        {/* ── Right — Bento grid ── */}
+        <div className="relative grid grid-cols-3 grid-rows-2 gap-3 lg:gap-4 min-h-[380px] lg:min-h-[520px]">
+          {/* Center "Original" card — spans middle column, both rows */}
+          <div className="col-start-2 row-span-2 flex items-center justify-center">
+            <div className="relative w-full rounded-3xl overflow-hidden border border-border/70 shadow-xl shadow-foreground/[0.06]" style={{ aspectRatio: '3/4.5' }}>
+              <CrossfadeStack
+                images={centerProducts.map((p) => p.img)}
+                activeIndex={centerIdx}
+              />
+              <div className="absolute bottom-4 left-4 right-4 z-10">
+                <span className="text-xs font-medium text-white/90 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                  Original
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Output cards */}
-          {outputCards.map((card) => (
-            <div
-              key={card.label}
-              className={`absolute z-20 w-36 h-44 sm:w-40 sm:h-48 lg:w-44 lg:h-56 rounded-2xl bg-gradient-to-br ${card.color} backdrop-blur-sm border border-white/50 shadow-lg shadow-black/5 ${card.rotate} ${card.x} ${card.y} flex flex-col items-center justify-center gap-2 transition-transform hover:scale-105`}
-              style={{ animation: `heroFloat 4s ease-in-out infinite`, animationDelay: card.delay }}
-            >
-              <div className="w-20 h-24 sm:w-20 sm:h-26 lg:w-24 lg:h-28 rounded-xl bg-white/40 shadow-inner" />
-              <span className="text-[11px] lg:text-xs font-medium text-[#475569] bg-white/70 backdrop-blur-sm px-2 py-0.5 rounded-md">
-                {card.label}
-              </span>
-            </div>
-          ))}
+          {/* 4 output cards in corners */}
+          {cardSets.map((card, i) => {
+            const isLeft = i % 2 === 0;
+            const isTop = i < 2;
+            const col = isLeft ? 'col-start-1' : 'col-start-3';
+            const row = isTop ? 'row-start-1' : 'row-start-2';
+            const rotations = ['-rotate-2', 'rotate-2', '-rotate-1', 'rotate-1'];
+            const delays = [0, 150, 300, 450];
+
+            return (
+              <div key={card.label} className={`${col} ${row} flex items-center`}>
+                <OutputCard
+                  label={card.label}
+                  images={card.images}
+                  intervalMs={500}
+                  delay={delays[i]}
+                  rotate={rotations[i]}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
