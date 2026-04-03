@@ -11,9 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/brandedToast';
 import { PRODUCT_CATEGORIES as SHARED_CATEGORIES } from '@/lib/categoryConstants';
 import { ArrowRight, Check } from 'lucide-react';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-const authHero = getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 });
+import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
 
 const REFERRAL_OPTIONS = [
   'Social media post',
@@ -299,20 +297,7 @@ export default function Onboarding() {
         </div>
       </div>
 
-      {/* Right side — Hero image (hidden on mobile) */}
-      <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative">
-        <img
-          src={authHero}
-          alt="AI-generated product photography showcase"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-        <div className="absolute bottom-8 left-8 right-8">
-          <p className="text-white/90 text-sm font-medium">
-            Generated with VOVV.AI
-          </p>
-        </div>
-      </div>
+      <AuthHeroGallery />
     </div>
   );
 }
