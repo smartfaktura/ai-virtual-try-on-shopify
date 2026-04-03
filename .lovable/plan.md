@@ -1,41 +1,28 @@
 
 
-# Hero Redesign — Visuals First, Controls Below
+# Fix Hero: 40/60 Split, Pill Styling, Image Zoom
 
-## Problems
-- 50/50 split wastes space on images; text area too wide
-- "Your photo" + pills sit above marquee, pushing visuals down
-- Mobile: text not visible (marquee takes over)
-- Image crossfade happens on all 9 cards — should only be on "Product page" and "Perspectives"
+## Issues Found
 
-## Layout Changes
+1. **Grid ratio wrong**: `lg:grid-cols-[2fr_3fr]` = 40/60 ✓ on paper, but the `max-w-lg` on the left column constrains it to ~32rem, making the left side appear much narrower than 40%. Need to remove `max-w-lg` or increase it.
 
-### Desktop: 40/60 split
-Change grid from `lg:grid-cols-2` to `lg:grid-cols-[2fr_3fr]` — gives ~40% to copy, ~60% to the marquee area. More visual real estate.
+2. **Selected pill looks like CTA**: Active pill uses `bg-foreground text-background` — same visual weight as the primary CTA button. Fix: use a subtle highlight instead (e.g., light fill + dark text + bottom underline or ring).
 
-### Move "Your Photo" + Pills below the marquee
-Instead of sitting above the marquee (pushing images down), place a row **below** the two marquee rows:
+3. **Images zoomed in**: Cards are `w-[160px] h-[213px]` / `w-[200px] h-[267px]` with `object-cover`. The source images have different aspect ratios than 3:4, so `object-cover` crops/zooms them. Fix: use `object-contain` with a subtle background color, or adjust card dimensions to better match source image ratios.
 
-```text
-┌─────────────────────────────────────────────┐
-│  Copy (40%)  │  Marquee Row 1 →             │
-│              │  ← Marquee Row 2             │
-│              │                              │
-│              │  [📷 Your Photo] [Fashion] [Jewelry] [Home] [Beauty]  │
-└─────────────────────────────────────────────┘
-```
+## Changes (all in `HomeHero.tsx`)
 
-The "Your photo" thumbnail sits inline with the pills in a compact bar below the marquee. Slightly bigger thumbnail (~w-14 h-[70px]). This keeps the visual showcase front and center.
+### 1. Fix 40/60 split
+- Remove `max-w-lg` from the left column — let the grid columns actually control the width
+- Keep `lg:grid-cols-[2fr_3fr]` which is the correct 40/60 ratio
 
-### Image rotation: only on "Product page" and "Perspectives"
-- Cards at index 0 (Product page) and index 8 (Perspectives) keep the crossfade rotation at 1s intervals
-- All other 7 cards show a **single static image** (first image in their array) — no rotation
-- This draws attention to the two key categories without visual overload
+### 2. Improve pill styling
+- Active: `bg-secondary text-foreground border-foreground/20 font-semibold` — subtle filled look, clearly different from the rounded CTA button
+- Inactive: keep current outlined style
 
-### Mobile fixes
-- Stack vertically: copy block first (visible, compact padding), then marquee rows, then pills row
-- Ensure h1, subtitle, and CTA buttons are fully visible before scroll
-- Reduce `pt-24` to `pt-20` on mobile for tighter spacing
+### 3. Fix image zoom
+- Change `object-cover` to `object-cover` but with a larger `width` optimization param (800 instead of 400) so less upscaling crop
+- Better fix: switch card images to `object-contain bg-[#f0efed]` so full image is visible without cropping
 
 ## File Modified
 - `src/components/home/HomeHero.tsx`
