@@ -12,7 +12,7 @@ export function HomePricingTeaser() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section className="py-24 lg:py-32" id="pricing">
+    <section className="py-16 lg:py-32" id="pricing">
       <div
         ref={ref}
         className={`max-w-2xl mx-auto px-6 text-center transition-all duration-700 ${
@@ -29,17 +29,17 @@ export function HomePricingTeaser() {
           20 free credits · No credit card required
         </p>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 mb-10">
           <Link
             to="/auth"
-            className="inline-flex items-center gap-2 h-12 px-7 rounded-xl bg-[#1a1a2e] text-white text-[15px] font-medium hover:bg-[#2a2a3e] transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-[#1a1a2e] text-white text-[15px] font-medium hover:bg-[#2a2a3e] transition-colors w-full sm:w-auto"
           >
             Start free
             <ArrowRight size={16} />
           </Link>
           <Link
             to="/pricing"
-            className="inline-flex items-center gap-2 h-12 px-7 rounded-xl border border-[#d4d4d4] text-[#1a1a2e] text-[15px] font-medium hover:bg-[#f5f5f3] transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full border border-[#d4d4d4] text-[#1a1a2e] text-[15px] font-medium hover:bg-[#f5f5f3] transition-colors w-full sm:w-auto"
           >
             View pricing
           </Link>

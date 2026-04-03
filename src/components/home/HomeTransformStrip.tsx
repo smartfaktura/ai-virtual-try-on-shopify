@@ -13,9 +13,9 @@ export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section className="py-24 lg:py-32 bg-[#f5f5f3]" id="examples">
+    <section className="py-16 lg:py-32 bg-[#f5f5f3]" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             From one product photo to every asset you need
           </h2>
@@ -24,21 +24,23 @@ export function HomeTransformStrip() {
           </p>
         </div>
 
-        <div ref={ref} className="flex flex-wrap lg:flex-nowrap items-center justify-center gap-4 lg:gap-2">
+        <div
+          ref={ref}
+          className="flex items-center gap-4 lg:gap-2 overflow-x-auto lg:overflow-visible lg:flex-wrap lg:justify-center pb-4 lg:pb-0 snap-x snap-mandatory lg:snap-none -mx-6 px-6 lg:mx-0 lg:px-0"
+        >
           {steps.map((step, i) => (
-            <div key={step.label} className="flex items-center gap-2">
+            <div key={step.label} className="flex items-center gap-2 snap-center shrink-0 lg:shrink">
               <div
-                className={`w-44 h-60 sm:w-48 sm:h-64 rounded-2xl bg-gradient-to-br ${step.color} shadow-sm border border-white/60 flex flex-col items-center justify-between p-5 transition-all duration-700 hover:-translate-y-1 hover:shadow-md ${
+                className={`w-48 h-64 sm:w-56 sm:h-72 rounded-2xl bg-gradient-to-br ${step.color} shadow-sm border border-white/60 flex flex-col items-center justify-between p-5 transition-all duration-700 hover:-translate-y-1 hover:shadow-md ${
                   visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
                 }`}
                 style={{ transitionDelay: `${i * 120}ms` }}
               >
-                {/* Inner visual area */}
                 <div className="w-full flex-1 rounded-xl bg-white/40 shadow-inner flex items-center justify-center mb-3 relative overflow-hidden">
                   {step.silhouette ? (
-                    <div className="w-12 h-20 rounded-lg bg-gradient-to-b from-[#c4bfb7] to-[#b4afaa] opacity-50 shadow-inner" />
+                    <div className="w-14 h-24 rounded-lg bg-gradient-to-b from-[#c4bfb7] to-[#b4afaa] opacity-50 shadow-inner" />
                   ) : (
-                    <step.icon size={24} className="text-[#94a3b8] opacity-60" />
+                    <step.icon size={28} className="text-[#94a3b8] opacity-60" />
                   )}
                 </div>
                 <span className="text-xs font-medium text-[#475569] bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-lg">

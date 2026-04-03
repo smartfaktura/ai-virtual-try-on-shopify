@@ -28,40 +28,34 @@ const cards = [
 function CardVisual({ type, gradient }: { type: 'product' | 'social' | 'video'; gradient: string }) {
   if (type === 'product') {
     return (
-      <div className={`h-72 sm:h-80 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
-        {/* Centered product on white card */}
-        <div className="w-40 h-52 rounded-2xl bg-white/80 shadow-lg shadow-black/5 border border-white flex items-center justify-center">
-          <div className="w-14 h-24 rounded-xl bg-gradient-to-b from-[#e8e3dd] to-[#d4cfc8] shadow-inner opacity-70" />
+      <div className={`h-80 sm:h-96 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
+        <div className="w-44 h-56 sm:w-48 sm:h-60 rounded-2xl bg-white/80 shadow-lg shadow-black/5 border border-white flex items-center justify-center">
+          <div className="w-16 h-28 sm:w-18 sm:h-32 rounded-xl bg-gradient-to-b from-[#e8e3dd] to-[#d4cfc8] shadow-inner opacity-70" />
         </div>
-        {/* Secondary floating card */}
-        <div className="absolute -bottom-3 -right-3 w-24 h-32 rounded-xl bg-white/60 backdrop-blur border border-white/40 shadow-md rotate-6" />
+        <div className="absolute -bottom-3 -right-3 w-28 h-36 rounded-xl bg-white/60 backdrop-blur border border-white/40 shadow-md rotate-6" />
       </div>
     );
   }
   if (type === 'social') {
     return (
-      <div className={`h-72 sm:h-80 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
-        {/* Square social format */}
-        <div className="w-44 h-44 rounded-2xl bg-white/70 shadow-lg shadow-black/5 border border-white/60 flex flex-col items-center justify-center gap-3 p-4">
-          <div className="w-12 h-18 rounded-lg bg-gradient-to-b from-rose-200/60 to-rose-100/40 shadow-inner" />
+      <div className={`h-80 sm:h-96 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
+        <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-2xl bg-white/70 shadow-lg shadow-black/5 border border-white/60 flex flex-col items-center justify-center gap-3 p-4">
+          <div className="w-14 h-20 rounded-lg bg-gradient-to-b from-rose-200/60 to-rose-100/40 shadow-inner" />
           <div className="space-y-1.5 w-full">
             <div className="h-2 w-3/4 mx-auto rounded-full bg-[#1a1a2e]/10" />
             <div className="h-2 w-1/2 mx-auto rounded-full bg-[#1a1a2e]/6" />
           </div>
         </div>
-        {/* Overlap card */}
-        <div className="absolute top-8 -left-2 w-20 h-28 rounded-xl bg-white/40 backdrop-blur border border-white/30 shadow-sm -rotate-6" />
+        <div className="absolute top-8 -left-2 w-24 h-32 rounded-xl bg-white/40 backdrop-blur border border-white/30 shadow-sm -rotate-6" />
       </div>
     );
   }
   return (
-    <div className={`h-72 sm:h-80 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
-      {/* 16:9 video frame */}
-      <div className="w-52 h-32 rounded-2xl bg-white/70 shadow-lg shadow-black/5 border border-white/60 flex items-center justify-center relative">
-        <div className="w-12 h-12 rounded-full bg-white/90 shadow-md flex items-center justify-center">
-          <Play size={18} className="text-[#475569] ml-0.5" fill="currentColor" />
+    <div className={`h-80 sm:h-96 bg-gradient-to-br ${gradient} relative flex items-center justify-center overflow-hidden`}>
+      <div className="w-56 h-36 sm:w-64 sm:h-40 rounded-2xl bg-white/70 shadow-lg shadow-black/5 border border-white/60 flex items-center justify-center relative">
+        <div className="w-14 h-14 rounded-full bg-white/90 shadow-md flex items-center justify-center">
+          <Play size={20} className="text-[#475569] ml-0.5" fill="currentColor" />
         </div>
-        {/* Timeline bar */}
         <div className="absolute bottom-3 left-4 right-4 h-1 rounded-full bg-[#1a1a2e]/10">
           <div className="h-full w-1/3 rounded-full bg-[#475569]/40" />
         </div>
@@ -74,9 +68,9 @@ export function HomeCreateCards() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section className="py-24 lg:py-32">
+    <section className="py-16 lg:py-32">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             What do you want to create first?
           </h2>
@@ -85,7 +79,7 @@ export function HomeCreateCards() {
           </p>
         </div>
 
-        <div ref={ref} className="grid md:grid-cols-3 gap-6">
+        <div ref={ref} className="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
           {cards.map((card, i) => (
             <div
               key={card.title}

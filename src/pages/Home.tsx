@@ -1,7 +1,7 @@
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/constants';
-import { HomeNav } from '@/components/home/HomeNav';
+import { LandingNav } from '@/components/landing/LandingNav';
 import { HomeHero } from '@/components/home/HomeHero';
 import { HomeTransformStrip } from '@/components/home/HomeTransformStrip';
 import { HomeCreateCards } from '@/components/home/HomeCreateCards';
@@ -41,7 +41,7 @@ export default function Home() {
       />
       <JsonLd data={jsonLd} />
 
-      <HomeNav />
+      <LandingNav />
       <HomeHero />
       <HomeTransformStrip />
       <HomeCreateCards />

@@ -23,9 +23,9 @@ export function HomeWhySwitch() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section className="py-24 lg:py-32 bg-[#1a1a2e]">
+    <section className="py-16 lg:py-32 bg-[#1a1a2e]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-white text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             Why brands are replacing slow content production
           </h2>
@@ -34,11 +34,11 @@ export function HomeWhySwitch() {
           </p>
         </div>
 
-        <div ref={ref} className="grid md:grid-cols-3 gap-6">
+        <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {cards.map((card, i) => (
             <div
               key={card.title}
-              className={`bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 transition-all duration-700 hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 ${
+              className={`bg-white/5 border border-white/10 rounded-3xl p-7 sm:p-8 lg:p-10 transition-all duration-700 hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${i * 150}ms` }}
