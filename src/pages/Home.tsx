@@ -41,7 +41,7 @@ export default function Home() {
       />
       <JsonLd data={jsonLd} />
 
-      <HomeNav />
+      <LandingNav />
       <HomeHero />
       <HomeTransformStrip />
       <HomeCreateCards />

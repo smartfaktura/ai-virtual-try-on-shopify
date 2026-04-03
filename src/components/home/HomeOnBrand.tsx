@@ -19,9 +19,9 @@ export function HomeOnBrand() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section className="py-24 lg:py-32">
+    <section className="py-16 lg:py-32">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             Keep every visual on‑brand
           </h2>
@@ -32,12 +32,12 @@ export function HomeOnBrand() {
 
         <div
           ref={ref}
-          className={`grid lg:grid-cols-2 gap-12 lg:gap-20 items-center transition-all duration-700 ${
+          className={`grid lg:grid-cols-2 gap-10 lg:gap-20 items-center transition-all duration-700 ${
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
           {/* Left — Brand settings panel mock */}
-          <div className="bg-white rounded-3xl shadow-sm border border-[#f0efed] p-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-[#f0efed] p-6 sm:p-8">
             <p className="text-[13px] font-medium text-[#475569] uppercase tracking-wide mb-5">
               Visual direction
             </p>
@@ -63,7 +63,7 @@ export function HomeOnBrand() {
             </div>
           </div>
 
-          {/* Right — Consistent output grid with faux product silhouettes */}
+          {/* Right — Consistent output grid */}
           <div className="grid grid-cols-2 gap-3">
             {[
               'from-amber-50 to-orange-50',
@@ -73,11 +73,9 @@ export function HomeOnBrand() {
             ].map((c, i) => (
               <div
                 key={i}
-                className={`aspect-[3/4] rounded-2xl bg-gradient-to-br ${c} shadow-sm border border-white/60 flex items-center justify-center relative overflow-hidden`}
+                className={`aspect-square rounded-2xl bg-gradient-to-br ${c} shadow-sm border border-white/60 flex items-center justify-center relative overflow-hidden`}
               >
-                {/* Faux product silhouette — all match to prove consistency */}
-                <div className="w-12 h-20 rounded-xl bg-gradient-to-b from-[#d4cfc8]/50 to-[#c4bfb7]/40 shadow-inner" />
-                {/* Subtle warm overlay */}
+                <div className="w-16 h-24 sm:w-18 sm:h-28 rounded-xl bg-gradient-to-b from-[#d4cfc8]/50 to-[#c4bfb7]/40 shadow-inner" />
                 <div className="absolute inset-0 bg-gradient-to-t from-amber-100/10 to-transparent pointer-events-none" />
               </div>
             ))}

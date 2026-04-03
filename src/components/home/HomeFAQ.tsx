@@ -34,7 +34,7 @@ const faqs = [
 
 export function HomeFAQ() {
   return (
-    <section className="py-24 lg:py-32 bg-[#f5f5f3]" id="faq">
+    <section className="py-16 lg:py-32 bg-[#f5f5f3]" id="faq">
       <div className="max-w-2xl mx-auto px-6">
         <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-12">
           Frequently asked questions
