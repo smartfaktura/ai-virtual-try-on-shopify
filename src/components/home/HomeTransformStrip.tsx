@@ -1,13 +1,136 @@
+import { useState, useEffect } from 'react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { Camera, ShoppingBag, Megaphone, Sparkles, Play } from 'lucide-react';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const steps = [
-  { label: 'Original', icon: Camera, color: 'from-[#e8e3dd] to-[#d8d3cb]', silhouette: true },
-  { label: 'Product page', icon: ShoppingBag, color: 'from-amber-100 to-orange-50' },
-  { label: 'Social ad', icon: Megaphone, color: 'from-rose-100 to-pink-50' },
-  { label: 'Lifestyle', icon: Sparkles, color: 'from-emerald-100 to-teal-50' },
-  { label: 'Video', icon: Play, color: 'from-sky-100 to-blue-50' },
+const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
+
+const centerProducts = [
+  h('hero-product-croptop.jpg'),
+  h('hero-product-ring-new.png'),
+  h('hero-product-headphones.png'),
 ];
+
+const outputCards = [
+  {
+    label: 'Product page',
+    images: [
+      h('hero-croptop-studio-lookbook.png'),
+      h('hero-ring-fabric.png'),
+      h('hero-hp-desert.png'),
+      h('hero-croptop-golden-hour.png'),
+      h('hero-ring-portrait.png'),
+    ],
+  },
+  {
+    label: 'Social ad',
+    images: [
+      h('hero-croptop-cafe-lifestyle.png'),
+      h('hero-ring-hand.png'),
+      h('hero-hp-elevator.png'),
+      h('hero-croptop-urban-edge.png'),
+      h('hero-ring-ugc.png'),
+    ],
+  },
+  {
+    label: 'Lifestyle',
+    images: [
+      h('hero-croptop-pilates-studio.png'),
+      h('hero-ring-concrete.png'),
+      h('hero-hp-linen.png'),
+      h('hero-croptop-studio-lounge.png'),
+      h('hero-ring-eucalyptus.png'),
+    ],
+  },
+  {
+    label: 'Editorial',
+    images: [
+      h('hero-croptop-studio-dark.png'),
+      h('hero-ring-golden-light.png'),
+      h('hero-hp-studio-seated.png'),
+      h('hero-ring-floating.png'),
+      h('hero-croptop-basketball-court.png'),
+    ],
+  },
+];
+
+function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const id = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
+      return () => clearInterval(id);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [length, intervalMs, delay]);
+  return idx;
+}
+
+function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex: number }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {images.map((src, i) => (
+        <img
+          key={src}
+          src={getOptimizedUrl(src, { width: 400, quality: 55 })}
+          alt=""
+          loading="lazy"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+            i === activeIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function OriginalCard({ visible }: { visible: boolean }) {
+  const idx = useRotatingIndex(centerProducts.length, 2000);
+  return (
+    <div
+      className={`relative rounded-2xl overflow-hidden border border-border/60 shadow-xl shadow-foreground/[0.06] transition-all duration-700 ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      }`}
+      style={{ aspectRatio: '3/4' }}
+    >
+      <CrossfadeStack images={centerProducts} activeIndex={idx} />
+      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent z-10">
+        <span className="text-[11px] font-semibold tracking-widest uppercase text-white/90">
+          Original
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function OutputCardItem({
+  label,
+  images,
+  delay,
+  visible,
+}: {
+  label: string;
+  images: string[];
+  delay: number;
+  visible: boolean;
+}) {
+  const idx = useRotatingIndex(images.length, 500, delay);
+  return (
+    <div
+      className={`relative rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] transition-all duration-700 hover:scale-[1.03] hover:shadow-lg ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      }`}
+      style={{ aspectRatio: '3/4', transitionDelay: `${delay}ms` }}
+    >
+      <CrossfadeStack images={images} activeIndex={idx} />
+      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent z-10">
+        <span className="text-[11px] font-medium tracking-wide text-white/90">
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function HomeTransformStrip() {
   const { ref, visible } = useScrollReveal();
@@ -16,46 +139,44 @@ export function HomeTransformStrip() {
     <section className="py-16 lg:py-32 bg-[#f5f5f3]" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
-          <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
+          <h2 className="text-foreground text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
             From one product photo to every asset you need
           </h2>
-          <p className="text-[#6b7280] text-lg leading-relaxed">
+          <p className="text-muted-foreground text-lg leading-relaxed">
             Use the same product to create store images, social creatives, campaign visuals, and short videos.
           </p>
         </div>
 
-        <div
-          ref={ref}
-          className="flex items-center gap-4 lg:gap-2 overflow-x-auto lg:overflow-visible lg:flex-wrap lg:justify-center pb-4 lg:pb-0 snap-x snap-mandatory lg:snap-none -mx-6 px-6 lg:mx-0 lg:px-0"
-        >
-          {steps.map((step, i) => (
-            <div key={step.label} className="flex items-center gap-2 snap-center shrink-0 lg:shrink">
-              <div
-                className={`w-48 h-64 sm:w-56 sm:h-72 rounded-2xl bg-gradient-to-br ${step.color} shadow-sm border border-white/60 flex flex-col items-center justify-between p-5 transition-all duration-700 hover:-translate-y-1 hover:shadow-md ${
-                  visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                }`}
-                style={{ transitionDelay: `${i * 120}ms` }}
-              >
-                <div className="w-full flex-1 rounded-xl bg-white/40 shadow-inner flex items-center justify-center mb-3 relative overflow-hidden">
-                  {step.silhouette ? (
-                    <div className="w-14 h-24 rounded-lg bg-gradient-to-b from-[#c4bfb7] to-[#b4afaa] opacity-50 shadow-inner" />
-                  ) : (
-                    <step.icon size={28} className="text-[#94a3b8] opacity-60" />
-                  )}
-                </div>
-                <span className="text-xs font-medium text-[#475569] bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-                  {step.label}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className="hidden lg:flex flex-col items-center gap-0.5 shrink-0 mx-1">
-                  <div className="w-6 h-px bg-[#cbd5e1]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#cbd5e1]" />
-                  <div className="w-6 h-px bg-[#cbd5e1]" />
-                </div>
-              )}
-            </div>
-          ))}
+        <div ref={ref} className="flex items-center gap-3 lg:gap-5">
+          {/* Original — larger anchor */}
+          <div className="w-[28%] lg:w-[22%] shrink-0">
+            <OriginalCard visible={visible} />
+          </div>
+
+          {/* Arrow connector */}
+          <div
+            className={`hidden sm:flex flex-col items-center gap-1 shrink-0 transition-all duration-700 delay-200 ${
+              visible ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <div className="w-8 lg:w-12 h-px bg-border" />
+            <svg width="8" height="8" viewBox="0 0 8 8" className="text-border">
+              <path d="M0 0 L8 4 L0 8 Z" fill="currentColor" />
+            </svg>
+          </div>
+
+          {/* Output cards grid */}
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3">
+            {outputCards.map((card, i) => (
+              <OutputCardItem
+                key={card.label}
+                label={card.label}
+                images={card.images}
+                delay={200 + i * 120}
+                visible={visible}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
