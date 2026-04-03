@@ -70,11 +70,14 @@ function usePreload(urls: string[]) {
 function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
     const timeout = setTimeout(() => {
-      const id = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
-      return () => clearInterval(id);
+      intervalId = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
     }, delay);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [length, intervalMs, delay]);
   return idx;
 }
