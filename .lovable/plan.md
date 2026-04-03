@@ -1,33 +1,47 @@
 
 
-# Fix HomeTransformStrip & HomeHero — Rotation Speed, Static Original, Video, Mobile Sizing
+# Revised Hero & TransformStrip — Marquee Ticker Approach
 
-## Issues
-1. **TransformStrip "Original" card rotates** — should be static (one fixed product image)
-2. **Output cards rotate at 500ms** — too fast, change to 1000ms (1 second)
-3. **No Video card** in either section — add a 5th "Video" output card
-4. **Hero banner also rotates output cards at 500ms** — change to 1000ms
-5. **Hero banner missing video** — same fix, add Video card
-6. **Mobile images too small** — increase card sizes on small screens
+## The Problem with 3x3
+At ~150×200px per card, the images become thumbnails. The whole point is showing off visual quality — tiny cards defeat that.
 
-## Changes
+## Better Idea: Double-Row Marquee
 
-### `src/components/home/HomeTransformStrip.tsx`
+Two rows of cards **continuously auto-scrolling in opposite directions**, like a film strip. Cards are much larger because they only need to fit 2 rows (not 3). The infinite scroll means all 9 categories cycle through naturally — the user sees everything without clicking or scrolling.
 
-1. **Make Original card static** — remove `useRotatingIndex` from `OriginalCard`, pick one fixed product image (e.g. `hero-product-croptop.jpg`)
-2. **Slow output cards to 1000ms** — change `useRotatingIndex(images.length, 500, delay)` → `1000`
-3. **Add Video card** — add a 5th output card labeled "Video" with images from the hero set (since no .mp4 assets are used inline here, use 5 different hero images to represent video stills)
-4. **Fix useRotatingIndex cleanup bug** — same pattern as the hero fix
-5. **Mobile sizing** — change the grid from `grid-cols-2 sm:grid-cols-4` to `grid-cols-2 sm:grid-cols-5` for 5 cards; make mobile original card wider (`w-[40%]` → bigger) and output card aspect ratio slightly taller
+```text
+Desktop hero right side:
 
-### `src/components/home/HomeHero.tsx`
+  ← ← ← [Product page] [Social Media] [Editorial] [Ad Creatives] [UGC Style] ← ← ←
+  → → → [Selfie] [Flat Lay] [Video] [Perspectives] [Product page] → → → 
+```
 
-1. **Slow output cards to 1000ms** — change `intervalMs={500}` → `intervalMs={1000}`
-2. **Add Video card** — add a 5th entry to `cardSets` labeled "Video" with hero images
-3. **Adjust grid** — go from 3-col bento to accommodate 5 output cards (e.g. 2 left, center original, 2 right, plus 1 video card below or adjust to a wider layout)
-4. **Mobile sizing** — increase `min-h` values and card sizes on small screens
+- **Row 1**: scrolls left slowly (~30s loop)
+- **Row 2**: scrolls right slowly (~35s loop, slight speed difference for organic feel)
+- Each card: ~200×267px on desktop (aspect 3/4), large enough to see detail
+- Each card still crossfades its images every 1s — so there's movement both within cards AND across the strip
+- Category label on each card
+- Pauses on hover so user can look closely
+- CSS `@keyframes` animation — no JS scroll needed, very performant
+
+### With "Original" anchor
+A static "Your photo" Original card floats at the left edge or top-left corner, visually anchoring the "1 photo" input. The marquee rows flow out from it to the right.
+
+### Mobile
+Same concept but single row marquee, cards slightly smaller (~140×187px). Still big enough to read. Continuous scroll keeps it dynamic.
+
+## TransformStrip Section
+
+Replace the cramped grid with the same marquee concept but wider (full-width section). Two rows scrolling opposite directions. Larger cards (~220×293px). The section title "From one product photo to every asset you need" already explains the concept, so the marquee just needs to look impressive.
+
+## Why This Works
+- Cards are 2-3x larger than a 3x3 grid
+- User sees all 9 categories without any interaction
+- Constant motion draws the eye — feels alive and premium
+- No scrolling, no clicking, no tabs needed
+- Scales perfectly to any screen width (marquee just wraps)
 
 ## Files Modified
-- `src/components/home/HomeTransformStrip.tsx`
-- `src/components/home/HomeHero.tsx`
+- `src/components/home/HomeHero.tsx` — marquee ticker layout
+- `src/components/home/HomeTransformStrip.tsx` — same marquee approach, full-width
 
