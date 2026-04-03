@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -18,8 +18,7 @@ const categories: { key: CategoryKey; label: string; productImg: string }[] = [
 
 const outputLabels = ['Product page', 'Social Media', 'Editorial', 'Ad Creatives', 'UGC Style', 'Selfie', 'Flat Lay', 'Video', 'Perspectives'] as const;
 
-/* Indices that get crossfade rotation */
-const ROTATING_INDICES = new Set([0, 8]); // Product page & Perspectives
+const ROTATING_INDICES = new Set([0, 8]);
 
 const categoryImages: Record<CategoryKey, string[][]> = {
   fashion: [
@@ -68,6 +67,43 @@ const categoryImages: Record<CategoryKey, string[][]> = {
   ],
 };
 
+/* ── Typewriter hook ── */
+const TYPEWRITER_WORDS = ['product page image', 'social creative', 'editorial shot', 'video ad', 'lookbook photo'];
+const TYPING_SPEED = 60;
+const ERASING_SPEED = 35;
+const PAUSE_AFTER_TYPE = 2000;
+const PAUSE_AFTER_ERASE = 400;
+
+function useTypewriter(words: string[]) {
+  const [wordIndex, setWordIndex] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [isTyping, setIsTyping] = useState(true);
+
+  const tick = useCallback(() => {
+    const currentWord = words[wordIndex];
+
+    if (isTyping) {
+      if (displayText.length < currentWord.length) {
+        return { delay: TYPING_SPEED, next: () => setDisplayText(currentWord.slice(0, displayText.length + 1)) };
+      }
+      return { delay: PAUSE_AFTER_TYPE, next: () => setIsTyping(false) };
+    }
+
+    if (displayText.length > 0) {
+      return { delay: ERASING_SPEED, next: () => setDisplayText(displayText.slice(0, -1)) };
+    }
+    return { delay: PAUSE_AFTER_ERASE, next: () => { setWordIndex((i) => (i + 1) % words.length); setIsTyping(true); } };
+  }, [words, wordIndex, displayText, isTyping]);
+
+  useEffect(() => {
+    const { delay, next } = tick();
+    const id = setTimeout(next, delay);
+    return () => clearTimeout(id);
+  }, [tick]);
+
+  return { displayText, isTyping: isTyping && displayText.length < words[wordIndex].length };
+}
+
 /* ── Hooks ── */
 function useRotatingIndex(length: number, intervalMs: number, enabled: boolean) {
   const [idx, setIdx] = useState(0);
@@ -89,7 +125,7 @@ function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex
           src={getOptimizedUrl(src, { width: 800, quality: 55 })}
           alt=""
           loading="lazy"
-          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
             i === activeIndex ? 'opacity-100' : 'opacity-0'
           }`}
         />
@@ -103,7 +139,7 @@ function MarqueeCard({ label, images, cardIndex }: { label: string; images: stri
   const rotates = ROTATING_INDICES.has(cardIndex);
   const idx = useRotatingIndex(images.length, 1000, rotates);
   return (
-    <div className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] bg-[hsl(var(--muted))]">
+    <div className="relative flex-shrink-0 w-[160px] sm:w-[200px] aspect-[3/4] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
       {rotates ? (
         <CrossfadeStack images={images} activeIndex={idx} />
       ) : (
@@ -111,7 +147,7 @@ function MarqueeCard({ label, images, cardIndex }: { label: string; images: stri
           src={getOptimizedUrl(images[0], { width: 800, quality: 55 })}
           alt=""
           loading="lazy"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
         />
       )}
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
@@ -126,12 +162,10 @@ function MarqueeRow({
   cards,
   direction,
   duration,
-  indexOffset,
 }: {
   cards: { label: string; images: string[]; originalIndex: number }[];
   direction: 'left' | 'right';
   duration: string;
-  indexOffset?: number;
 }) {
   const doubled = [...cards, ...cards];
   return (
@@ -153,6 +187,7 @@ function MarqueeRow({
 /* ── Main component ── */
 export function HomeHero() {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('fashion');
+  const { displayText, isTyping } = useTypewriter(TYPEWRITER_WORDS);
 
   const activeCat = categories.find((c) => c.key === activeCategory)!;
   const images = categoryImages[activeCategory];
@@ -170,23 +205,18 @@ export function HomeHero() {
     <section className="pt-20 pb-8 lg:pt-28 lg:pb-16 bg-[#FAFAF8] overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-[2fr_3fr] gap-6 lg:gap-12 items-center">
         {/* ── Left — Copy (40%) ── */}
-        <div className="mx-auto lg:mx-0 text-center lg:text-left">
-          <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 mb-5">
-            AI product visuals
-          </span>
-
-          <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.05] font-semibold tracking-[-0.03em] mb-4">
+        <div className="text-center lg:text-left">
+          <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.05] font-semibold tracking-[-0.03em] mb-6">
             One product photo.
             <br />
+            <span className="text-muted-foreground">Every </span>
             <span className="bg-gradient-to-r from-[hsl(var(--foreground))] via-[hsl(215,25%,40%)] to-[hsl(var(--foreground))] bg-clip-text text-transparent">
-              Every visual you need.
+              {displayText}
             </span>
+            <span className={`inline-block w-[2px] h-[0.85em] bg-foreground/70 ml-0.5 align-middle ${isTyping ? 'animate-pulse' : 'animate-[pulse_1s_steps(1)_infinite]'}`} />
+            <br />
+            <span className="text-muted-foreground">you need.</span>
           </h1>
-
-          <p className="text-[16px] leading-relaxed text-muted-foreground mb-7 max-w-md mx-auto lg:mx-0">
-            Create product images, social creatives, and short videos — without
-            another photoshoot.
-          </p>
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-4 justify-center lg:justify-start">
             <Link
@@ -211,15 +241,13 @@ export function HomeHero() {
 
         {/* ── Right — Marquee + controls below (60%) ── */}
         <div className="flex flex-col gap-3">
-          {/* Marquee rows */}
           <div className="flex flex-col gap-3">
             <MarqueeRow cards={row1} direction="left" duration="30s" />
             <MarqueeRow cards={row2} direction="right" duration="35s" />
           </div>
 
-          {/* Controls bar: Your Photo + Category pills */}
+          {/* Controls bar */}
           <div className="flex items-center gap-3 flex-wrap justify-center lg:justify-start pt-1">
-            {/* Your photo card */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="w-14 h-[70px] rounded-xl overflow-hidden border-2 border-background shadow-lg shadow-foreground/10">
                 <img
@@ -233,10 +261,8 @@ export function HomeHero() {
               </span>
             </div>
 
-            {/* Divider */}
             <div className="w-px h-8 bg-border/60 hidden sm:block" />
 
-            {/* Category pills */}
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
                 <button
