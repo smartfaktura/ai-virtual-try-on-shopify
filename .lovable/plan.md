@@ -1,82 +1,78 @@
 
 
-# New Landing Page: /home
+# Overhaul /home Landing Page — Premium Visual Upgrade
 
-## Overview
-Create a brand-new premium, conversion-focused landing page at `/home` with a warm white aesthetic, buyer-facing language, and 11 distinct sections. This is a completely separate page from the existing `/` landing page — different design system, different copy, different structure.
+## Problems Identified
+1. **Hero visual is broken** — the "original" card and output cards are tiny, awkwardly positioned, and look like colored rectangles floating randomly. The layout doesn't communicate "transformation" at all.
+2. **Every section uses empty gradient placeholder boxes** — no visual richness, no texture, no depth. The page looks like a wireframe, not a premium landing page.
+3. **Sections feel sparse and generic** — the category cards, transform strip, create cards, quality proof, and how-it-works sections all look like colored rectangles with labels.
+4. **No visual storytelling** — there's no sense of a product being transformed. Just colored boxes with text labels.
 
-## Files to Create
+## Strategy
+Since we don't have real product images yet, we need to make the placeholder visuals much more convincing and premium using:
+- Richer gradient compositions with multiple layers
+- Faux product silhouettes using CSS shapes and shadows
+- Inner shadows, glass morphism, and layered depth
+- Better proportions and spatial relationships
+- More sophisticated card compositions with overlapping elements
+- Real visual hierarchy that communicates transformation
 
-### 1. `src/pages/Home.tsx`
-Main page component that composes all 11 sections with lazy-loading for below-fold content. Includes SEO head, JSON-LD, and the new navbar. Uses a custom warm white color palette via inline CSS variables or Tailwind classes (not overriding the global theme).
+## Files to Modify
 
-### 2. `src/components/home/HomeNav.tsx`
-Sticky navbar with: VOVV logo, anchor links (Examples, How it works, Pricing, FAQ), "Start free" CTA button. White/translucent blur background on scroll. Minimal, premium styling. Mobile hamburger menu.
+### 1. `src/components/home/HomeHero.tsx` — Complete rewrite
+- Make the right-side visual composition much larger and more impressive
+- Center card should be bigger (w-64 h-80) with a faux product silhouette (CSS circle/shape inside)
+- Output cards should orbit around it in a structured, overlapping arrangement — not randomly scattered
+- Add subtle floating animation via CSS keyframes
+- Add depth with layered shadows and glass borders
+- Make the visual area take up proper space (min-h-[400px] on desktop)
+- Tighten the left side copy — reduce eyebrow to just a subtle tag, keep headline tight
 
-### 3. `src/components/home/HomeHero.tsx`
-Two-column hero: left = copy + CTAs, right = visual transformation concept (original product card surrounded by output cards with subtle shadows). Uses exact copy from spec. Floating layered card composition on the right.
+### 2. `src/components/home/HomeTransformStrip.tsx` — Visual upgrade
+- Make cards taller and add inner visual elements (faux product shape + background variation per card type)
+- Add a connecting flow line between cards (SVG or border-based)
+- Make the "Original" card visually distinct (darker, with a camera/upload icon feel)
 
-### 4. `src/components/home/HomeTransformStrip.tsx`
-Section 2 — Horizontal strip showing one product becoming 5 outputs (Original → Product page → Social ad → Lifestyle → Video). Each as a labeled card. Scroll-reveal animation.
+### 3. `src/components/home/HomeCreateCards.tsx` — Richer preview areas
+- Add layered inner cards inside each preview area to simulate actual outputs
+- Each card type gets a distinct visual treatment (e.g., product card shows a centered product shape on white, social card shows a square format with overlay text hint, video card shows a play button overlay)
+- Make cards taller with more visual weight
 
-### 5. `src/components/home/HomeCreateCards.tsx`
-Section 3 — Three tall editorial cards: Product page images, Social & ad creatives, Product videos. Each with dominant preview area, title, description, CTA. Large rounded corners, soft shadows.
+### 4. `src/components/home/HomeCategoryExamples.tsx` — More visual depth
+- Make the 3 example thumbnails inside each category card larger and more detailed
+- Add hover state that scales the first image
+- Use more varied and richer gradients per category
 
-### 6. `src/components/home/HomeCategoryExamples.tsx`
-Section 4 — Four category cards (Beauty, Fashion, Jewelry, Home) with example visuals. Image-heavy, minimal text, premium gallery layout.
+### 5. `src/components/home/HomeHowItWorks.tsx` — Faux UI mockups
+- Replace plain gradient boxes with structured UI mockups using CSS (e.g., step 1 shows a dashed upload zone, step 2 shows selection cards, step 3 shows a gallery grid)
+- Each step visual should feel like an actual product screenshot
 
-### 7. `src/components/home/HomeHowItWorks.tsx`
-Section 5 — Three staggered steps with large step numbers, alternating left/right layout. Upload → Choose → Generate. Clean visual mock/preview for each step.
+### 6. `src/components/home/HomeOnBrand.tsx` — Richer output grid
+- Add faux product silhouettes inside the 4 output cards on the right
+- Add subtle matching warm-tone backgrounds to prove "consistency"
+- All 4 should share the same background tone to visually prove the point
 
-### 8. `src/components/home/HomeWhySwitch.tsx`
-Section 6 — Darker contrast section. Three comparison cards (Faster, Easier, More scalable). Slightly darker premium background for page rhythm.
+### 7. `src/components/home/HomeQualityProof.tsx` — Better gallery
+- Make the grid more editorial with varied sizes
+- Add zoom/magnifier icon overlay on hover
+- Add richer inner visual elements
 
-### 9. `src/components/home/HomeOnBrand.tsx`
-Section 7 — Two-column: left = brand settings panel mockup, right = grid of consistent outputs. Proves visual consistency without using internal "Brand Profiles" terminology.
+### 8. `src/components/home/HomeWhySwitch.tsx` — Minor polish
+- Add subtle gradient border or glow effect on hover for the cards
+- This section is the strongest already, just needs minor refinement
 
-### 10. `src/components/home/HomeQualityProof.tsx`
-Section 8 — Trust section with before/after comparisons, detail crops, use-case placements. Modular editorial gallery layout.
+### 9. `src/components/home/HomeFinalCTA.tsx` — More visual presence
+- Add subtle floating product card silhouettes in the background (absolute positioned, low opacity)
+- Make the background more visually interesting
 
-### 11. `src/components/home/HomePricingTeaser.tsx`
-Section 9 — Centered minimal panel. "Start free, upgrade when you're ready." Two buttons, reassurance row. Light, airy design.
+### 10. `src/components/home/HomeNav.tsx` — Minor tweak
+- Increase height slightly (h-16 → h-[68px])
+- Add subtle shadow when scrolled instead of just border
 
-### 12. `src/components/home/HomeFAQ.tsx`
-Section 10 — Accordion with 6 buyer-focused questions (exact copy from spec). Premium spacing, minimal borders.
-
-### 13. `src/components/home/HomeFinalCTA.tsx`
-Section 11 — Darker/contrast background. "Try it on your product" headline, two CTAs, subtle background visual treatment.
-
-### 14. `src/components/home/HomeFooter.tsx`
-Simple, minimal footer matching the new page's warm white aesthetic.
-
-## File to Modify
-
-### `src/App.tsx`
-- Add lazy import for `Home` page
-- Add route: `<Route path="/home" element={<Home />} />`
-
-## Design System (Page-Scoped)
-All styling will use Tailwind utility classes with hardcoded color values scoped to this page, avoiding changes to the global theme:
-- Background: `bg-[#FAFAF8]` (warm porcelain)
-- Cards: `bg-white` with `shadow-sm` or `shadow-md`
-- Text: `text-[#1a1a2e]` (charcoal), `text-[#6b7280]` (muted gray)
-- Accent: `text-[#475569]` (slate blue-gray), used sparingly
-- Darker sections: `bg-[#1a1a2e]` or `bg-[#f1f0ee]`
-- Rounded: `rounded-2xl` or `rounded-3xl`
-- Spacing: `py-24 lg:py-32` between sections
-
-## Animation
-- CSS-only fade-in-up on scroll using Intersection Observer
-- Subtle hover transforms on cards (`hover:-translate-y-1 transition-transform`)
-- No external animation libraries
-
-## Images
-- Use placeholder divs with gradient backgrounds initially (can be replaced with real assets later)
-- Where possible, reference existing landing assets from Supabase storage via `getLandingAssetUrl()`
-
-## Responsive
-- Mobile-first with clean stacking
-- Hero: single column on mobile, two columns on `lg:`
-- Cards: stack vertically on mobile, grid on desktop
-- Strong CTA visibility at all breakpoints
+## Design Details
+- All placeholder visuals will use layered CSS: gradients + inner shadows + CSS shapes + glass borders
+- Faux product silhouettes: rounded rectangles or circles with soft inner shadows simulating a product bottle/box shape
+- Color palette stays the same (warm porcelain, charcoal, muted accents)
+- No external images needed — pure CSS visual richness
+- Add a small CSS keyframe for subtle float animation on hero cards
 
