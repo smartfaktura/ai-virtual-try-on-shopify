@@ -242,10 +242,10 @@ export function HomeHero() {
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(cat.key)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-200 border ${
+                  className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs transition-all duration-200 border ${
                     activeCategory === cat.key
-                      ? 'bg-foreground text-background border-foreground shadow-sm'
-                      : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
+                      ? 'bg-secondary text-foreground border-foreground/20 font-semibold'
+                      : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground font-medium'
                   }`}
                 >
                   {cat.label}
