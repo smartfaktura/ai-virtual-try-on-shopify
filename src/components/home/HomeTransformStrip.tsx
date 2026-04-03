@@ -5,11 +5,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
-const centerProducts = [
-  h('hero-product-croptop.jpg'),
-  h('hero-product-ring-new.png'),
-  h('hero-product-headphones.png'),
-];
+const staticOriginal = h('hero-product-croptop.jpg');
 
 const outputCards = [
   {
@@ -52,16 +48,29 @@ const outputCards = [
       h('hero-croptop-basketball-court.png'),
     ],
   },
+  {
+    label: 'Video',
+    images: [
+      h('hero-croptop-golden-hour.png'),
+      h('hero-hp-desert.png'),
+      h('hero-ring-hand.png'),
+      h('hero-croptop-pilates-studio.png'),
+      h('hero-ring-golden-light.png'),
+    ],
+  },
 ];
 
 function useRotatingIndex(length: number, intervalMs: number, delay = 0) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
     const timeout = setTimeout(() => {
-      const id = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
-      return () => clearInterval(id);
+      intervalId = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
     }, delay);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [length, intervalMs, delay]);
   return idx;
 }
@@ -85,7 +94,6 @@ function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex
 }
 
 function OriginalCard({ visible }: { visible: boolean }) {
-  const idx = useRotatingIndex(centerProducts.length, 2000);
   return (
     <div
       className={`relative rounded-2xl overflow-hidden border border-border/60 shadow-xl shadow-foreground/[0.06] transition-all duration-700 ${
@@ -93,7 +101,12 @@ function OriginalCard({ visible }: { visible: boolean }) {
       }`}
       style={{ aspectRatio: '3/4' }}
     >
-      <CrossfadeStack images={centerProducts} activeIndex={idx} />
+      <img
+        src={getOptimizedUrl(staticOriginal, { width: 400, quality: 55 })}
+        alt="Original product"
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
       <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent z-10">
         <span className="text-[11px] font-semibold tracking-widest uppercase text-white/90">
           Original
@@ -114,7 +127,7 @@ function OutputCardItem({
   delay: number;
   visible: boolean;
 }) {
-  const idx = useRotatingIndex(images.length, 500, delay);
+  const idx = useRotatingIndex(images.length, 1000, delay);
   return (
     <div
       className={`relative rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] transition-all duration-700 hover:scale-[1.03] hover:shadow-lg ${
@@ -149,7 +162,7 @@ export function HomeTransformStrip() {
 
         <div ref={ref} className="flex items-center gap-3 lg:gap-5">
           {/* Original — larger anchor */}
-          <div className="w-[28%] lg:w-[22%] shrink-0">
+          <div className="w-[35%] sm:w-[28%] lg:w-[22%] shrink-0">
             <OriginalCard visible={visible} />
           </div>
 
@@ -166,7 +179,7 @@ export function HomeTransformStrip() {
           </div>
 
           {/* Output cards grid */}
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3">
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-5 gap-2 lg:gap-3">
             {outputCards.map((card, i) => (
               <OutputCardItem
                 key={card.label}
