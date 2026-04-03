@@ -170,7 +170,7 @@ export function HomeHero() {
     <section className="pt-20 pb-8 lg:pt-28 lg:pb-16 bg-[#FAFAF8] overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-[2fr_3fr] gap-6 lg:gap-12 items-center">
         {/* ── Left — Copy (40%) ── */}
-        <div className="max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
+        <div className="mx-auto lg:mx-0 text-center lg:text-left">
           <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 mb-5">
             AI product visuals
           </span>
