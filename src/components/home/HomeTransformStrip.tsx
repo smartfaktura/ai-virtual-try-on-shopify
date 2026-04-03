@@ -77,42 +77,22 @@ const CATEGORIES: CategoryData[] = [
   },
 ];
 
-/* ── Shimmer card ── */
-function ShimmerCard() {
-  return (
-    <div className="flex-shrink-0 w-[160px] sm:w-[240px] lg:w-[260px] rounded-2xl overflow-hidden">
-      <div className="aspect-[3/4] bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
-    </div>
-  );
-}
-
-/* ── Single image card ── */
-function ImageCard({
-  label,
-  src,
-  onLoad,
-}: {
-  label: string;
-  src: string;
-  onLoad?: () => void;
-}) {
+/* ── Image card ── */
+function ImageCard({ label, src }: { label: string; src: string }) {
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <div className="relative flex-shrink-0 w-[160px] sm:w-[240px] lg:w-[260px] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.06]">
-      <div className="aspect-[3/4] relative">
+    <div className="relative flex-shrink-0 w-[140px] sm:w-[200px] lg:w-[240px] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.06]">
+      <div className="aspect-[4/5] relative">
         {!loaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
         )}
         <img
-          src={getOptimizedUrl(src, { width: 440, quality: 75 })}
+          src={getOptimizedUrl(src, { width: 400, quality: 75 })}
           alt={label}
           loading="lazy"
           decoding="async"
-          onLoad={() => {
-            setLoaded(true);
-            onLoad?.();
-          }}
+          onLoad={() => setLoaded(true)}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         />
       </div>
@@ -142,13 +122,65 @@ function MarqueeRow({
         key={fadeKey}
         className={`flex gap-3 lg:gap-4 w-max ${
           direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'
-        } group-hover/marquee:[animation-play-state:paused] animate-fade-in`}
-        style={{ animationDuration: duration }}
+        } group-hover/marquee:[animation-play-state:paused]`}
+        style={{ animationDuration: duration, animationTimingFunction: 'linear', animationIterationCount: 'infinite' }}
       >
         {doubled.map((card, i) => (
           <ImageCard key={`${card.label}-${i}`} label={card.label} src={card.image} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ── Segmented control ── */
+function CategorySegmentedControl({
+  categories,
+  activeIdx,
+  onChange,
+}: {
+  categories: CategoryData[];
+  activeIdx: number;
+  onChange: (idx: number) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const btn = buttonRefs.current[activeIdx];
+    const container = containerRef.current;
+    if (btn && container) {
+      const cRect = container.getBoundingClientRect();
+      const bRect = btn.getBoundingClientRect();
+      setIndicator({ left: bRect.left - cRect.left, width: bRect.width });
+    }
+  }, [activeIdx]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative inline-flex items-center bg-muted/40 rounded-full p-1 overflow-x-auto scrollbar-hide max-w-full"
+    >
+      {/* sliding indicator */}
+      <div
+        className="absolute top-1 bottom-1 rounded-full bg-background shadow-sm transition-all duration-300 ease-out"
+        style={{ left: indicator.left, width: indicator.width }}
+      />
+      {categories.map((cat, idx) => (
+        <button
+          key={cat.label}
+          ref={(el) => { buttonRefs.current[idx] = el; }}
+          onClick={() => onChange(idx)}
+          className={`relative z-10 whitespace-nowrap rounded-full px-4 sm:px-5 py-2 text-sm font-medium transition-colors duration-200 ${
+            idx === activeIdx
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground/70'
+          }`}
+        >
+          {cat.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -193,21 +225,13 @@ export function HomeTransformStrip() {
           </p>
         </div>
 
-        {/* Category pills */}
-        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10 lg:mb-14">
-          {CATEGORIES.map((cat, idx) => (
-            <button
-              key={cat.label}
-              onClick={() => switchCategory(idx)}
-              className={`rounded-full px-4 sm:px-5 py-2 text-sm font-medium transition-all duration-200 ${
-                idx === activeIdx
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+        {/* Category segmented control */}
+        <div className="flex justify-center mb-10 lg:mb-14">
+          <CategorySegmentedControl
+            categories={CATEGORIES}
+            activeIdx={activeIdx}
+            onChange={switchCategory}
+          />
         </div>
 
         {/* Strip */}
@@ -221,7 +245,7 @@ export function HomeTransformStrip() {
           <div className={`flex sm:hidden items-center justify-center gap-3 mb-4 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
             <div
               className="relative w-16 rounded-xl overflow-hidden shadow-lg"
-              style={{ aspectRatio: '3/4' }}
+              style={{ aspectRatio: '4/5' }}
             >
               <img
                 src={getOptimizedUrl(active.original, { width: 200, quality: 75 })}
@@ -242,7 +266,7 @@ export function HomeTransformStrip() {
           <div className="hidden sm:block shrink-0">
             <div
               className={`relative w-24 lg:w-32 rounded-2xl overflow-hidden shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
-              style={{ aspectRatio: '3/4' }}
+              style={{ aspectRatio: '4/5' }}
             >
               <img
                 src={getOptimizedUrl(active.original, { width: 300, quality: 75 })}
