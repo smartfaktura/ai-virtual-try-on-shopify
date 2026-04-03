@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -9,50 +8,21 @@ const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 /* ── Hero images for the marquee ── */
 const heroImages = [
   { label: 'Product page', src: h('hero-croptop-studio-lookbook.png') },
-  { label: 'Social Media', src: h('hero-croptop-cafe-lifestyle.png') },
-  { label: 'Editorial', src: h('hero-croptop-studio-dark.png') },
-  { label: 'Ad Creatives', src: h('hero-croptop-golden-hour.png') },
-  { label: 'UGC Style', src: h('hero-croptop-pilates-studio.png') },
-  { label: 'Selfie', src: h('hero-croptop-studio-lounge.png') },
-  { label: 'Flat Lay', src: h('hero-croptop-basketball-court.png') },
-  { label: 'Video', src: h('hero-ring-golden-light.png') },
-  { label: 'Perspectives', src: h('hero-ring-hand.png') },
-  { label: 'Lookbook', src: h('hero-croptop-urban-edge.png') },
-  { label: 'Lifestyle', src: h('hero-hp-desert.png') },
-  { label: 'Campaign', src: h('hero-ring-eucalyptus.png') },
+  { label: 'Social content', src: h('hero-croptop-cafe-lifestyle.png') },
+  { label: 'Creator style', src: h('hero-croptop-studio-dark.png') },
+  { label: 'Editorial', src: h('hero-croptop-golden-hour.png') },
+  { label: 'Campaign', src: h('hero-croptop-pilates-studio.png') },
+  { label: 'Lifestyle', src: h('hero-croptop-studio-lounge.png') },
+  { label: 'Lookbook', src: h('hero-croptop-basketball-court.png') },
+  { label: 'Ad creative', src: h('hero-ring-golden-light.png') },
+  { label: 'Flat lay', src: h('hero-ring-hand.png') },
+  { label: 'Video', src: h('hero-croptop-urban-edge.png') },
+  { label: 'Product page', src: h('hero-hp-desert.png') },
+  { label: 'Social content', src: h('hero-ring-eucalyptus.png') },
 ];
 
 const row1 = heroImages.slice(0, 6);
 const row2 = heroImages.slice(6).concat(heroImages.slice(0, 2));
-
-/* ── Typewriter hook ── */
-const WORDS = ['product page image', 'social creative', 'editorial shot', 'video ad', 'lookbook photo'];
-
-function useTypewriter(words: string[]) {
-  const [wordIndex, setWordIndex] = useState(0);
-  const [text, setText] = useState('');
-  const [typing, setTyping] = useState(true);
-
-  const tick = useCallback(() => {
-    const word = words[wordIndex];
-    if (typing) {
-      if (text.length < word.length)
-        return { delay: 60, next: () => setText(word.slice(0, text.length + 1)) };
-      return { delay: 2000, next: () => setTyping(false) };
-    }
-    if (text.length > 0)
-      return { delay: 35, next: () => setText(text.slice(0, -1)) };
-    return { delay: 400, next: () => { setWordIndex((i) => (i + 1) % words.length); setTyping(true); } };
-  }, [words, wordIndex, text, typing]);
-
-  useEffect(() => {
-    const { delay, next } = tick();
-    const id = setTimeout(next, delay);
-    return () => clearTimeout(id);
-  }, [tick]);
-
-  return text;
-}
 
 /* ── Marquee card ── */
 function MarqueeCard({ label, src }: { label: string; src: string }) {
@@ -94,23 +64,19 @@ function MarqueeRow({ cards, direction, duration }: {
 
 /* ── Main component ── */
 export function HomeHero() {
-  const displayText = useTypewriter(WORDS);
-
   return (
-    <section className="pt-24 pb-6 lg:pt-32 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
+    <section className="pt-24 pb-6 lg:pt-28 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
-        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-5">
           One product photo.
           <br />
-          <span className="text-muted-foreground">Every </span>
-          <span className="bg-gradient-to-r from-[hsl(var(--foreground))] via-[hsl(215,25%,40%)] to-[hsl(var(--foreground))] bg-clip-text text-transparent">
-            {displayText}
-          </span>
-          <span className="inline-block w-[2px] h-[0.8em] bg-foreground/60 ml-0.5 align-middle animate-[pulse_1s_steps(1)_infinite]" />
-          <br />
-          <span className="text-muted-foreground">you need.</span>
+          <span className="text-[#4a5578]">AI creates the rest.</span>
         </h1>
+
+        <p className="max-w-xl mx-auto text-muted-foreground text-lg leading-relaxed mb-6">
+          Turn a single product image into product page visuals, social content, and campaign-ready creative in minutes.
+        </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
           <Link
