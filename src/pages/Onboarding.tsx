@@ -297,20 +297,7 @@ export default function Onboarding() {
         </div>
       </div>
 
-      {/* Right side — Hero image (hidden on mobile) */}
-      <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative">
-        <img
-          src={authHero}
-          alt="AI-generated product photography showcase"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-        <div className="absolute bottom-8 left-8 right-8">
-          <p className="text-white/90 text-sm font-medium">
-            Generated with VOVV.AI
-          </p>
-        </div>
-      </div>
+      <AuthHeroGallery />
     </div>
   );
 }
