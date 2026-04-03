@@ -194,18 +194,21 @@ export function HomeTransformStrip() {
         </div>
 
         {/* Category pills */}
-        <div className="flex flex-wrap justify-center gap-2 mb-10 lg:mb-14">
+        <div className="flex justify-center gap-6 mb-10 lg:mb-14 border-b border-border/40">
           {CATEGORIES.map((cat, idx) => (
             <button
               key={cat.label}
               onClick={() => switchCategory(idx)}
-              className={`px-4 py-2 rounded-full text-sm transition-all duration-200 ${
+              className={`relative pb-3 text-sm transition-colors duration-200 ${
                 idx === activeIdx
-                  ? 'bg-foreground/10 text-foreground font-semibold ring-1 ring-foreground/15'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {cat.label}
+              {idx === activeIdx && (
+                <span className="absolute bottom-0 inset-x-0 h-[2px] bg-foreground rounded-full animate-fade-in" />
+              )}
             </button>
           ))}
         </div>
