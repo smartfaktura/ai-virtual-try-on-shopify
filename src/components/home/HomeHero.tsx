@@ -6,94 +6,44 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
-/* ── Category definitions ── */
-type CategoryKey = 'fashion' | 'jewelry' | 'home' | 'beauty';
-
-const categories: { key: CategoryKey; label: string; productImg: string }[] = [
-  { key: 'fashion', label: 'Fashion & Accessories', productImg: h('hero-product-croptop.jpg') },
-  { key: 'jewelry', label: 'Jewelry', productImg: h('hero-ring-fabric.png') },
-  { key: 'home', label: 'Home & Lifestyle', productImg: h('hero-hp-desert.png') },
-  { key: 'beauty', label: 'Beauty & Skincare', productImg: h('hero-croptop-cafe-lifestyle.png') },
+/* ── Hero images for the marquee ── */
+const heroImages = [
+  { label: 'Product page', src: h('hero-croptop-studio-lookbook.png') },
+  { label: 'Social Media', src: h('hero-croptop-cafe-lifestyle.png') },
+  { label: 'Editorial', src: h('hero-croptop-studio-dark.png') },
+  { label: 'Ad Creatives', src: h('hero-croptop-golden-hour.png') },
+  { label: 'UGC Style', src: h('hero-croptop-pilates-studio.png') },
+  { label: 'Selfie', src: h('hero-croptop-studio-lounge.png') },
+  { label: 'Flat Lay', src: h('hero-croptop-basketball-court.png') },
+  { label: 'Video', src: h('hero-ring-golden-light.png') },
+  { label: 'Perspectives', src: h('hero-ring-hand.png') },
+  { label: 'Lookbook', src: h('hero-croptop-urban-edge.png') },
+  { label: 'Lifestyle', src: h('hero-hp-desert.png') },
+  { label: 'Campaign', src: h('hero-ring-eucalyptus.png') },
 ];
 
-const outputLabels = ['Product page', 'Social Media', 'Editorial', 'Ad Creatives', 'UGC Style', 'Selfie', 'Flat Lay', 'Video', 'Perspectives'] as const;
-
-const ROTATING_INDICES = new Set([0, 8]);
-
-const categoryImages: Record<CategoryKey, string[][]> = {
-  fashion: [
-    [h('hero-croptop-studio-lookbook.png'), h('hero-croptop-cafe-lifestyle.png')],
-    [h('hero-croptop-cafe-lifestyle.png'), h('hero-croptop-golden-hour.png')],
-    [h('hero-croptop-studio-dark.png'), h('hero-croptop-studio-lounge.png')],
-    [h('hero-croptop-golden-hour.png'), h('hero-croptop-urban-edge.png')],
-    [h('hero-croptop-pilates-studio.png'), h('hero-croptop-studio-lookbook.png')],
-    [h('hero-croptop-studio-lounge.png'), h('hero-croptop-studio-dark.png')],
-    [h('hero-croptop-basketball-court.png'), h('hero-croptop-golden-hour.png')],
-    [h('hero-croptop-golden-hour.png'), h('hero-croptop-urban-edge.png')],
-    [h('hero-croptop-studio-lookbook.png'), h('hero-croptop-cafe-lifestyle.png')],
-  ],
-  jewelry: [
-    [h('hero-ring-fabric.png'), h('hero-ring-hand.png')],
-    [h('hero-ring-hand.png'), h('hero-ring-golden-light.png')],
-    [h('hero-ring-golden-light.png'), h('hero-ring-portrait.png')],
-    [h('hero-ring-portrait.png'), h('hero-ring-ugc.png')],
-    [h('hero-ring-ugc.png'), h('hero-ring-concrete.png')],
-    [h('hero-ring-concrete.png'), h('hero-ring-eucalyptus.png')],
-    [h('hero-ring-floating.png'), h('hero-ring-fabric.png')],
-    [h('hero-ring-eucalyptus.png'), h('hero-ring-hand.png')],
-    [h('hero-ring-golden-light.png'), h('hero-ring-floating.png')],
-  ],
-  home: [
-    [h('hero-hp-desert.png'), h('hero-hp-elevator.png')],
-    [h('hero-hp-elevator.png'), h('hero-hp-linen.png')],
-    [h('hero-hp-studio-seated.png'), h('hero-hp-desert.png')],
-    [h('hero-hp-desert.png'), h('hero-hp-elevator.png')],
-    [h('hero-hp-linen.png'), h('hero-hp-studio-seated.png')],
-    [h('hero-hp-linen.png'), h('hero-hp-desert.png')],
-    [h('hero-hp-elevator.png'), h('hero-hp-linen.png')],
-    [h('hero-hp-desert.png'), h('hero-hp-studio-seated.png')],
-    [h('hero-hp-studio-seated.png'), h('hero-hp-elevator.png')],
-  ],
-  beauty: [
-    [h('hero-croptop-cafe-lifestyle.png'), h('hero-ring-eucalyptus.png')],
-    [h('hero-ring-eucalyptus.png'), h('hero-croptop-studio-lounge.png')],
-    [h('hero-croptop-studio-lounge.png'), h('hero-hp-linen.png')],
-    [h('hero-hp-linen.png'), h('hero-croptop-pilates-studio.png')],
-    [h('hero-croptop-pilates-studio.png'), h('hero-ring-concrete.png')],
-    [h('hero-ring-concrete.png'), h('hero-croptop-cafe-lifestyle.png')],
-    [h('hero-croptop-golden-hour.png'), h('hero-ring-eucalyptus.png')],
-    [h('hero-ring-portrait.png'), h('hero-croptop-studio-dark.png')],
-    [h('hero-croptop-studio-dark.png'), h('hero-hp-linen.png')],
-  ],
-};
+const row1 = heroImages.slice(0, 6);
+const row2 = heroImages.slice(6).concat(heroImages.slice(0, 2));
 
 /* ── Typewriter hook ── */
-const TYPEWRITER_WORDS = ['product page image', 'social creative', 'editorial shot', 'video ad', 'lookbook photo'];
-const TYPING_SPEED = 60;
-const ERASING_SPEED = 35;
-const PAUSE_AFTER_TYPE = 2000;
-const PAUSE_AFTER_ERASE = 400;
+const WORDS = ['product page image', 'social creative', 'editorial shot', 'video ad', 'lookbook photo'];
 
 function useTypewriter(words: string[]) {
   const [wordIndex, setWordIndex] = useState(0);
-  const [displayText, setDisplayText] = useState('');
-  const [isTyping, setIsTyping] = useState(true);
+  const [text, setText] = useState('');
+  const [typing, setTyping] = useState(true);
 
   const tick = useCallback(() => {
-    const currentWord = words[wordIndex];
-
-    if (isTyping) {
-      if (displayText.length < currentWord.length) {
-        return { delay: TYPING_SPEED, next: () => setDisplayText(currentWord.slice(0, displayText.length + 1)) };
-      }
-      return { delay: PAUSE_AFTER_TYPE, next: () => setIsTyping(false) };
+    const word = words[wordIndex];
+    if (typing) {
+      if (text.length < word.length)
+        return { delay: 60, next: () => setText(word.slice(0, text.length + 1)) };
+      return { delay: 2000, next: () => setTyping(false) };
     }
-
-    if (displayText.length > 0) {
-      return { delay: ERASING_SPEED, next: () => setDisplayText(displayText.slice(0, -1)) };
-    }
-    return { delay: PAUSE_AFTER_ERASE, next: () => { setWordIndex((i) => (i + 1) % words.length); setIsTyping(true); } };
-  }, [words, wordIndex, displayText, isTyping]);
+    if (text.length > 0)
+      return { delay: 35, next: () => setText(text.slice(0, -1)) };
+    return { delay: 400, next: () => { setWordIndex((i) => (i + 1) % words.length); setTyping(true); } };
+  }, [words, wordIndex, text, typing]);
 
   useEffect(() => {
     const { delay, next } = tick();
@@ -101,55 +51,19 @@ function useTypewriter(words: string[]) {
     return () => clearTimeout(id);
   }, [tick]);
 
-  return { displayText, isTyping: isTyping && displayText.length < words[wordIndex].length };
-}
-
-/* ── Hooks ── */
-function useRotatingIndex(length: number, intervalMs: number, enabled: boolean) {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    if (!enabled || length <= 1) return;
-    const id = setInterval(() => setIdx((i) => (i + 1) % length), intervalMs);
-    return () => clearInterval(id);
-  }, [length, intervalMs, enabled]);
-  return idx;
-}
-
-/* ── Crossfade stack ── */
-function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex: number }) {
-  return (
-    <div className="relative w-full h-full overflow-hidden">
-      {images.map((src, i) => (
-        <img
-          key={src}
-          src={getOptimizedUrl(src, { width: 800, quality: 55 })}
-          alt=""
-          loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            i === activeIndex ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      ))}
-    </div>
-  );
+  return text;
 }
 
 /* ── Marquee card ── */
-function MarqueeCard({ label, images, cardIndex }: { label: string; images: string[]; cardIndex: number }) {
-  const rotates = ROTATING_INDICES.has(cardIndex);
-  const idx = useRotatingIndex(images.length, 1000, rotates);
+function MarqueeCard({ label, src }: { label: string; src: string }) {
   return (
-    <div className="relative flex-shrink-0 w-[160px] sm:w-[200px] aspect-[3/4] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
-      {rotates ? (
-        <CrossfadeStack images={images} activeIndex={idx} />
-      ) : (
-        <img
-          src={getOptimizedUrl(images[0], { width: 800, quality: 55 })}
-          alt=""
-          loading="lazy"
-          className="w-full h-full object-cover"
-        />
-      )}
+    <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04]">
+      <img
+        src={getOptimizedUrl(src, { width: 420, quality: 55 })}
+        alt={label}
+        loading="lazy"
+        className="w-full h-full object-cover"
+      />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
         <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-white/90">{label}</span>
       </div>
@@ -158,12 +72,8 @@ function MarqueeCard({ label, images, cardIndex }: { label: string; images: stri
 }
 
 /* ── Marquee row ── */
-function MarqueeRow({
-  cards,
-  direction,
-  duration,
-}: {
-  cards: { label: string; images: string[]; originalIndex: number }[];
+function MarqueeRow({ cards, direction, duration }: {
+  cards: { label: string; src: string }[];
   direction: 'left' | 'right';
   duration: string;
 }) {
@@ -171,13 +81,11 @@ function MarqueeRow({
   return (
     <div className="overflow-hidden w-full group/marquee">
       <div
-        className={`flex gap-3 w-max ${
-          direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'
-        } group-hover/marquee:[animation-play-state:paused]`}
+        className={`flex gap-3 w-max ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'} group-hover/marquee:[animation-play-state:paused]`}
         style={{ animationDuration: duration }}
       >
         {doubled.map((card, i) => (
-          <MarqueeCard key={`${card.label}-${i}`} label={card.label} images={card.images} cardIndex={card.originalIndex} />
+          <MarqueeCard key={`${card.label}-${i}`} label={card.label} src={card.src} />
         ))}
       </div>
     </div>
@@ -186,100 +94,49 @@ function MarqueeRow({
 
 /* ── Main component ── */
 export function HomeHero() {
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>('fashion');
-  const { displayText, isTyping } = useTypewriter(TYPEWRITER_WORDS);
-
-  const activeCat = categories.find((c) => c.key === activeCategory)!;
-  const images = categoryImages[activeCategory];
-
-  const marqueeCards = outputLabels.map((label, i) => ({
-    label,
-    images: images[i],
-    originalIndex: i,
-  }));
-
-  const row1 = marqueeCards.slice(0, 5);
-  const row2 = marqueeCards.slice(4);
+  const displayText = useTypewriter(WORDS);
 
   return (
-    <section className="pt-20 pb-8 lg:pt-28 lg:pb-16 bg-[#FAFAF8] overflow-hidden">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-[2fr_3fr] gap-6 lg:gap-12 items-center">
-        {/* ── Left — Copy (40%) ── */}
-        <div className="text-center lg:text-left">
-          <h1 className="text-foreground text-[2.5rem] sm:text-5xl lg:text-[3.25rem] leading-[1.05] font-semibold tracking-[-0.03em] mb-6">
-            One product photo.
-            <br />
-            <span className="text-muted-foreground">Every </span>
-            <span className="bg-gradient-to-r from-[hsl(var(--foreground))] via-[hsl(215,25%,40%)] to-[hsl(var(--foreground))] bg-clip-text text-transparent">
-              {displayText}
-            </span>
-            <span className={`inline-block w-[2px] h-[0.85em] bg-foreground/70 ml-0.5 align-middle ${isTyping ? 'animate-pulse' : 'animate-[pulse_1s_steps(1)_infinite]'}`} />
-            <br />
-            <span className="text-muted-foreground">you need.</span>
-          </h1>
+    <section className="pt-24 pb-6 lg:pt-32 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
+      {/* ── Centered copy ── */}
+      <div className="max-w-3xl mx-auto px-6 text-center mb-10">
+        <h1 className="text-foreground text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.08] font-semibold tracking-[-0.03em] mb-6">
+          One product photo.
+          <br />
+          <span className="text-muted-foreground">Every </span>
+          <span className="bg-gradient-to-r from-[hsl(var(--foreground))] via-[hsl(215,25%,40%)] to-[hsl(var(--foreground))] bg-clip-text text-transparent">
+            {displayText}
+          </span>
+          <span className="inline-block w-[2px] h-[0.8em] bg-foreground/60 ml-0.5 align-middle animate-[pulse_1s_steps(1)_infinite]" />
+          <br />
+          <span className="text-muted-foreground">you need.</span>
+        </h1>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-4 justify-center lg:justify-start">
-            <Link
-              to="/auth"
-              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-[15px] font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/15 w-full sm:w-auto"
-            >
-              Try it on my product
-              <ArrowRight size={16} />
-            </Link>
-            <a
-              href="#examples"
-              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-[15px] font-medium hover:bg-secondary transition-colors w-full sm:w-auto"
-            >
-              See examples
-            </a>
-          </div>
-
-          <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
-            20 free credits · No credit card required
-          </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+          <Link
+            to="/auth"
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground text-[15px] font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/15"
+          >
+            Try it on my product
+            <ArrowRight size={16} />
+          </Link>
+          <a
+            href="#examples"
+            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-border text-foreground text-[15px] font-medium hover:bg-secondary transition-colors"
+          >
+            See examples
+          </a>
         </div>
 
-        {/* ── Right — Marquee + controls below (60%) ── */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-3">
-            <MarqueeRow cards={row1} direction="left" duration="30s" />
-            <MarqueeRow cards={row2} direction="right" duration="35s" />
-          </div>
+        <p className="text-[11px] tracking-[0.12em] uppercase text-muted-foreground/60 font-medium">
+          20 free credits · No credit card required
+        </p>
+      </div>
 
-          {/* Controls bar */}
-          <div className="flex items-center gap-3 flex-wrap justify-center lg:justify-start pt-1">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-14 h-[70px] rounded-xl overflow-hidden border-2 border-background shadow-lg shadow-foreground/10">
-                <img
-                  src={getOptimizedUrl(activeCat.productImg, { width: 120, quality: 60 })}
-                  alt="Original product"
-                  className="w-full h-full object-cover transition-opacity duration-300"
-                />
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/70">
-                Your<br />photo
-              </span>
-            </div>
-
-            <div className="w-px h-8 bg-border/60 hidden sm:block" />
-
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.key}
-                  onClick={() => setActiveCategory(cat.key)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs transition-all duration-200 border ${
-                    activeCategory === cat.key
-                      ? 'bg-secondary text-foreground border-foreground/20 font-semibold'
-                      : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground font-medium'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* ── Marquee rows ── */}
+      <div className="flex flex-col gap-3">
+        <MarqueeRow cards={row1} direction="left" duration="35s" />
+        <MarqueeRow cards={row2} direction="right" duration="40s" />
       </div>
     </section>
   );
