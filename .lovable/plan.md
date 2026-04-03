@@ -1,34 +1,34 @@
 
 
-# Fix Transform Strip Section — Categories, Visibility & Mobile
+# Fix Transform Strip: Marquee, Zoom & Category Design
 
-## Problems
-1. **Category tabs feel like floating text** — plain text with underline sitting on a border line looks "text on text", no visual separation from the heading above
-2. **Desktop images too small** — cards at 180px/220px with tiny original thumbnail feel undersized on large screens
-3. **Mobile: original card hidden** — `hidden sm:block` means mobile users never see the "before" context
-4. **Mobile: can't see all cards** — marquee scrolls but cards are narrow and rows feel cramped
+## Problems Identified
 
-## Changes (all in `HomeTransformStrip.tsx`)
+1. **Marquee not scrolling**: Conflict between CSS (`index.css` uses `translateX(-33.333%)`) and Tailwind config (`translateX(-50%)`). The CSS override wins, but the code doubles the array (needs `-50%`), so the animation either doesn't loop seamlessly or appears stuck.
 
-### 1. Category tabs — pill-style with background fill
-- Replace underline tabs with filled pill/chip buttons inside a centered row
-- Active: `bg-foreground text-background` (dark fill, white text) — clear, tappable
-- Inactive: `bg-muted/50 text-muted-foreground hover:bg-muted` — subtle but distinct
-- Add `rounded-full px-5 py-2` for proper pill shape
-- Remove the `border-b border-border/40` container border
-- Add more gap between heading and tabs (`mb-12`)
+2. **Images look zoomed**: Cards use `aspect-[3/4]` (portrait) with `object-cover`, which aggressively crops the source images. These are already tightly framed photos, so the extra crop makes them feel zoomed in.
 
-### 2. Desktop — larger cards and original thumbnail
-- Increase card width: `w-[180px] sm:w-[240px] lg:w-[260px]`
-- Increase original thumbnail: `w-24 lg:w-32` with bigger label text
-- Increase gap between rows: `gap-4`
+3. **Category pills feel dated**: Basic rounded buttons with fill/no-fill states lack the polished, interactive feel expected in 2026 design.
 
-### 3. Mobile — show original card above the marquee
-- Remove `hidden sm:block` — instead show the original card on mobile as a horizontal strip above the marquee rows
-- On mobile: render the original as a small card (w-16, aspect 3/4) centered above the grid with a "Your photo →" label and a subtle arrow, giving context
-- On `sm+`: keep the current left-side layout
+## Fixes (all in `HomeTransformStrip.tsx` + `index.css`)
 
-### 4. Mobile card sizing
-- Slightly larger mobile cards: `w-[160px]` (from 180 which is fine, but ensure gap is tighter `gap-2`)
-- This keeps more cards visible in the viewport
+### 1. Fix marquee animation (`index.css`)
+- Change `marquee-left` from `-33.333%` to `-50%` to match the doubled array
+- Same for `marquee-right` start position
+- This makes the infinite scroll loop seamlessly
+
+### 2. Reduce zoom — change aspect ratio to `4/5`
+- Switch cards from `aspect-[3/4]` to `aspect-[4/5]` — slightly less tall, less aggressive crop
+- Shows more of each image without feeling squished
+- Also reduce card width slightly on desktop (`lg:w-[240px]`) to fit more cards in view
+
+### 3. Modern category selector — segmented control with sliding indicator
+- Replace plain pills with a segmented control bar: a single `bg-muted/30` rounded container holding all options
+- Active item gets a sliding white `bg-background` pill with subtle shadow, animated via `transition-all`
+- Uses `relative` positioning with a calculated `translateX` for the active indicator
+- Feels like iOS/Apple segmented control — modern, tactile, premium
+- On mobile: horizontal scroll with `overflow-x-auto` and `scrollbar-hide`
+
+### 4. Ensure `animationDuration` on marquee applies correctly
+- The `style={{ animationDuration: duration }}` only applies to the parent div, but the Tailwind animation class also sets duration. Ensure the inline style wins by using `!important` or removing duration from the Tailwind animation definition.
 
