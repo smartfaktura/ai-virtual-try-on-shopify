@@ -223,7 +223,7 @@ export function HomeTransformStrip() {
           {/* Original card */}
           <div className="hidden sm:block shrink-0">
             <div
-              className={`relative w-20 lg:w-24 rounded-2xl overflow-hidden border border-border/60 shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+              className={`relative w-20 lg:w-24 rounded-2xl overflow-hidden shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
               style={{ aspectRatio: '3/4' }}
             >
               <img
