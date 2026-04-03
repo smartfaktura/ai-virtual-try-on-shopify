@@ -181,7 +181,7 @@ export function HomeTransformStrip() {
   const row2 = active.cards.slice(4);
 
   return (
-    <section className="py-16 lg:py-32 bg-[hsl(var(--muted)/0.35)] overflow-hidden" id="examples">
+    <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
         <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-10">
