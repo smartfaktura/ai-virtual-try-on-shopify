@@ -15,6 +15,7 @@ import { checkAppVersion } from '@/lib/versionCheck';
 import Landing from '@/pages/Landing';
 
 const TryShot = lazy(() => import('@/pages/TryShot'));
+const Home = lazy(() => import('@/pages/Home'));
 
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));

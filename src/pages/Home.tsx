@@ -36,8 +36,8 @@ export default function Home() {
       <SEOHead
         title="VOVV — AI Product Images & Videos for Ecommerce"
         description="Turn one product photo into ready-to-use product images, ads, and videos. Create ecommerce visuals in minutes without booking another shoot."
-        url={`${SITE_URL}/home`}
-        image={DEFAULT_OG_IMAGE}
+        canonical={`${SITE_URL}/home`}
+        ogImage={DEFAULT_OG_IMAGE}
       />
       <JsonLd data={jsonLd} />
 
