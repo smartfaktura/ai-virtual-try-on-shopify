@@ -15,6 +15,7 @@ import { checkAppVersion } from '@/lib/versionCheck';
 import Landing from '@/pages/Landing';
 
 const TryShot = lazy(() => import('@/pages/TryShot'));
+const Home = lazy(() => import('@/pages/Home'));
 
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -105,6 +106,7 @@ const App = () => {
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/landing" element={<Landing />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
