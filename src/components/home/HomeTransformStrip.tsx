@@ -213,7 +213,7 @@ export function HomeTransformStrip() {
         {/* Strip */}
         <div
           ref={ref}
-          className={`flex items-center gap-4 lg:gap-6 transition-all duration-700 ${
+          className={`flex flex-col sm:flex-row items-center gap-4 lg:gap-6 transition-all duration-700 ${
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
         >
