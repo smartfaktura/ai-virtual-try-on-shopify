@@ -1,33 +1,30 @@
 
 
-# Fix Muted Look & Modernize Category Tabs
+# Refine Home Page Hero Section
 
-## Problems
-1. **Section background `bg-[hsl(var(--muted)/0.35)]`** — adds a washed-out grey tint over the whole section, making everything look muted/dull
-2. **Category pills use `rounded-full` with faint ring** — looks like generic 2020-era filter buttons, not modern tabs
-3. **Image quality param `quality: 55`** — too low, contributing to the muted/washed appearance
-4. **Card border `border-border/60`** — adds grey framing that dulls the images further
+## File to modify
 
-## Changes (all in `HomeTransformStrip.tsx`)
+### `src/components/home/HomeHero.tsx`
 
-### 1. Remove muted section background
-- Change `bg-[hsl(var(--muted)/0.35)]` → `bg-background` — clean white background, images pop
+**Remove:**
+- The `useTypewriter` hook, `WORDS` constant, and all rotating/animated text logic
+- The blinking cursor span
 
-### 2. Modern underline-style tabs instead of pills
-- Replace `rounded-full` pill buttons with a clean inline tab bar:
-  - Active: `text-foreground font-semibold` with an animated bottom border/underline (2px)
-  - Inactive: `text-muted-foreground hover:text-foreground`
-  - No background fill, no ring — just clean text tabs with underline indicator
-  - Wrap in a horizontal scrollable container with a subtle bottom border line
+**Replace headline with fixed two-line copy:**
+- Line 1: "One product photo." — dark foreground color
+- Line 2: "AI creates the rest." — slightly muted slate-blue (`text-[#4a5578]`) for refined contrast
 
-### 3. Boost image quality
-- Increase `quality` from `55` to `75` for marquee cards
-- Increase original thumbnail quality from `55` to `75`
+**Add subheadline** below headline with `max-w-xl`:
+- "Turn a single product image into product page visuals, social content, and campaign-ready creative in minutes."
+- `text-muted-foreground text-lg`
 
-### 4. Clean up card borders
-- Remove `border border-border/60` from ImageCard — let the rounded corners and shadow define the card edge
-- Keep `shadow-md` for subtle depth without the grey border dulling the image
+**Spacing adjustments:**
+- Reduce top padding: `pt-24 lg:pt-28` (from `lg:pt-32`)
+- `mb-5` on h1, `mb-6` on subheadline
 
-## File Modified
-- `src/components/home/HomeTransformStrip.tsx`
+**Marquee card labels** — update to ecommerce-relevant terms:
+- Row 1: Product page, Social content, Creator style, Editorial, Campaign, Lifestyle
+- Row 2: Lookbook, Ad creative, Flat lay, Video, Product page, Social content
+
+No other files changed. Nav stays as-is.
 
