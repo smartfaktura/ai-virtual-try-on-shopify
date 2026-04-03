@@ -4,11 +4,16 @@ import { ArrowRight } from 'lucide-react';
 export function HomeFinalCTA() {
   return (
     <section className="py-24 lg:py-32 bg-[#1a1a2e] relative overflow-hidden">
-      {/* Subtle background blobs */}
-      <div className="absolute inset-0 opacity-10">
+      {/* Background blobs */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#475569] blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#64748b] blur-3xl" />
       </div>
+
+      {/* Floating faux cards — decorative */}
+      <div className="absolute top-12 left-[10%] w-20 h-28 rounded-xl bg-white/5 border border-white/5 -rotate-12 pointer-events-none" />
+      <div className="absolute bottom-16 right-[12%] w-24 h-32 rounded-xl bg-white/5 border border-white/5 rotate-6 pointer-events-none" />
+      <div className="absolute top-1/3 right-[8%] w-16 h-20 rounded-lg bg-white/3 border border-white/3 rotate-12 pointer-events-none" />
 
       <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
         <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">

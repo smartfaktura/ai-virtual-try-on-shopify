@@ -3,23 +3,27 @@ import { useScrollReveal } from '@/hooks/useScrollReveal';
 const categories = [
   {
     title: 'Beauty & skincare',
-    text: 'Premium packshots, campaign visuals, and social content for serums, creams, and beauty products.',
-    colors: ['from-rose-100 to-pink-50', 'from-amber-100 to-orange-50', 'from-fuchsia-100 to-purple-50'],
+    text: 'Premium packshots and campaign visuals for serums, creams, and beauty products.',
+    colors: ['from-rose-200/80 to-pink-100/60', 'from-amber-200/70 to-orange-100/50', 'from-fuchsia-200/70 to-purple-100/50'],
+    shapes: ['rounded-full w-10 h-10', 'rounded-2xl w-8 h-14', 'rounded-xl w-10 h-12'],
   },
   {
     title: 'Fashion & accessories',
-    text: 'Editorial content, ecommerce visuals, and creator-style assets for fashion brands.',
-    colors: ['from-slate-200 to-gray-100', 'from-stone-200 to-neutral-100', 'from-zinc-200 to-gray-100'],
+    text: 'Editorial content and ecommerce visuals for fashion brands.',
+    colors: ['from-slate-300/60 to-gray-200/40', 'from-stone-300/60 to-neutral-200/40', 'from-zinc-300/50 to-gray-200/30'],
+    shapes: ['rounded-xl w-10 h-16', 'rounded-lg w-12 h-12', 'rounded-2xl w-8 h-14'],
   },
   {
     title: 'Jewelry',
-    text: 'Luxury product images, detail-rich close-ups, and polished campaign visuals.',
-    colors: ['from-amber-200 to-yellow-100', 'from-orange-100 to-amber-50', 'from-yellow-100 to-amber-50'],
+    text: 'Luxury product images and polished campaign visuals.',
+    colors: ['from-amber-300/60 to-yellow-200/40', 'from-orange-200/60 to-amber-100/40', 'from-yellow-200/60 to-amber-100/40'],
+    shapes: ['rounded-full w-12 h-12', 'rounded-full w-8 h-8', 'rounded-full w-10 h-10'],
   },
   {
     title: 'Home & lifestyle',
-    text: 'Clean product visuals and elevated lifestyle imagery for candles, decor, and home brands.',
-    colors: ['from-emerald-100 to-teal-50', 'from-lime-100 to-green-50', 'from-cyan-100 to-sky-50'],
+    text: 'Clean product visuals for candles, decor, and home brands.',
+    colors: ['from-emerald-200/60 to-teal-100/40', 'from-lime-200/50 to-green-100/30', 'from-cyan-200/50 to-sky-100/30'],
+    shapes: ['rounded-2xl w-12 h-14', 'rounded-xl w-10 h-10', 'rounded-lg w-8 h-12'],
   },
 ];
 
@@ -42,15 +46,19 @@ export function HomeCategoryExamples() {
           {categories.map((cat, i) => (
             <div
               key={cat.title}
-              className={`bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-700 hover:-translate-y-1 hover:shadow-md ${
+              className={`bg-white rounded-3xl shadow-sm border border-[#f0efed] overflow-hidden transition-all duration-700 hover:-translate-y-1 hover:shadow-md group ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${i * 120}ms` }}
             >
-              {/* Example visuals */}
-              <div className="grid grid-cols-3 gap-1.5 p-3">
+              <div className="grid grid-cols-3 gap-2 p-3">
                 {cat.colors.map((c, j) => (
-                  <div key={j} className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${c}`} />
+                  <div
+                    key={j}
+                    className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${c} border border-white/40 shadow-inner flex items-center justify-center transition-transform duration-300 ${j === 0 ? 'group-hover:scale-105' : ''}`}
+                  >
+                    <div className={`${cat.shapes[j]} bg-white/30 shadow-inner`} />
+                  </div>
                 ))}
               </div>
 

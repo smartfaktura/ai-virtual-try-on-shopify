@@ -23,16 +23,15 @@ export function HomeNav() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/80 backdrop-blur-xl border-b border-[#e8e7e4]'
+          ? 'bg-white/80 backdrop-blur-xl shadow-sm shadow-black/5'
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-[68px]">
         <Link to="/home" className="text-[#1a1a2e] font-semibold text-xl tracking-tight">
           VOVV
         </Link>
 
-        {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
           {links.map((l) => (
             <a
@@ -54,7 +53,6 @@ export function HomeNav() {
           </Link>
         </div>
 
-        {/* Mobile toggle */}
         <button
           onClick={() => setOpen(!open)}
           className="md:hidden p-2 text-[#1a1a2e]"
@@ -64,7 +62,6 @@ export function HomeNav() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-white border-t border-[#e8e7e4] px-6 py-4 space-y-3">
           {links.map((l) => (

@@ -1,35 +1,41 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { ZoomIn } from 'lucide-react';
 
 const proofs = [
   {
     label: 'Original',
     sublabel: 'Uploaded product',
-    color: 'from-[#f5f0eb] to-[#e8e3dd]',
+    color: 'from-[#e8e3dd] to-[#d8d3cb]',
     span: 'col-span-1 row-span-2',
+    shape: 'w-16 h-28 rounded-2xl',
   },
   {
     label: 'Generated',
     sublabel: 'Product page ready',
-    color: 'from-amber-50 to-orange-50',
+    color: 'from-amber-100 to-orange-50',
     span: 'col-span-1 row-span-1',
+    shape: 'w-12 h-18 rounded-xl',
   },
   {
     label: 'Detail crop',
     sublabel: 'Texture & quality',
-    color: 'from-stone-100 to-neutral-50',
+    color: 'from-stone-200/60 to-neutral-100/40',
     span: 'col-span-1 row-span-1',
+    shape: 'w-20 h-14 rounded-lg',
   },
   {
     label: 'Ad use',
     sublabel: 'Campaign placement',
-    color: 'from-rose-50 to-pink-50',
+    color: 'from-rose-100 to-pink-50',
     span: 'col-span-1 row-span-1',
+    shape: 'w-14 h-14 rounded-xl',
   },
   {
     label: 'Product page use',
     sublabel: 'Storefront ready',
-    color: 'from-sky-50 to-blue-50',
+    color: 'from-sky-100 to-blue-50',
     span: 'col-span-1 row-span-1',
+    shape: 'w-12 h-18 rounded-xl',
   },
 ];
 
@@ -57,11 +63,19 @@ export function HomeQualityProof() {
           {proofs.map((p, i) => (
             <div
               key={p.label}
-              className={`${p.span} rounded-2xl bg-gradient-to-br ${p.color} shadow-sm relative overflow-hidden group min-h-[200px]`}
+              className={`${p.span} rounded-2xl bg-gradient-to-br ${p.color} shadow-sm border border-white/50 relative overflow-hidden group min-h-[200px] flex items-center justify-center`}
               style={{ transitionDelay: `${i * 100}ms` }}
             >
+              {/* Faux product silhouette */}
+              <div className={`${p.shape} bg-gradient-to-b from-white/40 to-white/20 shadow-inner`} />
+
+              {/* Zoom overlay on hover */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                <ZoomIn size={20} className="text-[#475569] opacity-0 group-hover:opacity-60 transition-opacity" />
+              </div>
+
               <div className="absolute bottom-4 left-4 z-10">
-                <span className="block text-xs font-medium text-[#475569] bg-white/80 backdrop-blur px-2.5 py-1 rounded-md">
+                <span className="block text-xs font-medium text-[#475569] bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-md">
                   {p.label}
                 </span>
                 <span className="block text-[11px] text-[#9ca3af] mt-1 ml-0.5">{p.sublabel}</span>
