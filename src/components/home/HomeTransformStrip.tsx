@@ -80,7 +80,7 @@ const CATEGORIES: CategoryData[] = [
 /* ── Shimmer card ── */
 function ShimmerCard() {
   return (
-    <div className="flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden border border-border/60">
+    <div className="flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden">
       <div className="aspect-[3/4] bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
     </div>
   );
@@ -99,13 +99,13 @@ function ImageCard({
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <div className="relative flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
+    <div className="relative flex-shrink-0 w-[180px] sm:w-[220px] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.06]">
       <div className="aspect-[3/4] relative">
         {!loaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
         )}
         <img
-          src={getOptimizedUrl(src, { width: 440, quality: 55 })}
+          src={getOptimizedUrl(src, { width: 440, quality: 75 })}
           alt={label}
           loading="lazy"
           decoding="async"
@@ -181,7 +181,7 @@ export function HomeTransformStrip() {
   const row2 = active.cards.slice(4);
 
   return (
-    <section className="py-16 lg:py-32 bg-[hsl(var(--muted)/0.35)] overflow-hidden" id="examples">
+    <section className="py-16 lg:py-32 bg-background overflow-hidden" id="examples">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading */}
         <div className="text-center max-w-2xl mx-auto mb-8 lg:mb-10">
@@ -194,18 +194,21 @@ export function HomeTransformStrip() {
         </div>
 
         {/* Category pills */}
-        <div className="flex flex-wrap justify-center gap-2 mb-10 lg:mb-14">
+        <div className="flex justify-center gap-6 mb-10 lg:mb-14 border-b border-border/40">
           {CATEGORIES.map((cat, idx) => (
             <button
               key={cat.label}
               onClick={() => switchCategory(idx)}
-              className={`px-4 py-2 rounded-full text-sm transition-all duration-200 ${
+              className={`relative pb-3 text-sm transition-colors duration-200 ${
                 idx === activeIdx
-                  ? 'bg-foreground/10 text-foreground font-semibold ring-1 ring-foreground/15'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {cat.label}
+              {idx === activeIdx && (
+                <span className="absolute bottom-0 inset-x-0 h-[2px] bg-foreground rounded-full animate-fade-in" />
+              )}
             </button>
           ))}
         </div>
@@ -220,11 +223,11 @@ export function HomeTransformStrip() {
           {/* Original card */}
           <div className="hidden sm:block shrink-0">
             <div
-              className={`relative w-20 lg:w-24 rounded-2xl overflow-hidden border border-border/60 shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+              className={`relative w-20 lg:w-24 rounded-2xl overflow-hidden shadow-xl shadow-foreground/[0.06] transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
               style={{ aspectRatio: '3/4' }}
             >
               <img
-                src={getOptimizedUrl(active.original, { width: 200, quality: 55 })}
+                src={getOptimizedUrl(active.original, { width: 200, quality: 75 })}
                 alt="Original product"
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
