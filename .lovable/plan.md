@@ -1,42 +1,42 @@
 
 
-# Hero Banner Fixes — Category Pills + Better "Your Photo" + Mobile
+# Hero Redesign — Visuals First, Controls Below
 
-## What's Wrong Now
-- "Your photo" card is tiny (64x80px) and awkwardly overlaps the marquee — hard to notice
-- Mobile has massive blank space between nav and the marquee cards (copy section takes full height before images appear)
-- No way for users to see different product types — all images are mixed
+## Problems
+- 50/50 split wastes space on images; text area too wide
+- "Your photo" + pills sit above marquee, pushing visuals down
+- Mobile: text not visible (marquee takes over)
+- Image crossfade happens on all 9 cards — should only be on "Product page" and "Perspectives"
 
-## Plan
+## Layout Changes
 
-### 1. Add Product Category Pills
-Add clickable pills above the marquee: **Beauty & Skincare**, **Fashion & Accessories**, **Jewelry**, **Home & Lifestyle**
+### Desktop: 40/60 split
+Change grid from `lg:grid-cols-2` to `lg:grid-cols-[2fr_3fr]` — gives ~40% to copy, ~60% to the marquee area. More visual real estate.
 
-- Each category maps to a different set of images for the 9 output-type cards (Product page, Social Media, Editorial, etc.)
-- Default: show current mixed set (or start with "Fashion & Accessories")
-- On click: swap the image URLs in the marquee cards — images load on demand (no preload for inactive categories)
-- Active pill gets a filled/highlighted style, others are outlined
-- Pills sit in a row between the "Your photo" area and the marquee rows
+### Move "Your Photo" + Pills below the marquee
+Instead of sitting above the marquee (pushing images down), place a row **below** the two marquee rows:
 
-The existing hero image filenames already map naturally:
-- **Fashion & Accessories**: `hero-croptop-*` images
-- **Jewelry**: `hero-ring-*` images  
-- **Home & Lifestyle**: `hero-hp-*` images (headphones/home products)
-- **Beauty & Skincare**: mix or reuse lifestyle shots
+```text
+┌─────────────────────────────────────────────┐
+│  Copy (40%)  │  Marquee Row 1 →             │
+│              │  ← Marquee Row 2             │
+│              │                              │
+│              │  [📷 Your Photo] [Fashion] [Jewelry] [Home] [Beauty]  │
+└─────────────────────────────────────────────┘
+```
 
-### 2. Reposition "Your Photo"
-- Move from awkward absolute-positioned overlay to a **dedicated row above the marquee**
-- Make it bigger: ~80x100px on desktop
-- Place it inline with the category pills: `[YOUR PHOTO thumbnail] [pill] [pill] [pill] [pill]`
-- Clear "YOUR PHOTO" label below it
-- On mobile: show centered above the marquee rows
+The "Your photo" thumbnail sits inline with the pills in a compact bar below the marquee. Slightly bigger thumbnail (~w-14 h-[70px]). This keeps the visual showcase front and center.
 
-### 3. Fix Mobile Layout
-- Reduce top padding so content appears sooner
-- Show "Your photo" card centered between copy and marquee
-- Category pills wrap into 2x2 grid on small screens
-- Marquee cards use current mobile sizing (160x213px)
+### Image rotation: only on "Product page" and "Perspectives"
+- Cards at index 0 (Product page) and index 8 (Perspectives) keep the crossfade rotation at 1s intervals
+- All other 7 cards show a **single static image** (first image in their array) — no rotation
+- This draws attention to the two key categories without visual overload
 
-## Files Modified
-- `src/components/home/HomeHero.tsx` — add category state, pills row, reposition original card, fix mobile spacing
+### Mobile fixes
+- Stack vertically: copy block first (visible, compact padding), then marquee rows, then pills row
+- Ensure h1, subtitle, and CTA buttons are fully visible before scroll
+- Reduce `pt-24` to `pt-20` on mobile for tighter spacing
+
+## File Modified
+- `src/components/home/HomeHero.tsx`
 
