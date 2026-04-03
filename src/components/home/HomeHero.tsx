@@ -213,7 +213,7 @@ export function HomeHero() {
             const delays = [0, 150, 300, 450];
 
             return (
-              <div key={card.label} className={`${col} ${row} flex items-center`}>
+              <div key={card.label} className={`${col} ${row} flex items-center w-full`}>
                 <OutputCard
                   label={card.label}
                   images={card.images}
