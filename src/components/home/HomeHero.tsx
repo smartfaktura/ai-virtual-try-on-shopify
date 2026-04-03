@@ -86,10 +86,10 @@ function CrossfadeStack({ images, activeIndex }: { images: string[]; activeIndex
       {images.map((src, i) => (
         <img
           key={src}
-          src={getOptimizedUrl(src, { width: 400, quality: 55 })}
+          src={getOptimizedUrl(src, { width: 800, quality: 55 })}
           alt=""
           loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${
             i === activeIndex ? 'opacity-100' : 'opacity-0'
           }`}
         />
@@ -103,15 +103,15 @@ function MarqueeCard({ label, images, cardIndex }: { label: string; images: stri
   const rotates = ROTATING_INDICES.has(cardIndex);
   const idx = useRotatingIndex(images.length, 1000, rotates);
   return (
-    <div className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04]">
+    <div className="relative flex-shrink-0 w-[160px] h-[213px] sm:w-[200px] sm:h-[267px] rounded-2xl overflow-hidden border border-border/60 shadow-md shadow-foreground/[0.04] bg-[hsl(var(--muted))]">
       {rotates ? (
         <CrossfadeStack images={images} activeIndex={idx} />
       ) : (
         <img
-          src={getOptimizedUrl(images[0], { width: 400, quality: 55 })}
+          src={getOptimizedUrl(images[0], { width: 800, quality: 55 })}
           alt=""
           loading="lazy"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       )}
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent">
@@ -170,7 +170,7 @@ export function HomeHero() {
     <section className="pt-20 pb-8 lg:pt-28 lg:pb-16 bg-[#FAFAF8] overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 grid lg:grid-cols-[2fr_3fr] gap-6 lg:gap-12 items-center">
         {/* ── Left — Copy (40%) ── */}
-        <div className="max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
+        <div className="mx-auto lg:mx-0 text-center lg:text-left">
           <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 mb-5">
             AI product visuals
           </span>
@@ -242,10 +242,10 @@ export function HomeHero() {
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(cat.key)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-200 border ${
+                  className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs transition-all duration-200 border ${
                     activeCategory === cat.key
-                      ? 'bg-foreground text-background border-foreground shadow-sm'
-                      : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
+                      ? 'bg-secondary text-foreground border-foreground/20 font-semibold'
+                      : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground font-medium'
                   }`}
                 >
                   {cat.label}
