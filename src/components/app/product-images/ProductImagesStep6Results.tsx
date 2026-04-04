@@ -113,3 +113,5 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     </div>
   );
 }
+
+export default ProductImagesStep6Results;

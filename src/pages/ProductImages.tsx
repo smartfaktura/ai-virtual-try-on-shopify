@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
@@ -19,15 +19,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { ProductImagesStep2Scenes } from '@/components/app/product-images/ProductImagesStep2Scenes';
-import { ProductImagesStep3Refine } from '@/components/app/product-images/ProductImagesStep3Refine';
-import { ProductImagesStep4Review } from '@/components/app/product-images/ProductImagesStep4Review';
-import { ProductImagesStep5Generating } from '@/components/app/product-images/ProductImagesStep5Generating';
-import { ProductImagesStep6Results } from '@/components/app/product-images/ProductImagesStep6Results';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
+
+// Lazy-load step components for faster initial render
+const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
+const ProductImagesStep3Refine = lazy(() => import('@/components/app/product-images/ProductImagesStep3Refine'));
+const ProductImagesStep4Review = lazy(() => import('@/components/app/product-images/ProductImagesStep4Review'));
+const ProductImagesStep5Generating = lazy(() => import('@/components/app/product-images/ProductImagesStep5Generating'));
+const ProductImagesStep6Results = lazy(() => import('@/components/app/product-images/ProductImagesStep6Results'));
 
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';

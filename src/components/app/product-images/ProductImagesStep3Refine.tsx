@@ -965,3 +965,5 @@ export function ProductImagesStep3Refine({
     </div>
   );
 }
+
+export default ProductImagesStep3Refine;

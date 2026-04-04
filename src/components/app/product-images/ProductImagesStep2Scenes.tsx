@@ -275,3 +275,5 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     </div>
   );
 }
+
+export default ProductImagesStep2Scenes;
