@@ -590,6 +590,19 @@ export function buildDynamicPrompt(
   // Resolve all {{token}} placeholders
   let prompt = template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
+  // Auto-inject key directives if template didn't include their tokens
+  const injectIfMissing = (keyword: string, tokenName: string) => {
+    const resolved = resolveToken(tokenName, ctx);
+    if (resolved && !prompt.toLowerCase().includes(keyword)) {
+      prompt += ` ${resolved}`;
+    }
+  };
+  injectIfMissing('background', 'background');
+  injectIfMissing('shadow', 'shadowDirective');
+  injectIfMissing('surface', 'surfaceDirective');
+  injectIfMissing('styling', 'stylingDirective');
+  injectIfMissing('lighting', 'lightingDirective');
+
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
 
