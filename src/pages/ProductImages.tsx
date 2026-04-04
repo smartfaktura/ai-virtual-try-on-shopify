@@ -537,6 +537,7 @@ export default function ProductImages() {
             onDetailsChange={setDetails}
             productCount={selectedProducts.length}
             sceneCount={selectedScenes.length}
+            selectedScenes={selectedScenes}
           />
         )}
 

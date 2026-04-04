@@ -93,6 +93,9 @@ export interface DetailSettings {
   // Custom note
   customNote?: string;
 
+  // Per-scene aspect ratio overrides (sceneId -> ratio)
+  sceneAspectOverrides?: Record<string, string>;
+
   // Model selection (replaces generic person details when set)
   selectedModelId?: string;
 }
