@@ -521,15 +521,6 @@ export default function ProductImages() {
         )}
 
         {step === 3 && (
-          <ProductImagesStep3Settings
-            details={details}
-            onDetailsChange={setDetails}
-            productCount={selectedProducts.length}
-            sceneCount={selectedScenes.length}
-          />
-        )}
-
-        {step === 4 && (
           <ProductImagesStep3Details
             selectedSceneIds={selectedSceneIds}
             productCount={selectedProducts.length}
@@ -537,6 +528,15 @@ export default function ProductImages() {
             onDetailsChange={setDetails}
             userModels={userModelProfiles}
             globalModels={globalModelProfiles}
+          />
+        )}
+
+        {step === 4 && (
+          <ProductImagesStep3Settings
+            details={details}
+            onDetailsChange={setDetails}
+            productCount={selectedProducts.length}
+            sceneCount={selectedScenes.length}
           />
         )}
 
