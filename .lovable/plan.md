@@ -1,81 +1,110 @@
 
 
-# Analysis: Category Detection & Prompt Mapping Coverage
+# Smart Defaults + Auto-Inject for Fashionable Generations
 
-## Current State — What's Working
+## Problem
 
-The system has three layers of category detection, executed in order:
+When a user skips the Refine step (or leaves everything on "Auto"), the prompt builder produces weak, generic instructions:
 
-1. **AI analysis (`productAnalyses` prop)** — from `useProductAnalysis` hook, which calls the `analyze-product-category` edge function using Gemini
-2. **Cached `analysis_json`** — persisted on the `user_products` row after first analysis
-3. **Keyword fallback** — substring matching against product title, description, product_type, and tags
+| Setting | Current default when "Auto" | Result |
+|---------|----------------------------|--------|
+| Background | `"clean neutral"` | AI invents random bokeh/warm tones |
+| Surface | `"on a premium styled surface"` | Vague — AI picks anything |
+| Styling direction | empty string | No aesthetic guidance at all |
+| Shadow | `"soft, natural contact shadow"` | OK but could be better per category |
+| Lighting | category-aware function | Good — keep as-is |
+| Consistency | `"balanced"` | OK |
+| Accent | empty string | Fine as default |
+| Person details | empty string | AI invents random model traits |
 
-All three layers output the same 12 category IDs, which perfectly align with the 12 `CATEGORY_COLLECTIONS` IDs in `sceneData.ts`:
-`fragrance`, `beauty-skincare`, `makeup-lipsticks`, `bags-accessories`, `hats-small`, `shoes`, `garments`, `home-decor`, `tech-devices`, `food-beverage`, `supplements-wellness`, `other`
+Additionally, 82 of 91 scene templates lack `{{background}}`, `{{shadowDirective}}`, `{{surfaceDirective}}`, and `{{stylingDirective}}` tokens — so even when users DO select values, they never reach the prompt.
 
-The prompt builder maps are also complete — `BG_MAP`, `LIGHTING_MAP`, `SHADOW_MAP`, `SURFACE_MAP`, `STYLING_DIRECTION_MAP`, `HAND_STYLE_MAP`, `NAIL_MAP` all have entries for every UI chip value, plus legacy keys for backward compatibility.
+## Solution: Two Changes
 
-## Edge Cases Found
+### Change 1: Category-aware smart defaults (prompt builder)
 
-### 1. Keyword false positives from substring matching
-The keyword matching uses `combined.includes(kw)` which means:
-- A product called "**Organic** Cotton T-Shirt" matches `food-beverage` (keyword: `organic`) AND `garments` (keyword: `cotton`, `shirt`)
-- A product called "**Honey** Gold Lipstick" matches `food-beverage` (keyword: `honey`) AND `makeup-lipsticks` (keyword: `lipstick`)
-- "**Cream** Leather Bag" matches `beauty-skincare` (keyword: `cream`) AND `bags-accessories` (keyword: `bag`, `leather`)
+Replace all weak "auto" fallbacks with strong, fashionable defaults keyed by product category. When `isAuto()` is true, instead of returning generic strings, return production-quality descriptions.
 
-**Impact**: Extra categories get recommended. Not harmful (user just sees more "Recommended" sections), but noisy.
+**File: `src/lib/productImagePromptBuilder.ts`**
 
-**Fix**: When AI analysis is available, skip keyword fallback entirely. AI analysis is the authoritative source — keywords should only run when no AI category exists.
+New default functions:
 
-### 2. No `other` collection exists but category is valid
-The `analyze-product-category` edge function can return `"other"`. The code correctly filters this out (`cat !== 'other'`). But there IS an `other` collection in `CATEGORY_COLLECTIONS` with scenes. Products classified as "other" will never get those scenes recommended.
+```text
+defaultBackground(category):
+  garments / shoes / bags → "soft warm white seamless studio background"
+  fragrance / beauty / makeup → "soft neutral light gray seamless background"  
+  tech-devices → "clean matte white seamless background"
+  food-beverage → "warm off-white background with natural warmth"
+  home-decor → "soft white studio background"
+  default → "soft warm white seamless studio background"
 
-**Impact**: Niche products (e.g., musical instruments, art supplies, pet accessories) get no category-specific recommendations even though the "other" collection has generic scenes for them.
+defaultSurface(category):
+  garments → "on a clean, minimal studio surface with seamless backdrop"
+  shoes / bags → "on a clean, minimal studio surface with seamless backdrop"
+  fragrance / beauty → "on a clean, minimal studio surface with seamless backdrop"
+  food-beverage → "on a warm, natural wood surface with visible grain"
+  home-decor → "on a premium styled surface with complementary texture"
+  default → "on a clean, minimal studio surface with seamless backdrop"
 
-**Fix**: Stop filtering out `"other"` — let it recommend the "other" collection.
+defaultShadow(category):
+  garments / shoes / bags → "soft diffused shadow beneath for a refined, airy feel"
+  fragrance / beauty → "barely-visible contact shadow for floating elegance"
+  tech-devices → "crisp, well-defined shadow adding depth and dimension"
+  default → "soft, natural contact shadow grounding the product"
 
-### 3. Analysis timing race condition
-On step 2, `productAnalyses` may still be empty if the AI analysis hasn't completed yet. The `useEffect` syncs `expandedCategories` when `relevantCatIds` changes, so this is handled — categories will update once analysis finishes. No fix needed.
-
-### 4. Keyword partial-word matches
-`includes('top')` would match "laptop", "desktop", "stopper". `includes('ring')` matches "string", "catering". `includes('bar')` matches "barbecue", "barista".
-
-**Impact**: Can cause false positive category matches for `garments` (top), `hats-small` (ring), and `supplements-wellness` (bar).
-
-**Fix**: Use word-boundary matching instead of raw `includes`.
-
-## Plan
-
-### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-
-**A. Skip keyword fallback when AI analysis covers all products**:
-```typescript
-// Only run keyword fallback for products WITHOUT analysis
-const unanalyzedProducts = products.filter(p => {
-  const hasAnalysis = productAnalyses?.[p.id]?.category 
-    || (p as any).analysis_json?.category;
-  return !hasAnalysis;
-});
-if (unanalyzedProducts.length > 0) {
-  // run keyword matching only on unanalyzed products
-}
+defaultStyling(category):
+  garments → "Clean commercial styling — crisp, professional composition"
+  fragrance / beauty / makeup → "Beauty-clean styling — luminous, minimal composition"
+  shoes / bags → "Minimal luxury styling — clean, restrained, premium"
+  tech-devices → "Modern sleek styling — contemporary, geometric, sharp"
+  food-beverage → "Organic natural styling — relaxed, authentic"
+  default → "Clean commercial styling — crisp, professional"
 ```
 
-**B. Allow `"other"` category to recommend scenes**:
-Remove the `cat !== 'other'` filter — the "other" collection has useful generic scenes.
+Update each `resolveToken` case to call these instead of returning vague strings.
 
-**C. Use word-boundary matching**:
-Replace `combined.includes(kw)` with a regex word-boundary check to prevent partial-word false positives:
+### Change 2: Auto-inject missing directives after template resolution
+
+**File: `src/lib/productImagePromptBuilder.ts`** — In `buildDynamicPrompt`, after line 512 (template resolution + cleanup), auto-append any directive the template didn't include:
+
 ```typescript
-const regex = new RegExp(`\\b${kw}\\b`, 'i');
-if (keywords.some(kw => regex.test(combined))) matched.add(catId);
+// After template resolution, inject key directives if missing
+const injectIfMissing = (keyword: string, tokenName: string) => {
+  const resolved = resolveToken(tokenName, ctx);
+  if (resolved && !prompt.toLowerCase().includes(keyword)) {
+    prompt += ` ${resolved}`;
+  }
+};
+
+injectIfMissing('background', 'background');      // "Background: soft warm white..."
+injectIfMissing('shadow', 'shadowDirective');
+injectIfMissing('surface', 'surfaceDirective');
+injectIfMissing('styling', 'stylingDirective');
+injectIfMissing('lighting', 'lightingDirective');
 ```
 
-These three changes eliminate all identified edge cases while keeping the system robust for any product type.
+This ensures ALL 91 scenes get background/shadow/surface/styling/lighting regardless of whether their template has the tokens.
+
+### Summary of defaults when nothing is selected
+
+| Setting | Smart default |
+|---------|--------------|
+| Background | `soft warm white seamless studio background` (category-tuned) |
+| Lighting | Already category-aware — keep |
+| Shadow | `soft diffused shadow` (category-tuned) |
+| Surface | `clean minimal studio surface` (category-tuned) |
+| Styling | `Clean commercial styling` (category-tuned) |
+| Consistency | `balanced` — keep |
+| Hand style | `realistic human hand` — keep |
+| Nails | `natural, clean nails` — keep |
+
+When a user DOES select a value, the existing maps (LIGHTING_MAP, SHADOW_MAP, BG_MAP, etc.) already produce strong prompt-engineered sentences — those are all good and stay unchanged.
 
 ## Files to Update
 
 | File | Change |
 |------|--------|
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Word-boundary matching, skip keywords when AI analysis exists, allow "other" category |
+| `src/lib/productImagePromptBuilder.ts` | Add `defaultBackground()`, `defaultSurface()`, `defaultShadow()`, `defaultStyling()` functions; update `resolveToken` to use them; add auto-inject block after template resolution |
+
+One file, focused change. No UI changes needed — defaults work silently in the backend prompt builder.
 
