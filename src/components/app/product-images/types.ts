@@ -78,6 +78,7 @@ export interface ProductImageScene {
   id: string;
   title: string;
   description: string;
+  promptTemplate?: string;
   previewUrl?: string;
   chips?: string[];
   triggerBlocks: string[];
