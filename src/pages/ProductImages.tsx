@@ -14,7 +14,8 @@ import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { ALL_SCENES } from '@/components/app/product-images/sceneData';
 import { getTriggeredBlocks } from '@/components/app/product-images/detailBlockConfig';
-import { ProductImagesStep1Products } from '@/components/app/product-images/ProductImagesStep1Products';
+import { CatalogStepProducts } from '@/components/app/catalog/CatalogStepProducts';
+import { AddProductModal } from '@/components/app/AddProductModal';
 import { ProductImagesStep2Scenes } from '@/components/app/product-images/ProductImagesStep2Scenes';
 import { ProductImagesStep3Settings } from '@/components/app/product-images/ProductImagesStep3Settings';
 import { ProductImagesStep3Details } from '@/components/app/product-images/ProductImagesStep3Details';
@@ -70,6 +71,8 @@ export default function ProductImages() {
   // Load models for Step 4
   const { asProfiles: userModelProfiles } = useUserModels();
   const { asProfiles: globalModelProfiles } = useCustomModels();
+
+  const [addProductOpen, setAddProductOpen] = useState(false);
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
@@ -360,13 +363,23 @@ export default function ProductImages() {
 
       <div className="mt-6">
         {step === 1 && (
-          <ProductImagesStep1Products
-            products={userProducts}
-            isLoading={isLoadingProducts}
-            selectedIds={selectedProductIds}
-            onSelectionChange={setSelectedProductIds}
-            onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
-          />
+          <>
+            <CatalogStepProducts
+              products={userProducts}
+              productsLoading={isLoadingProducts}
+              selectedProductIds={selectedProductIds}
+              onProductSelectionChange={setSelectedProductIds}
+              maxProducts={20}
+              onNext={handleNext}
+              canProceed={canProceed}
+              onAddProduct={() => setAddProductOpen(true)}
+            />
+            <AddProductModal
+              open={addProductOpen}
+              onOpenChange={setAddProductOpen}
+              onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+            />
+          </>
         )}
 
         {step === 2 && (
