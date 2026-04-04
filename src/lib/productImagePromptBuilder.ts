@@ -22,6 +22,10 @@ const LIGHTING_MAP: Record<string, string> = {
   'flat-commercial': 'Flat, even commercial lighting with minimal shadows for clean packshot clarity.',
   'rim-backlit': 'Rim lighting and backlighting creating a luminous product silhouette with a subtle halo.',
   'overhead-beauty': 'Overhead beauty lighting with a soft, even glow and minimal under-shadows.',
+  // Scene-specific chip values
+  'natural': 'Natural ambient lighting with organic warmth and gentle shadow transitions.',
+  'studio': 'Professional controlled studio lighting with clean, even illumination.',
+  'dramatic': 'Dramatic high-contrast lighting with deep shadows and bold highlights.',
 };
 
 // ── Shadow sentence map (keys aligned to Refine UI chip values) ──
