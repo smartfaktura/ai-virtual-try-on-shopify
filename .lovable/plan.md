@@ -1,284 +1,115 @@
 
 
-# Product Images Flow — Major Overhaul Plan
+# Dynamic Prompt Engineering for Product Image Scenes
 
-This is a large architectural change touching the data model, scene library, product analysis, refine logic, scene assignment, and review step. The plan is split into **4 phases** to keep each implementation manageable.
+## Problem
 
----
+The current `buildInstruction` function (line 172-186 in `ProductImages.tsx`) is extremely basic — it concatenates `scene.description` (a short UI label) with flat key-value pairs like `Background: soft white`. This produces weak, generic prompts that lack photographic direction, texture detail, and fail to incorporate the rich Refine data users configure.
 
-## Current State
+## Solution
 
-- 7-step wizard: Products → Scenes → Refine → Settings → Review → Generate → Results
-- Flat scene selection (global + category collections)
-- Single flat `DetailSettings` object for all refine/settings
-- No scene-to-product assignment logic — every scene applies to every product
-- No product analysis (category, size, material)
-- Refine is scene-block-triggered chips, not a global aesthetic layer
+### 1. Add `promptTemplate` to each scene (`sceneData.ts`)
 
-## Target State
+Instead of a static `promptInstruction`, add a `promptTemplate` string with **placeholder tokens** that get resolved at generation time using product analysis + refine settings. Tokens use `{{variable}}` syntax.
 
-- 6-step wizard: Products → Scenes → Refine → Review → Generate → Results (merge Settings into Refine)
-- Scene assignment with scopes: `ALL`, `CATEGORY_GROUP`, `INDIVIDUAL_PRODUCT`
-- Product metadata analysis (category, size, color, material)
-- Refine = global aesthetic layer + person styling + scene-specific details
-- Expanded scene library (~80 category-specific scenes)
-
----
-
-## Phase 1: Data Model & Product Analysis
-
-### 1A. New types (`types.ts`)
-
-Add new interfaces:
-
-```typescript
-// Product categories
-export type ProductCategory =
-  | 'fragrance' | 'beauty-skincare' | 'makeup-lipsticks'
-  | 'bags-accessories' | 'hats-small' | 'shoes'
-  | 'garments' | 'home-decor' | 'tech-devices'
-  | 'food-beverage' | 'supplements-wellness' | 'other';
-
-// Product analysis metadata (persisted to DB)
-export interface ProductAnalysis {
-  category: ProductCategory;
-  sizeClass: 'very-small' | 'small' | 'medium' | 'large' | 'extra-large';
-  colorFamily: string;
-  materialFamily: string;
-  finish: string;
-  packagingRelevant: boolean;
-  personCompatible: boolean;
-}
-
-// Scene assignment
-export type SceneScope = 'all' | 'category_group' | 'individual_product';
-
-export interface SceneSelection {
-  sceneId: string;
-  scope: SceneScope;
-  scopeValue: string | null; // category slug or product ID
-}
-
-// Refine structure (replaces flat DetailSettings for aesthetic)
-export interface OverallAesthetic {
-  consistency: string;
-  colorWorld: string;
-  backgroundFamily: string;
-  surfaceMaterial: string;
-  lightingFamily: string;
-  shadowStyle: string;
-  stylingDirection: string;
-  accentColor: string;
-  accentCustom?: string;
-  aestheticSource?: 'auto-balance' | 'anchor-first' | 'manual';
-}
-
-export interface PersonStyling {
-  presentation: string;
-  ageRange: string;
-  skinTone: string;
-  modelSelectionMode: string;
-  outfitStyle: string;
-  outfitColorDirection: string;
-  handStyle: string;
-  nails: string;
-  jewelryVisibility: string;
-  expression: string;
-  hairVisibility: string;
-  selectedModelId?: string;
-}
-
-export interface RefineSettings {
-  aesthetic: OverallAesthetic;
-  person?: PersonStyling;
-  sceneDetails: Record<string, Record<string, string>>; // sceneId -> field -> value
-  advanced?: Record<string, string>;
-  customNote?: string;
-  packagingReferenceUrl?: string;
-}
-
-// Updated generation plan
-export interface GenerationPlan {
-  products: UserProduct[];
-  productAnalyses: Record<string, ProductAnalysis>;
-  sceneSelections: SceneSelection[];
-  refine: RefineSettings;
-  aspectRatio: string;
-  quality: string;
-  imageCount: string;
-  sceneAspectOverrides?: Record<string, string>;
-  sceneProps?: Record<string, string[]>;
-  totalImages: number;
-  totalCredits: number;
-}
+Example for `clean-packshot`:
+```
+Professional ecommerce product photograph of {{productName}} ({{productType}}) on {{background}} seamless background. {{lightingDirective}} Sharp center-frame composition with crisp product edges. Ultra-sharp focus on every surface detail — {{materialTexture}}, label text, finish reflections. True-to-life color accuracy, {{shadowDirective}}. {{consistencyDirective}} 8K photorealistic commercial packshot quality.
 ```
 
-Keep the existing `DetailSettings` temporarily for backward compatibility but mark deprecated.
+Example for `in-hand-studio`:
+```
+Studio product photograph of {{productName}} held in a {{handStyle}} human hand against a {{background}} background. {{personDirective}} Crisp edge-to-edge sharpness on both the product and skin — visible skin pores, natural hand anatomy, {{nailDirective}}. {{lightingDirective}} Product is the clear hero, hand provides natural scale. {{materialTexture}}. Professional commercial photography, hyper-realistic skin and material rendering, 8K detail.
+```
 
-### 1B. Product analysis via edge function
+Example for `bag_detail_macro`:
+```
+Extreme close-up macro photograph of {{productName}} construction details. Tack-sharp focus on {{focusArea}} — visible micro-details: thread tension, {{materialTexture}}, edge paint line. Shallow depth of field, {{lightingDirective}} with subtle reflections on surfaces. {{accentDirective}} Ultra-realistic material photography, 8K macro commercial detail.
+```
 
-**New file**: `supabase/functions/analyze-product-category/index.ts`
+### 2. Create `buildDynamicPrompt` utility (`src/lib/productImagePromptBuilder.ts`)
 
-Uses Lovable AI (Gemini Flash) to analyze a product image and return `ProductAnalysis`. Called once per product; results cached.
+New file with a single function that resolves tokens from all available data sources:
 
-### 1C. Database migration
+**Input**: scene, product, productAnalysis, refineSettings (details object), selectedModel
 
-Add `analysis_json` (jsonb, nullable) column to `user_products` table. Once analyzed, the result is stored so we don't re-analyze.
+**Token resolution map**:
 
-### 1D. Auto-analysis hook
+| Token | Source | Example output |
+|---|---|---|
+| `{{productName}}` | `product.title` | "Chanel No.5 Eau de Parfum" |
+| `{{productType}}` | `product.product_type` or `analysis.category` | "fragrance" |
+| `{{background}}` | `details.backgroundTone` or refine aesthetic `backgroundFamily` | "warm beige" |
+| `{{lightingDirective}}` | `details.lightingStyle` or refine `lightingFamily` → mapped to full sentence | "Soft diffused studio lighting with even fill and no harsh shadows." |
+| `{{shadowDirective}}` | `details.shadowStyle` → mapped | "Product grounded with a barely-visible natural shadow." |
+| `{{materialTexture}}` | `analysis.materialFamily` + `analysis.finish` | "visible leather grain, matte finish" |
+| `{{surfaceDirective}}` | `details.surfaceType` or refine `surfaceMaterial` | "placed on warm brushed wood surface" |
+| `{{personDirective}}` | person styling fields → assembled sentence | "Model: feminine presentation, age 25-35, medium skin tone, soft smile expression." |
+| `{{handStyle}}` | `details.handStyle` | "polished beauty" |
+| `{{nailDirective}}` | `details.nails` | "polished nails with clean manicure" |
+| `{{outfitDirective}}` | `details.outfitStyle` + color direction | "Wearing elegant minimal luxury outfit in neutral tones." |
+| `{{focusArea}}` | `details.focusArea` | "leather grain, stitching, metal clasp" |
+| `{{accentDirective}}` | refine accent color → sentence | "Subtle warm accent tones complementing the product palette." |
+| `{{consistencyDirective}}` | refine consistency level → sentence | "Maintain strong visual consistency with other shots in this series." |
+| `{{productSize}}` | `analysis.sizeClass` | "small" |
+| `{{colorFamily}}` | `analysis.colorFamily` | "warm brown with gold accents" |
+| `{{stylingDirective}}` | refine `stylingDirection` → sentence | "Minimal luxury styling direction with refined simplicity." |
+| `{{moodDirective}}` | `details.mood` | "Premium, sophisticated mood." |
+| `{{environmentDirective}}` | `details.environmentType` | "calm interior setting" |
+| `{{brandingDirective}}` | `details.brandingVisibility` → sentence | "Brand logo and text subtly visible but not dominant." |
+| `{{customNote}}` | `details.customNote` | appended raw |
+| `{{modelDirective}}` | selected model info | "Use the specific model reference provided in the source image." |
+| `{{packagingDirective}}` | packaging fields → sentence | "Product shown with its outer box packaging, partially open." |
 
-**New file**: `src/hooks/useProductAnalysis.ts`
+**Fallback logic**: If a token has no user value, it resolves to a smart default based on the scene type and product analysis. For example, `{{lightingDirective}}` with no user selection → infer from category: fragrance→"Soft directional side lighting", tech→"Crisp controlled studio lighting".
 
-After product selection (Step 1 → Step 2 transition), check which selected products lack `analysis_json`. Call the edge function for those. Show a brief "Analyzing products..." loading state. Allow user to correct category via a small dropdown.
+**Quality anchor**: Every prompt ends with a fixed suffix: `"Professional product photography, ultra-sharp focus, hyper-realistic textures and materials, 8K commercial quality, photorealistic rendering."`
 
-**Files**: `types.ts`, new edge function, new hook, DB migration
+### 3. Add `promptTemplate` to all ~80 scenes
 
----
+Each scene gets a template tailored to its shot type. Templates are 3-5 sentences with tokens for dynamic data. Grouped by type:
 
-## Phase 2: Scene Library Expansion & Assignment
+- **Packshot/studio scenes** (6): Focus on background, lighting, shadow, material texture
+- **Person/hand scenes** (20+): Include person directive, hand style, nails, outfit, expression, skin
+- **Detail/macro scenes** (15+): Focus on focus area, material texture, crop intensity
+- **Lifestyle/environment scenes** (15+): Include environment, surface, styling, mood
+- **Editorial scenes** (10+): Include mood, styling direction, accent, consistency
+- **Packaging scenes** (6+): Include packaging directive, reference strength
+- **Flat lay scenes** (5+): Include arrangement, styling density, props
 
-### 2A. Expanded scene data (`sceneData.ts`)
+### 4. Update `buildInstruction` in `ProductImages.tsx`
 
-Replace current scenes with the full set from the spec:
+Replace the current flat key-value concatenation with a call to `buildDynamicPrompt`:
 
-- **Global scenes** (~11): Clean Studio Shot, Marketplace Listing, Editorial on Surface, Product on Pedestal, Tabletop Lifestyle, In-Hand Studio, In-Hand Lifestyle, Close-Up Detail, More Angles, Product + Packaging, Packaging Detail
-- **Category-specific scenes** (~70): All scenes listed in the spec per category (Fragrance ×7, Beauty ×7, Makeup ×7, Bags ×8, Hats ×6, Shoes ×7, Apparel ×7, Home ×6, Tech ×6, Food ×7, Supplements ×7, Other ×5)
+```typescript
+import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
 
-Each scene gets the internal ID from the spec (e.g., `fragrance_hero_surface`).
+const buildInstruction = useCallback((scene, product) => {
+  const analysis = product.analysis_json as ProductAnalysis | null;
+  return buildDynamicPrompt(scene, product, analysis, details);
+}, [details]);
+```
 
-### 2B. Scene assignment UI (`ProductImagesStep2Scenes.tsx`)
+The generation loop already iterates product × scene, so we pass the current product to get product-specific tokens resolved.
 
-Major changes:
-- Use product analyses to show **Recommended** categories with product thumbnails: "Selected for: [thumb] [thumb]"
-- Global scenes get `scope: 'all'` automatically
-- Category scenes get `scope: 'category_group'` automatically
-- Add collapsible "Assign to specific products" option per scene for `scope: 'individual_product'`
-- Output is `SceneSelection[]` instead of `Set<string>`
+### 5. Update `ProductImageScene` type
 
-### 2C. Scene compatibility
+Add `promptTemplate?: string` to the interface in `types.ts`.
 
-Add `compatibleCategories?: ProductCategory[]` to `ProductImageScene`. When `scope: 'all'`, only generate for compatible products. Global scenes are compatible with all by default; category scenes are compatible with their category.
+## Files Modified
 
-**Files**: `sceneData.ts`, `ProductImagesStep2Scenes.tsx`, `types.ts`
+| File | Change |
+|---|---|
+| `src/components/app/product-images/types.ts` | Add `promptTemplate?: string` to `ProductImageScene` |
+| `src/lib/productImagePromptBuilder.ts` | **New** — `buildDynamicPrompt()` with token resolution, lighting/shadow/person mapping tables, quality suffix |
+| `src/components/app/product-images/sceneData.ts` | Add `promptTemplate` to all ~80 scenes with tokens |
+| `src/pages/ProductImages.tsx` | Replace `buildInstruction` to use `buildDynamicPrompt`, pass product to it in generation loop |
 
----
+## Key Design Decisions
 
-## Phase 3: Refine Overhaul
-
-### 3A. New Refine step (`ProductImagesStep3Refine.tsx`)
-
-Replace current `ProductImagesStep3Details.tsx` + `ProductImagesStep3Settings.tsx` with a unified Refine step:
-
-**Section 1 — Overall Aesthetic** (always shown)
-- Consistency: Natural / Strong / Strict
-- Color world: Auto / Warm neutrals / Cool neutrals / Soft monochrome / Brand-led / Custom
-- Background family: Pure white / Soft white / Light grey / Warm beige / Taupe / Stone / Accent / Custom / Auto
-- Surface/material: Minimal studio / Stone-plaster / Warm wood / Fabric / Glossy / Auto
-- Lighting: Soft diffused / Warm editorial / Crisp studio / Natural daylight / Side-lit premium
-- Shadow: None / Soft / Natural / Defined
-- Styling direction: Minimal luxury / Clean commercial / Fashion editorial / Beauty clean / Organic / Modern sleek / Auto
-- Accent color: None / Product accent / Brand accent / Subtle / Strong / Custom
-- **Aesthetic source** (shown only when multi-category selection): Auto-balance / Anchor first product / Manual
-
-Auto-fill from product analysis.
-
-**Section 2 — Visible Person Styling** (shown only when person-compatible scenes selected)
-- All fields from spec: presentation, age, skin tone, model selection mode, outfit style, outfit color, hand style, nails, jewelry, expression, hair
-- Model picker (existing component)
-- Auto-fill from product category
-
-**Section 3 — Scene-Specific Details** (collapsible per-scene)
-- Triggered detail blocks based on scene type (keep existing trigger logic)
-- Includes: detail focus, angle selection, packaging details, product size, branding, layout, props
-
-**Section 4 — Advanced** (collapsed)
-- Custom note
-- Per-category or per-product overrides (future)
-
-**Section 5 — Format & Output** (bottom card)
-- Aspect ratio selector with per-scene overrides (existing from Settings)
-- Image count
-- Live credit preview
-- Per-scene props (existing from Settings)
-
-This merges the current Steps 3+4 into one step, reducing the wizard to 6 steps.
-
-**Files**: New `ProductImagesStep3Refine.tsx`, update `ProductImages.tsx` step definitions
-
----
-
-## Phase 4: Review, Generation & Admin
-
-### 4A. Updated Review (`ProductImagesStep4Review.tsx`)
-
-Show:
-- Products grouped by category
-- Scenes with scope badges: "All products" / "Fragrance" / "[product name]"
-- Aesthetic summary card
-- Person styling summary (if applicable)
-- Output count: breakdown by product × scene
-- Credits total
-- Edit jump-links per section
-
-### 4B. Updated Generation Logic (`ProductImages.tsx`)
-
-When generating:
-- For each `SceneSelection`, resolve which products it applies to based on scope
-- Build instruction using `RefineSettings` aesthetic + person + scene details
-- Pass per-scene aspect ratio overrides
-- Pass per-scene props
-
-### 4C. Admin Scene Management
-
-Update `/admin/scenes` to:
-- Manage global + category scenes
-- Set compatible categories per scene
-- Set which refine blocks each scene triggers
-- Toggle active/inactive
-- Manage preview images
-- Set sort order within categories
-
-**Files**: `ProductImagesStep4Review.tsx`, `ProductImages.tsx` generation logic, admin pages
-
----
-
-## Step-by-Step Migration
-
-The wizard changes from 7 steps to 6:
-
-| # | Old | New |
-|---|-----|-----|
-| 1 | Products | Products (+ auto-analysis) |
-| 2 | Scenes | Scenes (with scope assignment) |
-| 3 | Refine (details) | Refine (aesthetic + person + details + format) |
-| 4 | Settings (format) | Review |
-| 5 | Review | Generate |
-| 6 | Generate | Results |
-| 7 | Results | — |
-
-## What We Keep
-
-- Product selection mechanism (grid/list, search, pagination, add product modal)
-- Product context strip
-- Sticky bar
-- Generation queue/polling/results logic
-- Credits calculation pattern
-- Model picker component
-- Base64 image conversion for generation
-
-## Implementation Order
-
-1. **Phase 1** — Data model + product analysis (foundation)
-2. **Phase 2** — Scene library + assignment (core feature)
-3. **Phase 3** — Refine overhaul (UX improvement)
-4. **Phase 4** — Review + generation + admin (completion)
-
-Each phase is independently deployable. Phase 1 can ship with the old UI still working. Phase 2-3 are the main UX changes. Phase 4 ties it all together.
-
-## Estimated Scope
-
-- ~15 files modified/created
-- 1 edge function
-- 1 DB migration
-- Scene data file grows from ~270 lines to ~600+ lines
+- Templates live in `sceneData.ts` alongside scene definitions — easy to edit and preview
+- Token resolution is pure functions with no side effects — testable
+- Fallback defaults are category-aware (fragrance defaults differ from tech defaults)
+- The quality suffix is always appended, ensuring every prompt demands 8K photorealistic output
+- Person tokens only resolve when the scene has person-related trigger blocks — no phantom person descriptions in product-only shots
 
