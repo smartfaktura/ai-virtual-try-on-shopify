@@ -2,7 +2,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 export type UserProduct = Tables<'user_products'>;
 
-export type PIStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type PIStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface ProductImageScene {
   id: string;

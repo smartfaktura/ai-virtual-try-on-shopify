@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, SlidersHorizontal, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List, Gem } from 'lucide-react';
+import { Package, Layers, SlidersHorizontal, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +29,7 @@ import { ProductImagesStep5Generating } from '@/components/app/product-images/Pr
 import { ProductImagesStep6Results } from '@/components/app/product-images/ProductImagesStep6Results';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
-import { ProductImagesStep3Props } from '@/components/app/product-images/ProductImagesStep3Props';
+
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import type { PIStep, UserProduct, DetailSettings } from '@/components/app/product-images/types';
@@ -38,11 +38,10 @@ const STEP_DEFS = [
   { number: 1, label: 'Products', icon: Package },
   { number: 2, label: 'Scenes', icon: Layers },
   { number: 3, label: 'Refine', icon: Paintbrush },
-  { number: 4, label: 'Props', icon: Gem },
-  { number: 5, label: 'Settings', icon: SlidersHorizontal },
-  { number: 6, label: 'Review', icon: ClipboardCheck },
-  { number: 7, label: 'Generate', icon: Sparkles },
-  { number: 8, label: 'Results', icon: CheckCircle },
+  { number: 4, label: 'Settings', icon: SlidersHorizontal },
+  { number: 5, label: 'Review', icon: ClipboardCheck },
+  { number: 6, label: 'Generate', icon: Sparkles },
+  { number: 7, label: 'Results', icon: CheckCircle },
 ];
 
 // Map detail block keys to the detail settings fields they own
@@ -73,7 +72,6 @@ export default function ProductImages() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
-  const [propProductIds, setPropProductIds] = useState<Set<string>>(new Set());
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Load models for Step 4
@@ -173,12 +171,12 @@ export default function ProductImages() {
   const handleGenerate = useCallback(async () => {
     if (!canAfford) { openBuyModal(); return; }
 
-    setStep(7);
+    setStep(6);
     setCompletedJobs(0);
 
     const { data: session } = await supabase.auth.getSession();
     const token = session?.session?.access_token;
-    if (!token) { toast.error('Authentication required'); setStep(6); return; }
+    if (!token) { toast.error('Authentication required'); setStep(5); return; }
 
     const batchId = crypto.randomUUID();
     const newJobMap = new Map<string, string>();
@@ -243,7 +241,7 @@ export default function ProductImages() {
 
     if (newJobMap.size === 0) {
       toast.error('Could not queue any jobs');
-      setStep(6);
+      setStep(5);
       return;
     }
 
@@ -297,7 +295,7 @@ export default function ProductImages() {
 
           setResults(resultMap);
           refreshBalance();
-          setStep(8);
+          setStep(7);
           return;
         }
 
@@ -320,7 +318,6 @@ export default function ProductImages() {
     if (s === 3) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 4) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 5) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
-    if (s === 6) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     return false;
   };
 
@@ -329,9 +326,8 @@ export default function ProductImages() {
       case 1: return selectedProductIds.size > 0;
       case 2: return selectedSceneIds.size > 0;
       case 3: return true;
-      case 4: return true; // props optional
-      case 5: return true;
-      case 6: return canAfford && totalImages > 0;
+      case 4: return true;
+      case 5: return canAfford && totalImages > 0;
       default: return false;
     }
   })();
@@ -342,8 +338,7 @@ export default function ProductImages() {
       case 2: setStep(3); break;
       case 3: setStep(4); break;
       case 4: setStep(5); break;
-      case 5: setStep(6); break;
-      case 6: handleGenerate(); break;
+      case 5: handleGenerate(); break;
     }
   };
 
@@ -353,7 +348,6 @@ export default function ProductImages() {
       case 3: setStep(2); break;
       case 4: setStep(3); break;
       case 5: setStep(4); break;
-      case 6: setStep(5); break;
     }
   };
 
@@ -362,7 +356,7 @@ export default function ProductImages() {
       <SEOHead title="Product Images — VOVV" description="Generate product images" />
       <PageHeader title="Product Images" subtitle="Generate stunning product visuals across multiple scene types."><span /></PageHeader>
 
-      {step <= 6 && (
+      {step <= 5 && (
         <CatalogStepper
           steps={STEP_DEFS}
           currentStep={step}
@@ -371,8 +365,7 @@ export default function ProductImages() {
         />
       )}
 
-      {/* Product context strip on Steps 2-6 */}
-      {step >= 2 && step <= 6 && selectedProducts.length > 0 && (
+      {step >= 2 && step <= 5 && selectedProducts.length > 0 && (
         <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
       )}
 
@@ -539,15 +532,6 @@ export default function ProductImages() {
         )}
 
         {step === 4 && (
-          <ProductImagesStep3Props
-            allProducts={userProducts}
-            heroProductIds={selectedProductIds}
-            propProductIds={propProductIds}
-            onPropSelectionChange={setPropProductIds}
-          />
-        )}
-
-        {step === 5 && (
           <ProductImagesStep3Settings
             details={details}
             onDetailsChange={setDetails}
@@ -556,7 +540,7 @@ export default function ProductImages() {
           />
         )}
 
-        {step === 6 && (
+        {step === 5 && (
           <ProductImagesStep4Review
             selectedProducts={selectedProducts}
             selectedSceneIds={selectedSceneIds}
@@ -567,7 +551,7 @@ export default function ProductImages() {
           />
         )}
 
-        {step === 7 && (
+        {step === 6 && (
           <ProductImagesStep5Generating
             totalJobs={jobMap.size}
             completedJobs={completedJobs}
@@ -575,7 +559,7 @@ export default function ProductImages() {
           />
         )}
 
-        {step === 8 && (
+        {step === 7 && (
           <ProductImagesStep6Results
             results={results}
             onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
@@ -585,7 +569,7 @@ export default function ProductImages() {
       </div>
 
       {/* Sticky bottom bar for Steps 1-5 */}
-      {step >= 1 && step <= 6 && (
+      {step >= 1 && step <= 5 && (
         <ProductImagesStickyBar
           step={step}
           productCount={selectedProducts.length}
