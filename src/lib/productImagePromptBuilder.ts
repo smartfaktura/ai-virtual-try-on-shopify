@@ -606,7 +606,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'negativeSpaceDirective': return '';
     case 'productProminenceDirective': {
       if (isAuto(details.productProminence)) return '';
-      return `Product prominence: ${details.productProminence!.replace(/-/g, ' ')}.`;
+      return PROMINENCE_MAP[details.productProminence!] || `Product prominence: ${details.productProminence!.replace(/-/g, ' ')}.`;
+    }
+    case 'stylingDensityDirective': {
+      if (isAuto(details.stylingDensity)) return '';
+      return STYLING_DENSITY_MAP[details.stylingDensity!] || `${details.stylingDensity!.replace(/-/g, ' ')} styling density.`;
     }
     case 'sceneIntensityDirective': {
       if (isAuto(details.sceneIntensity)) return '';
