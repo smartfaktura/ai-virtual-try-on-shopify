@@ -641,22 +641,13 @@ export function ProductImagesStep3Refine({
           <CollapsibleContent>
             <Card className="mt-2">
               <CardContent className="p-4 space-y-4">
-                {/* Model picker */}
-                {allModels.length > 0 && (
-                  <>
-                    <p className="text-xs text-muted-foreground">Select a model or customize manually below.</p>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                      {userModels.map(m => (
-                        <ModelSelectorCard key={m.modelId} model={m} isSelected={details.selectedModelId === m.modelId}
-                          onSelect={() => update({ selectedModelId: details.selectedModelId === m.modelId ? undefined : m.modelId })} />
-                      ))}
-                      {globalModels.map(m => (
-                        <ModelSelectorCard key={m.modelId} model={m} isSelected={details.selectedModelId === m.modelId}
-                          onSelect={() => update({ selectedModelId: details.selectedModelId === m.modelId ? undefined : m.modelId })} />
-                      ))}
-                    </div>
-                  </>
-                )}
+                {/* Model picker with sections */}
+                <ModelPickerSections
+                  userModels={userModels}
+                  globalModels={globalModels}
+                  selectedModelId={details.selectedModelId}
+                  onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
+                />
 
                 {!details.selectedModelId && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2 border-t border-border">
