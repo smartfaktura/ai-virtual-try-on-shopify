@@ -1,55 +1,54 @@
 
 
-# Product Images Flow — Round 5 Fixes
+# Product Images — UX Fixes Round 6
 
-## 3 Changes
+## 4 Changes
 
-### 1. Split "Generation Settings" into its own step (Step 3), move scene-specific details to Step 4
+### 1. Product cards: show full image (not zoomed/cropped), add search & type filter
 
-**Current**: Step 3 mixes format/quality/count cards with scene-triggered detail blocks. The stepper has 6 steps: Products → Scenes → Details → Review → Generate → Results.
+**Current**: Product cards use `object-cover` on a square aspect ratio, cropping product images badly (can't see the full product). No search or filter.
 
-**Fix**: Insert a new step between Scenes and the current Details:
-- **Step 3 "Settings"** — Format/Size (with small shape icons on each chip), Quality, Images per scene. Clean, simple.
-- **Step 4 "Refine"** — Scene-triggered detail blocks only (model picker, action, environment, focus, etc.) + custom note. Renamed from "Details" for clarity.
-- Review becomes Step 5, Generate Step 6, Results Step 7.
+**Fix**: Match the Products page (`/app/products`) pattern:
+- Change `object-cover` to `object-contain` with `bg-muted` background so the full product image is visible without cropping
+- Add a search input (same pattern as Products page: `Search` icon + `Input`)
+- Add a type filter dropdown (using product_type values from products array)
+- Show filtered count when filtering
 
-**Files**:
-- `types.ts` — Change `PIStep` from `1-6` to `1-7`
-- `ProductImages.tsx` — Update `STEP_DEFS` to 7 steps, add new step routing, update `canNavigateTo`, `canProceed`, `handleNext`, `handleBack`. Extract generation settings (aspectRatio, quality, imageCount) into Step 3 component, scene details into Step 4.
-- New `ProductImagesStep3Settings.tsx` — Format/Size with small shape SVG icons (square, portrait, story, landscape outlines next to each label), Quality chips, Images per scene chips. Simple and focused.
-- Rename current `ProductImagesStep3Details.tsx` → keep file but remove the "Generation settings" section (format/quality/imageCount cards). It becomes only the scene-triggered blocks. Update heading to "Refine your scenes" with subtitle "Optional tweaks based on your selected scenes."
+**File**: `ProductImagesStep1Products.tsx`
 
-### 2. Format/Size chips get small shape icons
+### 2. Scenes grid: 5-6 columns per row
 
-In the new Step 3 Settings component, each aspect ratio chip will have a tiny inline SVG shape icon before the label:
-- 1:1 → small square outline
-- 4:5 → tall rectangle outline
-- 3:4 → slightly tall rectangle
-- 9:16 → very tall thin rectangle
-- 16:9 → wide rectangle
+**Current**: Scene cards use `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Too few per row.
 
-These are simple 12×12 inline SVGs rendered inside each chip.
+**Fix**: Change Universal Scenes grid to `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6`. Same for category collection grids inside `CategorySection`.
 
-### 3. Sticky bar — use solid card style matching other workflows
+**File**: `ProductImagesStep2Scenes.tsx` — update both grid class strings
 
-**Current**: Semi-transparent backdrop-blur bar that looks faint and conflicts with floating elements.
+### 3. Sticky bar: stop overlapping sidebar & chat button
 
-**Fix**: Replace with a solid `bg-background` card-style bar similar to the credit summary sections used in TryOnSettingsPanel and CatalogStepReviewV2. Specifically:
-- Solid `bg-background` (no transparency/blur)
-- `border border-border rounded-xl shadow-lg` — floating card look
-- `fixed bottom-4 left-[var(--sidebar-width,0px)] right-4` with proper z-index — sits above content but leaves room for the chat button (which is at `bottom-20`)
-- Stronger text contrast: summary numbers in `font-bold text-foreground`, credits with colored icon
-- Compact but clear layout
+**Current**: The sticky bar uses `fixed bottom-4 left-[var(--sidebar-width,0px)]` which sits at viewport bottom, overlapping the StudioChat button (which is `fixed bottom-4 left-4 lg:left-[var(--sidebar-offset)]` z-40). The bar also extends under the sidebar on large screens.
 
-**File**: `ProductImagesStickyBar.tsx` — full restyle. Update step labels for new 7-step flow.
+**Fix**: Change the sticky bar from `fixed` to use the page's scroll container. Since the main content scrolls inside `#app-main-scroll` (not the viewport), `fixed` positioning is wrong — it overlaps everything. Switch to `sticky bottom-0` inside the page content flow, with solid styling:
+- `sticky bottom-0 z-20` — stays at the bottom of the scroll area, not the viewport
+- `bg-background border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.05)]` — solid card with subtle top shadow
+- Remove `left-[var(--sidebar-width)]` since sticky doesn't need it
+- Add `mx-(-4) sm:mx-(-6) lg:mx-(-8) px-4 sm:px-6 lg:px-8` to make it full-width within the content area (canceling parent padding)
+- This naturally avoids overlapping the chat button (which is `fixed`) and the sidebar
+
+**File**: `ProductImagesStickyBar.tsx` — restyle as sticky bottom bar. `ProductImages.tsx` — remove the `mb-16` wrapper since sticky doesn't need it.
+
+### 4. Increase bottom padding on step content
+
+Since sticky bar is now `sticky bottom-0`, the step content `pb-20` should remain to ensure content doesn't hide behind it.
+
+No file change needed — `pb-20` is already in each step component.
 
 ## Summary
 
 | File | Change |
 |------|--------|
-| `types.ts` | `PIStep` becomes `1 \| 2 \| 3 \| 4 \| 5 \| 6 \| 7` |
-| `ProductImages.tsx` | 7-step flow, new step routing, pass settings props to Step3Settings |
-| New `ProductImagesStep3Settings.tsx` | Format (with shape icons), Quality, Images per scene |
-| `ProductImagesStep3Details.tsx` | Remove generation settings section, keep only scene blocks + custom note, rename heading |
-| `ProductImagesStickyBar.tsx` | Solid card-style floating bar, updated step labels for 7 steps |
+| `ProductImagesStep1Products.tsx` | `object-contain` + `bg-muted`, add search input + type filter dropdown |
+| `ProductImagesStep2Scenes.tsx` | Grid columns → 5-6 per row on desktop |
+| `ProductImagesStickyBar.tsx` | `sticky bottom-0` with solid bg, top border + shadow |
+| `ProductImages.tsx` | Remove `mb-16` wrapper around sticky bar |
 
