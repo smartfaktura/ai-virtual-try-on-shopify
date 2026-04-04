@@ -552,27 +552,26 @@ export default function ProductImages() {
         )}
 
         {step === 3 && (
-          <>
-            <ProductImagesStep3Details
-              selectedSceneIds={selectedSceneIds}
-              productCount={selectedProducts.length}
-              details={details}
-              onDetailsChange={setDetails}
-              userModels={userModelProfiles}
-              globalModels={globalModelProfiles}
-            />
-            <div className="mt-6">
-              <ProductImagesStep3Settings
-                details={details}
-                onDetailsChange={setDetails}
-                productCount={selectedProducts.length}
-                sceneCount={selectedScenes.length}
-                selectedScenes={selectedScenes}
-                allProducts={userProducts}
-                selectedProductIds={selectedProductIds}
-              />
-            </div>
-          </>
+          <ProductImagesStep3Refine
+            selectedSceneIds={selectedSceneIds}
+            productCount={selectedProducts.length}
+            details={details}
+            onDetailsChange={setDetails}
+            userModels={userModelProfiles}
+            globalModels={globalModelProfiles}
+            selectedScenes={selectedScenes}
+            allProducts={userProducts}
+            selectedProductIds={selectedProductIds}
+            hasMultipleCategories={(() => {
+              const cats = new Set<string>();
+              for (const p of selectedProducts) {
+                const analysis = p.analysis_json as any;
+                if (analysis?.category) cats.add(analysis.category);
+                else cats.add(p.product_type || 'other');
+              }
+              return cats.size > 1;
+            })()}
+          />
         )}
 
         {step === 4 && (
