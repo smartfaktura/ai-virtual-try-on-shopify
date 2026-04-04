@@ -52,9 +52,9 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
   },
   {
     id: 'detail-coverage',
-    title: 'Multi-Angle Coverage',
-    description: 'Front, back, and side angles for full coverage.',
-    triggerBlocks: ['detailFocus', 'angleSelection'],
+    title: 'Front Angle',
+    description: 'Clean front-facing product angle.',
+    triggerBlocks: ['detailFocus'],
     isGlobal: true,
   },
   {
@@ -132,13 +132,6 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     title: 'Ghost / Invisible',
     description: 'Floating product effect, no mannequin visible.',
     triggerBlocks: ['background'],
-    isGlobal: true,
-  },
-  {
-    id: 'on-surface',
-    title: 'Styled Surface',
-    description: 'Placed naturally on marble, wood, or fabric.',
-    triggerBlocks: ['sceneEnvironment'],
     isGlobal: true,
   },
 ];
