@@ -35,11 +35,11 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
       </div>
 
       {isLargeBatch && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="p-4 flex items-start gap-3">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-400">Large batch — {totalImages} images</p>
+              <p className="text-sm font-medium text-destructive">Large batch — {totalImages} images</p>
               <p className="text-xs text-muted-foreground mt-0.5">Generation may take several minutes. You can leave this page and find results in your library.</p>
             </div>
           </CardContent>
