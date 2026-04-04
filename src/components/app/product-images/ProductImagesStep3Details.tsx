@@ -277,19 +277,47 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
   const sceneGroups = getBlocksByScene(selectedSceneIds, ALL_SCENES);
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
+  const [openBlocks, setOpenBlocks] = useState<Set<string>>(new Set());
 
   const hasSceneBlocks = sceneGroups.length > 0;
   const hasPersonBlock = sceneGroups.some(g => g.blocks.includes('personDetails'));
 
+  // Count how many detail fields have been customized (exclude format/generation keys)
+  const IGNORE_KEYS = new Set(['aspectRatio', 'quality', 'imageCount']);
+  const customizedCount = Object.entries(details).filter(([k, v]) => v && v !== '' && !IGNORE_KEYS.has(k)).length;
+
+  const handleReset = () => {
+    const reset: DetailSettings = { aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount };
+    onDetailsChange(reset);
+  };
+
+  const toggleBlock = (id: string) => {
+    const next = new Set(openBlocks);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setOpenBlocks(next);
+  };
+
   return (
     <div className="space-y-6 pb-20">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Refine your scenes</h2>
-        <p className="text-sm text-muted-foreground mt-1">Optional tweaks based on your selected scenes. We'll use smart defaults for anything you skip.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Refine your scenes</h2>
+          <p className="text-sm text-muted-foreground mt-1">Optional tweaks based on your selected scenes. We'll use smart defaults for anything you skip.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {customizedCount > 0 && (
+            <Badge variant="secondary" className="text-[10px]">{customizedCount} customized</Badge>
+          )}
+          {customizedCount > 0 && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={handleReset}>
+              <RotateCcw className="w-3 h-3" />Reset All
+            </Button>
+          )}
+        </div>
       </div>
 
       {hasSceneBlocks ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {hasPersonBlock && (
             <Card className="border-border">
               <CardContent className="p-4">
@@ -308,32 +336,47 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
           {sceneGroups.map(group => {
             const blocks = group.blocks.filter(b => b !== 'personDetails');
             if (blocks.length === 0) return null;
+            const blockId = group.sceneId;
+            const isOpen = openBlocks.has(blockId);
+            const groupCustomized = blocks.some(bk => {
+              const fields = BLOCK_FIELD_MAP_LOCAL[bk] || [];
+              return fields.some(f => details[f] && details[f] !== '');
+            });
 
             return (
-              <Card key={group.sceneId} className="border-border">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-start gap-2">
-                    <SceneThumbnail sceneId={group.sceneId} />
-                    <div className="min-w-0">
-                      <span className="text-sm font-semibold">"{group.sceneTitle}" options</span>
+              <Collapsible key={group.sceneId} open={isOpen} onOpenChange={() => toggleBlock(blockId)}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <SceneThumbnail sceneId={group.sceneId} />
+                      <span className="text-sm font-semibold truncate">"{group.sceneTitle}" options</span>
                       {group.alsoUsedBy.length > 0 && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Also applies to: {group.alsoUsedBy.join(', ')}</p>
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline">+{group.alsoUsedBy.length} more</span>
+                      )}
+                      {groupCustomized && (
+                        <Badge variant="secondary" className="text-[9px] h-4 px-1">customized</Badge>
                       )}
                     </div>
+                    {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
                   </div>
-
-                  {blocks.map(blockKey => {
-                    const meta = BLOCK_LABELS[blockKey];
-                    if (!meta) return null;
-                    return (
-                      <div key={blockKey} className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
-                        <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
-                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <Card className="border-border mt-1">
+                    <CardContent className="p-4 space-y-4">
+                      {blocks.map(blockKey => {
+                        const meta = BLOCK_LABELS[blockKey];
+                        if (!meta) return null;
+                        return (
+                          <div key={blockKey} className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+                            <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
+                            <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                </CollapsibleContent>
+              </Collapsible>
             );
           })}
         </div>
@@ -373,3 +416,16 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
     </div>
   );
 }
+
+// Local block-to-field map for checking customization status
+const BLOCK_FIELD_MAP_LOCAL: Record<string, (keyof DetailSettings)[]> = {
+  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
+  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
+  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
+  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
+  actionDetails: ['actionType', 'actionIntensity'],
+  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
+  angleSelection: ['requestedViews', 'numberOfViews'],
+  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
+  productSize: ['productSize'],
+};
