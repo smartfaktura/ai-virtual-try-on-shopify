@@ -422,7 +422,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'background': {
       const bgFamily = details.negativeSpace; // background family selection from UI
       const colorWorld = details.backgroundTone; // color world selection from UI
-      const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? 'clean neutral' : bgFamily!.replace(/-/g, ' '));
+      const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
     }
