@@ -176,7 +176,7 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
   },
   {
     id: 'garments',
-    title: 'Garments',
+    title: 'Clothing & Apparel',
     scenes: [
       { id: 'garment-folded', title: 'Folded Display', description: 'Garment neatly folded for product shot.', triggerBlocks: ['background'], isGlobal: false, categoryCollection: 'garments' },
       { id: 'garment-hanging', title: 'Hanging Display', description: 'Garment on hanger showing full silhouette.', triggerBlocks: ['background'], isGlobal: false, categoryCollection: 'garments' },
