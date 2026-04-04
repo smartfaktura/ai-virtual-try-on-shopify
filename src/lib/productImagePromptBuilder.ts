@@ -41,11 +41,15 @@ const BG_MAP: Record<string, string> = {
   'pure-white': 'pure seamless white (#FFFFFF)',
   'warm-beige': 'warm beige / cream',
   'light-gray': 'soft neutral light gray',
+  'light-grey': 'soft neutral light gray',
+  'soft-white': 'soft warm white',
   'cool-gray': 'cool mid-gray',
   'off-white': 'off-white / ivory',
   'black': 'deep matte black',
   'gradient': 'subtle gradient',
   'colored': 'solid colored',
+  'taupe': 'warm taupe',
+  'stone': 'natural stone gray',
 };
 
 // ── Color world map (stored in backgroundTone) ──
