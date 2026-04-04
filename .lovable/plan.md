@@ -1,50 +1,55 @@
 
 
-# Product Images Flow — UX Fixes Round 4
+# Product Images Flow — Round 5 Fixes
 
-## 4 Issues to Fix
+## 3 Changes
 
-### 1. Sticky bar overlaps floating chat button
+### 1. Split "Generation Settings" into its own step (Step 3), move scene-specific details to Step 4
 
-**Root cause**: The `ProductImagesStickyBar` uses `sticky bottom-0` which pins at the bottom of the scroll container. But the `StudioChat` floating button is `fixed bottom-4 left-4` (z-40), and on catalog pages it moves to `right-4`. Both compete for the same viewport space.
+**Current**: Step 3 mixes format/quality/count cards with scene-triggered detail blocks. The stepper has 6 steps: Products → Scenes → Details → Review → Generate → Results.
 
-**Fix**: Add `mb-16` (64px margin-bottom) to the sticky bar wrapper so it sits above the floating chat button. Also improve readability by increasing text contrast and spacing slightly.
-
-**File**: `ProductImagesStickyBar.tsx` — add bottom margin via a wrapper in `ProductImages.tsx`, and improve text styling for better readability.
-
-### 2. Reset scenes/details when product selection changes
-
-**Current**: User can select products, go to scenes, come back, change products, but old scene/detail selections persist — causing stale/misleading state.
-
-**Fix**: In `ProductImages.tsx`, add a `useEffect` watching `selectedProductIds` that resets `selectedSceneIds` and `details` back to defaults whenever the product set changes (but not on initial mount).
-
-**File**: `ProductImages.tsx` — add a ref to track previous product IDs and reset downstream state on change.
-
-### 3. Model selector integration for scenes requiring a person
-
-**Current**: When user selects scenes like "In-Hand" or "Portrait with Product", they get generic person detail chips (age range, skin tone) but no way to pick from their existing brand models or the app's model library.
-
-**Fix**: Add a model selector section to Step 3 that appears when `personDetails` is triggered. Show the user's brand models (from `useUserModels`) and the global model library (from `useCustomModels`). Use `ModelSelectorCard` for display. Store selected model ID in `details.selectedModelId`. This replaces the generic person detail chips (age, skin tone, etc.) — if a model is selected, those fields are hidden since the model already defines them.
+**Fix**: Insert a new step between Scenes and the current Details:
+- **Step 3 "Settings"** — Format/Size (with small shape icons on each chip), Quality, Images per scene. Clean, simple.
+- **Step 4 "Refine"** — Scene-triggered detail blocks only (model picker, action, environment, focus, etc.) + custom note. Renamed from "Details" for clarity.
+- Review becomes Step 5, Generate Step 6, Results Step 7.
 
 **Files**:
-- `ProductImagesStep3Details.tsx` — Accept new props for models, render a model picker grid when `personDetails` block is triggered, hide generic person chips if model is selected
-- `types.ts` — Add `selectedModelId?: string` to `DetailSettings`
-- `ProductImages.tsx` — Load models via hooks, pass to Step3
+- `types.ts` — Change `PIStep` from `1-6` to `1-7`
+- `ProductImages.tsx` — Update `STEP_DEFS` to 7 steps, add new step routing, update `canNavigateTo`, `canProceed`, `handleNext`, `handleBack`. Extract generation settings (aspectRatio, quality, imageCount) into Step 3 component, scene details into Step 4.
+- New `ProductImagesStep3Settings.tsx` — Format/Size with small shape SVG icons (square, portrait, story, landscape outlines next to each label), Quality chips, Images per scene chips. Simple and focused.
+- Rename current `ProductImagesStep3Details.tsx` → keep file but remove the "Generation settings" section (format/quality/imageCount cards). It becomes only the scene-triggered blocks. Update heading to "Refine your scenes" with subtitle "Optional tweaks based on your selected scenes."
 
-### 4. Fix "Focus Area" block — smart defaults based on product context
+### 2. Format/Size chips get small shape icons
 
-**Current**: The `detailFocus` block always shows generic options (Material/Texture, Label/Logo, Hardware/Details, Packaging, Full Product) regardless of what the product actually is. If user uploads a lipstick and selects "Product Near Lips", asking about "Hardware/Details" makes no sense.
+In the new Step 3 Settings component, each aspect ratio chip will have a tiny inline SVG shape icon before the label:
+- 1:1 → small square outline
+- 4:5 → tall rectangle outline
+- 3:4 → slightly tall rectangle
+- 9:16 → very tall thin rectangle
+- 16:9 → wide rectangle
 
-**Fix**: Make the `detailFocus` `BlockFields` context-aware. When triggered by makeup/beauty scenes (IDs starting with `makeup-` or `beauty-`), show relevant options like "Product Focus", "Texture/Formula", "Label", "Full Product". For other categories, keep current options. Also rename the block title to "What to focus on" for clarity.
+These are simple 12×12 inline SVGs rendered inside each chip.
 
-**File**: `ProductImagesStep3Details.tsx` — update the `detailFocus` case in `BlockFields` to accept the triggering scene ID and adjust options accordingly.
+### 3. Sticky bar — use solid card style matching other workflows
 
-## Summary of file changes
+**Current**: Semi-transparent backdrop-blur bar that looks faint and conflicts with floating elements.
+
+**Fix**: Replace with a solid `bg-background` card-style bar similar to the credit summary sections used in TryOnSettingsPanel and CatalogStepReviewV2. Specifically:
+- Solid `bg-background` (no transparency/blur)
+- `border border-border rounded-xl shadow-lg` — floating card look
+- `fixed bottom-4 left-[var(--sidebar-width,0px)] right-4` with proper z-index — sits above content but leaves room for the chat button (which is at `bottom-20`)
+- Stronger text contrast: summary numbers in `font-bold text-foreground`, credits with colored icon
+- Compact but clear layout
+
+**File**: `ProductImagesStickyBar.tsx` — full restyle. Update step labels for new 7-step flow.
+
+## Summary
 
 | File | Change |
 |------|--------|
-| `ProductImagesStickyBar.tsx` | Improve text readability, slightly more padding |
-| `ProductImages.tsx` | Add bottom spacer for sticky bar, reset scenes/details on product change, load models and pass to Step3 |
-| `ProductImagesStep3Details.tsx` | Add model selector grid when personDetails triggered, context-aware focus options, accept model props |
-| `types.ts` | Add `selectedModelId` to `DetailSettings` |
+| `types.ts` | `PIStep` becomes `1 \| 2 \| 3 \| 4 \| 5 \| 6 \| 7` |
+| `ProductImages.tsx` | 7-step flow, new step routing, pass settings props to Step3Settings |
+| New `ProductImagesStep3Settings.tsx` | Format (with shape icons), Quality, Images per scene |
+| `ProductImagesStep3Details.tsx` | Remove generation settings section, keep only scene blocks + custom note, rename heading |
+| `ProductImagesStickyBar.tsx` | Solid card-style floating bar, updated step labels for 7 steps |
 
