@@ -12,22 +12,6 @@ interface Step2Props {
   selectedProducts: UserProduct[];
 }
 
-const SCENE_GRADIENTS: Record<string, string> = {
-  'clean-packshot': 'from-slate-100 to-gray-200',
-  'soft-neutral-studio': 'from-stone-100 to-neutral-200',
-  'marketplace-ready': 'from-blue-50 to-slate-100',
-  'editorial-product': 'from-amber-50 to-orange-100',
-  'lifestyle': 'from-emerald-50 to-teal-100',
-  'in-hand': 'from-rose-50 to-pink-100',
-  'detail-coverage': 'from-violet-50 to-purple-100',
-  'packaging': 'from-sky-50 to-blue-100',
-  'flat-lay': 'from-lime-50 to-green-100',
-  'group-collection': 'from-indigo-50 to-blue-100',
-  'social-media': 'from-fuchsia-50 to-pink-100',
-  'seasonal-holiday': 'from-red-50 to-amber-100',
-  'shadow-light': 'from-zinc-200 to-slate-300',
-};
-
 /** Keyword map from product metadata → category collection IDs */
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask'],
@@ -58,8 +42,6 @@ function detectRelevantCategories(products: UserProduct[]): Set<string> {
 }
 
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
-  const gradient = SCENE_GRADIENTS[scene.id] || 'from-muted to-muted/80';
-
   return (
     <button
       onClick={onToggle}
@@ -69,7 +51,7 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           : 'border-border hover:border-primary/30 hover:bg-muted/30'
       }`}
     >
-      <div className={`aspect-[4/3] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
+      <div className="aspect-[4/5] bg-muted flex items-center justify-center relative">
         {scene.previewUrl ? (
           <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
         ) : (
@@ -97,18 +79,67 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
   );
 }
 
+function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScene, toggleCategory, isRecommended }: {
+  cat: { id: string; title: string; scenes: ProductImageScene[] };
+  selectedSceneIds: Set<string>;
+  expandedCategories: Set<string>;
+  toggleScene: (id: string) => void;
+  toggleCategory: (id: string) => void;
+  isRecommended?: boolean;
+}) {
+  const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
+  const isOpen = expandedCategories.has(cat.id);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={() => toggleCategory(cat.id)}>
+      <CollapsibleTrigger className="w-full">
+        <div className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+          isRecommended
+            ? 'border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.05]'
+            : 'border-border hover:bg-muted/30'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{cat.title}</span>
+            {isRecommended && (
+              <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Recommended</Badge>
+            )}
+            {selectedInCat > 0 && (
+              <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedInCat}</Badge>
+            )}
+          </div>
+          {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-2 pl-2">
+          {cat.scenes.map(scene => (
+            <SceneCard
+              key={scene.id}
+              scene={scene}
+              selected={selectedSceneIds.has(scene.id)}
+              onToggle={() => toggleScene(scene.id)}
+            />
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts }: Step2Props) {
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts), [selectedProducts]);
 
-  // Auto-expand relevant categories on mount
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
 
-  // Sort: relevant categories first, then the rest
-  const sortedCollections = useMemo(() => {
-    const relevant = CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id));
-    const rest = CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id));
-    return [...relevant, ...rest];
-  }, [relevantCatIds]);
+  const recommendedCollections = useMemo(
+    () => CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id)),
+    [relevantCatIds],
+  );
+
+  const otherCollections = useMemo(
+    () => CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id)),
+    [relevantCatIds],
+  );
 
   const toggleScene = (id: string) => {
     const next = new Set(selectedSceneIds);
@@ -137,48 +168,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         )}
       </div>
 
-      {/* Category collections — relevant first, auto-expanded */}
-      {relevantCatIds.size > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-primary">Recommended for your products</h3>
-          <div className="space-y-2">
-            {sortedCollections.filter(c => relevantCatIds.has(c.id)).map(cat => {
-              const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
-              const isOpen = expandedCategories.has(cat.id);
-              return (
-                <Collapsible key={cat.id} open={isOpen} onOpenChange={() => toggleCategory(cat.id)}>
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.05] transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{cat.title}</span>
-                        <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Match</Badge>
-                        {selectedInCat > 0 && (
-                          <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedInCat}</Badge>
-                        )}
-                      </div>
-                      {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-2 pl-2">
-                      {cat.scenes.map(scene => (
-                        <SceneCard
-                          key={scene.id}
-                          scene={scene}
-                          selected={selectedSceneIds.has(scene.id)}
-                          onToggle={() => toggleScene(scene.id)}
-                        />
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Global scenes */}
+      {/* 1. Universal Scenes — always first */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
@@ -196,41 +186,40 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         </div>
       </div>
 
-      {/* Other category collections */}
+      {/* 2. Recommended categories — right after Universal, auto-expanded */}
+      {recommendedCollections.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-primary">Recommended for your products</h3>
+          <div className="space-y-2">
+            {recommendedCollections.map(cat => (
+              <CategorySection
+                key={cat.id}
+                cat={cat}
+                selectedSceneIds={selectedSceneIds}
+                expandedCategories={expandedCategories}
+                toggleScene={toggleScene}
+                toggleCategory={toggleCategory}
+                isRecommended
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Other category collections */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground">Explore more scenes by product type</h3>
         <div className="space-y-2">
-          {sortedCollections.filter(c => !relevantCatIds.has(c.id)).map(cat => {
-            const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
-            const isOpen = expandedCategories.has(cat.id);
-            return (
-              <Collapsible key={cat.id} open={isOpen} onOpenChange={() => toggleCategory(cat.id)}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{cat.title}</span>
-                      {selectedInCat > 0 && (
-                        <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedInCat}</Badge>
-                      )}
-                    </div>
-                    {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-2 pl-2">
-                    {cat.scenes.map(scene => (
-                      <SceneCard
-                        key={scene.id}
-                        scene={scene}
-                        selected={selectedSceneIds.has(scene.id)}
-                        onToggle={() => toggleScene(scene.id)}
-                      />
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
+          {otherCollections.map(cat => (
+            <CategorySection
+              key={cat.id}
+              cat={cat}
+              selectedSceneIds={selectedSceneIds}
+              expandedCategories={expandedCategories}
+              toggleScene={toggleScene}
+              toggleCategory={toggleCategory}
+            />
+          ))}
         </div>
       </div>
     </div>
