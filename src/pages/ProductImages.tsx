@@ -205,8 +205,14 @@ export default function ProductImages() {
   const handleGenerate = useCallback(async () => {
     if (!canAfford) { openBuyModal(); return; }
 
-    setStep(5);
+    const imgCount = parseInt(details.imageCount || '1', 10);
+    const totalExpected = selectedProducts.length * selectedScenes.length * imgCount;
+    setExpectedJobCount(totalExpected);
+    setEnqueuedCount(0);
     setCompletedJobs(0);
+    setCompletedJobIds(new Set());
+    setFailedJobIds(new Set());
+    setStep(5);
 
     const { data: session } = await supabase.auth.getSession();
     const token = session?.session?.access_token;
