@@ -318,7 +318,6 @@ export default function ProductImages() {
     if (s === 3) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 4) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 5) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
-    if (s === 6) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     return false;
   };
 
@@ -327,9 +326,8 @@ export default function ProductImages() {
       case 1: return selectedProductIds.size > 0;
       case 2: return selectedSceneIds.size > 0;
       case 3: return true;
-      case 4: return true; // props optional
-      case 5: return true;
-      case 6: return canAfford && totalImages > 0;
+      case 4: return true;
+      case 5: return canAfford && totalImages > 0;
       default: return false;
     }
   })();
@@ -340,8 +338,7 @@ export default function ProductImages() {
       case 2: setStep(3); break;
       case 3: setStep(4); break;
       case 4: setStep(5); break;
-      case 5: setStep(6); break;
-      case 6: handleGenerate(); break;
+      case 5: handleGenerate(); break;
     }
   };
 
@@ -351,7 +348,6 @@ export default function ProductImages() {
       case 3: setStep(2); break;
       case 4: setStep(3); break;
       case 5: setStep(4); break;
-      case 6: setStep(5); break;
     }
   };
 
