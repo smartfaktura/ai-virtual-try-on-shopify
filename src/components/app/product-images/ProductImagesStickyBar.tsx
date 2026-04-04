@@ -6,9 +6,8 @@ const STEP_LABELS: Record<number, string> = {
   1: 'Products',
   2: 'Scenes',
   3: 'Refine',
-  4: 'Props',
-  5: 'Settings',
-  6: 'Review',
+  4: 'Settings',
+  5: 'Review',
 };
 
 interface StickyBarProps {
