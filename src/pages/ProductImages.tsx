@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, SlidersHorizontal, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List } from 'lucide-react';
+import { Package, Layers, SlidersHorizontal, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List, Gem } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
