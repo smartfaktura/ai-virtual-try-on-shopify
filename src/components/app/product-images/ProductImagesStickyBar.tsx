@@ -22,7 +22,7 @@ interface StickyBarProps {
   onBack: () => void;
 }
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 5;
 
 export function ProductImagesStickyBar({ step, productCount, sceneCount, totalImages, totalCredits, balance, canProceed, onNext, onBack }: StickyBarProps) {
   const canAfford = balance >= totalCredits;
