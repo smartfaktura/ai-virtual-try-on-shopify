@@ -223,7 +223,7 @@ const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] is a reference for th
 
 // ── Body framing map by category + scene type ──
 function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
-  const isOnModel = sceneType === 'portrait' || sceneType === 'editorial';
+  const isOnModel = sceneType === 'portrait' || sceneType === 'editorial' || sceneType === 'lifestyle';
   if (!isOnModel) return '';
 
   switch (category) {
