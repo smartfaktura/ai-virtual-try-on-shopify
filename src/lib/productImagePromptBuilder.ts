@@ -475,9 +475,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     // Bug 7 fix: UI stores "styling direction" in details.mood — route it correctly
     case 'stylingDirective': {
-      // The UI label says "Styling direction" but stores in `mood`
       const sd = details.mood || details.stylingDirection;
-      if (isAuto(sd)) return '';
+      if (isAuto(sd)) return defaultStyling(cat);
       return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
 
