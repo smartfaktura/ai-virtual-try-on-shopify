@@ -297,7 +297,7 @@ export default function ProductImages() {
 
           setResults(resultMap);
           refreshBalance();
-          setStep(7);
+          setStep(8);
           return;
         }
 
