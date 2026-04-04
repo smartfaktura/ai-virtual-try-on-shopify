@@ -309,6 +309,8 @@ export default function ProductImages() {
             const key = `${product.id}_${scene.id}_${i}`;
             newJobMap.set(key, result.jobId);
             lastBalance = result.newBalance;
+            setJobMap(new Map(newJobMap));
+            setEnqueuedCount(newJobMap.size);
             injectActiveJob(queryClient, {
               jobId: result.jobId,
               workflow_name: 'Product Images',
@@ -334,7 +336,8 @@ export default function ProductImages() {
     }
 
     if (lastBalance !== null) setBalanceFromServer(lastBalance);
-    setJobMap(newJobMap);
+    setJobMap(new Map(newJobMap));
+    setEnqueuedCount(newJobMap.size);
     sendWake(token);
 
     startPolling(newJobMap);
