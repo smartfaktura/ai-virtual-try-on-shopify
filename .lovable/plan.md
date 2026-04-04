@@ -1,124 +1,123 @@
 
 
-# Refine Options Audit — Field Collisions + Missing Map Entries
+# Prompt Engineering Audit — Product Images Flow
 
-## Critical Issues Found
+## Summary
 
-### Issue 1: Two field collisions — scene-specific blocks overwrite global aesthetic
+After a thorough review of all 91 scene templates, the prompt builder (`productImagePromptBuilder.ts`), the Refine UI, and the token resolution logic, here is what's working well and what still needs fixing.
 
-Two pairs of UI controls silently write to the **same** `details` field, causing whichever is set last to overwrite the other:
+## What's Working Well
 
-| `details` field | Overall Aesthetic control | Scene-specific block control | Conflict |
-|---|---|---|---|
-| `negativeSpace` | **Background family** (pure-white, soft-white, light-grey...) | **Spacing** (tight, balanced, generous) | User picks "soft-white" background, then sets "tight" spacing → background becomes "tight" → BG_MAP returns nothing → garbage prompt |
-| `mood` | **Styling direction** (minimal-luxury, fashion-editorial...) | **Mood** (clean, warm, dramatic, editorial, natural) | User picks "fashion-editorial" styling, then sets scene mood to "warm" → styling direction becomes "warm" → STYLING_DIRECTION_MAP returns nothing → weak fallback |
+- **Category-aware smart defaults** — background, surface, shadow, styling, and lighting all produce strong, fashion-forward defaults per product category when user leaves settings on "Auto"
+- **Auto-injection** — background, shadow, surface, styling, lighting, composition, and mood are all injected into templates that lack those tokens
+- **Maps are comprehensive** — LIGHTING_MAP (11 entries), SHADOW_MAP (7 entries), BG_MAP (12 entries), SURFACE_MAP (9 entries), STYLING_DIRECTION_MAP (9 entries) all cover UI chip values
+- **Camera directives** — every scene type gets a specific lens/aperture instruction
+- **Material texture** — extracted from product analysis or description using 19 material keywords
+- **Negative prompts** — 3-layer negatives (base + product + person) applied correctly
+- **Quality suffix** — strong 8K commercial quality instruction appended to all prompts
 
-**Fix**: Give scene-specific block fields their own `details` keys:
-- Rename scene-specific "Spacing" from `negativeSpace` → `compositionFraming` (which already exists in the type but is unused)
-- Rename scene-specific "Mood" from `mood` → `sceneIntensity` (which already exists in the type but is unused)
+## Issues Found
 
-### Issue 2: Missing prompt map entries for scene-specific chip values
+### Issue 1: `stylingDensity` is a dead field — never reaches the prompt
 
-These scene-specific chip values have no entry in their respective maps and fall through to weak generic fallbacks:
+The "Scene Environment" block lets users pick `stylingDensity` (Minimal / Moderate / Fully Styled), but there is NO `resolveToken` case for it, NO map for it, and NO template uses a `{{stylingDensity}}` token. Whatever the user selects is silently ignored.
 
-| Map | Missing keys (from scene-specific blocks) |
-|---|---|
-| `LIGHTING_MAP` | `natural`, `studio`, `dramatic` |
-| `SHADOW_MAP` | `dramatic` |
-| `SURFACE_MAP` | `wood`, `glass` |
-| `CONSISTENCY_MAP` | `natural`, `strong`, `strict` (from multi-product consistency chips) |
+**Fix**: Add a `STYLING_DENSITY_MAP` and a `stylingDensityDirective` token, then auto-inject it.
 
-### Issue 3: Scene-specific visualDirection "Mood" values produce no useful prompt
+### Issue 2: `moodDirective` token resolves to empty string — dead token in 20+ templates
 
-The values `clean`, `warm`, `dramatic`, `editorial`, `natural` are not in STYLING_DIRECTION_MAP. After fixing the field collision (Issue 1), these will route through `sceneIntensity` which needs its own resolution logic.
+Many templates include `{{moodDirective}}` (fragrance_hero_surface, beauty_shelf_placement, bag_hero_surface, etc.), but `resolveToken('moodDirective')` returns `''` always. This is correct since `details.mood` actually stores the styling direction — but it means those templates have a dead placeholder producing nothing.
+
+The `{{moodDirective}}` should resolve to the same value as `{{stylingDirective}}` since both represent the overall style. Currently templates that have `{{moodDirective}}` but NOT `{{stylingDirective}}` get NO styling instruction at all (the auto-inject check for "styling" passes because the word isn't in the prompt — but `{{moodDirective}}` already resolved to empty and was cleaned up).
+
+Wait — actually re-checking: `injectIfMissing('styling', 'stylingDirective')` would inject because the word "styling" won't appear. So this is actually handled. But it creates redundancy in templates that have BOTH `{{moodDirective}}` AND `{{stylingDirective}}` — the mood resolves to nothing and styling resolves properly. No bug, just dead code.
+
+**Fix**: Make `moodDirective` an alias for `stylingDirective` instead of returning empty. This way templates that rely on `{{moodDirective}}` get the styling instruction directly rather than depending on auto-inject.
+
+### Issue 3: `environmentDirective` is too weak
+
+When a user selects "Bathroom", "Kitchen", etc., it resolves to just `"Set in a bathroom environment."` — very generic. Fashion-forward product images need richer environment descriptions.
+
+**Fix**: Add an `ENVIRONMENT_MAP` with aesthetic descriptions per environment type.
+
+### Issue 4: `productProminence` values lack prompt mapping
+
+Values `hero`, `balanced`, `contextual` just get converted to `"Product prominence: hero."` — no rich description.
+
+**Fix**: Add a `PROMINENCE_MAP` with detailed composition instructions.
+
+### Issue 5: Scene-specific `backgroundTone` chips don't match `COLOR_WORLD_MAP`
+
+The scene-specific background block offers chips: `white`, `light-gray`, `warm-neutral`, `cool-neutral`, `gradient`. The values `white`, `light-gray`, and `gradient` have no entry in `COLOR_WORLD_MAP`, but `backgroundTone` is read as color world. These fall through silently.
+
+**Fix**: Add these missing entries to `COLOR_WORLD_MAP`, or better — route scene-specific tone through `BG_MAP` instead since those values are background colors, not color worlds.
+
+### Issue 6: Person directive is weak when auto — no defaults at all
+
+When no person details are selected, `buildPersonDirective` returns `''`. For on-model shots (garments, bags carry shot, etc.), this means the AI gets zero guidance on what the model should look like — resulting in random, inconsistent models.
+
+**Fix**: Add a `defaultPersonDirective(category)` that returns a fashion-appropriate default when no person details are set but the scene requires a person.
+
+### Issue 7: `outfitDirective` returns nothing when auto
+
+For on-model scenes, if the user doesn't select outfit style/color, the prompt has no outfit guidance. The AI picks random outfits that may clash with the product.
+
+**Fix**: Add smart default outfits per category (e.g., garments: "complementary, non-competing outfit", bags: "clean minimal outfit that doesn't distract from the bag").
 
 ## Plan
 
-### File 1: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+### File: `src/lib/productImagePromptBuilder.ts`
 
-**A. Fix scene-specific "Spacing" field** (line 374): Change from `negativeSpace` to `compositionFraming`
-```
-// Before
-<ChipSelector label="Spacing" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} ...
-// After  
-<ChipSelector label="Spacing" value={details.compositionFraming} onChange={v => update({ compositionFraming: v })} ...
-```
-
-**B. Fix scene-specific "Mood" field** (line 382): Change from `mood` to `sceneIntensity`
-```
-// Before
-<ChipSelector label="Mood" value={details.mood} onChange={v => update({ mood: v })} ...
-// After
-<ChipSelector label="Mood" value={details.sceneIntensity} onChange={v => update({ sceneIntensity: v })} ...
-```
-
-**C. Update BLOCK_FIELD_MAP** (line 484-485): Replace `negativeSpace` with `compositionFraming` in background block, and ensure visualDirection uses `sceneIntensity` for mood.
-
-### File 2: `src/lib/productImagePromptBuilder.ts`
-
-**A. Add missing LIGHTING_MAP entries:**
+**A. Add `STYLING_DENSITY_MAP` + resolver:**
 ```typescript
-'natural': 'Natural ambient lighting with organic warmth and gentle shadow transitions.',
-'studio': 'Professional controlled studio lighting with clean, even illumination.',
-'dramatic': 'Dramatic high-contrast lighting with deep shadows and bold highlights.',
+const STYLING_DENSITY_MAP = {
+  'minimal': 'Minimal styling — product alone or with 1-2 subtle props, clean negative space.',
+  'moderate': 'Moderate styling — thoughtful arrangement with complementary contextual props.',
+  'styled': 'Fully styled scene — rich arrangement with multiple props, textures, and lifestyle elements.',
+};
 ```
 
-**B. Add missing SHADOW_MAP entry:**
+**B. Make `moodDirective` alias `stylingDirective`:**
+Instead of returning `''`, return the same resolved styling direction. This makes the 20+ templates with `{{moodDirective}}` produce actual output.
+
+**C. Add `ENVIRONMENT_MAP`:**
 ```typescript
-'dramatic': 'Product anchored with a strong, dramatic cast shadow adding visual weight and depth.',
+const ENVIRONMENT_MAP = {
+  'bathroom': 'Set in a modern, clean bathroom — white tiles or marble surfaces, soft ambient light, spa-like calm.',
+  'kitchen': 'Set in a bright, contemporary kitchen — clean countertops, natural light, curated simplicity.',
+  'living-room': 'Set in a styled living room — premium furniture, warm tones, editorial interior feel.',
+  'desk': 'Set at a clean, organized workspace — minimal desk accessories, focused professional aesthetic.',
+  'outdoor': 'Set in a natural outdoor environment — soft daylight, organic textures, open air.',
+  'shelf': 'Set on a curated display shelf — clean lines, intentional arrangement, retail-quality presentation.',
+};
 ```
 
-**C. Add missing SURFACE_MAP entries:**
+**D. Add `PROMINENCE_MAP`:**
 ```typescript
-'wood': 'placed on a natural wood surface with visible grain and organic warmth',
-'glass': 'placed on a transparent glass surface with subtle reflections and clean edges',
+const PROMINENCE_MAP = {
+  'hero': 'Product dominates the frame — fills 60-80% of composition, maximum visual impact.',
+  'balanced': 'Product is clearly the hero but shares space with environment — fills 40-60% of frame.',
+  'contextual': 'Product is identifiable but environment tells the story — product fills 20-40% of frame.',
+};
 ```
 
-**D. Add missing CONSISTENCY_MAP entries:**
-```typescript
-'natural': 'Maintain natural visual flow across the series — same general tone with organic variation.',
-'strong': 'Maintain strong visual consistency with other shots — same lighting direction, color temperature, and style.',
-'strict': 'Maintain strict visual consistency — identical lighting, identical background, identical framing across all shots.',
-```
+**E. Add `defaultPersonDirective(category)` for auto person:**
+Returns fashion-appropriate model descriptions when scenes require a person but user didn't customize (e.g., "Professional fashion model with natural, contemporary look and realistic skin texture").
 
-**E. Add `compositionFraming` resolution** in `resolveToken`:
-```typescript
-case 'compositionDirective': {
-  if (isAuto(details.compositionFraming)) return '';
-  const FRAMING_MAP = {
-    'tight': 'Tight composition — product fills the frame with minimal surrounding space.',
-    'balanced': 'Balanced composition — product centered with comfortable breathing room.',
-    'generous': 'Generous composition — ample negative space around the product for editorial feel.',
-  };
-  return FRAMING_MAP[details.compositionFraming!] || `${details.compositionFraming} composition.`;
-}
-```
+**F. Add `defaultOutfitDirective(category)` for auto outfit:**
+Returns smart outfit defaults (e.g., garments: "Wearing clean, complementary styling that doesn't compete with the product", bags: "Wearing a minimalist neutral outfit — product is the styling hero").
 
-**F. Add `sceneIntensity` resolution** in `resolveToken`:
-```typescript
-case 'sceneIntensityDirective': {
-  if (isAuto(details.sceneIntensity)) return '';
-  const SCENE_MOOD_MAP = {
-    'clean': 'Clean, modern aesthetic — crisp lines, minimal distraction, contemporary feel.',
-    'warm': 'Warm, inviting atmosphere — rich amber undertones, cozy tactile quality.',
-    'dramatic': 'Dramatic, high-impact visual — bold contrasts, cinematic depth, editorial tension.',
-    'editorial': 'Editorial storytelling — magazine-quality composition with narrative visual intent.',
-    'natural': 'Natural, organic feel — soft, authentic, unforced visual language.',
-  };
-  return SCENE_MOOD_MAP[details.sceneIntensity!] || `${details.sceneIntensity} scene mood.`;
-}
-```
+**G. Auto-inject `stylingDensityDirective`:**
+Add to the `injectIfMissing` block.
 
-**G. Auto-inject compositionFraming and sceneIntensity** in the `injectIfMissing` block:
-```typescript
-injectIfMissing('composition', 'compositionDirective');
-injectIfMissing('mood', 'sceneIntensityDirective');  // only if no mood/styling already present
-```
+**H. Fix `backgroundTone` scene-specific values:**
+Add `'white'`, `'light-gray'`, and `'gradient'` to `COLOR_WORLD_MAP` with appropriate descriptions.
 
 ## Files to Update
 
 | File | Change |
-|---|---|
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Fix 2 field collisions (negativeSpace → compositionFraming, mood → sceneIntensity in scene-specific blocks), update BLOCK_FIELD_MAP |
-| `src/lib/productImagePromptBuilder.ts` | Add 9 missing map entries, add compositionFraming + sceneIntensity resolvers, add auto-inject for new directives |
+|------|--------|
+| `src/lib/productImagePromptBuilder.ts` | Add 4 new maps (STYLING_DENSITY, ENVIRONMENT, PROMINENCE, COLOR_WORLD additions), make moodDirective alias stylingDirective, add defaultPersonDirective + defaultOutfitDirective, add stylingDensity auto-inject |
+
+Single file change. No UI changes needed — all fixes are in prompt resolution logic.
 
