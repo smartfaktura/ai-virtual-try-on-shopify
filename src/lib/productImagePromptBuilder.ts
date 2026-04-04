@@ -250,7 +250,7 @@ function defaultBackground(category?: string): string {
     case 'garments':
     case 'shoes':
     case 'bags-accessories':
-      return 'soft warm white seamless studio background';
+      return 'soft warm white seamless studio background — do NOT reproduce the background from the product reference photo';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
