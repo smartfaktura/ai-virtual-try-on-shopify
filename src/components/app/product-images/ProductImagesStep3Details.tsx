@@ -3,17 +3,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RatioIcon, ImageIcon, Zap, Layers, Camera } from 'lucide-react';
+import { RatioIcon, ImageIcon, Zap, Layers, Camera, User } from 'lucide-react';
 import { useState } from 'react';
 import { getBlocksByScene } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
+import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings } from './types';
+import type { ModelProfile } from '@/types';
 
 interface Step3Props {
   selectedSceneIds: Set<string>;
   productCount: number;
   details: DetailSettings;
   onDetailsChange: (d: DetailSettings) => void;
+  userModels?: ModelProfile[];
+  globalModels?: ModelProfile[];
 }
 
 function ChipSelector({ label, value, onChange, options }: { label: string; value?: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
@@ -36,20 +40,6 @@ function ChipSelector({ label, value, onChange, options }: { label: string; valu
           </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-function SelectField({ label, value, onChange, options }: { label: string; value?: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
-      <Select value={value || ''} onValueChange={onChange}>
-        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Auto" /></SelectTrigger>
-        <SelectContent>
-          {options.map(o => <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
     </div>
   );
 }
@@ -103,26 +93,31 @@ const IMAGE_COUNT_OPTIONS = [
   { value: '4', label: '4' },
 ];
 
+/** Context-aware focus area options */
+function getFocusOptions(sceneIds: string[]): { value: string; label: string }[] {
+  const hasBeauty = sceneIds.some(id => id.startsWith('makeup-') || id.startsWith('beauty-') || id.includes('lips') || id.includes('skin') || id.includes('face'));
+  if (hasBeauty) {
+    return [
+      { value: 'product', label: 'Product Focus' },
+      { value: 'texture-formula', label: 'Texture / Formula' },
+      { value: 'label', label: 'Label / Branding' },
+      { value: 'full-product', label: 'Full Product' },
+    ];
+  }
+  return [
+    { value: 'material', label: 'Material / Texture' },
+    { value: 'label', label: 'Label / Logo' },
+    { value: 'hardware', label: 'Hardware / Details' },
+    { value: 'packaging', label: 'Packaging' },
+    { value: 'full-product', label: 'Full Product' },
+  ];
+}
+
 /** Render the detail fields for a specific block key */
-function BlockFields({ blockKey, details, update }: { blockKey: string; details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
+function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string; details: DetailSettings; update: (p: Partial<DetailSettings>) => void; sceneIds: string[] }) {
   switch (blockKey) {
     case 'personDetails':
-      return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
-            { value: 'hand-only', label: 'Hand Only' }, { value: 'half-body', label: 'Half Body' }, { value: 'portrait', label: 'Portrait' }, { value: 'full-body', label: 'Full Body' },
-          ]} />
-          <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
-            { value: '20s', label: '20s' }, { value: '30s', label: '30s' }, { value: '40s', label: '40s' }, { value: '50+', label: '50+' },
-          ]} />
-          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
-            { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'tan', label: 'Tan' }, { value: 'dark', label: 'Dark' },
-          ]} />
-          <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
-            { value: 'natural', label: 'Natural' }, { value: 'manicured', label: 'Manicured' }, { value: 'polished', label: 'Polished' },
-          ]} />
-        </div>
-      );
+      return null; // Handled separately with model selector
     case 'actionDetails':
       return (
         <div className="grid grid-cols-2 gap-3">
@@ -179,9 +174,7 @@ function BlockFields({ blockKey, details, update }: { blockKey: string; details:
     case 'detailFocus':
       return (
         <div className="grid grid-cols-2 gap-3">
-          <ChipSelector label="Focus Area" value={details.focusArea} onChange={v => update({ focusArea: v })} options={[
-            { value: 'material', label: 'Material / Texture' }, { value: 'label', label: 'Label / Logo' }, { value: 'hardware', label: 'Hardware / Details' }, { value: 'packaging', label: 'Packaging' }, { value: 'full-product', label: 'Full Product' },
-          ]} />
+          <ChipSelector label="What to focus on" value={details.focusArea} onChange={v => update({ focusArea: v })} options={getFocusOptions(sceneIds)} />
           <ChipSelector label="Crop Intensity" value={details.cropIntensity} onChange={v => update({ cropIntensity: v })} options={[
             { value: 'slight', label: 'Slight Close-Up' }, { value: 'medium', label: 'Medium Close-Up' }, { value: 'extreme', label: 'Extreme Macro' },
           ]} />
@@ -216,22 +209,104 @@ function BlockFields({ blockKey, details, update }: { blockKey: string; details:
 }
 
 const BLOCK_LABELS: Record<string, { title: string }> = {
-  personDetails: { title: 'Person / Model Details' },
+  personDetails: { title: 'Person / Model' },
   actionDetails: { title: 'Action Details' },
   background: { title: 'Background & Composition' },
   visualDirection: { title: 'Visual Direction' },
   sceneEnvironment: { title: 'Scene Environment' },
-  detailFocus: { title: 'Detail Focus' },
+  detailFocus: { title: 'What to Focus On' },
   angleSelection: { title: 'Angle Selection' },
   packagingDetails: { title: 'Packaging Details' },
   productSize: { title: 'Product Size' },
 };
 
-export function ProductImagesStep3Details({ selectedSceneIds, productCount, details, onDetailsChange }: Step3Props) {
+/** Model picker section for personDetails */
+function ModelPickerSection({
+  userModels,
+  globalModels,
+  selectedModelId,
+  onSelectModel,
+  details,
+  update,
+}: {
+  userModels: ModelProfile[];
+  globalModels: ModelProfile[];
+  selectedModelId?: string;
+  onSelectModel: (id: string | undefined) => void;
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+}) {
+  const allModels = [...userModels, ...globalModels];
+  const hasModels = allModels.length > 0;
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <User className="w-3.5 h-3.5 text-primary" />
+        <span className="text-xs font-semibold text-muted-foreground">Person / Model</span>
+      </div>
+
+      {hasModels ? (
+        <>
+          <p className="text-xs text-muted-foreground">Select a model or customize manually below.</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {userModels.length > 0 && (
+              <>
+                {userModels.map(m => (
+                  <ModelSelectorCard
+                    key={m.modelId}
+                    model={m}
+                    isSelected={selectedModelId === m.modelId}
+                    onSelect={() => onSelectModel(selectedModelId === m.modelId ? undefined : m.modelId)}
+                  />
+                ))}
+              </>
+            )}
+            {globalModels.map(m => (
+              <ModelSelectorCard
+                key={m.modelId}
+                model={m}
+                isSelected={selectedModelId === m.modelId}
+                onSelect={() => onSelectModel(selectedModelId === m.modelId ? undefined : m.modelId)}
+              />
+            ))}
+          </div>
+          {userModels.length > 0 && globalModels.length > 0 && (
+            <p className="text-[10px] text-muted-foreground">Your brand models appear first.</p>
+          )}
+        </>
+      ) : (
+        <p className="text-xs text-muted-foreground">No models available. Customize person details below.</p>
+      )}
+
+      {/* Show manual person details if no model selected */}
+      {!selectedModelId && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border">
+          <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
+            { value: 'hand-only', label: 'Hand Only' }, { value: 'half-body', label: 'Half Body' }, { value: 'portrait', label: 'Portrait' }, { value: 'full-body', label: 'Full Body' },
+          ]} />
+          <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
+            { value: '20s', label: '20s' }, { value: '30s', label: '30s' }, { value: '40s', label: '40s' }, { value: '50+', label: '50+' },
+          ]} />
+          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
+            { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'tan', label: 'Tan' }, { value: 'dark', label: 'Dark' },
+          ]} />
+          <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
+            { value: 'natural', label: 'Natural' }, { value: 'manicured', label: 'Manicured' }, { value: 'polished', label: 'Polished' },
+          ]} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ProductImagesStep3Details({ selectedSceneIds, productCount, details, onDetailsChange, userModels = [], globalModels = [] }: Step3Props) {
   const sceneGroups = getBlocksByScene(selectedSceneIds, ALL_SCENES);
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
+  const allSceneIds = Array.from(selectedSceneIds);
 
   const hasSceneBlocks = sceneGroups.length > 0;
+  const hasPersonBlock = sceneGroups.some(g => g.blocks.includes('personDetails'));
 
   return (
     <div className="space-y-6 pb-20">
@@ -273,7 +348,7 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
         </Card>
       </div>
 
-      {/* Section B: Scene-grouped detail blocks — all inline, no collapsibles */}
+      {/* Section B: Scene-grouped detail blocks — all inline */}
       {hasSceneBlocks && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -282,33 +357,55 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
           </div>
           <p className="text-sm text-muted-foreground -mt-2">All fields are optional — we'll use smart defaults.</p>
 
-          {sceneGroups.map(group => (
-            <Card key={group.sceneId} className="border-border">
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-start gap-2">
-                  <SceneThumbnail sceneId={group.sceneId} />
-                  <div className="min-w-0">
-                    <span className="text-sm font-semibold">Because you selected "{group.sceneTitle}"</span>
-                    {group.alsoUsedBy.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Also used by: {group.alsoUsedBy.join(', ')}</p>
-                    )}
-                  </div>
-                </div>
-
-                {group.blocks.map(blockKey => {
-                  const meta = BLOCK_LABELS[blockKey];
-                  if (!meta) return null;
-
-                  return (
-                    <div key={blockKey} className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
-                      <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
-                      <BlockFields blockKey={blockKey} details={details} update={update} />
-                    </div>
-                  );
-                })}
+          {/* Model picker — shown once if any scene triggers personDetails */}
+          {hasPersonBlock && (
+            <Card className="border-border">
+              <CardContent className="p-4">
+                <ModelPickerSection
+                  userModels={userModels}
+                  globalModels={globalModels}
+                  selectedModelId={details.selectedModelId}
+                  onSelectModel={id => update({ selectedModelId: id })}
+                  details={details}
+                  update={update}
+                />
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          {sceneGroups.map(group => {
+            // Filter out personDetails since it's handled above
+            const blocks = group.blocks.filter(b => b !== 'personDetails');
+            if (blocks.length === 0) return null;
+
+            return (
+              <Card key={group.sceneId} className="border-border">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-start gap-2">
+                    <SceneThumbnail sceneId={group.sceneId} />
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold">Because you selected "{group.sceneTitle}"</span>
+                      {group.alsoUsedBy.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Also used by: {group.alsoUsedBy.join(', ')}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {blocks.map(blockKey => {
+                    const meta = BLOCK_LABELS[blockKey];
+                    if (!meta) return null;
+
+                    return (
+                      <div key={blockKey} className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+                        <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
+                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
