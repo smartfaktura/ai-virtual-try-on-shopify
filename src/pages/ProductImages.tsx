@@ -104,6 +104,11 @@ export default function ProductImages() {
   const [completedJobs, setCompletedJobs] = useState(0);
   const [results, setResults] = useState<Map<string, { images: string[]; productName: string }>>(new Map());
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [expectedJobCount, setExpectedJobCount] = useState(0);
+  const [enqueuedCount, setEnqueuedCount] = useState(0);
+  const [completedJobIds, setCompletedJobIds] = useState<Set<string>>(new Set());
+  const [failedJobIds, setFailedJobIds] = useState<Set<string>>(new Set());
+  const pollingStartRef = useRef<number>(0);
 
   // Load user products
   const { data: userProducts = [], isLoading: isLoadingProducts } = useQuery({
