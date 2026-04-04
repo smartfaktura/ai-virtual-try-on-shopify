@@ -320,6 +320,7 @@ export default function ProductImages() {
     if (s === 3) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 4) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 5) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
+    if (s === 6) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     return false;
   };
 
