@@ -443,7 +443,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     // Bug 9 fix: surface now uses SURFACE_MAP for rich descriptions
     case 'surfaceDirective': {
-      if (isAuto(details.surfaceType)) return 'on a premium styled surface';
+      if (isAuto(details.surfaceType)) return defaultSurface(cat);
       return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
     }
 
