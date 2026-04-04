@@ -435,8 +435,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     // Bug 2 fix: shadow now matches UI chip values via updated SHADOW_MAP
     case 'shadowDirective': {
-      if (isAuto(details.shadowStyle)) return 'Product grounded with a soft, natural contact shadow.';
-      return SHADOW_MAP[details.shadowStyle!] || 'Product grounded with a soft, natural contact shadow.';
+      if (isAuto(details.shadowStyle)) return defaultShadow(cat);
+      return SHADOW_MAP[details.shadowStyle!] || defaultShadow(cat);
     }
 
     case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish, ctx.productDescription);
