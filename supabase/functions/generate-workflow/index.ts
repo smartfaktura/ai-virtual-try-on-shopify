@@ -704,11 +704,23 @@ async function generateImage(
   const maxRetries = 1; // 2 attempts total (primary + 1 retry)
   const PER_IMAGE_TIMEOUT = 100_000; // 100s per image — gives Nano Banana Pro enough time
 
-  // Build content array: text prompt + all reference images
+  // Build content array: text prompt + labeled reference images
+  const IMAGE_LABEL_MAP: Record<string, string> = {
+    product: '[PRODUCT IMAGE] Primary product reference — reproduce this EXACTLY:',
+    product_2: '[PRODUCT IMAGE 2] Additional product reference:',
+    product_3: '[PRODUCT IMAGE 3] Additional product reference:',
+    product_4: '[PRODUCT IMAGE 4] Additional product reference:',
+    model: '[MODEL IMAGE] Identity reference — the person MUST look like this:',
+    scene_reference: '[SCENE REFERENCE] Composition and style reference:',
+    packaging_reference: '[PACKAGING REFERENCE] Packaging fidelity reference:',
+  };
+
   const contentParts: Array<Record<string, unknown>> = [
     { type: "text", text: prompt },
   ];
   for (const img of referenceImages) {
+    const labelText = IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
+    contentParts.push({ type: "text", text: labelText });
     contentParts.push({
       type: "image_url",
       image_url: { url: img.url },
