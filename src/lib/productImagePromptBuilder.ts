@@ -730,11 +730,11 @@ export function buildDynamicPrompt(
   injectIfMissing('prominence', 'productProminenceDirective');
   injectIfMissing('body framing', 'bodyFramingDirective');
 
+  // Prepend reference isolation instruction BEFORE cleanup so it appears early
+  prompt = REFERENCE_ISOLATION + ' ' + prompt;
+
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
-
-  // Append reference isolation instruction
-  prompt += ' ' + REFERENCE_ISOLATION;
 
   // Append quality suffix if not already present
   if (!prompt.includes('8K commercial quality')) {
