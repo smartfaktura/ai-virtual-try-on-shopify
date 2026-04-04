@@ -692,6 +692,22 @@ export default function ProductImages() {
                 totalJobs={jobMap.size}
                 completedJobs={completedJobs}
                 productCount={selectedProducts.length}
+                products={selectedProducts}
+                jobMap={jobMap}
+                completedJobIds={completedJobIds}
+                failedJobIds={failedJobIds}
+                enqueuedJobs={enqueuedCount}
+                expectedJobCount={expectedJobCount}
+                onViewResults={() => {
+                  if (pollingRef.current) clearTimeout(pollingRef.current);
+                  // Fetch final state and transition
+                  const jobIds = Array.from(jobMap.values());
+                  supabase.from('generation_queue').select('id, status, result').in('id', jobIds).then(({ data }) => {
+                    const productMap = new Map<string, string>();
+                    for (const [key, jobId] of jobMap.entries()) productMap.set(jobId, key.split('_')[0]);
+                    finishWithResults(data || [], productMap);
+                  });
+                }}
               />
             )}
 
