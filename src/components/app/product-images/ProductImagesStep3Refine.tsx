@@ -32,6 +32,9 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
   onSelect: (id: string) => void;
 }) {
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
+  const [showAllModal, setShowAllModal] = useState(false);
+  const [modalGender, setModalGender] = useState<'all' | 'female' | 'male'>('all');
+  const [modalSearch, setModalSearch] = useState('');
 
   const filteredUser = useMemo(() =>
     genderFilter === 'all' ? userModels : userModels.filter(m => m.gender === genderFilter),
@@ -40,6 +43,37 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
   const filteredGlobal = useMemo(() =>
     genderFilter === 'all' ? globalModels : globalModels.filter(m => m.gender === genderFilter),
     [globalModels, genderFilter]);
+
+  const INLINE_LIMIT = 6;
+
+  const inlineModels = useMemo(() => {
+    const first6 = filteredGlobal.slice(0, INLINE_LIMIT);
+    if (selectedModelId && !first6.some(m => m.modelId === selectedModelId) && !filteredUser.some(m => m.modelId === selectedModelId)) {
+      const selectedModel = filteredGlobal.find(m => m.modelId === selectedModelId);
+      if (selectedModel) {
+        return [...first6.slice(0, INLINE_LIMIT - 1), selectedModel];
+      }
+    }
+    return first6;
+  }, [filteredGlobal, filteredUser, selectedModelId]);
+
+  const modalFilteredUser = useMemo(() =>
+    modalGender === 'all' ? userModels : userModels.filter(m => m.gender === modalGender),
+    [userModels, modalGender]);
+
+  const modalFilteredGlobal = useMemo(() => {
+    let list = modalGender === 'all' ? globalModels : globalModels.filter(m => m.gender === modalGender);
+    if (modalSearch.trim()) {
+      const q = modalSearch.toLowerCase();
+      list = list.filter(m => m.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [globalModels, modalGender, modalSearch]);
+
+  const handleModalSelect = (id: string) => {
+    onSelect(id);
+    setShowAllModal(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -84,21 +118,80 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
         )}
       </div>
 
-      {/* Library Models */}
+      {/* Library Models — inline preview */}
       {filteredGlobal.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {filteredGlobal.map(m => (
+            {inlineModels.map(m => (
               <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
             ))}
           </div>
+          {filteredGlobal.length > INLINE_LIMIT && (
+            <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}>
+              View all {filteredGlobal.length} models →
+            </Button>
+          )}
         </div>
       )}
 
       {userModels.length === 0 && globalModels.length === 0 && (
         <p className="text-xs text-muted-foreground italic">No models available. Use manual styling options below.</p>
       )}
+
+      {/* Full model picker modal */}
+      <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base"><User className="w-4 h-4 text-primary" />Select a Model</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <Tabs value={modalGender} onValueChange={(v) => setModalGender(v as any)}>
+              <TabsList className="h-8">
+                <TabsTrigger value="all" className="text-[11px] px-3 h-6">All</TabsTrigger>
+                <TabsTrigger value="female" className="text-[11px] px-3 h-6">Women</TabsTrigger>
+                <TabsTrigger value="male" className="text-[11px] px-3 h-6">Men</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input placeholder="Search models..." value={modalSearch} onChange={e => setModalSearch(e.target.value)} className="pl-8 h-8 text-xs" />
+            </div>
+          </div>
+
+          <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+            {modalFilteredUser.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {modalFilteredUser.map(m => (
+                    <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => handleModalSelect(m.modelId)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {modalFilteredGlobal.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {modalFilteredGlobal.map(m => (
+                    <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => handleModalSelect(m.modelId)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {modalFilteredUser.length === 0 && modalFilteredGlobal.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">No models match your search.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
