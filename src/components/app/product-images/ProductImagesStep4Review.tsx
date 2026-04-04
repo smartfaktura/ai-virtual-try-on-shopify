@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { Coins, Package, Layers, AlertTriangle, Pencil } from 'lucide-react';
+import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User } from 'lucide-react';
 import { ALL_SCENES } from './sceneData';
 import type { UserProduct, DetailSettings } from './types';
 
@@ -17,6 +17,31 @@ interface Step4Props {
   onEditStep?: (step: number) => void;
 }
 
+// Human-friendly labels for aesthetic values
+const AESTHETIC_LABELS: Record<string, string> = {
+  'auto': 'Auto', 'warm-neutral': 'Warm neutrals', 'cool-neutral': 'Cool neutrals',
+  'monochrome': 'Soft monochrome', 'brand-led': 'Brand-led',
+  'pure-white': 'Pure white', 'soft-white': 'Soft white', 'light-grey': 'Light grey',
+  'warm-beige': 'Warm beige', 'taupe': 'Taupe', 'stone': 'Stone',
+  'minimal-studio': 'Minimal studio', 'stone-plaster': 'Stone / plaster',
+  'warm-wood': 'Warm wood', 'fabric': 'Fabric', 'glossy': 'Glossy',
+  'soft-diffused': 'Soft diffused', 'warm-editorial': 'Warm editorial',
+  'crisp-studio': 'Crisp studio', 'natural-daylight': 'Natural daylight', 'side-lit': 'Side-lit',
+  'none': 'None', 'soft': 'Soft', 'natural': 'Natural', 'defined': 'Defined',
+  'minimal-luxury': 'Minimal luxury', 'clean-commercial': 'Clean commercial',
+  'fashion-editorial': 'Fashion editorial', 'beauty-clean': 'Beauty clean',
+  'organic-natural': 'Organic natural', 'modern-sleek': 'Modern sleek',
+  'product-accent': 'Product accent', 'brand-accent': 'Brand accent',
+  'subtle': 'Subtle', 'strong': 'Strong',
+  'auto-balance': 'Auto-balance', 'anchor-first': 'Anchor first', 'manual': 'Manual',
+  'strict': 'Strict',
+};
+
+function friendlyLabel(val: string | undefined): string {
+  if (!val) return '';
+  return AESTHETIC_LABELS[val] || val.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, creditsPerImage, balance, onEditStep }: Step4Props) {
   const selectedScenes = ALL_SCENES.filter(s => selectedSceneIds.has(s.id));
   const imageCount = parseInt(details.imageCount || '1', 10);
@@ -27,7 +52,23 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const canAfford = balance >= totalCredits;
   const isLargeBatch = totalImages > 20;
 
-  const activeDetails = Object.entries(details).filter(([k, v]) => v && v !== '' && k !== 'aspectRatio' && k !== 'quality' && k !== 'imageCount');
+  // Collect aesthetic settings that have values
+  const aestheticEntries: { label: string; value: string }[] = [];
+  if (details.backgroundTone) aestheticEntries.push({ label: 'Color world', value: friendlyLabel(details.backgroundTone) });
+  if (details.negativeSpace) aestheticEntries.push({ label: 'Background', value: friendlyLabel(details.negativeSpace) });
+  if (details.surfaceType) aestheticEntries.push({ label: 'Surface', value: friendlyLabel(details.surfaceType) });
+  if (details.lightingStyle) aestheticEntries.push({ label: 'Lighting', value: friendlyLabel(details.lightingStyle) });
+  if (details.shadowStyle) aestheticEntries.push({ label: 'Shadow', value: friendlyLabel(details.shadowStyle) });
+  if (details.mood) aestheticEntries.push({ label: 'Style', value: friendlyLabel(details.mood) });
+  if (details.brandingVisibility) aestheticEntries.push({ label: 'Accent', value: friendlyLabel(details.brandingVisibility) });
+  if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
+
+  // Person styling entries
+  const personEntries: { label: string; value: string }[] = [];
+  if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
+  if (details.ageRange) personEntries.push({ label: 'Age', value: details.ageRange });
+  if (details.skinTone) personEntries.push({ label: 'Skin', value: friendlyLabel(details.skinTone) });
+  if (details.selectedModelId) personEntries.push({ label: 'Model', value: 'Selected' });
 
   return (
     <div className="space-y-6 pb-20">
@@ -93,9 +134,12 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               )}
             </div>
             <div className="flex flex-wrap gap-1">
-              {selectedScenes.map(s => (
+              {selectedScenes.slice(0, 12).map(s => (
                 <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
               ))}
+              {selectedScenes.length > 12 && (
+                <Badge variant="secondary" className="text-[10px]">+{selectedScenes.length - 12} more</Badge>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -149,25 +193,71 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         </Card>
       </div>
 
-      {/* Detail overrides */}
-      {activeDetails.length > 0 && (
+      {/* Aesthetic summary */}
+      {aestheticEntries.length > 0 && (
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold">Applied settings</p>
+              <div className="flex items-center gap-2">
+                <Paintbrush className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs font-semibold">Aesthetic settings</p>
+              </div>
               {onEditStep && (
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(4)}>
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
                   <Pencil className="w-3 h-3" />Edit
                 </Button>
               )}
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {activeDetails.map(([key, value]) => (
-                <Badge key={key} variant="secondary" className="text-[10px]">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}: {String(value)}
+              {aestheticEntries.map(e => (
+                <Badge key={e.label} variant="secondary" className="text-[10px]">
+                  {e.label}: {e.value}
                 </Badge>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Person styling summary */}
+      {personEntries.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <User className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs font-semibold">Person styling</p>
+              </div>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {personEntries.map(e => (
+                <Badge key={e.label} variant="secondary" className="text-[10px]">
+                  {e.label}: {e.value}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Custom note */}
+      {details.customNote && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold">Custom note</p>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">{details.customNote}</p>
           </CardContent>
         </Card>
       )}
