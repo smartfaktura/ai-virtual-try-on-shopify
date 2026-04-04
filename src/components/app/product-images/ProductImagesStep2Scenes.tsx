@@ -111,7 +111,7 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-2 pl-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 pt-2 pl-2">
           {cat.scenes.map(scene => (
             <SceneCard
               key={scene.id}
