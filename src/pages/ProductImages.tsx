@@ -524,6 +524,8 @@ export default function ProductImages() {
           <ProductImagesStep3Settings
             details={details}
             onDetailsChange={setDetails}
+            productCount={selectedProducts.length}
+            sceneCount={selectedScenes.length}
           />
         )}
 
