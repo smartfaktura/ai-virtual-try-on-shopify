@@ -3,8 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { ChevronDown, RatioIcon, ImageIcon, Zap, User, Hand, Layers, Info } from 'lucide-react';
+import { RatioIcon, ImageIcon, Zap, Layers, Camera } from 'lucide-react';
 import { useState } from 'react';
 import { getBlocksByScene } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
@@ -55,22 +54,32 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   );
 }
 
-function DetailBlock({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
+/** Small scene thumbnail with hover-to-enlarge */
+function SceneThumbnail({ sceneId }: { sceneId: string }) {
+  const scene = ALL_SCENES.find(s => s.id === sceneId);
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="w-full">
-        <div className="flex items-center justify-between py-2 cursor-pointer">
-          <span className="text-xs font-semibold text-muted-foreground">{title}</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+    <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <div className="w-6 h-6 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+        {scene?.previewUrl ? (
+          <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+        ) : (
+          <Camera className="w-3 h-3 text-muted-foreground/40" />
+        )}
+      </div>
+      {hovered && (
+        <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-lg bg-muted border border-border shadow-lg overflow-hidden">
+          {scene?.previewUrl ? (
+            <img src={scene.previewUrl} alt={scene?.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Camera className="w-8 h-8 text-muted-foreground/30" />
+            </div>
+          )}
         </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="pb-3 space-y-3">
-          {children}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+    </div>
   );
 }
 
@@ -127,42 +136,42 @@ function BlockFields({ blockKey, details, update }: { blockKey: string; details:
       );
     case 'background':
       return (
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Background Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <ChipSelector label="Background Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
             { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' }, { value: 'warm-neutral', label: 'Warm Neutral' }, { value: 'cool-neutral', label: 'Cool Neutral' }, { value: 'gradient', label: 'Soft Gradient' },
           ]} />
-          <SelectField label="Shadow Style" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
+          <ChipSelector label="Shadow Style" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
             { value: 'none', label: 'No Shadow' }, { value: 'soft', label: 'Soft Drop' }, { value: 'natural', label: 'Natural' }, { value: 'dramatic', label: 'Dramatic' },
           ]} />
-          <SelectField label="Negative Space" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
+          <ChipSelector label="Negative Space" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
             { value: 'tight', label: 'Tight Crop' }, { value: 'balanced', label: 'Balanced' }, { value: 'generous', label: 'Generous' },
           ]} />
         </div>
       );
     case 'visualDirection':
       return (
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Mood" value={details.mood} onChange={v => update({ mood: v })} options={[
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <ChipSelector label="Mood" value={details.mood} onChange={v => update({ mood: v })} options={[
             { value: 'clean', label: 'Clean & Modern' }, { value: 'warm', label: 'Warm & Inviting' }, { value: 'dramatic', label: 'Dramatic' }, { value: 'editorial', label: 'Editorial' }, { value: 'natural', label: 'Natural' },
           ]} />
-          <SelectField label="Product Prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
+          <ChipSelector label="Product Prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
             { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
           ]} />
-          <SelectField label="Lighting Style" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
+          <ChipSelector label="Lighting Style" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
             { value: 'soft-diffused', label: 'Soft Diffused' }, { value: 'natural', label: 'Natural Light' }, { value: 'studio', label: 'Studio' }, { value: 'dramatic', label: 'Dramatic' }, { value: 'golden-hour', label: 'Golden Hour' },
           ]} />
         </div>
       );
     case 'sceneEnvironment':
       return (
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <ChipSelector label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
             { value: 'bathroom', label: 'Bathroom' }, { value: 'kitchen', label: 'Kitchen' }, { value: 'living-room', label: 'Living Room' }, { value: 'desk', label: 'Desk / Workspace' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'shelf', label: 'Shelf / Display' },
           ]} />
-          <SelectField label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
+          <ChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
             { value: 'marble', label: 'Marble' }, { value: 'wood', label: 'Wood' }, { value: 'concrete', label: 'Concrete' }, { value: 'fabric', label: 'Fabric / Linen' }, { value: 'glass', label: 'Glass' },
           ]} />
-          <SelectField label="Styling Density" value={details.stylingDensity} onChange={v => update({ stylingDensity: v })} options={[
+          <ChipSelector label="Styling Density" value={details.stylingDensity} onChange={v => update({ stylingDensity: v })} options={[
             { value: 'minimal', label: 'Minimal' }, { value: 'moderate', label: 'Moderate' }, { value: 'styled', label: 'Fully Styled' },
           ]} />
         </div>
@@ -170,27 +179,27 @@ function BlockFields({ blockKey, details, update }: { blockKey: string; details:
     case 'detailFocus':
       return (
         <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Focus Area" value={details.focusArea} onChange={v => update({ focusArea: v })} options={[
+          <ChipSelector label="Focus Area" value={details.focusArea} onChange={v => update({ focusArea: v })} options={[
             { value: 'material', label: 'Material / Texture' }, { value: 'label', label: 'Label / Logo' }, { value: 'hardware', label: 'Hardware / Details' }, { value: 'packaging', label: 'Packaging' }, { value: 'full-product', label: 'Full Product' },
           ]} />
-          <SelectField label="Crop Intensity" value={details.cropIntensity} onChange={v => update({ cropIntensity: v })} options={[
+          <ChipSelector label="Crop Intensity" value={details.cropIntensity} onChange={v => update({ cropIntensity: v })} options={[
             { value: 'slight', label: 'Slight Close-Up' }, { value: 'medium', label: 'Medium Close-Up' }, { value: 'extreme', label: 'Extreme Macro' },
           ]} />
         </div>
       );
     case 'angleSelection':
       return (
-        <SelectField label="Number of Views" value={details.numberOfViews} onChange={v => update({ numberOfViews: v })} options={[
+        <ChipSelector label="Number of Views" value={details.numberOfViews} onChange={v => update({ numberOfViews: v })} options={[
           { value: '2', label: '2 angles' }, { value: '3', label: '3 angles' }, { value: '4', label: '4 angles' }, { value: '6', label: '6 angles' },
         ]} />
       );
     case 'packagingDetails':
       return (
         <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
+          <ChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
             { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
           ]} />
-          <SelectField label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
+          <ChipSelector label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
             { value: 'loose', label: 'Loose' }, { value: 'balanced', label: 'Balanced' }, { value: 'strict', label: 'Strict' },
           ]} />
         </div>
@@ -206,9 +215,9 @@ function BlockFields({ blockKey, details, update }: { blockKey: string; details:
   }
 }
 
-const BLOCK_LABELS: Record<string, { title: string; icon?: React.ReactNode; prominent?: boolean }> = {
-  personDetails: { title: 'Person / Model Details', icon: <User className="w-4 h-4" />, prominent: true },
-  actionDetails: { title: 'Action Details', icon: <Hand className="w-4 h-4" />, prominent: true },
+const BLOCK_LABELS: Record<string, { title: string }> = {
+  personDetails: { title: 'Person / Model Details' },
+  actionDetails: { title: 'Action Details' },
   background: { title: 'Background & Composition' },
   visualDirection: { title: 'Visual Direction' },
   sceneEnvironment: { title: 'Scene Environment' },
@@ -264,26 +273,24 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
         </Card>
       </div>
 
-      {/* Section B: Scene-grouped detail blocks */}
+      {/* Section B: Scene-grouped detail blocks — all inline, no collapsibles */}
       {hasSceneBlocks && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-primary" />
             <h2 className="text-lg font-semibold tracking-tight">Based on your selected scenes</h2>
           </div>
-          <p className="text-sm text-muted-foreground -mt-2">Fine-tune details for the scenes you chose. All fields are optional — we'll use smart defaults.</p>
+          <p className="text-sm text-muted-foreground -mt-2">All fields are optional — we'll use smart defaults.</p>
 
           {sceneGroups.map(group => (
             <Card key={group.sceneId} className="border-border">
               <CardContent className="p-4 space-y-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Info className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                      <span className="text-sm font-semibold">Because you selected "{group.sceneTitle}"</span>
-                    </div>
+                <div className="flex items-start gap-2">
+                  <SceneThumbnail sceneId={group.sceneId} />
+                  <div className="min-w-0">
+                    <span className="text-sm font-semibold">Because you selected "{group.sceneTitle}"</span>
                     {group.alsoUsedBy.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground mt-1 ml-5.5">Also used by: {group.alsoUsedBy.join(', ')}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Also used by: {group.alsoUsedBy.join(', ')}</p>
                     )}
                   </div>
                 </div>
@@ -292,25 +299,11 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
                   const meta = BLOCK_LABELS[blockKey];
                   if (!meta) return null;
 
-                  // Prominent blocks (person, action) render inline
-                  if (meta.prominent) {
-                    return (
-                      <div key={blockKey} className="rounded-lg border border-primary/15 bg-primary/[0.02] p-3 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-primary">{meta.icon}</span>
-                          <span className="text-xs font-semibold">{meta.title}</span>
-                          <Badge variant="secondary" className="text-[10px]">Important</Badge>
-                        </div>
-                        <BlockFields blockKey={blockKey} details={details} update={update} />
-                      </div>
-                    );
-                  }
-
-                  // Other blocks as collapsibles within the scene card
                   return (
-                    <DetailBlock key={blockKey} title={meta.title}>
+                    <div key={blockKey} className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+                      <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
                       <BlockFields blockKey={blockKey} details={details} update={update} />
-                    </DetailBlock>
+                    </div>
                   );
                 })}
               </CardContent>
