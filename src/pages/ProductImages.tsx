@@ -170,20 +170,9 @@ export default function ProductImages() {
   }, [step, selectedProducts, analyzeProducts]);
 
   // Build instruction from scene + details
-  const buildInstruction = useCallback((scene: typeof ALL_SCENES[0]) => {
-    const parts: string[] = [scene.description];
-    if (details.backgroundTone) parts.push(`Background: ${details.backgroundTone}`);
-    if (details.mood) parts.push(`Mood: ${details.mood}`);
-    if (details.lightingStyle) parts.push(`Lighting: ${details.lightingStyle}`);
-    if (details.environmentType) parts.push(`Environment: ${details.environmentType}`);
-    if (details.surfaceType) parts.push(`Surface: ${details.surfaceType}`);
-    if (details.presentation) parts.push(`Person: ${details.presentation}`);
-    if (details.actionType) parts.push(`Action: ${details.actionType}`);
-    if (details.focusArea) parts.push(`Focus: ${details.focusArea}`);
-    if (details.brandingVisibility) parts.push(`Branding: ${details.brandingVisibility}`);
-    if (details.layoutSpace) parts.push(`Layout: ${details.layoutSpace}`);
-    if (details.customNote) parts.push(`Note: ${details.customNote}`);
-    return parts.join('. ');
+  const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
+    const analysis = (product as any).analysis_json as ProductAnalysis | null;
+    return buildDynamicPrompt(scene, product, analysis, details);
   }, [details]);
 
   // Generation handler
