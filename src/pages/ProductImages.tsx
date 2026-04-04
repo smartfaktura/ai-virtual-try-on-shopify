@@ -204,15 +204,17 @@ export default function ProductImages() {
 
       for (const scene of selectedScenes) {
         for (let i = 0; i < imgCount; i++) {
+          const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
           const payload: Record<string, unknown> = {
             workflow_name: 'Product Images',
             workflow_slug: 'product-images',
             product: {
               title: product.title,
-              productType: product.product_type,
+              productType: productAnalysis?.category || product.product_type,
               description: product.description,
               dimensions: product.dimensions || undefined,
               imageUrl: base64Image,
+              analysis: productAnalysis || undefined,
             },
             product_name: product.title,
             product_image_url: product.image_url,
