@@ -72,6 +72,8 @@ export default function ProductImages() {
   const { asProfiles: userModelProfiles } = useUserModels();
   const { asProfiles: globalModelProfiles } = useCustomModels();
 
+  const [addProductOpen, setAddProductOpen] = useState(false);
+
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
   const [completedJobs, setCompletedJobs] = useState(0);
