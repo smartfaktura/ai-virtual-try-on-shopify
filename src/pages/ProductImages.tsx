@@ -353,6 +353,7 @@ export default function ProductImages() {
       case 3: setStep(2); break;
       case 4: setStep(3); break;
       case 5: setStep(4); break;
+      case 6: setStep(5); break;
     }
   };
 
