@@ -216,7 +216,32 @@ const STYLING_DIRECTION_MAP: Record<string, string> = {
 // ── Negative prompt components ──
 const BASE_NEGATIVES = 'No watermarks, no text overlays, no chromatic aberration, no lens flare artifacts, no color banding, no over-saturation.';
 const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
-const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
+const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment.';
+
+// ── Reference isolation instruction ──
+const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] is a reference for the product ONLY. Completely IGNORE its background, lighting, and environment. Generate the product in the new scene/background described above.';
+
+// ── Body framing map by category + scene type ──
+function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
+  const isOnModel = sceneType === 'portrait' || sceneType === 'editorial';
+  if (!isOnModel) return '';
+
+  switch (category) {
+    case 'garments':
+      return 'Full-body shot — model visible from head to toe, feet fully inside frame, natural standing pose. Do NOT crop at the knees or waist.';
+    case 'shoes':
+      return 'Three-quarter to full-body shot — model visible from head to below the knees, shoes clearly visible and in-frame.';
+    case 'bags-accessories':
+      return 'Three-quarter shot — model visible from head to mid-thigh, bag and hands fully in-frame.';
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Close-up beauty shot — shoulders and face, product interaction zone fully visible.';
+    case 'fragrance':
+      return 'Upper-body shot — head to waist, product clearly held and visible.';
+    default:
+      return 'Full-body shot — model visible from head to toe, natural standing pose.';
+  }
+}
 
 // ── Category-aware defaults ──
 
