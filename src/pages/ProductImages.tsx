@@ -539,6 +539,15 @@ export default function ProductImages() {
         )}
 
         {step === 4 && (
+          <ProductImagesStep3Props
+            allProducts={userProducts}
+            heroProductIds={selectedProductIds}
+            propProductIds={propProductIds}
+            onPropSelectionChange={setPropProductIds}
+          />
+        )}
+
+        {step === 5 && (
           <ProductImagesStep3Settings
             details={details}
             onDetailsChange={setDetails}
@@ -547,7 +556,7 @@ export default function ProductImages() {
           />
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <ProductImagesStep4Review
             selectedProducts={selectedProducts}
             selectedSceneIds={selectedSceneIds}
@@ -558,7 +567,7 @@ export default function ProductImages() {
           />
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <ProductImagesStep5Generating
             totalJobs={jobMap.size}
             completedJobs={completedJobs}
@@ -566,7 +575,7 @@ export default function ProductImages() {
           />
         )}
 
-        {step === 7 && (
+        {step === 8 && (
           <ProductImagesStep6Results
             results={results}
             onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
