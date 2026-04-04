@@ -178,7 +178,7 @@ export default function ProductImages() {
 
     const { data: session } = await supabase.auth.getSession();
     const token = session?.session?.access_token;
-    if (!token) { toast.error('Authentication required'); setStep(5); return; }
+    if (!token) { toast.error('Authentication required'); setStep(6); return; }
 
     const batchId = crypto.randomUUID();
     const newJobMap = new Map<string, string>();
