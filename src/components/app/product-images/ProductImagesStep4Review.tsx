@@ -106,12 +106,12 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
             <div className="flex flex-wrap gap-1.5">
               {selectedProducts.slice(0, 8).map(p => (
-                <div key={p.id} className="w-10 h-10 rounded-md overflow-hidden bg-white border border-border/40">
-                  <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 80, quality: 60 })} alt={p.title} className="w-full h-full object-contain p-0.5" />
+                <div key={p.id} className="w-14 h-14 rounded-lg overflow-hidden bg-muted/40 border border-border/40">
+                  <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 112, quality: 70 })} alt={p.title} className="w-full h-full object-contain p-1" />
                 </div>
               ))}
               {selectedProducts.length > 8 && (
-                <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
                   +{selectedProducts.length - 8}
                 </div>
               )}

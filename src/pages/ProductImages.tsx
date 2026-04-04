@@ -120,9 +120,16 @@ export default function ProductImages() {
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
-  // Scroll to top on step change
+  // Ref for wizard content area
+  const wizardContentRef = useRef<HTMLDivElement>(null);
+
+  // Scroll wizard into view on step change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (wizardContentRef.current) {
+      wizardContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [step]);
 
   // Reset visible count when search changes
@@ -169,11 +176,11 @@ export default function ProductImages() {
     }
   }, [step, selectedProducts, analyzeProducts]);
 
-  // Build instruction from scene + details
+  // Build instruction from scene + details — use live analyses map instead of stale DB row
   const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
-    const analysis = (product as any).analysis_json as ProductAnalysis | null;
+    const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
     return buildDynamicPrompt(scene, product, analysis, details);
-  }, [details]);
+  }, [details, analyses]);
 
   // Generation handler
   const handleGenerate = useCallback(async () => {
@@ -197,15 +204,17 @@ export default function ProductImages() {
 
       for (const scene of selectedScenes) {
         for (let i = 0; i < imgCount; i++) {
+          const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
           const payload: Record<string, unknown> = {
             workflow_name: 'Product Images',
             workflow_slug: 'product-images',
             product: {
               title: product.title,
-              productType: product.product_type,
+              productType: productAnalysis?.category || product.product_type,
               description: product.description,
               dimensions: product.dimensions || undefined,
               imageUrl: base64Image,
+              analysis: productAnalysis || undefined,
             },
             product_name: product.title,
             product_image_url: product.image_url,
@@ -373,7 +382,7 @@ export default function ProductImages() {
         <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
       )}
 
-      <div className="mt-6">
+      <div className="mt-6" ref={wizardContentRef}>
         {step === 1 && (
           <>
             <div className="space-y-3">
