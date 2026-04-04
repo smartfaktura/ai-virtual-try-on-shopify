@@ -22,11 +22,15 @@ export interface CategoryCollection {
 }
 
 export interface DetailSettings {
+  // Format / generation config
+  aspectRatio?: string;
+  quality?: string;
+  imageCount?: string;
+
   // Background & composition
   backgroundTone?: string;
   shadowStyle?: string;
   compositionFraming?: string;
-  aspectRatio?: string;
   negativeSpace?: string;
 
   // Visual direction
