@@ -1178,6 +1178,7 @@ serve(async (req) => {
             body.theme,
             body.theme_notes,
             aspectRatio,
+            !!(body as Record<string, unknown>).batch_outfit_lock,
           );
 
           console.log(
