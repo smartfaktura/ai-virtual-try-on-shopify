@@ -25,7 +25,7 @@ export function ProductContextStrip({ products, onChangeProducts }: ProductConte
             <Tooltip key={p.id}>
               <TooltipTrigger asChild>
                 <div className="w-8 h-8 rounded-md overflow-hidden bg-white flex-shrink-0 border border-border/40 p-0.5">
-                  <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 64, quality: 50 })} alt={p.title} className="w-full h-full object-contain" />
+                  <ShimmerImage src={p.image_url} alt={p.title} loading="eager" className="w-full h-full object-contain" />
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">{p.title}</TooltipContent>

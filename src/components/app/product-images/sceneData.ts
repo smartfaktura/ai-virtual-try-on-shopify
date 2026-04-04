@@ -134,13 +134,6 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['background'],
     isGlobal: true,
   },
-  {
-    id: 'on-surface',
-    title: 'Styled Surface',
-    description: 'Placed naturally on marble, wood, or fabric.',
-    triggerBlocks: ['sceneEnvironment'],
-    isGlobal: true,
-  },
 ];
 
 export const CATEGORY_COLLECTIONS: CategoryCollection[] = [

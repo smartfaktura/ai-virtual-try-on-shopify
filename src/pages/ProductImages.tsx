@@ -119,6 +119,16 @@ export default function ProductImages() {
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(25);
+  }, [productSearch]);
+
   // Reset downstream state when product selection changes
   useEffect(() => {
     const key = Array.from(selectedProductIds).sort().join(',');
