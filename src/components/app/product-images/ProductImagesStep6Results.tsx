@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, RefreshCw, CheckCircle, Archive } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+
 import { useState } from 'react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
