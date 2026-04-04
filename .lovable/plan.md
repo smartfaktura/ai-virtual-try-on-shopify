@@ -1,73 +1,72 @@
 
 
-# Fix Generation Loading UX + Error Handling
+# Fix: State Cleanup Between Generations + Stale Recommendations
 
 ## Problems Found
 
-### 1. "0 of 1 product" stuck state
-In `ProductImages.tsx` line 326, `setJobMap(newJobMap)` is called only AFTER all enqueue calls complete. But Step 5 renders immediately (line 203: `setStep(5)`) with `totalJobs={jobMap.size}` which is still 0. So the user sees "Processing 0 images across 1 product" and "0/0 completed 0%" during the entire enqueue phase (which can take several seconds for multi-scene batches).
+### 1. No state reset between generations
+When clicking "Generate More" on the results page (line 717), only `results` and `jobMap` are cleared. These generation tracking states are NOT reset:
+- `completedJobs` (stays at previous count)
+- `enqueuedCount` / `expectedJobCount`
+- `completedJobIds` / `failedJobIds`
 
-### 2. No generation timeout / error recovery
-The polling loop (lines 332-386) has no timeout. If jobs get permanently stuck in `processing` or `queued` status, the spinner runs forever with no way out.
+Additionally, when navigating back to step 1 from results, `selectedSceneIds` and `details` persist from the previous generation, causing stale pre-selections.
 
-### 3. No branded experience during generation
-The generating screen is a plain spinner — no VOVV.AI team personality.
+### 2. Stale "Recommended" categories in Step 2
+In `ProductImagesStep2Scenes.tsx` line 166, `expandedCategories` is initialized via `useState(() => new Set(relevantCatIds))`. This initializer only runs on first mount. When products change (bag replaces fragrance), the `recommendedCollections` useMemo updates correctly, but the expanded accordion state stays stale. More importantly, since Step2 is lazy-loaded and conditionally rendered (`step === 2`), React may keep it mounted within the Suspense boundary (lines 646-721 render all steps 2-6 inside one Suspense).
+
+The fix: sync `expandedCategories` with `relevantCatIds` via a `useEffect`.
+
+### 3. Last generation failures
+Edge function logs show Gemini blocked image generation with `blockReason: "OTHER"` for multiple jobs. The system correctly refunded credits and marked jobs as failed. This is a content moderation false positive from Gemini, not a code bug. The polling/timeout logic handled it correctly.
 
 ## Plan
 
 ### File 1: `src/pages/ProductImages.tsx`
 
-**A. Fix the "0 jobs" problem** — track expected job count separately from jobMap:
-- Add `const [expectedJobCount, setExpectedJobCount] = useState(0)` 
-- Before starting enqueue loop, compute expected count: `selectedProducts.length * selectedScenes.length * imgCount` and call `setExpectedJobCount()`
-- Pass `expectedJobCount` instead of `jobMap.size` as `totalJobs` to Step 5
-- Update `jobMap` progressively during the enqueue loop (after each successful enqueue) so the UI shows "Queuing X of Y..." phase
+**A. Add a `resetGenerationState` function** that clears all generation-related state:
+```typescript
+const resetGenerationState = useCallback(() => {
+  setJobMap(new Map());
+  setCompletedJobs(0);
+  setResults(new Map());
+  setExpectedJobCount(0);
+  setEnqueuedCount(0);
+  setCompletedJobIds(new Set());
+  setFailedJobIds(new Set());
+  if (pollingRef.current) clearTimeout(pollingRef.current);
+}, []);
+```
 
-**B. Add enqueue phase tracking** — pass an `enqueuingCount` to Step 5:
-- Add `const [enqueuedCount, setEnqueuedCount] = useState(0)`
-- Increment after each successful enqueue inside the loop
-- Pass to Step 5 as `enqueuedJobs`
+**B. Fix "Generate More" handler** (line 717):
+Change from partial reset to full reset:
+```typescript
+onGenerateMore={() => { resetGenerationState(); setStep(2); }}
+```
 
-**C. Add generation timeout** — in `startPolling`, track elapsed time:
-- After 5 minutes of polling with no progress, show a "taking longer than expected" message
-- After 10 minutes total, auto-transition to results with whatever completed, show error toast for stuck jobs
-- Add a "Cancel & View Results" button to Step 5
+**C. Add a "Start Fresh" option on results** that also clears product/scene selections:
+```typescript
+// Could also be added alongside "Generate More"
+```
 
-**D. Track failed jobs** — currently polling counts `completed` OR `failed` as `done`, but doesn't pass failure info to Step 5:
-- Track `completedJobIds` and `failedJobIds` Sets during polling
-- Pass them to Step 5
+### File 2: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-### File 2: `src/components/app/product-images/ProductImagesStep5Generating.tsx`
+**Sync expanded categories when products change** - add a `useEffect` after line 166:
+```typescript
+useEffect(() => {
+  setExpandedCategories(new Set(relevantCatIds));
+}, [relevantCatIds]);
+```
 
-Complete rewrite of the generating screen:
+This ensures when the user selects a bag (after previously generating for fragrance), the expanded/recommended categories update to show bags-accessories instead of fragrance.
 
-**A. Multi-phase display:**
-- Phase 1 "Queuing": While `enqueuedJobs < totalJobs` — show "Setting up your scenes..." with branded avatar messages
-- Phase 2 "Generating": Once all queued — show progress bar with per-product breakdown
-- Phase 3 "Almost done": When > 80% complete — show "Finishing touches..." message
-
-**B. Branded avatar messages** — rotating VOVV.AI team messages during generation:
-- Import `TEAM_MEMBERS` from teamData and `getOptimizedUrl` from imageOptimization
-- Show a sequence of messages with team member avatars:
-  - Sophia: "Setting up your scene lighting..."
-  - Kenji: "Composing the perfect angle..."
-  - Luna: "Adding final touches..."
-- Cycle through messages every 6 seconds using `useEffect` + `useState`
-
-**C. Error recovery UI:**
-- If `failedJobs > 0` after completion, show count of failed images
-- Add "Cancel & View Results" button visible after 60 seconds
-- Add "Taking longer than expected" warning after 3 minutes
-
-**D. Fix the counter display:**
-- During queuing phase: "Queuing scene 3 of 8..."
-- During generation: "2 of 8 images completed"
-- Show per-product rows (already partially implemented but not wired)
-
-### Files to Update
+## Files to Update
 
 | File | Change |
 |------|--------|
-| `src/pages/ProductImages.tsx` | Add `expectedJobCount`, `enqueuedCount`, `failedJobIds`, `completedJobIds` state; update enqueue loop to set counts progressively; add polling timeout; pass new props to Step 5 |
-| `src/components/app/product-images/ProductImagesStep5Generating.tsx` | Multi-phase UI with branded avatars, error recovery button, timeout warning, fix counter display |
+| `src/pages/ProductImages.tsx` | Add `resetGenerationState`, fix "Generate More" handler |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Add `useEffect` to sync `expandedCategories` with `relevantCatIds` |
+
+## Note on Generation Failures
+The last generation failed because Gemini's content moderation blocked the prompts (`blockReason: "OTHER"`). The system handled this correctly: credits were refunded and jobs marked as failed. No code fix needed for this -- it's a model-side content filter issue.
 
