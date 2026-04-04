@@ -34,6 +34,7 @@ const ProductImagesStep6Results = lazy(() => import('@/components/app/product-im
 
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { mockModels } from '@/data/mockData';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
 import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
 import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
