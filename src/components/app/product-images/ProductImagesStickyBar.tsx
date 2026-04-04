@@ -119,7 +119,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
           )}
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {step > 1 && step <= 6 && (
+            {step > 1 && step <= 5 && (
               <Button variant="outline" size="sm" onClick={onBack}>Back</Button>
             )}
             <Button size="sm" disabled={!canProceed} onClick={onNext} className="gap-1.5">
