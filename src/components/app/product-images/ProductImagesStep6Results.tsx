@@ -79,9 +79,10 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
       {lightboxOpen && (
         <ImageLightbox
           images={lightboxImages}
-          initialIndex={lightboxIndex}
+          currentIndex={lightboxIndex}
           open={lightboxOpen}
-          onOpenChange={setLightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
         />
       )}
     </div>
