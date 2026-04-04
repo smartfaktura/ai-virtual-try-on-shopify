@@ -38,7 +38,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
     }
   })();
 
-  const showGenIcon = step === 6;
+  const showGenIcon = step === 5;
 
   return (
     <div className="sticky bottom-4 z-10">
