@@ -286,6 +286,13 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'focusArea': return resolveFocusArea(details, scene);
     case 'accentDirective': {
       const ac = details.accentColor;
+      const vis = details.brandingVisibility;
+      if (vis === 'custom' && ac && /^#[0-9A-Fa-f]{6}$/.test(ac)) {
+        return `Accent tones: subtle accent color (${ac}) complementing the product palette.`;
+      }
+      if (vis === 'brand-accent' && ac && /^#[0-9A-Fa-f]{6}$/.test(ac)) {
+        return `Brand accent color (${ac}) woven subtly into the composition.`;
+      }
       return ac ? `Accent tones: subtle ${ac.replace(/-/g, ' ')} accents complementing the product palette.` : '';
     }
     case 'consistencyDirective': return CONSISTENCY_MAP[details.consistency || 'balanced'] || CONSISTENCY_MAP['balanced'];

@@ -319,6 +319,93 @@ const BLOCK_FIELD_MAP: Record<string, (keyof DetailSettings)[]> = {
    Constants
    ══════════════════════════════════════════════ */
 
+const AUTO_AESTHETIC_DEFAULTS: Partial<DetailSettings> = {
+  backgroundTone: 'auto',
+  negativeSpace: 'auto',
+  surfaceType: 'auto',
+  lightingStyle: 'soft-diffused',
+  shadowStyle: 'natural',
+  mood: 'auto',
+  brandingVisibility: 'none',
+};
+
+function isAutoApplied(details: DetailSettings): boolean {
+  return Object.entries(AUTO_AESTHETIC_DEFAULTS).every(
+    ([k, v]) => details[k as keyof DetailSettings] === v
+  );
+}
+
+function AutoAestheticButton({ details, update }: { details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
+  const active = isAutoApplied(details);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (active) {
+          // Clear auto values
+          const cleared: Partial<DetailSettings> = {};
+          for (const k of Object.keys(AUTO_AESTHETIC_DEFAULTS)) cleared[k as keyof DetailSettings] = undefined as any;
+          update(cleared);
+        } else {
+          update(AUTO_AESTHETIC_DEFAULTS);
+        }
+      }}
+      className={cn(
+        'flex items-center gap-2 w-full px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer',
+        active
+          ? 'border-primary bg-primary/5 text-primary'
+          : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground',
+      )}
+    >
+      <Sparkles className="w-4 h-4" />
+      <span>Auto</span>
+      <span className="text-xs font-normal opacity-70">(Recommended)</span>
+      {active && <Badge variant="secondary" className="ml-auto text-[10px] h-5">Applied</Badge>}
+    </button>
+  );
+}
+
+function CustomHexPanel({ accentColor, onChange, isBrandMode }: { accentColor: string; onChange: (hex: string) => void; isBrandMode: boolean }) {
+  const [localHex, setLocalHex] = useState(accentColor || '#000000');
+  const isValid = /^#([0-9A-Fa-f]{6})$/.test(localHex);
+
+  const handleBlur = () => {
+    if (isValid) onChange(localHex);
+  };
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
+      {isBrandMode && (
+        <p className="text-xs text-muted-foreground flex-1">No brand profile selected — enter your brand accent manually:</p>
+      )}
+      <div
+        className="w-8 h-8 rounded-md border border-border flex-shrink-0 shadow-sm"
+        style={{ backgroundColor: isValid ? localHex : '#000000' }}
+      />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground font-medium">HEX</span>
+          <Input
+            value={localHex}
+            onChange={e => {
+              let v = e.target.value;
+              if (!v.startsWith('#')) v = '#' + v;
+              setLocalHex(v.slice(0, 7));
+            }}
+            onBlur={handleBlur}
+            onKeyDown={e => { if (e.key === 'Enter') handleBlur(); }}
+            className={cn('h-7 w-24 text-xs font-mono', !isValid && localHex.length === 7 && 'border-destructive')}
+            placeholder="#000000"
+          />
+        </div>
+        {!isValid && localHex.length === 7 && (
+          <span className="text-[10px] text-destructive">Invalid hex code</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const ASPECT_RATIOS = [
   { value: '1:1', label: 'Square 1:1' },
   { value: '4:5', label: 'Portrait 4:5' },
