@@ -176,7 +176,90 @@ const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural ha
 const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
 
 // ── Category-aware defaults ──
+
+function defaultBackground(category?: string): string {
+  switch (category) {
+    case 'garments':
+    case 'shoes':
+    case 'bags-accessories':
+      return 'soft warm white seamless studio background';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'soft neutral light gray seamless background';
+    case 'tech-devices':
+      return 'clean matte white seamless background';
+    case 'food-beverage':
+      return 'warm off-white background with natural warmth';
+    case 'home-decor':
+      return 'soft white studio background';
+    default:
+      return 'soft warm white seamless studio background';
+  }
+}
+
+function defaultSurface(category?: string): string {
+  switch (category) {
+    case 'food-beverage':
+      return 'placed on a warm, natural wood surface with visible grain';
+    case 'home-decor':
+      return 'placed on a premium styled surface with complementary texture';
+    default:
+      return 'placed on a clean, minimal studio surface with seamless backdrop';
+  }
+}
+
+function defaultShadow(category?: string): string {
+  switch (category) {
+    case 'garments':
+    case 'shoes':
+    case 'bags-accessories':
+      return 'Soft diffused shadow beneath the product for a refined, airy feel.';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Barely-visible contact shadow for floating elegance.';
+    case 'tech-devices':
+      return 'Crisp, well-defined shadow adding depth and dimension.';
+    default:
+      return 'Soft, natural contact shadow grounding the product.';
+  }
+}
+
+function defaultStyling(category?: string): string {
+  switch (category) {
+    case 'garments':
+      return 'Clean commercial styling — crisp, professional composition.';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Beauty-clean styling — luminous, minimal composition with premium product focus.';
+    case 'shoes':
+    case 'bags-accessories':
+      return 'Minimal luxury styling — clean, restrained, premium composition.';
+    case 'tech-devices':
+      return 'Modern sleek styling — contemporary, geometric, sharp composition.';
+    case 'food-beverage':
+      return 'Organic natural styling — relaxed, authentic composition.';
+    default:
+      return 'Clean commercial styling — crisp, professional composition.';
+  }
+}
+
 function defaultLighting(category?: string): string {
+  switch (category) {
+    case 'fragrance': return 'Soft directional side lighting with gentle glass refraction highlights.';
+    case 'beauty-skincare':
+    case 'makeup-lipsticks': return 'Soft overhead beauty lighting with even glow and subtle specular accents.';
+    case 'tech-devices': return 'Crisp controlled studio lighting with clean specular reflections.';
+    case 'food-beverage': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
+    case 'garments': return 'Even soft studio lighting revealing fabric texture and true color.';
+    case 'bags-accessories':
+    case 'shoes': return 'Controlled directional lighting revealing leather grain and material depth.';
+    case 'home-decor': return 'Warm ambient interior lighting with natural window-light feel.';
+    default: return 'Professional studio lighting with soft fill and controlled highlights.';
+  }
+}
   switch (category) {
     case 'fragrance': return 'Soft directional side lighting with gentle glass refraction highlights.';
     case 'beauty-skincare':
