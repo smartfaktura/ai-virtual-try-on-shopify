@@ -504,7 +504,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'compositionDirective': {
       if (isAuto(details.compositionFraming)) return '';
-      return `Composition: ${details.compositionFraming!.replace(/-/g, ' ')}.`;
+      const COMP_MAP: Record<string, string> = {
+        'tight': 'Tight composition — product fills the frame with minimal surrounding space.',
+        'balanced': 'Balanced composition — product centered with comfortable breathing room.',
+        'generous': 'Generous composition — ample negative space around the product for editorial feel.',
+      };
+      return COMP_MAP[details.compositionFraming!] || `${details.compositionFraming!.replace(/-/g, ' ')} composition.`;
     }
     // negativeSpaceDirective should now be empty since negativeSpace stores background family (Bug 3)
     case 'negativeSpaceDirective': return '';
