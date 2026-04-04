@@ -241,7 +241,7 @@ export default function ProductImages() {
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
     const aspectRatio = details.aspectRatio || '1:1';
-    const imgCount = parseInt(details.imageCount || '1', 10);
+    // imgCount already declared above
 
     for (const product of selectedProducts) {
       const base64Image = await convertImageToBase64(product.image_url);
