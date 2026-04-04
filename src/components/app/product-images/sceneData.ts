@@ -475,14 +475,14 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
       {
         id: 'apparel_on_model_editorial', title: 'On-Model Look',
         description: 'Full or half-body model shot focused on fit and silhouette.',
-        promptTemplate: 'On-model fashion photograph — {{productName}} worn by model showing fit, silhouette, and drape. {{personDirective}} {{outfitDirective}} Hyper-realistic skin texture where visible. Fabric showing {{materialTexture}} — weave, color depth, construction quality. {{lightingDirective}} {{moodDirective}} {{modelDirective}} {{consistencyDirective}} {{cameraDirective}}',
+        promptTemplate: 'On-model fashion photograph — {{productName}} worn by model showing fit, silhouette, and drape. {{bodyFramingDirective}} {{personDirective}} {{outfitDirective}} Hyper-realistic skin texture where visible. Fabric showing {{materialTexture}} — weave, color depth, construction quality. {{lightingDirective}} {{moodDirective}} {{modelDirective}} {{consistencyDirective}} {{cameraDirective}}',
         triggerBlocks: ['personDetails'], isGlobal: false, categoryCollection: 'garments',
         sceneType: 'portrait',
       },
       {
         id: 'apparel_motion_scene', title: 'Movement Shot',
         description: 'Garment shown in motion for drape, softness, or fluidity.',
-        promptTemplate: 'Motion fashion photograph — {{productName}} garment in movement showing fabric fluidity, drape, and flow. {{personDirective}} {{outfitDirective}} Fabric captured mid-motion — {{materialTexture}}, showing weight and movement quality. Slight motion blur on extremities, garment detail remains sharp. {{lightingDirective}} {{actionDirective}} {{moodDirective}} {{consistencyDirective}} {{cameraDirective}}',
+        promptTemplate: 'Motion fashion photograph — {{productName}} garment in movement showing fabric fluidity, drape, and flow. {{bodyFramingDirective}} {{personDirective}} {{outfitDirective}} Fabric captured mid-motion — {{materialTexture}}, showing weight and movement quality. Slight motion blur on extremities, garment detail remains sharp. {{lightingDirective}} {{actionDirective}} {{moodDirective}} {{consistencyDirective}} {{cameraDirective}}',
         triggerBlocks: ['personDetails', 'actionDetails'], isGlobal: false, categoryCollection: 'garments',
         sceneType: 'editorial',
       },

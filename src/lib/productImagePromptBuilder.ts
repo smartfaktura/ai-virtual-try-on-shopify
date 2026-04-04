@@ -216,7 +216,32 @@ const STYLING_DIRECTION_MAP: Record<string, string> = {
 // ── Negative prompt components ──
 const BASE_NEGATIVES = 'No watermarks, no text overlays, no chromatic aberration, no lens flare artifacts, no color banding, no over-saturation.';
 const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
-const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
+const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment.';
+
+// ── Reference isolation instruction ──
+const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] is a reference for the product ONLY. Completely IGNORE its background, lighting, and environment. Generate the product in the new scene/background described above.';
+
+// ── Body framing map by category + scene type ──
+function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
+  const isOnModel = sceneType === 'portrait' || sceneType === 'editorial';
+  if (!isOnModel) return '';
+
+  switch (category) {
+    case 'garments':
+      return 'Full-body shot — model visible from head to toe, feet fully inside frame, natural standing pose. Do NOT crop at the knees or waist.';
+    case 'shoes':
+      return 'Three-quarter to full-body shot — model visible from head to below the knees, shoes clearly visible and in-frame.';
+    case 'bags-accessories':
+      return 'Three-quarter shot — model visible from head to mid-thigh, bag and hands fully in-frame.';
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Close-up beauty shot — shoulders and face, product interaction zone fully visible.';
+    case 'fragrance':
+      return 'Upper-body shot — head to waist, product clearly held and visible.';
+    default:
+      return 'Full-body shot — model visible from head to toe, natural standing pose.';
+  }
+}
 
 // ── Category-aware defaults ──
 
@@ -343,17 +368,17 @@ function defaultPersonDirective(category?: string): string {
 function defaultOutfitDirective(category?: string): string {
   switch (category) {
     case 'garments':
-      return 'Wearing clean, complementary styling that doesn\'t compete with the product — neutral tones, minimal accessories.';
+      return 'Wearing slim-fit light beige cotton trousers and minimal white sneakers — same outfit in every shot. Clothing must NOT compete with the product.';
     case 'bags-accessories':
-      return 'Wearing a minimalist neutral outfit — product is the styling hero, clothing serves as backdrop.';
+      return 'Wearing a fitted black turtleneck, slim dark navy trousers, and black ankle boots — same outfit in every shot. Product is the styling hero.';
     case 'shoes':
-      return 'Wearing slim-fit neutral clothing that keeps visual focus on the footwear.';
+      return 'Wearing cropped slim dark denim and a plain white tee — same outfit in every shot. Visual focus stays on the footwear.';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
-      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product.';
+      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product. Same look in every shot.';
     default:
-      return 'Wearing clean, understated clothing in neutral tones — product remains the visual focus.';
+      return 'Wearing clean, understated clothing in neutral tones — same outfit in every shot. Product remains the visual focus.';
   }
 }
 
@@ -498,23 +523,19 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productName': return productName;
     case 'productType': return productType || cat || 'product';
 
-    // Bug 3 fix: background family is stored in negativeSpace by the UI
-    // Bug 10 fix: color world is stored in backgroundTone — use as color modifier
     case 'background': {
-      const bgFamily = details.negativeSpace; // background family selection from UI
-      const colorWorld = details.backgroundTone; // color world selection from UI
+      const bgFamily = details.negativeSpace;
+      const colorWorld = details.backgroundTone;
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
     }
 
-    // Bug 1 fix: lighting now matches UI chip values via updated LIGHTING_MAP
     case 'lightingDirective': {
       if (isAuto(details.lightingStyle)) return defaultLighting(cat);
       return LIGHTING_MAP[details.lightingStyle!] || defaultLighting(cat);
     }
 
-    // Bug 2 fix: shadow now matches UI chip values via updated SHADOW_MAP
     case 'shadowDirective': {
       if (isAuto(details.shadowStyle)) return defaultShadow(cat);
       return SHADOW_MAP[details.shadowStyle!] || defaultShadow(cat);
@@ -522,7 +543,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish, ctx.productDescription);
 
-    // Bug 9 fix: surface now uses SURFACE_MAP for rich descriptions
     case 'surfaceDirective': {
       if (isAuto(details.surfaceType)) return defaultSurface(cat);
       return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
@@ -542,7 +562,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
-    // Bug 6 fix: accent uses accentColor + brandingVisibility for accent only
     case 'accentDirective': {
       const ac = details.accentColor;
       const vis = details.brandingVisibility;
@@ -562,14 +581,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productSize': return analysis?.sizeClass || 'medium';
     case 'colorFamily': return analysis?.colorFamily || 'neutral tones';
 
-    // Bug 7 fix: UI stores "styling direction" in details.mood — route it correctly
     case 'stylingDirective': {
       const sd = details.mood || details.stylingDirection;
       if (isAuto(sd)) return defaultStyling(cat);
       return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
 
-    // moodDirective aliases stylingDirective so templates with {{moodDirective}} get actual output
     case 'moodDirective': return resolveToken('stylingDirective', ctx);
 
     case 'environmentDirective': {
@@ -577,8 +594,9 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return ENVIRONMENT_MAP[details.environmentType!] || `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
     }
 
-    // Bug 6 fix: brandingDirective returns empty — no separate branding UI section exists
     case 'brandingDirective': return '';
+
+    case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType);
 
     case 'customNote': return details.customNote || '';
     case 'modelDirective': return ctx.selectedModelId ? 'Use the specific model reference provided in the source image.' : '';
@@ -602,7 +620,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
       };
       return COMP_MAP[details.compositionFraming!] || `${details.compositionFraming!.replace(/-/g, ' ')} composition.`;
     }
-    // negativeSpaceDirective should now be empty since negativeSpace stores background family (Bug 3)
     case 'negativeSpaceDirective': return '';
     case 'productProminenceDirective': {
       if (isAuto(details.productProminence)) return '';
@@ -711,9 +728,13 @@ export function buildDynamicPrompt(
   injectIfMissing('mood', 'sceneIntensityDirective');
   injectIfMissing('styling density', 'stylingDensityDirective');
   injectIfMissing('prominence', 'productProminenceDirective');
+  injectIfMissing('body framing', 'bodyFramingDirective');
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
+
+  // Append reference isolation instruction
+  prompt += ' ' + REFERENCE_ISOLATION;
 
   // Append quality suffix if not already present
   if (!prompt.includes('8K commercial quality')) {

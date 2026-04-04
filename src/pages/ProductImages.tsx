@@ -307,6 +307,8 @@ export default function ProductImages() {
             aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
             batch_id: batchId,
             scene_name: scene.title,
+            batch_outfit_lock: true,
+            batch_size: selectedScenes.length,
           };
 
           await paceDelay(newJobMap.size);
