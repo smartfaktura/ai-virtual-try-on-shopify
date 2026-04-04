@@ -29,7 +29,7 @@ import { ProductImagesStep5Generating } from '@/components/app/product-images/Pr
 import { ProductImagesStep6Results } from '@/components/app/product-images/ProductImagesStep6Results';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
-import { ProductImagesStep3Props } from '@/components/app/product-images/ProductImagesStep3Props';
+
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import type { PIStep, UserProduct, DetailSettings } from '@/components/app/product-images/types';
