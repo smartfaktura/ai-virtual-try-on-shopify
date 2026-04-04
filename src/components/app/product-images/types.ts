@@ -30,6 +30,9 @@ export interface SceneSelection {
   scopeValue: string | null; // category slug or product ID
 }
 
+// ── Scene type for camera/focus defaults ──
+export type SceneType = 'macro' | 'packshot' | 'portrait' | 'lifestyle' | 'editorial' | 'flatlay';
+
 // ── Refine structure ──
 export interface OverallAesthetic {
   consistency: string;
@@ -84,6 +87,7 @@ export interface ProductImageScene {
   triggerBlocks: string[];
   isGlobal: boolean;
   categoryCollection?: string;
+  sceneType?: SceneType;
 }
 
 export interface CategoryCollection {
@@ -127,6 +131,10 @@ export interface DetailSettings {
   expression?: string;
   hairVisibility?: string;
 
+  // Outfit details (from person styling)
+  outfitStyle?: string;
+  outfitColorDirection?: string;
+
   // Action details
   actionType?: string;
   actionIntensity?: string;
@@ -160,6 +168,12 @@ export interface DetailSettings {
 
   // Consistency
   consistency?: string;
+
+  // Styling direction
+  stylingDirection?: string;
+
+  // Accent color
+  accentColor?: string;
 
   // Custom note
   customNote?: string;
