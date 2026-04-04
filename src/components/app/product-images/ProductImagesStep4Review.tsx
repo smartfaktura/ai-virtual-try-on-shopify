@@ -104,11 +104,11 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {selectedProducts.slice(0, 12).map(p => (
                 <div key={p.id} className="space-y-1">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40 p-1">
                     <ShimmerImage
-                      src={getOptimizedUrl(p.image_url, { width: 160, quality: 75 })}
+                      src={p.image_url}
                       alt={p.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>

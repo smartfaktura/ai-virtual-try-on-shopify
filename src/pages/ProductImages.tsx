@@ -34,6 +34,7 @@ const ProductImagesStep6Results = lazy(() => import('@/components/app/product-im
 
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { mockModels } from '@/data/mockData';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
 import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
 import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
@@ -86,7 +87,11 @@ export default function ProductImages() {
   // Load models for Refine step
   // Defer model queries until Refine step
   const { asProfiles: userModelProfiles } = useUserModels({ enabled: step >= 3 });
-  const { asProfiles: globalModelProfiles } = useCustomModels({ enabled: step >= 3 });
+  const { asProfiles: customModelProfiles } = useCustomModels({ enabled: step >= 3 });
+  const globalModelProfiles = useMemo(
+    () => [...mockModels, ...(customModelProfiles || [])],
+    [customModelProfiles]
+  );
 
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
