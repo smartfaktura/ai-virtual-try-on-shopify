@@ -78,6 +78,9 @@ export default function ProductImages() {
   const { asProfiles: globalModelProfiles } = useCustomModels();
 
   const [addProductOpen, setAddProductOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
+  const MAX_PRODUCTS = 20;
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
