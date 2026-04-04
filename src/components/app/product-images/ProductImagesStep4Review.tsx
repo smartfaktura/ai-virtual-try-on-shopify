@@ -1,10 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { Sparkles, Coins, Package, Layers } from 'lucide-react';
+import { Coins, Package, Layers, AlertTriangle } from 'lucide-react';
 import { ALL_SCENES } from './sceneData';
 import type { UserProduct, DetailSettings } from './types';
 
@@ -14,29 +13,41 @@ interface Step4Props {
   details: DetailSettings;
   creditsPerImage: number;
   balance: number;
-  onGenerate: () => void;
-  onBack: () => void;
-  onOpenBuyCredits: () => void;
 }
 
-export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, creditsPerImage, balance, onGenerate, onBack, onOpenBuyCredits }: Step4Props) {
+export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, creditsPerImage, balance }: Step4Props) {
   const selectedScenes = ALL_SCENES.filter(s => selectedSceneIds.has(s.id));
-  const totalImages = selectedProducts.length * selectedScenes.length;
-  const totalCredits = totalImages * creditsPerImage;
+  const imageCount = parseInt(details.imageCount || '1', 10);
+  const totalImages = selectedProducts.length * selectedScenes.length * imageCount;
+  const quality = details.quality || 'high';
+  const costPerImage = quality === 'standard' ? 3 : 6;
+  const totalCredits = totalImages * costPerImage;
   const canAfford = balance >= totalCredits;
+  const isLargeBatch = totalImages > 20;
 
-  // Collect non-empty detail overrides for display
-  const activeDetails = Object.entries(details).filter(([, v]) => v && v !== '');
+  const activeDetails = Object.entries(details).filter(([k, v]) => v && v !== '' && k !== 'aspectRatio' && k !== 'quality' && k !== 'imageCount');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">Review your generation plan</h2>
         <p className="text-sm text-muted-foreground mt-1">Confirm your selections before generating.</p>
       </div>
 
+      {isLargeBatch && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-destructive">Large batch — {totalImages} images</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Generation may take several minutes. You can leave this page and find results in your library.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Products summary */}
+        {/* Products */}
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -58,7 +69,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
           </CardContent>
         </Card>
 
-        {/* Scenes summary */}
+        {/* Scenes */}
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -73,7 +84,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
           </CardContent>
         </Card>
 
-        {/* Credits summary */}
+        {/* Credits */}
         <Card className={!canAfford ? 'border-destructive/50' : 'border-primary/30'}>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -82,12 +93,24 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Format</span>
+                <span className="font-medium">{details.aspectRatio || '1:1'}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Quality</span>
+                <span className="font-medium">{quality === 'high' ? 'Pro' : 'Standard'}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Images per scene</span>
+                <span className="font-medium">{imageCount}</span>
+              </div>
+              <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Total images</span>
                 <span className="font-medium">{totalImages}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Cost per image</span>
-                <span className="font-medium">{creditsPerImage} credits</span>
+                <span className="font-medium">{costPerImage} credits</span>
               </div>
               <Separator className="my-1.5" />
               <div className="flex justify-between text-sm font-semibold">
@@ -118,23 +141,6 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
           </CardContent>
         </Card>
       )}
-
-      {!canAfford && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="p-4 flex items-center justify-between">
-            <p className="text-sm text-destructive">You need {totalCredits - balance} more credits to generate.</p>
-            <Button variant="outline" size="sm" onClick={onOpenBuyCredits}>Buy Credits</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={onBack}>Back</Button>
-        <Button size="lg" disabled={!canAfford} onClick={onGenerate} className="gap-2">
-          <Sparkles className="w-4 h-4" />
-          Generate {totalImages} image{totalImages !== 1 ? 's' : ''}
-        </Button>
-      </div>
     </div>
   );
 }

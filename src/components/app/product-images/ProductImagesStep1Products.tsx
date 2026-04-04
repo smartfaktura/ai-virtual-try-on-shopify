@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, Plus, Package } from 'lucide-react';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -13,11 +13,10 @@ interface Step1Props {
   isLoading: boolean;
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
-  onContinue: () => void;
   onProductAdded: () => void;
 }
 
-export function ProductImagesStep1Products({ products, isLoading, selectedIds, onSelectionChange, onContinue, onProductAdded }: Step1Props) {
+export function ProductImagesStep1Products({ products, isLoading, selectedIds, onSelectionChange, onProductAdded }: Step1Props) {
   const [showAdd, setShowAdd] = useState(false);
 
   const toggleProduct = (id: string) => {
@@ -28,7 +27,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">Select products</h2>
         <p className="text-sm text-muted-foreground mt-1">Choose one or more products to generate visuals for.</p>
@@ -58,7 +57,6 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
         </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {/* Add new product card */}
           <button
             onClick={() => setShowAdd(true)}
             className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors min-h-[200px] cursor-pointer"
@@ -102,12 +100,6 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
           })}
         </div>
       )}
-
-      <div className="flex justify-end pt-2">
-        <Button size="lg" disabled={selectedIds.size === 0} onClick={onContinue}>
-          Continue to scenes
-        </Button>
-      </div>
 
       <AddProductModal
         open={showAdd}
