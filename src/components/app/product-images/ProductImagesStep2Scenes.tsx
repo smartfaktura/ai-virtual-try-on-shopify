@@ -168,6 +168,19 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     setExpandedCategories(next);
   };
 
+  const selectAllCategory = (catId: string) => {
+    const cat = CATEGORY_COLLECTIONS.find(c => c.id === catId);
+    if (!cat) return;
+    const next = new Set(selectedSceneIds);
+    const allSelected = cat.scenes.every(s => next.has(s.id));
+    if (allSelected) {
+      cat.scenes.forEach(s => next.delete(s.id));
+    } else {
+      cat.scenes.forEach(s => next.add(s.id));
+    }
+    onSelectionChange(next);
+  };
+
   return (
     <div className="space-y-8 pb-20">
       <div>
