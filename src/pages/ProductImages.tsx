@@ -81,6 +81,7 @@ export default function ProductImages() {
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
+  const [visibleCount, setVisibleCount] = useState(25);
   const MAX_PRODUCTS = 20;
 
   // Generation state
