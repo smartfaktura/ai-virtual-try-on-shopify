@@ -72,7 +72,6 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
             {!showGenIcon && <ArrowRight className="w-3.5 h-3.5" />}
           </Button>
         </div>
-      </div>
     </div>
   );
 }
