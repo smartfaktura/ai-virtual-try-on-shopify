@@ -1,47 +1,50 @@
 
 
-# Product Images Flow — UX Fixes Round 3
+# Product Images Flow — UX Fixes Round 4
 
-## 3 Changes
+## 4 Issues to Fix
 
-### 1. Scene ordering: Recommended categories appear right after Universal Scenes, auto-opened
+### 1. Sticky bar overlaps floating chat button
 
-**Current**: Recommended categories show above Universal Scenes. Non-matched categories show below in a separate section.
+**Root cause**: The `ProductImagesStickyBar` uses `sticky bottom-0` which pins at the bottom of the scroll container. But the `StudioChat` floating button is `fixed bottom-4 left-4` (z-40), and on catalog pages it moves to `right-4`. Both compete for the same viewport space.
 
-**Fix**: Reorder Step2 layout to: Universal Scenes first → Recommended categories (auto-expanded, with "Recommended" badge) → Other categories (collapsed). Move the recommended section from above global scenes to directly below them.
+**Fix**: Add `mb-16` (64px margin-bottom) to the sticky bar wrapper so it sits above the floating chat button. Also improve readability by increasing text contrast and spacing slightly.
 
-**File**: `ProductImagesStep2Scenes.tsx` — restructure the JSX order: global scenes section first, then recommended categories, then other categories.
+**File**: `ProductImagesStickyBar.tsx` — add bottom margin via a wrapper in `ProductImages.tsx`, and improve text styling for better readability.
 
-### 2. Scene card placeholders: uniform gray, 4:5 aspect ratio
+### 2. Reset scenes/details when product selection changes
 
-**Current**: Scene cards use colorful gradients (`from-slate-100 to-gray-200`, etc.) with `aspect-[4/3]`.
+**Current**: User can select products, go to scenes, come back, change products, but old scene/detail selections persist — causing stale/misleading state.
 
-**Fix**: Replace all gradient placeholders with a single uniform `bg-muted` (light gray) and change aspect ratio from `aspect-[4/3]` to `aspect-[4/5]`. Remove the `SCENE_GRADIENTS` map entirely.
+**Fix**: In `ProductImages.tsx`, add a `useEffect` watching `selectedProductIds` that resets `selectedSceneIds` and `details` back to defaults whenever the product set changes (but not on initial mount).
 
-**File**: `ProductImagesStep2Scenes.tsx` — in `SceneCard`, replace `bg-gradient-to-br ${gradient}` with `bg-muted`, change `aspect-[4/3]` to `aspect-[4/5]`.
+**File**: `ProductImages.tsx` — add a ref to track previous product IDs and reset downstream state on change.
 
-### 3. Step 3 Details — replace collapsibles with inline fields, add scene thumbnail on hover, remove blocking requirement
+### 3. Model selector integration for scenes requiring a person
 
-**Current problems**:
-- Non-prominent blocks use collapsible dropdowns — users don't realize they need to open them
-- No visual reference to the scene that triggered the block
-- Fields feel hidden and disconnected
+**Current**: When user selects scenes like "In-Hand" or "Portrait with Product", they get generic person detail chips (age range, skin tone) but no way to pick from their existing brand models or the app's model library.
 
-**Fix**:
-- Remove `DetailBlock` collapsible wrapper entirely. Render ALL block fields **inline** (always visible) within their scene group card — same as prominent blocks but without the "Important" badge for non-critical ones
-- Add a small 24×24 gray placeholder thumbnail next to each "Because you selected X" header. On hover, show a larger 120px preview via a simple CSS hover scale/tooltip
-- Make all detail fields **optional** — user should be able to proceed to next step without filling anything. The sticky bar CTA should always be enabled on Step 3 (details are all optional with smart defaults). Remove any validation gating if present
-- Keep the "All fields are optional — we'll use smart defaults" text prominent
+**Fix**: Add a model selector section to Step 3 that appears when `personDetails` is triggered. Show the user's brand models (from `useUserModels`) and the global model library (from `useCustomModels`). Use `ModelSelectorCard` for display. Store selected model ID in `details.selectedModelId`. This replaces the generic person detail chips (age, skin tone, etc.) — if a model is selected, those fields are hidden since the model already defines them.
 
 **Files**:
-- `ProductImagesStep3Details.tsx` — Remove `DetailBlock` component, render all `BlockFields` inline. Add scene thumbnail (small gray placeholder with hover enlarge) next to "Because you selected" header.
-- `ProductImages.tsx` — Ensure `canProceed` for step 3 is always `true` (no required field gating)
+- `ProductImagesStep3Details.tsx` — Accept new props for models, render a model picker grid when `personDetails` block is triggered, hide generic person chips if model is selected
+- `types.ts` — Add `selectedModelId?: string` to `DetailSettings`
+- `ProductImages.tsx` — Load models via hooks, pass to Step3
+
+### 4. Fix "Focus Area" block — smart defaults based on product context
+
+**Current**: The `detailFocus` block always shows generic options (Material/Texture, Label/Logo, Hardware/Details, Packaging, Full Product) regardless of what the product actually is. If user uploads a lipstick and selects "Product Near Lips", asking about "Hardware/Details" makes no sense.
+
+**Fix**: Make the `detailFocus` `BlockFields` context-aware. When triggered by makeup/beauty scenes (IDs starting with `makeup-` or `beauty-`), show relevant options like "Product Focus", "Texture/Formula", "Label", "Full Product". For other categories, keep current options. Also rename the block title to "What to focus on" for clarity.
+
+**File**: `ProductImagesStep3Details.tsx` — update the `detailFocus` case in `BlockFields` to accept the triggering scene ID and adjust options accordingly.
 
 ## Summary of file changes
 
 | File | Change |
 |------|--------|
-| `ProductImagesStep2Scenes.tsx` | Reorder: Universal first → Recommended below → Others. Gray placeholders, 4:5 aspect. Remove `SCENE_GRADIENTS`. |
-| `ProductImagesStep3Details.tsx` | Remove collapsibles, render all fields inline. Add scene thumbnail with hover preview. |
-| `ProductImages.tsx` | Ensure step 3 always allows proceeding (no validation gate) |
+| `ProductImagesStickyBar.tsx` | Improve text readability, slightly more padding |
+| `ProductImages.tsx` | Add bottom spacer for sticky bar, reset scenes/details on product change, load models and pass to Step3 |
+| `ProductImagesStep3Details.tsx` | Add model selector grid when personDetails triggered, context-aware focus options, accept model props |
+| `types.ts` | Add `selectedModelId` to `DetailSettings` |
 
