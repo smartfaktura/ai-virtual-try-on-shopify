@@ -22,6 +22,88 @@ import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, Ov
 import type { ModelProfile } from '@/types';
 
 /* ══════════════════════════════════════════════
+   Model Picker with Brand / Library sections
+   ══════════════════════════════════════════════ */
+
+function ModelPickerSections({ userModels, globalModels, selectedModelId, onSelect }: {
+  userModels: ModelProfile[];
+  globalModels: ModelProfile[];
+  selectedModelId?: string;
+  onSelect: (id: string) => void;
+}) {
+  const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
+
+  const filteredUser = useMemo(() =>
+    genderFilter === 'all' ? userModels : userModels.filter(m => m.gender === genderFilter),
+    [userModels, genderFilter]);
+
+  const filteredGlobal = useMemo(() =>
+    genderFilter === 'all' ? globalModels : globalModels.filter(m => m.gender === genderFilter),
+    [globalModels, genderFilter]);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">Select a model or skip to customize manually below.</p>
+
+      {/* Gender filter */}
+      <Tabs value={genderFilter} onValueChange={(v) => setGenderFilter(v as any)}>
+        <TabsList className="h-8">
+          <TabsTrigger value="all" className="text-[11px] px-3 h-6">All</TabsTrigger>
+          <TabsTrigger value="female" className="text-[11px] px-3 h-6">Women</TabsTrigger>
+          <TabsTrigger value="male" className="text-[11px] px-3 h-6">Men</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Your Brand Models */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Crown className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
+        </div>
+        {filteredUser.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {filteredUser.map(m => (
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+            ))}
+          </div>
+        ) : (
+          <button
+            onClick={() => window.open('/app/brand-models', '_blank')}
+            className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-4 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Plus className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">Create Your Brand Model</p>
+                <p className="text-[11px] text-muted-foreground">Generate a unique AI model for your brand</p>
+              </div>
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* Library Models */}
+      {filteredGlobal.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Library Models</span>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {filteredGlobal.map(m => (
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={selectedModelId === m.modelId} onSelect={() => onSelect(m.modelId)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {userModels.length === 0 && globalModels.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">No models available. Use manual styling options below.</p>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
    Shared UI helpers
    ══════════════════════════════════════════════ */
 
