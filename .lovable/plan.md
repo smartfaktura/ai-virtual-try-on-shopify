@@ -1,43 +1,47 @@
 
 
-# Copy Catalog Floating Bar & Product Selection to Product Images
+# Product Images — Fix Product Selection, Category Naming & Sticky Bar Overlap
 
-## 2 Changes
+## 3 Changes
 
-### 1. Replace sticky bar with catalog-style floating card
+### 1. Fix double sticky bar overlap
 
-**Current**: `ProductImagesStickyBar` uses `sticky bottom-0` with full-width border-top — looks like a plain footer, not a floating card.
+**Problem**: `CatalogStepProducts` has its own built-in floating selection bar (lines 469-498) with a "Next" button. `ProductImages.tsx` also renders `ProductImagesStickyBar` on steps 1-5. Two bars stack/overlap at the bottom.
 
-**Target pattern** (from `CatalogStepShots.tsx` line 116-144):
-```
-sticky bottom-4 z-10
-  └─ rounded-xl border border-border bg-card/95 backdrop-blur-sm p-3 sm:p-4 shadow-lg
-```
+**Fix**: Hide `ProductImagesStickyBar` on step 1 (since `CatalogStepProducts` already handles navigation there). Only show it on steps 2-5.
 
-**Fix**: Restyle `ProductImagesStickyBar.tsx` to match this exact pattern:
-- Outer: `sticky bottom-4 z-10` (not `bottom-0`, not full-width negative margins)
-- Inner: `rounded-xl border border-border bg-card/95 backdrop-blur-sm p-3 sm:p-4 shadow-lg`
-- Keep the same content layout (summary + credits + buttons) but wrap in the card style
-- Remove the `-mx-4 sm:-mx-6 lg:-mx-8` negative margins — let it float naturally within content
+**File**: `ProductImages.tsx` — change `step >= 1` to `step >= 2` in the sticky bar condition.
 
-**File**: `ProductImagesStickyBar.tsx`
+### 2. Replace product selection with virtual-try-on style
 
-### 2. Replace product selection with CatalogStepProducts pattern
+**Problem**: `CatalogStepProducts` uses a padded card style with `object-cover` and large cards (4 cols). The virtual-try-on-set uses a compact 6-column grid with smaller cards, search, select all/clear, and grid/list toggle — which the user prefers.
 
-**Current**: `ProductImagesStep1Products` is a simpler custom implementation with basic search/filter and plain cards.
+**Fix**: Instead of using `CatalogStepProducts`, build a lightweight product selection inline in `ProductImages.tsx` step 1 that matches the try-on pattern from `Generate.tsx` lines 2917-3101:
+- Compact grid: `grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6`
+- Search bar + Select All / Clear buttons + Grid/List toggle
+- `ShimmerImage` with `object-cover` and `aspect-square`
+- Compact info below: title (10px) + product_type (9px)
+- Circular checkmark badge (top-left)
+- Add New Product card (dashed border)
+- Selection count badge
+- Keep the `AddProductModal` integration
 
-**Target** (`CatalogStepProducts.tsx`): Rich UI with underline tabs (My Products / Import URL / Upload CSV), numbered selection badges, grid/list view toggle, "Select All / Clear" buttons, selection order tracking, and `object-cover` images with proper card styling (rounded-2xl, shimmer, gradient overlay).
+**File**: `ProductImages.tsx` — replace `CatalogStepProducts` usage in step 1 with inline try-on style product grid. Remove `CatalogStepProducts` import.
 
-**Fix**: Replace the body of `ProductImagesStep1Products.tsx` to reuse the `CatalogStepProducts` component directly, passing the same props. The `CatalogStepProducts` already accepts `products`, `selectedProductIds`, `onProductSelectionChange`, `maxProducts`, `onAddProduct`, etc.
+### 3. Rename "Garments" to "Clothing & Apparel"
 
-In `ProductImages.tsx`, render `CatalogStepProducts` instead of `ProductImagesStep1Products` for step 1, mapping the existing props. Set `maxProducts` to a reasonable limit (e.g. 20). The `onNext` and `canProceed` remain handled by the parent sticky bar, so pass a no-op or the existing `handleNext` for `onNext`.
+**Problem**: "Garments" is an industry term that's not intuitive for most users.
 
-**Files**: `ProductImages.tsx` — swap step 1 component. `ProductImagesStep1Products.tsx` can be deleted or kept as unused.
+**Fix**: 
+- In `sceneData.ts`: Change `title: 'Garments'` to `title: 'Clothing & Apparel'`
+- In `ProductImagesStep2Scenes.tsx` keyword map: Keep the `'garments'` key but the title change propagates from `sceneData.ts`
+
+**File**: `sceneData.ts` — update title on line 179.
 
 ## Summary
 
 | File | Change |
 |------|--------|
-| `ProductImagesStickyBar.tsx` | Restyle to `sticky bottom-4` floating card with `rounded-xl border bg-card/95 backdrop-blur-sm shadow-lg` |
-| `ProductImages.tsx` | Replace Step 1 with `CatalogStepProducts` component import |
+| `ProductImages.tsx` | Replace `CatalogStepProducts` with try-on style inline product grid; show sticky bar only on steps 2-5 |
+| `sceneData.ts` | Rename "Garments" → "Clothing & Apparel" |
 
