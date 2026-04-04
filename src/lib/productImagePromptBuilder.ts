@@ -528,10 +528,18 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
     }
 
-    case 'personDirective': return buildPersonDirective(details);
+    case 'personDirective': {
+      const needsPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      return buildPersonDirective(details, cat, needsPerson);
+    }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
-    case 'outfitDirective': return buildOutfitDirective(details);
+    case 'outfitDirective': {
+      const outfit = buildOutfitDirective(details);
+      if (outfit) return outfit;
+      const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      return needsOutfit ? defaultOutfitDirective(cat) : '';
+    }
     case 'focusArea': return resolveFocusArea(details, scene);
 
     // Bug 6 fix: accent uses accentColor + brandingVisibility for accent only
