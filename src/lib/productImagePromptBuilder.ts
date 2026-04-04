@@ -223,7 +223,7 @@ const REFERENCE_ISOLATION = 'CRITICAL: The [PRODUCT IMAGE] is a reference for th
 
 // ── Body framing map by category + scene type ──
 function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
-  const isOnModel = sceneType === 'portrait' || sceneType === 'editorial';
+  const isOnModel = sceneType === 'portrait' || sceneType === 'editorial' || sceneType === 'lifestyle';
   if (!isOnModel) return '';
 
   switch (category) {
@@ -250,7 +250,7 @@ function defaultBackground(category?: string): string {
     case 'garments':
     case 'shoes':
     case 'bags-accessories':
-      return 'soft warm white seamless studio background';
+      return 'soft warm white seamless studio background — do NOT reproduce the background from the product reference photo';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
@@ -730,11 +730,11 @@ export function buildDynamicPrompt(
   injectIfMissing('prominence', 'productProminenceDirective');
   injectIfMissing('body framing', 'bodyFramingDirective');
 
+  // Prepend reference isolation instruction BEFORE cleanup so it appears early
+  prompt = REFERENCE_ISOLATION + ' ' + prompt;
+
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
-
-  // Append reference isolation instruction
-  prompt += ' ' + REFERENCE_ISOLATION;
 
   // Append quality suffix if not already present
   if (!prompt.includes('8K commercial quality')) {

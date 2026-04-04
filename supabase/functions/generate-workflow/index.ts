@@ -219,6 +219,7 @@ function buildVariationPrompt(
   theme?: string,
   themeNotes?: string,
   aspectRatio?: string,
+  batchOutfitLock?: boolean,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -561,6 +562,8 @@ CRITICAL REQUIREMENTS:
 4. Ultra high resolution, professional quality, no AI artifacts.
 5. This specific variation must clearly match the "${variation.label}" direction described above.
 ${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
+7. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] shows the product ONLY. You MUST completely IGNORE the background, environment, and lighting visible in [PRODUCT IMAGE]. Generate ONLY the new background/environment described in the variation instruction above. The product's original photo background must NOT appear in the output.
+${batchOutfitLock ? `8. OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit described in the variation instruction. Do NOT deviate — same colors, same garment types, same shoes. This is a multi-image batch and visual consistency across all shots is mandatory.` : ""}
 
 ${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
   })();
@@ -1175,6 +1178,7 @@ serve(async (req) => {
             body.theme,
             body.theme_notes,
             aspectRatio,
+            !!(body as Record<string, unknown>).batch_outfit_lock,
           );
 
           console.log(
