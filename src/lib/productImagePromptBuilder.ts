@@ -561,12 +561,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
 
-    // Bug 7 fix: moodDirective should be empty since "mood" field actually stores styling direction
-    case 'moodDirective': return '';
+    // moodDirective aliases stylingDirective so templates with {{moodDirective}} get actual output
+    case 'moodDirective': return resolveToken('stylingDirective', ctx);
 
     case 'environmentDirective': {
       if (isAuto(details.environmentType)) return '';
-      return `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
+      return ENVIRONMENT_MAP[details.environmentType!] || `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
     }
 
     // Bug 6 fix: brandingDirective returns empty — no separate branding UI section exists
