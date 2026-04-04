@@ -67,7 +67,12 @@ export default function ProductImages() {
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts } = useProductAnalysis();
 
-  const INITIAL_DETAILS: DetailSettings = { aspectRatio: '1:1', quality: 'high', imageCount: '1' };
+  const INITIAL_DETAILS: DetailSettings = {
+    aspectRatio: '1:1', quality: 'high', imageCount: '1',
+    backgroundTone: 'auto', negativeSpace: 'auto', surfaceType: 'auto',
+    lightingStyle: 'soft-diffused', shadowStyle: 'natural', mood: 'auto',
+    brandingVisibility: 'none',
+  };
 
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
