@@ -84,8 +84,9 @@ export default function ProductImages() {
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Load models for Refine step
-  const { asProfiles: userModelProfiles } = useUserModels();
-  const { asProfiles: globalModelProfiles } = useCustomModels();
+  // Defer model queries until Refine step
+  const { asProfiles: userModelProfiles } = useUserModels({ enabled: step >= 3 });
+  const { asProfiles: globalModelProfiles } = useCustomModels({ enabled: step >= 3 });
 
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
