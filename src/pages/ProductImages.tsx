@@ -211,7 +211,7 @@ export default function ProductImages() {
             product_image_url: product.image_url,
             selected_variations: [{
               label: scene.title,
-              instruction: buildInstruction(scene),
+              instruction: buildInstruction(scene, product),
             }],
             quality,
             aspectRatio,
