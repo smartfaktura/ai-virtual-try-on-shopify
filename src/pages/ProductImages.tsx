@@ -377,6 +377,8 @@ export default function ProductImages() {
             productCount={selectedProducts.length}
             details={details}
             onDetailsChange={setDetails}
+            userModels={userModelProfiles}
+            globalModels={globalModelProfiles}
           />
         )}
 
