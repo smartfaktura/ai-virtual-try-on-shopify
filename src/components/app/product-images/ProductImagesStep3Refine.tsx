@@ -371,7 +371,7 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
           <ChipSelector label="Shadow" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
             { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft Drop' }, { value: 'natural', label: 'Natural' }, { value: 'dramatic', label: 'Dramatic' },
           ]} />
-          <ChipSelector label="Spacing" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
+          <ChipSelector label="Spacing" value={details.compositionFraming} onChange={v => update({ compositionFraming: v })} options={[
             { value: 'tight', label: 'Tight Crop' }, { value: 'balanced', label: 'Balanced' }, { value: 'generous', label: 'Generous' },
           ]} />
         </div>
