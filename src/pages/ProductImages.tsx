@@ -197,15 +197,15 @@ export default function ProductImages() {
     let modelRef: { name: string; gender: string; ethnicity: string; bodyType: string; ageRange: string; imageUrl: string } | undefined;
     if (details.selectedModelId) {
       const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
-      const found = allModels.find(m => m.id === details.selectedModelId);
+      const found = allModels.find(m => m.modelId === details.selectedModelId);
       if (found) {
-        const modelBase64 = await convertImageToBase64(found.image_url);
+        const modelBase64 = await convertImageToBase64(found.sourceImageUrl || found.previewUrl);
         modelRef = {
           name: found.name,
-          gender: (found as any).gender || '',
-          ethnicity: (found as any).ethnicity || '',
-          bodyType: (found as any).body_type || (found as any).bodyType || '',
-          ageRange: (found as any).age_range || (found as any).ageRange || '',
+          gender: found.gender || '',
+          ethnicity: found.ethnicity || '',
+          bodyType: found.bodyType || '',
+          ageRange: found.ageRange || '',
           imageUrl: modelBase64,
         };
       }
