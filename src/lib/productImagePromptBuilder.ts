@@ -519,7 +519,14 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'sceneIntensityDirective': {
       if (isAuto(details.sceneIntensity)) return '';
-      return `Scene intensity: ${details.sceneIntensity!.replace(/-/g, ' ')}.`;
+      const SCENE_MOOD_MAP: Record<string, string> = {
+        'clean': 'Clean, modern aesthetic — crisp lines, minimal distraction, contemporary feel.',
+        'warm': 'Warm, inviting atmosphere — rich amber undertones, cozy tactile quality.',
+        'dramatic': 'Dramatic, high-impact visual — bold contrasts, cinematic depth, editorial tension.',
+        'editorial': 'Editorial storytelling — magazine-quality composition with narrative visual intent.',
+        'natural': 'Natural, organic feel — soft, authentic, unforced visual language.',
+      };
+      return SCENE_MOOD_MAP[details.sceneIntensity!] || `${details.sceneIntensity!.replace(/-/g, ' ')} scene mood.`;
     }
     case 'cameraDirective': return resolveCameraDirective(scene);
     default: return '';
