@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera, LayoutGrid } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { GLOBAL_SCENES, CATEGORY_COLLECTIONS } from './sceneData';
 import type { ProductImageScene, UserProduct } from './types';
@@ -24,6 +24,14 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'smartwatch'],
   'food-beverage': ['food', 'coffee', 'tea', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'juice', 'beverage', 'organic', 'artisan'],
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
+};
+
+type GridSize = 'small' | 'medium' | 'large';
+
+const GRID_CLASSES: Record<GridSize, string> = {
+  small: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7',
+  medium: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6',
+  large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 };
 
 function detectRelevantCategories(products: UserProduct[]): Set<string> {
@@ -59,15 +67,40 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           </div>
         )}
       </div>
-      <div className="p-2">
-        <p className="text-xs font-semibold truncate">{scene.title}</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{scene.description}</p>
+      <div className="p-1.5">
+        <p className="text-[11px] font-semibold truncate">{scene.title}</p>
+        <p className="text-[10px] text-muted-foreground line-clamp-1">{scene.description}</p>
       </div>
     </button>
   );
 }
 
-function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScene, toggleCategory, onSelectAllCategory, isRecommended }: {
+function GridSizeToggle({ value, onChange }: { value: GridSize; onChange: (v: GridSize) => void }) {
+  const sizes: { id: GridSize; label: string; iconScale: string }[] = [
+    { id: 'small', label: 'S', iconScale: 'scale-75' },
+    { id: 'medium', label: 'M', iconScale: 'scale-100' },
+    { id: 'large', label: 'L', iconScale: 'scale-125' },
+  ];
+  return (
+    <div className="flex items-center border border-border rounded-md overflow-hidden">
+      {sizes.map(s => (
+        <button
+          key={s.id}
+          onClick={() => onChange(s.id)}
+          className={`px-2 py-1 text-[10px] font-semibold transition-colors ${
+            value === s.id
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground hover:bg-muted'
+          }`}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScene, toggleCategory, onSelectAllCategory, isRecommended, gridClass }: {
   cat: { id: string; title: string; scenes: ProductImageScene[] };
   selectedSceneIds: Set<string>;
   expandedCategories: Set<string>;
@@ -75,6 +108,7 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
   toggleCategory: (id: string) => void;
   onSelectAllCategory: (catId: string) => void;
   isRecommended?: boolean;
+  gridClass: string;
 }) {
   const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
   const allSelected = selectedInCat === cat.scenes.length;
@@ -112,7 +146,7 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
             {allSelected ? 'Deselect All' : 'Select All'}
           </Button>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 pt-2 pl-2">
+        <div className={`grid ${gridClass} gap-2 pt-2 pl-2`}>
           {cat.scenes.map(scene => (
             <SceneCard
               key={scene.id}
@@ -130,6 +164,9 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts }: Step2Props) {
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts), [selectedProducts]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
+  const [gridSize, setGridSize] = useState<GridSize>('medium');
+
+  const gridClass = GRID_CLASSES[gridSize];
 
   const recommendedCollections = useMemo(
     () => CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id)),
@@ -164,15 +201,20 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
 
   return (
     <div className="space-y-8 pb-20">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Select scenes</h2>
-        <p className="text-sm text-muted-foreground mt-1">Choose the visuals you want for your products.</p>
-        {selectedSceneIds.size > 0 && (
-          <div className="flex items-center gap-2 mt-3">
-            <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} scene{selectedSceneIds.size !== 1 ? 's' : ''} selected</Badge>
-            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
-          </div>
-        )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Select scenes</h2>
+          <p className="text-sm text-muted-foreground mt-1">Choose the visuals you want for your products.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedSceneIds.size > 0 && (
+            <>
+              <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
+            </>
+          )}
+          <GridSizeToggle value={gridSize} onChange={setGridSize} />
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -180,7 +222,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-semibold">Universal Scenes</h3>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+        <div className={`grid ${gridClass} gap-2`}>
           {GLOBAL_SCENES.map(scene => (
             <SceneCard
               key={scene.id}
@@ -206,6 +248,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
                 toggleCategory={toggleCategory}
                 onSelectAllCategory={selectAllCategory}
                 isRecommended
+                gridClass={gridClass}
               />
             ))}
           </div>
@@ -224,6 +267,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               toggleScene={toggleScene}
               toggleCategory={toggleCategory}
               onSelectAllCategory={selectAllCategory}
+              gridClass={gridClass}
             />
           ))}
         </div>
