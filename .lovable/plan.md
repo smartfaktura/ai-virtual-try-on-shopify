@@ -1,83 +1,47 @@
 
 
-# Fix: Product Images Page Slow Initial Load
+# Fix: Show All Models + Fix Product Thumbnails in Review
 
-## Root Cause
+## Issue 1: Only Brand Models Shown
 
-The `/app/generate/product-images` page is slow to load because:
+The model picker in Step 3 (Refine) receives `globalModels` from `useCustomModels()`, which only fetches admin-uploaded custom models from the database. The standard library models (`mockModels` — 50+ models used in Freestyle) are not included.
 
-1. **All 6 step components are eagerly imported** — the page imports `ProductImagesStep2Scenes`, `ProductImagesStep3Refine` (967 lines), `ProductImagesStep4Review`, `ProductImagesStep5Generating`, `ProductImagesStep6Results` at the top level. Only Step 1 (product grid) is needed initially.
-
-2. **Model hooks run immediately** — `useUserModels()` and `useCustomModels()` fire DB queries on mount, but models aren't needed until Step 3 (Refine). These queries add latency to the initial render.
-
-3. **Dev server recompilation** — recent heavy edits to Step 3 (967 lines) cause Vite to recompile a large chunk on every page load in dev mode. This is inherent to the dev environment but lazy-loading would reduce the impact.
-
-## Plan
-
-### 1. Lazy-load step components (biggest impact)
-
-**File**: `src/pages/ProductImages.tsx`
-
-Replace direct imports of steps 2-6 with `React.lazy()`:
+**Fix**: In `src/pages/ProductImages.tsx`, import `mockModels` from `@/data/mockData` and merge them with `customModels` when passing `globalModels` to Step 3:
 
 ```typescript
-const ProductImagesStep2Scenes = lazy(() => import('./product-images/ProductImagesStep2Scenes'));
-const ProductImagesStep3Refine = lazy(() => import('./product-images/ProductImagesStep3Refine'));
-// ... etc for steps 4, 5, 6
+import { mockModels } from '@/data/mockData';
+
+// Combine mock library models + admin custom models
+const allLibraryModels = useMemo(
+  () => [...mockModels, ...globalModelProfiles],
+  [globalModelProfiles]
+);
 ```
 
-Wrap each step render in a lightweight `<Suspense fallback={<StepSkeleton />}>` that shows a simple skeleton while the step chunk loads. Step 1 (product grid) stays inline since it's the landing view.
+Then pass `allLibraryModels` as `globalModels` to `ProductImagesStep3Refine`.
 
-### 2. Defer model queries until Step 3
+## Issue 2: Product Thumbnails in Review Look Bad
 
-**File**: `src/pages/ProductImages.tsx`
+In `ProductImagesStep4Review.tsx` (line 111), product thumbnails use `object-cover` in `aspect-square` containers. Products with non-square images get cropped/zoomed. The `getOptimizedUrl` with `width: 160` may also distort.
 
-Change the model hooks to only run when needed:
+**Fix**: Change `object-cover` to `object-contain` and add padding so the product is fully visible:
 
 ```typescript
-const { asProfiles: userModelProfiles } = useUserModels({ enabled: step >= 3 });
-const { asProfiles: globalModelProfiles } = useCustomModels({ enabled: step >= 3 });
+<div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40 p-1">
+  <ShimmerImage
+    src={p.image_url}
+    alt={p.title}
+    className="w-full h-full object-contain"
+  />
+</div>
 ```
 
-This requires a small update to `useUserModels` and `useCustomModels` hooks to accept an `enabled` option that gets merged with the existing `!!user` check.
-
-### 3. Add `enabled` option to model hooks
-
-**Files**: `src/hooks/useUserModels.ts`, `src/hooks/useCustomModels.ts`
-
-Add an optional `enabled` parameter:
-
-```typescript
-export function useUserModels(opts?: { enabled?: boolean }) {
-  const { user } = useAuth();
-  const query = useQuery({
-    queryKey: ['user-models', user?.id],
-    queryFn: async () => { ... },
-    enabled: !!user && (opts?.enabled !== false),
-  });
-  // ...
-}
-```
-
-Same pattern for `useCustomModels`.
+Remove the `getOptimizedUrl` wrapper for these small thumbnails — they're already tiny, and the optimization transform may be causing the zoomed appearance.
 
 ## Files to Update
 
 | File | Change |
 |------|--------|
-| `src/pages/ProductImages.tsx` | Lazy-load steps 2-6, defer model hooks to step >= 3 |
-| `src/hooks/useUserModels.ts` | Accept optional `enabled` param |
-| `src/hooks/useCustomModels.ts` | Accept optional `enabled` param |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Add `export default` for lazy import |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Add `export default` for lazy import |
-| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Add `export default` for lazy import |
-| `src/components/app/product-images/ProductImagesStep5Generating.tsx` | Add `export default` for lazy import |
-| `src/components/app/product-images/ProductImagesStep6Results.tsx` | Add `export default` for lazy import |
-
-## Expected Impact
-
-- Step 1 renders immediately with just the product grid (small chunk)
-- Steps 2-6 load on-demand when the user navigates to them
-- Model DB queries don't run until the user reaches Step 3
-- Total initial JS payload reduced significantly
+| `src/pages/ProductImages.tsx` | Import `mockModels`, merge with custom models, pass as `globalModels` |
+| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Change `object-cover` to `object-contain`, add `p-1`, remove `getOptimizedUrl` |
 
