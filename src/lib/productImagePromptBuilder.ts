@@ -74,6 +74,9 @@ const SURFACE_MAP: Record<string, string> = {
   'concrete': 'placed on a raw concrete surface with industrial texture',
   'marble': 'placed on polished marble with natural veining and luxurious feel',
   'terrazzo': 'placed on a terrazzo surface with colorful aggregate chips',
+  // Scene-specific chip values
+  'wood': 'placed on a natural wood surface with visible grain and organic warmth',
+  'glass': 'placed on a transparent glass surface with subtle reflections and clean edges',
 };
 
 // ── Consistency sentence map ──
