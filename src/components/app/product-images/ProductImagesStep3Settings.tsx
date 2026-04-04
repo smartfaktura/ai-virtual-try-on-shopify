@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Zap, ImageIcon, Coins } from 'lucide-react';
+import { ImageIcon, Coins } from 'lucide-react';
 import type { DetailSettings } from './types';
 
 interface Step3SettingsProps {
@@ -9,7 +9,6 @@ interface Step3SettingsProps {
   sceneCount?: number;
 }
 
-/* Tiny inline aspect-ratio shape icons */
 function RatioShape({ ratio }: { ratio: string }) {
   const size = 14;
   const shapes: Record<string, { w: number; h: number }> = {
@@ -24,11 +23,7 @@ function RatioShape({ ratio }: { ratio: string }) {
   const y = (size - s.h) / 2;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0">
-      <rect
-        x={x} y={y} width={s.w} height={s.h} rx={1.5}
-        className="fill-none stroke-current"
-        strokeWidth={1.5}
-      />
+      <rect x={x} y={y} width={s.w} height={s.h} rx={1.5} className="fill-none stroke-current" strokeWidth={1.5} />
     </svg>
   );
 }
@@ -59,16 +54,11 @@ function ChipSelector({ label, value, onChange, options }: { label: string; valu
 }
 
 const ASPECT_RATIOS = [
-  { value: '1:1', label: 'Square' },
-  { value: '4:5', label: 'Portrait' },
-  { value: '3:4', label: 'Tall' },
-  { value: '9:16', label: 'Story' },
-  { value: '16:9', label: 'Landscape' },
-];
-
-const QUALITY_OPTIONS = [
-  { value: 'standard', label: 'Standard (3 cr)' },
-  { value: 'high', label: 'Pro (6 cr)' },
+  { value: '1:1', label: 'Square 1:1' },
+  { value: '4:5', label: 'Portrait 4:5' },
+  { value: '3:4', label: 'Tall 3:4' },
+  { value: '9:16', label: 'Story 9:16' },
+  { value: '16:9', label: 'Landscape 16:9' },
 ];
 
 const IMAGE_COUNT_OPTIONS = [
@@ -87,7 +77,7 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
   }));
 
   const imgCount = parseInt(details.imageCount || '1', 10);
-  const costPerImage = (details.quality || 'high') === 'standard' ? 3 : 6;
+  const costPerImage = 6;
   const totalImages = productCount * sceneCount * imgCount;
   const totalCredits = totalImages * costPerImage;
 
@@ -95,10 +85,10 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
     <div className="space-y-6 pb-20">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">Generation settings</h2>
-        <p className="text-sm text-muted-foreground mt-1">Choose format, quality, and how many images per scene.</p>
+        <p className="text-sm text-muted-foreground mt-1">Choose format and how many images per scene.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -106,16 +96,6 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
               <span className="text-sm font-semibold">Format</span>
             </div>
             <ChipSelector label="" value={details.aspectRatio || '1:1'} onChange={v => update({ aspectRatio: v })} options={ratioOptions} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Quality</span>
-            </div>
-            <ChipSelector label="" value={details.quality || 'high'} onChange={v => update({ quality: v })} options={QUALITY_OPTIONS} />
           </CardContent>
         </Card>
 
@@ -130,14 +110,13 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
         </Card>
       </div>
 
-      {/* Live cost preview */}
       {productCount > 0 && sceneCount > 0 && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2.5 border border-border/60">
           <Coins className="w-4 h-4 text-primary flex-shrink-0" />
           <span>
             <span className="font-medium text-foreground">{productCount}</span> product{productCount !== 1 ? 's' : ''}{' '}
-            × <span className="font-medium text-foreground">{sceneCount}</span> scene{sceneCount !== 1 ? 's' : ''}{' '}
-            × <span className="font-medium text-foreground">{imgCount}</span> image{imgCount !== 1 ? 's' : ''}{' '}
+            · <span className="font-medium text-foreground">{sceneCount}</span> scene{sceneCount !== 1 ? 's' : ''}{' '}
+            · <span className="font-medium text-foreground">{imgCount}</span> image{imgCount !== 1 ? 's' : ''}{' '}
             = <span className="font-bold text-foreground">{totalImages} images</span>{' '}
             — <span className="font-bold text-primary">{totalCredits} credits</span>
           </span>

@@ -36,8 +36,8 @@ import type { PIStep, UserProduct, DetailSettings } from '@/components/app/produ
 const STEP_DEFS = [
   { number: 1, label: 'Products', icon: Package },
   { number: 2, label: 'Scenes', icon: Layers },
-  { number: 3, label: 'Settings', icon: SlidersHorizontal },
-  { number: 4, label: 'Refine', icon: Paintbrush },
+  { number: 3, label: 'Refine', icon: Paintbrush },
+  { number: 4, label: 'Settings', icon: SlidersHorizontal },
   { number: 5, label: 'Review', icon: ClipboardCheck },
   { number: 6, label: 'Generate', icon: Sparkles },
   { number: 7, label: 'Results', icon: CheckCircle },
@@ -521,15 +521,6 @@ export default function ProductImages() {
         )}
 
         {step === 3 && (
-          <ProductImagesStep3Settings
-            details={details}
-            onDetailsChange={setDetails}
-            productCount={selectedProducts.length}
-            sceneCount={selectedScenes.length}
-          />
-        )}
-
-        {step === 4 && (
           <ProductImagesStep3Details
             selectedSceneIds={selectedSceneIds}
             productCount={selectedProducts.length}
@@ -537,6 +528,15 @@ export default function ProductImages() {
             onDetailsChange={setDetails}
             userModels={userModelProfiles}
             globalModels={globalModelProfiles}
+          />
+        )}
+
+        {step === 4 && (
+          <ProductImagesStep3Settings
+            details={details}
+            onDetailsChange={setDetails}
+            productCount={selectedProducts.length}
+            sceneCount={selectedScenes.length}
           />
         )}
 

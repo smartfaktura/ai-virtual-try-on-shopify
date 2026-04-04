@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Layers, Camera, User, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { Layers, Camera, User, RotateCcw, ChevronDown, ChevronRight, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { getBlocksByScene } from './detailBlockConfig';
@@ -167,13 +167,36 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
       );
     case 'packagingDetails':
       return (
-        <div className="grid grid-cols-2 gap-3">
-          <ChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
-            { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
-          ]} />
-          <ChipSelector label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
-            { value: 'loose', label: 'Loose' }, { value: 'balanced', label: 'Balanced' }, { value: 'strict', label: 'Strict' },
-          ]} />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <ChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
+              { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
+            ]} />
+            <ChipSelector label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
+              { value: 'loose', label: 'Loose' }, { value: 'balanced', label: 'Balanced' }, { value: 'strict', label: 'Strict' },
+            ]} />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Packaging Reference Image</Label>
+            <p className="text-[10px] text-muted-foreground">Upload a photo of your packaging so we match it accurately.</p>
+            {details.packagingReferenceUrl ? (
+              <div className="flex items-center gap-3">
+                <img src={details.packagingReferenceUrl} alt="Packaging ref" className="w-16 h-16 rounded-lg object-cover border border-border" />
+                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => update({ packagingReferenceUrl: undefined })}>Remove</Button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center w-full h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-muted/30">
+                <span className="text-xs text-muted-foreground">Click to upload</span>
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => update({ packagingReferenceUrl: reader.result as string });
+                  reader.readAsDataURL(file);
+                }} />
+              </label>
+            )}
+          </div>
         </div>
       );
     case 'productSize':
