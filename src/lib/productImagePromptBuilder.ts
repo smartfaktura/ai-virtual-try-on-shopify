@@ -1,7 +1,19 @@
 import type { ProductImageScene, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
 
-// ── Lighting sentence map ──
+// ── Utility: treat "auto", empty, and undefined as unset ──
+function isAuto(val?: string): boolean {
+  return !val || val === 'auto';
+}
+
+// ── Lighting sentence map (keys aligned to Refine UI chip values) ──
 const LIGHTING_MAP: Record<string, string> = {
+  // UI chip values (primary)
+  'soft-diffused': 'Soft diffused studio lighting with even fill and no harsh shadows.',
+  'warm-editorial': 'Warm editorial lighting with rich amber undertones and controlled directional highlights.',
+  'crisp-studio': 'Crisp controlled studio lighting with clean specular reflections and sharp product definition.',
+  'natural-daylight': 'Natural daylight with soft, warm, organic shadows and gentle falloff.',
+  'side-lit': 'Directional side lighting creating gentle gradients, dramatic highlights, and controlled shadows.',
+  // Legacy keys (backward compat)
   'soft-studio': 'Soft diffused studio lighting with even fill and no harsh shadows.',
   'directional-side': 'Directional side lighting creating gentle gradients, dramatic highlights, and controlled shadows.',
   'natural-window': 'Natural window light casting soft, warm, organic shadows with gentle falloff.',
@@ -12,10 +24,13 @@ const LIGHTING_MAP: Record<string, string> = {
   'overhead-beauty': 'Overhead beauty lighting with a soft, even glow and minimal under-shadows.',
 };
 
-// ── Shadow sentence map ──
+// ── Shadow sentence map (keys aligned to Refine UI chip values) ──
 const SHADOW_MAP: Record<string, string> = {
   'natural': 'Product grounded with a soft, natural contact shadow.',
   'none': 'No visible shadows — pure floating product on seamless background.',
+  'soft': 'Gentle diffused shadow beneath the product for a refined, airy feel.',
+  'defined': 'Product anchored with a crisp, well-defined cast shadow adding depth and dimension.',
+  // Legacy keys
   'minimal': 'Product grounded with a barely-visible subtle shadow.',
   'dramatic': 'Product anchored with a strong, dramatic cast shadow adding depth.',
   'soft-diffused': 'Gentle diffused shadow beneath the product for a refined, airy feel.',
@@ -33,6 +48,26 @@ const BG_MAP: Record<string, string> = {
   'colored': 'solid colored',
 };
 
+// ── Color world map (stored in backgroundTone) ──
+const COLOR_WORLD_MAP: Record<string, string> = {
+  'warm-neutral': 'warm neutral color palette with creamy beige and soft ivory tones',
+  'cool-neutral': 'cool neutral color palette with soft gray and blue-white undertones',
+  'monochrome': 'monochromatic color palette — single hue family with tonal variation',
+  'brand-led': 'color palette guided by the brand identity colors',
+};
+
+// ── Surface type map ──
+const SURFACE_MAP: Record<string, string> = {
+  'minimal-studio': 'placed on a clean, minimal studio surface with seamless backdrop',
+  'stone-plaster': 'placed on a natural stone or raw plaster surface with subtle mineral texture',
+  'warm-wood': 'placed on a warm, natural wood surface with visible grain pattern',
+  'fabric': 'placed on a premium draped fabric surface with soft folds and texture',
+  'glossy': 'placed on a glossy reflective surface creating mirror-like product reflections',
+  'concrete': 'placed on a raw concrete surface with industrial texture',
+  'marble': 'placed on polished marble with natural veining and luxurious feel',
+  'terrazzo': 'placed on a terrazzo surface with colorful aggregate chips',
+};
+
 // ── Consistency sentence map ──
 const CONSISTENCY_MAP: Record<string, string> = {
   'high': 'Maintain strong visual consistency with other shots in this series — same lighting direction, color temperature, and style language.',
@@ -40,9 +75,12 @@ const CONSISTENCY_MAP: Record<string, string> = {
   'loose': 'Allow creative variation while keeping the product recognizable.',
 };
 
-// ── Hand style lookup ──
+// ── Hand style lookup (keys aligned to Refine UI chip values) ──
 const HAND_STYLE_MAP: Record<string, string> = {
+  'clean-studio': 'clean, well-groomed studio hand with smooth skin and elegant presentation',
+  'natural-lifestyle': 'natural, casual hand with realistic skin texture and relaxed grip',
   'polished-beauty': 'elegant, well-groomed beauty hand with smooth skin and polished appearance',
+  // Legacy keys
   'natural-casual': 'natural, casual hand with realistic skin texture and relaxed grip',
   'masculine-rugged': 'strong masculine hand with natural skin texture and confident grip',
   'manicured-luxury': 'immaculately manicured luxury hand with flawless skin and refined elegance',
@@ -50,8 +88,12 @@ const HAND_STYLE_MAP: Record<string, string> = {
   'artistic-expressive': 'artistic, expressive hand with character and natural imperfections',
 };
 
-// ── Nail style lookup ──
+// ── Nail style lookup (keys aligned to Refine UI chip values) ──
 const NAIL_MAP: Record<string, string> = {
+  'natural': 'clean, natural nails with neat cuticles and healthy sheen',
+  'polished': 'professional polished nails with glossy, chip-free finish',
+  'minimal': 'bare, minimal nails with clean, trimmed appearance',
+  // Legacy keys
   'natural-clean': 'clean, natural nails with neat cuticles and healthy sheen',
   'gel-polish': 'professional gel-polished nails with glossy, chip-free finish',
   'matte-polish': 'sophisticated matte-polished nails with velvety finish',
@@ -111,6 +153,15 @@ const MATERIAL_KEYWORDS: Record<string, string> = {
   'silver': 'silver surface with cool reflections and polished brilliance',
 };
 
+// ── Styling direction map (stored in details.mood by the UI) ──
+const STYLING_DIRECTION_MAP: Record<string, string> = {
+  'minimal-luxury': 'Minimal luxury styling — clean, restrained composition with premium, intentional details.',
+  'editorial-bold': 'Bold editorial styling — dramatic composition with high-fashion visual tension.',
+  'organic-natural': 'Organic natural styling — relaxed, effortless composition with earthy, authentic feel.',
+  'playful-vibrant': 'Playful vibrant styling — energetic composition with bold colors and dynamic arrangement.',
+  'classic-timeless': 'Classic timeless styling — traditional, refined composition with enduring elegance.',
+};
+
 // ── Negative prompt components ──
 const BASE_NEGATIVES = 'No watermarks, no text overlays, no chromatic aberration, no lens flare artifacts, no color banding, no over-saturation.';
 const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
@@ -149,15 +200,15 @@ function defaultMaterial(materialFamily?: string, finish?: string, productDescri
   return 'crisp surface detail with visible material grain, finish quality, and micro-texture';
 }
 
-// ── Person directive builder (now includes outfit + model) ──
+// ── Person directive builder (skips auto values) ──
 function buildPersonDirective(d: DetailSettings): string {
   const parts: string[] = [];
-  if (d.presentation) parts.push(`${d.presentation} presentation`);
-  if (d.ageRange) parts.push(`age ${d.ageRange}`);
-  if (d.skinTone) parts.push(`${d.skinTone} skin tone`);
-  if (d.expression) parts.push(`${d.expression} expression`);
-  if (d.hairVisibility) parts.push(`${d.hairVisibility} hair visibility`);
-  if (d.cropType) parts.push(`${d.cropType} crop`);
+  if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
+  if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
+  if (!isAuto(d.skinTone)) parts.push(`${d.skinTone} skin tone`);
+  if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
+  if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
+  if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
   if (parts.length === 0) return '';
 
   let directive = `Model: ${parts.join(', ')}.`;
@@ -174,26 +225,26 @@ function buildPersonDirective(d: DetailSettings): string {
 }
 
 function resolveHandStyle(raw?: string): string {
-  if (!raw) return 'realistic human hand with natural skin texture and visible pores';
-  return HAND_STYLE_MAP[raw] || raw.replace(/-/g, ' ');
+  if (isAuto(raw)) return 'realistic human hand with natural skin texture and visible pores';
+  return HAND_STYLE_MAP[raw!] || raw!.replace(/-/g, ' ');
 }
 
 function resolveNailStyle(raw?: string): string {
-  if (!raw) return 'natural, clean nails with neat cuticles';
-  return NAIL_MAP[raw] || `${raw.replace(/-/g, ' ')} nails with clean manicure`;
+  if (isAuto(raw)) return 'natural, clean nails with neat cuticles';
+  return NAIL_MAP[raw!] || `${raw!.replace(/-/g, ' ')} nails with clean manicure`;
 }
 
 function buildHandDirective(d: DetailSettings): string {
   const parts: string[] = [];
   parts.push(resolveHandStyle(d.handStyle));
-  if (d.nails) parts.push(resolveNailStyle(d.nails));
-  if (d.jewelryVisible) parts.push(`jewelry ${d.jewelryVisible}`);
+  if (!isAuto(d.nails)) parts.push(resolveNailStyle(d.nails));
+  if (!isAuto(d.jewelryVisible)) parts.push(`jewelry ${d.jewelryVisible}`);
   return parts.join(', ');
 }
 
 function buildOutfitDirective(d: DetailSettings): string {
-  const style = d.outfitStyle;
-  const color = d.outfitColorDirection;
+  const style = isAuto(d.outfitStyle) ? undefined : d.outfitStyle;
+  const color = isAuto(d.outfitColorDirection) ? undefined : d.outfitColorDirection;
   if (!style && !color) return '';
   const s = style ? `Wearing ${style.replace(/-/g, ' ')} outfit` : 'Outfit';
   const c = color ? ` in ${color.replace(/-/g, ' ')} tones` : '';
@@ -203,10 +254,10 @@ function buildOutfitDirective(d: DetailSettings): string {
 // ── Packaging directive builder ──
 function buildPackagingDirective(d: DetailSettings): string {
   const parts: string[] = [];
-  if (d.packagingType) parts.push(d.packagingType);
-  if (d.packagingState) parts.push(d.packagingState);
-  if (d.packagingComposition) parts.push(d.packagingComposition);
-  if (d.packagingFocus) parts.push(`focus on ${d.packagingFocus}`);
+  if (!isAuto(d.packagingType)) parts.push(d.packagingType!);
+  if (!isAuto(d.packagingState)) parts.push(d.packagingState!);
+  if (!isAuto(d.packagingComposition)) parts.push(d.packagingComposition!);
+  if (!isAuto(d.packagingFocus)) parts.push(`focus on ${d.packagingFocus}`);
   if (parts.length === 0) return 'Product shown alongside its packaging.';
   return `Packaging: ${parts.join(', ')}.`;
 }
@@ -229,7 +280,7 @@ function resolveCameraDirective(scene: ProductImageScene): string {
 
 // ── Focus area resolver with scene-type-aware defaults ──
 function resolveFocusArea(d: DetailSettings, scene: ProductImageScene): string {
-  if (d.focusArea) return d.focusArea;
+  if (d.focusArea && !isAuto(d.focusArea)) return d.focusArea;
 
   const st = scene.sceneType;
   if (st && FOCUS_AREA_DEFAULTS[st]) return FOCUS_AREA_DEFAULTS[st];
@@ -274,16 +325,44 @@ function resolveToken(token: string, ctx: TokenContext): string {
   switch (token) {
     case 'productName': return productName;
     case 'productType': return productType || cat || 'product';
-    case 'background': return BG_MAP[details.backgroundTone || ''] || details.backgroundTone || 'clean neutral';
-    case 'lightingDirective': return LIGHTING_MAP[details.lightingStyle || ''] || details.lightingStyle || defaultLighting(cat);
-    case 'shadowDirective': return SHADOW_MAP[details.shadowStyle || ''] || details.shadowStyle || 'Product grounded with a soft, natural contact shadow.';
+
+    // Bug 3 fix: background family is stored in negativeSpace by the UI
+    // Bug 10 fix: color world is stored in backgroundTone — use as color modifier
+    case 'background': {
+      const bgFamily = details.negativeSpace; // background family selection from UI
+      const colorWorld = details.backgroundTone; // color world selection from UI
+      const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? 'clean neutral' : bgFamily!.replace(/-/g, ' '));
+      const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
+      return `${bgResolved}${cwResolved}`;
+    }
+
+    // Bug 1 fix: lighting now matches UI chip values via updated LIGHTING_MAP
+    case 'lightingDirective': {
+      if (isAuto(details.lightingStyle)) return defaultLighting(cat);
+      return LIGHTING_MAP[details.lightingStyle!] || defaultLighting(cat);
+    }
+
+    // Bug 2 fix: shadow now matches UI chip values via updated SHADOW_MAP
+    case 'shadowDirective': {
+      if (isAuto(details.shadowStyle)) return 'Product grounded with a soft, natural contact shadow.';
+      return SHADOW_MAP[details.shadowStyle!] || 'Product grounded with a soft, natural contact shadow.';
+    }
+
     case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish, ctx.productDescription);
-    case 'surfaceDirective': return details.surfaceType ? `placed on ${details.surfaceType} surface` : 'on a premium styled surface';
+
+    // Bug 9 fix: surface now uses SURFACE_MAP for rich descriptions
+    case 'surfaceDirective': {
+      if (isAuto(details.surfaceType)) return 'on a premium styled surface';
+      return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
+    }
+
     case 'personDirective': return buildPersonDirective(details);
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': return buildOutfitDirective(details);
     case 'focusArea': return resolveFocusArea(details, scene);
+
+    // Bug 6 fix: accent uses accentColor + brandingVisibility for accent only
     case 'accentDirective': {
       const ac = details.accentColor;
       const vis = details.brandingVisibility;
@@ -293,32 +372,62 @@ function resolveToken(token: string, ctx: TokenContext): string {
       if (vis === 'brand-accent' && ac && /^#[0-9A-Fa-f]{6}$/.test(ac)) {
         return `Brand accent color (${ac}) woven subtly into the composition.`;
       }
-      return ac ? `Accent tones: subtle ${ac.replace(/-/g, ' ')} accents complementing the product palette.` : '';
+      if (!isAuto(vis) && vis !== 'none' && vis !== 'custom' && vis !== 'brand-accent') {
+        return `Accent tones: subtle ${vis!.replace(/-/g, ' ')} accents complementing the product palette.`;
+      }
+      return '';
     }
+
     case 'consistencyDirective': return CONSISTENCY_MAP[details.consistency || 'balanced'] || CONSISTENCY_MAP['balanced'];
     case 'productSize': return analysis?.sizeClass || 'medium';
     case 'colorFamily': return analysis?.colorFamily || 'neutral tones';
+
+    // Bug 7 fix: UI stores "styling direction" in details.mood — route it correctly
     case 'stylingDirective': {
-      const sd = details.stylingDirection;
-      return sd ? `${sd.replace(/-/g, ' ')} styling direction with refined visual intention.` : '';
+      // The UI label says "Styling direction" but stores in `mood`
+      const sd = details.mood || details.stylingDirection;
+      if (isAuto(sd)) return '';
+      return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
-    case 'moodDirective': return details.mood ? `${details.mood.replace(/-/g, ' ')} mood and atmosphere.` : '';
-    case 'environmentDirective': return details.environmentType ? `Set in a ${details.environmentType.replace(/-/g, ' ')} environment.` : '';
-    case 'brandingDirective': return details.brandingVisibility ? `Branding: ${details.brandingVisibility.replace(/-/g, ' ')}.` : '';
+
+    // Bug 7 fix: moodDirective should be empty since "mood" field actually stores styling direction
+    case 'moodDirective': return '';
+
+    case 'environmentDirective': {
+      if (isAuto(details.environmentType)) return '';
+      return `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
+    }
+
+    // Bug 6 fix: brandingDirective returns empty — no separate branding UI section exists
+    case 'brandingDirective': return '';
+
     case 'customNote': return details.customNote || '';
     case 'modelDirective': return ctx.selectedModelId ? 'Use the specific model reference provided in the source image.' : '';
     case 'packagingDirective': return buildPackagingDirective(details);
-    case 'cropDirective': return details.cropIntensity ? `Crop intensity: ${details.cropIntensity.replace(/-/g, ' ')}.` : '';
+    case 'cropDirective': {
+      if (isAuto(details.cropIntensity)) return '';
+      return `Crop intensity: ${details.cropIntensity!.replace(/-/g, ' ')}.`;
+    }
     case 'actionDirective': {
       const parts: string[] = [];
-      if (details.actionType) parts.push(details.actionType.replace(/-/g, ' '));
-      if (details.actionIntensity) parts.push(`intensity: ${details.actionIntensity.replace(/-/g, ' ')}`);
+      if (!isAuto(details.actionType)) parts.push(details.actionType!.replace(/-/g, ' '));
+      if (!isAuto(details.actionIntensity)) parts.push(`intensity: ${details.actionIntensity!.replace(/-/g, ' ')}`);
       return parts.length ? `Action: ${parts.join(', ')}.` : '';
     }
-    case 'compositionDirective': return details.compositionFraming ? `Composition: ${details.compositionFraming.replace(/-/g, ' ')}.` : '';
-    case 'negativeSpaceDirective': return details.negativeSpace ? `Negative space: ${details.negativeSpace.replace(/-/g, ' ')}.` : '';
-    case 'productProminenceDirective': return details.productProminence ? `Product prominence: ${details.productProminence.replace(/-/g, ' ')}.` : '';
-    case 'sceneIntensityDirective': return details.sceneIntensity ? `Scene intensity: ${details.sceneIntensity.replace(/-/g, ' ')}.` : '';
+    case 'compositionDirective': {
+      if (isAuto(details.compositionFraming)) return '';
+      return `Composition: ${details.compositionFraming!.replace(/-/g, ' ')}.`;
+    }
+    // negativeSpaceDirective should now be empty since negativeSpace stores background family (Bug 3)
+    case 'negativeSpaceDirective': return '';
+    case 'productProminenceDirective': {
+      if (isAuto(details.productProminence)) return '';
+      return `Product prominence: ${details.productProminence!.replace(/-/g, ' ')}.`;
+    }
+    case 'sceneIntensityDirective': {
+      if (isAuto(details.sceneIntensity)) return '';
+      return `Scene intensity: ${details.sceneIntensity!.replace(/-/g, ' ')}.`;
+    }
     case 'cameraDirective': return resolveCameraDirective(scene);
     default: return '';
   }
@@ -371,13 +480,15 @@ export function buildDynamicPrompt(
     const parts: string[] = [scene.description];
     parts.push(`Product: ${product.title}.`);
     if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
-    if (details.backgroundTone) parts.push(`Background: ${resolveToken('background', ctx)}.`);
-    if (details.lightingStyle) parts.push(resolveToken('lightingDirective', ctx));
-    if (details.mood) parts.push(resolveToken('moodDirective', ctx));
-    if (details.environmentType) parts.push(resolveToken('environmentDirective', ctx));
-    if (details.surfaceType) parts.push(resolveToken('surfaceDirective', ctx) + '.');
-    if (details.presentation) parts.push(resolveToken('personDirective', ctx));
-    if (details.focusArea) parts.push(`Focus: ${details.focusArea}.`);
+    parts.push(`Background: ${resolveToken('background', ctx)}.`);
+    parts.push(resolveToken('lightingDirective', ctx));
+    const styling = resolveToken('stylingDirective', ctx);
+    if (styling) parts.push(styling);
+    const env = resolveToken('environmentDirective', ctx);
+    if (env) parts.push(env);
+    if (!isAuto(details.surfaceType)) parts.push(resolveToken('surfaceDirective', ctx) + '.');
+    if (!isAuto(details.presentation)) parts.push(resolveToken('personDirective', ctx));
+    if (details.focusArea && !isAuto(details.focusArea)) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
     parts.push(resolveCameraDirective(scene));
     parts.push(QUALITY_SUFFIX);
