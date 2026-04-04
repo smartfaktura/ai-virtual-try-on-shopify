@@ -4,9 +4,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { ChevronDown, RatioIcon, ImageIcon, Zap, User, Hand } from 'lucide-react';
+import { ChevronDown, RatioIcon, ImageIcon, Zap, User, Hand, Layers, Info } from 'lucide-react';
 import { useState } from 'react';
-import { getTriggeredBlocks } from './detailBlockConfig';
+import { getBlocksByScene } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
 import type { DetailSettings } from './types';
 
@@ -20,7 +20,7 @@ interface Step3Props {
 function ChipSelector({ label, value, onChange, options }: { label: string; value?: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-medium">{label}</Label>
+      {label && <Label className="text-xs font-medium">{label}</Label>}
       <div className="flex flex-wrap gap-1.5">
         {options.map(o => (
           <button
@@ -55,29 +55,21 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   );
 }
 
-function DetailBlock({ title, description, children, defaultOpen = false, icon }: { title: string; description: string; children: React.ReactNode; defaultOpen?: boolean; icon?: React.ReactNode }) {
+function DetailBlock({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <Card>
-        <CollapsibleTrigger className="w-full">
-          <CardContent className="flex items-center justify-between p-4 cursor-pointer">
-            <div className="flex items-center gap-3 text-left">
-              {icon && <div className="text-muted-foreground">{icon}</div>}
-              <div>
-                <p className="text-sm font-semibold">{title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-              </div>
-            </div>
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
-          </CardContent>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="px-4 pb-4 pt-0 space-y-4 border-t border-border/50">
-            {children}
-          </CardContent>
-        </CollapsibleContent>
-      </Card>
+      <CollapsibleTrigger className="w-full">
+        <div className="flex items-center justify-between py-2 cursor-pointer">
+          <span className="text-xs font-semibold text-muted-foreground">{title}</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="pb-3 space-y-3">
+          {children}
+        </div>
+      </CollapsibleContent>
     </Collapsible>
   );
 }
@@ -91,8 +83,8 @@ const ASPECT_RATIOS = [
 ];
 
 const QUALITY_OPTIONS = [
-  { value: 'standard', label: 'Standard (3 credits)' },
-  { value: 'high', label: 'Pro (6 credits)' },
+  { value: 'standard', label: 'Standard (3 cr)' },
+  { value: 'high', label: 'Pro (6 cr)' },
 ];
 
 const IMAGE_COUNT_OPTIONS = [
@@ -102,20 +94,144 @@ const IMAGE_COUNT_OPTIONS = [
   { value: '4', label: '4' },
 ];
 
+/** Render the detail fields for a specific block key */
+function BlockFields({ blockKey, details, update }: { blockKey: string; details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
+  switch (blockKey) {
+    case 'personDetails':
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
+            { value: 'hand-only', label: 'Hand Only' }, { value: 'half-body', label: 'Half Body' }, { value: 'portrait', label: 'Portrait' }, { value: 'full-body', label: 'Full Body' },
+          ]} />
+          <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
+            { value: '20s', label: '20s' }, { value: '30s', label: '30s' }, { value: '40s', label: '40s' }, { value: '50+', label: '50+' },
+          ]} />
+          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
+            { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'tan', label: 'Tan' }, { value: 'dark', label: 'Dark' },
+          ]} />
+          <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
+            { value: 'natural', label: 'Natural' }, { value: 'manicured', label: 'Manicured' }, { value: 'polished', label: 'Polished' },
+          ]} />
+        </div>
+      );
+    case 'actionDetails':
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          <ChipSelector label="Action Type" value={details.actionType} onChange={v => update({ actionType: v })} options={[
+            { value: 'holding', label: 'Holding' }, { value: 'opening', label: 'Opening' }, { value: 'applying', label: 'Applying' }, { value: 'pouring', label: 'Pouring' }, { value: 'using', label: 'Using' }, { value: 'displaying', label: 'Displaying' },
+          ]} />
+          <ChipSelector label="Action Intensity" value={details.actionIntensity} onChange={v => update({ actionIntensity: v })} options={[
+            { value: 'static', label: 'Static Support' }, { value: 'subtle', label: 'Subtle Action' }, { value: 'clear', label: 'Clear Action' },
+          ]} />
+        </div>
+      );
+    case 'background':
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField label="Background Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
+            { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' }, { value: 'warm-neutral', label: 'Warm Neutral' }, { value: 'cool-neutral', label: 'Cool Neutral' }, { value: 'gradient', label: 'Soft Gradient' },
+          ]} />
+          <SelectField label="Shadow Style" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
+            { value: 'none', label: 'No Shadow' }, { value: 'soft', label: 'Soft Drop' }, { value: 'natural', label: 'Natural' }, { value: 'dramatic', label: 'Dramatic' },
+          ]} />
+          <SelectField label="Negative Space" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
+            { value: 'tight', label: 'Tight Crop' }, { value: 'balanced', label: 'Balanced' }, { value: 'generous', label: 'Generous' },
+          ]} />
+        </div>
+      );
+    case 'visualDirection':
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField label="Mood" value={details.mood} onChange={v => update({ mood: v })} options={[
+            { value: 'clean', label: 'Clean & Modern' }, { value: 'warm', label: 'Warm & Inviting' }, { value: 'dramatic', label: 'Dramatic' }, { value: 'editorial', label: 'Editorial' }, { value: 'natural', label: 'Natural' },
+          ]} />
+          <SelectField label="Product Prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
+            { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
+          ]} />
+          <SelectField label="Lighting Style" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
+            { value: 'soft-diffused', label: 'Soft Diffused' }, { value: 'natural', label: 'Natural Light' }, { value: 'studio', label: 'Studio' }, { value: 'dramatic', label: 'Dramatic' }, { value: 'golden-hour', label: 'Golden Hour' },
+          ]} />
+        </div>
+      );
+    case 'sceneEnvironment':
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
+            { value: 'bathroom', label: 'Bathroom' }, { value: 'kitchen', label: 'Kitchen' }, { value: 'living-room', label: 'Living Room' }, { value: 'desk', label: 'Desk / Workspace' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'shelf', label: 'Shelf / Display' },
+          ]} />
+          <SelectField label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
+            { value: 'marble', label: 'Marble' }, { value: 'wood', label: 'Wood' }, { value: 'concrete', label: 'Concrete' }, { value: 'fabric', label: 'Fabric / Linen' }, { value: 'glass', label: 'Glass' },
+          ]} />
+          <SelectField label="Styling Density" value={details.stylingDensity} onChange={v => update({ stylingDensity: v })} options={[
+            { value: 'minimal', label: 'Minimal' }, { value: 'moderate', label: 'Moderate' }, { value: 'styled', label: 'Fully Styled' },
+          ]} />
+        </div>
+      );
+    case 'detailFocus':
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField label="Focus Area" value={details.focusArea} onChange={v => update({ focusArea: v })} options={[
+            { value: 'material', label: 'Material / Texture' }, { value: 'label', label: 'Label / Logo' }, { value: 'hardware', label: 'Hardware / Details' }, { value: 'packaging', label: 'Packaging' }, { value: 'full-product', label: 'Full Product' },
+          ]} />
+          <SelectField label="Crop Intensity" value={details.cropIntensity} onChange={v => update({ cropIntensity: v })} options={[
+            { value: 'slight', label: 'Slight Close-Up' }, { value: 'medium', label: 'Medium Close-Up' }, { value: 'extreme', label: 'Extreme Macro' },
+          ]} />
+        </div>
+      );
+    case 'angleSelection':
+      return (
+        <SelectField label="Number of Views" value={details.numberOfViews} onChange={v => update({ numberOfViews: v })} options={[
+          { value: '2', label: '2 angles' }, { value: '3', label: '3 angles' }, { value: '4', label: '4 angles' }, { value: '6', label: '6 angles' },
+        ]} />
+      );
+    case 'packagingDetails':
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
+            { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
+          ]} />
+          <SelectField label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
+            { value: 'loose', label: 'Loose' }, { value: 'balanced', label: 'Balanced' }, { value: 'strict', label: 'Strict' },
+          ]} />
+        </div>
+      );
+    case 'productSize':
+      return (
+        <ChipSelector label="Detected Size" value={details.productSize} onChange={v => update({ productSize: v })} options={[
+          { value: 'auto', label: 'Auto' }, { value: 'very-small', label: 'Very Small' }, { value: 'small', label: 'Small' }, { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }, { value: 'extra-large', label: 'Extra Large' },
+        ]} />
+      );
+    default:
+      return null;
+  }
+}
+
+const BLOCK_LABELS: Record<string, { title: string; icon?: React.ReactNode; prominent?: boolean }> = {
+  personDetails: { title: 'Person / Model Details', icon: <User className="w-4 h-4" />, prominent: true },
+  actionDetails: { title: 'Action Details', icon: <Hand className="w-4 h-4" />, prominent: true },
+  background: { title: 'Background & Composition' },
+  visualDirection: { title: 'Visual Direction' },
+  sceneEnvironment: { title: 'Scene Environment' },
+  detailFocus: { title: 'Detail Focus' },
+  angleSelection: { title: 'Angle Selection' },
+  packagingDetails: { title: 'Packaging Details' },
+  productSize: { title: 'Product Size' },
+};
+
 export function ProductImagesStep3Details({ selectedSceneIds, productCount, details, onDetailsChange }: Step3Props) {
-  const triggered = getTriggeredBlocks(selectedSceneIds, ALL_SCENES, productCount);
+  const sceneGroups = getBlocksByScene(selectedSceneIds, ALL_SCENES);
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
 
-  const has = (key: string) => triggered.includes(key);
+  const hasSceneBlocks = sceneGroups.length > 0;
 
   return (
     <div className="space-y-6 pb-20">
+      {/* Section A: Generation Settings */}
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Generation settings & details</h2>
-        <p className="text-sm text-muted-foreground mt-1">Configure format, quality, and scene-specific options.</p>
+        <h2 className="text-xl font-semibold tracking-tight">Generation settings</h2>
+        <p className="text-sm text-muted-foreground mt-1">Configure format, quality, and output count.</p>
       </div>
 
-      {/* Always-visible: Format, Quality, Count */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 space-y-3">
@@ -123,12 +239,7 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
               <RatioIcon className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold">Format / Size</span>
             </div>
-            <ChipSelector
-              label=""
-              value={details.aspectRatio || '1:1'}
-              onChange={v => update({ aspectRatio: v })}
-              options={ASPECT_RATIOS}
-            />
+            <ChipSelector label="" value={details.aspectRatio || '1:1'} onChange={v => update({ aspectRatio: v })} options={ASPECT_RATIOS} />
           </CardContent>
         </Card>
 
@@ -138,12 +249,7 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
               <Zap className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold">Quality</span>
             </div>
-            <ChipSelector
-              label=""
-              value={details.quality || 'high'}
-              onChange={v => update({ quality: v })}
-              options={QUALITY_OPTIONS}
-            />
+            <ChipSelector label="" value={details.quality || 'high'} onChange={v => update({ quality: v })} options={QUALITY_OPTIONS} />
           </CardContent>
         </Card>
 
@@ -153,190 +259,92 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
               <ImageIcon className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold">Images per scene</span>
             </div>
-            <ChipSelector
-              label=""
-              value={details.imageCount || '1'}
-              onChange={v => update({ imageCount: v })}
-              options={IMAGE_COUNT_OPTIONS}
-            />
+            <ChipSelector label="" value={details.imageCount || '1'} onChange={v => update({ imageCount: v })} options={IMAGE_COUNT_OPTIONS} />
           </CardContent>
         </Card>
       </div>
 
-      {/* Prominent inline: Person details when human scenes selected */}
-      {has('personDetails') && (
-        <Card className="border-primary/20 bg-primary/[0.02]">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Person / Model Details</span>
-              <Badge variant="secondary" className="text-[10px]">Required for selected scenes</Badge>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
-                { value: 'hand-only', label: 'Hand Only' }, { value: 'half-body', label: 'Half Body' }, { value: 'portrait', label: 'Portrait' }, { value: 'full-body', label: 'Full Body' },
-              ]} />
-              <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
-                { value: '20s', label: '20s' }, { value: '30s', label: '30s' }, { value: '40s', label: '40s' }, { value: '50+', label: '50+' },
-              ]} />
-              <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
-                { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'tan', label: 'Tan' }, { value: 'dark', label: 'Dark' },
-              ]} />
-              <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
-                { value: 'natural', label: 'Natural' }, { value: 'manicured', label: 'Manicured' }, { value: 'polished', label: 'Polished' },
-              ]} />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Section B: Scene-grouped detail blocks */}
+      {hasSceneBlocks && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-primary" />
+            <h2 className="text-lg font-semibold tracking-tight">Based on your selected scenes</h2>
+          </div>
+          <p className="text-sm text-muted-foreground -mt-2">Fine-tune details for the scenes you chose. All fields are optional — we'll use smart defaults.</p>
+
+          {sceneGroups.map(group => (
+            <Card key={group.sceneId} className="border-border">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Info className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                      <span className="text-sm font-semibold">Because you selected "{group.sceneTitle}"</span>
+                    </div>
+                    {group.alsoUsedBy.length > 0 && (
+                      <p className="text-[11px] text-muted-foreground mt-1 ml-5.5">Also used by: {group.alsoUsedBy.join(', ')}</p>
+                    )}
+                  </div>
+                </div>
+
+                {group.blocks.map(blockKey => {
+                  const meta = BLOCK_LABELS[blockKey];
+                  if (!meta) return null;
+
+                  // Prominent blocks (person, action) render inline
+                  if (meta.prominent) {
+                    return (
+                      <div key={blockKey} className="rounded-lg border border-primary/15 bg-primary/[0.02] p-3 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-primary">{meta.icon}</span>
+                          <span className="text-xs font-semibold">{meta.title}</span>
+                          <Badge variant="secondary" className="text-[10px]">Important</Badge>
+                        </div>
+                        <BlockFields blockKey={blockKey} details={details} update={update} />
+                      </div>
+                    );
+                  }
+
+                  // Other blocks as collapsibles within the scene card
+                  return (
+                    <DetailBlock key={blockKey} title={meta.title}>
+                      <BlockFields blockKey={blockKey} details={details} update={update} />
+                    </DetailBlock>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
 
-      {/* Prominent inline: Action details */}
-      {has('actionDetails') && (
-        <Card className="border-primary/20 bg-primary/[0.02]">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <Hand className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Action Details</span>
-              <Badge variant="secondary" className="text-[10px]">For in-use scenes</Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <ChipSelector label="Action Type" value={details.actionType} onChange={v => update({ actionType: v })} options={[
-                { value: 'holding', label: 'Holding' }, { value: 'opening', label: 'Opening' }, { value: 'applying', label: 'Applying' }, { value: 'pouring', label: 'Pouring' }, { value: 'using', label: 'Using' }, { value: 'displaying', label: 'Displaying' },
-              ]} />
-              <ChipSelector label="Action Intensity" value={details.actionIntensity} onChange={v => update({ actionIntensity: v })} options={[
-                { value: 'static', label: 'Static Support' }, { value: 'subtle', label: 'Subtle Action' }, { value: 'clear', label: 'Clear Action' },
-              ]} />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Collapsible advanced blocks */}
-      <div className="space-y-3">
-        {has('background') && (
-          <DetailBlock title="Background & Composition" description="Control background tone, shadows, and framing.">
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField label="Background Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
-                { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' }, { value: 'warm-neutral', label: 'Warm Neutral' }, { value: 'cool-neutral', label: 'Cool Neutral' }, { value: 'gradient', label: 'Soft Gradient' },
-              ]} />
-              <SelectField label="Shadow Style" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
-                { value: 'none', label: 'No Shadow' }, { value: 'soft', label: 'Soft Drop' }, { value: 'natural', label: 'Natural' }, { value: 'dramatic', label: 'Dramatic' },
-              ]} />
-              <SelectField label="Negative Space" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
-                { value: 'tight', label: 'Tight Crop' }, { value: 'balanced', label: 'Balanced' }, { value: 'generous', label: 'Generous' },
-              ]} />
-            </div>
-          </DetailBlock>
-        )}
-
-        {has('visualDirection') && (
-          <DetailBlock title="Visual Direction" description="Set mood, intensity, and lighting.">
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField label="Mood" value={details.mood} onChange={v => update({ mood: v })} options={[
-                { value: 'clean', label: 'Clean & Modern' }, { value: 'warm', label: 'Warm & Inviting' }, { value: 'dramatic', label: 'Dramatic' }, { value: 'editorial', label: 'Editorial' }, { value: 'natural', label: 'Natural' },
-              ]} />
-              <SelectField label="Product Prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
-                { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
-              ]} />
-              <SelectField label="Lighting Style" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
-                { value: 'soft-diffused', label: 'Soft Diffused' }, { value: 'natural', label: 'Natural Light' }, { value: 'studio', label: 'Studio' }, { value: 'dramatic', label: 'Dramatic' }, { value: 'golden-hour', label: 'Golden Hour' },
-              ]} />
-            </div>
-          </DetailBlock>
-        )}
-
-        {has('sceneEnvironment') && (
-          <DetailBlock title="Scene Environment" description="Define the setting and styling.">
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
-                { value: 'bathroom', label: 'Bathroom' }, { value: 'kitchen', label: 'Kitchen' }, { value: 'living-room', label: 'Living Room' }, { value: 'desk', label: 'Desk / Workspace' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'shelf', label: 'Shelf / Display' },
-              ]} />
-              <SelectField label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
-                { value: 'marble', label: 'Marble' }, { value: 'wood', label: 'Wood' }, { value: 'concrete', label: 'Concrete' }, { value: 'fabric', label: 'Fabric / Linen' }, { value: 'glass', label: 'Glass' },
-              ]} />
-              <SelectField label="Styling Density" value={details.stylingDensity} onChange={v => update({ stylingDensity: v })} options={[
-                { value: 'minimal', label: 'Minimal' }, { value: 'moderate', label: 'Moderate' }, { value: 'styled', label: 'Fully Styled' },
-              ]} />
-            </div>
-          </DetailBlock>
-        )}
-
-        {has('detailFocus') && (
-          <DetailBlock title="Detail Focus" description="Set close-up focus and crop.">
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField label="Focus Area" value={details.focusArea} onChange={v => update({ focusArea: v })} options={[
-                { value: 'material', label: 'Material / Texture' }, { value: 'label', label: 'Label / Logo' }, { value: 'hardware', label: 'Hardware / Details' }, { value: 'packaging', label: 'Packaging' }, { value: 'full-product', label: 'Full Product' },
-              ]} />
-              <SelectField label="Crop Intensity" value={details.cropIntensity} onChange={v => update({ cropIntensity: v })} options={[
-                { value: 'slight', label: 'Slight Close-Up' }, { value: 'medium', label: 'Medium Close-Up' }, { value: 'extreme', label: 'Extreme Macro' },
-              ]} />
-            </div>
-          </DetailBlock>
-        )}
-
-        {has('angleSelection') && (
-          <DetailBlock title="Angle Selection" description="Request multiple angle views.">
-            <SelectField label="Number of Views" value={details.numberOfViews} onChange={v => update({ numberOfViews: v })} options={[
-              { value: '2', label: '2 angles' }, { value: '3', label: '3 angles' }, { value: '4', label: '4 angles' }, { value: '6', label: '6 angles' },
-            ]} />
-          </DetailBlock>
-        )}
-
-        {has('packagingDetails') && (
-          <DetailBlock title="Packaging Details" description="Configure packaging presentation.">
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
-                { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
-              ]} />
-              <SelectField label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
-                { value: 'loose', label: 'Loose' }, { value: 'balanced', label: 'Balanced' }, { value: 'strict', label: 'Strict' },
-              ]} />
-            </div>
-          </DetailBlock>
-        )}
-
-        {has('productSize') && (
-          <DetailBlock title="Product Size" description="Confirm product scale for realistic compositions.">
-            <ChipSelector label="Detected Size" value={details.productSize} onChange={v => update({ productSize: v })} options={[
-              { value: 'auto', label: 'Auto' }, { value: 'very-small', label: 'Very Small' }, { value: 'small', label: 'Small' }, { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }, { value: 'extra-large', label: 'Extra Large' },
-            ]} />
-          </DetailBlock>
-        )}
-
-        {has('branding') && (
-          <DetailBlock title="Branding Visibility" description="How prominently branding should appear.">
-            <ChipSelector label="" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
-              { value: 'subtle', label: 'Subtle' }, { value: 'balanced', label: 'Balanced' }, { value: 'prominent', label: 'Prominent' },
-            ]} />
-          </DetailBlock>
-        )}
-
-        {has('layout') && (
-          <DetailBlock title="Layout Space" description="Balance between product and surrounding space.">
-            <ChipSelector label="" value={details.layoutSpace} onChange={v => update({ layoutSpace: v })} options={[
-              { value: 'product-focused', label: 'Product-focused' }, { value: 'balanced', label: 'Balanced' }, { value: 'extra-space', label: 'Extra space for text' },
-            ]} />
-          </DetailBlock>
-        )}
-
-        {has('consistency') && (
-          <DetailBlock title="Consistency" description="Match style across multiple products.">
+      {/* Consistency — only for multi-product */}
+      {productCount > 1 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <span className="text-sm font-semibold">Consistency across products</span>
             <ChipSelector label="" value={details.consistency} onChange={v => update({ consistency: v })} options={[
               { value: 'standard', label: 'Standard' }, { value: 'high', label: 'High' }, { value: 'strict', label: 'Strict' },
             ]} />
-          </DetailBlock>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Custom note — always shown */}
-        <DetailBlock title="Custom Note" description="Anything important to keep in mind?">
+      {/* Section C: Custom note — always visible */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <span className="text-sm font-semibold">Custom note</span>
+          <p className="text-xs text-muted-foreground">Anything important to keep in mind?</p>
           <Textarea
             placeholder="Special instructions, unusual product details, styling preferences..."
             value={details.customNote || ''}
             onChange={e => update({ customNote: e.target.value })}
-            className="text-xs min-h-[80px]"
+            rows={3}
+            className="text-sm"
           />
-        </DetailBlock>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

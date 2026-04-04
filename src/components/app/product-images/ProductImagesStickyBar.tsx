@@ -30,7 +30,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
   const showGenIcon = step === 4;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm">
+    <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm rounded-b-lg -mx-1 px-1">
       <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3 gap-4">
         {/* Left: Summary */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground min-w-0">

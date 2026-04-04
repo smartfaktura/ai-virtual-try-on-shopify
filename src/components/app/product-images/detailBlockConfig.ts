@@ -1,3 +1,5 @@
+import type { ProductImageScene } from './types';
+
 /** Maps trigger block keys to display metadata */
 export interface DetailBlockDef {
   key: string;
@@ -36,4 +38,58 @@ export function getTriggeredBlocks(
   // Consistency only if multiple products
   if (productCount > 1) blocks.add('consistency');
   return Array.from(blocks);
+}
+
+/** Group triggered detail blocks by the scenes that caused them.
+ *  Returns an array of { scene, blocks } where blocks are unique to that scene group.
+ *  If multiple scenes trigger the same block, it appears under the first scene only. */
+export interface SceneBlockGroup {
+  sceneId: string;
+  sceneTitle: string;
+  blocks: string[];
+  /** Other scene titles that also trigger these blocks */
+  alsoUsedBy: string[];
+}
+
+export function getBlocksByScene(
+  selectedSceneIds: Set<string>,
+  allScenes: ProductImageScene[],
+): SceneBlockGroup[] {
+  const claimed = new Set<string>();
+  const groups: SceneBlockGroup[] = [];
+
+  // Track which block belongs to which scenes for "also used by"
+  const blockToScenes = new Map<string, string[]>();
+  const selectedScenes = allScenes.filter(s => selectedSceneIds.has(s.id));
+
+  for (const scene of selectedScenes) {
+    for (const block of scene.triggerBlocks) {
+      if (!blockToScenes.has(block)) blockToScenes.set(block, []);
+      blockToScenes.get(block)!.push(scene.title);
+    }
+  }
+
+  for (const scene of selectedScenes) {
+    const newBlocks = scene.triggerBlocks.filter(b => !claimed.has(b));
+    if (newBlocks.length === 0) continue;
+
+    for (const b of newBlocks) claimed.add(b);
+
+    const alsoUsedBy: string[] = [];
+    for (const b of newBlocks) {
+      const others = (blockToScenes.get(b) || []).filter(t => t !== scene.title);
+      for (const o of others) {
+        if (!alsoUsedBy.includes(o)) alsoUsedBy.push(o);
+      }
+    }
+
+    groups.push({
+      sceneId: scene.id,
+      sceneTitle: scene.title,
+      blocks: newBlocks,
+      alsoUsedBy,
+    });
+  }
+
+  return groups;
 }

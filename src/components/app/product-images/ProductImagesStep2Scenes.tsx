@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { GLOBAL_SCENES, CATEGORY_COLLECTIONS } from './sceneData';
-import type { ProductImageScene } from './types';
+import type { ProductImageScene, UserProduct } from './types';
 
 interface Step2Props {
   selectedSceneIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
+  selectedProducts: UserProduct[];
 }
 
 const SCENE_GRADIENTS: Record<string, string> = {
@@ -27,6 +28,35 @@ const SCENE_GRADIENTS: Record<string, string> = {
   'shadow-light': 'from-zinc-200 to-slate-300',
 };
 
+/** Keyword map from product metadata → category collection IDs */
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask'],
+  'makeup-lipsticks': ['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'cosmetic', 'lip', 'bronzer', 'highlighter', 'primer', 'beauty'],
+  'fragrance': ['perfume', 'cologne', 'fragrance', 'eau de', 'scent', 'parfum'],
+  'bags-accessories': ['bag', 'handbag', 'purse', 'clutch', 'wallet', 'tote', 'backpack', 'briefcase', 'satchel'],
+  'hats-small': ['hat', 'cap', 'beanie', 'scarf', 'gloves', 'belt', 'watch', 'bracelet', 'necklace', 'earring', 'ring', 'sunglasses', 'jewelry', 'jewellery'],
+  'shoes': ['shoe', 'sneaker', 'boot', 'sandal', 'heel', 'loafer', 'slipper', 'footwear'],
+  'garments': ['shirt', 'dress', 'jacket', 'pants', 'jeans', 'sweater', 'hoodie', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'legging', 'clothing', 'apparel', 'garment'],
+  'home-decor': ['candle', 'vase', 'pillow', 'blanket', 'lamp', 'decor', 'home', 'interior', 'furniture', 'rug', 'curtain', 'mirror', 'frame', 'planter', 'ceramic'],
+  'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'smartwatch'],
+  'food-beverage': ['food', 'coffee', 'tea', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'juice', 'beverage', 'organic', 'artisan'],
+  'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
+};
+
+function detectRelevantCategories(products: UserProduct[]): Set<string> {
+  const matched = new Set<string>();
+  const combined = products.map(p =>
+    `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
+  ).join(' ');
+
+  for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(kw => combined.includes(kw))) {
+      matched.add(catId);
+    }
+  }
+  return matched;
+}
+
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
   const gradient = SCENE_GRADIENTS[scene.id] || 'from-muted to-muted/80';
 
@@ -39,7 +69,6 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           : 'border-border hover:border-primary/30 hover:bg-muted/30'
       }`}
     >
-      {/* Preview placeholder */}
       <div className={`aspect-[4/3] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
         {scene.previewUrl ? (
           <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
@@ -68,8 +97,18 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
   );
 }
 
-export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange }: Step2Props) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts }: Step2Props) {
+  const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts), [selectedProducts]);
+
+  // Auto-expand relevant categories on mount
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
+
+  // Sort: relevant categories first, then the rest
+  const sortedCollections = useMemo(() => {
+    const relevant = CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id));
+    const rest = CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id));
+    return [...relevant, ...rest];
+  }, [relevantCatIds]);
 
   const toggleScene = (id: string) => {
     const next = new Set(selectedSceneIds);
@@ -98,6 +137,47 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange }
         )}
       </div>
 
+      {/* Category collections — relevant first, auto-expanded */}
+      {relevantCatIds.size > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-primary">Recommended for your products</h3>
+          <div className="space-y-2">
+            {sortedCollections.filter(c => relevantCatIds.has(c.id)).map(cat => {
+              const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
+              const isOpen = expandedCategories.has(cat.id);
+              return (
+                <Collapsible key={cat.id} open={isOpen} onOpenChange={() => toggleCategory(cat.id)}>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.05] transition-colors cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{cat.title}</span>
+                        <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Match</Badge>
+                        {selectedInCat > 0 && (
+                          <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedInCat}</Badge>
+                        )}
+                      </div>
+                      {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-2 pl-2">
+                      {cat.scenes.map(scene => (
+                        <SceneCard
+                          key={scene.id}
+                          scene={scene}
+                          selected={selectedSceneIds.has(scene.id)}
+                          onToggle={() => toggleScene(scene.id)}
+                        />
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Global scenes */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
@@ -116,11 +196,11 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange }
         </div>
       </div>
 
-      {/* Category collections */}
+      {/* Other category collections */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground">Explore scenes by product type</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground">Explore more scenes by product type</h3>
         <div className="space-y-2">
-          {CATEGORY_COLLECTIONS.map(cat => {
+          {sortedCollections.filter(c => !relevantCatIds.has(c.id)).map(cat => {
             const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
             const isOpen = expandedCategories.has(cat.id);
             return (
