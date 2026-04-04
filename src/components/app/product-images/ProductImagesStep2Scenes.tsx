@@ -245,6 +245,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               expandedCategories={expandedCategories}
               toggleScene={toggleScene}
               toggleCategory={toggleCategory}
+              onSelectAllCategory={selectAllCategory}
             />
           ))}
         </div>
