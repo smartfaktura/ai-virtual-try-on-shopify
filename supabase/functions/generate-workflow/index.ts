@@ -126,6 +126,15 @@ interface WorkflowRequest {
     description: string;
     dimensions?: string;
     imageUrl: string;
+    analysis?: {
+      category?: string;
+      sizeClass?: string;
+      colorFamily?: string;
+      materialFamily?: string;
+      finish?: string;
+      packagingRelevant?: boolean;
+      personCompatible?: boolean;
+    };
   };
   additional_products?: Array<{
     title: string;
@@ -176,6 +185,17 @@ interface WorkflowRequest {
     photography_reference?: string;
   };
   selected_variations?: number[];
+  extra_variations?: Array<{
+    label: string;
+    instruction: string;
+    aspect_ratio?: string;
+    category?: string;
+    scope?: string;
+    preview_url?: string;
+    prompt_only?: boolean;
+    use_scene_reference?: boolean;
+  }>;
+  packaging_reference_url?: string;
   product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
   quality?: string;
   image_count?: number;
@@ -506,13 +526,26 @@ CRITICAL REQUIREMENTS:
 12. The perspective vanishing point must remain identical to the source photo — no rotation, no tilt correction.
 
 ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement. ${allNegatives}` : "AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement."}`
-    : `${processedTemplate}
+    : (() => {
+  // Build product analysis block if available
+  const analysisData = (product as unknown as Record<string, unknown>).analysis as WorkflowRequest['product']['analysis'] | undefined;
+  const analysisLines: string[] = [];
+  if (analysisData) {
+    if (analysisData.category) analysisLines.push(`- Category: ${analysisData.category}`);
+    if (analysisData.materialFamily) analysisLines.push(`- Material: ${analysisData.materialFamily}`);
+    if (analysisData.finish) analysisLines.push(`- Finish: ${analysisData.finish}`);
+    if (analysisData.colorFamily) analysisLines.push(`- Color family: ${analysisData.colorFamily}`);
+    if (analysisData.sizeClass) analysisLines.push(`- Size class: ${analysisData.sizeClass}`);
+  }
+  const analysisBlock = analysisLines.length > 0 ? `\n${analysisLines.join('\n')}` : '';
+
+  return `${processedTemplate}
 ${themeBlock}
 PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
-${product.description ? `- Description: ${product.description}` : ""}
+${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
 ${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
@@ -530,6 +563,7 @@ CRITICAL REQUIREMENTS:
 ${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
 
 ${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
+  })();
 
   return prompt;
 }
@@ -670,11 +704,23 @@ async function generateImage(
   const maxRetries = 1; // 2 attempts total (primary + 1 retry)
   const PER_IMAGE_TIMEOUT = 100_000; // 100s per image — gives Nano Banana Pro enough time
 
-  // Build content array: text prompt + all reference images
+  // Build content array: text prompt + labeled reference images
+  const IMAGE_LABEL_MAP: Record<string, string> = {
+    product: '[PRODUCT IMAGE] Primary product reference — reproduce this EXACTLY:',
+    product_2: '[PRODUCT IMAGE 2] Additional product reference:',
+    product_3: '[PRODUCT IMAGE 3] Additional product reference:',
+    product_4: '[PRODUCT IMAGE 4] Additional product reference:',
+    model: '[MODEL IMAGE] Identity reference — the person MUST look like this:',
+    scene_reference: '[SCENE REFERENCE] Composition and style reference:',
+    packaging_reference: '[PACKAGING REFERENCE] Packaging fidelity reference:',
+  };
+
   const contentParts: Array<Record<string, unknown>> = [
     { type: "text", text: prompt },
   ];
   for (const img of referenceImages) {
+    const labelText = IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
+    contentParts.push({ type: "text", text: labelText });
     contentParts.push({
       type: "image_url",
       image_url: { url: img.url },
@@ -1153,6 +1199,11 @@ serve(async (req) => {
           if (variation.use_scene_reference && variation.preview_url && !variation.prompt_only) {
             referenceImages.push({ url: variation.preview_url, label: "scene_reference" });
             console.log(`[generate-workflow] Adding scene reference image for "${variation.label}"`);
+          }
+          // Add packaging reference image when provided
+          if ((body as Record<string, unknown>).packaging_reference_url) {
+            referenceImages.push({ url: (body as Record<string, unknown>).packaging_reference_url as string, label: "packaging_reference" });
+            console.log(`[generate-workflow] Adding packaging reference image`);
           }
 
           let imageUrl = await generateImage(

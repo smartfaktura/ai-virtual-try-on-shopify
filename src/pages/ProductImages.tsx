@@ -193,6 +193,25 @@ export default function ProductImages() {
     const token = session?.session?.access_token;
     if (!token) { toast.error('Authentication required'); setStep(4); return; }
 
+    // Resolve model image if selectedModelId is set
+    let modelRef: { name: string; gender: string; ethnicity: string; bodyType: string; ageRange: string; imageUrl: string } | undefined;
+    if (details.selectedModelId) {
+      const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
+      const found = allModels.find(m => m.modelId === details.selectedModelId);
+      if (found) {
+        const modelBase64 = await convertImageToBase64(found.sourceImageUrl || found.previewUrl);
+        modelRef = {
+          name: found.name,
+          gender: found.gender || '',
+          ethnicity: found.ethnicity || '',
+          bodyType: found.bodyType || '',
+          ageRange: found.ageRange || '',
+          imageUrl: modelBase64,
+        };
+      }
+    }
+
+    const WORKFLOW_ID = '4bb79966-42f1-4720-af45-183aa954e8e1';
     const batchId = crypto.randomUUID();
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
@@ -201,11 +220,36 @@ export default function ProductImages() {
 
     for (const product of selectedProducts) {
       const base64Image = await convertImageToBase64(product.image_url);
+      const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
 
-      for (const scene of selectedScenes) {
+      // Build extra_variations from selected scenes with full prompt instructions
+      const extraVariations = selectedScenes.map(scene => ({
+        label: scene.title,
+        instruction: buildInstruction(scene, product),
+        aspect_ratio: details.sceneAspectOverrides?.[scene.id] || undefined,
+      }));
+
+      // Each scene gets its own job (1 image per job for reliability)
+      for (let sceneIdx = 0; sceneIdx < selectedScenes.length; sceneIdx++) {
+        const scene = selectedScenes[sceneIdx];
         for (let i = 0; i < imgCount; i++) {
-          const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
+          // Resolve prop products for this scene
+          const propProductIds = details.sceneProps?.[scene.id] || [];
+          const propProducts = propProductIds
+            .map(pid => userProducts.find(p => p.id === pid))
+            .filter(Boolean)
+            .map(p => p!);
+          const additionalProducts = propProducts.length > 0
+            ? await Promise.all(propProducts.map(async pp => ({
+                title: pp.title,
+                productType: pp.product_type,
+                description: pp.description,
+                imageUrl: await convertImageToBase64(pp.image_url),
+              })))
+            : undefined;
+
           const payload: Record<string, unknown> = {
+            workflow_id: WORKFLOW_ID,
             workflow_name: 'Product Images',
             workflow_slug: 'product-images',
             product: {
@@ -218,19 +262,21 @@ export default function ProductImages() {
             },
             product_name: product.title,
             product_image_url: product.image_url,
-            selected_variations: [{
-              label: scene.title,
-              instruction: buildInstruction(scene, product),
-            }],
+            extra_variations: [extraVariations[sceneIdx]],
+            selected_variations: [0],
+            ...(additionalProducts ? { additional_products: additionalProducts } : {}),
+            ...(modelRef ? { model: modelRef } : {}),
+            ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
             quality,
-            aspectRatio,
+            aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
             batch_id: batchId,
+            scene_name: scene.title,
           };
 
           await paceDelay(newJobMap.size);
 
           const result = await enqueueWithRetry(
-            { jobType: 'workflow', payload, imageCount: 1, quality, hasModel: false, hasScene: false, skipWake: true },
+            { jobType: 'workflow', payload, imageCount: 1, quality, hasModel: !!modelRef, hasScene: false, skipWake: true },
             token,
           );
 
@@ -267,7 +313,7 @@ export default function ProductImages() {
     sendWake(token);
 
     startPolling(newJobMap);
-  }, [selectedProducts, selectedScenes, canAfford, details, buildInstruction, openBuyModal, setBalanceFromServer, queryClient, quality]);
+  }, [selectedProducts, selectedScenes, canAfford, details, buildInstruction, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
@@ -382,7 +428,7 @@ export default function ProductImages() {
         <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
       )}
 
-      <div className="mt-6" ref={wizardContentRef}>
+      <div className="mt-2" ref={wizardContentRef}>
         {step === 1 && (
           <>
             <div className="space-y-3">
