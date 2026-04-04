@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, Plus, Package } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, CheckCircle, Plus, Package, Search } from 'lucide-react';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -18,6 +20,25 @@ interface Step1Props {
 
 export function ProductImagesStep1Products({ products, isLoading, selectedIds, onSelectionChange, onProductAdded }: Step1Props) {
   const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+
+  const productTypes = useMemo(() => {
+    const types = new Set(products.map(p => p.product_type).filter(Boolean));
+    return Array.from(types).sort();
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    let list = products;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(p => p.title.toLowerCase().includes(q) || (p.product_type && p.product_type.toLowerCase().includes(q)));
+    }
+    if (typeFilter !== 'all') {
+      list = list.filter(p => p.product_type === typeFilter);
+    }
+    return list;
+  }, [products, search, typeFilter]);
 
   const toggleProduct = (id: string) => {
     const next = new Set(selectedIds);
@@ -33,12 +54,40 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
         <p className="text-sm text-muted-foreground mt-1">Choose one or more products to generate visuals for.</p>
       </div>
 
-      {selectedIds.size > 0 && (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">{selectedIds.size} selected</Badge>
-          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
+      {/* Search & filter bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="relative flex-1 w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search products…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
         </div>
-      )}
+        {productTypes.length > 1 && (
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {productTypes.map(t => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">{selectedIds.size} selected</Badge>
+            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
+          </div>
+        )}
+        {filtered.length !== products.length && (
+          <span className="text-xs text-muted-foreground">{filtered.length} of {products.length} shown</span>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
@@ -65,7 +114,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
             <span className="text-xs text-muted-foreground mt-2 group-hover:text-primary">Add Product</span>
           </button>
 
-          {products.map((p) => {
+          {filtered.map((p) => {
             const selected = selectedIds.has(p.id);
             return (
               <button
@@ -77,11 +126,11 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
                     : 'border-border hover:border-primary/30'
                 }`}
               >
-                <div className="aspect-square bg-muted overflow-hidden">
+                <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-3">
                   <ShimmerImage
                     src={getOptimizedUrl(p.image_url, { width: 280, quality: 70 })}
                     alt={p.title}
-                    className="w-full h-full object-cover"
+                    className="max-w-full max-h-full object-contain"
                   />
                 </div>
                 <div className="p-2.5">
