@@ -523,23 +523,19 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productName': return productName;
     case 'productType': return productType || cat || 'product';
 
-    // Bug 3 fix: background family is stored in negativeSpace by the UI
-    // Bug 10 fix: color world is stored in backgroundTone — use as color modifier
     case 'background': {
-      const bgFamily = details.negativeSpace; // background family selection from UI
-      const colorWorld = details.backgroundTone; // color world selection from UI
+      const bgFamily = details.negativeSpace;
+      const colorWorld = details.backgroundTone;
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
     }
 
-    // Bug 1 fix: lighting now matches UI chip values via updated LIGHTING_MAP
     case 'lightingDirective': {
       if (isAuto(details.lightingStyle)) return defaultLighting(cat);
       return LIGHTING_MAP[details.lightingStyle!] || defaultLighting(cat);
     }
 
-    // Bug 2 fix: shadow now matches UI chip values via updated SHADOW_MAP
     case 'shadowDirective': {
       if (isAuto(details.shadowStyle)) return defaultShadow(cat);
       return SHADOW_MAP[details.shadowStyle!] || defaultShadow(cat);
@@ -547,7 +543,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish, ctx.productDescription);
 
-    // Bug 9 fix: surface now uses SURFACE_MAP for rich descriptions
     case 'surfaceDirective': {
       if (isAuto(details.surfaceType)) return defaultSurface(cat);
       return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
@@ -567,7 +562,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
-    // Bug 6 fix: accent uses accentColor + brandingVisibility for accent only
     case 'accentDirective': {
       const ac = details.accentColor;
       const vis = details.brandingVisibility;
@@ -587,14 +581,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productSize': return analysis?.sizeClass || 'medium';
     case 'colorFamily': return analysis?.colorFamily || 'neutral tones';
 
-    // Bug 7 fix: UI stores "styling direction" in details.mood — route it correctly
     case 'stylingDirective': {
       const sd = details.mood || details.stylingDirection;
       if (isAuto(sd)) return defaultStyling(cat);
       return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
 
-    // moodDirective aliases stylingDirective so templates with {{moodDirective}} get actual output
     case 'moodDirective': return resolveToken('stylingDirective', ctx);
 
     case 'environmentDirective': {
@@ -602,8 +594,9 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return ENVIRONMENT_MAP[details.environmentType!] || `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
     }
 
-    // Bug 6 fix: brandingDirective returns empty — no separate branding UI section exists
     case 'brandingDirective': return '';
+
+    case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType);
 
     case 'customNote': return details.customNote || '';
     case 'modelDirective': return ctx.selectedModelId ? 'Use the specific model reference provided in the source image.' : '';
@@ -627,7 +620,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
       };
       return COMP_MAP[details.compositionFraming!] || `${details.compositionFraming!.replace(/-/g, ' ')} composition.`;
     }
-    // negativeSpaceDirective should now be empty since negativeSpace stores background family (Bug 3)
     case 'negativeSpaceDirective': return '';
     case 'productProminenceDirective': {
       if (isAuto(details.productProminence)) return '';
