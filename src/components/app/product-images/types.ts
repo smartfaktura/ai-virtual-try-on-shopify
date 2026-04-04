@@ -76,6 +76,7 @@ export interface DetailSettings {
   packagingComposition?: string;
   packagingFocus?: string;
   referenceStrength?: string;
+  packagingReferenceUrl?: string;
 
   // Product size
   productSize?: string;
