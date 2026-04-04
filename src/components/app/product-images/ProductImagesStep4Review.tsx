@@ -268,3 +268,5 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
     </div>
   );
 }
+
+export default ProductImagesStep4Review;

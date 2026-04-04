@@ -80,3 +80,5 @@ export function ProductImagesStep5Generating({ totalJobs, completedJobs, product
     </div>
   );
 }
+
+export default ProductImagesStep5Generating;

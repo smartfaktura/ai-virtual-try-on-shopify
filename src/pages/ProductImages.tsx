@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
@@ -19,15 +19,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { ProductImagesStep2Scenes } from '@/components/app/product-images/ProductImagesStep2Scenes';
-import { ProductImagesStep3Refine } from '@/components/app/product-images/ProductImagesStep3Refine';
-import { ProductImagesStep4Review } from '@/components/app/product-images/ProductImagesStep4Review';
-import { ProductImagesStep5Generating } from '@/components/app/product-images/ProductImagesStep5Generating';
-import { ProductImagesStep6Results } from '@/components/app/product-images/ProductImagesStep6Results';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
+
+// Lazy-load step components for faster initial render
+const ProductImagesStep2Scenes = lazy(() => import('@/components/app/product-images/ProductImagesStep2Scenes'));
+const ProductImagesStep3Refine = lazy(() => import('@/components/app/product-images/ProductImagesStep3Refine'));
+const ProductImagesStep4Review = lazy(() => import('@/components/app/product-images/ProductImagesStep4Review'));
+const ProductImagesStep5Generating = lazy(() => import('@/components/app/product-images/ProductImagesStep5Generating'));
+const ProductImagesStep6Results = lazy(() => import('@/components/app/product-images/ProductImagesStep6Results'));
 
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
@@ -81,8 +84,9 @@ export default function ProductImages() {
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Load models for Refine step
-  const { asProfiles: userModelProfiles } = useUserModels();
-  const { asProfiles: globalModelProfiles } = useCustomModels();
+  // Defer model queries until Refine step
+  const { asProfiles: userModelProfiles } = useUserModels({ enabled: step >= 3 });
+  const { asProfiles: globalModelProfiles } = useCustomModels({ enabled: step >= 3 });
 
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
@@ -593,62 +597,66 @@ export default function ProductImages() {
           </>
         )}
 
-        {step === 2 && (
-          <ProductImagesStep2Scenes
-            selectedSceneIds={selectedSceneIds}
-            onSelectionChange={setSelectedSceneIds}
-            selectedProducts={selectedProducts}
-          />
-        )}
+        {step >= 2 && step <= 6 && (
+          <Suspense fallback={<div className="space-y-4 py-8"><Skeleton className="h-8 w-48" /><div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div></div>}>
+            {step === 2 && (
+              <ProductImagesStep2Scenes
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={setSelectedSceneIds}
+                selectedProducts={selectedProducts}
+              />
+            )}
 
-        {step === 3 && (
-          <ProductImagesStep3Refine
-            selectedSceneIds={selectedSceneIds}
-            productCount={selectedProducts.length}
-            details={details}
-            onDetailsChange={setDetails}
-            userModels={userModelProfiles}
-            globalModels={globalModelProfiles}
-            selectedScenes={selectedScenes}
-            allProducts={userProducts}
-            selectedProductIds={selectedProductIds}
-            hasMultipleCategories={(() => {
-              const cats = new Set<string>();
-              for (const p of selectedProducts) {
-                const analysis = p.analysis_json as any;
-                if (analysis?.category) cats.add(analysis.category);
-                else cats.add(p.product_type || 'other');
-              }
-              return cats.size > 1;
-            })()}
-          />
-        )}
+            {step === 3 && (
+              <ProductImagesStep3Refine
+                selectedSceneIds={selectedSceneIds}
+                productCount={selectedProducts.length}
+                details={details}
+                onDetailsChange={setDetails}
+                userModels={userModelProfiles}
+                globalModels={globalModelProfiles}
+                selectedScenes={selectedScenes}
+                allProducts={userProducts}
+                selectedProductIds={selectedProductIds}
+                hasMultipleCategories={(() => {
+                  const cats = new Set<string>();
+                  for (const p of selectedProducts) {
+                    const analysis = p.analysis_json as any;
+                    if (analysis?.category) cats.add(analysis.category);
+                    else cats.add(p.product_type || 'other');
+                  }
+                  return cats.size > 1;
+                })()}
+              />
+            )}
 
-        {step === 4 && (
-          <ProductImagesStep4Review
-            selectedProducts={selectedProducts}
-            selectedSceneIds={selectedSceneIds}
-            details={details}
-            creditsPerImage={creditsPerImage}
-            balance={balance}
-            onEditStep={(s) => setStep(s as PIStep)}
-          />
-        )}
+            {step === 4 && (
+              <ProductImagesStep4Review
+                selectedProducts={selectedProducts}
+                selectedSceneIds={selectedSceneIds}
+                details={details}
+                creditsPerImage={creditsPerImage}
+                balance={balance}
+                onEditStep={(s) => setStep(s as PIStep)}
+              />
+            )}
 
-        {step === 5 && (
-          <ProductImagesStep5Generating
-            totalJobs={jobMap.size}
-            completedJobs={completedJobs}
-            productCount={selectedProducts.length}
-          />
-        )}
+            {step === 5 && (
+              <ProductImagesStep5Generating
+                totalJobs={jobMap.size}
+                completedJobs={completedJobs}
+                productCount={selectedProducts.length}
+              />
+            )}
 
-        {step === 6 && (
-          <ProductImagesStep6Results
-            results={results}
-            onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
-            onGoToLibrary={() => navigate('/app/library')}
-          />
+            {step === 6 && (
+              <ProductImagesStep6Results
+                results={results}
+                onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
+                onGoToLibrary={() => navigate('/app/library')}
+              />
+            )}
+          </Suspense>
         )}
       </div>
 
