@@ -260,19 +260,6 @@ function defaultLighting(category?: string): string {
     default: return 'Professional studio lighting with soft fill and controlled highlights.';
   }
 }
-  switch (category) {
-    case 'fragrance': return 'Soft directional side lighting with gentle glass refraction highlights.';
-    case 'beauty-skincare':
-    case 'makeup-lipsticks': return 'Soft overhead beauty lighting with even glow and subtle specular accents.';
-    case 'tech-devices': return 'Crisp controlled studio lighting with clean specular reflections.';
-    case 'food-beverage': return 'Warm natural diffused lighting with appetite-enhancing warmth.';
-    case 'garments': return 'Even soft studio lighting revealing fabric texture and true color.';
-    case 'bags-accessories':
-    case 'shoes': return 'Controlled directional lighting revealing leather grain and material depth.';
-    case 'home-decor': return 'Warm ambient interior lighting with natural window-light feel.';
-    default: return 'Professional studio lighting with soft fill and controlled highlights.';
-  }
-}
 
 function extractMaterialFromDescription(description?: string): string | null {
   if (!description) return null;
