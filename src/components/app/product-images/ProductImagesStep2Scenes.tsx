@@ -37,26 +37,37 @@ const GRID_CLASSES: Record<GridSize, string> = {
 
 function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
+  const analyzedIds = new Set<string>();
 
-  // Use AI-detected categories from analysis_json when available
+  // Layer 1: AI-detected categories from productAnalyses prop
   if (productAnalyses) {
     for (const p of products) {
       const cat = productAnalyses[p.id]?.category;
-      if (cat && cat !== 'other') matched.add(cat);
+      if (cat) {
+        matched.add(cat);
+        analyzedIds.add(p.id);
+      }
     }
   }
-  // Also check product.analysis_json directly
+  // Layer 2: Cached analysis_json on product row
   for (const p of products) {
+    if (analyzedIds.has(p.id)) continue;
     const aj = (p as any).analysis_json as { category?: string } | null;
-    if (aj?.category && aj.category !== 'other') matched.add(aj.category);
+    if (aj?.category) {
+      matched.add(aj.category);
+      analyzedIds.add(p.id);
+    }
   }
 
-  // Keyword fallback
-  const combined = products.map(p =>
-    `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
-  ).join(' ');
-  for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    if (keywords.some(kw => combined.includes(kw))) matched.add(catId);
+  // Layer 3: Keyword fallback — only for products WITHOUT any AI analysis
+  const unanalyzed = products.filter(p => !analyzedIds.has(p.id));
+  if (unanalyzed.length > 0) {
+    const combined = unanalyzed.map(p =>
+      `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
+    ).join(' ');
+    for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) matched.add(catId);
+    }
   }
   return matched;
 }
