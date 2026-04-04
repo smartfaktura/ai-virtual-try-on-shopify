@@ -365,8 +365,7 @@ export default function ProductImages() {
         />
       )}
 
-      {/* Product context strip on Steps 2-6 */}
-      {step >= 2 && step <= 6 && selectedProducts.length > 0 && (
+      {step >= 2 && step <= 5 && selectedProducts.length > 0 && (
         <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
       )}
 
