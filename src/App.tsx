@@ -20,6 +20,7 @@ const Home = lazy(() => import('@/pages/Home'));
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
+const ProductImages = lazy(() => import('@/pages/ProductImages'));
 
 const Templates = lazy(() => import('@/pages/Templates'));
 const Discover = lazy(() => import('@/pages/Discover'));
@@ -172,6 +173,7 @@ const App = () => {
                         <Route path="/workflows" element={<Workflows />} />
                         <Route path="/creative-drops" element={<CreativeDrops />} />
                         <Route path="/generate" element={<Generate />} />
+                        <Route path="/generate/product-images" element={<ProductImages />} />
                         <Route path="/generate/:workflowSlug" element={<Generate />} />
                         <Route path="/library" element={<Jobs />} />
                         <Route path="/library/:id" element={<Jobs />} />
