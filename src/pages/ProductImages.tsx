@@ -176,11 +176,11 @@ export default function ProductImages() {
     }
   }, [step, selectedProducts, analyzeProducts]);
 
-  // Build instruction from scene + details
+  // Build instruction from scene + details — use live analyses map instead of stale DB row
   const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
-    const analysis = (product as any).analysis_json as ProductAnalysis | null;
+    const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
     return buildDynamicPrompt(scene, product, analysis, details);
-  }, [details]);
+  }, [details, analyses]);
 
   // Generation handler
   const handleGenerate = useCallback(async () => {
