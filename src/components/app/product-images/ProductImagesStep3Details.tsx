@@ -1,8 +1,11 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Layers, Camera, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Layers, Camera, User, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { getBlocksByScene } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
