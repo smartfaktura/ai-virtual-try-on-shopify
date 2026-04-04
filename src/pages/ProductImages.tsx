@@ -171,7 +171,7 @@ export default function ProductImages() {
   const handleGenerate = useCallback(async () => {
     if (!canAfford) { openBuyModal(); return; }
 
-    setStep(7);
+    setStep(6);
     setCompletedJobs(0);
 
     const { data: session } = await supabase.auth.getSession();
