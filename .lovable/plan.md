@@ -1,77 +1,68 @@
 
 
-# Fix: Inconsistent On-Model Generations (Cut Legs, Mixed Outfits, Background Bleed)
+# Fix: Background Bleed, Outfit Inconsistency, and Cut-off Framing
 
-## Problems Identified
+## Root Cause Analysis
 
-1. **Cut-off legs / head-only crops**: The `apparel_on_model_editorial` template says "showing fit, silhouette, and drape" but gives zero body framing guidance. The AI randomly picks head-shot, half-body, or 3/4 crops.
+Three issues visible in the latest generation:
 
-2. **Inconsistent outfits across batch**: Each scene job is dispatched independently. The `defaultOutfitDirective` for garments says "clean, complementary styling...neutral tones" — too vague. One generation picks brown trousers, another picks jeans. There is no "outfit DNA" shared across the batch.
+1. **Background bleed (beige bg everywhere)**: The `REFERENCE_ISOLATION` instruction is appended at the END of the client-side prompt inside `variation.instruction`. But the backend wraps this in a much larger prompt with CRITICAL REQUIREMENTS. The AI model sees the beige background in [PRODUCT IMAGE] and reproduces it because the isolation instruction is buried — the AI gives more weight to what it SEES than what it READS when the text instruction is weak/late.
 
-3. **Product reference background leaking**: No instruction tells the AI to ignore the background of the uploaded product photo. The AI sees the product's original background (e.g., beige/brown studio) and reproduces it.
+2. **Outfit inconsistency (one image dark pants, another beige)**: The `batch_outfit_lock: true` flag is sent to the backend but **the backend completely ignores it**. The outfit lock text only exists inside the client-side prompt as inline text. The AI model doesn't prioritize it because it's not in the backend's numbered CRITICAL REQUIREMENTS section.
+
+3. **Cut-off body**: The `bodyFramingDirective` was added to only 2 specific templates (`apparel_on_model_editorial`, `apparel_motion_scene`). Other scenes that involve people don't get it. The auto-inject at the bottom checks for "body framing" keyword but many on-model prompts don't trigger person-type scenes consistently.
 
 ## Plan
 
-### File 1: `src/lib/productImagePromptBuilder.ts`
+### File 1: `supabase/functions/generate-workflow/index.ts`
 
-**A. Add garment body-framing instruction to on-model scenes**
+The backend prompt builder (`buildVariationPrompt`) needs to read and enforce batch consistency at the CRITICAL REQUIREMENTS level — where the AI model actually pays attention.
 
-Add a new `bodyFramingDirective` token that resolves based on `sceneType` and category:
-- For garments + portrait/editorial scenes: "Full-body shot — model visible from head to toe, feet fully inside frame, natural standing pose."
-- For bags/shoes + portrait: "Three-quarter shot — model visible from head to mid-thigh."
-- For beauty/fragrance + portrait: "Close-up beauty shot — shoulders and face."
+**A. Read `batch_outfit_lock` from body and inject into CRITICAL REQUIREMENTS:**
 
-Inject this into any template containing `personDirective` if the word "body" or "full" isn't already present.
+Add a new parameter to `buildVariationPrompt` for batch context. When `batch_outfit_lock` is true, append to the numbered CRITICAL REQUIREMENTS:
 
-**B. Lock outfit across batch with deterministic outfit description**
-
-Create a `buildLockedOutfitDirective(category, productTitle)` that returns a specific, deterministic outfit instead of vague guidance:
-- Garments: "Wearing slim-fit light beige cotton trousers and minimal white sneakers — same outfit in every shot."
-- Bags: "Wearing a fitted black turtleneck, slim dark navy trousers, and black ankle boots — same outfit in every shot."
-- Shoes: "Wearing cropped slim dark denim and a plain white tee — same outfit in every shot."
-
-Replace the current vague `defaultOutfitDirective` with this locked version. The key addition is the explicit "same outfit in every shot" instruction.
-
-**C. Add product-background isolation instruction**
-
-Add a `REFERENCE_ISOLATION` constant:
 ```
-"CRITICAL: The [PRODUCT IMAGE] is a reference for the product ONLY. 
-Completely IGNORE its background, lighting, and environment. 
-Generate the product in the new scene/background described above."
+7. OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit described in the variation instruction. Do NOT deviate — same colors, same garment types, same shoes. This is a multi-image batch and visual consistency across all shots is mandatory.
 ```
 
-Append this to every resolved prompt in `buildDynamicPrompt` before the quality suffix.
+**B. Elevate reference isolation to CRITICAL REQUIREMENTS:**
 
-**D. Add negative prompt for background bleed**
+Move the reference isolation instruction from buried inline text to a numbered CRITICAL REQUIREMENT:
 
-Expand `PRODUCT_NEGATIVES` to include: "no background from reference image, no original product photo environment."
-
-### File 2: `src/components/app/product-images/sceneData.ts`
-
-**E. Update `apparel_on_model_editorial` template**
-
-Add `{{bodyFramingDirective}}` token and explicit full-body instruction:
 ```
-'On-model fashion photograph — {{productName}} worn by model. 
-{{bodyFramingDirective}} {{personDirective}} {{outfitDirective}} ...'
+8. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] shows the product ONLY. You MUST completely IGNORE the background, environment, and lighting visible in [PRODUCT IMAGE]. Generate ONLY the new background/environment described in the variation instruction above. The product's original photo background must NOT appear in the output.
 ```
 
-**F. Update `apparel_motion_scene` template similarly**
+**C. Pass batch context through the function call chain:**
 
-Add `{{bodyFramingDirective}}` to the motion shot template.
+Read `body.batch_outfit_lock` and `body.batch_size` and pass to `buildVariationPrompt`. Add the new critical requirements conditionally.
 
-### File 3: `src/pages/ProductImages.tsx`
+### File 2: `src/lib/productImagePromptBuilder.ts`
 
-**G. Pass batch context to payload**
+**D. Move `REFERENCE_ISOLATION` from end-of-prompt to beginning:**
 
-Add `batch_outfit_lock: true` and `batch_size: selectedScenes.length` to the payload so the backend prompt builder knows this is a multi-scene batch that needs visual consistency.
+Currently appended after cleanup at line 737. Move it to be injected right after the template resolution (before auto-inject block), so it appears early in the `variation.instruction` text that the backend receives.
 
-## Summary of Changes
+**E. Strengthen background instruction in all on-model templates:**
+
+The `injectIfMissing('background', 'background')` auto-inject should produce a stronger directive for garment scenes. Update `defaultBackground('garments')` to include explicit "NOT the reference image background":
+
+```
+'soft warm white seamless studio background — do NOT reproduce the background from the product reference photo'
+```
+
+### File 3: `src/components/app/product-images/sceneData.ts`
+
+**F. Add `{{bodyFramingDirective}}` to ALL garment on-model scenes:**
+
+Check every scene in the garments category that has `personDetails` or `actionDetails` in triggerBlocks and add `{{bodyFramingDirective}}` if missing. Also apply to universal scenes like `in-hand-studio`, `in-hand-lifestyle` where garments might be shown.
+
+## Files to Update
 
 | File | Change |
 |------|--------|
-| `src/lib/productImagePromptBuilder.ts` | Add bodyFramingDirective, locked outfit defaults, reference isolation block, expanded negatives |
-| `src/components/app/product-images/sceneData.ts` | Add `{{bodyFramingDirective}}` to 2 garment on-model templates |
-| `src/pages/ProductImages.tsx` | Pass batch consistency metadata in payload |
+| `supabase/functions/generate-workflow/index.ts` | Read batch_outfit_lock, add outfit consistency + background isolation to CRITICAL REQUIREMENTS |
+| `src/lib/productImagePromptBuilder.ts` | Move REFERENCE_ISOLATION to beginning of prompt, strengthen default backgrounds |
+| `src/components/app/product-images/sceneData.ts` | Add bodyFramingDirective to all on-model garment scenes |
 
