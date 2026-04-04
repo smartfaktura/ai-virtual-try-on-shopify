@@ -329,8 +329,9 @@ export default function ProductImages() {
       case 1: return selectedProductIds.size > 0;
       case 2: return selectedSceneIds.size > 0;
       case 3: return true;
-      case 4: return true;
-      case 5: return canAfford && totalImages > 0;
+      case 4: return true; // props optional
+      case 5: return true;
+      case 6: return canAfford && totalImages > 0;
       default: return false;
     }
   })();
