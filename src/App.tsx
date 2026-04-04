@@ -20,6 +20,7 @@ const Home = lazy(() => import('@/pages/Home'));
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
+const ProductImages = lazy(() => import('@/pages/ProductImages'));
 
 const Templates = lazy(() => import('@/pages/Templates'));
 const Discover = lazy(() => import('@/pages/Discover'));
