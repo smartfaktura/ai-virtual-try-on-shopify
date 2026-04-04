@@ -30,10 +30,10 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
   const showGenIcon = step === 4;
 
   return (
-    <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm rounded-b-lg -mx-1 px-1">
-      <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3 gap-4">
+    <div className="sticky bottom-0 z-30 mb-16 border-t border-border bg-background/98 backdrop-blur-md rounded-b-lg -mx-1 px-1 shadow-[0_-2px_8px_hsl(var(--foreground)/0.06)]">
+      <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5 gap-4">
         {/* Left: Summary */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground min-w-0">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground min-w-0">
           {productCount > 0 && (
             <span className="whitespace-nowrap">
               <span className="font-semibold text-foreground">{productCount}</span> product{productCount !== 1 ? 's' : ''}

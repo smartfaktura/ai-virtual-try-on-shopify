@@ -104,6 +104,17 @@ export default function ProductImages() {
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
+  // Reset downstream state when product selection changes
+  useEffect(() => {
+    const key = Array.from(selectedProductIds).sort().join(',');
+    if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
+      setSelectedSceneIds(new Set());
+      setDetails(INITIAL_DETAILS);
+      if (step > 1) setStep(1);
+    }
+    prevProductIdsRef.current = key;
+  }, [selectedProductIds]);
+
   // Stale detail cleanup when scenes change
   useEffect(() => {
     const triggered = getTriggeredBlocks(selectedSceneIds, ALL_SCENES, selectedProducts.length);
