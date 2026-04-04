@@ -120,9 +120,16 @@ export default function ProductImages() {
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
 
-  // Scroll to top on step change
+  // Ref for wizard content area
+  const wizardContentRef = useRef<HTMLDivElement>(null);
+
+  // Scroll wizard into view on step change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (wizardContentRef.current) {
+      wizardContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [step]);
 
   // Reset visible count when search changes
