@@ -84,6 +84,10 @@ const CONSISTENCY_MAP: Record<string, string> = {
   'high': 'Maintain strong visual consistency with other shots in this series — same lighting direction, color temperature, and style language.',
   'balanced': 'Maintain balanced visual consistency with the series while allowing natural scene variation.',
   'loose': 'Allow creative variation while keeping the product recognizable.',
+  // Scene-specific chip values
+  'natural': 'Maintain natural visual flow across the series — same general tone with organic variation.',
+  'strong': 'Maintain strong visual consistency with other shots — same lighting direction, color temperature, and style.',
+  'strict': 'Maintain strict visual consistency — identical lighting, identical background, identical framing across all shots.',
 };
 
 // ── Hand style lookup (keys aligned to Refine UI chip values) ──
