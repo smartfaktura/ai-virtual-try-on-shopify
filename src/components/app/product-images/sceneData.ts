@@ -52,9 +52,9 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
   },
   {
     id: 'detail-coverage',
-    title: 'Multi-Angle Coverage',
-    description: 'Front, back, and side angles for full coverage.',
-    triggerBlocks: ['detailFocus', 'angleSelection'],
+    title: 'Front Angle',
+    description: 'Clean front-facing product angle.',
+    triggerBlocks: ['detailFocus'],
     isGlobal: true,
   },
   {
