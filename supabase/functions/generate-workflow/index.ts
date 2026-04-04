@@ -126,6 +126,15 @@ interface WorkflowRequest {
     description: string;
     dimensions?: string;
     imageUrl: string;
+    analysis?: {
+      category?: string;
+      sizeClass?: string;
+      colorFamily?: string;
+      materialFamily?: string;
+      finish?: string;
+      packagingRelevant?: boolean;
+      personCompatible?: boolean;
+    };
   };
   additional_products?: Array<{
     title: string;
@@ -176,6 +185,17 @@ interface WorkflowRequest {
     photography_reference?: string;
   };
   selected_variations?: number[];
+  extra_variations?: Array<{
+    label: string;
+    instruction: string;
+    aspect_ratio?: string;
+    category?: string;
+    scope?: string;
+    preview_url?: string;
+    prompt_only?: boolean;
+    use_scene_reference?: boolean;
+  }>;
+  packaging_reference_url?: string;
   product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
   quality?: string;
   image_count?: number;
