@@ -62,6 +62,38 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   'cool-neutral': 'cool neutral color palette with soft gray and blue-white undertones',
   'monochrome': 'monochromatic color palette — single hue family with tonal variation',
   'brand-led': 'color palette guided by the brand identity colors',
+  // Scene-specific backgroundTone chip values
+  'white': 'clean white color palette with pure, bright tones',
+  'light-gray': 'soft light-gray color palette with neutral, understated tones',
+  'gradient': 'subtle gradient color palette with smooth tonal transitions',
+};
+
+// ── Styling density map ──
+const STYLING_DENSITY_MAP: Record<string, string> = {
+  'minimal': 'Minimal styling — product alone or with 1-2 subtle props, clean negative space.',
+  'moderate': 'Moderate styling — thoughtful arrangement with complementary contextual props.',
+  'styled': 'Fully styled scene — rich arrangement with multiple props, textures, and lifestyle elements.',
+};
+
+// ── Environment map ──
+const ENVIRONMENT_MAP: Record<string, string> = {
+  'bathroom': 'Set in a modern, clean bathroom — white tiles or marble surfaces, soft ambient light, spa-like calm.',
+  'kitchen': 'Set in a bright, contemporary kitchen — clean countertops, natural light, curated simplicity.',
+  'living-room': 'Set in a styled living room — premium furniture, warm tones, editorial interior feel.',
+  'desk': 'Set at a clean, organized workspace — minimal desk accessories, focused professional aesthetic.',
+  'outdoor': 'Set in a natural outdoor environment — soft daylight, organic textures, open air.',
+  'shelf': 'Set on a curated display shelf — clean lines, intentional arrangement, retail-quality presentation.',
+  'bedroom': 'Set in a serene, styled bedroom — soft linens, warm ambient light, intimate editorial mood.',
+  'cafe': 'Set in a contemporary café — warm wood tones, ambient light, curated lifestyle backdrop.',
+  'studio': 'Set in a professional photography studio — controlled environment, clean backgrounds, focused lighting.',
+  'garden': 'Set in a lush garden environment — natural greenery, soft diffused daylight, organic textures.',
+};
+
+// ── Prominence map ──
+const PROMINENCE_MAP: Record<string, string> = {
+  'hero': 'Product dominates the frame — fills 60-80% of composition, maximum visual impact.',
+  'balanced': 'Product is clearly the hero but shares space with environment — fills 40-60% of frame.',
+  'contextual': 'Product is identifiable but environment tells the story — product fills 20-40% of frame.',
 };
 
 // ── Surface type map ──
@@ -289,8 +321,44 @@ function defaultMaterial(materialFamily?: string, finish?: string, productDescri
   return 'crisp surface detail with visible material grain, finish quality, and micro-texture';
 }
 
+// ── Default person directive when user leaves everything on auto but scene needs a person ──
+function defaultPersonDirective(category?: string): string {
+  switch (category) {
+    case 'garments':
+      return 'Professional fashion model with natural, contemporary look — realistic skin texture, confident but relaxed posture, editorial presence.';
+    case 'shoes':
+    case 'bags-accessories':
+      return 'Stylish model with clean, modern look — natural skin, understated elegance, product is the focus.';
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Beauty model with flawless, luminous skin — close-up ready, soft natural expression, editorial beauty standard.';
+    case 'fragrance':
+      return 'Aspirational model with refined, photogenic features — natural skin texture, subtle confidence, luxury aesthetic.';
+    default:
+      return 'Professional model with natural, contemporary look — realistic skin texture, confident posture, clean aesthetic.';
+  }
+}
+
+// ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
+function defaultOutfitDirective(category?: string): string {
+  switch (category) {
+    case 'garments':
+      return 'Wearing clean, complementary styling that doesn\'t compete with the product — neutral tones, minimal accessories.';
+    case 'bags-accessories':
+      return 'Wearing a minimalist neutral outfit — product is the styling hero, clothing serves as backdrop.';
+    case 'shoes':
+      return 'Wearing slim-fit neutral clothing that keeps visual focus on the footwear.';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product.';
+    default:
+      return 'Wearing clean, understated clothing in neutral tones — product remains the visual focus.';
+  }
+}
+
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean): string {
   const parts: string[] = [];
   if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
   if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
@@ -298,13 +366,28 @@ function buildPersonDirective(d: DetailSettings): string {
   if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
   if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
   if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
-  if (parts.length === 0) return '';
+
+  if (parts.length === 0) {
+    // No person details set — use smart defaults if scene requires a person
+    if (sceneNeedsPerson) {
+      let directive = defaultPersonDirective(category);
+      const outfitStr = buildOutfitDirective(d);
+      directive += ` ${outfitStr || defaultOutfitDirective(category)}`;
+      directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
+      return directive;
+    }
+    return '';
+  }
 
   let directive = `Model: ${parts.join(', ')}.`;
 
-  // Append outfit if present
+  // Append outfit if present, or use smart default for on-model scenes
   const outfitStr = buildOutfitDirective(d);
-  if (outfitStr) directive += ` ${outfitStr}`;
+  if (outfitStr) {
+    directive += ` ${outfitStr}`;
+  } else if (sceneNeedsPerson) {
+    directive += ` ${defaultOutfitDirective(category)}`;
+  }
 
   // Append model reference if present
   if (d.selectedModelId) directive += ' Use the specific model reference provided in the source image.';
@@ -445,10 +528,18 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
     }
 
-    case 'personDirective': return buildPersonDirective(details);
+    case 'personDirective': {
+      const needsPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      return buildPersonDirective(details, cat, needsPerson);
+    }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
-    case 'outfitDirective': return buildOutfitDirective(details);
+    case 'outfitDirective': {
+      const outfit = buildOutfitDirective(details);
+      if (outfit) return outfit;
+      const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      return needsOutfit ? defaultOutfitDirective(cat) : '';
+    }
     case 'focusArea': return resolveFocusArea(details, scene);
 
     // Bug 6 fix: accent uses accentColor + brandingVisibility for accent only
@@ -478,12 +569,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
       return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
 
-    // Bug 7 fix: moodDirective should be empty since "mood" field actually stores styling direction
-    case 'moodDirective': return '';
+    // moodDirective aliases stylingDirective so templates with {{moodDirective}} get actual output
+    case 'moodDirective': return resolveToken('stylingDirective', ctx);
 
     case 'environmentDirective': {
       if (isAuto(details.environmentType)) return '';
-      return `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
+      return ENVIRONMENT_MAP[details.environmentType!] || `Set in a ${details.environmentType!.replace(/-/g, ' ')} environment.`;
     }
 
     // Bug 6 fix: brandingDirective returns empty — no separate branding UI section exists
@@ -515,7 +606,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'negativeSpaceDirective': return '';
     case 'productProminenceDirective': {
       if (isAuto(details.productProminence)) return '';
-      return `Product prominence: ${details.productProminence!.replace(/-/g, ' ')}.`;
+      return PROMINENCE_MAP[details.productProminence!] || `Product prominence: ${details.productProminence!.replace(/-/g, ' ')}.`;
+    }
+    case 'stylingDensityDirective': {
+      if (isAuto(details.stylingDensity)) return '';
+      return STYLING_DENSITY_MAP[details.stylingDensity!] || `${details.stylingDensity!.replace(/-/g, ' ')} styling density.`;
     }
     case 'sceneIntensityDirective': {
       if (isAuto(details.sceneIntensity)) return '';
@@ -614,6 +709,8 @@ export function buildDynamicPrompt(
   injectIfMissing('lighting', 'lightingDirective');
   injectIfMissing('composition', 'compositionDirective');
   injectIfMissing('mood', 'sceneIntensityDirective');
+  injectIfMissing('styling density', 'stylingDensityDirective');
+  injectIfMissing('prominence', 'productProminenceDirective');
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
