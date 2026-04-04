@@ -1,54 +1,41 @@
 
 
-# Add Per-Scene Props to Settings Step
+# Product Images — Pagination, Thumbnail Fix, Scene Cleanup, Scroll Reset
 
-## What
-Add an "Add Prop" button next to each scene in the "Customize format per scene" collapsible section. Users can attach extra products (e.g., sunglasses, bags) as styling props to specific scenes, enriching the generation with accessories.
+## 4 Changes
 
-## Approach
+### 1. Paginate Products (25 initial + Load More)
+**File**: `src/components/app/product-images/ProductImagesStep1Products.tsx`
 
-Keep it simple: reuse the prop picker modal pattern from `CatalogStepProps` but adapted for scene-level assignment instead of per-combo. A global "Add prop to all scenes" button sits at the top of the collapsible section.
+- Add `visibleCount` state initialized to 25
+- Reset `visibleCount` to 25 when search or typeFilter changes
+- Slice `filtered` to `filtered.slice(0, visibleCount)` for the grid
+- Show a "Load more" button below the grid when `filtered.length > visibleCount`
+- Button text: "Show more (X remaining)"
+- Increment by 25 on click
 
-### Data Model
-**File**: `types.ts`
+### 2. Fix Context Strip Thumbnails
+**File**: `src/components/app/product-images/ProductContextStrip.tsx`
 
-Add `sceneProps?: Record<string, string[]>` to `DetailSettings`. Keys are scene IDs, values are arrays of product IDs to include as props in that scene.
+The `getOptimizedUrl` with `width: 64` produces broken renders at 32×32px. Fix by using the raw `image_url` directly — the browser handles downscaling fine at this size. Also add `loading="eager"` for these nav thumbnails.
 
-### Settings UI
-**File**: `ProductImagesStep3Settings.tsx`
+### 3. Scene Data Cleanup
+**File**: `src/components/app/product-images/sceneData.ts`
 
-- Accept new prop: `allProducts` (user's product list) and `selectedProductIds` (hero products to exclude from props)
-- Add a `PropPickerModal` component (simplified version of CatalogStepProps picker — search, grid, multi-select)
-- Each scene row in the collapsible gets an "Add Prop" button (Plus icon) that opens the modal scoped to that scene
-- Add a "Add prop to all scenes" button at the top of the collapsible
-- Show assigned prop thumbnails as small chips with remove (X) buttons next to each scene
-- "Clear all props" link when any props are assigned
+- **Remove** `on-surface` ("Styled Surface") from `GLOBAL_SCENES`
+- **Fix** `detail-coverage` ("Multi-Angle Coverage"): rename to "Front Angle", update description to "Clean front-facing product angle.", and remove `angleSelection` from `triggerBlocks` — each scene generates one angle, not multiple. Individual angle scenes (back-angle, side-profile, top-down) already exist separately.
 
-### UI Layout (inside collapsible)
-```text
-  [+ Add prop to all scenes]    2 scenes have props  Clear all
+### 4. Scroll to Top on Step Change
+**File**: `src/pages/ProductImages.tsx`
 
-  Dramatic Lighting   [1:1 4:5 3:4 ...] [+ Add Prop]
-    🖼 Sunglasses  ✕   🖼 Watch  ✕
-
-  Back View           [1:1 4:5 3:4 ...] [+ Add Prop]
-    (no props)
-
-  Side View           [1:1 4:5 3:4 ...] [+ Add Prop]
-    🖼 Sunglasses  ✕   🖼 Watch  ✕
-```
-
-### Props Threading
-**File**: `ProductImages.tsx`
-
-- Pass `allProducts` (from user_products query) and `selectedProductIds` to the Settings step
-- The `sceneProps` data flows through to Review and Generation steps via `DetailSettings`
+Add a `useEffect` that watches `step` and calls `window.scrollTo({ top: 0, behavior: 'smooth' })` whenever the step changes. This ensures users always see the top of each wizard section.
 
 ## Files Modified
 
 | File | Changes |
 |------|---------|
-| `types.ts` | Add `sceneProps?: Record<string, string[]>` to `DetailSettings` |
-| `ProductImagesStep3Settings.tsx` | Add PropPickerModal, per-scene prop buttons, prop chips display |
-| `ProductImages.tsx` | Pass `allProducts` and `selectedProductIds` to Settings step |
+| `ProductImagesStep1Products.tsx` | Add pagination (25 + load more), reset on filter change |
+| `ProductContextStrip.tsx` | Remove `getOptimizedUrl`, use raw `image_url` |
+| `sceneData.ts` | Remove Styled Surface, rename Multi-Angle → Front Angle |
+| `ProductImages.tsx` | Add scroll-to-top effect on step change |
 
