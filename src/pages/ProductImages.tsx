@@ -13,15 +13,16 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { ALL_SCENES } from '@/components/app/product-images/sceneData';
+import { getTriggeredBlocks } from '@/components/app/product-images/detailBlockConfig';
 import { ProductImagesStep1Products } from '@/components/app/product-images/ProductImagesStep1Products';
 import { ProductImagesStep2Scenes } from '@/components/app/product-images/ProductImagesStep2Scenes';
 import { ProductImagesStep3Details } from '@/components/app/product-images/ProductImagesStep3Details';
 import { ProductImagesStep4Review } from '@/components/app/product-images/ProductImagesStep4Review';
 import { ProductImagesStep5Generating } from '@/components/app/product-images/ProductImagesStep5Generating';
 import { ProductImagesStep6Results } from '@/components/app/product-images/ProductImagesStep6Results';
+import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
+import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
 import type { PIStep, UserProduct, DetailSettings } from '@/components/app/product-images/types';
-
-const CREDITS_PER_IMAGE = 6;
 
 const STEP_DEFS = [
   { number: 1, label: 'Products', icon: Package },
@@ -32,6 +33,22 @@ const STEP_DEFS = [
   { number: 6, label: 'Results', icon: CheckCircle },
 ];
 
+// Map detail block keys to the detail settings fields they own
+const BLOCK_FIELD_MAP: Record<string, (keyof DetailSettings)[]> = {
+  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
+  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
+  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
+  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
+  actionDetails: ['actionType', 'actionIntensity'],
+  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
+  angleSelection: ['requestedViews', 'numberOfViews'],
+  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
+  productSize: ['productSize'],
+  branding: ['brandingVisibility'],
+  layout: ['layoutSpace'],
+  consistency: ['consistency'],
+};
+
 export default function ProductImages() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -41,7 +58,7 @@ export default function ProductImages() {
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
-  const [details, setDetails] = useState<DetailSettings>({});
+  const [details, setDetails] = useState<DetailSettings>({ aspectRatio: '1:1', quality: 'high', imageCount: '1' });
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
@@ -70,8 +87,34 @@ export default function ProductImages() {
     [selectedSceneIds],
   );
 
-  const totalImages = selectedProducts.length * selectedScenes.length;
-  const totalCredits = totalImages * CREDITS_PER_IMAGE;
+  // Derived credit calculation
+  const imageCount = parseInt(details.imageCount || '1', 10);
+  const quality = details.quality || 'high';
+  const creditsPerImage = quality === 'standard' ? 3 : 6;
+  const totalImages = selectedProducts.length * selectedScenes.length * imageCount;
+  const totalCredits = totalImages * creditsPerImage;
+  const canAfford = balance >= totalCredits;
+
+  // Stale detail cleanup when scenes change
+  useEffect(() => {
+    const triggered = getTriggeredBlocks(selectedSceneIds, ALL_SCENES, selectedProducts.length);
+    const staleKeys: (keyof DetailSettings)[] = [];
+    for (const [block, fields] of Object.entries(BLOCK_FIELD_MAP)) {
+      if (!triggered.includes(block)) {
+        for (const field of fields) {
+          if (details[field]) staleKeys.push(field);
+        }
+      }
+    }
+    if (staleKeys.length > 0) {
+      const cleaned = { ...details };
+      for (const key of staleKeys) {
+        delete cleaned[key];
+      }
+      setDetails(cleaned);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSceneIds, selectedProducts.length]);
 
   // Build instruction from scene + details
   const buildInstruction = useCallback((scene: typeof ALL_SCENES[0]) => {
@@ -92,7 +135,7 @@ export default function ProductImages() {
 
   // Generation handler
   const handleGenerate = useCallback(async () => {
-    if (balance < totalCredits) { openBuyModal(); return; }
+    if (!canAfford) { openBuyModal(); return; }
 
     setStep(5);
     setCompletedJobs(0);
@@ -104,56 +147,60 @@ export default function ProductImages() {
     const batchId = crypto.randomUUID();
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
+    const aspectRatio = details.aspectRatio || '1:1';
+    const imgCount = parseInt(details.imageCount || '1', 10);
 
     for (const product of selectedProducts) {
       const base64Image = await convertImageToBase64(product.image_url);
 
       for (const scene of selectedScenes) {
-        const payload: Record<string, unknown> = {
-          workflow_name: 'Product Images',
-          workflow_slug: 'product-images',
-          product: {
-            title: product.title,
-            productType: product.product_type,
-            description: product.description,
-            dimensions: product.dimensions || undefined,
-            imageUrl: base64Image,
-          },
-          product_name: product.title,
-          product_image_url: product.image_url,
-          selected_variations: [{
-            label: scene.title,
-            instruction: buildInstruction(scene),
-          }],
-          quality: 'high',
-          aspectRatio: scene.id === 'wide-banner' ? '16:9' : '1:1',
-          batch_id: batchId,
-        };
-
-        await paceDelay(newJobMap.size);
-
-        const result = await enqueueWithRetry(
-          { jobType: 'workflow', payload, imageCount: 1, quality: 'high', hasModel: false, hasScene: false, skipWake: true },
-          token,
-        );
-
-        if (!isEnqueueError(result)) {
-          const key = `${product.id}_${scene.id}`;
-          newJobMap.set(key, result.jobId);
-          lastBalance = result.newBalance;
-          injectActiveJob(queryClient, {
-            jobId: result.jobId,
+        for (let i = 0; i < imgCount; i++) {
+          const payload: Record<string, unknown> = {
             workflow_name: 'Product Images',
             workflow_slug: 'product-images',
+            product: {
+              title: product.title,
+              productType: product.product_type,
+              description: product.description,
+              dimensions: product.dimensions || undefined,
+              imageUrl: base64Image,
+            },
             product_name: product.title,
-            job_type: 'workflow',
-            quality: 'high',
-            imageCount: 1,
+            product_image_url: product.image_url,
+            selected_variations: [{
+              label: scene.title,
+              instruction: buildInstruction(scene),
+            }],
+            quality,
+            aspectRatio,
             batch_id: batchId,
-          });
-        } else if (result.type === 'insufficient_credits') {
-          toast.error(result.message);
-          break;
+          };
+
+          await paceDelay(newJobMap.size);
+
+          const result = await enqueueWithRetry(
+            { jobType: 'workflow', payload, imageCount: 1, quality, hasModel: false, hasScene: false, skipWake: true },
+            token,
+          );
+
+          if (!isEnqueueError(result)) {
+            const key = `${product.id}_${scene.id}_${i}`;
+            newJobMap.set(key, result.jobId);
+            lastBalance = result.newBalance;
+            injectActiveJob(queryClient, {
+              jobId: result.jobId,
+              workflow_name: 'Product Images',
+              workflow_slug: 'product-images',
+              product_name: product.title,
+              job_type: 'workflow',
+              quality,
+              imageCount: 1,
+              batch_id: batchId,
+            });
+          } else if (result.type === 'insufficient_credits') {
+            toast.error(result.message);
+            break;
+          }
         }
       }
     }
@@ -168,13 +215,12 @@ export default function ProductImages() {
     setJobMap(newJobMap);
     sendWake(token);
 
-    // Start polling
     startPolling(newJobMap);
-  }, [selectedProducts, selectedScenes, balance, totalCredits, buildInstruction, openBuyModal, setBalanceFromServer, queryClient]);
+  }, [selectedProducts, selectedScenes, canAfford, details, buildInstruction, openBuyModal, setBalanceFromServer, queryClient, quality]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
-    const productMap = new Map<string, string>(); // jobId -> productId
+    const productMap = new Map<string, string>();
     for (const [key, jobId] of activeJobMap.entries()) {
       const productId = key.split('_')[0];
       productMap.set(jobId, productId);
@@ -193,7 +239,6 @@ export default function ProductImages() {
         setCompletedJobs(done.length);
 
         if (done.length >= jobIds.length) {
-          // Collect results
           const resultMap = new Map<string, { images: string[]; productName: string }>();
           for (const job of jobs) {
             if (job.status !== 'completed' || !job.result) continue;
@@ -229,7 +274,6 @@ export default function ProductImages() {
     pollingRef.current = setTimeout(poll, 2000);
   }, [selectedProducts, refreshBalance]);
 
-  // Cleanup polling on unmount
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
   }, []);
@@ -239,7 +283,34 @@ export default function ProductImages() {
     if (s === 2) return selectedProductIds.size > 0;
     if (s === 3) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
     if (s === 4) return selectedProductIds.size > 0 && selectedSceneIds.size > 0;
-    return false; // 5, 6 not clickable
+    return false;
+  };
+
+  const canProceed = (() => {
+    switch (step) {
+      case 1: return selectedProductIds.size > 0;
+      case 2: return selectedSceneIds.size > 0;
+      case 3: return true;
+      case 4: return canAfford && totalImages > 0;
+      default: return false;
+    }
+  })();
+
+  const handleNext = () => {
+    switch (step) {
+      case 1: setStep(2); break;
+      case 2: setStep(3); break;
+      case 3: setStep(4); break;
+      case 4: handleGenerate(); break;
+    }
+  };
+
+  const handleBack = () => {
+    switch (step) {
+      case 2: setStep(1); break;
+      case 3: setStep(2); break;
+      case 4: setStep(3); break;
+    }
   };
 
   return (
@@ -256,6 +327,11 @@ export default function ProductImages() {
         />
       )}
 
+      {/* Product context strip on Steps 2-4 */}
+      {step >= 2 && step <= 4 && selectedProducts.length > 0 && (
+        <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
+      )}
+
       <div className="mt-6">
         {step === 1 && (
           <ProductImagesStep1Products
@@ -263,7 +339,6 @@ export default function ProductImages() {
             isLoading={isLoadingProducts}
             selectedIds={selectedProductIds}
             onSelectionChange={setSelectedProductIds}
-            onContinue={() => setStep(2)}
             onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
           />
         )}
@@ -272,8 +347,6 @@ export default function ProductImages() {
           <ProductImagesStep2Scenes
             selectedSceneIds={selectedSceneIds}
             onSelectionChange={setSelectedSceneIds}
-            onContinue={() => setStep(3)}
-            onBack={() => setStep(1)}
           />
         )}
 
@@ -283,8 +356,6 @@ export default function ProductImages() {
             productCount={selectedProducts.length}
             details={details}
             onDetailsChange={setDetails}
-            onContinue={() => setStep(4)}
-            onBack={() => setStep(2)}
           />
         )}
 
@@ -293,11 +364,8 @@ export default function ProductImages() {
             selectedProducts={selectedProducts}
             selectedSceneIds={selectedSceneIds}
             details={details}
-            creditsPerImage={CREDITS_PER_IMAGE}
+            creditsPerImage={creditsPerImage}
             balance={balance}
-            onGenerate={handleGenerate}
-            onBack={() => setStep(3)}
-            onOpenBuyCredits={openBuyModal}
           />
         )}
 
@@ -317,6 +385,21 @@ export default function ProductImages() {
           />
         )}
       </div>
+
+      {/* Sticky bottom bar for Steps 1-4 */}
+      {step >= 1 && step <= 4 && (
+        <ProductImagesStickyBar
+          step={step}
+          productCount={selectedProducts.length}
+          sceneCount={selectedScenes.length}
+          totalImages={totalImages}
+          totalCredits={totalCredits}
+          balance={balance}
+          canProceed={canProceed}
+          onNext={handleNext}
+          onBack={handleBack}
+        />
+      )}
     </div>
   );
 }
