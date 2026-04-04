@@ -1,95 +1,41 @@
 
 
-# Product Images Flow — B2B Polish (10 UX Improvements)
+# Product Images — Add Perspective & Catalog Scenes + Hide Support Icon
 
-These are refinements to existing UI/UX, not new features. Focused on making the flow faster, clearer, and more efficient for repeat B2B users.
+## 2 Changes
 
-## 1. Step 1: Show product count + empty state with clear CTA
+### 1. Add new global scenes from Perspectives and Catalog Studio
 
-**Current**: No empty state when user has 0 products — just a blank grid. No guidance.
-**Fix**: Add an empty state card with illustration and "Add Your First Product" CTA button. Also show "X of 20" in the toolbar header so users always know capacity.
+**Why**: Perspectives offers valuable angle/detail shots (back view, side angles, macro, top-down, wide/environment) and Catalog Studio offers product-only shots (ghost mannequin, on-surface) that are universally useful for any product category — not just fashion.
 
-**File**: `ProductImages.tsx` — add empty state block when `userProducts.length === 0`
+**New global scenes to add to `GLOBAL_SCENES` in `sceneData.ts`**:
 
-## 2. Step 1: Show sticky bar on Step 1 too (with "Next: Choose Scenes")
+| ID | Title | Description | Chips | Trigger Blocks | Source |
+|----|-------|-------------|-------|----------------|--------|
+| `back-angle` | Back Angle | Rear view showing the back of the product | Back, Reverse, 180° | `angleSelection` | Perspectives |
+| `side-profile` | Side Profile | Left or right side view of the product | Side, Profile, 3/4 | `angleSelection` | Perspectives |
+| `top-down` | Top-Down / Bird's Eye | Direct overhead view of the product | Overhead, Top, Flat | `angleSelection` | Perspectives |
+| `macro-texture` | Macro Texture | Extreme close-up showing micro-details, textures, and material quality | Texture, Macro, Material | `detailFocus` | Perspectives |
+| `wide-environment` | Wide / Context Shot | Pulled-back shot showing the product in a broader environment | Wide, Context, Environment | `sceneEnvironment`, `productSize` | Perspectives |
+| `ghost-mannequin` | Ghost Mannequin | Invisible mannequin or floating product effect for clean product-only shots | Invisible, Clean, Product-only | `background` | Catalog Studio |
+| `on-surface` | On Surface | Product placed naturally on a styled surface with subtle shadow | Surface, Natural, Shadow | `sceneEnvironment` | Catalog Studio |
 
-**Current**: Sticky bar hidden on Step 1. User has no visible "Next" button — must mentally know to proceed.
-**Fix**: Show sticky bar on all steps 1-5 (revert `step >= 2` back to `step >= 1`). The bar already shows "Choose Scenes" as CTA for step 1.
+**File**: `src/components/app/product-images/sceneData.ts` — add 7 new entries to `GLOBAL_SCENES` array
 
-**File**: `ProductImages.tsx` — change condition from `step >= 2` to `step >= 1`
+### 2. Hide support chat icon on /app/generate/product-images
 
-## 3. Step 2: Add scene count to section headers + "Select All" per category
+**Current**: `StudioChat.tsx` already hides on mobile for certain pages and repositions for catalog pages using `isCatalogPage`.
 
-**Current**: Category headers show a count badge but no quick "Select All" for that category.
-**Fix**: Add a small "Select All" button inside each `CategorySection` header (next to the count badge). Clicking selects all scenes in that category.
+**Fix**: Add a `hideCompletely` condition for the product-images generate page, similar to the existing `hideOnMobile` pattern.
 
-**File**: `ProductImagesStep2Scenes.tsx` — add `onSelectAll` callback to `CategorySection`
-
-## 4. Step 3: Show live cost preview as settings change
-
-**Current**: Settings step shows credit labels on quality chips ("3 cr" / "6 cr") but no running total.
-**Fix**: Add a small summary line below the 3 cards: "5 products x 3 scenes x 2 images = 30 images — 180 credits". Updates live as user changes settings.
-
-**File**: `ProductImagesStep3Settings.tsx` — accept `productCount`, `sceneCount` props; render summary line
-
-## 5. Step 4 (Refine): Collapse all blocks by default, show "X customized" count
-
-**Current**: All detail blocks are open/visible, which is overwhelming for users who want defaults.
-**Fix**: Wrap each block in a `Collapsible` that starts collapsed. Show a subtle "customized" badge on blocks where user has set values. Add a "Reset All" button at the top.
-
-**File**: `ProductImagesStep3Details.tsx` — wrap blocks in collapsibles, add reset button
-
-## 6. Step 5 (Review): Add "Edit" links on each review card
-
-**Current**: Review cards show products/scenes/credits as read-only. To change anything, user must click Back repeatedly.
-**Fix**: Add small "Edit" text buttons on each card that jump directly to the relevant step (`setStep(1)` for products, `setStep(2)` for scenes, `setStep(3)` for settings).
-
-**File**: `ProductImagesStep4Review.tsx` — accept `onEditStep` callback, add Edit buttons
-
-## 7. Sticky bar: Show step label context
-
-**Current**: Sticky bar shows product/scene/image counts but not which step user is on.
-**Fix**: Add a subtle step indicator text on the left: "Step 2 of 5 — Scenes" so user always knows context.
-
-**File**: `ProductImagesStickyBar.tsx` — add step label from STEP_DEFS
-
-## 8. Step 6 (Generating): Add per-product progress rows
-
-**Current**: Single progress bar for all jobs. User can't see which products are done.
-**Fix**: Show a compact list below the progress bar with each product name + status icon (spinner / checkmark / X). Keeps user informed on large batches.
-
-**File**: `ProductImagesStep5Generating.tsx` — accept `products` and `jobMap` props, render per-product status
-
-## 9. Step 7 (Results): Add "Download All" button
-
-**Current**: Results page shows images grouped by product with "Generate More" and "View in Library" buttons. No bulk download.
-**Fix**: Add a "Download All" button that triggers downloading all result images. Use the existing `dropDownload` utility pattern.
-
-**File**: `ProductImagesStep6Results.tsx` — add Download All button using existing download utilities
-
-## 10. Product Context Strip: Show product names on hover
-
-**Current**: Strip shows tiny 8x8 thumbnails — hard to tell which products are selected without clicking back.
-**Fix**: Add a tooltip on each thumbnail showing the product name. Use existing `Tooltip` component.
-
-**File**: `ProductContextStrip.tsx` — wrap each thumbnail in `Tooltip`
-
----
+**File**: `src/components/app/StudioChat.tsx`
+- Add: `const isProductImagesPage = location.pathname === '/app/generate/product-images';`
+- Add to the existing `hideOnMobile` condition OR create a new `if (isProductImagesPage) return null;` check that hides the floating button entirely on this page (to prevent overlap with the floating sticky bar)
 
 ## Summary
 
-| # | File | Change |
-|---|------|--------|
-| 1 | `ProductImages.tsx` | Empty state for 0 products |
-| 2 | `ProductImages.tsx` | Show sticky bar on Step 1 |
-| 3 | `ProductImagesStep2Scenes.tsx` | "Select All" per category |
-| 4 | `ProductImagesStep3Settings.tsx` | Live cost preview line |
-| 5 | `ProductImagesStep3Details.tsx` | Collapse blocks by default + reset |
-| 6 | `ProductImagesStep4Review.tsx` | "Edit" jump links on cards |
-| 7 | `ProductImagesStickyBar.tsx` | Step label context |
-| 8 | `ProductImagesStep5Generating.tsx` | Per-product progress rows |
-| 9 | `ProductImagesStep6Results.tsx` | "Download All" button |
-| 10 | `ProductContextStrip.tsx` | Tooltip on product thumbnails |
-
-All changes are refinements to existing components — no new tables, no new pages, no new features.
+| File | Change |
+|------|--------|
+| `sceneData.ts` | Add 7 new global scenes (5 from Perspectives, 2 from Catalog Studio) |
+| `StudioChat.tsx` | Hide chat widget on `/app/generate/product-images` |
 
