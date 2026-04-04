@@ -728,9 +728,13 @@ export function buildDynamicPrompt(
   injectIfMissing('mood', 'sceneIntensityDirective');
   injectIfMissing('styling density', 'stylingDensityDirective');
   injectIfMissing('prominence', 'productProminenceDirective');
+  injectIfMissing('body framing', 'bodyFramingDirective');
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
+
+  // Append reference isolation instruction
+  prompt += ' ' + REFERENCE_ISOLATION;
 
   // Append quality suffix if not already present
   if (!prompt.includes('8K commercial quality')) {
