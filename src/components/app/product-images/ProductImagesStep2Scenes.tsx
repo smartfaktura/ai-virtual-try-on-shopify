@@ -35,8 +35,23 @@ const GRID_CLASSES: Record<GridSize, string> = {
   large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 };
 
-function detectRelevantCategories(products: UserProduct[]): Set<string> {
+function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
+
+  // Use AI-detected categories from analysis_json when available
+  if (productAnalyses) {
+    for (const p of products) {
+      const cat = productAnalyses[p.id]?.category;
+      if (cat && cat !== 'other') matched.add(cat);
+    }
+  }
+  // Also check product.analysis_json directly
+  for (const p of products) {
+    const aj = (p as any).analysis_json as { category?: string } | null;
+    if (aj?.category && aj.category !== 'other') matched.add(aj.category);
+  }
+
+  // Keyword fallback
   const combined = products.map(p =>
     `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
   ).join(' ');
