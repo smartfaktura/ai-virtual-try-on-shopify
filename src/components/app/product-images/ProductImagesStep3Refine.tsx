@@ -379,7 +379,7 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
     case 'visualDirection':
       return (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <ChipSelector label="Mood" value={details.mood} onChange={v => update({ mood: v })} options={[
+          <ChipSelector label="Mood" value={details.sceneIntensity} onChange={v => update({ sceneIntensity: v })} options={[
             { value: 'clean', label: 'Clean & Modern' }, { value: 'warm', label: 'Warm & Inviting' }, { value: 'dramatic', label: 'Dramatic' },
             { value: 'editorial', label: 'Editorial' }, { value: 'natural', label: 'Natural' },
           ]} />

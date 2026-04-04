@@ -612,6 +612,8 @@ export function buildDynamicPrompt(
   injectIfMissing('surface', 'surfaceDirective');
   injectIfMissing('styling', 'stylingDirective');
   injectIfMissing('lighting', 'lightingDirective');
+  injectIfMissing('composition', 'compositionDirective');
+  injectIfMissing('mood', 'sceneIntensityDirective');
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
