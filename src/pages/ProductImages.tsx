@@ -570,7 +570,7 @@ export default function ProductImages() {
       </div>
 
       {/* Sticky bottom bar for Steps 1-5 */}
-      {step >= 1 && step <= 6 && (
+      {step >= 1 && step <= 5 && (
         <ProductImagesStickyBar
           step={step}
           productCount={selectedProducts.length}
