@@ -342,7 +342,8 @@ export default function ProductImages() {
       case 2: setStep(3); break;
       case 3: setStep(4); break;
       case 4: setStep(5); break;
-      case 5: handleGenerate(); break;
+      case 5: setStep(6); break;
+      case 6: handleGenerate(); break;
     }
   };
 
