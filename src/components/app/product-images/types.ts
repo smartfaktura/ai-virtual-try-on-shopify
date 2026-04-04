@@ -91,6 +91,9 @@ export interface DetailSettings {
 
   // Custom note
   customNote?: string;
+
+  // Model selection (replaces generic person details when set)
+  selectedModelId?: string;
 }
 
 export interface GenerationPlan {

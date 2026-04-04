@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
@@ -22,6 +22,8 @@ import { ProductImagesStep5Generating } from '@/components/app/product-images/Pr
 import { ProductImagesStep6Results } from '@/components/app/product-images/ProductImagesStep6Results';
 import { ProductContextStrip } from '@/components/app/product-images/ProductContextStrip';
 import { ProductImagesStickyBar } from '@/components/app/product-images/ProductImagesStickyBar';
+import { useUserModels } from '@/hooks/useUserModels';
+import { useCustomModels } from '@/hooks/useCustomModels';
 import type { PIStep, UserProduct, DetailSettings } from '@/components/app/product-images/types';
 
 const STEP_DEFS = [
@@ -55,10 +57,17 @@ export default function ProductImages() {
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
 
+  const INITIAL_DETAILS: DetailSettings = { aspectRatio: '1:1', quality: 'high', imageCount: '1' };
+
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
-  const [details, setDetails] = useState<DetailSettings>({ aspectRatio: '1:1', quality: 'high', imageCount: '1' });
+  const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
+  const prevProductIdsRef = useRef<string | null>(null);
+
+  // Load models for Step 3
+  const { asProfiles: userModelProfiles } = useUserModels();
+  const { asProfiles: globalModelProfiles } = useCustomModels();
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
@@ -94,6 +103,17 @@ export default function ProductImages() {
   const totalImages = selectedProducts.length * selectedScenes.length * imageCount;
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
+
+  // Reset downstream state when product selection changes
+  useEffect(() => {
+    const key = Array.from(selectedProductIds).sort().join(',');
+    if (prevProductIdsRef.current !== null && prevProductIdsRef.current !== key) {
+      setSelectedSceneIds(new Set());
+      setDetails(INITIAL_DETAILS);
+      if (step > 1) setStep(1);
+    }
+    prevProductIdsRef.current = key;
+  }, [selectedProductIds]);
 
   // Stale detail cleanup when scenes change
   useEffect(() => {
@@ -357,6 +377,8 @@ export default function ProductImages() {
             productCount={selectedProducts.length}
             details={details}
             onDetailsChange={setDetails}
+            userModels={userModelProfiles}
+            globalModels={globalModelProfiles}
           />
         )}
 
