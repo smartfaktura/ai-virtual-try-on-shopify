@@ -243,7 +243,7 @@ export default function ProductImages() {
 
     if (newJobMap.size === 0) {
       toast.error('Could not queue any jobs');
-      setStep(5);
+      setStep(6);
       return;
     }
 
