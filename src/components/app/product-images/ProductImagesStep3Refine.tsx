@@ -342,10 +342,10 @@ function AutoAestheticButton({ details, update }: { details: DetailSettings; upd
       type="button"
       onClick={() => {
         if (active) {
-          // Clear auto values
-          const cleared: Partial<DetailSettings> = {};
-          for (const k of Object.keys(AUTO_AESTHETIC_DEFAULTS)) cleared[k as keyof DetailSettings] = undefined as any;
-          update(cleared);
+          update({
+            backgroundTone: undefined, negativeSpace: undefined, surfaceType: undefined,
+            lightingStyle: undefined, shadowStyle: undefined, mood: undefined, brandingVisibility: undefined,
+          });
         } else {
           update(AUTO_AESTHETIC_DEFAULTS);
         }
