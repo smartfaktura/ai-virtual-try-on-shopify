@@ -62,6 +62,38 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   'cool-neutral': 'cool neutral color palette with soft gray and blue-white undertones',
   'monochrome': 'monochromatic color palette — single hue family with tonal variation',
   'brand-led': 'color palette guided by the brand identity colors',
+  // Scene-specific backgroundTone chip values
+  'white': 'clean white color palette with pure, bright tones',
+  'light-gray': 'soft light-gray color palette with neutral, understated tones',
+  'gradient': 'subtle gradient color palette with smooth tonal transitions',
+};
+
+// ── Styling density map ──
+const STYLING_DENSITY_MAP: Record<string, string> = {
+  'minimal': 'Minimal styling — product alone or with 1-2 subtle props, clean negative space.',
+  'moderate': 'Moderate styling — thoughtful arrangement with complementary contextual props.',
+  'styled': 'Fully styled scene — rich arrangement with multiple props, textures, and lifestyle elements.',
+};
+
+// ── Environment map ──
+const ENVIRONMENT_MAP: Record<string, string> = {
+  'bathroom': 'Set in a modern, clean bathroom — white tiles or marble surfaces, soft ambient light, spa-like calm.',
+  'kitchen': 'Set in a bright, contemporary kitchen — clean countertops, natural light, curated simplicity.',
+  'living-room': 'Set in a styled living room — premium furniture, warm tones, editorial interior feel.',
+  'desk': 'Set at a clean, organized workspace — minimal desk accessories, focused professional aesthetic.',
+  'outdoor': 'Set in a natural outdoor environment — soft daylight, organic textures, open air.',
+  'shelf': 'Set on a curated display shelf — clean lines, intentional arrangement, retail-quality presentation.',
+  'bedroom': 'Set in a serene, styled bedroom — soft linens, warm ambient light, intimate editorial mood.',
+  'cafe': 'Set in a contemporary café — warm wood tones, ambient light, curated lifestyle backdrop.',
+  'studio': 'Set in a professional photography studio — controlled environment, clean backgrounds, focused lighting.',
+  'garden': 'Set in a lush garden environment — natural greenery, soft diffused daylight, organic textures.',
+};
+
+// ── Prominence map ──
+const PROMINENCE_MAP: Record<string, string> = {
+  'hero': 'Product dominates the frame — fills 60-80% of composition, maximum visual impact.',
+  'balanced': 'Product is clearly the hero but shares space with environment — fills 40-60% of frame.',
+  'contextual': 'Product is identifiable but environment tells the story — product fills 20-40% of frame.',
 };
 
 // ── Surface type map ──
