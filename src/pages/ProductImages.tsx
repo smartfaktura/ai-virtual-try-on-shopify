@@ -661,6 +661,7 @@ export default function ProductImages() {
                 selectedSceneIds={selectedSceneIds}
                 onSelectionChange={setSelectedSceneIds}
                 selectedProducts={selectedProducts}
+                productAnalyses={analyses}
               />
             )}
 

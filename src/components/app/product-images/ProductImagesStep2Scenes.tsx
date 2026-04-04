@@ -10,18 +10,19 @@ interface Step2Props {
   selectedSceneIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
   selectedProducts: UserProduct[];
+  productAnalyses?: Record<string, { category: string }>;
 }
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask'],
   'makeup-lipsticks': ['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'cosmetic', 'lip', 'bronzer', 'highlighter', 'primer', 'beauty'],
   'fragrance': ['perfume', 'cologne', 'fragrance', 'eau de', 'scent', 'parfum'],
-  'bags-accessories': ['bag', 'handbag', 'purse', 'clutch', 'wallet', 'tote', 'backpack', 'briefcase', 'satchel'],
+  'bags-accessories': ['bag', 'handbag', 'purse', 'clutch', 'wallet', 'tote', 'backpack', 'briefcase', 'satchel', 'crossbody', 'messenger', 'duffel', 'case', 'pouch'],
   'hats-small': ['hat', 'cap', 'beanie', 'scarf', 'gloves', 'belt', 'watch', 'bracelet', 'necklace', 'earring', 'ring', 'sunglasses', 'jewelry', 'jewellery'],
-  'shoes': ['shoe', 'sneaker', 'boot', 'sandal', 'heel', 'loafer', 'slipper', 'footwear'],
-  'garments': ['shirt', 'dress', 'jacket', 'pants', 'jeans', 'sweater', 'hoodie', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'legging', 'clothing', 'apparel', 'garment'],
+  'shoes': ['shoe', 'sneaker', 'boot', 'sandal', 'heel', 'loafer', 'slipper', 'footwear', 'trainer', 'mule', 'clog', 'pump', 'oxford', 'derby'],
+  'garments': ['shirt', 'dress', 'jacket', 'pants', 'jeans', 'sweater', 'hoodie', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'legging', 'clothing', 'apparel', 'garment', 'jersey', 'tank', 'polo', 'uniform', 'tracksuit', 'jogger', 'vest', 'cardigan', 'blazer', 'suit', 'romper', 'jumpsuit', 'athletic', 'activewear', 'sportswear', 'basketball'],
   'home-decor': ['candle', 'vase', 'pillow', 'blanket', 'lamp', 'decor', 'home', 'interior', 'furniture', 'rug', 'curtain', 'mirror', 'frame', 'planter', 'ceramic'],
-  'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'smartwatch'],
+  'tech-devices': ['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'mouse', 'camera', 'tech', 'gadget', 'electronic', 'smartwatch', 'monitor', 'console', 'controller', 'drone', 'wearable'],
   'food-beverage': ['food', 'coffee', 'tea', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'juice', 'beverage', 'organic', 'artisan'],
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
 };
@@ -34,8 +35,23 @@ const GRID_CLASSES: Record<GridSize, string> = {
   large: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 };
 
-function detectRelevantCategories(products: UserProduct[]): Set<string> {
+function detectRelevantCategories(products: UserProduct[], productAnalyses?: Record<string, { category: string }>): Set<string> {
   const matched = new Set<string>();
+
+  // Use AI-detected categories from analysis_json when available
+  if (productAnalyses) {
+    for (const p of products) {
+      const cat = productAnalyses[p.id]?.category;
+      if (cat && cat !== 'other') matched.add(cat);
+    }
+  }
+  // Also check product.analysis_json directly
+  for (const p of products) {
+    const aj = (p as any).analysis_json as { category?: string } | null;
+    if (aj?.category && aj.category !== 'other') matched.add(aj.category);
+  }
+
+  // Keyword fallback
   const combined = products.map(p =>
     `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
   ).join(' ');
@@ -161,8 +177,8 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
   );
 }
 
-export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts }: Step2Props) {
-  const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts), [selectedProducts]);
+export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
+  const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
