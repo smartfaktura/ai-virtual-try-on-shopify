@@ -32,7 +32,7 @@ function toModelProfile(m: UserModel): ModelProfile {
   };
 }
 
-export function useUserModels() {
+export function useUserModels(opts?: { enabled?: boolean }) {
   const { user } = useAuth();
 
   const query = useQuery({
@@ -46,7 +46,7 @@ export function useUserModels() {
       if (error) throw error;
       return (data as unknown as UserModel[]) ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && (opts?.enabled !== false),
   });
 
   const models = query.data ?? [];

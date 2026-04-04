@@ -42,7 +42,7 @@ function toModelProfile(m: CustomModel): ModelProfile {
   };
 }
 
-export function useCustomModels() {
+export function useCustomModels(opts?: { enabled?: boolean }) {
   const { user } = useAuth();
 
   const query = useQuery({
@@ -57,7 +57,7 @@ export function useCustomModels() {
       if (error) throw error;
       return (data as unknown as CustomModel[]) ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && (opts?.enabled !== false),
   });
 
   const models = query.data ?? [];
