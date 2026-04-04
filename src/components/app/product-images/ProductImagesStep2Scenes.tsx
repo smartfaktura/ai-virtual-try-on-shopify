@@ -10,6 +10,7 @@ interface Step2Props {
   selectedSceneIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
   selectedProducts: UserProduct[];
+  productAnalyses?: Record<string, { category: string }>;
 }
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
