@@ -166,6 +166,11 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
+  // Sync expanded categories when selected products change
+  useEffect(() => {
+    setExpandedCategories(new Set(relevantCatIds));
+  }, [relevantCatIds]);
+
   const gridClass = GRID_CLASSES[gridSize];
 
   const recommendedCollections = useMemo(

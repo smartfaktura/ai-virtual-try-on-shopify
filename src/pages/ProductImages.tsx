@@ -725,7 +725,7 @@ export default function ProductImages() {
             {step === 6 && (
               <ProductImagesStep6Results
                 results={results}
-                onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
+                onGenerateMore={() => { resetGenerationState(); setStep(2); }}
                 onGoToLibrary={() => navigate('/app/library')}
               />
             )}
