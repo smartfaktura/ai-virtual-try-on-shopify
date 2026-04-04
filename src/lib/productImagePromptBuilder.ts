@@ -176,6 +176,76 @@ const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural ha
 const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
 
 // ── Category-aware defaults ──
+
+function defaultBackground(category?: string): string {
+  switch (category) {
+    case 'garments':
+    case 'shoes':
+    case 'bags-accessories':
+      return 'soft warm white seamless studio background';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'soft neutral light gray seamless background';
+    case 'tech-devices':
+      return 'clean matte white seamless background';
+    case 'food-beverage':
+      return 'warm off-white background with natural warmth';
+    case 'home-decor':
+      return 'soft white studio background';
+    default:
+      return 'soft warm white seamless studio background';
+  }
+}
+
+function defaultSurface(category?: string): string {
+  switch (category) {
+    case 'food-beverage':
+      return 'placed on a warm, natural wood surface with visible grain';
+    case 'home-decor':
+      return 'placed on a premium styled surface with complementary texture';
+    default:
+      return 'placed on a clean, minimal studio surface with seamless backdrop';
+  }
+}
+
+function defaultShadow(category?: string): string {
+  switch (category) {
+    case 'garments':
+    case 'shoes':
+    case 'bags-accessories':
+      return 'Soft diffused shadow beneath the product for a refined, airy feel.';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Barely-visible contact shadow for floating elegance.';
+    case 'tech-devices':
+      return 'Crisp, well-defined shadow adding depth and dimension.';
+    default:
+      return 'Soft, natural contact shadow grounding the product.';
+  }
+}
+
+function defaultStyling(category?: string): string {
+  switch (category) {
+    case 'garments':
+      return 'Clean commercial styling — crisp, professional composition.';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Beauty-clean styling — luminous, minimal composition with premium product focus.';
+    case 'shoes':
+    case 'bags-accessories':
+      return 'Minimal luxury styling — clean, restrained, premium composition.';
+    case 'tech-devices':
+      return 'Modern sleek styling — contemporary, geometric, sharp composition.';
+    case 'food-beverage':
+      return 'Organic natural styling — relaxed, authentic composition.';
+    default:
+      return 'Clean commercial styling — crisp, professional composition.';
+  }
+}
+
 function defaultLighting(category?: string): string {
   switch (category) {
     case 'fragrance': return 'Soft directional side lighting with gentle glass refraction highlights.';
@@ -339,7 +409,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'background': {
       const bgFamily = details.negativeSpace; // background family selection from UI
       const colorWorld = details.backgroundTone; // color world selection from UI
-      const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? 'clean neutral' : bgFamily!.replace(/-/g, ' '));
+      const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
     }
@@ -352,15 +422,15 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     // Bug 2 fix: shadow now matches UI chip values via updated SHADOW_MAP
     case 'shadowDirective': {
-      if (isAuto(details.shadowStyle)) return 'Product grounded with a soft, natural contact shadow.';
-      return SHADOW_MAP[details.shadowStyle!] || 'Product grounded with a soft, natural contact shadow.';
+      if (isAuto(details.shadowStyle)) return defaultShadow(cat);
+      return SHADOW_MAP[details.shadowStyle!] || defaultShadow(cat);
     }
 
     case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish, ctx.productDescription);
 
     // Bug 9 fix: surface now uses SURFACE_MAP for rich descriptions
     case 'surfaceDirective': {
-      if (isAuto(details.surfaceType)) return 'on a premium styled surface';
+      if (isAuto(details.surfaceType)) return defaultSurface(cat);
       return SURFACE_MAP[details.surfaceType!] || `placed on a ${details.surfaceType!.replace(/-/g, ' ')} surface`;
     }
 
@@ -392,9 +462,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     // Bug 7 fix: UI stores "styling direction" in details.mood — route it correctly
     case 'stylingDirective': {
-      // The UI label says "Styling direction" but stores in `mood`
       const sd = details.mood || details.stylingDirection;
-      if (isAuto(sd)) return '';
+      if (isAuto(sd)) return defaultStyling(cat);
       return STYLING_DIRECTION_MAP[sd!] || `${sd!.replace(/-/g, ' ')} styling direction with refined visual intention.`;
     }
 
@@ -507,6 +576,19 @@ export function buildDynamicPrompt(
 
   // Resolve all {{token}} placeholders
   let prompt = template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
+
+  // Auto-inject key directives if template didn't include their tokens
+  const injectIfMissing = (keyword: string, tokenName: string) => {
+    const resolved = resolveToken(tokenName, ctx);
+    if (resolved && !prompt.toLowerCase().includes(keyword)) {
+      prompt += ` ${resolved}`;
+    }
+  };
+  injectIfMissing('background', 'background');
+  injectIfMissing('shadow', 'shadowDirective');
+  injectIfMissing('surface', 'surfaceDirective');
+  injectIfMissing('styling', 'stylingDirective');
+  injectIfMissing('lighting', 'lightingDirective');
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
