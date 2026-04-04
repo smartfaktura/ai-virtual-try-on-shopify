@@ -321,8 +321,44 @@ function defaultMaterial(materialFamily?: string, finish?: string, productDescri
   return 'crisp surface detail with visible material grain, finish quality, and micro-texture';
 }
 
+// ── Default person directive when user leaves everything on auto but scene needs a person ──
+function defaultPersonDirective(category?: string): string {
+  switch (category) {
+    case 'garments':
+      return 'Professional fashion model with natural, contemporary look — realistic skin texture, confident but relaxed posture, editorial presence.';
+    case 'shoes':
+    case 'bags-accessories':
+      return 'Stylish model with clean, modern look — natural skin, understated elegance, product is the focus.';
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Beauty model with flawless, luminous skin — close-up ready, soft natural expression, editorial beauty standard.';
+    case 'fragrance':
+      return 'Aspirational model with refined, photogenic features — natural skin texture, subtle confidence, luxury aesthetic.';
+    default:
+      return 'Professional model with natural, contemporary look — realistic skin texture, confident posture, clean aesthetic.';
+  }
+}
+
+// ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
+function defaultOutfitDirective(category?: string): string {
+  switch (category) {
+    case 'garments':
+      return 'Wearing clean, complementary styling that doesn\'t compete with the product — neutral tones, minimal accessories.';
+    case 'bags-accessories':
+      return 'Wearing a minimalist neutral outfit — product is the styling hero, clothing serves as backdrop.';
+    case 'shoes':
+      return 'Wearing slim-fit neutral clothing that keeps visual focus on the footwear.';
+    case 'fragrance':
+    case 'beauty-skincare':
+    case 'makeup-lipsticks':
+      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product.';
+    default:
+      return 'Wearing clean, understated clothing in neutral tones — product remains the visual focus.';
+  }
+}
+
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean): string {
   const parts: string[] = [];
   if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
   if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
@@ -330,13 +366,28 @@ function buildPersonDirective(d: DetailSettings): string {
   if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
   if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
   if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
-  if (parts.length === 0) return '';
+
+  if (parts.length === 0) {
+    // No person details set — use smart defaults if scene requires a person
+    if (sceneNeedsPerson) {
+      let directive = defaultPersonDirective(category);
+      const outfitStr = buildOutfitDirective(d);
+      directive += ` ${outfitStr || defaultOutfitDirective(category)}`;
+      directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
+      return directive;
+    }
+    return '';
+  }
 
   let directive = `Model: ${parts.join(', ')}.`;
 
-  // Append outfit if present
+  // Append outfit if present, or use smart default for on-model scenes
   const outfitStr = buildOutfitDirective(d);
-  if (outfitStr) directive += ` ${outfitStr}`;
+  if (outfitStr) {
+    directive += ` ${outfitStr}`;
+  } else if (sceneNeedsPerson) {
+    directive += ` ${defaultOutfitDirective(category)}`;
+  }
 
   // Append model reference if present
   if (d.selectedModelId) directive += ' Use the specific model reference provided in the source image.';
