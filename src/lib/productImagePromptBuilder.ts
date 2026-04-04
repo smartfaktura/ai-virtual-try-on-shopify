@@ -40,6 +40,82 @@ const CONSISTENCY_MAP: Record<string, string> = {
   'loose': 'Allow creative variation while keeping the product recognizable.',
 };
 
+// ── Hand style lookup ──
+const HAND_STYLE_MAP: Record<string, string> = {
+  'polished-beauty': 'elegant, well-groomed beauty hand with smooth skin and polished appearance',
+  'natural-casual': 'natural, casual hand with realistic skin texture and relaxed grip',
+  'masculine-rugged': 'strong masculine hand with natural skin texture and confident grip',
+  'manicured-luxury': 'immaculately manicured luxury hand with flawless skin and refined elegance',
+  'editorial-minimal': 'minimal editorial hand with clean lines and understated elegance',
+  'artistic-expressive': 'artistic, expressive hand with character and natural imperfections',
+};
+
+// ── Nail style lookup ──
+const NAIL_MAP: Record<string, string> = {
+  'natural-clean': 'clean, natural nails with neat cuticles and healthy sheen',
+  'gel-polish': 'professional gel-polished nails with glossy, chip-free finish',
+  'matte-polish': 'sophisticated matte-polished nails with velvety finish',
+  'french-tip': 'classic French-tip manicure with precise white tips',
+  'nude-neutral': 'subtle nude-tone polished nails blending naturally with skin',
+  'bold-color': 'bold, statement-color nails adding visual contrast',
+  'bare-minimal': 'bare, unpolished nails with clean, trimmed appearance',
+};
+
+// ── Camera directive by scene type ──
+const CAMERA_MAP: Record<string, string> = {
+  'macro': 'Shot with 100mm macro lens at f/2.8, extremely shallow depth of field isolating fine details.',
+  'packshot': 'Shot with 50mm lens at f/8 for minimal distortion, edge-to-edge sharpness across the product.',
+  'portrait': 'Shot with 85mm portrait lens at f/2, creamy bokeh background, flattering perspective.',
+  'lifestyle': 'Shot with 35mm lens at f/4, natural perspective with environmental context in soft focus.',
+  'editorial': 'Shot with 50mm lens at f/2.8, cinematic depth of field with intentional focal plane.',
+  'flatlay': 'Shot from directly overhead with 35mm lens at f/5.6, even sharpness across the flat surface.',
+};
+
+// ── Focus area defaults by scene type ──
+const FOCUS_AREA_DEFAULTS: Record<string, string> = {
+  'macro': 'fine construction details, material joints, and surface micro-texture',
+  'packshot': 'overall product form, label clarity, and finish quality',
+  'portrait': 'product placement and model interaction point',
+  'lifestyle': 'product in its natural context with surrounding detail',
+  'editorial': 'compositional hero element and textural contrast',
+  'flatlay': 'arrangement geometry and individual item details',
+  'formula': 'viscosity, translucency, bubble structure, and sheen',
+  'hardware': 'clasp mechanism, zipper teeth, hinge, and metal finish',
+  'label': 'printed text legibility, embossing, foil detail, and material texture',
+  'sole': 'tread pattern, sole construction, material joints, and brand markings',
+  'fabric': 'weave structure, thread count, seam construction, and fiber detail',
+  'dose': 'granule texture, capsule seam, powder consistency, and serving format',
+};
+
+// ── Material keyword extraction from description ──
+const MATERIAL_KEYWORDS: Record<string, string> = {
+  'leather': 'visible leather grain, natural hide texture, and edge finishing',
+  'glass': 'transparent glass clarity with refraction, surface reflections, and edge thickness',
+  'metal': 'metallic surface with brushed or polished finish, visible machining detail',
+  'aluminum': 'anodized aluminum surface with precise machining and controlled reflections',
+  'ceramic': 'ceramic glaze with depth, subtle surface variation, and fired finish',
+  'wood': 'natural wood grain pattern, growth rings, and organic surface variation',
+  'plastic': 'molded plastic surface with clean parting lines and controlled sheen',
+  'fabric': 'woven fabric texture with visible thread structure and natural drape',
+  'suede': 'soft suede nap with directional pile and velvety surface texture',
+  'silk': 'luxurious silk with natural sheen, fluid drape, and light-catching surface',
+  'cotton': 'natural cotton weave with soft texture and breathable appearance',
+  'rubber': 'matte rubber surface with grip texture and flexible material character',
+  'stone': 'natural stone surface with mineral veining and organic texture',
+  'marble': 'polished marble with natural veining, translucency, and smooth finish',
+  'velvet': 'plush velvet pile with rich depth and light-absorbing texture',
+  'canvas': 'sturdy canvas weave with visible thread structure and durable finish',
+  'porcelain': 'refined porcelain with smooth glaze, translucent edges, and precise form',
+  'titanium': 'lightweight titanium with brushed finish and aerospace-grade precision',
+  'gold': 'gold surface with warm reflections and luxurious metallic depth',
+  'silver': 'silver surface with cool reflections and polished brilliance',
+};
+
+// ── Negative prompt components ──
+const BASE_NEGATIVES = 'No watermarks, no text overlays, no chromatic aberration, no lens flare artifacts, no color banding, no over-saturation.';
+const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
+const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
+
 // ── Category-aware defaults ──
 function defaultLighting(category?: string): string {
   switch (category) {
@@ -56,13 +132,24 @@ function defaultLighting(category?: string): string {
   }
 }
 
-function defaultMaterial(materialFamily?: string, finish?: string): string {
-  if (materialFamily && finish) return `visible ${materialFamily} texture, ${finish} finish`;
-  if (materialFamily) return `visible ${materialFamily} texture and surface detail`;
-  return 'sharp surface texture and material detail';
+function extractMaterialFromDescription(description?: string): string | null {
+  if (!description) return null;
+  const lower = description.toLowerCase();
+  for (const [keyword, phrase] of Object.entries(MATERIAL_KEYWORDS)) {
+    if (lower.includes(keyword)) return phrase;
+  }
+  return null;
 }
 
-// ── Person directive builder ──
+function defaultMaterial(materialFamily?: string, finish?: string, productDescription?: string): string {
+  if (materialFamily && finish) return `visible ${materialFamily} texture, ${finish} finish`;
+  if (materialFamily) return `visible ${materialFamily} texture and surface detail`;
+  const extracted = extractMaterialFromDescription(productDescription);
+  if (extracted) return extracted;
+  return 'crisp surface detail with visible material grain, finish quality, and micro-texture';
+}
+
+// ── Person directive builder (now includes outfit + model) ──
 function buildPersonDirective(d: DetailSettings): string {
   const parts: string[] = [];
   if (d.presentation) parts.push(`${d.presentation} presentation`);
@@ -72,25 +159,44 @@ function buildPersonDirective(d: DetailSettings): string {
   if (d.hairVisibility) parts.push(`${d.hairVisibility} hair visibility`);
   if (d.cropType) parts.push(`${d.cropType} crop`);
   if (parts.length === 0) return '';
-  return `Model: ${parts.join(', ')}. Hyper-realistic skin texture with visible pores and natural anatomy.`;
+
+  let directive = `Model: ${parts.join(', ')}.`;
+
+  // Append outfit if present
+  const outfitStr = buildOutfitDirective(d);
+  if (outfitStr) directive += ` ${outfitStr}`;
+
+  // Append model reference if present
+  if (d.selectedModelId) directive += ' Use the specific model reference provided in the source image.';
+
+  directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
+  return directive;
+}
+
+function resolveHandStyle(raw?: string): string {
+  if (!raw) return 'realistic human hand with natural skin texture and visible pores';
+  return HAND_STYLE_MAP[raw] || raw.replace(/-/g, ' ');
+}
+
+function resolveNailStyle(raw?: string): string {
+  if (!raw) return 'natural, clean nails with neat cuticles';
+  return NAIL_MAP[raw] || `${raw.replace(/-/g, ' ')} nails with clean manicure`;
 }
 
 function buildHandDirective(d: DetailSettings): string {
   const parts: string[] = [];
-  if (d.handStyle) parts.push(d.handStyle);
-  if (d.nails) parts.push(`${d.nails} nails`);
+  parts.push(resolveHandStyle(d.handStyle));
+  if (d.nails) parts.push(resolveNailStyle(d.nails));
   if (d.jewelryVisible) parts.push(`jewelry ${d.jewelryVisible}`);
-  if (parts.length === 0) return 'realistic human hand with natural skin texture and visible pores';
   return parts.join(', ');
 }
 
 function buildOutfitDirective(d: DetailSettings): string {
-  // outfitStyle and outfitColorDirection are in refine person fields
-  const style = (d as any).outfitStyle;
-  const color = (d as any).outfitColorDirection;
+  const style = d.outfitStyle;
+  const color = d.outfitColorDirection;
   if (!style && !color) return '';
-  const s = style ? `Wearing ${style} outfit` : 'Outfit';
-  const c = color ? ` in ${color} tones` : '';
+  const s = style ? `Wearing ${style.replace(/-/g, ' ')} outfit` : 'Outfit';
+  const c = color ? ` in ${color.replace(/-/g, ' ')} tones` : '';
   return `${s}${c}.`;
 }
 
@@ -105,17 +211,64 @@ function buildPackagingDirective(d: DetailSettings): string {
   return `Packaging: ${parts.join(', ')}.`;
 }
 
+// ── Camera directive resolver ──
+function resolveCameraDirective(scene: ProductImageScene): string {
+  const st = scene.sceneType;
+  if (st && CAMERA_MAP[st]) return CAMERA_MAP[st];
+
+  // Infer from trigger blocks
+  const triggers = scene.triggerBlocks;
+  if (triggers.includes('detailFocus')) return CAMERA_MAP['macro'];
+  if (triggers.includes('personDetails') && !triggers.includes('sceneEnvironment')) return CAMERA_MAP['portrait'];
+  if (triggers.includes('sceneEnvironment') && triggers.includes('personDetails')) return CAMERA_MAP['lifestyle'];
+  if (triggers.includes('sceneEnvironment')) return CAMERA_MAP['lifestyle'];
+  if (triggers.includes('visualDirection')) return CAMERA_MAP['editorial'];
+
+  return CAMERA_MAP['packshot'];
+}
+
+// ── Focus area resolver with scene-type-aware defaults ──
+function resolveFocusArea(d: DetailSettings, scene: ProductImageScene): string {
+  if (d.focusArea) return d.focusArea;
+
+  const st = scene.sceneType;
+  if (st && FOCUS_AREA_DEFAULTS[st]) return FOCUS_AREA_DEFAULTS[st];
+
+  // Infer from scene ID patterns
+  const id = scene.id;
+  if (id.includes('texture') || id.includes('formula')) return FOCUS_AREA_DEFAULTS['formula'];
+  if (id.includes('hardware') || id.includes('clasp') || id.includes('detail_macro')) return FOCUS_AREA_DEFAULTS['hardware'];
+  if (id.includes('label') || id.includes('packaging_detail')) return FOCUS_AREA_DEFAULTS['label'];
+  if (id.includes('sole')) return FOCUS_AREA_DEFAULTS['sole'];
+  if (id.includes('fabric') || id.includes('stitch')) return FOCUS_AREA_DEFAULTS['fabric'];
+  if (id.includes('dose') || id.includes('scoop')) return FOCUS_AREA_DEFAULTS['dose'];
+
+  // Fall back based on trigger blocks
+  if (scene.triggerBlocks.includes('detailFocus')) return FOCUS_AREA_DEFAULTS['macro'];
+  return 'key product details and construction quality';
+}
+
+// ── Negative prompt builder ──
+function buildNegativePrompt(scene: ProductImageScene): string {
+  const parts = [BASE_NEGATIVES, PRODUCT_NEGATIVES];
+  const hasPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+  if (hasPerson) parts.push(PERSON_NEGATIVES);
+  return parts.join(' ');
+}
+
 // ── Token resolution ──
 interface TokenContext {
   productName: string;
   productType: string;
+  productDescription?: string;
   analysis: ProductAnalysis | null;
   details: DetailSettings;
   selectedModelId?: string;
+  scene: ProductImageScene;
 }
 
 function resolveToken(token: string, ctx: TokenContext): string {
-  const { productName, productType, analysis, details } = ctx;
+  const { productName, productType, analysis, details, scene } = ctx;
   const cat = analysis?.category;
 
   switch (token) {
@@ -124,40 +277,69 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'background': return BG_MAP[details.backgroundTone || ''] || details.backgroundTone || 'clean neutral';
     case 'lightingDirective': return LIGHTING_MAP[details.lightingStyle || ''] || details.lightingStyle || defaultLighting(cat);
     case 'shadowDirective': return SHADOW_MAP[details.shadowStyle || ''] || details.shadowStyle || 'Product grounded with a soft, natural contact shadow.';
-    case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish);
+    case 'materialTexture': return defaultMaterial(analysis?.materialFamily, analysis?.finish, ctx.productDescription);
     case 'surfaceDirective': return details.surfaceType ? `placed on ${details.surfaceType} surface` : 'on a premium styled surface';
     case 'personDirective': return buildPersonDirective(details);
     case 'handStyle': return buildHandDirective(details);
-    case 'nailDirective': return details.nails ? `${details.nails} nails with clean manicure` : 'natural clean nails';
+    case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': return buildOutfitDirective(details);
-    case 'focusArea': return details.focusArea || 'key product construction details';
-    case 'accentDirective': return (details as any).accentColor ? `Accent tones: ${(details as any).accentColor}.` : '';
-    case 'consistencyDirective': return CONSISTENCY_MAP[details.consistency || ''] || '';
+    case 'focusArea': return resolveFocusArea(details, scene);
+    case 'accentDirective': {
+      const ac = details.accentColor;
+      return ac ? `Accent tones: subtle ${ac.replace(/-/g, ' ')} accents complementing the product palette.` : '';
+    }
+    case 'consistencyDirective': return CONSISTENCY_MAP[details.consistency || 'balanced'] || CONSISTENCY_MAP['balanced'];
     case 'productSize': return analysis?.sizeClass || 'medium';
     case 'colorFamily': return analysis?.colorFamily || 'neutral tones';
-    case 'stylingDirective': return (details as any).stylingDirection ? `${(details as any).stylingDirection} styling direction.` : '';
-    case 'moodDirective': return details.mood ? `${details.mood} mood and atmosphere.` : '';
-    case 'environmentDirective': return details.environmentType ? `Set in a ${details.environmentType} environment.` : '';
-    case 'brandingDirective': return details.brandingVisibility ? `Branding: ${details.brandingVisibility}.` : '';
+    case 'stylingDirective': {
+      const sd = details.stylingDirection;
+      return sd ? `${sd.replace(/-/g, ' ')} styling direction with refined visual intention.` : '';
+    }
+    case 'moodDirective': return details.mood ? `${details.mood.replace(/-/g, ' ')} mood and atmosphere.` : '';
+    case 'environmentDirective': return details.environmentType ? `Set in a ${details.environmentType.replace(/-/g, ' ')} environment.` : '';
+    case 'brandingDirective': return details.brandingVisibility ? `Branding: ${details.brandingVisibility.replace(/-/g, ' ')}.` : '';
     case 'customNote': return details.customNote || '';
     case 'modelDirective': return ctx.selectedModelId ? 'Use the specific model reference provided in the source image.' : '';
     case 'packagingDirective': return buildPackagingDirective(details);
-    case 'cropDirective': return details.cropIntensity ? `Crop intensity: ${details.cropIntensity}.` : '';
+    case 'cropDirective': return details.cropIntensity ? `Crop intensity: ${details.cropIntensity.replace(/-/g, ' ')}.` : '';
     case 'actionDirective': {
       const parts: string[] = [];
-      if (details.actionType) parts.push(details.actionType);
-      if (details.actionIntensity) parts.push(`intensity: ${details.actionIntensity}`);
+      if (details.actionType) parts.push(details.actionType.replace(/-/g, ' '));
+      if (details.actionIntensity) parts.push(`intensity: ${details.actionIntensity.replace(/-/g, ' ')}`);
       return parts.length ? `Action: ${parts.join(', ')}.` : '';
     }
-    case 'compositionDirective': return details.compositionFraming ? `Composition: ${details.compositionFraming}.` : '';
-    case 'negativeSpaceDirective': return details.negativeSpace ? `Negative space: ${details.negativeSpace}.` : '';
-    case 'productProminenceDirective': return details.productProminence ? `Product prominence: ${details.productProminence}.` : '';
-    case 'sceneIntensityDirective': return details.sceneIntensity ? `Scene intensity: ${details.sceneIntensity}.` : '';
+    case 'compositionDirective': return details.compositionFraming ? `Composition: ${details.compositionFraming.replace(/-/g, ' ')}.` : '';
+    case 'negativeSpaceDirective': return details.negativeSpace ? `Negative space: ${details.negativeSpace.replace(/-/g, ' ')}.` : '';
+    case 'productProminenceDirective': return details.productProminence ? `Product prominence: ${details.productProminence.replace(/-/g, ' ')}.` : '';
+    case 'sceneIntensityDirective': return details.sceneIntensity ? `Scene intensity: ${details.sceneIntensity.replace(/-/g, ' ')}.` : '';
+    case 'cameraDirective': return resolveCameraDirective(scene);
     default: return '';
   }
 }
 
-const QUALITY_SUFFIX = 'Professional product photography, ultra-sharp focus, hyper-realistic textures and materials, 8K commercial quality, photorealistic rendering.';
+const QUALITY_SUFFIX = 'Professional product photography, ultra-sharp focus, hyper-realistic textures and materials, accurate white balance, true-to-life color reproduction, 8K commercial quality, photorealistic rendering.';
+
+// ── Post-resolution cleanup ──
+function cleanupPrompt(raw: string): string {
+  let s = raw;
+  // Remove orphaned punctuation patterns from empty tokens
+  s = s.replace(/,\s*,/g, ',');           // double commas
+  s = s.replace(/,\s*\./g, '.');          // comma before period
+  s = s.replace(/\.\s*\./g, '.');         // double periods
+  s = s.replace(/—\s*,/g, '—');           // dash then comma
+  s = s.replace(/—\s*\./g, '.');          // dash then period
+  s = s.replace(/:\s*\./g, '.');          // colon then period
+  s = s.replace(/:\s*,/g, ':');           // colon then comma
+  s = s.replace(/\s+—\s+\./g, '.');      // spaced dash then period
+  // Remove sentences that are just whitespace between periods
+  s = s.replace(/\.\s+\./g, '.');
+  // Collapse multiple spaces
+  s = s.replace(/\s{2,}/g, ' ');
+  // Remove leading/trailing spaces around periods
+  s = s.replace(/\s+\./g, '.');
+  s = s.replace(/\.\s{2,}/g, '. ');
+  return s.trim();
+}
 
 export function buildDynamicPrompt(
   scene: ProductImageScene,
@@ -170,16 +352,18 @@ export function buildDynamicPrompt(
   const ctx: TokenContext = {
     productName: product.title,
     productType: product.product_type || analysis?.category || '',
+    productDescription: product.description,
     analysis,
     details,
     selectedModelId: details.selectedModelId,
+    scene,
   };
 
   if (!template) {
     // Fallback: old-style concatenation but enriched
     const parts: string[] = [scene.description];
     parts.push(`Product: ${product.title}.`);
-    if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish)}.`);
+    if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
     if (details.backgroundTone) parts.push(`Background: ${resolveToken('background', ctx)}.`);
     if (details.lightingStyle) parts.push(resolveToken('lightingDirective', ctx));
     if (details.mood) parts.push(resolveToken('moodDirective', ctx));
@@ -188,25 +372,38 @@ export function buildDynamicPrompt(
     if (details.presentation) parts.push(resolveToken('personDirective', ctx));
     if (details.focusArea) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
+    parts.push(resolveCameraDirective(scene));
     parts.push(QUALITY_SUFFIX);
-    return parts.filter(Boolean).join(' ');
+    const negatives = buildNegativePrompt(scene);
+    parts.push(negatives);
+    return cleanupPrompt(parts.filter(Boolean).join(' '));
   }
 
   // Resolve all {{token}} placeholders
   let prompt = template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
-  // Clean up: remove double spaces, empty sentences, etc.
-  prompt = prompt.replace(/\.\s*\./g, '.').replace(/\s{2,}/g, ' ').trim();
+  // Apply cleanup
+  prompt = cleanupPrompt(prompt);
 
   // Append quality suffix if not already present
   if (!prompt.includes('8K commercial quality')) {
     prompt += ' ' + QUALITY_SUFFIX;
   }
 
+  // Append camera directive
+  const camera = resolveCameraDirective(scene);
+  if (camera && !prompt.includes('lens at')) {
+    prompt += ' ' + camera;
+  }
+
+  // Append negative prompt
+  const negatives = buildNegativePrompt(scene);
+  prompt += ' ' + negatives;
+
   // Append custom note at the end
   if (details.customNote && !prompt.includes(details.customNote)) {
     prompt += ' ' + details.customNote;
   }
 
-  return prompt;
+  return cleanupPrompt(prompt);
 }
