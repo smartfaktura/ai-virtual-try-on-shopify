@@ -104,6 +104,11 @@ export default function ProductImages() {
   const [completedJobs, setCompletedJobs] = useState(0);
   const [results, setResults] = useState<Map<string, { images: string[]; productName: string }>>(new Map());
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [expectedJobCount, setExpectedJobCount] = useState(0);
+  const [enqueuedCount, setEnqueuedCount] = useState(0);
+  const [completedJobIds, setCompletedJobIds] = useState<Set<string>>(new Set());
+  const [failedJobIds, setFailedJobIds] = useState<Set<string>>(new Set());
+  const pollingStartRef = useRef<number>(0);
 
   // Load user products
   const { data: userProducts = [], isLoading: isLoadingProducts } = useQuery({
@@ -200,8 +205,14 @@ export default function ProductImages() {
   const handleGenerate = useCallback(async () => {
     if (!canAfford) { openBuyModal(); return; }
 
-    setStep(5);
+    const imgCount = parseInt(details.imageCount || '1', 10);
+    const totalExpected = selectedProducts.length * selectedScenes.length * imgCount;
+    setExpectedJobCount(totalExpected);
+    setEnqueuedCount(0);
     setCompletedJobs(0);
+    setCompletedJobIds(new Set());
+    setFailedJobIds(new Set());
+    setStep(5);
 
     const { data: session } = await supabase.auth.getSession();
     const token = session?.session?.access_token;
@@ -230,7 +241,7 @@ export default function ProductImages() {
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
     const aspectRatio = details.aspectRatio || '1:1';
-    const imgCount = parseInt(details.imageCount || '1', 10);
+    // imgCount already declared above
 
     for (const product of selectedProducts) {
       const base64Image = await convertImageToBase64(product.image_url);
@@ -298,6 +309,8 @@ export default function ProductImages() {
             const key = `${product.id}_${scene.id}_${i}`;
             newJobMap.set(key, result.jobId);
             lastBalance = result.newBalance;
+            setJobMap(new Map(newJobMap));
+            setEnqueuedCount(newJobMap.size);
             injectActiveJob(queryClient, {
               jobId: result.jobId,
               workflow_name: 'Product Images',
@@ -323,11 +336,37 @@ export default function ProductImages() {
     }
 
     if (lastBalance !== null) setBalanceFromServer(lastBalance);
-    setJobMap(newJobMap);
+    setJobMap(new Map(newJobMap));
+    setEnqueuedCount(newJobMap.size);
     sendWake(token);
 
     startPolling(newJobMap);
   }, [selectedProducts, selectedScenes, canAfford, details, buildInstruction, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles]);
+
+  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, string>) => {
+    const resultMap = new Map<string, { images: string[]; productName: string }>();
+    for (const job of jobs) {
+      if (job.status !== 'completed' || !job.result) continue;
+      const productId = productMap.get(job.id) || 'unknown';
+      const product = selectedProducts.find(p => p.id === productId);
+      const r = job.result as any;
+      const images: string[] = [];
+      if (Array.isArray(r.images)) {
+        for (const img of r.images) {
+          const url = typeof img === 'string' ? img : img?.url || img?.image_url;
+          if (url) images.push(url);
+        }
+      }
+      if (images.length > 0) {
+        const existing = resultMap.get(productId) || { images: [], productName: product?.title || 'Product' };
+        existing.images.push(...images);
+        resultMap.set(productId, existing);
+      }
+    }
+    setResults(resultMap);
+    refreshBalance();
+    setStep(6);
+  }, [selectedProducts, refreshBalance]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
@@ -336,9 +375,22 @@ export default function ProductImages() {
       const productId = key.split('_')[0];
       productMap.set(jobId, productId);
     }
+    pollingStartRef.current = Date.now();
+    const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
     const poll = async () => {
       try {
+        // Hard timeout — force transition to results
+        if (Date.now() - pollingStartRef.current > TIMEOUT_MS) {
+          const { data: finalJobs } = await supabase
+            .from('generation_queue')
+            .select('id, status, result')
+            .in('id', jobIds);
+          toast.warning('Generation timed out — showing available results.');
+          finishWithResults(finalJobs || [], productMap);
+          return;
+        }
+
         const { data: jobs } = await supabase
           .from('generation_queue')
           .select('id, status, result')
@@ -347,32 +399,21 @@ export default function ProductImages() {
         if (!jobs) { pollingRef.current = setTimeout(poll, 3000); return; }
 
         const done = jobs.filter(j => j.status === 'completed' || j.status === 'failed');
+        const newCompleted = new Set<string>();
+        const newFailed = new Set<string>();
+        for (const j of done) {
+          if (j.status === 'completed') newCompleted.add(j.id);
+          if (j.status === 'failed') newFailed.add(j.id);
+        }
         setCompletedJobs(done.length);
+        setCompletedJobIds(newCompleted);
+        setFailedJobIds(newFailed);
 
         if (done.length >= jobIds.length) {
-          const resultMap = new Map<string, { images: string[]; productName: string }>();
-          for (const job of jobs) {
-            if (job.status !== 'completed' || !job.result) continue;
-            const productId = productMap.get(job.id) || 'unknown';
-            const product = selectedProducts.find(p => p.id === productId);
-            const r = job.result as any;
-            const images: string[] = [];
-            if (Array.isArray(r.images)) {
-              for (const img of r.images) {
-                const url = typeof img === 'string' ? img : img?.url || img?.image_url;
-                if (url) images.push(url);
-              }
-            }
-            if (images.length > 0) {
-              const existing = resultMap.get(productId) || { images: [], productName: product?.title || 'Product' };
-              existing.images.push(...images);
-              resultMap.set(productId, existing);
-            }
+          if (newFailed.size > 0) {
+            toast.warning(`${newFailed.size} image${newFailed.size !== 1 ? 's' : ''} failed — credits refunded.`);
           }
-
-          setResults(resultMap);
-          refreshBalance();
-          setStep(6);
+          finishWithResults(jobs, productMap);
           return;
         }
 
@@ -383,7 +424,7 @@ export default function ProductImages() {
     };
 
     pollingRef.current = setTimeout(poll, 2000);
-  }, [selectedProducts, refreshBalance]);
+  }, [finishWithResults]);
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
@@ -651,6 +692,22 @@ export default function ProductImages() {
                 totalJobs={jobMap.size}
                 completedJobs={completedJobs}
                 productCount={selectedProducts.length}
+                products={selectedProducts}
+                jobMap={jobMap}
+                completedJobIds={completedJobIds}
+                failedJobIds={failedJobIds}
+                enqueuedJobs={enqueuedCount}
+                expectedJobCount={expectedJobCount}
+                onViewResults={() => {
+                  if (pollingRef.current) clearTimeout(pollingRef.current);
+                  // Fetch final state and transition
+                  const jobIds = Array.from(jobMap.values());
+                  supabase.from('generation_queue').select('id, status, result').in('id', jobIds).then(({ data }) => {
+                    const productMap = new Map<string, string>();
+                    for (const [key, jobId] of jobMap.entries()) productMap.set(jobId, key.split('_')[0]);
+                    finishWithResults(data || [], productMap);
+                  });
+                }}
               />
             )}
 
