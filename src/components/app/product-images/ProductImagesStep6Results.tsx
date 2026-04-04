@@ -73,11 +73,11 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                 onClick={() => openLightbox(images, i)}
                 className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group"
               >
-                <div className="aspect-square bg-muted overflow-hidden">
+                <div className="aspect-[4/5] bg-white overflow-hidden">
                   <ShimmerImage
-                    src={getOptimizedUrl(url, { width: 400, quality: 80 })}
+                    src={url}
                     alt={`${productName} - ${i + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
               </button>

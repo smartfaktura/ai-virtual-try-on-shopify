@@ -351,16 +351,14 @@ function AutoAestheticButton({ details, update }: { details: DetailSettings; upd
         }
       }}
       className={cn(
-        'flex items-center gap-2 w-full px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
         active
-          ? 'border-primary bg-primary/5 text-primary'
-          : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground',
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
       )}
     >
-      <Sparkles className="w-4 h-4" />
-      <span>Auto</span>
-      <span className="text-xs font-normal opacity-70">(Recommended)</span>
-      {active && <Badge variant="secondary" className="ml-auto text-[10px] h-5">Applied</Badge>}
+      <Sparkles className="w-3.5 h-3.5" />
+      Auto (Recommended)
     </button>
   );
 }
