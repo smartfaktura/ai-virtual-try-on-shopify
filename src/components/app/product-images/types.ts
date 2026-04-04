@@ -96,6 +96,9 @@ export interface DetailSettings {
   // Per-scene aspect ratio overrides (sceneId -> ratio)
   sceneAspectOverrides?: Record<string, string>;
 
+  // Per-scene props (sceneId -> array of product IDs used as styling accessories)
+  sceneProps?: Record<string, string[]>;
+
   // Model selection (replaces generic person details when set)
   selectedModelId?: string;
 }

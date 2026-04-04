@@ -538,6 +538,8 @@ export default function ProductImages() {
             productCount={selectedProducts.length}
             sceneCount={selectedScenes.length}
             selectedScenes={selectedScenes}
+            allProducts={userProducts}
+            selectedProductIds={selectedProductIds}
           />
         )}
 
