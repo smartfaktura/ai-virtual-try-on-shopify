@@ -1,9 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { Coins, Package, Layers, AlertTriangle } from 'lucide-react';
+import { Coins, Package, Layers, AlertTriangle, Pencil } from 'lucide-react';
 import { ALL_SCENES } from './sceneData';
 import type { UserProduct, DetailSettings } from './types';
 
@@ -13,9 +14,10 @@ interface Step4Props {
   details: DetailSettings;
   creditsPerImage: number;
   balance: number;
+  onEditStep?: (step: number) => void;
 }
 
-export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, creditsPerImage, balance }: Step4Props) {
+export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, creditsPerImage, balance, onEditStep }: Step4Props) {
   const selectedScenes = ALL_SCENES.filter(s => selectedSceneIds.has(s.id));
   const imageCount = parseInt(details.imageCount || '1', 10);
   const totalImages = selectedProducts.length * selectedScenes.length * imageCount;
@@ -50,9 +52,16 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         {/* Products */}
         <Card>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">{selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">{selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''}</span>
+              </div>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(1)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {selectedProducts.slice(0, 8).map(p => (
@@ -72,9 +81,16 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         {/* Scenes */}
         <Card>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">{selectedScenes.length} Scene{selectedScenes.length !== 1 ? 's' : ''}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">{selectedScenes.length} Scene{selectedScenes.length !== 1 ? 's' : ''}</span>
+              </div>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(2)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
             </div>
             <div className="flex flex-wrap gap-1">
               {selectedScenes.map(s => (
@@ -87,9 +103,16 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         {/* Credits */}
         <Card className={!canAfford ? 'border-destructive/50' : 'border-primary/30'}>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Coins className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Credits</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Credits</span>
+              </div>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
             </div>
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
@@ -130,7 +153,14 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
       {activeDetails.length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-semibold mb-2">Applied settings</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold">Applied settings</p>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(4)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {activeDetails.map(([key, value]) => (
                 <Badge key={key} variant="secondary" className="text-[10px]">
