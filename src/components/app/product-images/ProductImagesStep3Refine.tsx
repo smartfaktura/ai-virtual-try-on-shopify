@@ -468,6 +468,9 @@ export function ProductImagesStep3Refine({
         <CollapsibleContent>
           <Card className="mt-2 border-primary/10">
             <CardContent className="p-4 space-y-4">
+              {/* Auto (Recommended) button */}
+              <AutoAestheticButton details={details} update={update} />
+
               {hasMultipleCategories && (
                 <ChipSelector label="Aesthetic source" value={details.consistency || 'auto-balance'} onChange={v => update({ consistency: v })} options={[
                   { value: 'auto-balance', label: 'Auto-balance across products' },
@@ -522,9 +525,14 @@ export function ProductImagesStep3Refine({
 
               <ChipSelector label="Accent color" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
                 { value: 'none', label: 'None' }, { value: 'product-accent', label: 'Use product accent' },
-                { value: 'brand-accent', label: 'Use brand accent' }, { value: 'subtle', label: 'Subtle accent' },
-                { value: 'strong', label: 'Strong accent' },
+                { value: 'brand-accent', label: 'Use brand accent' }, { value: 'custom', label: 'Custom hex' },
+                { value: 'subtle', label: 'Subtle accent' }, { value: 'strong', label: 'Strong accent' },
               ]} />
+
+              {/* Custom hex color panel */}
+              {(details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+              )}
             </CardContent>
           </Card>
         </CollapsibleContent>
