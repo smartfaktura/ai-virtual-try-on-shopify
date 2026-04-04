@@ -219,6 +219,7 @@ function buildVariationPrompt(
   theme?: string,
   themeNotes?: string,
   aspectRatio?: string,
+  batchOutfitLock?: boolean,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
