@@ -363,13 +363,23 @@ export default function ProductImages() {
 
       <div className="mt-6">
         {step === 1 && (
-          <ProductImagesStep1Products
-            products={userProducts}
-            isLoading={isLoadingProducts}
-            selectedIds={selectedProductIds}
-            onSelectionChange={setSelectedProductIds}
-            onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
-          />
+          <>
+            <CatalogStepProducts
+              products={userProducts}
+              productsLoading={isLoadingProducts}
+              selectedProductIds={selectedProductIds}
+              onProductSelectionChange={setSelectedProductIds}
+              maxProducts={20}
+              onNext={handleNext}
+              canProceed={canProceed}
+              onAddProduct={() => setAddProductOpen(true)}
+            />
+            <AddProductModal
+              open={addProductOpen}
+              onOpenChange={setAddProductOpen}
+              onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+            />
+          </>
         )}
 
         {step === 2 && (
