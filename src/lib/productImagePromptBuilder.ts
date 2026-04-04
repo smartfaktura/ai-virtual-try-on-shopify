@@ -22,6 +22,10 @@ const LIGHTING_MAP: Record<string, string> = {
   'flat-commercial': 'Flat, even commercial lighting with minimal shadows for clean packshot clarity.',
   'rim-backlit': 'Rim lighting and backlighting creating a luminous product silhouette with a subtle halo.',
   'overhead-beauty': 'Overhead beauty lighting with a soft, even glow and minimal under-shadows.',
+  // Scene-specific chip values
+  'natural': 'Natural ambient lighting with organic warmth and gentle shadow transitions.',
+  'studio': 'Professional controlled studio lighting with clean, even illumination.',
+  'dramatic': 'Dramatic high-contrast lighting with deep shadows and bold highlights.',
 };
 
 // ── Shadow sentence map (keys aligned to Refine UI chip values) ──
@@ -70,6 +74,9 @@ const SURFACE_MAP: Record<string, string> = {
   'concrete': 'placed on a raw concrete surface with industrial texture',
   'marble': 'placed on polished marble with natural veining and luxurious feel',
   'terrazzo': 'placed on a terrazzo surface with colorful aggregate chips',
+  // Scene-specific chip values
+  'wood': 'placed on a natural wood surface with visible grain and organic warmth',
+  'glass': 'placed on a transparent glass surface with subtle reflections and clean edges',
 };
 
 // ── Consistency sentence map ──
@@ -77,6 +84,10 @@ const CONSISTENCY_MAP: Record<string, string> = {
   'high': 'Maintain strong visual consistency with other shots in this series — same lighting direction, color temperature, and style language.',
   'balanced': 'Maintain balanced visual consistency with the series while allowing natural scene variation.',
   'loose': 'Allow creative variation while keeping the product recognizable.',
+  // Scene-specific chip values
+  'natural': 'Maintain natural visual flow across the series — same general tone with organic variation.',
+  'strong': 'Maintain strong visual consistency with other shots — same lighting direction, color temperature, and style.',
+  'strict': 'Maintain strict visual consistency — identical lighting, identical background, identical framing across all shots.',
 };
 
 // ── Hand style lookup (keys aligned to Refine UI chip values) ──
@@ -493,7 +504,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'compositionDirective': {
       if (isAuto(details.compositionFraming)) return '';
-      return `Composition: ${details.compositionFraming!.replace(/-/g, ' ')}.`;
+      const COMP_MAP: Record<string, string> = {
+        'tight': 'Tight composition — product fills the frame with minimal surrounding space.',
+        'balanced': 'Balanced composition — product centered with comfortable breathing room.',
+        'generous': 'Generous composition — ample negative space around the product for editorial feel.',
+      };
+      return COMP_MAP[details.compositionFraming!] || `${details.compositionFraming!.replace(/-/g, ' ')} composition.`;
     }
     // negativeSpaceDirective should now be empty since negativeSpace stores background family (Bug 3)
     case 'negativeSpaceDirective': return '';
@@ -503,7 +519,14 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
     case 'sceneIntensityDirective': {
       if (isAuto(details.sceneIntensity)) return '';
-      return `Scene intensity: ${details.sceneIntensity!.replace(/-/g, ' ')}.`;
+      const SCENE_MOOD_MAP: Record<string, string> = {
+        'clean': 'Clean, modern aesthetic — crisp lines, minimal distraction, contemporary feel.',
+        'warm': 'Warm, inviting atmosphere — rich amber undertones, cozy tactile quality.',
+        'dramatic': 'Dramatic, high-impact visual — bold contrasts, cinematic depth, editorial tension.',
+        'editorial': 'Editorial storytelling — magazine-quality composition with narrative visual intent.',
+        'natural': 'Natural, organic feel — soft, authentic, unforced visual language.',
+      };
+      return SCENE_MOOD_MAP[details.sceneIntensity!] || `${details.sceneIntensity!.replace(/-/g, ' ')} scene mood.`;
     }
     case 'cameraDirective': return resolveCameraDirective(scene);
     default: return '';
@@ -589,6 +612,8 @@ export function buildDynamicPrompt(
   injectIfMissing('surface', 'surfaceDirective');
   injectIfMissing('styling', 'stylingDirective');
   injectIfMissing('lighting', 'lightingDirective');
+  injectIfMissing('composition', 'compositionDirective');
+  injectIfMissing('mood', 'sceneIntensityDirective');
 
   // Apply cleanup
   prompt = cleanupPrompt(prompt);
