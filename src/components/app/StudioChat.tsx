@@ -73,11 +73,14 @@ export function StudioChat() {
     }
   }, [isOpen]);
 
+  const isProductImagesPage = location.pathname === '/app/generate/product-images';
   const hideOnMobile = isMobile && (
     location.pathname === '/app/creative-drops' ||
     location.pathname === '/app/freestyle' ||
     location.pathname === '/app/perspectives'
   );
+
+  if (isProductImagesPage) return null;
 
   if (hideOnMobile) return null;
 
