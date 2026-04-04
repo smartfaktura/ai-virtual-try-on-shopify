@@ -1,72 +1,47 @@
 
 
-# Fix: State Cleanup Between Generations + Stale Recommendations
+# Show Only 6 Models with "View All" Modal
 
-## Problems Found
+## What Changes
 
-### 1. No state reset between generations
-When clicking "Generate More" on the results page (line 717), only `results` and `jobMap` are cleared. These generation tracking states are NOT reset:
-- `completedJobs` (stays at previous count)
-- `enqueuedCount` / `expectedJobCount`
-- `completedJobIds` / `failedJobIds`
+The `ModelPickerSections` component in `ProductImagesStep3Refine.tsx` currently renders ALL library models inline (50+ cards). Instead, show only the first 6 library models with a "View all models" button that opens a full modal picker.
 
-Additionally, when navigating back to step 1 from results, `selectedSceneIds` and `details` persist from the previous generation, causing stale pre-selections.
+## File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-### 2. Stale "Recommended" categories in Step 2
-In `ProductImagesStep2Scenes.tsx` line 166, `expandedCategories` is initialized via `useState(() => new Set(relevantCatIds))`. This initializer only runs on first mount. When products change (bag replaces fragrance), the `recommendedCollections` useMemo updates correctly, but the expanded accordion state stays stale. More importantly, since Step2 is lazy-loaded and conditionally rendered (`step === 2`), React may keep it mounted within the Suspense boundary (lines 646-721 render all steps 2-6 inside one Suspense).
+### Changes to `ModelPickerSections` (lines 28-101)
 
-The fix: sync `expandedCategories` with `relevantCatIds` via a `useEffect`.
+1. **Add modal state**: `const [showAllModal, setShowAllModal] = useState(false)`
 
-### 3. Last generation failures
-Edge function logs show Gemini blocked image generation with `blockReason: "OTHER"` for multiple jobs. The system correctly refunded credits and marked jobs as failed. This is a content moderation false positive from Gemini, not a code bug. The polling/timeout logic handled it correctly.
+2. **Limit inline library grid to 6**: Change line 92 from rendering all `filteredGlobal` to `filteredGlobal.slice(0, 6)`. If the selected model is beyond index 6, include it in the visible set so it stays visible.
 
-## Plan
+3. **Add "View all" button** after the 6-card grid:
+   - Shows count like "View all 24 models →"
+   - Opens the modal
 
-### File 1: `src/pages/ProductImages.tsx`
+4. **Add a full-screen Dialog** for the complete model list:
+   - Has its own gender filter tabs (All / Women / Men)
+   - Search input to filter by name
+   - Shows ALL brand models at the top, then all library models in a scrollable grid
+   - Clicking a model selects it and closes the modal
+   - Selected model highlighted with checkmark (reuses `ModelSelectorCard`)
 
-**A. Add a `resetGenerationState` function** that clears all generation-related state:
-```typescript
-const resetGenerationState = useCallback(() => {
-  setJobMap(new Map());
-  setCompletedJobs(0);
-  setResults(new Map());
-  setExpectedJobCount(0);
-  setEnqueuedCount(0);
-  setCompletedJobIds(new Set());
-  setFailedJobIds(new Set());
-  if (pollingRef.current) clearTimeout(pollingRef.current);
-}, []);
+### Component structure for the modal:
+```
+<Dialog open={showAllModal} onOpenChange={setShowAllModal}>
+  <DialogContent className="max-w-3xl max-h-[80vh]">
+    <DialogHeader>
+      <DialogTitle>Select a Model</DialogTitle>
+    </DialogHeader>
+    {/* Gender tabs + Search input */}
+    {/* Scrollable grid of ALL models */}
+  </DialogContent>
+</Dialog>
 ```
 
-**B. Fix "Generate More" handler** (line 717):
-Change from partial reset to full reset:
-```typescript
-onGenerateMore={() => { resetGenerationState(); setStep(2); }}
-```
+### Selection logic:
+- When a model is selected in the modal, call `onSelect(id)` and `setShowAllModal(false)`
+- The selected model always appears in the inline 6-card preview (swap it in if it's not in the first 6)
 
-**C. Add a "Start Fresh" option on results** that also clears product/scene selections:
-```typescript
-// Could also be added alongside "Generate More"
-```
-
-### File 2: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
-
-**Sync expanded categories when products change** - add a `useEffect` after line 166:
-```typescript
-useEffect(() => {
-  setExpandedCategories(new Set(relevantCatIds));
-}, [relevantCatIds]);
-```
-
-This ensures when the user selects a bag (after previously generating for fragrance), the expanded/recommended categories update to show bags-accessories instead of fragrance.
-
-## Files to Update
-
-| File | Change |
-|------|--------|
-| `src/pages/ProductImages.tsx` | Add `resetGenerationState`, fix "Generate More" handler |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Add `useEffect` to sync `expandedCategories` with `relevantCatIds` |
-
-## Note on Generation Failures
-The last generation failed because Gemini's content moderation blocked the prompts (`blockReason: "OTHER"`). The system handled this correctly: credits were refunded and jobs marked as failed. No code fix needed for this -- it's a model-side content filter issue.
+## No other files need changes
+The `ModelSelectorCard` component is reused as-is in both the inline grid and the modal.
 
