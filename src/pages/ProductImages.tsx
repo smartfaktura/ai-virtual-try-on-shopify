@@ -110,6 +110,17 @@ export default function ProductImages() {
   const [failedJobIds, setFailedJobIds] = useState<Set<string>>(new Set());
   const pollingStartRef = useRef<number>(0);
 
+  const resetGenerationState = useCallback(() => {
+    setJobMap(new Map());
+    setCompletedJobs(0);
+    setResults(new Map());
+    setExpectedJobCount(0);
+    setEnqueuedCount(0);
+    setCompletedJobIds(new Set());
+    setFailedJobIds(new Set());
+    if (pollingRef.current) clearTimeout(pollingRef.current);
+  }, []);
+
   // Load user products
   const { data: userProducts = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ['user-products', user?.id],
@@ -714,7 +725,7 @@ export default function ProductImages() {
             {step === 6 && (
               <ProductImagesStep6Results
                 results={results}
-                onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
+                onGenerateMore={() => { resetGenerationState(); setStep(2); }}
                 onGoToLibrary={() => navigate('/app/library')}
               />
             )}
