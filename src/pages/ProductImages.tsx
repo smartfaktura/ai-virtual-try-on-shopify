@@ -245,7 +245,7 @@ export default function ProductImages() {
   return (
     <div className="space-y-6">
       <SEOHead title="Product Images — VOVV" description="Generate product images" />
-      <PageHeader title="Product Images" subtitle="Generate stunning product visuals across multiple scene types." />
+      <PageHeader title="Product Images" subtitle="Generate stunning product visuals across multiple scene types."><span /></PageHeader>
 
       {step <= 4 && (
         <CatalogStepper

@@ -173,6 +173,7 @@ const App = () => {
                         <Route path="/workflows" element={<Workflows />} />
                         <Route path="/creative-drops" element={<CreativeDrops />} />
                         <Route path="/generate" element={<Generate />} />
+                        <Route path="/generate/product-images" element={<ProductImages />} />
                         <Route path="/generate/:workflowSlug" element={<Generate />} />
                         <Route path="/library" element={<Jobs />} />
                         <Route path="/library/:id" element={<Jobs />} />
