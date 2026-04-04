@@ -1,63 +1,47 @@
 
 
-# Product Images Flow — UX Fixes
+# Product Images Flow — UX Fixes Round 3
 
-## 3 Issues to Fix
+## 3 Changes
 
-### 1. Category collections should auto-prioritize based on selected products
+### 1. Scene ordering: Recommended categories appear right after Universal Scenes, auto-opened
 
-**Current**: Category collections are always in the same static order, all collapsed.
+**Current**: Recommended categories show above Universal Scenes. Non-matched categories show below in a separate section.
 
-**Fix**: Accept `selectedProducts` as a prop in `ProductImagesStep2Scenes`. Use a simple keyword/category detection function that maps product names/descriptions to category IDs (e.g., product named "Lipstick X" → `makeup-lipsticks`). Reorder `CATEGORY_COLLECTIONS` so matched categories appear first, and auto-expand them. Non-matching categories stay below, collapsed.
+**Fix**: Reorder Step2 layout to: Universal Scenes first → Recommended categories (auto-expanded, with "Recommended" badge) → Other categories (collapsed). Move the recommended section from above global scenes to directly below them.
 
-**Files**: `ProductImagesStep2Scenes.tsx` — add `selectedProducts` prop, add `detectRelevantCategories()` utility, sort + auto-open matched categories.
+**File**: `ProductImagesStep2Scenes.tsx` — restructure the JSX order: global scenes section first, then recommended categories, then other categories.
 
-### 2. Sticky bar conflicts with app's floating menu / support icon
+### 2. Scene card placeholders: uniform gray, 4:5 aspect ratio
 
-**Current**: `fixed bottom-0 left-0 right-0` overlaps the existing floating action button and customer support widget.
+**Current**: Scene cards use colorful gradients (`from-slate-100 to-gray-200`, etc.) with `aspect-[4/3]`.
 
-**Fix**: Change from `fixed bottom-0` to an inline sticky bar anchored inside the content area: `sticky bottom-0` within the scrollable content container. This keeps it visible at the bottom of the viewport scroll area without overlapping the global floating UI elements. Add a subtle top border and backdrop blur.
+**Fix**: Replace all gradient placeholders with a single uniform `bg-muted` (light gray) and change aspect ratio from `aspect-[4/3]` to `aspect-[4/5]`. Remove the `SCENE_GRADIENTS` map entirely.
 
-**File**: `ProductImagesStickyBar.tsx` — change positioning from `fixed` to `sticky`, scope it inside the content wrapper in `ProductImages.tsx`.
+**File**: `ProductImagesStep2Scenes.tsx` — in `SceneCard`, replace `bg-gradient-to-br ${gradient}` with `bg-muted`, change `aspect-[4/3]` to `aspect-[4/5]`.
 
-### 3. Step 3 Details — restructure completely
+### 3. Step 3 Details — replace collapsibles with inline fields, add scene thumbnail on hover, remove blocking requirement
 
 **Current problems**:
-- "Generation settings & details" combines format/quality with scene-specific detail blocks in one flat page
-- Blocks like "Background & Composition" appear without context of WHY
-- User doesn't understand the connection between selected scenes and shown blocks
-- Branding/Layout/Consistency always shown even when irrelevant
+- Non-prominent blocks use collapsible dropdowns — users don't realize they need to open them
+- No visual reference to the scene that triggered the block
+- Fields feel hidden and disconnected
 
-**Fix — new structure**:
-
-**Section A: "Generation settings"** (always visible)
-- Format/Size, Quality, Images per scene — same 3 cards as now
-
-**Section B: "Based on your selected scenes"** (only if triggered blocks exist beyond branding/layout)
-- Group detail blocks by the scenes that triggered them
-- Show a header like: *"Because you selected In-Hand / Human Support"* → then show Person Details and Action Details inline
-- Show: *"Because you selected Lifestyle Scene"* → then show Scene Environment and Visual Direction
-- If multiple scenes trigger the same block, group under the first relevant scene and note "also used by X"
-- Person Details and Action Details should always be **inline cards** (not collapsibles) when triggered — they're critical choices
-- Only show blocks that are truly triggered — remove the always-show logic for `branding`, `layout`, and `consistency` unless explicitly triggered by selected scenes or multi-product
-
-**Section C: "Custom note"** (always visible, simple textarea at bottom)
-
-This means `detailBlockConfig.ts` needs a reverse-lookup: given triggered blocks, map back to which scenes caused them. The Step3 component will iterate selected scenes, find their triggered blocks, and render grouped sections.
+**Fix**:
+- Remove `DetailBlock` collapsible wrapper entirely. Render ALL block fields **inline** (always visible) within their scene group card — same as prominent blocks but without the "Important" badge for non-critical ones
+- Add a small 24×24 gray placeholder thumbnail next to each "Because you selected X" header. On hover, show a larger 120px preview via a simple CSS hover scale/tooltip
+- Make all detail fields **optional** — user should be able to proceed to next step without filling anything. The sticky bar CTA should always be enabled on Step 3 (details are all optional with smart defaults). Remove any validation gating if present
+- Keep the "All fields are optional — we'll use smart defaults" text prominent
 
 **Files**:
-- `ProductImagesStep3Details.tsx` — full restructure into Scene-grouped sections
-- `detailBlockConfig.ts` — add `getBlocksByScene()` helper that returns `{ sceneTitle, sceneId, blocks: string[] }[]` for display grouping
-- `sceneData.ts` — remove `branding` and `layout` from most scene triggerBlocks (they're generic filler, not useful detail blocks)
+- `ProductImagesStep3Details.tsx` — Remove `DetailBlock` component, render all `BlockFields` inline. Add scene thumbnail (small gray placeholder with hover enlarge) next to "Because you selected" header.
+- `ProductImages.tsx` — Ensure `canProceed` for step 3 is always `true` (no required field gating)
 
-### Summary of file changes
+## Summary of file changes
 
 | File | Change |
 |------|--------|
-| `ProductImagesStep2Scenes.tsx` | Add `selectedProducts` prop, auto-detect + reorder + auto-expand relevant categories |
-| `ProductImagesStickyBar.tsx` | Change `fixed` → `sticky`, adjust positioning |
-| `ProductImages.tsx` | Pass `selectedProducts` to Step2, move sticky bar inside content wrapper |
-| `ProductImagesStep3Details.tsx` | Restructure into "Settings" + "Because you selected X" grouped sections |
-| `detailBlockConfig.ts` | Add `getBlocksByScene()` reverse-lookup helper |
-| `sceneData.ts` | Clean up triggerBlocks — remove generic `branding`/`layout` from most scenes, keep only meaningful triggers |
+| `ProductImagesStep2Scenes.tsx` | Reorder: Universal first → Recommended below → Others. Gray placeholders, 4:5 aspect. Remove `SCENE_GRADIENTS`. |
+| `ProductImagesStep3Details.tsx` | Remove collapsibles, render all fields inline. Add scene thumbnail with hover preview. |
+| `ProductImages.tsx` | Ensure step 3 always allows proceeding (no validation gate) |
 
