@@ -1200,6 +1200,11 @@ serve(async (req) => {
             referenceImages.push({ url: variation.preview_url, label: "scene_reference" });
             console.log(`[generate-workflow] Adding scene reference image for "${variation.label}"`);
           }
+          // Add packaging reference image when provided
+          if ((body as Record<string, unknown>).packaging_reference_url) {
+            referenceImages.push({ url: (body as Record<string, unknown>).packaging_reference_url as string, label: "packaging_reference" });
+            console.log(`[generate-workflow] Adding packaging reference image`);
+          }
 
           let imageUrl = await generateImage(
             prompt,
