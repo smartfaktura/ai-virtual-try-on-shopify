@@ -597,62 +597,66 @@ export default function ProductImages() {
           </>
         )}
 
-        {step === 2 && (
-          <ProductImagesStep2Scenes
-            selectedSceneIds={selectedSceneIds}
-            onSelectionChange={setSelectedSceneIds}
-            selectedProducts={selectedProducts}
-          />
-        )}
+        {step >= 2 && step <= 6 && (
+          <Suspense fallback={<div className="space-y-4 py-8"><Skeleton className="h-8 w-48" /><div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div></div>}>
+            {step === 2 && (
+              <ProductImagesStep2Scenes
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={setSelectedSceneIds}
+                selectedProducts={selectedProducts}
+              />
+            )}
 
-        {step === 3 && (
-          <ProductImagesStep3Refine
-            selectedSceneIds={selectedSceneIds}
-            productCount={selectedProducts.length}
-            details={details}
-            onDetailsChange={setDetails}
-            userModels={userModelProfiles}
-            globalModels={globalModelProfiles}
-            selectedScenes={selectedScenes}
-            allProducts={userProducts}
-            selectedProductIds={selectedProductIds}
-            hasMultipleCategories={(() => {
-              const cats = new Set<string>();
-              for (const p of selectedProducts) {
-                const analysis = p.analysis_json as any;
-                if (analysis?.category) cats.add(analysis.category);
-                else cats.add(p.product_type || 'other');
-              }
-              return cats.size > 1;
-            })()}
-          />
-        )}
+            {step === 3 && (
+              <ProductImagesStep3Refine
+                selectedSceneIds={selectedSceneIds}
+                productCount={selectedProducts.length}
+                details={details}
+                onDetailsChange={setDetails}
+                userModels={userModelProfiles}
+                globalModels={globalModelProfiles}
+                selectedScenes={selectedScenes}
+                allProducts={userProducts}
+                selectedProductIds={selectedProductIds}
+                hasMultipleCategories={(() => {
+                  const cats = new Set<string>();
+                  for (const p of selectedProducts) {
+                    const analysis = p.analysis_json as any;
+                    if (analysis?.category) cats.add(analysis.category);
+                    else cats.add(p.product_type || 'other');
+                  }
+                  return cats.size > 1;
+                })()}
+              />
+            )}
 
-        {step === 4 && (
-          <ProductImagesStep4Review
-            selectedProducts={selectedProducts}
-            selectedSceneIds={selectedSceneIds}
-            details={details}
-            creditsPerImage={creditsPerImage}
-            balance={balance}
-            onEditStep={(s) => setStep(s as PIStep)}
-          />
-        )}
+            {step === 4 && (
+              <ProductImagesStep4Review
+                selectedProducts={selectedProducts}
+                selectedSceneIds={selectedSceneIds}
+                details={details}
+                creditsPerImage={creditsPerImage}
+                balance={balance}
+                onEditStep={(s) => setStep(s as PIStep)}
+              />
+            )}
 
-        {step === 5 && (
-          <ProductImagesStep5Generating
-            totalJobs={jobMap.size}
-            completedJobs={completedJobs}
-            productCount={selectedProducts.length}
-          />
-        )}
+            {step === 5 && (
+              <ProductImagesStep5Generating
+                totalJobs={jobMap.size}
+                completedJobs={completedJobs}
+                productCount={selectedProducts.length}
+              />
+            )}
 
-        {step === 6 && (
-          <ProductImagesStep6Results
-            results={results}
-            onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
-            onGoToLibrary={() => navigate('/app/library')}
-          />
+            {step === 6 && (
+              <ProductImagesStep6Results
+                results={results}
+                onGenerateMore={() => { setStep(2); setResults(new Map()); setJobMap(new Map()); }}
+                onGoToLibrary={() => navigate('/app/library')}
+              />
+            )}
+          </Suspense>
         )}
       </div>
 
