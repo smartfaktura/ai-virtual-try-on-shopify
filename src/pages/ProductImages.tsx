@@ -443,10 +443,58 @@ export default function ProductImages() {
                   return <p className="text-center text-sm text-muted-foreground py-6">No products match "{productSearch}"</p>;
                 }
 
+                const visible = filtered.slice(0, visibleCount);
+                const remaining = filtered.length - visibleCount;
+
+                const loadMoreBtn = remaining > 0 && (
+                  <div className="flex justify-center pt-4">
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => setVisibleCount(v => v + 25)}>
+                      Show more ({remaining} remaining)
+                    </Button>
+                  </div>
+                );
+
                 if (productViewMode === 'list') {
                   return (
-                    <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
-                      {filtered.map(up => {
+                    <div className="space-y-1">
+                      <div className="max-h-[420px] overflow-y-auto pr-1 space-y-1">
+                        {visible.map(up => {
+                          const isSelected = selectedProductIds.has(up.id);
+                          const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
+                          return (
+                            <button key={up.id} type="button" disabled={isDisabled} onClick={() => {
+                              const s = new Set(selectedProductIds);
+                              if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
+                              setSelectedProductIds(s);
+                            }} className={cn(
+                              'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left',
+                              isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
+                              isDisabled && 'opacity-40 cursor-not-allowed'
+                            )}>
+                              <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
+                                {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
+                              </div>
+                              <div className={cn(
+                                'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                                isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30'
+                              )}>
+                                {isSelected && <Check className="w-3 h-3" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {loadMoreBtn}
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
                         return (
@@ -455,62 +503,31 @@ export default function ProductImages() {
                             if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
                             setSelectedProductIds(s);
                           }} className={cn(
-                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left',
-                            isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
+                            'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                            isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
                             isDisabled && 'opacity-40 cursor-not-allowed'
                           )}>
-                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
-                              {up.product_type && <p className="text-[10px] text-muted-foreground truncate">{up.product_type}</p>}
-                            </div>
                             <div className={cn(
-                              'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
-                              isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30'
+                              'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                              isSelected ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
                             )}>
                               {isSelected && <Check className="w-3 h-3" />}
+                            </div>
+                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                            <div className="px-1.5 py-1.5 bg-card">
+                              <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
+                              {up.product_type && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>}
                             </div>
                           </button>
                         );
                       })}
+                      <button type="button" onClick={() => setAddProductOpen(true)} className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground">
+                        <Package className="w-6 h-6 mb-1 opacity-50" />
+                        <span className="text-[10px] font-medium">Add New</span>
+                      </button>
                     </div>
-                  );
-                }
-
-                return (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                    {filtered.map(up => {
-                      const isSelected = selectedProductIds.has(up.id);
-                      const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
-                      return (
-                        <button key={up.id} type="button" disabled={isDisabled} onClick={() => {
-                          const s = new Set(selectedProductIds);
-                          if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                          setSelectedProductIds(s);
-                        }} className={cn(
-                          'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
-                          isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
-                          isDisabled && 'opacity-40 cursor-not-allowed'
-                        )}>
-                          <div className={cn(
-                            'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
-                            isSelected ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
-                          )}>
-                            {isSelected && <Check className="w-3 h-3" />}
-                          </div>
-                          <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
-                          <div className="px-1.5 py-1.5 bg-card">
-                            <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
-                            {up.product_type && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>}
-                          </div>
-                        </button>
-                      );
-                    })}
-                    <button type="button" onClick={() => setAddProductOpen(true)} className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground">
-                      <Package className="w-6 h-6 mb-1 opacity-50" />
-                      <span className="text-[10px] font-medium">Add New</span>
-                    </button>
-                  </div>
+                    {loadMoreBtn}
+                  </>
                 );
               })()
               )}
