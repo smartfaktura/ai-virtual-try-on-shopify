@@ -31,10 +31,9 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
     switch (step) {
       case 1: return 'Choose Scenes';
       case 2: return 'Refine';
-      case 3: return 'Props';
-      case 4: return 'Settings';
-      case 5: return 'Review';
-      case 6: return `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`;
+      case 3: return 'Settings';
+      case 4: return 'Review';
+      case 5: return `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`;
       default: return 'Continue';
     }
   })();
