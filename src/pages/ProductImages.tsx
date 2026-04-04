@@ -32,7 +32,8 @@ import { ProductImagesStickyBar } from '@/components/app/product-images/ProductI
 import { useUserModels } from '@/hooks/useUserModels';
 import { useCustomModels } from '@/hooks/useCustomModels';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
-import type { PIStep, UserProduct, DetailSettings } from '@/components/app/product-images/types';
+import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
+import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
 
 const STEP_DEFS = [
   { number: 1, label: 'Products', icon: Package },
