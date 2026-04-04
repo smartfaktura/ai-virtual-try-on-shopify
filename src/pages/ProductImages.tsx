@@ -57,10 +57,17 @@ export default function ProductImages() {
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
 
+  const INITIAL_DETAILS: DetailSettings = { aspectRatio: '1:1', quality: 'high', imageCount: '1' };
+
   const [step, setStep] = useState<PIStep>(1);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
-  const [details, setDetails] = useState<DetailSettings>({ aspectRatio: '1:1', quality: 'high', imageCount: '1' });
+  const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
+  const prevProductIdsRef = useRef<string | null>(null);
+
+  // Load models for Step 3
+  const { asProfiles: userModelProfiles } = useUserModels();
+  const { asProfiles: globalModelProfiles } = useCustomModels();
 
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
