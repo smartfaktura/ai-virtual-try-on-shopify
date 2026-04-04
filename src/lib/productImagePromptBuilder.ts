@@ -368,17 +368,17 @@ function defaultPersonDirective(category?: string): string {
 function defaultOutfitDirective(category?: string): string {
   switch (category) {
     case 'garments':
-      return 'Wearing clean, complementary styling that doesn\'t compete with the product — neutral tones, minimal accessories.';
+      return 'Wearing slim-fit light beige cotton trousers and minimal white sneakers — same outfit in every shot. Clothing must NOT compete with the product.';
     case 'bags-accessories':
-      return 'Wearing a minimalist neutral outfit — product is the styling hero, clothing serves as backdrop.';
+      return 'Wearing a fitted black turtleneck, slim dark navy trousers, and black ankle boots — same outfit in every shot. Product is the styling hero.';
     case 'shoes':
-      return 'Wearing slim-fit neutral clothing that keeps visual focus on the footwear.';
+      return 'Wearing cropped slim dark denim and a plain white tee — same outfit in every shot. Visual focus stays on the footwear.';
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
-      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product.';
+      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product. Same look in every shot.';
     default:
-      return 'Wearing clean, understated clothing in neutral tones — product remains the visual focus.';
+      return 'Wearing clean, understated clothing in neutral tones — same outfit in every shot. Product remains the visual focus.';
   }
 }
 
