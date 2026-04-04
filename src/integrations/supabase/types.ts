@@ -1347,6 +1347,7 @@ export type Database = {
       }
       user_products: {
         Row: {
+          analysis_json: Json | null
           created_at: string
           description: string
           dimensions: string | null
@@ -1359,6 +1360,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analysis_json?: Json | null
           created_at?: string
           description?: string
           dimensions?: string | null
@@ -1371,6 +1373,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analysis_json?: Json | null
           created_at?: string
           description?: string
           dimensions?: string | null
