@@ -100,13 +100,22 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 </Button>
               )}
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {selectedProducts.slice(0, 8).map(p => (
-                <ProductThumbnail key={p.id} imageUrl={p.image_url} alt={p.title} size="md" />
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {selectedProducts.slice(0, 12).map(p => (
+                <div key={p.id} className="space-y-1">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40">
+                    <ShimmerImage
+                      src={getOptimizedUrl(p.image_url, { width: 160, quality: 75 })}
+                      alt={p.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>
+                </div>
               ))}
-              {selectedProducts.length > 8 && (
-                <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-                  +{selectedProducts.length - 8}
+              {selectedProducts.length > 12 && (
+                <div className="aspect-square rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                  +{selectedProducts.length - 12}
                 </div>
               )}
             </div>
