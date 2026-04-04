@@ -1,10 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Zap, ImageIcon } from 'lucide-react';
+import { Zap, ImageIcon, Coins } from 'lucide-react';
 import type { DetailSettings } from './types';
 
 interface Step3SettingsProps {
   details: DetailSettings;
   onDetailsChange: (d: DetailSettings) => void;
+  productCount?: number;
+  sceneCount?: number;
 }
 
 /* Tiny inline aspect-ratio shape icons */
@@ -76,13 +78,18 @@ const IMAGE_COUNT_OPTIONS = [
   { value: '4', label: '4 images' },
 ];
 
-export function ProductImagesStep3Settings({ details, onDetailsChange }: Step3SettingsProps) {
+export function ProductImagesStep3Settings({ details, onDetailsChange, productCount = 0, sceneCount = 0 }: Step3SettingsProps) {
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
 
   const ratioOptions = ASPECT_RATIOS.map(r => ({
     ...r,
     icon: <RatioShape ratio={r.value} />,
   }));
+
+  const imgCount = parseInt(details.imageCount || '1', 10);
+  const costPerImage = (details.quality || 'high') === 'standard' ? 3 : 6;
+  const totalImages = productCount * sceneCount * imgCount;
+  const totalCredits = totalImages * costPerImage;
 
   return (
     <div className="space-y-6 pb-20">
@@ -122,6 +129,20 @@ export function ProductImagesStep3Settings({ details, onDetailsChange }: Step3Se
           </CardContent>
         </Card>
       </div>
+
+      {/* Live cost preview */}
+      {productCount > 0 && sceneCount > 0 && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2.5 border border-border/60">
+          <Coins className="w-4 h-4 text-primary flex-shrink-0" />
+          <span>
+            <span className="font-medium text-foreground">{productCount}</span> product{productCount !== 1 ? 's' : ''}{' '}
+            × <span className="font-medium text-foreground">{sceneCount}</span> scene{sceneCount !== 1 ? 's' : ''}{' '}
+            × <span className="font-medium text-foreground">{imgCount}</span> image{imgCount !== 1 ? 's' : ''}{' '}
+            = <span className="font-bold text-foreground">{totalImages} images</span>{' '}
+            — <span className="font-bold text-primary">{totalCredits} credits</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 }

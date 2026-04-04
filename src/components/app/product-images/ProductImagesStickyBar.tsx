@@ -2,6 +2,14 @@ import { Button } from '@/components/ui/button';
 import { Coins, Sparkles, ArrowRight } from 'lucide-react';
 import type { PIStep } from './types';
 
+const STEP_LABELS: Record<number, string> = {
+  1: 'Products',
+  2: 'Scenes',
+  3: 'Settings',
+  4: 'Refine',
+  5: 'Review',
+};
+
 interface StickyBarProps {
   step: PIStep;
   productCount: number;
@@ -33,8 +41,11 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
   return (
     <div className="sticky bottom-4 z-10">
       <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm p-3 sm:p-4 shadow-lg flex items-center justify-between gap-4">
-        {/* Left: Summary */}
+        {/* Left: Step label + Summary */}
         <div className="flex items-center gap-3 text-sm text-muted-foreground min-w-0">
+          <span className="text-[10px] font-medium text-muted-foreground/70 whitespace-nowrap">
+            Step {step}/5 — {STEP_LABELS[step] || ''}
+          </span>
           {productCount > 0 && (
             <span className="whitespace-nowrap">
               <span className="font-bold text-foreground">{productCount}</span> product{productCount !== 1 ? 's' : ''}

@@ -79,15 +79,17 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
   );
 }
 
-function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScene, toggleCategory, isRecommended }: {
+function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScene, toggleCategory, onSelectAllCategory, isRecommended }: {
   cat: { id: string; title: string; scenes: ProductImageScene[] };
   selectedSceneIds: Set<string>;
   expandedCategories: Set<string>;
   toggleScene: (id: string) => void;
   toggleCategory: (id: string) => void;
+  onSelectAllCategory: (catId: string) => void;
   isRecommended?: boolean;
 }) {
   const selectedInCat = cat.scenes.filter(s => selectedSceneIds.has(s.id)).length;
+  const allSelected = selectedInCat === cat.scenes.length;
   const isOpen = expandedCategories.has(cat.id);
 
   return (
@@ -100,6 +102,7 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
         }`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{cat.title}</span>
+            <span className="text-[10px] text-muted-foreground">{cat.scenes.length} scenes</span>
             {isRecommended && (
               <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Recommended</Badge>
             )}
@@ -111,6 +114,16 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
+        <div className="flex items-center gap-2 pt-2 pl-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-7"
+            onClick={(e) => { e.stopPropagation(); onSelectAllCategory(cat.id); }}
+          >
+            {allSelected ? 'Deselect All' : 'Select All'}
+          </Button>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 pt-2 pl-2">
           {cat.scenes.map(scene => (
             <SceneCard
@@ -153,6 +166,19 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     if (next.has(catId)) next.delete(catId);
     else next.add(catId);
     setExpandedCategories(next);
+  };
+
+  const selectAllCategory = (catId: string) => {
+    const cat = CATEGORY_COLLECTIONS.find(c => c.id === catId);
+    if (!cat) return;
+    const next = new Set(selectedSceneIds);
+    const allSelected = cat.scenes.every(s => next.has(s.id));
+    if (allSelected) {
+      cat.scenes.forEach(s => next.delete(s.id));
+    } else {
+      cat.scenes.forEach(s => next.add(s.id));
+    }
+    onSelectionChange(next);
   };
 
   return (
@@ -199,6 +225,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
                 expandedCategories={expandedCategories}
                 toggleScene={toggleScene}
                 toggleCategory={toggleCategory}
+                onSelectAllCategory={selectAllCategory}
                 isRecommended
               />
             ))}
@@ -218,6 +245,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               expandedCategories={expandedCategories}
               toggleScene={toggleScene}
               toggleCategory={toggleCategory}
+              onSelectAllCategory={selectAllCategory}
             />
           ))}
         </div>

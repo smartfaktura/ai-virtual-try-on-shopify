@@ -1,11 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, RefreshCw, Video, CheckCircle } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, Archive } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useState } from 'react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
+import { toast } from '@/lib/brandedToast';
 
 interface Step6Props {
   results: Map<string, { images: string[]; productName: string }>;
@@ -17,6 +19,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [downloading, setDownloading] = useState(false);
 
   const allImages = Array.from(results.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
@@ -25,6 +28,25 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     setLightboxImages(images);
     setLightboxIndex(idx);
     setLightboxOpen(true);
+  };
+
+  const handleDownloadAll = async () => {
+    if (downloading || totalImages === 0) return;
+    setDownloading(true);
+    try {
+      const dropImages: DropImage[] = [];
+      for (const [, { images, productName }] of results.entries()) {
+        for (const url of images) {
+          dropImages.push({ url, workflow_name: 'Product Images', product_title: productName });
+        }
+      }
+      await downloadDropAsZip(dropImages, 'Product_Images');
+      toast.success('Download complete');
+    } catch {
+      toast.error('Download failed');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -69,6 +91,9 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
         <CardContent className="p-4 flex flex-wrap gap-3 items-center justify-center">
           <Button variant="outline" onClick={onGenerateMore} className="gap-1.5">
             <RefreshCw className="w-4 h-4" />Generate More
+          </Button>
+          <Button variant="outline" onClick={handleDownloadAll} disabled={downloading || totalImages === 0} className="gap-1.5">
+            <Archive className="w-4 h-4" />{downloading ? 'Downloading…' : 'Download All'}
           </Button>
           <Button variant="outline" onClick={onGoToLibrary} className="gap-1.5">
             <Download className="w-4 h-4" />View in Library

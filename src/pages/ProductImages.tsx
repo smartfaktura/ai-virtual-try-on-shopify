@@ -409,7 +409,20 @@ export default function ProductImages() {
                 </div>
               )}
 
-              {(() => {
+              {/* Empty state */}
+              {!isLoadingProducts && userProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 space-y-4 border-2 border-dashed border-border rounded-xl bg-muted/30">
+                  <Package className="w-10 h-10 text-muted-foreground/40" />
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-semibold text-foreground">No products yet</p>
+                    <p className="text-xs text-muted-foreground max-w-xs">Add your first product to start generating professional visuals across multiple scenes.</p>
+                  </div>
+                  <Button size="sm" onClick={() => setAddProductOpen(true)} className="gap-1.5">
+                    <Package className="w-3.5 h-3.5" />Add Your First Product
+                  </Button>
+                </div>
+              ) : (
+              (() => {
                 const filtered = userProducts.filter(p =>
                   p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
                   p.product_type.toLowerCase().includes(productSearch.toLowerCase())
@@ -488,7 +501,8 @@ export default function ProductImages() {
                     </button>
                   </div>
                 );
-              })()}
+              })()
+              )}
             </div>
             <AddProductModal
               open={addProductOpen}
@@ -510,6 +524,8 @@ export default function ProductImages() {
           <ProductImagesStep3Settings
             details={details}
             onDetailsChange={setDetails}
+            productCount={selectedProducts.length}
+            sceneCount={selectedScenes.length}
           />
         )}
 
@@ -531,6 +547,7 @@ export default function ProductImages() {
             details={details}
             creditsPerImage={creditsPerImage}
             balance={balance}
+            onEditStep={(s) => setStep(s as PIStep)}
           />
         )}
 
@@ -552,7 +569,7 @@ export default function ProductImages() {
       </div>
 
       {/* Sticky bottom bar for Steps 1-5 */}
-      {step >= 2 && step <= 5 && (
+      {step >= 1 && step <= 5 && (
         <ProductImagesStickyBar
           step={step}
           productCount={selectedProducts.length}
