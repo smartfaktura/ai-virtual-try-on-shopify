@@ -526,13 +526,26 @@ CRITICAL REQUIREMENTS:
 12. The perspective vanishing point must remain identical to the source photo — no rotation, no tilt correction.
 
 ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement. ${allNegatives}` : "AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement."}`
-    : `${processedTemplate}
+    : (() => {
+  // Build product analysis block if available
+  const analysisData = (product as unknown as Record<string, unknown>).analysis as WorkflowRequest['product']['analysis'] | undefined;
+  const analysisLines: string[] = [];
+  if (analysisData) {
+    if (analysisData.category) analysisLines.push(`- Category: ${analysisData.category}`);
+    if (analysisData.materialFamily) analysisLines.push(`- Material: ${analysisData.materialFamily}`);
+    if (analysisData.finish) analysisLines.push(`- Finish: ${analysisData.finish}`);
+    if (analysisData.colorFamily) analysisLines.push(`- Color family: ${analysisData.colorFamily}`);
+    if (analysisData.sizeClass) analysisLines.push(`- Size class: ${analysisData.sizeClass}`);
+  }
+  const analysisBlock = analysisLines.length > 0 ? `\n${analysisLines.join('\n')}` : '';
+
+  return `${processedTemplate}
 ${themeBlock}
 PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
-${product.description ? `- Description: ${product.description}` : ""}
+${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
 ${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
@@ -550,6 +563,7 @@ CRITICAL REQUIREMENTS:
 ${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
 
 ${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
+  })();
 
   return prompt;
 }

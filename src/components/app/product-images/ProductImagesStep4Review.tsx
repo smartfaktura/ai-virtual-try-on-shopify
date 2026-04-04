@@ -2,10 +2,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User } from 'lucide-react';
 import { ALL_SCENES } from './sceneData';
+import { ProductThumbnail } from './ProductThumbnail';
 import type { UserProduct, DetailSettings } from './types';
 
 interface Step4Props {
@@ -17,7 +16,6 @@ interface Step4Props {
   onEditStep?: (step: number) => void;
 }
 
-// Human-friendly labels for aesthetic values
 const AESTHETIC_LABELS: Record<string, string> = {
   'auto': 'Auto', 'warm-neutral': 'Warm neutrals', 'cool-neutral': 'Cool neutrals',
   'monochrome': 'Soft monochrome', 'brand-led': 'Brand-led',
@@ -52,7 +50,6 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const canAfford = balance >= totalCredits;
   const isLargeBatch = totalImages > 20;
 
-  // Collect aesthetic settings that have values
   const aestheticEntries: { label: string; value: string }[] = [];
   if (details.backgroundTone) aestheticEntries.push({ label: 'Color world', value: friendlyLabel(details.backgroundTone) });
   if (details.negativeSpace) aestheticEntries.push({ label: 'Background', value: friendlyLabel(details.negativeSpace) });
@@ -63,7 +60,6 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   if (details.brandingVisibility) aestheticEntries.push({ label: 'Accent', value: friendlyLabel(details.brandingVisibility) });
   if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
 
-  // Person styling entries
   const personEntries: { label: string; value: string }[] = [];
   if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
   if (details.ageRange) personEntries.push({ label: 'Age', value: details.ageRange });
@@ -106,9 +102,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
             <div className="flex flex-wrap gap-1.5">
               {selectedProducts.slice(0, 8).map(p => (
-                <div key={p.id} className="w-14 h-14 rounded-lg overflow-hidden bg-muted/40 border border-border/40">
-                  <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 112, quality: 70 })} alt={p.title} className="w-full h-full object-contain p-1" />
-                </div>
+                <ProductThumbnail key={p.id} imageUrl={p.image_url} alt={p.title} size="md" />
               ))}
               {selectedProducts.length > 8 && (
                 <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">

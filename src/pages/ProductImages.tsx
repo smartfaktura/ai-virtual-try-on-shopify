@@ -428,7 +428,7 @@ export default function ProductImages() {
         <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
       )}
 
-      <div className="mt-6" ref={wizardContentRef}>
+      <div className="mt-2" ref={wizardContentRef}>
         {step === 1 && (
           <>
             <div className="space-y-3">
