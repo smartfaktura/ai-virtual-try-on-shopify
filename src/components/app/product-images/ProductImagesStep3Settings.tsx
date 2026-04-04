@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ImageIcon, Coins } from 'lucide-react';
-import type { DetailSettings } from './types';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { ImageIcon, Coins, ChevronRight, RotateCcw } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { DetailSettings, ProductImageScene } from './types';
 
 interface Step3SettingsProps {
   details: DetailSettings;
   onDetailsChange: (d: DetailSettings) => void;
   productCount?: number;
   sceneCount?: number;
+  selectedScenes?: ProductImageScene[];
 }
 
 function RatioShape({ ratio }: { ratio: string }) {
@@ -53,6 +57,37 @@ function ChipSelector({ label, value, onChange, options }: { label: string; valu
   );
 }
 
+function MiniRatioChips({ value, globalValue, onChange }: { value: string; globalValue: string; onChange: (v: string) => void }) {
+  const ratios = ['1:1', '4:5', '3:4', '9:16', '16:9'];
+  const isDefault = value === globalValue;
+  return (
+    <div className="flex gap-1">
+      {ratios.map(r => {
+        const isActive = value === r;
+        const isGlobalDefault = r === globalValue;
+        return (
+          <button
+            key={r}
+            type="button"
+            onClick={() => onChange(r)}
+            className={cn(
+              'flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all border cursor-pointer',
+              isActive
+                ? 'bg-primary text-primary-foreground border-primary'
+                : isGlobalDefault
+                  ? 'bg-muted/60 text-muted-foreground border-border/60 hover:border-primary/40'
+                  : 'bg-muted/30 text-muted-foreground/70 border-border/40 hover:border-primary/40'
+            )}
+          >
+            <RatioShape ratio={r} />
+            {r}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const ASPECT_RATIOS = [
   { value: '1:1', label: 'Square 1:1' },
   { value: '4:5', label: 'Portrait 4:5' },
@@ -68,8 +103,13 @@ const IMAGE_COUNT_OPTIONS = [
   { value: '4', label: '4 images' },
 ];
 
-export function ProductImagesStep3Settings({ details, onDetailsChange, productCount = 0, sceneCount = 0 }: Step3SettingsProps) {
+export function ProductImagesStep3Settings({ details, onDetailsChange, productCount = 0, sceneCount = 0, selectedScenes = [] }: Step3SettingsProps) {
+  const [overridesOpen, setOverridesOpen] = useState(false);
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
+
+  const globalRatio = details.aspectRatio || '1:1';
+  const overrides = details.sceneAspectOverrides || {};
+  const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
 
   const ratioOptions = ASPECT_RATIOS.map(r => ({
     ...r,
@@ -80,6 +120,22 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
   const costPerImage = 6;
   const totalImages = productCount * sceneCount * imgCount;
   const totalCredits = totalImages * costPerImage;
+
+  const handleSceneRatioChange = (sceneId: string, ratio: string) => {
+    const next = { ...overrides };
+    if (ratio === globalRatio) {
+      delete next[sceneId];
+    } else {
+      next[sceneId] = ratio;
+    }
+    update({ sceneAspectOverrides: next });
+  };
+
+  const resetAllOverrides = () => {
+    update({ sceneAspectOverrides: {} });
+  };
+
+  const overrideCount = Object.values(overrides).filter(v => v !== globalRatio).length;
 
   return (
     <div className="space-y-6 pb-20">
@@ -92,10 +148,11 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <RatioShape ratio={details.aspectRatio || '1:1'} />
+              <RatioShape ratio={globalRatio} />
               <span className="text-sm font-semibold">Format</span>
+              <span className="text-xs text-muted-foreground">(applies to all)</span>
             </div>
-            <ChipSelector label="" value={details.aspectRatio || '1:1'} onChange={v => update({ aspectRatio: v })} options={ratioOptions} />
+            <ChipSelector label="" value={globalRatio} onChange={v => update({ aspectRatio: v })} options={ratioOptions} />
           </CardContent>
         </Card>
 
@@ -109,6 +166,64 @@ export function ProductImagesStep3Settings({ details, onDetailsChange, productCo
           </CardContent>
         </Card>
       </div>
+
+      {selectedScenes.length > 0 && (
+        <Collapsible open={overridesOpen} onOpenChange={setOverridesOpen}>
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group w-full">
+            <ChevronRight className={cn('w-4 h-4 transition-transform', overridesOpen && 'rotate-90')} />
+            <span>Customize format per scene</span>
+            <span className="text-xs text-muted-foreground/70">({selectedScenes.length} scene{selectedScenes.length !== 1 ? 's' : ''})</span>
+            {hasOverrides && (
+              <span className="ml-auto text-xs font-medium text-primary">{overrideCount} custom</span>
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <Card className="mt-3">
+              <CardContent className="p-3 space-y-2">
+                {selectedScenes.map(scene => {
+                  const sceneRatio = overrides[scene.id] || globalRatio;
+                  const isCustom = overrides[scene.id] && overrides[scene.id] !== globalRatio;
+                  return (
+                    <div key={scene.id} className={cn(
+                      'flex flex-col sm:flex-row sm:items-center gap-2 p-2 rounded-lg transition-colors',
+                      isCustom ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30'
+                    )}>
+                      <div className="flex items-center gap-2 min-w-0 sm:w-48">
+                        <span className={cn(
+                          'text-xs font-medium truncate',
+                          isCustom ? 'text-foreground' : 'text-muted-foreground'
+                        )}>
+                          {scene.title}
+                        </span>
+                        {isCustom && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">
+                            custom
+                          </span>
+                        )}
+                      </div>
+                      <MiniRatioChips
+                        value={sceneRatio}
+                        globalValue={globalRatio}
+                        onChange={(r) => handleSceneRatioChange(scene.id, r)}
+                      />
+                    </div>
+                  );
+                })}
+                {hasOverrides && (
+                  <button
+                    type="button"
+                    onClick={resetAllOverrides}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1 ml-auto cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Reset all to default
+                  </button>
+                )}
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {productCount > 0 && sceneCount > 0 && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2.5 border border-border/60">
