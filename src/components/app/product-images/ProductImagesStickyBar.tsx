@@ -6,8 +6,7 @@ const STEP_LABELS: Record<number, string> = {
   1: 'Products',
   2: 'Scenes',
   3: 'Refine',
-  4: 'Settings',
-  5: 'Review',
+  4: 'Review',
 };
 
 interface StickyBarProps {
@@ -22,7 +21,7 @@ interface StickyBarProps {
   onBack: () => void;
 }
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 export function ProductImagesStickyBar({ step, productCount, sceneCount, totalImages, totalCredits, balance, canProceed, onNext, onBack }: StickyBarProps) {
   const canAfford = balance >= totalCredits;
@@ -31,14 +30,13 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
     switch (step) {
       case 1: return 'Choose Scenes';
       case 2: return 'Refine';
-      case 3: return 'Settings';
-      case 4: return 'Review';
-      case 5: return `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`;
+      case 3: return 'Review';
+      case 4: return `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`;
       default: return 'Continue';
     }
   })();
 
-  const showGenIcon = step === 5;
+  const showGenIcon = step === 4;
 
   return (
     <div className="sticky bottom-4 z-10">
@@ -67,7 +65,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
             )}
           </div>
           <div className="flex items-center gap-2">
-            {step > 1 && step <= 5 && (
+            {step > 1 && step <= 4 && (
               <Button variant="outline" size="sm" className="h-8 text-xs flex-shrink-0" onClick={onBack}>Back</Button>
             )}
             <Button size="sm" disabled={!canProceed} onClick={onNext} className="gap-1.5 h-8 text-xs flex-1">
@@ -119,7 +117,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
           )}
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {step > 1 && step <= 5 && (
+            {step > 1 && step <= 4 && (
               <Button variant="outline" size="sm" onClick={onBack}>Back</Button>
             )}
             <Button size="sm" disabled={!canProceed} onClick={onNext} className="gap-1.5">
