@@ -356,7 +356,7 @@ export default function ProductImages() {
       <SEOHead title="Product Images — VOVV" description="Generate product images" />
       <PageHeader title="Product Images" subtitle="Generate stunning product visuals across multiple scene types."><span /></PageHeader>
 
-      {step <= 6 && (
+      {step <= 5 && (
         <CatalogStepper
           steps={STEP_DEFS}
           currentStep={step}
