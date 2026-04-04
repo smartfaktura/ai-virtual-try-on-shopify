@@ -347,6 +347,7 @@ export default function ProductImages() {
           <ProductImagesStep2Scenes
             selectedSceneIds={selectedSceneIds}
             onSelectionChange={setSelectedSceneIds}
+            selectedProducts={selectedProducts}
           />
         )}
 
