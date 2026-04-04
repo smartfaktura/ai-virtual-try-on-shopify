@@ -164,6 +164,10 @@ const STYLING_DIRECTION_MAP: Record<string, string> = {
   'organic-natural': 'Organic natural styling — relaxed, effortless composition with earthy, authentic feel.',
   'playful-vibrant': 'Playful vibrant styling — energetic composition with bold colors and dynamic arrangement.',
   'classic-timeless': 'Classic timeless styling — traditional, refined composition with enduring elegance.',
+  'clean-commercial': 'Clean commercial styling — crisp, professional composition optimized for product clarity and conversion.',
+  'fashion-editorial': 'Fashion editorial styling — elevated, magazine-quality composition with aspirational visual storytelling.',
+  'beauty-clean': 'Beauty-clean styling — luminous, minimal composition with soft tones and premium product focus.',
+  'modern-sleek': 'Modern sleek styling — contemporary, geometric composition with sharp lines and refined minimalism.',
 };
 
 // ── Negative prompt components ──

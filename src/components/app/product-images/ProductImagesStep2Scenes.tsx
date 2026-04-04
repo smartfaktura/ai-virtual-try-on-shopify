@@ -177,8 +177,8 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
   );
 }
 
-export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts }: Step2Props) {
-  const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts), [selectedProducts]);
+export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
+  const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
