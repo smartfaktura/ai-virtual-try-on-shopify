@@ -2,7 +2,77 @@ import type { Tables } from '@/integrations/supabase/types';
 
 export type UserProduct = Tables<'user_products'>;
 
-export type PIStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type PIStep = 1 | 2 | 3 | 4 | 5 | 6;
+
+// ── Product categories ──
+export type ProductCategory =
+  | 'fragrance' | 'beauty-skincare' | 'makeup-lipsticks'
+  | 'bags-accessories' | 'hats-small' | 'shoes'
+  | 'garments' | 'home-decor' | 'tech-devices'
+  | 'food-beverage' | 'supplements-wellness' | 'other';
+
+export interface ProductAnalysis {
+  category: ProductCategory;
+  sizeClass: 'very-small' | 'small' | 'medium' | 'large' | 'extra-large';
+  colorFamily: string;
+  materialFamily: string;
+  finish: string;
+  packagingRelevant: boolean;
+  personCompatible: boolean;
+}
+
+// ── Scene assignment ──
+export type SceneScope = 'all' | 'category_group' | 'individual_product';
+
+export interface SceneSelection {
+  sceneId: string;
+  scope: SceneScope;
+  scopeValue: string | null; // category slug or product ID
+}
+
+// ── Refine structure ──
+export interface OverallAesthetic {
+  consistency: string;
+  colorWorld: string;
+  backgroundFamily: string;
+  surfaceMaterial: string;
+  lightingFamily: string;
+  shadowStyle: string;
+  stylingDirection: string;
+  accentColor: string;
+  accentCustom?: string;
+  aestheticSource?: 'auto-balance' | 'anchor-first' | 'manual';
+}
+
+export interface PersonStyling {
+  presentation: string;
+  ageRange: string;
+  skinTone: string;
+  modelSelectionMode: string;
+  outfitStyle: string;
+  outfitColorDirection: string;
+  handStyle: string;
+  nails: string;
+  jewelryVisibility: string;
+  expression: string;
+  hairVisibility: string;
+  selectedModelId?: string;
+}
+
+export interface RefineSettings {
+  aesthetic: OverallAesthetic;
+  person?: PersonStyling;
+  sceneDetails: Record<string, Record<string, string>>;
+  advanced?: Record<string, string>;
+  customNote?: string;
+  packagingReferenceUrl?: string;
+  // Format & output (merged from old Settings step)
+  aspectRatio?: string;
+  quality?: string;
+  imageCount?: string;
+  sceneAspectOverrides?: Record<string, string>;
+  sceneProps?: Record<string, string[]>;
+}
 
 export interface ProductImageScene {
   id: string;
