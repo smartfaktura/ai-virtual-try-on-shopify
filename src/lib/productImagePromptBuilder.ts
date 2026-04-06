@@ -467,11 +467,8 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   let directive = `Model: ${parts.join(', ')}.`;
 
-  // Append outfit if present, or use smart default for on-model scenes
-  const outfitStr = buildOutfitDirective(d);
-  if (outfitStr) {
-    directive += ` ${outfitStr}`;
-  } else if (sceneNeedsPerson) {
+  // Append outfit using structured config or smart default for on-model scenes
+  if (sceneNeedsPerson) {
     directive += ` ${defaultOutfitDirective(category, d, gender)}`;
   }
 
