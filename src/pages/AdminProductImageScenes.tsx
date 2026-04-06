@@ -596,6 +596,41 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         </div>
       </div>
 
+      {/* Category-specific sub-category label overrides */}
+      <Collapsible>
+        <CollapsibleTrigger className="w-full">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer py-1">
+            <ChevronRight className="w-3.5 h-3.5 [[data-state=open]>&]:rotate-90 transition-transform" />
+            <span className="font-medium">Category-specific labels</span>
+            <span className="text-[10px]">(override sub-category name per product type)</span>
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="grid grid-cols-2 gap-2 pt-2 pl-4">
+            {EXCLUDE_CATS.map(cat => {
+              const overrides = (draft.sub_category_overrides as Record<string, string>) || {};
+              return (
+                <div key={cat} className="flex items-center gap-2">
+                  <Label className="text-[10px] w-28 shrink-0 text-muted-foreground">{CAT_LABEL_MAP[cat] || cat}</Label>
+                  <Input
+                    value={overrides[cat] || ''}
+                    onChange={e => {
+                      const next = { ...overrides };
+                      if (e.target.value) next[cat] = e.target.value;
+                      else delete next[cat];
+                      set('sub_category_overrides', next);
+                    }}
+                    placeholder={draft.sub_category || 'Default'}
+                    className="text-xs h-7"
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5 pl-4">Leave empty to use the default sub-category label</p>
+        </CollapsibleContent>
+      </Collapsible>
+
       <div className="space-y-1.5">
         <Label className="text-xs">Trigger Blocks</Label>
         <div className="flex flex-wrap gap-2">
