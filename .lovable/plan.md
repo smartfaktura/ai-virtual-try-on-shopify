@@ -1,56 +1,38 @@
 
 
-# Refine Step — UX Overhaul Round 3
+# Move Format & Output to Review Step
 
-## Issues from Screenshots
+## Rationale
 
-### Background Strip
-1. **Swatches are 12px dots** — impossible to distinguish gradients from solids. Users can't see the actual color.
-2. **No custom gradient option** — only custom HEX for solid colors. No way to define a gradient.
-3. **"all 9 scenes" label is easy to miss** — not clear enough that this affects everything.
+The Refine step should focus purely on **creative direction** (backgrounds, lighting, mood, model, outfit). Format settings (aspect ratio, image count, quality) and per-scene overrides/props are **output configuration** — they naturally belong in the Review step where the user finalizes their generation plan before hitting Generate.
 
-### Scene Card Expansion
-4. **Expanded settings squeezed into a narrow card column** — on desktop, the settings panel shows inside a ~250px wide card. Environment chips wrap badly, 3-column grids become 1-column. Should expand to full row width on desktop.
+This reduces cognitive load in Refine and makes Review more actionable (not just a read-only summary).
 
-### Outfit & Person Details
-5. **Full outfit panel shows for ALL on-model scenes** — even "In-Hand" shots only show a hand, yet users see Top + Bottom + Shoes + Accessories fields. Irrelevant pieces should be hidden based on scene type.
-6. **Person details pills are overwhelming** — Presentation, Age Range, Skin Tone, Expression, Hand Style, Nails, Jewelry dumped in a flat grid with tiny 10px pills. No grouping or hierarchy.
-7. **"Hand Style" options are cryptic** — "Clean studio", "Natural lifestyle", "Polished beauty" mean nothing to most users. Need clearer labels or descriptions.
-8. **Accessories input is a bare inline text field** — looks broken, not interactive enough.
+## Changes
 
-## Fixes
+### 1. Remove Format & Output from Refine (`ProductImagesStep3Refine.tsx`)
+- Delete the entire "SECTION 5: Format & Output" collapsible (lines ~1726–1841)
+- Delete the credit preview bar (lines ~1843–1855) — Review already shows credits
+- Remove related state (`formatOpen`, `overridesOpen`) and helper components (`RatioShape`, `MiniRatioChips`, `PropPickerModal`) only if they're not used elsewhere — but they'll be moved to Review, so extract them first
+- Remove `IMAGE_COUNT_OPTIONS`, `ratioOptions` constants if only used here
 
-### Fix 1: Larger Background Swatches with Gradient Previews
-Replace the tiny `w-3 h-3` swatch dots with `w-8 h-8` rounded rectangles that actually show the color/gradient. For gradients, render the full CSS gradient so users can see the actual fade. Add a "Custom Gradient" option alongside Custom HEX — with two color pickers (start/end color) that construct a linear-gradient prompt directive.
+### 2. Expand Review step into an interactive step (`ProductImagesStep4Review.tsx`)
+- Add `onDetailsChange` prop so format settings are editable (not read-only)
+- Move the Format card (aspect ratio chips), Images per scene card, and Quality card into the Review layout — place them **above** the existing summary cards
+- Move the Scene Ratios & Props collapsible into Review as well
+- Move `PropPickerModal`, `MiniRatioChips`, `RatioShape` components into this file
+- The existing Products/Scenes/Credits summary cards remain below as confirmation
+- Credits card updates live as format settings change
 
-Update `BG_SWATCH_OPTIONS` to include a `gradient-custom` entry. Add `backgroundCustomGradient?: { from: string; to: string }` to `DetailSettings` type. Update prompt builder to handle custom gradients.
+### 3. Update parent orchestrator (`ProductImages.tsx`)
+- Pass `onDetailsChange={setDetails}` to `ProductImagesStep4Review`
+- Pass `allProducts` (for prop picker) to Step 4
 
-### Fix 2: Scene Expansion Goes Full-Width on Desktop
-When a scene card is expanded, break it out of the grid and render the settings panel as a full-width row below the grid row. On desktop this means the expanded panel spans all 4 columns (`col-span-full`), giving settings room to breathe in their natural 2-3 column layouts. The card itself stays in its grid position with a highlighted border.
-
-### Fix 3: Context-Aware Outfit Visibility
-Determine which outfit pieces to show based on selected scene types:
-- **Hand-only scenes** (in-hand, holding): show only Top (since sleeves may be visible) + Accessories
-- **Upper body scenes** (close-up portrait): show Top + Accessories
-- **Full-body scenes** (editorial, walking): show Top + Bottom + Shoes + Accessories
-- Compute `visiblePieces` from the union of all selected on-model scene types
-
-### Fix 4: Reorganize Person Details into Grouped Sections
-Split the flat person details grid into two clear groups:
-- **Appearance** (collapsible, open by default): Presentation, Age Range, Skin Tone, Expression
-- **Styling Details** (collapsible, collapsed by default): Hand Style, Nails, Jewelry
-
-Rename confusing options:
-- Hand Style: "Clean studio" → "Manicured", "Natural lifestyle" → "Natural", "Polished beauty" → "Polished"
-
-### Fix 5: Better Accessories Input
-Replace the inline text field with a chip-based selector: `none`, `minimal`, `statement`, `custom` — where `custom` reveals a text input. This matches the pattern of every other field.
-
-## Files to Update
+### Files
 
 | File | Changes |
 |---|---|
-| `types.ts` | Add `backgroundCustomGradient?: { from: string; to: string }` to `DetailSettings` |
-| `ProductImagesStep3Refine.tsx` | (1) Enlarge background swatches to `w-8 h-8` rectangles. (2) Add custom gradient option with dual hex inputs. (3) Scene expansion panel becomes `col-span-full` below the card's grid row. (4) Compute `visibleOutfitPieces` from scene types to hide irrelevant outfit fields. (5) Split person details into Appearance + Styling Details groups. (6) Rename Hand Style options. (7) Replace accessories text input with chip selector. |
-| `productImagePromptBuilder.ts` | Handle `backgroundCustomGradient` — resolve as `"smooth gradient background transitioning from #XXX to #YYY"` |
+| `ProductImagesStep3Refine.tsx` | Remove Format & Output section, credit preview, and related state/constants |
+| `ProductImagesStep4Review.tsx` | Add editable Format & Output controls (aspect ratio, image count, quality, scene overrides, props) above the summary. Accept `onDetailsChange` and `allProducts` props. Move helper components from Refine. |
+| `ProductImages.tsx` | Pass `onDetailsChange` and `allProducts` to Step4Review |
 
