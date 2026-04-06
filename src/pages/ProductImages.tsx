@@ -13,7 +13,7 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { ALL_SCENES } from '@/components/app/product-images/sceneData';
-import { getTriggeredBlocks } from '@/components/app/product-images/detailBlockConfig';
+import { getTriggeredBlocks, BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
