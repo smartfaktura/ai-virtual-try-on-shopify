@@ -212,8 +212,7 @@ export default function ProductImages() {
   }, [lastSettingsCategory, details.aspectRatio, details.quality, details.imageCount]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
-  const quality = details.quality || 'high';
-  const creditsPerImage = quality === 'standard' ? 3 : 6;
+  const creditsPerImage = 6;
   const totalImages = computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;

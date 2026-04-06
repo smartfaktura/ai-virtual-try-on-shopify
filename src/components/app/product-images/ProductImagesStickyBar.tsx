@@ -111,11 +111,14 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
             </div>
           </div>
 
-          {totalCredits > 0 && (
-            <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted border border-border">
-              <Coins className="w-3.5 h-3.5 text-primary" />
-              <span className={`font-bold ${canAfford ? 'text-foreground' : 'text-destructive'}`}>{totalCredits}</span>
-              <span className="text-muted-foreground">cr</span>
+        {totalCredits > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted border border-border">
+                <Coins className="w-3.5 h-3.5 text-primary" />
+                <span className={`font-bold ${canAfford ? 'text-foreground' : 'text-destructive'}`}>{totalCredits}</span>
+                <span className="text-muted-foreground">cr</span>
+              </div>
+              {!canAfford && <span className="text-xs text-destructive font-medium">Not enough credits</span>}
             </div>
           )}
 

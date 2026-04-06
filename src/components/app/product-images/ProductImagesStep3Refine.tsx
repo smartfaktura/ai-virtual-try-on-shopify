@@ -1630,7 +1630,7 @@ export function ProductImagesStep3Refine({
   const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
   const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
   const imgCount = parseInt(details.imageCount || '1', 10);
-  const costPerImage = (details.quality || 'high') === 'standard' ? 3 : 6;
+  const costPerImage = 6;
   const sceneCount = selectedScenes.length;
   const totalImages = productCount * sceneCount * imgCount;
   const totalCredits = totalImages * costPerImage;

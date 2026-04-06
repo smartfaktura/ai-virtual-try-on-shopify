@@ -350,7 +350,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Quality</span>
-                <span className="font-medium">{quality === 'high' ? 'Pro' : 'Standard'}</span>
+                <span className="font-medium">Pro</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Images per scene</span>
