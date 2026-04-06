@@ -1,48 +1,28 @@
 
 
-# Remove Standard Quality + Add Live Credit Indicator to Steps 1-2
+# Fix: Refine Step Not Loading Settings After Scene Migration
 
-## Summary
+## Root Cause
 
-Two changes:
-1. Remove the "Standard (3 cr)" quality option from Product Images — all generations use Pro quality at 6 credits per image
-2. Add a live credit estimate to the sticky bar that updates as users select products and scenes, with a warning when balance is insufficient
+`ProductImages.tsx` imports the **static** `ALL_SCENES` from `sceneData.ts` and uses it to resolve `selectedScenes` (line 130). But Step 2 (`ProductImagesStep2Scenes`) uses the **database-backed** `useProductImageScenes` hook, which returns scenes with proper `triggerBlocks`, `subCategory`, etc.
 
-## Changes
+The static fallback scenes in `sceneData.ts` have **no `triggerBlocks` field** — so when Step 3 (Refine) receives these scenes, all block detection fails silently: no model picker, no scene settings, no expandable controls.
 
-### 1. Remove Standard quality option — force 6 credits per image
+Additionally, after the global-scenes migration, DB scene IDs may differ from static IDs, causing `ALL_SCENES.filter(s => selectedSceneIds.has(s.id))` to return an empty array.
 
-All `quality === 'standard' ? 3 : 6` references become a flat `6`.
+## Fix
 
-| File | Change |
-|---|---|
-| `src/pages/ProductImages.tsx` (line 216) | Replace `creditsPerImage = quality === 'standard' ? 3 : 6` with `const creditsPerImage = 6` |
-| `src/components/app/product-images/ProductImagesStep4Review.tsx` (line 83) | Same — hardcode `costPerImage = 6`, remove quality chip selector (lines 199-208) |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` (line 1633) | Same — hardcode `costPerImage = 6` |
-| `src/components/app/product-images/ProductImagesStep3Settings.tsx` | Remove any quality chip selector if present |
+**`src/pages/ProductImages.tsx`**:
+1. Import and call `useProductImageScenes()` hook
+2. Replace `ALL_SCENES` usage on line 130 with the hook's `allScenes`
+3. Remove the static `ALL_SCENES` import (no longer needed here)
+4. Pass `allScenes` to any other references that currently use `ALL_SCENES` (e.g., `getTriggeredBlocks` call)
 
-### 2. Live credit indicator in sticky bar during Steps 1-2
+This single change reconnects the Refine step to the live database scenes with all their `triggerBlocks`, making model pickers, scene settings, background controls, and all detail blocks load correctly again.
 
-The sticky bar already shows credits on Steps 3-4. The fix is to ensure `totalCredits` is computed and passed even when `sceneCount > 0` during Step 2. Currently `totalImages` is already computed in `ProductImages.tsx` and passed to the sticky bar — the credit display is already wired. The bar already shows the credit pill when `totalCredits > 0`. Since `totalCredits = selectedProducts × selectedScenes × imageCount × 6`, it will display as soon as the user has at least 1 product and 1 scene selected.
-
-The bar already turns the credit number red when `canAfford` is false. No additional work needed for the insufficient-credits warning — it's already wired.
-
-### 3. Add insufficient-credits warning text
-
-In the sticky bar, when `!canAfford && totalCredits > 0`, show a small "Not enough credits" label next to the credit pill, plus make the Generate button disabled with a tooltip. Currently the bar only turns the number red — add explicit text.
+## Files
 
 | File | Change |
 |---|---|
-| `src/components/app/product-images/ProductImagesStickyBar.tsx` | Next to credit pill, when `!canAfford`, render `<span className="text-xs text-destructive font-medium">Not enough credits</span>` |
-
-### 4. Backend alignment
-
-The `enqueue-generation` edge function already charges 6 credits for catalog jobs (`perImage = 4` for catalog, but product-images uses freestyle/workflow path with `quality === 'high'` → 6). Verify the job type sent is correct. The frontend sends `quality: 'high'` by default now, so the backend `calculateCreditCost` will return 6 per image for non-catalog jobs with high quality. No backend change needed.
-
-## Files modified
-
-- `src/pages/ProductImages.tsx`
-- `src/components/app/product-images/ProductImagesStep4Review.tsx`
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- `src/components/app/product-images/ProductImagesStickyBar.tsx`
+| `src/pages/ProductImages.tsx` | Add `useProductImageScenes` hook, replace static `ALL_SCENES` with hook's `allScenes` for `selectedScenes` memo and `getTriggeredBlocks` calls |
 
