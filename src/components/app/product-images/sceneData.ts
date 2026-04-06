@@ -558,7 +558,6 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
 ];
 
 export const ALL_SCENES: ProductImageScene[] = [
-  ...GLOBAL_SCENES,
   ...CATEGORY_COLLECTIONS.flatMap(c => c.scenes),
 ];
 
