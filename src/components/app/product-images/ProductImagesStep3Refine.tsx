@@ -819,7 +819,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   }, [currentConfig]);
 
   // Presets: built-in + saved for this category
-  const builtInPresets = useMemo(() => getBuiltInPresets(cat), [cat]);
+  const builtInPresets = useMemo(() => getBuiltInPresets(cat, isMale), [cat, isMale]);
   const categoryPresets = savedPresets.filter(p => p.category === cat);
   const allPresets = [...builtInPresets, ...categoryPresets];
 

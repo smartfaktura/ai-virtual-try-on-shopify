@@ -262,6 +262,32 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         </Card>
       )}
 
+      {/* Outfit summary */}
+      {outfitEntries.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Shirt className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs font-semibold">Locked outfit</p>
+              </div>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {outfitEntries.map(e => (
+                <Badge key={e.label} variant="secondary" className="text-[10px]">
+                  {e.label}: {e.value}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Custom note */}
       {details.customNote && (
         <Card>
