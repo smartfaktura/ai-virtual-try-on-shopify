@@ -579,7 +579,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const outfit = buildOutfitDirective(details);
       if (outfit) return outfit;
       const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
