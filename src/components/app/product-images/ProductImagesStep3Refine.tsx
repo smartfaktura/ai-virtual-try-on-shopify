@@ -418,7 +418,7 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
     case 'background':
       return (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <ChipSelector label="Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
+          <MultiChipSelector label="Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
             { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' }, { value: 'warm-neutral', label: 'Warm Neutral' },
             { value: 'cool-neutral', label: 'Cool Neutral' }, { value: 'gradient', label: 'Soft Gradient' },
           ]} />
