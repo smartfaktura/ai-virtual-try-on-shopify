@@ -1498,7 +1498,7 @@ export function ProductImagesStep3Refine({
                 </>
               )}
             </span>
-            <div className="flex gap-1 ml-1">
+            <div className="hidden sm:flex gap-1 ml-1">
               {scenesNeedingModel.slice(0, 4).map(s => (
                 <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
                   {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
