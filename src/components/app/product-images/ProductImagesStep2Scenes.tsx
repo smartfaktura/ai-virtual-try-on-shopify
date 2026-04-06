@@ -193,10 +193,36 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
-  // Sync expanded categories when selected products change
-  useEffect(() => {
-    setExpandedCategories(new Set(relevantCatIds));
-  }, [relevantCatIds]);
+  // Collect all detected categories for filtering universal scenes
+  const allDetectedCategories = useMemo(() => {
+    const cats = new Set<string>();
+    if (productAnalyses) {
+      for (const p of selectedProducts) {
+        const cat = productAnalyses[p.id]?.category;
+        if (cat) cats.add(cat);
+      }
+    }
+    for (const p of selectedProducts) {
+      const aj = (p as any).analysis_json as { category?: string } | null;
+      if (aj?.category) cats.add(aj.category);
+    }
+    // If no AI categories, fall back to keyword-detected ones
+    if (cats.size === 0) {
+      relevantCatIds.forEach(c => cats.add(c));
+    }
+    return cats;
+  }, [selectedProducts, productAnalyses, relevantCatIds]);
+
+  // Filter universal scenes: hide scenes where ALL selected products fall into excluded categories
+  const filteredGlobalScenes = useMemo(() => {
+    if (allDetectedCategories.size === 0) return GLOBAL_SCENES;
+    return GLOBAL_SCENES.filter(scene => {
+      if (!scene.excludeCategories || scene.excludeCategories.length === 0) return true;
+      // Show scene if at least one detected category is NOT excluded
+      const catsArray = Array.from(allDetectedCategories);
+      return catsArray.some(cat => !scene.excludeCategories!.includes(cat));
+    });
+  }, [allDetectedCategories]);
 
   const gridClass = GRID_CLASSES[gridSize];
 
