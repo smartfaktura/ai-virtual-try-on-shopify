@@ -1272,10 +1272,17 @@ export function ProductImagesStep3Refine({
             {selectedScenes.map(scene => {
               const isExpanded = expandedSceneId === scene.id;
               const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
-              const customized = isSceneCustomized(scene);
               const blockLabels = getSceneBlockLabels(scene);
               const group = sceneGroups.find(g => g.sceneId === scene.id);
               const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+              const templateCtrls = getTemplateControls(scene);
+              const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+
+              // Check if any template control has a non-default value
+              const hasCustomizations = sceneBlocks.some(bk => {
+                const fields = BLOCK_FIELD_MAP[bk] || [];
+                return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
+              });
 
               return (
                 <div key={scene.id} className={cn(
@@ -1284,17 +1291,17 @@ export function ProductImagesStep3Refine({
                 )}>
                   <button
                     type="button"
-                    onClick={() => sceneBlocks.length > 0 ? toggleSceneExpand(scene.id) : undefined}
+                    onClick={() => hasControls ? toggleSceneExpand(scene.id) : undefined}
                     className={cn(
                       'w-full text-left rounded-xl border-2 p-2 transition-all',
                       isExpanded
                         ? 'border-primary bg-primary/[0.03]'
-                        : customized
+                        : hasCustomizations
                           ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50'
                           : sceneNeedsModel && needsModel
                             ? 'border-amber-400/40 hover:border-amber-400/60'
                             : 'border-border hover:border-primary/30',
-                      sceneBlocks.length > 0 ? 'cursor-pointer' : 'cursor-default',
+                      hasControls ? 'cursor-pointer' : 'cursor-default',
                     )}
                   >
                     <div className="flex items-start gap-2.5">
@@ -1310,7 +1317,7 @@ export function ProductImagesStep3Refine({
                       <div className="flex-1 min-w-0 py-0.5">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-semibold truncate">{scene.title}</span>
-                          {customized && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
+                          {hasCustomizations && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
                         </div>
                         {/* Status */}
                         <div className="flex items-center gap-1 mt-1">
@@ -1327,15 +1334,15 @@ export function ProductImagesStep3Refine({
                         {/* Configurable blocks hint */}
                         {blockLabels.length > 0 && !isExpanded && (
                           <p className="text-[9px] text-muted-foreground mt-0.5 truncate">
-                            {blockLabels.slice(0, 2).join(', ')}{blockLabels.length > 2 ? ` +${blockLabels.length - 2}` : ''}
+                            {blockLabels.slice(0, 3).join(', ')}{blockLabels.length > 3 ? ` +${blockLabels.length - 3}` : ''}
                           </p>
                         )}
-                        {sceneBlocks.length === 0 && (
+                        {!hasControls && (
                           <p className="text-[9px] text-muted-foreground/60 mt-0.5 italic">No extra settings</p>
                         )}
                       </div>
                       {/* Expand indicator */}
-                      {sceneBlocks.length > 0 && (
+                      {hasControls && (
                         <div className="flex-shrink-0 mt-1">
                           {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-primary" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                         </div>
@@ -1344,8 +1351,9 @@ export function ProductImagesStep3Refine({
                   </button>
 
                   {/* Inline expanded settings */}
-                  {isExpanded && sceneBlocks.length > 0 && (
+                  {isExpanded && hasControls && (
                     <div className="mt-2 rounded-xl border border-primary/20 bg-card p-4 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                      {/* Scene-specific block fields */}
                       {sceneBlocks.map(blockKey => {
                         const meta = BLOCK_LABELS[blockKey];
                         if (!meta) return null;
@@ -1356,6 +1364,22 @@ export function ProductImagesStep3Refine({
                           </div>
                         );
                       })}
+
+                      {/* Template-derived style controls */}
+                      {templateCtrls.length > 0 && (
+                        <div className="space-y-3 pt-2 border-t border-border/40">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Style</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {templateCtrls.map(ctrl => (
+                              <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                            ))}
+                          </div>
+                          {/* Custom hex panel for accent control */}
+                          {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                            <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
