@@ -4,6 +4,32 @@ export type UserProduct = Tables<'user_products'>;
 
 export type PIStep = 1 | 2 | 3 | 4 | 5 | 6;
 
+// ── Structured outfit system ──
+export interface OutfitPiece {
+  garment: string;
+  color: string;
+  fit?: string;
+  material?: string;
+}
+
+export interface OutfitConfig {
+  top?: OutfitPiece;
+  bottom?: OutfitPiece;
+  shoes?: OutfitPiece;
+  accessories?: string;
+  name?: string;
+}
+
+export interface OutfitPreset {
+  id: string;
+  name: string;
+  config: OutfitConfig;
+  category: string;
+  gender?: string;
+  isBuiltIn?: boolean;
+  createdAt: string;
+}
+
 // ── Product categories ──
 export type ProductCategory =
   | 'fragrance' | 'beauty-skincare' | 'makeup-lipsticks'
@@ -189,11 +215,14 @@ export interface DetailSettings {
   // Model selection (replaces generic person details when set)
   selectedModelId?: string;
 
-  // Outfit locking (Catalog Studio-style per-piece control)
+  // Outfit locking (Catalog Studio-style per-piece control) — legacy flat strings
   outfitTop?: string;
   outfitBottom?: string;
   outfitShoes?: string;
   outfitAccessories?: string;
+
+  // Structured outfit config (preferred over flat strings)
+  outfitConfig?: OutfitConfig;
 }
 
 export interface GenerationPlan {

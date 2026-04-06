@@ -1,4 +1,4 @@
-import type { ProductImageScene, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
+import type { ProductImageScene, DetailSettings, ProductAnalysis, OutfitConfig, OutfitPiece } from '@/components/app/product-images/types';
 
 // ── Utility: treat "auto", empty, and undefined as unset ──
 function isAuto(val?: string): boolean {
@@ -367,26 +367,67 @@ function defaultPersonDirective(category?: string): string {
 // ── Category-aware outfit defaults (per-piece) ──
 interface OutfitPieces { top: string; bottom: string; shoes: string; accessories: string; }
 
-function categoryOutfitDefaults(category?: string): OutfitPieces {
+function categoryOutfitDefaults(category?: string, gender?: string): OutfitPieces {
+  const isMale = gender === 'male';
   switch (category) {
     case 'garments':
-      return { top: 'plain white t-shirt', bottom: 'slim-fit light beige cotton trousers', shoes: 'minimal white sneakers', accessories: 'none' };
+      return isMale
+        ? { top: 'plain white crew-neck tee', bottom: 'slim navy cotton chinos', shoes: 'white leather sneakers', accessories: 'none' }
+        : { top: 'fitted white t-shirt', bottom: 'slim-fit light beige cotton trousers', shoes: 'minimal white sneakers', accessories: 'none' };
     case 'bags-accessories':
-      return { top: 'fitted black turtleneck', bottom: 'slim dark navy trousers', shoes: 'black ankle boots', accessories: 'none' };
+      return isMale
+        ? { top: 'fitted black crew-neck sweater', bottom: 'slim dark navy trousers', shoes: 'black leather boots', accessories: 'none' }
+        : { top: 'fitted black turtleneck', bottom: 'slim dark navy trousers', shoes: 'black ankle boots', accessories: 'none' };
     case 'shoes':
-      return { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' };
+      return isMale
+        ? { top: 'plain white tee', bottom: 'slim dark wash denim', shoes: '', accessories: 'none' }
+        : { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' };
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
-      return { top: 'minimal elegant neckline', bottom: '', shoes: '', accessories: 'none' };
+      return isMale
+        ? { top: 'minimal clean neckline', bottom: '', shoes: '', accessories: 'none' }
+        : { top: 'minimal elegant neckline', bottom: '', shoes: '', accessories: 'none' };
     default:
       return { top: 'clean neutral top', bottom: 'understated trousers in neutral tones', shoes: 'minimal clean shoes', accessories: 'none' };
   }
 }
 
+// ── Build structured outfit string from OutfitConfig ──
+export function buildStructuredOutfitString(config: OutfitConfig): string {
+  const describePiece = (piece?: OutfitPiece): string => {
+    if (!piece || !piece.garment) return '';
+    const parts: string[] = [];
+    if (piece.fit) parts.push(piece.fit);
+    if (piece.color) parts.push(piece.color);
+    if (piece.material) parts.push(piece.material);
+    parts.push(piece.garment);
+    return parts.join(' ');
+  };
+
+  const segments: string[] = [];
+  const top = describePiece(config.top);
+  if (top) segments.push(top);
+  const bottom = describePiece(config.bottom);
+  if (bottom) segments.push(bottom);
+  const shoes = describePiece(config.shoes);
+  if (shoes) segments.push(shoes);
+
+  if (segments.length === 0) return '';
+  const outfitStr = segments.join(', ');
+  const accStr = config.accessories && config.accessories !== 'none' ? ` Accessories: ${config.accessories}.` : '';
+  return `Wearing ${outfitStr} — same outfit in every shot. Clothing must NOT compete with the product.${accStr}`;
+}
+
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
-function defaultOutfitDirective(category?: string, details?: DetailSettings): string {
-  const defaults = categoryOutfitDefaults(category);
+function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string): string {
+  // Prefer structured config if available
+  if (details?.outfitConfig) {
+    const structured = buildStructuredOutfitString(details.outfitConfig);
+    if (structured) return structured;
+  }
+
+  const defaults = categoryOutfitDefaults(category, gender);
   const top = details?.outfitTop || defaults.top;
   const bottom = details?.outfitBottom || defaults.bottom;
   const shoes = details?.outfitShoes || defaults.shoes;
@@ -404,7 +445,7 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings): st
 }
 
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string): string {
   const parts: string[] = [];
   if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
   if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
@@ -418,7 +459,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
       const outfitStr = buildOutfitDirective(d);
-      directive += ` ${outfitStr || defaultOutfitDirective(category, d)}`;
+      directive += ` ${outfitStr || defaultOutfitDirective(category, d, gender)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
@@ -432,7 +473,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   if (outfitStr) {
     directive += ` ${outfitStr}`;
   } else if (sceneNeedsPerson) {
-    directive += ` ${defaultOutfitDirective(category, d)}`;
+    directive += ` ${defaultOutfitDirective(category, d, gender)}`;
   }
 
   // Append model reference if present
@@ -533,6 +574,7 @@ interface TokenContext {
   analysis: ProductAnalysis | null;
   details: DetailSettings;
   selectedModelId?: string;
+  modelGender?: string;
   scene: ProductImageScene;
 }
 
@@ -571,7 +613,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
-      return buildPersonDirective(details, cat, needsPerson);
+      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
@@ -579,7 +621,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const outfit = buildOutfitDirective(details);
       if (outfit) return outfit;
       const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat, details) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
@@ -719,6 +761,7 @@ export function buildDynamicPrompt(
   product: { title: string; product_type?: string; description?: string; dimensions?: string | null },
   analysis: ProductAnalysis | null,
   details: DetailSettings,
+  modelGender?: string,
 ): string {
   const template = scene.promptTemplate;
 
@@ -729,6 +772,7 @@ export function buildDynamicPrompt(
     analysis,
     details,
     selectedModelId: details.selectedModelId,
+    modelGender,
     scene,
   };
 

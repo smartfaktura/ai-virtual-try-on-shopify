@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Crown, UserX } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,12 +13,13 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import {
   Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
+  Save, Trash2, History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlocksByScene } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
-import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory } from './types';
+import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
 import type { ModelProfile } from '@/types';
 
 /* ══════════════════════════════════════════════
@@ -597,57 +598,308 @@ const IMAGE_COUNT_OPTIONS = [
 ];
 
 /* ══════════════════════════════════════════════
-   Outfit Lock Panel (Catalog Studio-style)
+   Outfit Lock Panel (Pro structured system)
    ══════════════════════════════════════════════ */
 
-const CATEGORY_OUTFIT_DEFAULTS: Record<string, { top: string; bottom: string; shoes: string; accessories: string }> = {
-  garments: { top: 'plain white t-shirt', bottom: 'slim-fit light beige trousers', shoes: 'minimal white sneakers', accessories: 'none' },
-  'bags-accessories': { top: 'fitted black turtleneck', bottom: 'slim dark navy trousers', shoes: 'black ankle boots', accessories: 'none' },
-  shoes: { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' },
-  fragrance: { top: 'minimal elegant neckline', bottom: '', shoes: '', accessories: 'none' },
-  'beauty-skincare': { top: 'minimal elegant neckline', bottom: '', shoes: '', accessories: 'none' },
-  'makeup-lipsticks': { top: 'minimal elegant neckline', bottom: '', shoes: '', accessories: 'none' },
+const GARMENT_OPTIONS: Record<string, string[]> = {
+  top: ['t-shirt', 'turtleneck', 'blouse', 'crew-neck tee', 'tank top', 'shirt', 'sweater', 'crop top', 'camisole'],
+  bottom: ['trousers', 'chinos', 'jeans', 'skirt', 'shorts', 'leggings', 'wide-leg pants'],
+  shoes: ['sneakers', 'ankle boots', 'heels', 'loafers', 'sandals', 'mules', 'flats'],
+};
+const COLOR_OPTIONS = ['white', 'black', 'beige', 'navy', 'cream', 'gray', 'brown', 'olive', 'blush', 'camel'];
+const FIT_OPTIONS = ['slim', 'relaxed', 'cropped', 'fitted', 'oversized', 'tailored', 'regular'];
+const MATERIAL_OPTIONS = ['cotton', 'silk', 'linen', 'denim', 'leather', 'wool', 'cashmere', 'knit', 'satin'];
+
+const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
+  garments: {
+    top: { garment: 't-shirt', color: 'white', fit: 'fitted', material: 'cotton' },
+    bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+    accessories: 'none',
+  },
+  'bags-accessories': {
+    top: { garment: 'turtleneck', color: 'black', fit: 'fitted', material: 'knit' },
+    bottom: { garment: 'trousers', color: 'navy', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'ankle boots', color: 'black', material: 'leather' },
+    accessories: 'none',
+  },
+  shoes: {
+    top: { garment: 't-shirt', color: 'white', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'jeans', color: 'black', fit: 'slim', material: 'denim' },
+    accessories: 'none',
+  },
+  fragrance: {
+    top: { garment: 'camisole', color: 'cream', fit: 'fitted', material: 'silk' },
+    accessories: 'none',
+  },
+  'beauty-skincare': {
+    top: { garment: 'camisole', color: 'cream', fit: 'fitted', material: 'silk' },
+    accessories: 'none',
+  },
+  'makeup-lipsticks': {
+    top: { garment: 'camisole', color: 'cream', fit: 'fitted', material: 'silk' },
+    accessories: 'none',
+  },
 };
 
-function OutfitLockPanel({ details, update, primaryCategory }: {
+// Gender-variant defaults
+const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
+  garments: {
+    top: { garment: 'crew-neck tee', color: 'white', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'chinos', color: 'navy', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+  },
+  'bags-accessories': {
+    top: { garment: 'sweater', color: 'black', fit: 'regular', material: 'wool' },
+    bottom: { garment: 'trousers', color: 'navy', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'loafers', color: 'black', material: 'leather' },
+  },
+  shoes: {
+    top: { garment: 't-shirt', color: 'white', fit: 'regular', material: 'cotton' },
+    bottom: { garment: 'jeans', color: 'black', fit: 'slim', material: 'denim' },
+  },
+  fragrance: {
+    top: { garment: 'shirt', color: 'white', fit: 'fitted', material: 'cotton' },
+  },
+};
+
+// Built-in presets per category
+function getBuiltInPresets(category: string): OutfitPreset[] {
+  const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
+  if (!base) return [];
+  return [
+    { id: `builtin-studio-${category}`, name: 'Studio Standard', config: base, category, isBuiltIn: true, createdAt: '' },
+    { id: `builtin-editorial-${category}`, name: 'Editorial', config: {
+      ...base,
+      top: base.top ? { ...base.top, color: 'black' } : undefined,
+      bottom: base.bottom ? { ...base.bottom, color: 'black', fit: 'tailored' } : undefined,
+    }, category, isBuiltIn: true, createdAt: '' },
+    { id: `builtin-minimal-${category}`, name: 'Minimal', config: {
+      ...base,
+      top: base.top ? { ...base.top, color: 'white', garment: base.top.garment } : undefined,
+      bottom: base.bottom ? { ...base.bottom, color: 'cream', fit: 'relaxed' } : undefined,
+      shoes: base.shoes ? { ...base.shoes, color: 'white' } : undefined,
+    }, category, isBuiltIn: true, createdAt: '' },
+  ];
+}
+
+function loadSavedPresets(): OutfitPreset[] {
+  try {
+    const raw = localStorage.getItem('pi_outfit_presets');
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function savePresetsToStorage(presets: OutfitPreset[]) {
+  localStorage.setItem('pi_outfit_presets', JSON.stringify(presets));
+}
+
+function PieceField({ label, piece, onChange, pieceType }: {
+  label: string;
+  piece?: OutfitPiece;
+  onChange: (p: OutfitPiece) => void;
+  pieceType: 'top' | 'bottom' | 'shoes';
+}) {
+  const garments = GARMENT_OPTIONS[pieceType] || [];
+  const current = piece || { garment: '', color: '', fit: '', material: '' };
+
+  const updateField = (field: keyof OutfitPiece, value: string) => {
+    onChange({ ...current, [field]: value === current[field] ? '' : value });
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+        <Shirt className="w-3 h-3" />{label}
+      </span>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-[9px] text-muted-foreground">Garment</Label>
+          <div className="flex flex-wrap gap-1">
+            {garments.slice(0, 6).map(g => (
+              <button key={g} type="button" onClick={() => updateField('garment', g)}
+                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  current.garment === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+                )}>{g}</button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[9px] text-muted-foreground">Color</Label>
+          <div className="flex flex-wrap gap-1">
+            {COLOR_OPTIONS.slice(0, 6).map(c => (
+              <button key={c} type="button" onClick={() => updateField('color', c)}
+                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  current.color === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+                )}>{c}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-[9px] text-muted-foreground">Fit</Label>
+          <div className="flex flex-wrap gap-1">
+            {FIT_OPTIONS.slice(0, 5).map(f => (
+              <button key={f} type="button" onClick={() => updateField('fit', f)}
+                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  current.fit === f ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+                )}>{f}</button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[9px] text-muted-foreground">Material</Label>
+          <div className="flex flex-wrap gap-1">
+            {MATERIAL_OPTIONS.slice(0, 5).map(m => (
+              <button key={m} type="button" onClick={() => updateField('material', m)}
+                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  current.material === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+                )}>{m}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
   primaryCategory?: string;
+  modelGender?: string;
 }) {
-  const defaults = CATEGORY_OUTFIT_DEFAULTS[primaryCategory || ''] || {
-    top: 'clean neutral top', bottom: 'understated neutral trousers', shoes: 'minimal clean shoes', accessories: 'none',
+  const [saveName, setSaveName] = useState('');
+  const [showSave, setShowSave] = useState(false);
+  const [savedPresets, setSavedPresets] = useState<OutfitPreset[]>(() => loadSavedPresets());
+
+  const cat = primaryCategory || 'garments';
+  const isMale = modelGender === 'male';
+
+  // Resolve defaults with gender awareness
+  const defaultConfig = useMemo((): OutfitConfig => {
+    const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[cat] || CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
+    if (isMale && MALE_OUTFIT_OVERRIDES[cat]) {
+      return { ...base, ...MALE_OUTFIT_OVERRIDES[cat] };
+    }
+    return base;
+  }, [cat, isMale]);
+
+  // Current outfit config from details, falling back to defaults
+  const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
+
+  const updateConfig = useCallback((partial: Partial<OutfitConfig>) => {
+    const next = { ...currentConfig, ...partial };
+    update({ outfitConfig: next });
+  }, [currentConfig, update]);
+
+  // Presets: built-in + saved for this category
+  const builtInPresets = useMemo(() => getBuiltInPresets(cat), [cat]);
+  const categoryPresets = savedPresets.filter(p => p.category === cat);
+  const allPresets = [...builtInPresets, ...categoryPresets];
+
+  const loadPreset = (preset: OutfitPreset) => {
+    update({ outfitConfig: { ...preset.config } });
   };
 
-  type OutfitKey = 'outfitTop' | 'outfitBottom' | 'outfitShoes' | 'outfitAccessories';
-  const allFields: { key: OutfitKey; label: string; icon: React.ReactNode; placeholder: string }[] = [
-    { key: 'outfitTop', label: 'Top', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.top },
-    { key: 'outfitBottom', label: 'Bottom', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.bottom },
-    { key: 'outfitShoes', label: 'Shoes', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.shoes },
-    { key: 'outfitAccessories', label: 'Accessories', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.accessories },
-  ];
-  const fields = allFields.filter(f => f.placeholder); // hide fields with no default
+  const saveCurrentAsPreset = () => {
+    if (!saveName.trim()) return;
+    const newPreset: OutfitPreset = {
+      id: crypto.randomUUID(),
+      name: saveName.trim(),
+      config: currentConfig,
+      category: cat,
+      gender: modelGender,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [...savedPresets, newPreset];
+    setSavedPresets(updated);
+    savePresetsToStorage(updated);
+    setSaveName('');
+    setShowSave(false);
+  };
+
+  const deletePreset = (id: string) => {
+    const updated = savedPresets.filter(p => p.id !== id);
+    setSavedPresets(updated);
+    savePresetsToStorage(updated);
+  };
+
+  // Determine which pieces to show
+  const showBottom = !!defaultConfig.bottom?.garment;
+  const showShoes = !!defaultConfig.shoes?.garment;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Lock className="w-3.5 h-3.5 text-primary" />
-        <span className="text-[11px] text-muted-foreground">Locked across all on-model scenes. Edit to customize.</span>
+        <span className="text-[11px] text-muted-foreground">Locked across all on-model scenes. Structured for consistency.</span>
+        {isMale && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Male defaults</Badge>}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {fields.map(f => (
-          <div key={f.key} className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
-            {f.icon}
-            <div className="flex-1 min-w-0">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{f.label}</Label>
-              <Input
-                value={details[f.key] || ''}
-                onChange={e => update({ [f.key]: e.target.value })}
-                placeholder={f.placeholder}
-                className="h-7 text-xs border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/60"
-              />
-            </div>
+
+      {/* Preset bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        {allPresets.map(preset => (
+          <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
+            <button
+              type="button"
+              onClick={() => loadPreset(preset)}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+              )}
+            >
+              {preset.name}
+            </button>
+            {!preset.isBuiltIn && (
+              <button type="button" onClick={() => deletePreset(preset.id)}
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all cursor-pointer p-0.5">
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
           </div>
         ))}
+        {showSave ? (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Input
+              value={saveName}
+              onChange={e => setSaveName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveCurrentAsPreset(); if (e.key === 'Escape') setShowSave(false); }}
+              placeholder="Preset name..."
+              className="h-6 w-28 text-[10px] px-2"
+              autoFocus
+            />
+            <button type="button" onClick={saveCurrentAsPreset} className="text-primary hover:text-primary/80 cursor-pointer"><Save className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={() => setShowSave(false)} className="text-muted-foreground hover:text-foreground cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setShowSave(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
+            <Plus className="w-3 h-3" />Save
+          </button>
+        )}
+      </div>
+
+      {/* Structured outfit pieces */}
+      <div className="space-y-2">
+        <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
+        {showBottom && <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />}
+        {showShoes && <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />}
+
+        {/* Accessories */}
+        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Shirt className="w-3 h-3 text-muted-foreground" />
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Accessories</Label>
+            <Input
+              value={currentConfig.accessories || ''}
+              onChange={e => updateConfig({ accessories: e.target.value })}
+              placeholder="none"
+              className="h-6 text-[10px] border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 flex-1 placeholder:text-muted-foreground/60"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -774,8 +1026,13 @@ export function ProductImagesStep3Refine({
   const getProductById = (id: string) => allProducts.find(p => p.id === id);
   const modalAlreadySelected = propModalSceneId === null ? [] : sceneProps[propModalSceneId] || [];
 
-  // All models
+  // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
+  const selectedModelGender = useMemo(() => {
+    if (!details.selectedModelId) return undefined;
+    const model = allModels.find(m => m.modelId === details.selectedModelId);
+    return model?.gender;
+  }, [details.selectedModelId, allModels]);
 
   return (
     <div className="space-y-6 pb-20">
@@ -1048,7 +1305,7 @@ export function ProductImagesStep3Refine({
                 />
 
                 {/* Outfit lock panel */}
-                <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} />
+                <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
 
                 {/* Inline person details (only when no specific model selected) */}
                 {!details.selectedModelId && (

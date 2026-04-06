@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List } from 'lucide-react';
+import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, LayoutGrid, List, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,6 +82,8 @@ export default function ProductImages() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
+  const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
+  const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Load models for Refine step
@@ -142,7 +144,53 @@ export default function ProductImages() {
     [selectedSceneIds],
   );
 
-  // Derived credit calculation
+  // Primary category for outfit defaults
+  const primaryCategory = useMemo(() => {
+    for (const p of selectedProducts) {
+      const analysis = p.analysis_json as any;
+      if (analysis?.category) return analysis.category as string;
+    }
+    return selectedProducts[0]?.product_type || undefined;
+  }, [selectedProducts]);
+
+  // Check for last-used settings when entering Refine step
+  useEffect(() => {
+    if (step === 3 && primaryCategory) {
+      const key = `pi_last_details_${primaryCategory}`;
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          setLastSettingsCategory(primaryCategory);
+          setShowLastSettingsBanner(true);
+        }
+      } catch {}
+    } else {
+      setShowLastSettingsBanner(false);
+    }
+  }, [step, primaryCategory]);
+
+  // Save details when moving from Refine to Review
+  useEffect(() => {
+    if (step === 4 && primaryCategory) {
+      try {
+        localStorage.setItem(`pi_last_details_${primaryCategory}`, JSON.stringify(details));
+      } catch {}
+    }
+  }, [step, primaryCategory, details]);
+
+  const loadLastSettings = useCallback(() => {
+    if (!lastSettingsCategory) return;
+    try {
+      const saved = localStorage.getItem(`pi_last_details_${lastSettingsCategory}`);
+      if (saved) {
+        const parsed = JSON.parse(saved) as DetailSettings;
+        // Keep format settings from current session but load everything else
+        setDetails({ ...parsed, aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount });
+      }
+    } catch {}
+    setShowLastSettingsBanner(false);
+  }, [lastSettingsCategory, details.aspectRatio, details.quality, details.imageCount]);
+
   const imageCount = parseInt(details.imageCount || '1', 10);
   const quality = details.quality || 'high';
   const creditsPerImage = quality === 'standard' ? 3 : 6;
@@ -206,11 +254,19 @@ export default function ProductImages() {
     }
   }, [step, selectedProducts, analyzeProducts]);
 
+  // Resolve selected model gender for prompt builder
+  const selectedModelGender = useMemo(() => {
+    if (!details.selectedModelId) return undefined;
+    const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
+    const model = allModels.find(m => m.modelId === details.selectedModelId);
+    return model?.gender;
+  }, [details.selectedModelId, userModelProfiles, globalModelProfiles]);
+
   // Build instruction from scene + details — use live analyses map instead of stale DB row
   const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
-    return buildDynamicPrompt(scene, product, analysis, details);
-  }, [details, analyses]);
+    return buildDynamicPrompt(scene, product, analysis, details, selectedModelGender);
+  }, [details, analyses, selectedModelGender]);
 
   // Generation handler
   const handleGenerate = useCallback(async () => {
@@ -668,33 +724,37 @@ export default function ProductImages() {
             )}
 
             {step === 3 && (
-              <ProductImagesStep3Refine
-                selectedSceneIds={selectedSceneIds}
-                productCount={selectedProducts.length}
-                details={details}
-                onDetailsChange={setDetails}
-                userModels={userModelProfiles}
-                globalModels={globalModelProfiles}
-                selectedScenes={selectedScenes}
-                allProducts={userProducts}
-                selectedProductIds={selectedProductIds}
-                hasMultipleCategories={(() => {
-                  const cats = new Set<string>();
-                  for (const p of selectedProducts) {
-                    const analysis = p.analysis_json as any;
-                    if (analysis?.category) cats.add(analysis.category);
-                    else cats.add(p.product_type || 'other');
-                  }
-                  return cats.size > 1;
-                })()}
-                primaryCategory={(() => {
-                  for (const p of selectedProducts) {
-                    const analysis = p.analysis_json as any;
-                    if (analysis?.category) return analysis.category as string;
-                  }
-                  return selectedProducts[0]?.product_type || undefined;
-                })()}
-              />
+              <div>
+                {showLastSettingsBanner && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/[0.03] mb-4">
+                    <History className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground flex-1">Load your last settings for <span className="font-medium text-foreground">{lastSettingsCategory}</span>?</span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowLastSettingsBanner(false)}>Dismiss</Button>
+                    <Button size="sm" className="h-7 text-xs" onClick={loadLastSettings}>Apply</Button>
+                  </div>
+                )}
+                <ProductImagesStep3Refine
+                  selectedSceneIds={selectedSceneIds}
+                  productCount={selectedProducts.length}
+                  details={details}
+                  onDetailsChange={setDetails}
+                  userModels={userModelProfiles}
+                  globalModels={globalModelProfiles}
+                  selectedScenes={selectedScenes}
+                  allProducts={userProducts}
+                  selectedProductIds={selectedProductIds}
+                  hasMultipleCategories={(() => {
+                    const cats = new Set<string>();
+                    for (const p of selectedProducts) {
+                      const analysis = p.analysis_json as any;
+                      if (analysis?.category) cats.add(analysis.category);
+                      else cats.add(p.product_type || 'other');
+                    }
+                    return cats.size > 1;
+                  })()}
+                  primaryCategory={primaryCategory}
+                />
+              </div>
             )}
 
             {step === 4 && (
