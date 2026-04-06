@@ -628,6 +628,19 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'brandingDirective': return '';
 
+    case 'categoryPackshotDirective': {
+      switch (cat) {
+        case 'garments':
+          return 'Ghost mannequin / invisible mannequin style OR flat-lay arrangement on clean surface.';
+        case 'shoes':
+          return 'Standard packshot with shoe angled 3/4 view showing both the upper and sole profile.';
+        case 'bags-accessories':
+          return 'Standard packshot with accessory propped upright showing front face and hardware details.';
+        default:
+          return '';
+      }
+    }
+
     case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType);
 
     case 'customNote': return details.customNote || '';
