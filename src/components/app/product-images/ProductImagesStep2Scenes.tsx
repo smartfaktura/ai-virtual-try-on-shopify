@@ -137,6 +137,7 @@ interface UnifiedCategorySectionProps {
   catTitle: string;
   essentialScenes: ProductImageScene[];
   categoryScenes: ProductImageScene[];
+  categorySubGroups?: SubGroup[];
   selectedSceneIds: Set<string>;
   isOpen: boolean;
   onToggleOpen: () => void;
