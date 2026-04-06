@@ -1740,11 +1740,11 @@ export function ProductImagesStep3Refine({
   }, []);
 
   const toggleSceneExpand = (id: string) => {
-    // If scene needs model and none selected, auto-open Outfit section instead
     const scene = selectedScenes.find(s => s.id === id);
     if (scene && !details.selectedModelId) {
       const needsModelForScene = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
-      if (needsModelForScene) {
+      // Only redirect to outfit picker if scene has NO other expandable controls
+      if (needsModelForScene && !sceneHasControls(scene)) {
         scrollToOutfit();
         return;
       }
