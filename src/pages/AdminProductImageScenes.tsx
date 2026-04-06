@@ -434,6 +434,17 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Sub-Category (grouping label)</Label>
+          <Input value={draft.sub_category || ''} onChange={e => set('sub_category', e.target.value || null)} placeholder="e.g. Essentials, On-Model Looks, Celebrity Style" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Category Sort Order (section position)</Label>
+          <Input type="number" value={draft.category_sort_order ?? 0} onChange={e => set('category_sort_order', parseInt(e.target.value) || 0)} />
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <Label className="text-xs">Trigger Blocks</Label>
         <div className="flex flex-wrap gap-2">
