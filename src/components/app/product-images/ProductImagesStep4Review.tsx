@@ -79,8 +79,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const totalImages = computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
-  const quality = details.quality || 'high';
-  const costPerImage = quality === 'standard' ? 3 : 6;
+  const costPerImage = 6;
   const totalCredits = totalImages * costPerImage;
   const canAfford = balance >= totalCredits;
   const isLargeBatch = totalImages > 20;
