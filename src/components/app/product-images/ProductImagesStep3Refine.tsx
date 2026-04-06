@@ -656,9 +656,13 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
 };
 
 // Built-in presets per category
-function getBuiltInPresets(category: string): OutfitPreset[] {
-  const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
+function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
+  let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
   if (!base) return [];
+  // Apply gender overrides so presets match the user's model gender
+  if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
+    base = { ...base, ...MALE_OUTFIT_OVERRIDES[category] };
+  }
   return [
     { id: `builtin-studio-${category}`, name: 'Studio Standard', config: base, category, isBuiltIn: true, createdAt: '' },
     { id: `builtin-editorial-${category}`, name: 'Editorial', config: {
