@@ -154,12 +154,22 @@ export default function ProductImages() {
   const hasMultipleCategories = useMemo(() => {
     const cats = new Set<string>();
     for (const p of selectedProducts) {
+      // Check live analyses first
+      const liveAnalysis = analyses[p.id];
+      if (liveAnalysis?.category) { cats.add(liveAnalysis.category); continue; }
+      // Then cached analysis_json
       const analysis = p.analysis_json as any;
-      if (analysis?.category) cats.add(analysis.category);
-      else cats.add(p.product_type || 'other');
+      if (analysis?.category) { cats.add(analysis.category); continue; }
+      // Keyword fallback to resolve raw product_type to category ID
+      const combined = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
+      let resolved = 'other';
+      for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+        if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) { resolved = catId; break; }
+      }
+      cats.add(resolved);
     }
     return cats.size > 1;
-  }, [selectedProducts]);
+  }, [selectedProducts, analyses]);
 
   // Check for last-used settings when entering Refine step
   useEffect(() => {

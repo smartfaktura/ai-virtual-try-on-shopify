@@ -899,6 +899,11 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
   fragrance: {
     top: { garment: 'shirt', color: 'white', fit: 'fitted', material: 'cotton' },
   },
+  'hats-small': {
+    top: { garment: 'bomber jacket', color: 'navy', fit: 'regular', material: 'nylon' },
+    bottom: { garment: 'chinos', color: 'charcoal', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+  },
 };
 
 // Built-in presets per category
