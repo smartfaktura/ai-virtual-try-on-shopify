@@ -618,12 +618,14 @@ function OutfitLockPanel({ details, update, primaryCategory }: {
     top: 'clean neutral top', bottom: 'understated neutral trousers', shoes: 'minimal clean shoes', accessories: 'none',
   };
 
-  const fields: { key: 'outfitTop' | 'outfitBottom' | 'outfitShoes' | 'outfitAccessories'; label: string; icon: React.ReactNode; placeholder: string }[] = [
+  type OutfitKey = 'outfitTop' | 'outfitBottom' | 'outfitShoes' | 'outfitAccessories';
+  const allFields: { key: OutfitKey; label: string; icon: React.ReactNode; placeholder: string }[] = [
     { key: 'outfitTop', label: 'Top', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.top },
     { key: 'outfitBottom', label: 'Bottom', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.bottom },
     { key: 'outfitShoes', label: 'Shoes', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.shoes },
     { key: 'outfitAccessories', label: 'Accessories', icon: <Shirt className="w-3.5 h-3.5" />, placeholder: defaults.accessories },
-  ].filter(f => f.placeholder); // hide fields with no default (e.g. shoes for fragrance)
+  ];
+  const fields = allFields.filter(f => f.placeholder); // hide fields with no default
 
   return (
     <div className="space-y-3">
