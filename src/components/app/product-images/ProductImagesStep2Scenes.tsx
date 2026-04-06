@@ -364,27 +364,25 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         </div>
       )}
 
-      {/* Other categories — collapsed */}
       {unifiedOther.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">Explore more scenes by product type</h3>
-          <div className="space-y-2">
-            {unifiedOther.map(cat => (
-              <UnifiedCategorySectionWithSelectAll
-                key={cat.id}
-                catId={cat.id}
-                catTitle={cat.title}
-                essentialScenes={cat.essentialScenes}
-                categoryScenes={cat.scenes}
-                selectedSceneIds={selectedSceneIds}
-                isOpen={expandedCategories.has(cat.id)}
-                onToggleOpen={() => toggleCategory(cat.id)}
-                toggleScene={toggleScene}
-                onSelectAll={() => selectAllUnified(cat.id)}
-                gridClass={gridClass}
-              />
-            ))}
-          </div>
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
+          {unifiedOther.map(cat => (
+            <UnifiedCategorySectionWithSelectAll
+              key={cat.id}
+              catId={cat.id}
+              catTitle={cat.title}
+              essentialScenes={cat.essentialScenes}
+              categoryScenes={cat.scenes}
+              categorySubGroups={cat.subGroups}
+              selectedSceneIds={selectedSceneIds}
+              isOpen={expandedCategories.has(cat.id)}
+              onToggleOpen={() => toggleCategory(cat.id)}
+              toggleScene={toggleScene}
+              onSelectAll={() => selectAllUnified(cat.id)}
+              gridClass={gridClass}
+            />
+          ))}
         </div>
       )}
     </div>
