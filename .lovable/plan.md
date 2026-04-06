@@ -1,33 +1,42 @@
 
 
-# Three UI/UX Fixes for Refine Step
+# Improve Refine Step: Banner, Background Indicators, Triangle
 
-## 1. Selected model appears first in inline row
+## 1. Redesign Model-Needed Banner
 
-Currently in `ModelPickerSections`, when a model outside the top 6 is selected, it replaces the last slot (`first6.slice(0, INLINE_LIMIT - 1), selectedModel`). Fix: place the selected model at position 0 instead of appending it last.
+The current `Alert` with `AlertTriangle` icon looks generic and dated. Replace with a sleek inline card:
 
-**File:** `ProductImagesStep3Refine.tsx` (lines 52-61)
-- Change `inlineModels` logic: if the selected model isn't in the top 6 and isn't a user model, prepend it as the first item and take the next 5 from the filtered list (excluding the selected one).
+**File:** `ProductImagesStep3Refine.tsx` (lines 1459-1510)
 
-## 2. Outfit preset color indicators: lines instead of dots
+- Remove the `Alert`/`AlertDescription` wrapper
+- Replace with a minimal bordered card: subtle amber left-border accent (4px), clean layout with scene thumbnails inline, and a compact "Select Model" pill button
+- When model IS selected: show a subtle green left-border with checkmark and "Model applied to N scenes" in muted text — much more compact, single line
+- Remove the large triangle icon; use a small colored dot indicator instead
 
-Currently `PresetColorDots` renders 3 small circular dots vertically. Replace with a vertical strip of thin horizontal color bars along the left edge of the preset button, creating a sleek "color swatch stripe" effect.
+## 2. Show Background-Editable Indicator on Scene Cards
 
-**File:** `ProductImagesStep3Refine.tsx`
-- Redesign `PresetColorDots` → `PresetColorStripe`: render 3 thin horizontal bars (w-1, h-3 each, rounded, stacked vertically with no gap) forming a single left-edge color accent.
-- Update the preset button layout to position this stripe flush against the left border.
+Each scene's `triggerBlocks` array already defines whether it has `'background'` controls. Surface this on the card:
 
-## 3. Fix triangle indicator design
+**File:** `ProductImagesStep3Refine.tsx` (in `renderSceneCardButton`)
 
-The current triangle uses a rotated div with borders which looks rough. Replace with a clean CSS triangle using `border-width` technique (transparent sides, solid bottom matching card background), properly centered below the active card with a subtle border outline.
+- Check if scene has `'background'` in its `triggerBlocks`
+- If yes, show a small `Paintbrush` icon or "BG" chip on the card so users can see at a glance which scenes support background customization
+- This answers the user's question: not all scenes have background settings — only those with `'background'` in `triggerBlocks` (e.g., Packshot, Marketplace, Pedestal) do
 
-**File:** `ProductImagesStep3Refine.tsx` (lines 1684-1689)
-- Replace the rotated-div approach with a proper CSS triangle: an outer triangle (border color) with an inner triangle (card bg color) layered on top, creating a clean outlined arrow pointing down from the card into the expanded panel.
-- Adjust spacing so the triangle visually connects the card to the panel seamlessly (no gap).
+## 3. Fix Triangle Indicator
+
+The CSS border-triangle approach still looks awkward. Replace with a cleaner visual connector:
+
+**File:** `ProductImagesStep3Refine.tsx` (lines 1687-1696)
+
+- Remove the layered border-triangle divs entirely
+- Instead, use a simple thin vertical line (2px wide, 12px tall, border color) centered below the active card, connecting it to the expanded panel
+- The expanded panel itself already has `border-primary/30` — the connector line uses the same color
+- This creates a clean, minimal "stem" connecting card to panel, matching the app's editorial aesthetic
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | (1) Fix `inlineModels` to prepend selected model. (2) Redesign `PresetColorDots` to color stripe bars. (3) Replace triangle indicator with clean CSS triangle. |
+| `ProductImagesStep3Refine.tsx` | (1) Redesign model banner to sleek left-bordered card. (2) Add background-editable indicator on scene cards. (3) Replace triangle with thin vertical connector line. |
 
