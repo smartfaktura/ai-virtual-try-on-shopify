@@ -778,6 +778,7 @@ export function ProductImagesStep3Refine({
         <CollapsibleContent>
           <Card className="mt-2 border-primary/10">
             <CardContent className="p-4 space-y-4">
+              <p className="text-[11px] text-muted-foreground italic">Applies to universal scenes. Recommended scenes use their own optimized styling.</p>
               {/* Auto (Recommended) button */}
               <AutoAestheticButton details={details} update={update} />
 
