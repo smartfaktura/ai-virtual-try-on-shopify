@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera, LayoutGrid } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { GLOBAL_SCENES, CATEGORY_COLLECTIONS } from './sceneData';
-import type { ProductImageScene, UserProduct } from './types';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
+import type { ProductImageScene, UserProduct, CategoryCollection } from './types';
 
 interface Step2Props {
   selectedSceneIds: Set<string>;
