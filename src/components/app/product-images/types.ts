@@ -111,7 +111,7 @@ export interface ProductImageScene {
   promptTemplate?: string;
   previewUrl?: string;
   chips?: string[];
-  triggerBlocks?: string[];
+  triggerBlocks: string[];
   categoryCollection?: string;
   sceneType?: SceneType;
   subCategory?: string;
