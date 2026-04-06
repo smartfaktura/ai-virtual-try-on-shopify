@@ -1512,7 +1512,7 @@ export function ProductImagesStep3Refine({
         const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
         const modelShots = selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
 
-          const renderSceneCard = (scene: ProductImageScene) => {
+          const renderSceneCardButton = (scene: ProductImageScene) => {
           const isExpanded = expandedSceneId === scene.id;
           const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
           const group = sceneGroups.find(g => g.sceneId === scene.id);
@@ -1538,109 +1538,113 @@ export function ProductImagesStep3Refine({
           }
 
           return (
-            <React.Fragment key={scene.id}>
-              <div className="col-span-1">
-                <button
-                  type="button"
-                  onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
-                  className={cn(
-                    'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
-                    isExpanded
-                      ? 'border-primary bg-primary/[0.03] shadow-sm'
-                      : hasCustomizations
-                        ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
-                        : sceneNeedsModel && needsModel
-                          ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
-                          : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
-                    isClickable ? 'cursor-pointer' : 'cursor-default',
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                      {scene.previewUrl ? (
-                        <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
-                      {sceneNeedsModel && needsModel ? (
-                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
-                        </span>
-                      ) : hasCustomizations ? (
-                        <span className="flex items-center gap-1 mt-0.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                          <span className="text-[10px] text-primary font-medium">customized</span>
-                        </span>
-                      ) : controlPreviewNames.length > 0 ? (
-                        <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
-                      ) : null}
-                      {isClickable && !isExpanded && (
-                        <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
-                      )}
-                    </div>
-                    {isClickable && (
-                      <ChevronDown className={cn(
-                        'w-3.5 h-3.5 flex-shrink-0 transition-all',
-                        isExpanded
-                          ? 'text-primary rotate-180'
-                          : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
-                      )} />
+              <button
+                key={scene.id}
+                type="button"
+                onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
+                className={cn(
+                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
+                  isExpanded
+                    ? 'border-primary bg-primary/[0.03] shadow-sm'
+                    : hasCustomizations
+                      ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
+                      : sceneNeedsModel && needsModel
+                        ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
+                        : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
+                  isClickable ? 'cursor-pointer' : 'cursor-default',
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                    {scene.previewUrl ? (
+                      <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
                     )}
                   </div>
-                </button>
-              </div>
-
-              {/* Full-width expanded settings panel — spans entire grid row */}
-              {isExpanded && hasControls && (
-                <div className="col-span-2 sm:col-span-3 md:col-span-4 rounded-xl border border-primary/20 bg-card p-4 space-y-1 overflow-hidden transition-all duration-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                      {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40 m-auto" />}
-                    </div>
-                    <span className="text-sm font-semibold">{scene.title}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                    {sceneNeedsModel && needsModel ? (
+                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
+                      </span>
+                    ) : hasCustomizations ? (
+                      <span className="flex items-center gap-1 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <span className="text-[10px] text-primary font-medium">customized</span>
+                      </span>
+                    ) : controlPreviewNames.length > 0 ? (
+                      <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
+                    ) : null}
+                    {isClickable && !isExpanded && (
+                      <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
+                    )}
                   </div>
-                  {sceneBlocks.map((blockKey, idx) => {
-                    const meta = BLOCK_LABELS[blockKey];
-                    if (!meta) return null;
-                    return (
-                      <Collapsible key={blockKey} defaultOpen={idx === 0}>
-                        <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
-                          <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
-                          {meta.title}
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="pb-2 pt-1">
-                            <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    );
-                  })}
-
-                  {templateCtrls.length > 0 && (
-                    <Collapsible defaultOpen={sceneBlocks.length === 0}>
-                      <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-2 group/block">
-                        <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
-                        Style
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-2 pt-1">
-                          {templateCtrls.map(ctrl => (
-                            <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
-                          ))}
-                        </div>
-                        {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                          <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
+                  {isClickable && (
+                    <ChevronDown className={cn(
+                      'w-3.5 h-3.5 flex-shrink-0 transition-all',
+                      isExpanded
+                        ? 'text-primary rotate-180'
+                        : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
+                    )} />
                   )}
                 </div>
+              </button>
+          );
+        };
+
+        const renderExpandedPanel = (scene: ProductImageScene) => {
+          const group = sceneGroups.find(g => g.sceneId === scene.id);
+          const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+          const templateCtrls = getTemplateControls(scene);
+          const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+          if (!hasControls) return null;
+
+          return (
+            <div key={`panel-${scene.id}`} className="rounded-xl border border-primary/20 bg-card p-4 space-y-1 overflow-hidden transition-all duration-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                  {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40 m-auto" />}
+                </div>
+                <span className="text-sm font-semibold">{scene.title}</span>
+              </div>
+              {sceneBlocks.map((blockKey, idx) => {
+                const meta = BLOCK_LABELS[blockKey];
+                if (!meta) return null;
+                return (
+                  <Collapsible key={blockKey} defaultOpen={idx === 0}>
+                    <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
+                      <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                      {meta.title}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pb-2 pt-1">
+                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
+
+              {templateCtrls.length > 0 && (
+                <Collapsible defaultOpen={sceneBlocks.length === 0}>
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-2 group/block">
+                    <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                    Style
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-2 pt-1">
+                      {templateCtrls.map(ctrl => (
+                        <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                      ))}
+                    </div>
+                    {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                      <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
               )}
-            </React.Fragment>
+            </div>
           );
         };
 
