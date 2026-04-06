@@ -188,6 +188,12 @@ export interface DetailSettings {
 
   // Model selection (replaces generic person details when set)
   selectedModelId?: string;
+
+  // Outfit locking (Catalog Studio-style per-piece control)
+  outfitTop?: string;
+  outfitBottom?: string;
+  outfitShoes?: string;
+  outfitAccessories?: string;
 }
 
 export interface GenerationPlan {
