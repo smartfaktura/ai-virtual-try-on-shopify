@@ -1993,7 +1993,17 @@ export function ProductImagesStep3Refine({
                   </Badge>
                 )}
               </div>
-              <BackgroundSwatchSelector value={details.backgroundTone || ''} onChange={v => update({ backgroundTone: v })} details={details} update={update} />
+              <BackgroundSwatchSelector
+                value={details.backgroundTone || ''}
+                onChange={v => update({ backgroundTone: v })}
+                details={details}
+                update={update}
+                savedColors={savedColors}
+                canSave={canSave}
+                onSaveColor={(hex) => saveColor({ hex })}
+                onSaveGradient={(from, to) => saveGradient({ from, to })}
+                onDeleteSavedColor={deleteColor}
+              />
             </div>
           )}
 
