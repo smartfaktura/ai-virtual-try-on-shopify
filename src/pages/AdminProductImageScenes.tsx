@@ -285,6 +285,14 @@ export default function AdminProductImageScenes() {
                       <div className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
                         !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
                       } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
+                        {/* Thumbnail */}
+                        <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40">
+                          {scene.preview_image_url ? (
+                            <img src={scene.preview_image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Camera className="w-4 h-4 text-muted-foreground/40" />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium truncate">{scene.title}</span>
