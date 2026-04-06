@@ -1686,8 +1686,12 @@ export function ProductImagesStep3Refine({
                         {renderSceneCardButton(scene)}
                         {/* Triangle indicator */}
                         {isExpanded && (
-                          <div className="flex justify-center -mb-2 relative z-10">
-                            <div className="w-3 h-3 bg-card border-l border-t border-primary/30 rotate-45 translate-y-[-6px]" />
+                          <div className="flex justify-center relative z-10 -mb-[9px]">
+                            {/* Outer triangle (border) */}
+                            <div className="relative" style={{ width: 0, height: 0, borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderBottom: '9px solid hsl(var(--border))' }}>
+                              {/* Inner triangle (fill) */}
+                              <div className="absolute" style={{ left: -8, top: 1, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid hsl(var(--card))' }} />
+                            </div>
                           </div>
                         )}
                       </div>
