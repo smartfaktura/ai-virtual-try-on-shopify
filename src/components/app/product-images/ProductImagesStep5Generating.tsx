@@ -206,8 +206,15 @@ export function ProductImagesStep5Generating({
 
       {/* Cancel & view results button */}
       {showCancelButton && onViewResults && (
-        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={onViewResults}>
-          Skip waiting & view results so far
+        <Button
+          variant={nearComplete ? 'default' : 'ghost'}
+          size="sm"
+          className={nearComplete ? 'text-xs' : 'text-xs text-muted-foreground'}
+          onClick={onViewResults}
+        >
+          {nearComplete
+            ? `View ${completedOk} completed result${completedOk !== 1 ? 's' : ''}`
+            : 'Skip waiting & view results so far'}
         </Button>
       )}
 

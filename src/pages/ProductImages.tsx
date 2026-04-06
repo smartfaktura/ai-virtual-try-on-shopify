@@ -560,6 +560,29 @@ export default function ProductImages() {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
   }, []);
 
+  // Restore generation session on mount (page refresh recovery)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('pi_generation_session');
+      if (!saved || step !== 1) return;
+      const session = JSON.parse(saved);
+      const entries: [string, string][] = session.jobMapEntries || [];
+      if (entries.length === 0) return;
+      const restoredMap = new Map(entries);
+      setJobMap(restoredMap);
+      setExpectedJobCount(session.expectedJobCount || entries.length);
+      setEnqueuedCount(entries.length);
+      if (session.selectedProductIds) setSelectedProductIds(new Set(session.selectedProductIds));
+      if (session.selectedSceneIds) setSelectedSceneIds(new Set(session.selectedSceneIds));
+      // Adjust polling start to account for time already elapsed
+      pollingStartRef.current = session.startTime || Date.now();
+      setStep(5);
+      toast.info('Resuming your generation — hang tight!');
+      startPolling(restoredMap);
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const canNavigateTo = (s: number) => {
     if (s === 1) return true;
     if (s === 2) return selectedProductIds.size > 0;
