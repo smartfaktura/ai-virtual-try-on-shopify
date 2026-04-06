@@ -811,7 +811,17 @@ export function buildDynamicPrompt(
       prompt += ` ${resolved}`;
     }
   };
-  injectIfMissing('background', 'background', true);
+
+  // Background is ALWAYS injected globally (user expects it to apply to all scenes)
+  const bgTone = details.backgroundTone;
+  const hasBgToken = (template || '').includes('{{background}}');
+  if (!hasBgToken && !isAuto(bgTone)) {
+    const bgResolved = resolveToken('background', ctx);
+    if (bgResolved && !prompt.toLowerCase().includes('background')) {
+      prompt += ` Background: ${bgResolved}.`;
+    }
+  }
+
   injectIfMissing('shadow', 'shadowDirective', true);
   injectIfMissing('surface', 'surfaceDirective', true);
   injectIfMissing('styling', 'stylingDirective', true);

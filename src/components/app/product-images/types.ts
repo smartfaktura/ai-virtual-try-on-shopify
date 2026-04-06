@@ -206,6 +206,9 @@ export interface DetailSettings {
   // Custom note
   customNote?: string;
 
+  // Custom background hex (used when backgroundTone = 'custom')
+  backgroundCustomHex?: string;
+
   // Per-scene aspect ratio overrides (sceneId -> ratio)
   sceneAspectOverrides?: Record<string, string>;
 
