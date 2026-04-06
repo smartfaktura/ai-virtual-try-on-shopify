@@ -916,6 +916,18 @@ function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
       bottom: base.bottom ? { ...base.bottom, color: 'cream', fit: 'relaxed' } : undefined,
       shoes: base.shoes ? { ...base.shoes, color: 'white' } : undefined,
     }, category, isBuiltIn: true, createdAt: '' },
+    { id: `builtin-streetwear-${category}`, name: 'Streetwear', config: {
+      ...base,
+      top: base.top ? { ...base.top, color: 'charcoal', fit: 'oversized', material: 'cotton' } : undefined,
+      bottom: base.bottom ? { ...base.bottom, color: 'black', fit: 'relaxed', material: 'denim' } : undefined,
+      shoes: base.shoes ? { ...base.shoes, garment: 'sneakers', color: 'black', material: 'leather' } : undefined,
+    }, category, isBuiltIn: true, createdAt: '' },
+    { id: `builtin-luxurysoft-${category}`, name: 'Luxury Soft', config: {
+      ...base,
+      top: base.top ? { ...base.top, color: 'cream', fit: 'tailored', material: 'silk' } : undefined,
+      bottom: base.bottom ? { ...base.bottom, color: 'camel', fit: 'tailored', material: 'cashmere' } : undefined,
+      shoes: base.shoes ? { ...base.shoes, color: 'beige', material: 'suede' } : undefined,
+    }, category, isBuiltIn: true, createdAt: '' },
   ];
 }
 
