@@ -1756,8 +1756,8 @@ export function ProductImagesStep3Refine({
         const showBgStrip = bgScenes.length >= 1;
 
         // Group scenes: product shots vs on-model shots
-        const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
-        const modelShots = selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
+        const productShots = selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
+        const modelShots = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
 
           const renderSceneCardButton = (scene: ProductImageScene) => {
           const isExpanded = expandedSceneId === scene.id;
