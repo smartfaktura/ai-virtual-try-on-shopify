@@ -1,4 +1,4 @@
-import type { ProductImageScene, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
+import type { ProductImageScene, DetailSettings, ProductAnalysis, OutfitConfig, OutfitPiece } from '@/components/app/product-images/types';
 
 // ── Utility: treat "auto", empty, and undefined as unset ──
 function isAuto(val?: string): boolean {
