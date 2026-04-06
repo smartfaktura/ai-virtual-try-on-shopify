@@ -388,10 +388,13 @@ export default function ProductImages() {
             });
           } else if (result.type === 'insufficient_credits') {
             toast.error(result.message);
+            aborted = true;
             break;
           }
         }
+        if (aborted) break;
       }
+      if (aborted) break;
     }
 
     if (newJobMap.size === 0) {

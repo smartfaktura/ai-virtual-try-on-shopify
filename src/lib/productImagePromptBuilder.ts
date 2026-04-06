@@ -779,7 +779,8 @@ export function buildDynamicPrompt(
     const env = resolveToken('environmentDirective', ctx);
     if (env) parts.push(env);
     if (!isAuto(details.surfaceType)) parts.push(resolveToken('surfaceDirective', ctx) + '.');
-    if (!isAuto(details.presentation)) parts.push(resolveToken('personDirective', ctx));
+    const sceneNeedsPerson = scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails');
+    if (sceneNeedsPerson || !isAuto(details.presentation)) parts.push(resolveToken('personDirective', ctx));
     if (details.focusArea && !isAuto(details.focusArea)) parts.push(`Focus: ${details.focusArea}.`);
     if (details.customNote) parts.push(details.customNote);
     parts.push(resolveCameraDirective(scene));
