@@ -40,7 +40,7 @@ export const BLOCK_FIELD_MAP: Record<string, string[]> = {
 /** Get triggered blocks from a set of selected scene IDs */
 export function getTriggeredBlocks(
   selectedSceneIds: Set<string>,
-  allScenes: Array<{ id: string; triggerBlocks: string[] }>,
+  allScenes: Array<{ id: string; triggerBlocks?: string[] }>,
   productCount: number,
 ): string[] {
   const blocks = new Set<string>();
