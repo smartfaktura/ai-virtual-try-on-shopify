@@ -639,9 +639,9 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [openBlocks, setOpenBlocks] = useState<Set<string>>(new Set());
-  const [aestheticOpen, setAestheticOpen] = useState(true);
-  const [personOpen, setPersonOpen] = useState(true);
-  const [formatOpen, setFormatOpen] = useState(true);
+  const [aestheticOpen, setAestheticOpen] = useState(false);
+  const [personOpen, setPersonOpen] = useState(false);
+  const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [propModalOpen, setPropModalOpen] = useState(false);
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
