@@ -103,7 +103,6 @@ export function useProductImageScenes() {
   return {
     rawScenes: rawScenes ?? [],
     isLoading,
-    globalScenes,
     categoryCollections,
     allScenes,
     upsertScene,
