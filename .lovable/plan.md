@@ -1,76 +1,39 @@
 
 
-# Multi-Select Settings → Extra Variations
+# Multi-Select Background Swatches
 
-## What this changes
+## What changes
 
-Currently, settings like Packaging State, Background Tone, Environment, and Surface are single-select. The user wants to select multiple values (e.g., all 3 packaging states) and have each selection generate as a separate image, with credits counting accordingly.
+The global Background swatch selector ("All N scenes") currently allows only one selection. We convert it to multi-select so users can pick e.g. "Pure White" + "Warm" + "Cool" and get 3x images per scene, with credits updating live.
 
-## Design approach
-
-Rather than converting every `DetailSettings` field from `string` to `string[]` (which would break the entire prompt builder, review UI, and generation pipeline), we introduce a **"scene variation multiplier"** system. Specific fields are marked as multi-selectable, and the generation loop expands each combination into separate jobs.
+The variation engine (`sceneVariations.ts`) already handles `backgroundTone` as a comma-separated multi-select field — no backend or generation logic changes needed. This is purely a UI update.
 
 ## Changes
 
-### 1. Add `MultiChipSelector` component
-**File:** `ProductImagesStep3Refine.tsx`
+### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-A new component alongside `ChipSelector` that stores selections as comma-separated strings (e.g., `"sealed,open,both"`). This avoids changing the `DetailSettings` type from `string` to `string[]`.
+**Update `BackgroundSwatchSelector`:**
 
-- Visually identical to `ChipSelector` but allows multiple active chips
-- Shows a small `+N` badge when multiple are selected
+1. Change the toggle logic from single-select (`onChange(value === o.value ? '' : o.value)`) to multi-select: clicking a swatch adds/removes it from a comma-separated string. E.g. clicking "White" then "Warm" produces `"white,warm-neutral"`.
 
-### 2. Convert these fields to multi-select
-**File:** `ProductImagesStep3Refine.tsx` (BlockFields function)
+2. Special handling for `custom` and `gradient-custom`: these remain mutually exclusive with each other (since they need input fields) but can coexist with preset swatches. When custom is selected, show the hex input; when gradient-custom is selected, show the gradient inputs.
 
-| Field | Block | Current | New behavior |
-|---|---|---|---|
-| `packagingState` | packagingDetails | single | multi-select, each value = extra image |
-| `backgroundTone` | background (per-scene) | single | multi-select for per-scene tone |
-| `environmentType` | sceneEnvironment | single | multi-select (bathroom + kitchen = 2 images) |
-| `surfaceType` | sceneEnvironment | single | multi-select |
+3. Add a small `×N` badge next to "Background" label when multiple are selected, matching the style already used by `MultiChipSelector` for other fields.
 
-The global `BackgroundSwatchSelector` stays single-select (it sets the default for all scenes). Multi-select only applies within a scene's expanded panel.
+4. Visual: selected swatches get the existing `border-primary bg-primary/5` treatment. Multiple can be highlighted simultaneously.
 
-### 3. Update credit calculation
-**File:** `ProductImagesStep3Refine.tsx` + `ProductImagesStep4Review.tsx`
+**Update the `onChange` prop type:** The parent currently calls `onChange={v => update({ backgroundTone: v })}` — this stays the same since we're still storing a comma-separated string.
 
-Currently: `totalImages = productCount × sceneCount × imgCount`
+### No other files need changes
 
-New: For each scene, count the variation multiplier from multi-select fields. A scene with 3 packaging states selected = 3× images for that scene.
-
-Add a helper: `getSceneMultiplier(sceneId, details) → number` that parses comma-separated multi-select fields relevant to that scene's `triggerBlocks` and returns the product of their counts.
-
-### 4. Update generation loop
-**File:** `ProductImages.tsx` (`handleGenerate`)
-
-When iterating scenes, expand multi-select fields into separate jobs. For each scene, compute the combinations from its multi-select fields and create one job per combination, each with the specific value injected into the prompt.
-
-```
-// Pseudocode
-for scene of selectedScenes:
-  variations = expandMultiSelects(scene, details)  // e.g., [{packagingState:'sealed'}, {packagingState:'open'}]
-  for variation of variations:
-    for i of imgCount:
-      enqueue job with merged details
-```
-
-### 5. Update prompt builder
-**File:** `productImagePromptBuilder.ts`
-
-No changes needed — `buildDynamicPrompt` already reads single values from `details`. The generation loop will pass a copy of `details` with the specific single value for each variation.
-
-### 6. Update sticky bar credit display
-**File:** `ProductImagesStickyBar.tsx`
-
-Pass the new multiplier-aware total into the sticky bar so the credit count updates live as users toggle multiple options.
+- `sceneVariations.ts` — already has `backgroundTone` in `MULTI_SELECT_FIELDS` with block `'background'`
+- `ProductImages.tsx` — `expandMultiSelects` already handles comma-separated `backgroundTone`
+- `ProductImagesStep4Review.tsx` — already uses `computeTotalImages` which accounts for multipliers
+- Credit counting — already works via the variation multiplier system
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | Add `MultiChipSelector`, convert 4 fields, add `getSceneMultiplier` helper, update credit calc |
-| `ProductImagesStep4Review.tsx` | Update total image/credit calculation to use multiplier |
-| `ProductImages.tsx` | Expand generation loop to create separate jobs per multi-select combination |
-| `ProductImagesStickyBar.tsx` | Accept multiplier-aware totals |
+| `ProductImagesStep3Refine.tsx` | Convert `BackgroundSwatchSelector` from single to multi-select toggle logic; add `×N` count badge |
 
