@@ -306,7 +306,9 @@ export default function ProductImages() {
     const aspectRatio = details.aspectRatio || '1:1';
     // imgCount already declared above
 
+    let aborted = false;
     for (const product of selectedProducts) {
+      if (aborted) break;
       const base64Image = await convertImageToBase64(product.image_url);
       const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
 
