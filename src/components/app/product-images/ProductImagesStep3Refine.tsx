@@ -1160,6 +1160,9 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
 function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
   let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
   if (!base) return [];
+  // Ensure complete outfit for all categories
+  if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
+  if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };
   // Apply gender overrides so presets match the user's model gender
   if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
     base = { ...base, ...MALE_OUTFIT_OVERRIDES[category] };
@@ -1321,11 +1324,18 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   const prevCatRef = useRef(cat);
 
   // Initialize outfitConfig from category defaults — re-run when category/gender changes
-  useEffect(() => {
+   useEffect(() => {
     const categoryChanged = prevCatRef.current !== cat;
     prevCatRef.current = cat;
     if (!details.outfitConfig || categoryChanged) {
-      update({ outfitConfig: defaultConfig });
+      const config = { ...defaultConfig };
+      if (!config.bottom) {
+        config.bottom = { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' };
+      }
+      if (!config.shoes) {
+        config.shoes = { garment: 'sneakers', color: 'white', material: 'leather' };
+      }
+      update({ outfitConfig: config });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultConfig]);
@@ -1383,8 +1393,8 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   };
 
   // Determine which pieces to show
-  const showBottom = !!defaultConfig.bottom?.garment;
-  const showShoes = !!defaultConfig.shoes?.garment;
+  const showBottom = true;
+  const showShoes = true;
 
   return (
     <div className="space-y-4">
