@@ -66,6 +66,10 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   'white': 'clean white color palette with pure, bright tones',
   'light-gray': 'soft light-gray color palette with neutral, understated tones',
   'gradient': 'subtle gradient color palette with smooth tonal transitions',
+  // Gradient presets
+  'gradient-warm': 'warm gradient background fading from soft cream to warm sand tones',
+  'gradient-cool': 'cool gradient background fading from pale blue-white to soft steel gray',
+  'gradient-sunset': 'warm sunset-toned gradient background fading from soft peach to blush pink',
 };
 
 // ── Styling density map ──
