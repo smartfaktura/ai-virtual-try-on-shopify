@@ -586,6 +586,10 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'background': {
       const bgFamily = details.negativeSpace;
       const colorWorld = details.backgroundTone;
+      // Custom hex background
+      if (colorWorld === 'custom' && details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex)) {
+        return `solid background in color ${details.backgroundCustomHex}`;
+      }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
