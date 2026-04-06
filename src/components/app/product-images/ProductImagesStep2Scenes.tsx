@@ -392,13 +392,31 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
 
 /** Wrapper that adds Select All / Deselect All button inside the collapsible */
 function UnifiedCategorySectionWithSelectAll({
-  catId, catTitle, essentialScenes, categoryScenes,
+  catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
   selectedSceneIds, isOpen, onToggleOpen, toggleScene, onSelectAll,
   isRecommended, gridClass,
 }: UnifiedCategorySectionProps & { onSelectAll: () => void }) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
   const allSelected = allScenes.length > 0 && selectedCount === allScenes.length;
+
+  // Build sub-groups for essential scenes (by subCategory from DB)
+  const essentialSubGroups = useMemo(() => {
+    const map = new Map<string, ProductImageScene[]>();
+    for (const s of essentialScenes) {
+      const key = s.subCategory || '';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    return Array.from(map.entries()).map(([label, scenes]) => ({ label: label || 'Essential Shots', scenes }));
+  }, [essentialScenes]);
+
+  // Use DB sub-groups for category scenes, or fall back to a single group
+  const catSubGroups = useMemo(() => {
+    if (categorySubGroups && categorySubGroups.length > 0) return categorySubGroups;
+    if (categoryScenes.length === 0) return [];
+    return [{ label: `${catTitle} Shots`, scenes: categoryScenes }];
+  }, [categorySubGroups, categoryScenes, catTitle]);
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
@@ -410,12 +428,14 @@ function UnifiedCategorySectionWithSelectAll({
         }`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{catTitle}</span>
-            <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
             {isRecommended && (
               <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Recommended</Badge>
             )}
             {selectedCount > 0 && (
-              <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount}</Badge>
+              <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount} / {allScenes.length}</Badge>
+            )}
+            {selectedCount === 0 && (
+              <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
             )}
           </div>
           {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -433,27 +453,29 @@ function UnifiedCategorySectionWithSelectAll({
           </Button>
         </div>
 
-        {essentialScenes.length > 0 && (
-          <div className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Essential Shots</p>
+        {/* Essential shots sub-groups */}
+        {essentialSubGroups.map((sg, i) => (
+          <div key={`ess-${i}`} className="pt-3 pl-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{sg.label}</p>
             <div className={`grid ${gridClass} gap-2`}>
-              {essentialScenes.map(scene => (
+              {sg.scenes.map(scene => (
                 <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
               ))}
             </div>
           </div>
-        )}
+        ))}
 
-        {categoryScenes.length > 0 && (
-          <div className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{catTitle} Shots</p>
+        {/* Category shots sub-groups */}
+        {catSubGroups.map((sg, i) => (
+          <div key={`cat-${i}`} className="pt-3 pl-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{sg.label}</p>
             <div className={`grid ${gridClass} gap-2`}>
-              {categoryScenes.map(scene => (
+              {sg.scenes.map(scene => (
                 <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
               ))}
             </div>
           </div>
-        )}
+        ))}
       </CollapsibleContent>
     </Collapsible>
   );
