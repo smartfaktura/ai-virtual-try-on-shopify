@@ -1321,11 +1321,18 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   const prevCatRef = useRef(cat);
 
   // Initialize outfitConfig from category defaults — re-run when category/gender changes
-  useEffect(() => {
+   useEffect(() => {
     const categoryChanged = prevCatRef.current !== cat;
     prevCatRef.current = cat;
     if (!details.outfitConfig || categoryChanged) {
-      update({ outfitConfig: defaultConfig });
+      const config = { ...defaultConfig };
+      if (!config.bottom) {
+        config.bottom = { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' };
+      }
+      if (!config.shoes) {
+        config.shoes = { garment: 'sneakers', color: 'white', material: 'leather' };
+      }
+      update({ outfitConfig: config });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultConfig]);
