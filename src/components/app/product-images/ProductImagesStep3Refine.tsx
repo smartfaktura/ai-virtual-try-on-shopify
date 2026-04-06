@@ -1575,7 +1575,7 @@ export function ProductImagesStep3Refine({
 
   // Scenes that need a model
   const scenesNeedingModel = useMemo(() =>
-    selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails')),
+    selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')),
     [selectedScenes]
   );
   const needsModel = scenesNeedingModel.length > 0 && !details.selectedModelId;
