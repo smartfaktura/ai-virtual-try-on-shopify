@@ -565,16 +565,27 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'accentDirective': {
       const ac = details.accentColor;
       const vis = details.brandingVisibility;
+      if (vis === 'product-accent' && analysis?.accentColor && /^#[0-9A-Fa-f]{6}$/.test(analysis.accentColor)) {
+        return `Accent tones: subtle accent color (${analysis.accentColor}) derived from the product's dominant color.`;
+      }
       if (vis === 'custom' && ac && /^#[0-9A-Fa-f]{6}$/.test(ac)) {
         return `Accent tones: subtle accent color (${ac}) complementing the product palette.`;
       }
       if (vis === 'brand-accent' && ac && /^#[0-9A-Fa-f]{6}$/.test(ac)) {
         return `Brand accent color (${ac}) woven subtly into the composition.`;
       }
-      if (!isAuto(vis) && vis !== 'none' && vis !== 'custom' && vis !== 'brand-accent') {
+      if (!isAuto(vis) && vis !== 'none' && vis !== 'custom' && vis !== 'brand-accent' && vis !== 'product-accent') {
         return `Accent tones: subtle ${vis!.replace(/-/g, ' ')} accents complementing the product palette.`;
       }
       return '';
+    }
+
+    case 'accentColorDirective': {
+      const hex = analysis?.accentColor;
+      if (hex && /^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        return `smooth gradient background derived from the product's dominant color (${hex}), complementary and harmonious with the product`;
+      }
+      return 'smooth gradient background complementary to the product\'s dominant color tones';
     }
 
     case 'consistencyDirective': return CONSISTENCY_MAP[details.consistency || 'balanced'] || CONSISTENCY_MAP['balanced'];
