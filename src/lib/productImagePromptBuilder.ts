@@ -829,10 +829,12 @@ export function buildDynamicPrompt(
     }
   }
 
+  // For lighting: inject for ALL scenes when user explicitly set it (not just global)
+  // Other directives remain global-only to let category templates drive the look
   injectIfMissing('shadow', 'shadowDirective', true);
   injectIfMissing('surface', 'surfaceDirective', true);
   injectIfMissing('styling', 'stylingDirective', true);
-  injectIfMissing('lighting', 'lightingDirective', true);
+  injectIfMissing('lighting', 'lightingDirective', false);
   injectIfMissing('composition', 'compositionDirective', true);
   injectIfMissing('mood', 'sceneIntensityDirective', true);
   injectIfMissing('styling density', 'stylingDensityDirective', true);

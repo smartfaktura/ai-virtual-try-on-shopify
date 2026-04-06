@@ -54,7 +54,7 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['personDetails', 'actionDetails', 'productSize'],
     isGlobal: true,
     sceneType: 'portrait',
-    excludeCategories: ['home-decor', 'tech-devices'],
+    excludeCategories: ['home-decor', 'tech-devices', 'garments'],
   },
   {
     id: 'in-hand-lifestyle',
@@ -64,7 +64,7 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['personDetails', 'actionDetails', 'sceneEnvironment', 'productSize'],
     isGlobal: true,
     sceneType: 'lifestyle',
-    excludeCategories: ['home-decor', 'tech-devices'],
+    excludeCategories: ['home-decor', 'tech-devices', 'garments'],
   },
   {
     id: 'closeup-detail',

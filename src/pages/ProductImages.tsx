@@ -388,7 +388,7 @@ export default function ProductImages() {
               extra_variations: [variationEntry],
               selected_variations: [0],
               ...(additionalProducts ? { additional_products: additionalProducts } : {}),
-              ...(modelRef ? { model: modelRef } : {}),
+              ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
               ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
               quality,
               aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
@@ -504,8 +504,16 @@ export default function ProductImages() {
         if (Date.now() - pollingStartRef.current > TIMEOUT_MS) {
           const { data: finalJobs } = await supabase
             .from('generation_queue')
-            .select('id, status, result')
+            .select('id, status, result, payload')
             .in('id', jobIds);
+          // Enrich scene names from payload for any that fell back to 'Scene'
+          for (const j of finalJobs || []) {
+            const existing = productMap.get(j.id);
+            if (existing && existing.sceneName === 'Scene' && j.payload) {
+              const payloadSceneName = (j.payload as Record<string, unknown>)?.scene_name as string | undefined;
+              if (payloadSceneName) productMap.set(j.id, { ...existing, sceneName: payloadSceneName });
+            }
+          }
           toast.warning('Generation timed out — showing available results.');
           finishWithResults(finalJobs || [], productMap);
           return;
@@ -513,8 +521,17 @@ export default function ProductImages() {
 
         const { data: jobs } = await supabase
           .from('generation_queue')
-          .select('id, status, result')
+          .select('id, status, result, payload')
           .in('id', jobIds);
+
+        // Enrich scene names from payload for any that fell back to 'Scene'
+        for (const j of jobs || []) {
+          const existing = productMap.get(j.id);
+          if (existing && existing.sceneName === 'Scene' && j.payload) {
+            const payloadSceneName = (j.payload as Record<string, unknown>)?.scene_name as string | undefined;
+            if (payloadSceneName) productMap.set(j.id, { ...existing, sceneName: payloadSceneName });
+          }
+        }
 
         if (!jobs) { pollingRef.current = setTimeout(poll, 3000); return; }
 
@@ -872,13 +889,21 @@ export default function ProductImages() {
                   if (pollingRef.current) clearTimeout(pollingRef.current);
                   // Fetch final state and transition
                   const jobIds = Array.from(jobMap.values());
-                  supabase.from('generation_queue').select('id, status, result').in('id', jobIds).then(({ data }) => {
+                  supabase.from('generation_queue').select('id, status, result, payload').in('id', jobIds).then(({ data }) => {
                     const productMap = new Map<string, { productId: string; sceneName: string }>();
                     for (const [key, jobId] of jobMap.entries()) {
                       const parts = key.split('_');
                       const sceneId = parts[1] || '';
                       const scene = selectedScenes.find(s => s.id === sceneId);
                       productMap.set(jobId, { productId: parts[0], sceneName: scene?.title || 'Scene' });
+                    }
+                    // Enrich scene names from payload
+                    for (const j of data || []) {
+                      const existing = productMap.get(j.id);
+                      if (existing && existing.sceneName === 'Scene' && j.payload) {
+                        const payloadSceneName = (j.payload as Record<string, unknown>)?.scene_name as string | undefined;
+                        if (payloadSceneName) productMap.set(j.id, { ...existing, sceneName: payloadSceneName });
+                      }
                     }
                     finishWithResults(data || [], productMap);
                   });
