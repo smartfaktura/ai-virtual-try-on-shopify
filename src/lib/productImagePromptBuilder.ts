@@ -574,6 +574,7 @@ interface TokenContext {
   analysis: ProductAnalysis | null;
   details: DetailSettings;
   selectedModelId?: string;
+  modelGender?: string;
   scene: ProductImageScene;
 }
 
