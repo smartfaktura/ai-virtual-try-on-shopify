@@ -1595,12 +1595,7 @@ export function ProductImagesStep3Refine({
                         <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                         <span className="text-[10px] text-primary font-medium">customized</span>
                       </span>
-                    ) : controlPreviewNames.length > 0 ? (
-                      <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
                     ) : null}
-                    {isClickable && !isExpanded && (
-                      <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
-                    )}
                   </div>
                   {isClickable && (
                     <Settings2 className={cn(
