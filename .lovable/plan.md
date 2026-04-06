@@ -1,130 +1,47 @@
 
 
-# Admin Product Image Scenes Manager
+# Refine Step — UI Polish Pass
 
-## Context
+## Changes
 
-Product Image scenes are currently **hardcoded** in `sceneData.ts` (~100 scenes across 14 global scenes + 11 category collections). The existing `/app/admin/scenes` page manages Freestyle/TryOn scenes only. There is no admin UI to manage Product Image scenes.
+### 1. Smaller background swatch cards + remove Charcoal
+**File: `ProductImagesStep3Refine.tsx`**
+- Change card aspect from `aspect-[4/3]` to `aspect-square` in the `BackgroundSwatchSelector` grid
+- Increase grid density: `grid-cols-4 sm:grid-cols-8` (was `grid-cols-3 sm:grid-cols-6`)
+- Remove `charcoal` entry from `BG_SWATCH_OPTIONS` array
+- Shrink label text and overlay padding to match smaller cards
 
-## Approach
+### 2. Improve "needs model" banner
+**File: `ProductImagesStep3Refine.tsx`**
+- Restyle the model-needed banner from the current amber left-bordered card into a proper wizard-style attention card with an icon, bold heading, description text, and a styled "Select Model" button (not the current tiny pill)
+- Use a card-like layout: rounded-xl, subtle background, centered content with a User icon and clear CTA
 
-Move Product Image scene definitions to a new database table so admins can add, edit, reorder, hide, and configure scenes without code changes. The frontend falls back to the hardcoded data as seed, then reads from the database going forward.
+### 3. Reorder: Product shots before Background
+**File: `ProductImagesStep3Refine.tsx`**
+- In the scenes section render block (~lines 1972-2037), move the product shots grid **above** the Background strip
+- Background strip moves to render between product shots and on-model shots (or after both if no model shots)
 
-## Database
+### 4. Add background attention message
+**File: `ProductImagesStep3Refine.tsx`**
+- Add a small attention banner above the Background section (similar style to model banner but more subtle) reading: "Select a background for your selected scenes" with a Paintbrush icon
+- Show count of scenes that use backgrounds, hide banner once at least one background is selected
 
-### New table: `product_image_scenes`
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid PK | |
-| `scene_id` | text UNIQUE | e.g. `clean-packshot`, `fragrance_hero_surface` |
-| `title` | text | Display name |
-| `description` | text | Short description for users |
-| `prompt_template` | text | Full prompt with `{{tokens}}` |
-| `trigger_blocks` | text[] | Which detail panels to show |
-| `is_global` | boolean | True = universal scene |
-| `category_collection` | text | e.g. `fragrance`, `shoes` (null if global) |
-| `scene_type` | text | `macro`, `packshot`, `portrait`, `lifestyle`, `editorial`, `flatlay` |
-| `exclude_categories` | text[] | Product categories to hide this scene from |
-| `preview_image_url` | text | Optional preview thumbnail |
-| `is_active` | boolean | Soft-delete / hide |
-| `sort_order` | integer | Within its collection |
-| `created_at` | timestamptz | |
-
-RLS: Admin-only write, authenticated read.
-
-### Seed migration
-
-A second migration seeds all ~100 hardcoded scenes from `sceneData.ts` into the table so nothing is lost.
-
-## New Page: `/app/admin/product-image-scenes`
-
-### Layout (single scrollable page)
-
-```text
-┌──────────────────────────────────────────────────┐
-│ Product Image Scene Manager          [+ Add Scene]│
-│ [Search...]                    [Show hidden ☐]   │
-├──────────────────────────────────────────────────┤
-│ ▼ Global Scenes (14)                             │
-│   ┌─────────────────────────────────────────┐    │
-│   │ [≡] Clean Studio Shot    packshot  ✓    │    │
-│   │     triggerBlocks: background, productSize   │
-│   │     [Edit] [Hide] [↑] [↓]              │    │
-│   └─────────────────────────────────────────┘    │
-│   ...                                            │
-│                                                  │
-│ ▼ Fragrance (7 scenes)                           │
-│   ┌─────────────────────────────────────────┐    │
-│   │ [≡] Hero Bottle on Stone  editorial ✓   │    │
-│   │     [Edit] [Hide] [↑] [↓]              │    │
-│   └─────────────────────────────────────────┘    │
-│   ...                                            │
-│                                                  │
-│ ▼ Beauty & Skincare (7 scenes)                   │
-│   ...                                            │
-└──────────────────────────────────────────────────┘
-```
-
-### Edit Panel (inline expand or modal)
-
-When clicking "Edit" on a scene row, an inline collapsible expands with:
-
-- **Title** — text input
-- **Description** — text input
-- **Scene Type** — select (macro/packshot/portrait/lifestyle/editorial/flatlay)
-- **Category Collection** — select (global, fragrance, beauty-skincare, etc.)
-- **Trigger Blocks** — multi-select checkboxes from the 11 known blocks
-- **Exclude Categories** — multi-select checkboxes (product categories like home-decor, tech-devices)
-- **Prompt Template** — large textarea with token reference guide
-- **Preview Image** — upload or URL input
-- **Active** — toggle switch
-- **Sort Order** — number input
-
-### Add New Scene
-
-"+ Add Scene" button opens the same form but empty, with category collection pre-selected if adding from within a collection section.
-
-### Features
-
-- **Search** across all scenes by title/description/scene_id
-- **Reorder** within collections (up/down arrows + save)
-- **Hide/Show** toggle (sets `is_active = false`)
-- **Prompt token reference** — collapsible guide showing all available `{{tokens}}`
-- **Bulk save** — dirty tracking with single save button
-
-## Code Changes
-
-### New hook: `useProductImageScenes.ts`
-
-- Fetches all scenes from `product_image_scenes` table
-- Provides `GLOBAL_SCENES` and `CATEGORY_COLLECTIONS` shaped data
-- Falls back to hardcoded `sceneData.ts` if table is empty (first-load safety)
-- CRUD mutations for admin operations
-
-### Update scene consumers
-
-- `ProductImagesStep2Scenes.tsx` — import scenes from hook instead of hardcoded `sceneData.ts`
-- `ProductImagesStep3Refine.tsx` — same
-- `ProductImagesStep4Review.tsx` — same
-- `productImagePromptBuilder.ts` — same
-- Keep `sceneData.ts` as fallback/seed reference only
-
-### Register route
-
-- Add lazy import + route in `App.tsx` at `/app/admin/product-image-scenes`
+### 5. Improve outfit presets — descriptive cards instead of color dots
+**File: `ProductImagesStep3Refine.tsx`**
+- Replace the current preset bar (horizontal chips with `PresetColorDots`) with descriptive cards
+- Each card: title, 1-line description of the styling direction, no color swatches
+- Descriptions:
+  - **Studio Standard** — "Clean, neutral styling for commercial product focus"
+  - **Editorial** — "Dark tones, tailored fits for magazine-ready shots"
+  - **Minimal** — "Stripped-back whites and creams, relaxed silhouettes"
+  - **Streetwear** — "Oversized fits, dark palette, urban energy"
+  - **Luxury Soft** — "Silk and cashmere in warm neutrals, elevated elegance"
+- Cards layout: horizontal scroll row, each ~160px wide, rounded-xl border, active state with primary ring
+- Remove `PresetColorDots` component usage from preset buttons
 
 ## Files
 
-| File | Action |
+| File | Changes |
 |---|---|
-| Migration 1 | Create `product_image_scenes` table with RLS |
-| Migration 2 | Seed all ~100 scenes from hardcoded data |
-| `src/hooks/useProductImageScenes.ts` | New hook — fetch, CRUD, shaped output |
-| `src/pages/AdminProductImageScenes.tsx` | New admin page |
-| `src/App.tsx` | Add route |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Use hook instead of hardcoded imports |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Use hook |
-| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Use hook |
-| `src/lib/productImagePromptBuilder.ts` | Use hook-provided data |
+| `ProductImagesStep3Refine.tsx` | All 5 changes above |
 
