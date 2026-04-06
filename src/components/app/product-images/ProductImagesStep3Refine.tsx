@@ -834,9 +834,9 @@ function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; he
 function PresetColorDots({ config }: { config: OutfitConfig }) {
   const colors = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
   return (
-    <div className="flex flex-col w-5 h-5 rounded-md overflow-hidden border border-border/40 shrink-0">
+    <div className="flex flex-col w-6 h-6 rounded-md overflow-hidden border border-border/40 shrink-0">
       {colors.map((c, i) => (
-        <div key={i} className="flex-1" style={{ backgroundColor: c }} />
+        <div key={i} className="flex-1" style={{ backgroundColor: COLOR_HEX[c] || c }} />
       ))}
     </div>
   );
@@ -915,6 +915,18 @@ function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
       top: base.top ? { ...base.top, color: 'white', garment: base.top.garment } : undefined,
       bottom: base.bottom ? { ...base.bottom, color: 'cream', fit: 'relaxed' } : undefined,
       shoes: base.shoes ? { ...base.shoes, color: 'white' } : undefined,
+    }, category, isBuiltIn: true, createdAt: '' },
+    { id: `builtin-streetwear-${category}`, name: 'Streetwear', config: {
+      ...base,
+      top: base.top ? { ...base.top, color: 'charcoal', fit: 'oversized', material: 'cotton' } : undefined,
+      bottom: base.bottom ? { ...base.bottom, color: 'black', fit: 'relaxed', material: 'denim' } : undefined,
+      shoes: base.shoes ? { ...base.shoes, garment: 'sneakers', color: 'black', material: 'leather' } : undefined,
+    }, category, isBuiltIn: true, createdAt: '' },
+    { id: `builtin-luxurysoft-${category}`, name: 'Luxury Soft', config: {
+      ...base,
+      top: base.top ? { ...base.top, color: 'cream', fit: 'tailored', material: 'silk' } : undefined,
+      bottom: base.bottom ? { ...base.bottom, color: 'camel', fit: 'tailored', material: 'cashmere' } : undefined,
+      shoes: base.shoes ? { ...base.shoes, color: 'beige', material: 'suede' } : undefined,
     }, category, isBuiltIn: true, createdAt: '' },
   ];
 }
@@ -1331,7 +1343,7 @@ export function ProductImagesStep3Refine({
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
   const [_formatOpen, _setFormatOpen] = useState(false); // moved to Review step
   const [_overridesOpen, _setOverridesOpen] = useState(false); // moved to Review step
-  const [outfitOpen, setOutfitOpen] = useState(needsModel);
+  const [outfitOpen, setOutfitOpen] = useState(needsModel || hasPersonBlock);
   const [_advancedOpen, _setAdvancedOpen] = useState(false); // kept for API compat
   const outfitRef = useRef<HTMLDivElement>(null);
   const [propModalOpen, setPropModalOpen] = useState(false);
@@ -1486,7 +1498,7 @@ export function ProductImagesStep3Refine({
                 </>
               )}
             </span>
-            <div className="flex gap-1 ml-1">
+            <div className="hidden sm:flex gap-1 ml-1">
               {scenesNeedingModel.slice(0, 4).map(s => (
                 <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
                   {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
@@ -1546,7 +1558,7 @@ export function ProductImagesStep3Refine({
                 type="button"
                 onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
                 className={cn(
-                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
+                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card min-h-[72px]',
                   isExpanded
                     ? 'border-primary bg-primary/[0.03] shadow-sm'
                     : hasCustomizations
@@ -1583,12 +1595,7 @@ export function ProductImagesStep3Refine({
                         <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                         <span className="text-[10px] text-primary font-medium">customized</span>
                       </span>
-                    ) : controlPreviewNames.length > 0 ? (
-                      <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
                     ) : null}
-                    {isClickable && !isExpanded && (
-                      <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
-                    )}
                   </div>
                   {isClickable && (
                     <Settings2 className={cn(
@@ -1612,7 +1619,7 @@ export function ProductImagesStep3Refine({
           if (!hasControls) return null;
 
           return (
-            <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in slide-in-from-top-2 duration-200">
+            <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in fade-in duration-200">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
                   {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
@@ -1689,12 +1696,6 @@ export function ProductImagesStep3Refine({
                     return (
                       <div key={scene.id} className="relative">
                         {renderSceneCardButton(scene)}
-                        {/* Connector line */}
-                        {isExpanded && (
-                          <div className="flex justify-center">
-                            <div className="w-px h-3 bg-primary/30" />
-                          </div>
-                        )}
                       </div>
                     );
                   })}
