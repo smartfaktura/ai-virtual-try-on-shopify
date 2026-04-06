@@ -308,9 +308,9 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
 /** Wrapper that adds per-sub-group Select All buttons */
 function UnifiedCategorySectionWithSelectAll({
   catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
-  selectedSceneIds, isOpen, onToggleOpen, toggleScene,
+  selectedSceneIds, onSelectionChange, isOpen, onToggleOpen, toggleScene,
   isRecommended, gridClass,
-}: UnifiedCategorySectionProps & { onSelectAll?: () => void }) {
+}: UnifiedCategorySectionProps) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
 
@@ -338,15 +338,12 @@ function UnifiedCategorySectionWithSelectAll({
     return [{ label: `${catTitle} Shots`, scenes: categoryScenes }];
   }, [categorySubGroups, categoryScenes, catTitle]);
 
-  const toggleSubGroup = (scenes: ProductImageScene[]) => {
+  const bulkToggle = (scenes: ProductImageScene[]) => {
     const next = new Set(selectedSceneIds);
     const allSelected = scenes.every(s => next.has(s.id));
     if (allSelected) scenes.forEach(s => next.delete(s.id));
     else scenes.forEach(s => next.add(s.id));
-    // We need to call onSelectionChange but we only have toggleScene — build set manually
-    // Actually we need the parent's onSelectionChange. Let's use a workaround via toggleScene:
-    // This won't work cleanly. Let me refactor to pass onSelectionChange.
-    return next;
+    onSelectionChange(next);
   };
 
   return (
@@ -384,9 +381,7 @@ function UnifiedCategorySectionWithSelectAll({
               selectedSceneIds={selectedSceneIds}
               toggleScene={toggleScene}
               allSelected={sgAllSelected}
-              onToggleAll={() => {
-                sg.scenes.forEach(s => toggleScene(s.id));
-              }}
+              onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
             />
           );
@@ -403,9 +398,7 @@ function UnifiedCategorySectionWithSelectAll({
               selectedSceneIds={selectedSceneIds}
               toggleScene={toggleScene}
               allSelected={sgAllSelected}
-              onToggleAll={() => {
-                sg.scenes.forEach(s => toggleScene(s.id));
-              }}
+              onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
             />
           );
