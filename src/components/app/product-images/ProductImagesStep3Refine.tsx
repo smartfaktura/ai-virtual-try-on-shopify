@@ -16,7 +16,7 @@ import {
   Save, Trash2, History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getBlocksByScene } from './detailBlockConfig';
+import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
