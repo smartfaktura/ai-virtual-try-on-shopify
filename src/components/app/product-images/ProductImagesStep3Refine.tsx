@@ -1216,21 +1216,27 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
 
 function InlinePersonDetails({ details, update }: { details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
   const [stylingOpen, setStylingOpen] = useState(false);
+
+  const skinToneOptions = [
+    { value: 'light', label: 'Light', icon: <ColorDot hex={SKIN_TONE_HEX.light} size={10} /> },
+    { value: 'medium', label: 'Medium', icon: <ColorDot hex={SKIN_TONE_HEX.medium} size={10} /> },
+    { value: 'deep', label: 'Deep', icon: <ColorDot hex={SKIN_TONE_HEX.deep} size={10} /> },
+    { value: 'auto', label: 'Auto' },
+  ];
+
   return (
-    <div className="space-y-3">
-      {/* Appearance group — open by default */}
-      <div className="space-y-2">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="space-y-4">
+      {/* Appearance group */}
+      <div className="space-y-3">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
             { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
           ]} />
           <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
             { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
           ]} />
-          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
-            { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'deep', label: 'Deep' }, { value: 'auto', label: 'Auto' },
-          ]} />
+          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={skinToneOptions} />
           <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
             { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
           ]} />
@@ -1239,13 +1245,13 @@ function InlinePersonDetails({ details, update }: { details: DetailSettings; upd
 
       {/* Styling Details group — collapsed by default */}
       <Collapsible open={stylingOpen} onOpenChange={setStylingOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer">
-          <ChevronRight className={cn('w-3 h-3 transition-transform', stylingOpen && 'rotate-90')} />
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer">
+          <ChevronRight className={cn('w-3.5 h-3.5 transition-transform', stylingOpen && 'rotate-90')} />
           Styling Details
-          <span className="text-[9px] font-normal normal-case text-muted-foreground/60">hands, nails, jewelry</span>
+          <span className="text-[11px] font-normal normal-case text-muted-foreground/60">hands, nails, jewelry</span>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3">
             <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
               { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
               { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
