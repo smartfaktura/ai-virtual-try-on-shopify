@@ -1184,23 +1184,6 @@ function InlinePersonDetails({ details, update }: { details: DetailSettings; upd
     </div>
   );
 }
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/50">
-      <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
-        { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
-      ]} />
-      <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
-        { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
-      ]} />
-      <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
-        { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'deep', label: 'Deep' }, { value: 'auto', label: 'Auto' },
-      ]} />
-      <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
-        { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
-      ]} />
-    </div>
-  );
-}
 
 /* ══════════════════════════════════════════════
    Main Props
