@@ -504,8 +504,16 @@ export default function ProductImages() {
         if (Date.now() - pollingStartRef.current > TIMEOUT_MS) {
           const { data: finalJobs } = await supabase
             .from('generation_queue')
-            .select('id, status, result')
+            .select('id, status, result, payload')
             .in('id', jobIds);
+          // Enrich scene names from payload for any that fell back to 'Scene'
+          for (const j of finalJobs || []) {
+            const existing = productMap.get(j.id);
+            if (existing && existing.sceneName === 'Scene' && j.payload) {
+              const payloadSceneName = (j.payload as Record<string, unknown>)?.scene_name as string | undefined;
+              if (payloadSceneName) productMap.set(j.id, { ...existing, sceneName: payloadSceneName });
+            }
+          }
           toast.warning('Generation timed out — showing available results.');
           finishWithResults(finalJobs || [], productMap);
           return;
@@ -513,8 +521,17 @@ export default function ProductImages() {
 
         const { data: jobs } = await supabase
           .from('generation_queue')
-          .select('id, status, result')
+          .select('id, status, result, payload')
           .in('id', jobIds);
+
+        // Enrich scene names from payload for any that fell back to 'Scene'
+        for (const j of jobs || []) {
+          const existing = productMap.get(j.id);
+          if (existing && existing.sceneName === 'Scene' && j.payload) {
+            const payloadSceneName = (j.payload as Record<string, unknown>)?.scene_name as string | undefined;
+            if (payloadSceneName) productMap.set(j.id, { ...existing, sceneName: payloadSceneName });
+          }
+        }
 
         if (!jobs) { pollingRef.current = setTimeout(poll, 3000); return; }
 
