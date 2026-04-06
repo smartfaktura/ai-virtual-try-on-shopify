@@ -1050,6 +1050,7 @@ export type Database = {
           scene_type: string
           sort_order: number
           sub_category: string | null
+          sub_category_overrides: Json | null
           title: string
           trigger_blocks: string[]
         }
@@ -1068,6 +1069,7 @@ export type Database = {
           scene_type?: string
           sort_order?: number
           sub_category?: string | null
+          sub_category_overrides?: Json | null
           title: string
           trigger_blocks?: string[]
         }
@@ -1086,6 +1088,7 @@ export type Database = {
           scene_type?: string
           sort_order?: number
           sub_category?: string | null
+          sub_category_overrides?: Json | null
           title?: string
           trigger_blocks?: string[]
         }
