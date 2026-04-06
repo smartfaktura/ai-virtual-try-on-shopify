@@ -1305,7 +1305,7 @@ export function ProductImagesStep3Refine({
                 />
 
                 {/* Outfit lock panel */}
-                <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} />
+                <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
 
                 {/* Inline person details (only when no specific model selected) */}
                 {!details.selectedModelId && (
