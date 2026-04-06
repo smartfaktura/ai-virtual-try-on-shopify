@@ -195,16 +195,16 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <ChipSelector label="" value={details.imageCount || '1'} onChange={v => update({ imageCount: v })} options={IMAGE_COUNT_OPTIONS} />
               </div>
 
-              {/* Quality */}
+              {/* Quality — fixed at Pro */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <span className="text-xs font-semibold">Quality</span>
                 </div>
-                <ChipSelector label="" value={quality} onChange={v => update({ quality: v })} options={[
-                  { value: 'standard', label: 'Standard (3 cr)' },
-                  { value: 'high', label: 'Pro (6 cr)' },
-                ]} />
+                <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary">
+                  <Sparkles className="w-3 h-3" />
+                  Pro (6 cr)
+                </div>
               </div>
             </div>
 
