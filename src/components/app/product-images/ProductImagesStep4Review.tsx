@@ -51,13 +51,14 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   const isLargeBatch = totalImages > 20;
 
   const aestheticEntries: { label: string; value: string }[] = [];
-  if (details.backgroundTone) aestheticEntries.push({ label: 'Color world', value: friendlyLabel(details.backgroundTone) });
-  if (details.negativeSpace) aestheticEntries.push({ label: 'Background', value: friendlyLabel(details.negativeSpace) });
-  if (details.surfaceType) aestheticEntries.push({ label: 'Surface', value: friendlyLabel(details.surfaceType) });
-  if (details.lightingStyle) aestheticEntries.push({ label: 'Lighting', value: friendlyLabel(details.lightingStyle) });
-  if (details.shadowStyle) aestheticEntries.push({ label: 'Shadow', value: friendlyLabel(details.shadowStyle) });
-  if (details.mood) aestheticEntries.push({ label: 'Style', value: friendlyLabel(details.mood) });
-  if (details.brandingVisibility) aestheticEntries.push({ label: 'Accent', value: friendlyLabel(details.brandingVisibility) });
+  const isNonDefault = (val: string | undefined, defaultVal?: string) => val && val !== '' && val !== 'auto' && val !== defaultVal;
+  if (isNonDefault(details.backgroundTone)) aestheticEntries.push({ label: 'Color world', value: friendlyLabel(details.backgroundTone) });
+  if (isNonDefault(details.negativeSpace)) aestheticEntries.push({ label: 'Background', value: friendlyLabel(details.negativeSpace) });
+  if (isNonDefault(details.surfaceType)) aestheticEntries.push({ label: 'Surface', value: friendlyLabel(details.surfaceType) });
+  if (isNonDefault(details.lightingStyle, 'soft-diffused')) aestheticEntries.push({ label: 'Lighting', value: friendlyLabel(details.lightingStyle) });
+  if (isNonDefault(details.shadowStyle, 'natural')) aestheticEntries.push({ label: 'Shadow', value: friendlyLabel(details.shadowStyle) });
+  if (isNonDefault(details.mood)) aestheticEntries.push({ label: 'Style', value: friendlyLabel(details.mood) });
+  if (isNonDefault(details.brandingVisibility, 'product-accent')) aestheticEntries.push({ label: 'Accent', value: friendlyLabel(details.brandingVisibility) });
   if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
 
   const personEntries: { label: string; value: string }[] = [];

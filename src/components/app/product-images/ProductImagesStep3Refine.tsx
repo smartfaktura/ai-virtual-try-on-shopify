@@ -1017,7 +1017,12 @@ export function ProductImagesStep3Refine({
     'outfitConfig', 'selectedModelId', 'customNote',
     'outfitTop', 'outfitBottom', 'outfitShoes', 'outfitAccessories',
   ]);
-  const customizedCount = Object.entries(details).filter(([k, v]) => v && v !== '' && !IGNORE_KEYS.has(k)).length;
+  const BASELINE: Record<string, string> = {
+    backgroundTone: 'auto', negativeSpace: 'auto', surfaceType: 'auto',
+    lightingStyle: 'soft-diffused', shadowStyle: 'natural', mood: 'auto',
+    brandingVisibility: 'product-accent',
+  };
+  const customizedCount = Object.entries(details).filter(([k, v]) => v && v !== '' && !IGNORE_KEYS.has(k) && BASELINE[k] !== v).length;
 
   const handleReset = () => {
     onDetailsChange({ aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount });

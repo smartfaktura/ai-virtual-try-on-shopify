@@ -306,7 +306,9 @@ export default function ProductImages() {
     const aspectRatio = details.aspectRatio || '1:1';
     // imgCount already declared above
 
+    let aborted = false;
     for (const product of selectedProducts) {
+      if (aborted) break;
       const base64Image = await convertImageToBase64(product.image_url);
       const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
 
@@ -388,10 +390,13 @@ export default function ProductImages() {
             });
           } else if (result.type === 'insufficient_credits') {
             toast.error(result.message);
+            aborted = true;
             break;
           }
         }
+        if (aborted) break;
       }
+      if (aborted) break;
     }
 
     if (newJobMap.size === 0) {
