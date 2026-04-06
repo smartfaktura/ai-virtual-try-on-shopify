@@ -312,12 +312,9 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Select scenes</h2>
-          <p className="text-sm text-muted-foreground mt-1">Choose the visuals you want for your products.</p>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight">Select scenes</h2>
         <div className="flex items-center gap-2">
           {selectedSceneIds.size > 0 && (
             <>
