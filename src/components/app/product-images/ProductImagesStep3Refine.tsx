@@ -1565,9 +1565,10 @@ export function ProductImagesStep3Refine({
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
+  const { allScenes: dbScenes } = useProductImageScenes();
 
   // Scene-specific detail blocks
-  const sceneGroups = getBlocksByScene(selectedSceneIds, ALL_SCENES);
+  const sceneGroups = getBlocksByScene(selectedSceneIds, dbScenes);
   const hasPersonBlock = sceneGroups.some(g => g.blocks.includes('personDetails'));
   const hasSceneBlocks = sceneGroups.length > 0;
 
