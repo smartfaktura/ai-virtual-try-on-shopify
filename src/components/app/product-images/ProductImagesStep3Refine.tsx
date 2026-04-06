@@ -872,6 +872,12 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
     top: { garment: 'camisole', color: 'cream', fit: 'fitted', material: 'silk' },
     accessories: 'none',
   },
+  'hats-small': {
+    top: { garment: 'blazer', color: 'black', fit: 'fitted', material: 'wool' },
+    bottom: { garment: 'trousers', color: 'charcoal', fit: 'slim', material: 'wool' },
+    shoes: { garment: 'loafers', color: 'black', material: 'leather' },
+    accessories: 'none',
+  },
 };
 
 // Gender-variant defaults
