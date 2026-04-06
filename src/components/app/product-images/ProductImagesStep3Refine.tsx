@@ -1805,6 +1805,11 @@ export function ProductImagesStep3Refine({
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
                 <Badge variant="outline" className="text-[9px] h-4 px-1.5">All {selectedScenes.length} scenes</Badge>
+                {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 1 && (
+                  <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
+                    ×{details.backgroundTone.split(',').filter(Boolean).length} variations
+                  </Badge>
+                )}
               </div>
               <BackgroundSwatchSelector value={details.backgroundTone || ''} onChange={v => update({ backgroundTone: v })} details={details} update={update} />
             </div>
