@@ -728,15 +728,7 @@ export default function ProductImages() {
                   selectedScenes={selectedScenes}
                   allProducts={userProducts}
                   selectedProductIds={selectedProductIds}
-                  hasMultipleCategories={(() => {
-                    const cats = new Set<string>();
-                    for (const p of selectedProducts) {
-                      const analysis = p.analysis_json as any;
-                      if (analysis?.category) cats.add(analysis.category);
-                      else cats.add(p.product_type || 'other');
-                    }
-                    return cats.size > 1;
-                  })()}
+                  hasMultipleCategories={hasMultipleCategories}
                   primaryCategory={primaryCategory}
                 />
               </div>
