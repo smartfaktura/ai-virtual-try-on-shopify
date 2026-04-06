@@ -349,7 +349,30 @@ export default function AdminProductImageScenes() {
 
 /* ── Reusable scene edit form ── */
 function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d: Partial<DbScene>) => void }) {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const set = (field: string, value: any) => onChange({ ...draft, [field]: value });
+
+  const handleImageUpload = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const sceneSlug = draft.scene_id || 'new';
+      const path = `${user.id}/scene-previews/${sceneSlug}-${ts}.${ext}`;
+      const { data, error } = await supabase.storage.from('product-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('product-uploads').getPublicUrl(data.path);
+      set('preview_image_url', urlData.publicUrl);
+      toast.success('Preview image uploaded');
+    } catch (e: any) {
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const isGlobal = draft.is_global || draft.category_collection === null;
 
