@@ -1602,7 +1602,8 @@ export function ProductImagesStep3Refine({
 
       {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
       {selectedScenes.length > 0 && (() => {
-        const showBgStrip = selectedScenes.length >= 2;
+        const bgScenes = selectedScenes.filter(s => s.triggerBlocks?.includes('background'));
+        const showBgStrip = bgScenes.length >= 1;
 
         // Group scenes: product shots vs on-model shots
         const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
