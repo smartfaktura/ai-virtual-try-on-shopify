@@ -2073,28 +2073,7 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── SECTION 3: Consistency (if multi-product) ── */}
-      {productCount > 1 && (
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Consistency</span>
-            </div>
-            {hasMultipleCategories ? (
-              <ChipSelector label="Aesthetic source" value={details.consistency || 'auto-balance'} onChange={v => update({ consistency: v })} options={[
-                { value: 'auto-balance', label: 'Auto-balance across products' },
-                { value: 'anchor-first', label: 'Use first product as anchor' },
-                { value: 'manual', label: 'Let me choose manually' },
-              ]} />
-            ) : (
-              <ChipSelector label="Consistency across shots" value={details.consistency} onChange={v => update({ consistency: v })} options={[
-                { value: 'natural', label: 'Natural' }, { value: 'strong', label: 'Strong' }, { value: 'strict', label: 'Strict' },
-              ]} />
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* Consistency is auto-applied (default: balanced) — hidden from users for simplicity */}
 
       {/* ── SECTION 4: Custom Note ── */}
       <Card>
