@@ -875,7 +875,8 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
               </button>
             )}
           </div>
-        ))}
+          );
+        })}
         {showSave ? (
           <div className="flex items-center gap-1 flex-shrink-0">
             <Input
