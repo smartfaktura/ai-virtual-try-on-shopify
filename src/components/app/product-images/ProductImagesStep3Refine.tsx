@@ -1447,123 +1447,28 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── SECTION 3: Global Style ── */}
-      <Collapsible open={aestheticOpen} onOpenChange={setAestheticOpen}>
-        <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+      {/* ── SECTION 3: Consistency (if multi-product) ── */}
+      {productCount > 1 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Paintbrush className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Global Style</span>
-              <span className="text-[10px] text-muted-foreground">Default look for all scenes</span>
+              <Layers className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Consistency</span>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Scene thumbs that inherit global style */}
-              {!aestheticOpen && globalInheritScenes.length > 0 && (
-                <div className="hidden sm:flex items-center gap-1">
-                  {globalInheritScenes.slice(0, 4).map(s => (
-                    <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
-                      {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
-                    </div>
-                  ))}
-                  {globalInheritScenes.length > 4 && (
-                    <span className="text-[9px] text-muted-foreground">+{globalInheritScenes.length - 4}</span>
-                  )}
-                </div>
-              )}
-              {aestheticOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <Card className="mt-2 border-primary/10">
-            <CardContent className="p-4 space-y-4">
-              {/* Scene thumbnails showing which scenes inherit these */}
-              {selectedScenes.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] text-muted-foreground font-medium">Applies to:</span>
-                  <div className="flex gap-1.5">
-                    {selectedScenes.map(s => (
-                      <div key={s.id} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 border border-border/50">
-                        <div className="w-4 h-4 rounded bg-muted overflow-hidden flex-shrink-0">
-                          {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2 h-2 text-muted-foreground/40 m-auto" />}
-                        </div>
-                        <span className="text-[9px] text-muted-foreground truncate max-w-[60px]">{s.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[11px] text-muted-foreground italic">Default colors, lighting, and surfaces for your scenes. Smart defaults already applied.</p>
-              {/* Auto (Recommended) button */}
-              <AutoAestheticButton details={details} update={update} />
-
-              {hasMultipleCategories && (
-                <ChipSelector label="Aesthetic source" value={details.consistency || 'auto-balance'} onChange={v => update({ consistency: v })} options={[
-                  { value: 'auto-balance', label: 'Auto-balance across products' },
-                  { value: 'anchor-first', label: 'Use first product as anchor' },
-                  { value: 'manual', label: 'Let me choose manually' },
-                ]} />
-              )}
-
-              {productCount > 1 && !hasMultipleCategories && (
-                <ChipSelector label="Consistency across shots" value={details.consistency} onChange={v => update({ consistency: v })} options={[
-                  { value: 'natural', label: 'Natural' }, { value: 'strong', label: 'Strong' }, { value: 'strict', label: 'Strict' },
-                ]} />
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ChipSelector label="Color world" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
-                  { value: 'auto', label: 'Auto from product' }, { value: 'warm-neutral', label: 'Warm neutrals' },
-                  { value: 'cool-neutral', label: 'Cool neutrals' }, { value: 'monochrome', label: 'Soft monochrome' },
-                  { value: 'brand-led', label: 'Brand-led' },
-                ]} />
-
-                <ChipSelector label="Background family" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
-                  { value: 'pure-white', label: 'Pure white' }, { value: 'soft-white', label: 'Soft white' },
-                  { value: 'light-grey', label: 'Light grey' }, { value: 'warm-beige', label: 'Warm beige' },
-                  { value: 'taupe', label: 'Taupe' }, { value: 'stone', label: 'Stone' }, { value: 'auto', label: 'Auto' },
-                ]} />
-
-                <ChipSelector label="Surface / material" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
-                  { value: 'minimal-studio', label: 'Minimal studio' }, { value: 'stone-plaster', label: 'Stone / plaster' },
-                  { value: 'warm-wood', label: 'Warm wood' }, { value: 'fabric', label: 'Fabric / drape' },
-                  { value: 'glossy', label: 'Glossy clean' }, { value: 'auto', label: 'Auto from product' },
-                ]} />
-
-                <ChipSelector label="Lighting" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
-                  { value: 'soft-diffused', label: 'Soft diffused' }, { value: 'warm-editorial', label: 'Warm editorial' },
-                  { value: 'crisp-studio', label: 'Crisp studio' }, { value: 'natural-daylight', label: 'Natural daylight' },
-                  { value: 'side-lit', label: 'Side-lit premium' },
-                ]} />
-
-                <ChipSelector label="Shadow style" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
-                  { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft' },
-                  { value: 'natural', label: 'Natural' }, { value: 'defined', label: 'Defined' },
-                ]} />
-
-                <ChipSelector label="Styling direction" value={details.mood} onChange={v => update({ mood: v })} options={[
-                  { value: 'minimal-luxury', label: 'Minimal luxury' }, { value: 'clean-commercial', label: 'Clean commercial' },
-                  { value: 'fashion-editorial', label: 'Fashion editorial' }, { value: 'beauty-clean', label: 'Beauty clean' },
-                  { value: 'organic-natural', label: 'Organic natural' }, { value: 'modern-sleek', label: 'Modern sleek' },
-                  { value: 'auto', label: 'Auto from product' },
-                ]} />
-              </div>
-
-              <ChipSelector label="Accent color" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
-                { value: 'product-accent', label: 'Use product accent' }, { value: 'none', label: 'None' },
-                { value: 'brand-accent', label: 'Use brand accent' }, { value: 'custom', label: 'Custom hex' },
-                { value: 'subtle', label: 'Subtle accent' }, { value: 'strong', label: 'Strong accent' },
+            {hasMultipleCategories ? (
+              <ChipSelector label="Aesthetic source" value={details.consistency || 'auto-balance'} onChange={v => update({ consistency: v })} options={[
+                { value: 'auto-balance', label: 'Auto-balance across products' },
+                { value: 'anchor-first', label: 'Use first product as anchor' },
+                { value: 'manual', label: 'Let me choose manually' },
               ]} />
-
-              {/* Custom hex color panel */}
-              {(details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-              )}
-            </CardContent>
-          </Card>
-        </CollapsibleContent>
-      </Collapsible>
+            ) : (
+              <ChipSelector label="Consistency across shots" value={details.consistency} onChange={v => update({ consistency: v })} options={[
+                { value: 'natural', label: 'Natural' }, { value: 'strong', label: 'Strong' }, { value: 'strict', label: 'Strict' },
+              ]} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── SECTION 4: Custom Note ── */}
       <Card>
