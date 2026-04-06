@@ -827,8 +827,13 @@ export default function ProductImages() {
                   // Fetch final state and transition
                   const jobIds = Array.from(jobMap.values());
                   supabase.from('generation_queue').select('id, status, result').in('id', jobIds).then(({ data }) => {
-                    const productMap = new Map<string, string>();
-                    for (const [key, jobId] of jobMap.entries()) productMap.set(jobId, key.split('_')[0]);
+                    const productMap = new Map<string, { productId: string; sceneName: string }>();
+                    for (const [key, jobId] of jobMap.entries()) {
+                      const parts = key.split('_');
+                      const sceneId = parts[1] || '';
+                      const scene = selectedScenes.find(s => s.id === sceneId);
+                      productMap.set(jobId, { productId: parts[0], sceneName: scene?.title || 'Scene' });
+                    }
                     finishWithResults(data || [], productMap);
                   });
                 }}

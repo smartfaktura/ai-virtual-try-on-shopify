@@ -9,8 +9,13 @@ import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 
+interface ResultImage {
+  url: string;
+  sceneName: string;
+}
+
 interface Step6Props {
-  results: Map<string, { images: string[]; productName: string }>;
+  results: Map<string, { images: ResultImage[]; productName: string }>;
   onGenerateMore: () => void;
   onGoToLibrary: () => void;
 }
@@ -24,8 +29,8 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   const allImages = Array.from(results.values()).flatMap(r => r.images);
   const totalImages = allImages.length;
 
-  const openLightbox = (images: string[], idx: number) => {
-    setLightboxImages(images);
+  const openLightbox = (images: ResultImage[], idx: number) => {
+    setLightboxImages(images.map(i => i.url));
     setLightboxIndex(idx);
     setLightboxOpen(true);
   };
@@ -36,8 +41,8 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     try {
       const dropImages: DropImage[] = [];
       for (const [, { images, productName }] of results.entries()) {
-        for (const url of images) {
-          dropImages.push({ url, workflow_name: 'Product Images', product_title: productName });
+        for (const img of images) {
+          dropImages.push({ url: img.url, workflow_name: 'Product Images', product_title: productName });
         }
       }
       await downloadDropAsZip(dropImages, 'Product_Images');
@@ -67,18 +72,21 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
             <Badge variant="secondary" className="text-[10px]">{images.length} images</Badge>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {images.map((url, i) => (
+            {images.map((img, i) => (
               <button
                 key={i}
                 onClick={() => openLightbox(images, i)}
                 className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group"
               >
-                <div className="aspect-[4/5] bg-white overflow-hidden">
+                <div className="aspect-square bg-muted/30 overflow-hidden">
                   <ShimmerImage
-                    src={url}
-                    alt={`${productName} - ${i + 1}`}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    src={img.url}
+                    alt={`${productName} - ${img.sceneName} - ${i + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
+                </div>
+                <div className="px-2 py-1.5 bg-card border-t border-border">
+                  <p className="text-[10px] text-muted-foreground truncate">{img.sceneName}</p>
                 </div>
               </button>
             ))}
