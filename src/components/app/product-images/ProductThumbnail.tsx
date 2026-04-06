@@ -20,11 +20,11 @@ export function ProductThumbnail({ imageUrl, alt, size = 'md', className }: Prod
   const optimizeWidth = size === 'sm' ? 64 : size === 'md' ? 112 : 160;
 
   return (
-    <div className={cn(sizeClass, 'rounded-lg overflow-hidden bg-white border border-border/40 flex-shrink-0 p-0.5', className)}>
+    <div className={cn(sizeClass, 'rounded-lg overflow-hidden bg-white border border-border/40 flex-shrink-0', className)}>
       <ShimmerImage
         src={getOptimizedUrl(imageUrl, { width: optimizeWidth, quality: 70 })}
         alt={alt}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-cover"
       />
     </div>
   );
