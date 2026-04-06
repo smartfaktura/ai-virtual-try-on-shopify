@@ -1137,6 +1137,53 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
    ══════════════════════════════════════════════ */
 
 function InlinePersonDetails({ details, update }: { details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
+  const [stylingOpen, setStylingOpen] = useState(false);
+  return (
+    <div className="space-y-3">
+      {/* Appearance group — open by default */}
+      <div className="space-y-2">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
+            { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
+          ]} />
+          <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
+            { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
+          ]} />
+          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
+            { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'deep', label: 'Deep' }, { value: 'auto', label: 'Auto' },
+          ]} />
+          <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
+            { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
+          ]} />
+        </div>
+      </div>
+
+      {/* Styling Details group — collapsed by default */}
+      <Collapsible open={stylingOpen} onOpenChange={setStylingOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer">
+          <ChevronRight className={cn('w-3 h-3 transition-transform', stylingOpen && 'rotate-90')} />
+          Styling Details
+          <span className="text-[9px] font-normal normal-case text-muted-foreground/60">hands, nails, jewelry</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
+            <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
+              { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
+              { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+            ]} />
+            <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
+              { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
+            ]} />
+            <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
+              { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
+            ]} />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/50">
       <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
