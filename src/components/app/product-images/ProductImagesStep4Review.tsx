@@ -40,7 +40,7 @@ function friendlyLabel(val: string | undefined): string {
   return AESTHETIC_LABELS[val] || val.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
-export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, creditsPerImage, balance, onEditStep }: Step4Props) {
+export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep }: Step4Props) {
   const selectedScenes = ALL_SCENES.filter(s => selectedSceneIds.has(s.id));
   const imageCount = parseInt(details.imageCount || '1', 10);
   const totalImages = selectedProducts.length * selectedScenes.length * imageCount;

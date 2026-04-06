@@ -138,6 +138,17 @@ export default function ProductImages() {
     return selectedProducts[0]?.product_type || undefined;
   }, [selectedProducts]);
 
+  // Memoize hasMultipleCategories
+  const hasMultipleCategories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const p of selectedProducts) {
+      const analysis = p.analysis_json as any;
+      if (analysis?.category) cats.add(analysis.category);
+      else cats.add(p.product_type || 'other');
+    }
+    return cats.size > 1;
+  }, [selectedProducts]);
+
   // Check for last-used settings when entering Refine step
   useEffect(() => {
     if (step === 3 && primaryCategory) {
