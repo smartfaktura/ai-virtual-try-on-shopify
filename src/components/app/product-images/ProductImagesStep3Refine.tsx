@@ -481,7 +481,7 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
       return (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <ChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
+            <MultiChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
               { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
             ]} />
             <ChipSelector label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
