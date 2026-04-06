@@ -1292,9 +1292,9 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
-          {/* Quick Background strip */}
+          {/* Quick Background + Advanced strip */}
           {showBgStrip && (
-            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
@@ -1313,6 +1313,39 @@ export function ProductImagesStep3Refine({
                   </div>
                 ))}
               </div>
+
+              {/* Advanced details toggle */}
+              {(() => {
+                // Compute which controls 2+ scenes share
+                const controlCounts = new Map<TemplateControlKey, number>();
+                for (const s of selectedScenes) {
+                  for (const c of getTemplateControls(s)) {
+                    if (c !== 'background') controlCounts.set(c, (controlCounts.get(c) || 0) + 1);
+                  }
+                }
+                const sharedControls = Array.from(controlCounts.entries())
+                  .filter(([, count]) => count >= 2)
+                  .map(([key]) => key);
+
+                if (sharedControls.length === 0) return null;
+
+                return (
+                  <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                    <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer pt-1 border-t border-border/30 w-full">
+                      <Settings2 className="w-3 h-3" />
+                      <span>Advanced details</span>
+                      <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', advancedOpen && 'rotate-180')} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        {sharedControls.map(ctrl => (
+                          <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })()}
             </div>
           )}
 
