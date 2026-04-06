@@ -74,6 +74,8 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     preview_image_url: null,
     is_active: true,
     sort_order: 999,
+    sub_category: null,
+    category_sort_order: 0,
   };
 }
 
