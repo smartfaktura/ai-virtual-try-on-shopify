@@ -238,6 +238,53 @@ function ChipSelector({ label, value, onChange, options }: {
   );
 }
 
+/** Multi-select chip selector — stores comma-separated values in a single string field */
+function MultiChipSelector({ label, value, onChange, options }: {
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string; icon?: React.ReactNode }[];
+}) {
+  const selected = useMemo(() => new Set((value || '').split(',').filter(Boolean)), [value]);
+  const toggle = (v: string) => {
+    const next = new Set(selected);
+    if (next.has(v)) next.delete(v); else next.add(v);
+    onChange(Array.from(next).join(','));
+  };
+  return (
+    <div className="space-y-2">
+      {label && (
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs font-medium">{label}</Label>
+          {selected.size > 1 && (
+            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-bold">
+              ×{selected.size}
+            </Badge>
+          )}
+        </div>
+      )}
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(o => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => toggle(o.value)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
+              selected.has(o.value)
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+            )}
+          >
+            {o.icon}
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RatioShape({ ratio }: { ratio: string }) {
   const size = 14;
   const shapes: Record<string, { w: number; h: number }> = {
@@ -371,7 +418,7 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
     case 'background':
       return (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <ChipSelector label="Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
+          <MultiChipSelector label="Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
             { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' }, { value: 'warm-neutral', label: 'Warm Neutral' },
             { value: 'cool-neutral', label: 'Cool Neutral' }, { value: 'gradient', label: 'Soft Gradient' },
           ]} />
@@ -402,11 +449,11 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
     case 'sceneEnvironment':
       return (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <ChipSelector label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
+          <MultiChipSelector label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
             { value: 'bathroom', label: 'Bathroom' }, { value: 'kitchen', label: 'Kitchen' }, { value: 'living-room', label: 'Living Room' },
             { value: 'desk', label: 'Desk / Workspace' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'shelf', label: 'Shelf / Display' },
           ]} />
-          <ChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
+          <MultiChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
             { value: 'marble', label: 'Marble' }, { value: 'wood', label: 'Wood' }, { value: 'concrete', label: 'Concrete' },
             { value: 'fabric', label: 'Fabric / Linen' }, { value: 'glass', label: 'Glass' },
           ]} />
@@ -434,7 +481,7 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
       return (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <ChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
+            <MultiChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
               { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
             ]} />
             <ChipSelector label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[

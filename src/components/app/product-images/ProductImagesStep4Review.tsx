@@ -9,6 +9,7 @@ import { ALL_SCENES } from './sceneData';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
+import { computeTotalImages } from '@/lib/sceneVariations';
 import type { UserProduct, DetailSettings, ProductImageScene } from './types';
 
 /* ── Chip Selector (local) ── */
@@ -77,7 +78,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   }, [details, onDetailsChange]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
-  const totalImages = selectedProducts.length * selectedScenes.length * imageCount;
+  const totalImages = computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const quality = details.quality || 'high';
   const costPerImage = quality === 'standard' ? 3 : 6;
   const totalCredits = totalImages * costPerImage;
