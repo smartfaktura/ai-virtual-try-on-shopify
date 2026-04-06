@@ -82,6 +82,8 @@ export default function ProductImages() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(new Set());
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
+  const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
+  const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Load models for Refine step
