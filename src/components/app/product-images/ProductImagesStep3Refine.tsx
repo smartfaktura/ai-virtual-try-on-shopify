@@ -1599,7 +1599,7 @@ export function ProductImagesStep3Refine({
     // If scene needs model and none selected, auto-open Outfit section instead
     const scene = selectedScenes.find(s => s.id === id);
     if (scene && !details.selectedModelId) {
-      const needsModelForScene = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+      const needsModelForScene = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
       if (needsModelForScene) {
         scrollToOutfit();
         return;
