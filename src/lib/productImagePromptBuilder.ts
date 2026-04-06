@@ -840,6 +840,10 @@ export function buildDynamicPrompt(
   injectIfMissing('styling density', 'stylingDensityDirective', true);
   injectIfMissing('prominence', 'productProminenceDirective', true);
   injectIfMissing('body framing', 'bodyFramingDirective');
+  // Outfit + person directives: inject for ALL scenes (not global-only)
+  // so every on-model scene gets consistent outfit even if template forgot the token
+  injectIfMissing('outfit lock', 'outfitDirective', false);
+  injectIfMissing('model:', 'personDirective', false);
 
   // Prepend reference isolation instruction BEFORE cleanup so it appears early
   prompt = REFERENCE_ISOLATION + ' ' + prompt;
