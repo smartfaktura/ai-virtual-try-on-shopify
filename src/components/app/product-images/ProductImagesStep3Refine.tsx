@@ -132,9 +132,12 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
             ))}
           </div>
           {filteredGlobal.length > INLINE_LIMIT && (
-            <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}>
+            <button
+              className="mt-2 w-full text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer py-2 hover:underline underline-offset-4"
+              onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}
+            >
               View all {filteredGlobal.length} models →
-            </Button>
+            </button>
           )}
         </div>
       )}
