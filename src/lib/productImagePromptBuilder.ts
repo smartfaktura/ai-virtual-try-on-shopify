@@ -558,7 +558,7 @@ function resolveFocusArea(d: DetailSettings, scene: ProductImageScene): string {
 // ── Negative prompt builder ──
 function buildNegativePrompt(scene: ProductImageScene): string {
   const parts = [BASE_NEGATIVES, PRODUCT_NEGATIVES];
-  const hasPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+  const hasPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
   if (hasPerson) parts.push(PERSON_NEGATIVES);
   return parts.join(' ');
 }
