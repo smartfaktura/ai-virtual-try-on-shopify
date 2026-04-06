@@ -48,21 +48,8 @@ const STEP_DEFS = [
   { number: 6, label: 'Results', icon: CheckCircle },
 ];
 
-// Map detail block keys to the detail settings fields they own
-const BLOCK_FIELD_MAP: Record<string, (keyof DetailSettings)[]> = {
-  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
-  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
-  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
-  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
-  actionDetails: ['actionType', 'actionIntensity'],
-  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
-  angleSelection: ['requestedViews', 'numberOfViews'],
-  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
-  productSize: ['productSize'],
-  branding: ['brandingVisibility'],
-  layout: ['layoutSpace'],
-  consistency: ['consistency'],
-};
+// Import centralized BLOCK_FIELD_MAP
+import { BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
 
 export default function ProductImages() {
   const navigate = useNavigate();
