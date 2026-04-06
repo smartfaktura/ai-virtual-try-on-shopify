@@ -613,7 +613,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
-      return buildPersonDirective(details, cat, needsPerson);
+      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
@@ -621,7 +621,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const outfit = buildOutfitDirective(details);
       if (outfit) return outfit;
       const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat, details) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
