@@ -1234,7 +1234,7 @@ function PieceField({ label, piece, onChange, pieceType }: {
             <button key={g} type="button" onClick={() => updateField('garment', g)}
               className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                 current.garment === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-              )}>{g}</button>
+              )}><span className="capitalize">{g}</span></button>
           ))}
           {hasMore && !showAllGarments && (
             <button type="button" onClick={() => setShowAllGarments(true)}
