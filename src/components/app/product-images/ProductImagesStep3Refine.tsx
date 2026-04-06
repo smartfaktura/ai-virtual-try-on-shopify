@@ -484,6 +484,85 @@ const BLOCK_LABELS: Record<string, { title: string }> = {
 
 
 /* ══════════════════════════════════════════════
+   Template-derived controls helper
+   ══════════════════════════════════════════════ */
+
+type TemplateControlKey = 'lighting' | 'shadow' | 'mood' | 'surface' | 'background' | 'accent' | 'productProminence';
+
+function getTemplateControls(scene: ProductImageScene): TemplateControlKey[] {
+  const t = scene.promptTemplate || '';
+  const controls: TemplateControlKey[] = [];
+  if (t.includes('{{lightingDirective}}')) controls.push('lighting');
+  if (t.includes('{{shadowDirective}}')) controls.push('shadow');
+  if (t.includes('{{moodDirective}}')) controls.push('mood');
+  if (t.includes('{{surfaceDirective}}')) controls.push('surface');
+  if (t.includes('{{background}}')) controls.push('background');
+  if (t.includes('{{accentDirective}}') || t.includes('{{accentColorDirective}}')) controls.push('accent');
+  if (t.includes('{{productProminenceDirective}}')) controls.push('productProminence');
+  return controls;
+}
+
+const TEMPLATE_CONTROL_LABELS: Record<TemplateControlKey, string> = {
+  lighting: 'Lighting',
+  shadow: 'Shadow',
+  mood: 'Styling direction',
+  surface: 'Surface',
+  background: 'Background family',
+  accent: 'Accent color',
+  productProminence: 'Product prominence',
+};
+
+function TemplateControlChips({ controlKey, details, update }: {
+  controlKey: TemplateControlKey;
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+}) {
+  switch (controlKey) {
+    case 'lighting':
+      return <ChipSelector label="Lighting" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
+        { value: 'soft-diffused', label: 'Soft diffused' }, { value: 'warm-editorial', label: 'Warm editorial' },
+        { value: 'crisp-studio', label: 'Crisp studio' }, { value: 'natural-daylight', label: 'Natural daylight' },
+        { value: 'side-lit', label: 'Side-lit premium' },
+      ]} />;
+    case 'shadow':
+      return <ChipSelector label="Shadow" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
+        { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft' },
+        { value: 'natural', label: 'Natural' }, { value: 'defined', label: 'Defined' },
+      ]} />;
+    case 'mood':
+      return <ChipSelector label="Styling direction" value={details.mood} onChange={v => update({ mood: v })} options={[
+        { value: 'minimal-luxury', label: 'Minimal luxury' }, { value: 'clean-commercial', label: 'Clean commercial' },
+        { value: 'fashion-editorial', label: 'Fashion editorial' }, { value: 'beauty-clean', label: 'Beauty clean' },
+        { value: 'organic-natural', label: 'Organic natural' }, { value: 'modern-sleek', label: 'Modern sleek' },
+        { value: 'auto', label: 'Auto from product' },
+      ]} />;
+    case 'surface':
+      return <ChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
+        { value: 'minimal-studio', label: 'Minimal studio' }, { value: 'stone-plaster', label: 'Stone / plaster' },
+        { value: 'warm-wood', label: 'Warm wood' }, { value: 'fabric', label: 'Fabric / drape' },
+        { value: 'glossy', label: 'Glossy clean' }, { value: 'auto', label: 'Auto from product' },
+      ]} />;
+    case 'background':
+      return <ChipSelector label="Background family" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
+        { value: 'pure-white', label: 'Pure white' }, { value: 'soft-white', label: 'Soft white' },
+        { value: 'light-grey', label: 'Light grey' }, { value: 'warm-beige', label: 'Warm beige' },
+        { value: 'taupe', label: 'Taupe' }, { value: 'stone', label: 'Stone' }, { value: 'auto', label: 'Auto' },
+      ]} />;
+    case 'accent':
+      return <ChipSelector label="Accent color" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
+        { value: 'product-accent', label: 'Use product accent' }, { value: 'none', label: 'None' },
+        { value: 'brand-accent', label: 'Use brand accent' }, { value: 'custom', label: 'Custom hex' },
+        { value: 'subtle', label: 'Subtle accent' }, { value: 'strong', label: 'Strong accent' },
+      ]} />;
+    case 'productProminence':
+      return <ChipSelector label="Product prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
+        { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
+      ]} />;
+    default: return null;
+  }
+}
+
+/* ══════════════════════════════════════════════
    Constants
    ══════════════════════════════════════════════ */
 
@@ -1010,7 +1089,7 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
-  const [aestheticOpen, setAestheticOpen] = useState(false);
+  // Removed: aestheticOpen state (Global Style section deleted)
   const [outfitOpen, setOutfitOpen] = useState(false);
   const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
@@ -1081,30 +1160,28 @@ export function ProductImagesStep3Refine({
     return model?.gender;
   }, [details.selectedModelId, allModels]);
 
-  // Helper: get block labels for a scene
+  // Helper: get block labels for a scene (including template-derived ones)
   const getSceneBlockLabels = (scene: ProductImageScene) => {
     const labels = scene.triggerBlocks
       .filter(b => b !== 'personDetails' && b !== 'customNote' && b !== 'consistency')
       .map(b => BLOCK_LABELS[b]?.title)
       .filter(Boolean);
+    // Add template-derived control labels
+    const templateCtrls = getTemplateControls(scene);
+    for (const ctrl of templateCtrls) {
+      const lbl = TEMPLATE_CONTROL_LABELS[ctrl];
+      if (lbl && !labels.includes(lbl)) labels.push(lbl);
+    }
     return labels;
   };
 
-  // Check if a scene card has been customized
-  const isSceneCustomized = (scene: ProductImageScene) => {
+  // Check if a scene has any expandable controls (blocks or template controls)
+  const sceneHasControls = (scene: ProductImageScene) => {
     const group = sceneGroups.find(g => g.sceneId === scene.id);
-    if (!group) return false;
-    return group.blocks.some(bk => {
-      const fields = BLOCK_FIELD_MAP[bk] || [];
-      return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
-    });
+    const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+    const templateCtrls = getTemplateControls(scene);
+    return sceneBlocks.length > 0 || templateCtrls.length > 0;
   };
-
-  // Scenes that DON'T have scene-specific overrides (for global style thumbs)
-  const globalInheritScenes = useMemo(() => {
-    const sceneSpecificIds = new Set(sceneGroups.map(g => g.sceneId));
-    return selectedScenes.filter(s => !sceneSpecificIds.has(s.id) || s.triggerBlocks.length <= 1);
-  }, [selectedScenes, sceneGroups]);
 
   return (
     <div className="space-y-5 pb-20">
@@ -1189,16 +1266,26 @@ export function ProductImagesStep3Refine({
             <Camera className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold">Your scenes</span>
             <span className="text-[10px] text-muted-foreground">{selectedScenes.length} selected — tap to fine-tune</span>
+            <div className="ml-auto">
+              <AutoAestheticButton details={details} update={update} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {selectedScenes.map(scene => {
               const isExpanded = expandedSceneId === scene.id;
               const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
-              const customized = isSceneCustomized(scene);
               const blockLabels = getSceneBlockLabels(scene);
               const group = sceneGroups.find(g => g.sceneId === scene.id);
               const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+              const templateCtrls = getTemplateControls(scene);
+              const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+
+              // Check if any template control has a non-default value
+              const hasCustomizations = sceneBlocks.some(bk => {
+                const fields = BLOCK_FIELD_MAP[bk] || [];
+                return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
+              });
 
               return (
                 <div key={scene.id} className={cn(
@@ -1207,17 +1294,17 @@ export function ProductImagesStep3Refine({
                 )}>
                   <button
                     type="button"
-                    onClick={() => sceneBlocks.length > 0 ? toggleSceneExpand(scene.id) : undefined}
+                    onClick={() => hasControls ? toggleSceneExpand(scene.id) : undefined}
                     className={cn(
                       'w-full text-left rounded-xl border-2 p-2 transition-all',
                       isExpanded
                         ? 'border-primary bg-primary/[0.03]'
-                        : customized
+                        : hasCustomizations
                           ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50'
                           : sceneNeedsModel && needsModel
                             ? 'border-amber-400/40 hover:border-amber-400/60'
                             : 'border-border hover:border-primary/30',
-                      sceneBlocks.length > 0 ? 'cursor-pointer' : 'cursor-default',
+                      hasControls ? 'cursor-pointer' : 'cursor-default',
                     )}
                   >
                     <div className="flex items-start gap-2.5">
@@ -1233,7 +1320,7 @@ export function ProductImagesStep3Refine({
                       <div className="flex-1 min-w-0 py-0.5">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-semibold truncate">{scene.title}</span>
-                          {customized && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
+                          {hasCustomizations && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
                         </div>
                         {/* Status */}
                         <div className="flex items-center gap-1 mt-1">
@@ -1250,15 +1337,15 @@ export function ProductImagesStep3Refine({
                         {/* Configurable blocks hint */}
                         {blockLabels.length > 0 && !isExpanded && (
                           <p className="text-[9px] text-muted-foreground mt-0.5 truncate">
-                            {blockLabels.slice(0, 2).join(', ')}{blockLabels.length > 2 ? ` +${blockLabels.length - 2}` : ''}
+                            {blockLabels.slice(0, 3).join(', ')}{blockLabels.length > 3 ? ` +${blockLabels.length - 3}` : ''}
                           </p>
                         )}
-                        {sceneBlocks.length === 0 && (
+                        {!hasControls && (
                           <p className="text-[9px] text-muted-foreground/60 mt-0.5 italic">No extra settings</p>
                         )}
                       </div>
                       {/* Expand indicator */}
-                      {sceneBlocks.length > 0 && (
+                      {hasControls && (
                         <div className="flex-shrink-0 mt-1">
                           {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-primary" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                         </div>
@@ -1267,8 +1354,9 @@ export function ProductImagesStep3Refine({
                   </button>
 
                   {/* Inline expanded settings */}
-                  {isExpanded && sceneBlocks.length > 0 && (
+                  {isExpanded && hasControls && (
                     <div className="mt-2 rounded-xl border border-primary/20 bg-card p-4 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                      {/* Scene-specific block fields */}
                       {sceneBlocks.map(blockKey => {
                         const meta = BLOCK_LABELS[blockKey];
                         if (!meta) return null;
@@ -1279,6 +1367,22 @@ export function ProductImagesStep3Refine({
                           </div>
                         );
                       })}
+
+                      {/* Template-derived style controls */}
+                      {templateCtrls.length > 0 && (
+                        <div className="space-y-3 pt-2 border-t border-border/40">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Style</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {templateCtrls.map(ctrl => (
+                              <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                            ))}
+                          </div>
+                          {/* Custom hex panel for accent control */}
+                          {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                            <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1346,123 +1450,28 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── SECTION 3: Global Style ── */}
-      <Collapsible open={aestheticOpen} onOpenChange={setAestheticOpen}>
-        <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+      {/* ── SECTION 3: Consistency (if multi-product) ── */}
+      {productCount > 1 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Paintbrush className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Global Style</span>
-              <span className="text-[10px] text-muted-foreground">Default look for all scenes</span>
+              <Layers className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Consistency</span>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Scene thumbs that inherit global style */}
-              {!aestheticOpen && globalInheritScenes.length > 0 && (
-                <div className="hidden sm:flex items-center gap-1">
-                  {globalInheritScenes.slice(0, 4).map(s => (
-                    <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
-                      {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
-                    </div>
-                  ))}
-                  {globalInheritScenes.length > 4 && (
-                    <span className="text-[9px] text-muted-foreground">+{globalInheritScenes.length - 4}</span>
-                  )}
-                </div>
-              )}
-              {aestheticOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <Card className="mt-2 border-primary/10">
-            <CardContent className="p-4 space-y-4">
-              {/* Scene thumbnails showing which scenes inherit these */}
-              {selectedScenes.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] text-muted-foreground font-medium">Applies to:</span>
-                  <div className="flex gap-1.5">
-                    {selectedScenes.map(s => (
-                      <div key={s.id} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 border border-border/50">
-                        <div className="w-4 h-4 rounded bg-muted overflow-hidden flex-shrink-0">
-                          {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2 h-2 text-muted-foreground/40 m-auto" />}
-                        </div>
-                        <span className="text-[9px] text-muted-foreground truncate max-w-[60px]">{s.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[11px] text-muted-foreground italic">Default colors, lighting, and surfaces for your scenes. Smart defaults already applied.</p>
-              {/* Auto (Recommended) button */}
-              <AutoAestheticButton details={details} update={update} />
-
-              {hasMultipleCategories && (
-                <ChipSelector label="Aesthetic source" value={details.consistency || 'auto-balance'} onChange={v => update({ consistency: v })} options={[
-                  { value: 'auto-balance', label: 'Auto-balance across products' },
-                  { value: 'anchor-first', label: 'Use first product as anchor' },
-                  { value: 'manual', label: 'Let me choose manually' },
-                ]} />
-              )}
-
-              {productCount > 1 && !hasMultipleCategories && (
-                <ChipSelector label="Consistency across shots" value={details.consistency} onChange={v => update({ consistency: v })} options={[
-                  { value: 'natural', label: 'Natural' }, { value: 'strong', label: 'Strong' }, { value: 'strict', label: 'Strict' },
-                ]} />
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ChipSelector label="Color world" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
-                  { value: 'auto', label: 'Auto from product' }, { value: 'warm-neutral', label: 'Warm neutrals' },
-                  { value: 'cool-neutral', label: 'Cool neutrals' }, { value: 'monochrome', label: 'Soft monochrome' },
-                  { value: 'brand-led', label: 'Brand-led' },
-                ]} />
-
-                <ChipSelector label="Background family" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
-                  { value: 'pure-white', label: 'Pure white' }, { value: 'soft-white', label: 'Soft white' },
-                  { value: 'light-grey', label: 'Light grey' }, { value: 'warm-beige', label: 'Warm beige' },
-                  { value: 'taupe', label: 'Taupe' }, { value: 'stone', label: 'Stone' }, { value: 'auto', label: 'Auto' },
-                ]} />
-
-                <ChipSelector label="Surface / material" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
-                  { value: 'minimal-studio', label: 'Minimal studio' }, { value: 'stone-plaster', label: 'Stone / plaster' },
-                  { value: 'warm-wood', label: 'Warm wood' }, { value: 'fabric', label: 'Fabric / drape' },
-                  { value: 'glossy', label: 'Glossy clean' }, { value: 'auto', label: 'Auto from product' },
-                ]} />
-
-                <ChipSelector label="Lighting" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
-                  { value: 'soft-diffused', label: 'Soft diffused' }, { value: 'warm-editorial', label: 'Warm editorial' },
-                  { value: 'crisp-studio', label: 'Crisp studio' }, { value: 'natural-daylight', label: 'Natural daylight' },
-                  { value: 'side-lit', label: 'Side-lit premium' },
-                ]} />
-
-                <ChipSelector label="Shadow style" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
-                  { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft' },
-                  { value: 'natural', label: 'Natural' }, { value: 'defined', label: 'Defined' },
-                ]} />
-
-                <ChipSelector label="Styling direction" value={details.mood} onChange={v => update({ mood: v })} options={[
-                  { value: 'minimal-luxury', label: 'Minimal luxury' }, { value: 'clean-commercial', label: 'Clean commercial' },
-                  { value: 'fashion-editorial', label: 'Fashion editorial' }, { value: 'beauty-clean', label: 'Beauty clean' },
-                  { value: 'organic-natural', label: 'Organic natural' }, { value: 'modern-sleek', label: 'Modern sleek' },
-                  { value: 'auto', label: 'Auto from product' },
-                ]} />
-              </div>
-
-              <ChipSelector label="Accent color" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
-                { value: 'product-accent', label: 'Use product accent' }, { value: 'none', label: 'None' },
-                { value: 'brand-accent', label: 'Use brand accent' }, { value: 'custom', label: 'Custom hex' },
-                { value: 'subtle', label: 'Subtle accent' }, { value: 'strong', label: 'Strong accent' },
+            {hasMultipleCategories ? (
+              <ChipSelector label="Aesthetic source" value={details.consistency || 'auto-balance'} onChange={v => update({ consistency: v })} options={[
+                { value: 'auto-balance', label: 'Auto-balance across products' },
+                { value: 'anchor-first', label: 'Use first product as anchor' },
+                { value: 'manual', label: 'Let me choose manually' },
               ]} />
-
-              {/* Custom hex color panel */}
-              {(details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-              )}
-            </CardContent>
-          </Card>
-        </CollapsibleContent>
-      </Collapsible>
+            ) : (
+              <ChipSelector label="Consistency across shots" value={details.consistency} onChange={v => update({ consistency: v })} options={[
+                { value: 'natural', label: 'Natural' }, { value: 'strong', label: 'Strong' }, { value: 'strict', label: 'Strict' },
+              ]} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── SECTION 4: Custom Note ── */}
       <Card>
