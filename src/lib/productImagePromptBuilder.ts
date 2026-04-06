@@ -445,7 +445,7 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 }
 
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string): string {
   const parts: string[] = [];
   if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
   if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
@@ -459,7 +459,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
       const outfitStr = buildOutfitDirective(d);
-      directive += ` ${outfitStr || defaultOutfitDirective(category, d)}`;
+      directive += ` ${outfitStr || defaultOutfitDirective(category, d, gender)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
@@ -473,7 +473,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   if (outfitStr) {
     directive += ` ${outfitStr}`;
   } else if (sceneNeedsPerson) {
-    directive += ` ${defaultOutfitDirective(category, d)}`;
+    directive += ` ${defaultOutfitDirective(category, d, gender)}`;
   }
 
   // Append model reference if present
