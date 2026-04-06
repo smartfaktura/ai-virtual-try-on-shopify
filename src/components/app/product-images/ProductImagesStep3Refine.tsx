@@ -449,11 +449,11 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
     case 'sceneEnvironment':
       return (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <ChipSelector label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
+          <MultiChipSelector label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
             { value: 'bathroom', label: 'Bathroom' }, { value: 'kitchen', label: 'Kitchen' }, { value: 'living-room', label: 'Living Room' },
             { value: 'desk', label: 'Desk / Workspace' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'shelf', label: 'Shelf / Display' },
           ]} />
-          <ChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
+          <MultiChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
             { value: 'marble', label: 'Marble' }, { value: 'wood', label: 'Wood' }, { value: 'concrete', label: 'Concrete' },
             { value: 'fabric', label: 'Fabric / Linen' }, { value: 'glass', label: 'Glass' },
           ]} />
