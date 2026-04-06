@@ -283,7 +283,7 @@ export default function ProductImages() {
   }, [details.selectedModelId, userModelProfiles, globalModelProfiles]);
 
   // Build instruction from scene + details — use live analyses map instead of stale DB row
-  const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
+  const buildInstruction = useCallback((scene: typeof allScenes[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
     return buildDynamicPrompt(scene, product, analysis, details, selectedModelGender);
   }, [details, analyses, selectedModelGender]);
