@@ -402,25 +402,25 @@ export function buildStructuredOutfitString(config: OutfitConfig): string {
   const describePiece = (piece?: OutfitPiece): string => {
     if (!piece || !piece.garment) return '';
     const parts: string[] = [];
-    if (piece.fit) parts.push(piece.fit);
     if (piece.color) parts.push(piece.color);
     if (piece.material) parts.push(piece.material);
+    if (piece.fit) parts.push(`${piece.fit}-fit`);
     parts.push(piece.garment);
     return parts.join(' ');
   };
 
   const segments: string[] = [];
   const top = describePiece(config.top);
-  if (top) segments.push(top);
+  if (top) segments.push(`Top: ${top}`);
   const bottom = describePiece(config.bottom);
-  if (bottom) segments.push(bottom);
+  if (bottom) segments.push(`Bottom: ${bottom}`);
   const shoes = describePiece(config.shoes);
-  if (shoes) segments.push(shoes);
+  if (shoes) segments.push(`Shoes: ${shoes}`);
 
   if (segments.length === 0) return '';
-  const outfitStr = segments.join(', ');
+  const outfitStr = segments.join('; ');
   const accStr = config.accessories && config.accessories !== 'none' ? ` Accessories: ${config.accessories}.` : '';
-  return `Wearing ${outfitStr} — same outfit in every shot. Clothing must NOT compete with the product.${accStr}`;
+  return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials, same shoes. Clothing must NOT compete with the product.${accStr}`;
 }
 
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
