@@ -57,12 +57,15 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
               </div>
               <span className="text-[10px] font-medium text-muted-foreground">{STEP_LABELS[step]}</span>
             </div>
-            {totalCredits > 0 && (
+          {totalCredits > 0 && (
+            <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-muted border border-border">
                 <Coins className="w-3 h-3 text-primary" />
                 <span className={`font-bold ${canAfford ? 'text-foreground' : 'text-destructive'}`}>{totalCredits}</span>
               </div>
-            )}
+              {!canAfford && <span className="text-[10px] text-destructive font-medium">Not enough</span>}
+            </div>
+          )}
           </div>
           <div className="flex items-center gap-2">
             {step > 1 && step <= 4 && (
@@ -108,11 +111,14 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
             </div>
           </div>
 
-          {totalCredits > 0 && (
-            <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted border border-border">
-              <Coins className="w-3.5 h-3.5 text-primary" />
-              <span className={`font-bold ${canAfford ? 'text-foreground' : 'text-destructive'}`}>{totalCredits}</span>
-              <span className="text-muted-foreground">cr</span>
+        {totalCredits > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted border border-border">
+                <Coins className="w-3.5 h-3.5 text-primary" />
+                <span className={`font-bold ${canAfford ? 'text-foreground' : 'text-destructive'}`}>{totalCredits}</span>
+                <span className="text-muted-foreground">cr</span>
+              </div>
+              {!canAfford && <span className="text-xs text-destructive font-medium">Not enough credits</span>}
             </div>
           )}
 

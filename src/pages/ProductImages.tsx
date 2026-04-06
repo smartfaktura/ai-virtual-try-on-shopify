@@ -212,8 +212,7 @@ export default function ProductImages() {
   }, [lastSettingsCategory, details.aspectRatio, details.quality, details.imageCount]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
-  const quality = details.quality || 'high';
-  const creditsPerImage = quality === 'standard' ? 3 : 6;
+  const creditsPerImage = 6;
   const totalImages = computeTotalImages(selectedProducts.length, selectedScenes, imageCount, details);
   const totalCredits = totalImages * creditsPerImage;
   const canAfford = balance >= totalCredits;
@@ -390,7 +389,7 @@ export default function ProductImages() {
               ...(additionalProducts ? { additional_products: additionalProducts } : {}),
               ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
               ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-              quality,
+              quality: 'high',
               aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
               batch_id: batchId,
               scene_name: scene.title,
@@ -401,7 +400,7 @@ export default function ProductImages() {
             await paceDelay(newJobMap.size);
 
             const result = await enqueueWithRetry(
-              { jobType: 'workflow', payload, imageCount: 1, quality, hasModel: !!modelRef, hasScene: false, skipWake: true },
+              { jobType: 'workflow', payload, imageCount: 1, quality: 'high', hasModel: !!modelRef, hasScene: false, skipWake: true },
               token,
             );
 
@@ -417,7 +416,7 @@ export default function ProductImages() {
                 workflow_slug: 'product-images',
                 product_name: product.title,
                 job_type: 'workflow',
-                quality,
+                quality: 'high',
                 imageCount: 1,
                 batch_id: batchId,
               });
@@ -457,7 +456,7 @@ export default function ProductImages() {
     } catch {}
 
     startPolling(newJobMap);
-  }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
+  }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
   const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string }>) => {
     const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>();
