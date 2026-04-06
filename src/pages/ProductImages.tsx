@@ -687,6 +687,13 @@ export default function ProductImages() {
                   }
                   return cats.size > 1;
                 })()}
+                primaryCategory={(() => {
+                  for (const p of selectedProducts) {
+                    const analysis = p.analysis_json as any;
+                    if (analysis?.category) return analysis.category as string;
+                  }
+                  return selectedProducts[0]?.product_type || undefined;
+                })()}
               />
             )}
 
