@@ -1,43 +1,76 @@
 
 
-# Debug Report: Product Images — Issues Found & Fixes
+# Multi-Select Settings → Extra Variations
 
-## Bug 1: `hasMultipleCategories` uses raw `product_type` instead of resolved category IDs
+## What this changes
 
-**File:** `src/pages/ProductImages.tsx` (lines 154-162)
+Currently, settings like Packaging State, Background Tone, Environment, and Surface are single-select. The user wants to select multiple values (e.g., all 3 packaging states) and have each selection generate as a separate image, with credits counting accordingly.
 
-The `hasMultipleCategories` memo falls back to `p.product_type || 'other'` when `analysis_json` is missing, producing raw strings like `"bag"` instead of `"bags-accessories"`. Two products with types "bag" and "handbag" would show as 2 categories when they're actually the same (`bags-accessories`).
+## Design approach
 
-**Fix:** Apply the same `CATEGORY_KEYWORDS` keyword fallback used in `primaryCategory` — resolve each product's category to a proper ID before counting unique values.
+Rather than converting every `DetailSettings` field from `string` to `string[]` (which would break the entire prompt builder, review UI, and generation pipeline), we introduce a **"scene variation multiplier"** system. Specific fields are marked as multi-selectable, and the generation loop expands each combination into separate jobs.
 
-## Bug 2: Missing outfit defaults for `hats-small`, `home-decor`, `tech-devices`, `food-beverage`, `supplements-wellness`
+## Changes
 
-**File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx` (line 845-875)
+### 1. Add `MultiChipSelector` component
+**File:** `ProductImagesStep3Refine.tsx`
 
-`CATEGORY_OUTFIT_CONFIG_DEFAULTS` only has entries for 6 categories. Products in `hats-small` (hats, jewelry, watches) have person-based scenes but `getBuiltInPresets` returns `[]` because there's no default config. No fashion presets show up.
+A new component alongside `ChipSelector` that stores selections as comma-separated strings (e.g., `"sealed,open,both"`). This avoids changing the `DetailSettings` type from `string` to `string[]`.
 
-**Fix:** Add outfit defaults for `hats-small` (accessories-appropriate clothing). Categories like `home-decor`, `tech-devices`, `food-beverage` typically don't have person scenes, so they can share a generic fallback.
+- Visually identical to `ChipSelector` but allows multiple active chips
+- Shows a small `+N` badge when multiple are selected
 
-## Bug 3: `outfitOpen` initial state computed once — stale if model selected later
+### 2. Convert these fields to multi-select
+**File:** `ProductImagesStep3Refine.tsx` (BlockFields function)
 
-**File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx` (line 1346)
+| Field | Block | Current | New behavior |
+|---|---|---|---|
+| `packagingState` | packagingDetails | single | multi-select, each value = extra image |
+| `backgroundTone` | background (per-scene) | single | multi-select for per-scene tone |
+| `environmentType` | sceneEnvironment | single | multi-select (bathroom + kitchen = 2 images) |
+| `surfaceType` | sceneEnvironment | single | multi-select |
 
-`outfitOpen` is `useState(needsModel || hasPersonBlock)` — computed once on mount. If a user deselects their model (making `needsModel` true again), the section stays collapsed because `useState` only uses the initial value. Not a critical bug but a UX gap.
+The global `BackgroundSwatchSelector` stays single-select (it sets the default for all scenes). Multi-select only applies within a scene's expanded panel.
 
-**Fix:** No change needed — the model-needed banner's "Select" button already calls `scrollToOutfit()` which opens it. Current behavior is acceptable.
+### 3. Update credit calculation
+**File:** `ProductImagesStep3Refine.tsx` + `ProductImagesStep4Review.tsx`
 
-## Bug 4: `isPresetActive` checks `name` key on OutfitConfig — always fails
+Currently: `totalImages = productCount × sceneCount × imgCount`
 
-**File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx` (line 1079)
+New: For each scene, count the variation multiplier from multi-select fields. A scene with 3 packaging states selected = 3× images for that scene.
 
-`const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories', 'name']` — `name` is not a key on `OutfitConfig` (it exists on `OutfitPreset`, not `OutfitConfig`). This means `currentConfig['name']` is always `undefined` and `presetConfig['name']` is also `undefined`, so it coincidentally passes. Not a runtime error but incorrect and fragile.
+Add a helper: `getSceneMultiplier(sceneId, details) → number` that parses comma-separated multi-select fields relevant to that scene's `triggerBlocks` and returns the product of their counts.
 
-**Fix:** Remove `'name'` from the keys array.
+### 4. Update generation loop
+**File:** `ProductImages.tsx` (`handleGenerate`)
 
-## Summary of Changes
+When iterating scenes, expand multi-select fields into separate jobs. For each scene, compute the combinations from its multi-select fields and create one job per combination, each with the specific value injected into the prompt.
+
+```
+// Pseudocode
+for scene of selectedScenes:
+  variations = expandMultiSelects(scene, details)  // e.g., [{packagingState:'sealed'}, {packagingState:'open'}]
+  for variation of variations:
+    for i of imgCount:
+      enqueue job with merged details
+```
+
+### 5. Update prompt builder
+**File:** `productImagePromptBuilder.ts`
+
+No changes needed — `buildDynamicPrompt` already reads single values from `details`. The generation loop will pass a copy of `details` with the specific single value for each variation.
+
+### 6. Update sticky bar credit display
+**File:** `ProductImagesStickyBar.tsx`
+
+Pass the new multiplier-aware total into the sticky bar so the credit count updates live as users toggle multiple options.
+
+## Files
 
 | File | Changes |
 |---|---|
-| `ProductImages.tsx` | Fix `hasMultipleCategories` to use keyword-resolved category IDs |
-| `ProductImagesStep3Refine.tsx` | Add `hats-small` outfit defaults + male overrides; remove `'name'` from `isPresetActive` keys |
+| `ProductImagesStep3Refine.tsx` | Add `MultiChipSelector`, convert 4 fields, add `getSceneMultiplier` helper, update credit calc |
+| `ProductImagesStep4Review.tsx` | Update total image/credit calculation to use multiplier |
+| `ProductImages.tsx` | Expand generation loop to create separate jobs per multi-select combination |
+| `ProductImagesStickyBar.tsx` | Accept multiplier-aware totals |
 
