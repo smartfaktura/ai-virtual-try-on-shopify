@@ -447,12 +447,16 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 // ── Person directive builder (skips auto values) ──
 function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string): string {
   const parts: string[] = [];
-  if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
-  if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
-  if (!isAuto(d.skinTone)) parts.push(`${d.skinTone} skin tone`);
-  if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
-  if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
-  if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
+  // When a specific model is selected, skip user-set person details (age, skin, expression etc.)
+  // — those fields are hidden in the UI and shouldn't leak into the prompt
+  if (!d.selectedModelId) {
+    if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
+    if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
+    if (!isAuto(d.skinTone)) parts.push(`${d.skinTone} skin tone`);
+    if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
+    if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
+    if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
+  }
 
   if (parts.length === 0) {
     // No person details set — use smart defaults if scene requires a person
