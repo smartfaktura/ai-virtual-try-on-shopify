@@ -761,6 +761,7 @@ export function buildDynamicPrompt(
   product: { title: string; product_type?: string; description?: string; dimensions?: string | null },
   analysis: ProductAnalysis | null,
   details: DetailSettings,
+  modelGender?: string,
 ): string {
   const template = scene.promptTemplate;
 
@@ -771,6 +772,7 @@ export function buildDynamicPrompt(
     analysis,
     details,
     selectedModelId: details.selectedModelId,
+    modelGender,
     scene,
   };
 
