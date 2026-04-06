@@ -1160,6 +1160,9 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
 function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
   let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
   if (!base) return [];
+  // Ensure complete outfit for all categories
+  if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
+  if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };
   // Apply gender overrides so presets match the user's model gender
   if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
     base = { ...base, ...MALE_OUTFIT_OVERRIDES[category] };
