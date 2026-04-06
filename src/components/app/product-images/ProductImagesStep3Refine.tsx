@@ -796,9 +796,44 @@ const GARMENT_OPTIONS: Record<string, string[]> = {
   bottom: ['trousers', 'chinos', 'jeans', 'skirt', 'shorts', 'leggings', 'wide-leg pants'],
   shoes: ['sneakers', 'ankle boots', 'heels', 'loafers', 'sandals', 'mules', 'flats'],
 };
-const COLOR_OPTIONS = ['white', 'black', 'beige', 'navy', 'cream', 'gray', 'brown', 'olive', 'blush', 'camel'];
+const COLOR_OPTIONS = ['white', 'black', 'beige', 'navy', 'cream', 'gray', 'brown', 'olive', 'blush', 'camel', 'charcoal', 'burgundy'];
+
+/* Color swatch hex map for visual color dots */
+const COLOR_HEX: Record<string, string> = {
+  white: '#FFFFFF', black: '#1A1A1A', cream: '#FFFDD0', beige: '#F5F0E1',
+  navy: '#1B2A4A', gray: '#9CA3AF', brown: '#6B4226', olive: '#556B2F',
+  blush: '#DE98AB', camel: '#C19A6B', charcoal: '#36454F', burgundy: '#722F37',
+};
+
+/* Skin tone indicator colors */
+const SKIN_TONE_HEX: Record<string, string> = {
+  light: '#FADCB8', medium: '#C68642', deep: '#5C3317',
+};
+
 const FIT_OPTIONS = ['slim', 'relaxed', 'cropped', 'fitted', 'oversized', 'tailored', 'regular'];
 const MATERIAL_OPTIONS = ['cotton', 'silk', 'linen', 'denim', 'leather', 'wool', 'cashmere', 'knit', 'satin'];
+
+/* ── Color Dot ── */
+function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; hex?: string }) {
+  const bg = hex || (color ? COLOR_HEX[color] || '#D1D5DB' : '#D1D5DB');
+  const isBright = color === 'white' || color === 'cream';
+  return (
+    <span
+      className={cn('rounded-full inline-block flex-shrink-0', isBright && 'border border-border')}
+      style={{ width: size, height: size, backgroundColor: bg }}
+    />
+  );
+}
+
+/* ── Preset Color Summary (3 dots) ── */
+function PresetColorDots({ config }: { config: OutfitConfig }) {
+  const dots = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      {dots.map((c, i) => <ColorDot key={i} color={c} size={8} />)}
+    </div>
+  );
+}
 
 const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
   garments: {
@@ -896,58 +931,77 @@ function PieceField({ label, piece, onChange, pieceType }: {
 }) {
   const garments = GARMENT_OPTIONS[pieceType] || [];
   const current = piece || { garment: '', color: '', fit: '', material: '' };
+  const [showAllGarments, setShowAllGarments] = useState(false);
 
   const updateField = (field: keyof OutfitPiece, value: string) => {
     onChange({ ...current, [field]: value === current[field] ? '' : value });
   };
 
+  const INLINE_GARMENT_LIMIT = 5;
+  const visibleGarments = showAllGarments ? garments : garments.slice(0, INLINE_GARMENT_LIMIT);
+  const hasMore = garments.length > INLINE_GARMENT_LIMIT;
+
   return (
-    <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-        <Shirt className="w-3 h-3" />{label}
+    <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <Shirt className="w-3.5 h-3.5" />{label}
       </span>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Garment</Label>
-          <div className="flex flex-wrap gap-1">
-            {garments.slice(0, 6).map(g => (
-              <button key={g} type="button" onClick={() => updateField('garment', g)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
-                  current.garment === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-                )}>{g}</button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Color</Label>
-          <div className="flex flex-wrap gap-1">
-            {COLOR_OPTIONS.slice(0, 6).map(c => (
-              <button key={c} type="button" onClick={() => updateField('color', c)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
-                  current.color === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-                )}>{c}</button>
-            ))}
-          </div>
+
+      {/* Garment */}
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground font-medium">Garment</Label>
+        <div className="flex flex-wrap gap-2">
+          {visibleGarments.map(g => (
+            <button key={g} type="button" onClick={() => updateField('garment', g)}
+              className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
+                current.garment === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+              )}>{g}</button>
+          ))}
+          {hasMore && !showAllGarments && (
+            <button type="button" onClick={() => setShowAllGarments(true)}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer">
+              More…
+            </button>
+          )}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Fit</Label>
-          <div className="flex flex-wrap gap-1">
-            {FIT_OPTIONS.slice(0, 5).map(f => (
+
+      {/* Color swatches */}
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground font-medium">Color</Label>
+        <div className="flex flex-wrap gap-2">
+          {COLOR_OPTIONS.map(c => (
+            <button key={c} type="button" onClick={() => updateField('color', c)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
+                current.color === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+              )}>
+              <ColorDot color={c} size={12} />
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Fit + Material */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground font-medium">Fit</Label>
+          <div className="flex flex-wrap gap-2">
+            {FIT_OPTIONS.map(f => (
               <button key={f} type="button" onClick={() => updateField('fit', f)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   current.fit === f ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
                 )}>{f}</button>
             ))}
           </div>
         </div>
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Material</Label>
-          <div className="flex flex-wrap gap-1">
-            {MATERIAL_OPTIONS.slice(0, 5).map(m => (
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground font-medium">Material</Label>
+          <div className="flex flex-wrap gap-2">
+            {MATERIAL_OPTIONS.map(m => (
               <button key={m} type="button" onClick={() => updateField('material', m)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   current.material === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
                 )}>{m}</button>
             ))}
@@ -1053,15 +1107,15 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   const showShoes = !!defaultConfig.shoes?.garment;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Lock className="w-3.5 h-3.5 text-primary" />
-        <span className="text-[11px] text-muted-foreground">Locked across all on-model scenes. Structured for consistency.</span>
-        {isMale && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Male defaults</Badge>}
+        <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
+        {isMale && <Badge variant="outline" className="text-xs h-5 px-2">Male defaults</Badge>}
       </div>
 
-      {/* Preset bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      {/* Preset bar — visual cards */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
           return (
@@ -1070,12 +1124,13 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
               type="button"
               onClick={() => loadPreset(preset)}
               className={cn(
-                'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium border transition-all cursor-pointer',
                 active
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+                  ? 'bg-primary/10 text-primary border-primary shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-muted/60',
               )}
             >
+              <PresetColorDots config={preset.config} />
               {preset.name}
             </button>
             {!preset.isBuiltIn && (
@@ -1088,22 +1143,22 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
           );
         })}
         {showSave ? (
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <Input
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') saveCurrentAsPreset(); if (e.key === 'Escape') setShowSave(false); }}
               placeholder="Preset name..."
-              className="h-6 w-28 text-[10px] px-2"
+              className="h-8 w-32 text-xs px-2.5"
               autoFocus
             />
-            <button type="button" onClick={saveCurrentAsPreset} className="text-primary hover:text-primary/80 cursor-pointer"><Save className="w-3.5 h-3.5" /></button>
-            <button type="button" onClick={() => setShowSave(false)} className="text-muted-foreground hover:text-foreground cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={saveCurrentAsPreset} className="text-primary hover:text-primary/80 cursor-pointer"><Save className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setShowSave(false)} className="text-muted-foreground hover:text-foreground cursor-pointer"><X className="w-4 h-4" /></button>
           </div>
         ) : (
           <button type="button" onClick={() => setShowSave(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
-            <Plus className="w-3 h-3" />Save
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
+            <Plus className="w-3.5 h-3.5" />Save
           </button>
         )}
       </div>
@@ -1114,17 +1169,17 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         {showBottom && <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />}
         {showShoes && <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />}
 
-        {/* Accessories — chip selector */}
-        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5 space-y-2">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Shirt className="w-3 h-3" />Accessories
+        {/* Accessories */}
+        <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 space-y-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Shirt className="w-3.5 h-3.5" />Accessories
           </span>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {['none', 'minimal', 'statement'].map(opt => (
               <button key={opt} type="button"
                 onClick={() => updateConfig({ accessories: currentConfig.accessories === opt ? '' : opt })}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   currentConfig.accessories === opt
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
@@ -1134,7 +1189,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
             <button type="button"
               onClick={() => updateConfig({ accessories: currentConfig.accessories && !['none', 'minimal', 'statement'].includes(currentConfig.accessories) ? '' : 'custom' })}
               className={cn(
-                'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                'px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                 currentConfig.accessories && !['none', 'minimal', 'statement', ''].includes(currentConfig.accessories)
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
@@ -1146,7 +1201,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
               value={currentConfig.accessories === 'custom' ? '' : currentConfig.accessories}
               onChange={e => updateConfig({ accessories: e.target.value || 'custom' })}
               placeholder="Describe accessories..."
-              className="h-7 text-xs"
+              className="h-8 text-xs"
             />
           )}
         </div>
@@ -1161,21 +1216,27 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
 
 function InlinePersonDetails({ details, update }: { details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
   const [stylingOpen, setStylingOpen] = useState(false);
+
+  const skinToneOptions = [
+    { value: 'light', label: 'Light', icon: <ColorDot hex={SKIN_TONE_HEX.light} size={10} /> },
+    { value: 'medium', label: 'Medium', icon: <ColorDot hex={SKIN_TONE_HEX.medium} size={10} /> },
+    { value: 'deep', label: 'Deep', icon: <ColorDot hex={SKIN_TONE_HEX.deep} size={10} /> },
+    { value: 'auto', label: 'Auto' },
+  ];
+
   return (
-    <div className="space-y-3">
-      {/* Appearance group — open by default */}
-      <div className="space-y-2">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="space-y-4">
+      {/* Appearance group */}
+      <div className="space-y-3">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
             { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
           ]} />
           <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
             { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
           ]} />
-          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={[
-            { value: 'light', label: 'Light' }, { value: 'medium', label: 'Medium' }, { value: 'deep', label: 'Deep' }, { value: 'auto', label: 'Auto' },
-          ]} />
+          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={skinToneOptions} />
           <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
             { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
           ]} />
@@ -1184,13 +1245,13 @@ function InlinePersonDetails({ details, update }: { details: DetailSettings; upd
 
       {/* Styling Details group — collapsed by default */}
       <Collapsible open={stylingOpen} onOpenChange={setStylingOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer">
-          <ChevronRight className={cn('w-3 h-3 transition-transform', stylingOpen && 'rotate-90')} />
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer">
+          <ChevronRight className={cn('w-3.5 h-3.5 transition-transform', stylingOpen && 'rotate-90')} />
           Styling Details
-          <span className="text-[9px] font-normal normal-case text-muted-foreground/60">hands, nails, jewelry</span>
+          <span className="text-[11px] font-normal normal-case text-muted-foreground/60">hands, nails, jewelry</span>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3">
             <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
               { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
               { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
