@@ -1091,7 +1091,7 @@ export function ProductImagesStep3Refine({
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
   const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
-  const [outfitOpen, setOutfitOpen] = useState(false);
+  const [outfitOpen, setOutfitOpen] = useState(needsModel);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const outfitRef = useRef<HTMLDivElement>(null);
   const [propModalOpen, setPropModalOpen] = useState(false);
