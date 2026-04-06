@@ -9,6 +9,7 @@ import { ALL_SCENES } from './sceneData';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
+import { computeTotalImages } from '@/lib/sceneVariations';
 import type { UserProduct, DetailSettings, ProductImageScene } from './types';
 
 /* ── Chip Selector (local) ── */
