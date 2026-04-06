@@ -326,7 +326,8 @@ function MiniRatioChips({ value, globalValue, onChange }: { value: string; globa
 }
 
 function SceneThumbnail({ sceneId }: { sceneId: string }) {
-  const scene = ALL_SCENES.find(s => s.id === sceneId);
+  const { allScenes: dbScenes } = useProductImageScenes();
+  const scene = dbScenes.find(s => s.id === sceneId);
   const [hovered, setHovered] = useState(false);
   return (
     <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
