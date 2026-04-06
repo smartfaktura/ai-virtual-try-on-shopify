@@ -525,6 +525,16 @@ export default function ProductImages() {
           return;
         }
 
+        // Near-complete auto-finish: if 90%+ done after 90 seconds, show available results
+        const elapsedMs = Date.now() - pollingStartRef.current;
+        const threshold = Math.ceil(jobIds.length * 0.9);
+        if (elapsedMs > 90_000 && done.length >= threshold && done.length > 0) {
+          const remaining = jobIds.length - done.length;
+          toast.info(`${remaining} image${remaining !== 1 ? 's' : ''} still processing — showing ${done.length} completed results.`);
+          finishWithResults(jobs, productMap);
+          return;
+        }
+
         pollingRef.current = setTimeout(poll, 3000);
       } catch {
         pollingRef.current = setTimeout(poll, 5000);
