@@ -1398,7 +1398,7 @@ export function ProductImagesStep3Refine({
         const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
         const modelShots = selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
 
-        const renderSceneCard = (scene: ProductImageScene) => {
+          const renderSceneCard = (scene: ProductImageScene) => {
           const isExpanded = expandedSceneId === scene.id;
           const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
           const group = sceneGroups.find(g => g.sceneId === scene.id);
@@ -1407,13 +1407,11 @@ export function ProductImagesStep3Refine({
           const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
           const isClickable = hasControls || (sceneNeedsModel && needsModel);
 
-          // Check if any template control has a non-default value
           const hasCustomizations = sceneBlocks.some(bk => {
             const fields = BLOCK_FIELD_MAP[bk] || [];
             return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
           });
 
-          // Get first 2 control names for preview hint
           const controlPreviewNames: string[] = [];
           for (const bk of sceneBlocks) {
             const meta = BLOCK_LABELS[bk];
@@ -1426,66 +1424,70 @@ export function ProductImagesStep3Refine({
           }
 
           return (
-            <div key={scene.id} className="col-span-1">
-              <button
-                type="button"
-                onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
-                className={cn(
-                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
-                  isExpanded
-                    ? 'border-primary bg-primary/[0.03] shadow-sm'
-                    : hasCustomizations
-                      ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
-                      : sceneNeedsModel && needsModel
-                        ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
-                        : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
-                  isClickable ? 'cursor-pointer' : 'cursor-default',
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  {/* Thumbnail */}
-                  <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                    {scene.previewUrl ? (
-                      <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
-                    )}
-                  </div>
-                  {/* Title + status + control preview */}
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
-                    {sceneNeedsModel && needsModel ? (
-                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
-                      </span>
-                    ) : hasCustomizations ? (
-                      <span className="flex items-center gap-1 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                        <span className="text-[10px] text-primary font-medium">customized</span>
-                      </span>
-                    ) : controlPreviewNames.length > 0 ? (
-                      <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
-                    ) : null}
-                    {/* Hover hint */}
-                    {isClickable && !isExpanded && (
-                      <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
-                    )}
-                  </div>
-                  {/* Chevron */}
-                  {isClickable && (
-                    <ChevronDown className={cn(
-                      'w-3.5 h-3.5 flex-shrink-0 transition-all',
-                      isExpanded
-                        ? 'text-primary rotate-180'
-                        : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
-                    )} />
+            <React.Fragment key={scene.id}>
+              <div className="col-span-1">
+                <button
+                  type="button"
+                  onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
+                  className={cn(
+                    'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
+                    isExpanded
+                      ? 'border-primary bg-primary/[0.03] shadow-sm'
+                      : hasCustomizations
+                        ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
+                        : sceneNeedsModel && needsModel
+                          ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
+                          : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
+                    isClickable ? 'cursor-pointer' : 'cursor-default',
                   )}
-                </div>
-              </button>
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                      {scene.previewUrl ? (
+                        <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                      {sceneNeedsModel && needsModel ? (
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
+                        </span>
+                      ) : hasCustomizations ? (
+                        <span className="flex items-center gap-1 mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                          <span className="text-[10px] text-primary font-medium">customized</span>
+                        </span>
+                      ) : controlPreviewNames.length > 0 ? (
+                        <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
+                      ) : null}
+                      {isClickable && !isExpanded && (
+                        <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
+                      )}
+                    </div>
+                    {isClickable && (
+                      <ChevronDown className={cn(
+                        'w-3.5 h-3.5 flex-shrink-0 transition-all',
+                        isExpanded
+                          ? 'text-primary rotate-180'
+                          : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
+                      )} />
+                    )}
+                  </div>
+                </button>
+              </div>
 
-              {/* Inline expanded settings — collapsible sub-sections */}
+              {/* Full-width expanded settings panel — spans entire grid row */}
               {isExpanded && hasControls && (
-                <div className="mt-1.5 rounded-xl border border-primary/20 bg-card p-3 space-y-1 overflow-hidden transition-all duration-200">
+                <div className="col-span-2 sm:col-span-3 md:col-span-4 rounded-xl border border-primary/20 bg-card p-4 space-y-1 overflow-hidden transition-all duration-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                      {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40 m-auto" />}
+                    </div>
+                    <span className="text-sm font-semibold">{scene.title}</span>
+                  </div>
                   {sceneBlocks.map((blockKey, idx) => {
                     const meta = BLOCK_LABELS[blockKey];
                     if (!meta) return null;
@@ -1511,7 +1513,7 @@ export function ProductImagesStep3Refine({
                         Style
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-2 pt-1">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-2 pt-1">
                           {templateCtrls.map(ctrl => (
                             <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
                           ))}
@@ -1524,7 +1526,7 @@ export function ProductImagesStep3Refine({
                   )}
                 </div>
               )}
-            </div>
+            </React.Fragment>
           );
         };
 
