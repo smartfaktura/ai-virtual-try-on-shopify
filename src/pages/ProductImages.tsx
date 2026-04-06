@@ -724,6 +724,15 @@ export default function ProductImages() {
             )}
 
             {step === 3 && (
+              <>
+                {showLastSettingsBanner && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/[0.03] mb-4">
+                    <History className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground flex-1">Load your last settings for <span className="font-medium text-foreground">{lastSettingsCategory}</span>?</span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowLastSettingsBanner(false)}>Dismiss</Button>
+                    <Button size="sm" className="h-7 text-xs" onClick={loadLastSettings}>Apply</Button>
+                  </div>
+                )}
               <ProductImagesStep3Refine
                 selectedSceneIds={selectedSceneIds}
                 productCount={selectedProducts.length}
