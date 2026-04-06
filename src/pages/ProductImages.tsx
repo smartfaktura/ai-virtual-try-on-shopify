@@ -389,7 +389,7 @@ export default function ProductImages() {
               ...(additionalProducts ? { additional_products: additionalProducts } : {}),
               ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
               ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
-              quality,
+              quality: 'high',
               aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
               batch_id: batchId,
               scene_name: scene.title,
