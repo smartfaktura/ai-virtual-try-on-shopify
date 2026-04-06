@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera,
 } from 'lucide-react';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
