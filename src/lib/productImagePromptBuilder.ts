@@ -524,7 +524,7 @@ function resolveCameraDirective(scene: ProductImageScene): string {
   if (st && CAMERA_MAP[st]) return CAMERA_MAP[st];
 
   // Infer from trigger blocks
-  const triggers = scene.triggerBlocks;
+  const triggers = scene.triggerBlocks || [];
   if (triggers.includes('detailFocus')) return CAMERA_MAP['macro'];
   if (triggers.includes('personDetails') && !triggers.includes('sceneEnvironment')) return CAMERA_MAP['portrait'];
   if (triggers.includes('sceneEnvironment') && triggers.includes('personDetails')) return CAMERA_MAP['lifestyle'];
