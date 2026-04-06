@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera, LayoutGrid } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
