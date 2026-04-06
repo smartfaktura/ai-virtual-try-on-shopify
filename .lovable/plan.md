@@ -1,78 +1,86 @@
 
 
-# Fix: Missing Bottom & Shoes Outfit Controls
+# Fix: Hide Consistency Section + Ensure Outfit Injection for All Model Scenes
 
-## Problem
+## Problems Found
 
-The Outfit Lock Panel conditionally hides the **Bottom** and **Shoes** sections based on the detected product category's default config. For categories like `beauty-skincare`, `fragrance`, and `makeup-lipsticks`, these defaults intentionally omit bottom/shoes pieces — so `showBottom` and `showShoes` are `false`.
+### 1. Consistency section visible to users
+The "Consistency" card in Step 3 Refine (lines 2076-2097) is shown when `productCount > 1`. You want it hidden from users entirely.
 
-However, when the user selects on-model scenes (full-body editorial, catalog, etc.), they need full outfit control regardless of product category. A beauty brand shooting a model holding a serum still needs to define what pants and shoes the model wears.
+### 2. Outfit dropped from 13+ model scene prompts
+The prompt builder has an `injectIfMissing` system that auto-appends directives when a template doesn't include their token. Currently it covers lighting, shadow, surface, styling, composition, mood, prominence, and body framing — but **NOT** `outfitDirective` or `personDirective`.
 
-Your session confirms `primaryCategory` resolved to `beauty-skincare`, which hides Bottom and Shoes entirely.
+13 scene templates in the database have `personDetails` in their `triggerBlocks` but do NOT include `{{outfitDirective}}` in their prompt template (e.g., `beauty_application_skin`, `makeup_in_hand`, `food_in_hand`, `tech_use_interaction`, etc.). For these scenes, the user's outfit config is silently ignored.
 
-## Fix
+### 3. Outfit string lacks specificity for consistency
+`buildStructuredOutfitString` produces: `"Wearing slim beige cotton trousers, white leather sneakers — same outfit in every shot."` This is decent but could be stronger on exact color codes, brand-neutral descriptors, and cross-scene enforcement language.
 
-### Change 1: Always show Bottom and Shoes when on-model scenes are selected
+## Fix Plan
 
+### Change 1: Hide Consistency section
 **File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
 
-In `OutfitLockPanel`, change the visibility logic from category-default-dependent to always-on when the panel is visible (since the panel only renders when `hasPersonBlock` is true, meaning on-model scenes exist):
+Remove or comment out the entire Consistency card (lines 2076-2097). The consistency directive will still be injected into prompts using the default value (`balanced`), ensuring cross-scene consistency without exposing the control.
+
+### Change 2: Auto-inject outfit and person directives for all model scenes
+**File: `src/lib/productImagePromptBuilder.ts`**
+
+Add two new `injectIfMissing` calls after the existing block (around line 841):
 
 ```typescript
-// BEFORE (lines 1386-1387):
-const showBottom = !!defaultConfig.bottom?.garment;
-const showShoes = !!defaultConfig.shoes?.garment;
-
-// AFTER:
-const showBottom = true;
-const showShoes = true;
+// Outfit + person directives: inject for ALL scenes (not global-only)
+// so every on-model scene gets consistent outfit even if template forgot the token
+injectIfMissing('wearing', 'outfitDirective', false);
+injectIfMissing('model:', 'personDirective', false);
 ```
 
-This ensures that whenever the Outfit & Model section is visible (meaning on-model scenes are selected), users always have full control over top, bottom, and shoes — regardless of product category.
+This ensures that even if a scene template omits `{{outfitDirective}}`, the user's locked outfit config is appended to the prompt. The keyword check (`wearing`) prevents double-injection for templates that already include it.
 
-### Change 2: Ensure defaults populate for previously-hidden pieces
+### Change 3: Polish outfit string for stronger consistency
+**File: `src/lib/productImagePromptBuilder.ts`**
 
-When `defaultConfig` has no `bottom` or `shoes` (e.g., for beauty categories), the `PieceField` renders empty. Add fallback defaults so users see sensible starting values:
+Improve `buildStructuredOutfitString` to produce more precise, AI-friendly descriptions:
 
-In the same `OutfitLockPanel`, update the outfit initialization logic:
+- Add "exact" qualifiers: `"Wearing exactly: slim-fit beige cotton trousers, white leather sneakers"` 
+- Strengthen the consistency enforcement: `"CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. No substitutions."`
+- When pieces have color values, emphasize them: `"beige (not tan, not cream — beige)"` to reduce AI drift
 
+Updated function:
 ```typescript
-// In the useEffect that sets defaults (line 1324-1331):
-useEffect(() => {
-  const categoryChanged = prevCatRef.current !== cat;
-  prevCatRef.current = cat;
-  if (!details.outfitConfig || categoryChanged) {
-    // Ensure bottom and shoes always have a default
-    const config = { ...defaultConfig };
-    if (!config.bottom) {
-      config.bottom = { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' };
-    }
-    if (!config.shoes) {
-      config.shoes = { garment: 'sneakers', color: 'white', material: 'leather' };
-    }
-    update({ outfitConfig: config });
-  }
-}, [defaultConfig]);
-```
+export function buildStructuredOutfitString(config: OutfitConfig): string {
+  const describePiece = (piece?: OutfitPiece): string => {
+    if (!piece || !piece.garment) return '';
+    const parts: string[] = [];
+    if (piece.color) parts.push(piece.color);
+    if (piece.material) parts.push(piece.material);
+    if (piece.fit) parts.push(`${piece.fit}-fit`);
+    parts.push(piece.garment);
+    return parts.join(' ');
+  };
 
-### Change 3: Update built-in presets to include bottom and shoes for all categories
+  const segments: string[] = [];
+  const top = describePiece(config.top);
+  if (top) segments.push(`Top: ${top}`);
+  const bottom = describePiece(config.bottom);
+  if (bottom) segments.push(`Bottom: ${bottom}`);
+  const shoes = describePiece(config.shoes);
+  if (shoes) segments.push(`Shoes: ${shoes}`);
 
-In `getBuiltInPresets`, ensure the base presets always include bottom/shoes so preset cards work correctly:
-
-```typescript
-function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
-  let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
-  if (!base) return [];
-  // Ensure complete outfit for preset generation
-  if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
-  if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };
-  // ... rest of preset generation
+  if (segments.length === 0) return '';
+  const outfitStr = segments.join('; ');
+  const accStr = config.accessories && config.accessories !== 'none' 
+    ? ` Accessories: ${config.accessories}.` : '';
+  return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials, same shoes. Clothing must NOT compete with the product.${accStr}`;
 }
 ```
+
+### Change 4: Ensure fallback defaults also use strong language
+In `defaultOutfitDirective`, strengthen the fallback (when no `outfitConfig` exists) to also use the `OUTFIT LOCK` prefix and specificity pattern.
 
 ## Files Modified
 
 | File | Change |
 |---|---|
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Always show Bottom/Shoes when outfit panel is visible; add fallback defaults for missing pieces; ensure presets include full outfit |
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Hide Consistency section entirely |
+| `src/lib/productImagePromptBuilder.ts` | Add outfit/person auto-injection; polish outfit string for consistency |
 
