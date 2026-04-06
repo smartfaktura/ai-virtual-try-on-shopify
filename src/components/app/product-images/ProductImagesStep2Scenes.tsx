@@ -269,6 +269,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               categoryScenes={cat.scenes}
               categorySubGroups={cat.subGroups}
               selectedSceneIds={selectedSceneIds}
+              onSelectionChange={onSelectionChange}
               isOpen={expandedCategories.has(cat.id)}
               onToggleOpen={() => toggleCategory(cat.id)}
               toggleScene={toggleScene}
