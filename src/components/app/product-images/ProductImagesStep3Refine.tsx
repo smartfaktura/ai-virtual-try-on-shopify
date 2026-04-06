@@ -774,8 +774,8 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
         tabIndex={-1}
       />
 
-      {/* Swatch grid — 4:3 aspect cards, 6 per row */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {/* Swatch grid — square aspect cards, 8 per row */}
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
         {/* Preset cards */}
         {BG_SWATCH_OPTIONS.map(o => {
           const isActive = selected.includes(o.value);
