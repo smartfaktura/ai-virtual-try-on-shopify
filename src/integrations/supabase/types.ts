@@ -1040,17 +1040,14 @@ export type Database = {
           category_sort_order: number | null
           created_at: string
           description: string
-          exclude_categories: string[]
           id: string
           is_active: boolean
-          is_global: boolean
           preview_image_url: string | null
           prompt_template: string
           scene_id: string
           scene_type: string
           sort_order: number
           sub_category: string | null
-          sub_category_overrides: Json | null
           title: string
           trigger_blocks: string[]
         }
@@ -1059,17 +1056,14 @@ export type Database = {
           category_sort_order?: number | null
           created_at?: string
           description?: string
-          exclude_categories?: string[]
           id?: string
           is_active?: boolean
-          is_global?: boolean
           preview_image_url?: string | null
           prompt_template?: string
           scene_id: string
           scene_type?: string
           sort_order?: number
           sub_category?: string | null
-          sub_category_overrides?: Json | null
           title: string
           trigger_blocks?: string[]
         }
@@ -1078,17 +1072,14 @@ export type Database = {
           category_sort_order?: number | null
           created_at?: string
           description?: string
-          exclude_categories?: string[]
           id?: string
           is_active?: boolean
-          is_global?: boolean
           preview_image_url?: string | null
           prompt_template?: string
           scene_id?: string
           scene_type?: string
           sort_order?: number
           sub_category?: string | null
-          sub_category_overrides?: Json | null
           title?: string
           trigger_blocks?: string[]
         }
