@@ -1,124 +1,82 @@
 
 
-# Pro-Level Styling & Outfit System for Product Images
+# Debug Analysis: Product Images Flow — Issues Found
 
-## Current State Analysis
+## Critical Bugs
 
-The system has a functional but basic outfit mechanism:
-- **OutfitLockPanel**: 4 text inputs (top, bottom, shoes, accessories) with category defaults
-- **Prompt builder**: `defaultOutfitDirective()` reads these fields, falls back to hardcoded category defaults
-- **No persistence**: Settings reset every session — users re-enter the same outfit every time
-- **No presets**: No way to save a "look" and reuse it across shoots
-- **Flat structure**: Each piece is just a free-text string — no structured color/material/fit breakdown
-- **No "last used" memory**: The `INITIAL_DETAILS` in `ProductImages.tsx` is hardcoded every mount
+### 1. Credit calculation mismatch in Refine step
+**File:** `ProductImagesStep3Refine.tsx` line 1000
+**Issue:** `costPerImage` is hardcoded to `6`, ignoring the quality setting. If user selects "Standard" quality (3 credits), the Refine step still shows 6 credits per image. The Review step (`ProductImagesStep4Review.tsx` line 53) and parent (`ProductImages.tsx` line 196) correctly use `quality === 'standard' ? 3 : 6`.
+**Fix:** Read `details.quality` and compute cost dynamically: `const costPerImage = (details.quality || 'high') === 'standard' ? 3 : 6;`
 
-## Problems
+### 2. INITIAL_DETAILS vs AUTO_AESTHETIC_DEFAULTS conflict
+**File:** `ProductImages.tsx` line 78 sets `brandingVisibility: 'none'`
+**File:** `ProductImagesStep3Refine.tsx` line 507 sets `AUTO_AESTHETIC_DEFAULTS.brandingVisibility: 'product-accent'`
+**Issue:** On first mount, `isAutoApplied()` returns `false` because `details.brandingVisibility` is `'none'` (from INITIAL_DETAILS) but Auto expects `'product-accent'`. The "Auto (Recommended)" chip appears inactive even though the user hasn't changed anything. Clicking Auto then sets `product-accent`, which is correct — but the initial state is misleading.
+**Fix:** Align `INITIAL_DETAILS.brandingVisibility` to `'product-accent'` to match `AUTO_AESTHETIC_DEFAULTS`.
 
-1. **No memory** — B2B users run 50+ shoots/month. Re-entering "slim beige trousers, white sneakers" every time is painful.
-2. **No outfit presets** — A fashion brand has 2-3 standard looks (e.g., "ASOS Clean", "Editorial Dark", "Summer Casual"). No way to define and reuse them.
-3. **Free-text is imprecise** — "beige trousers" gives inconsistent results. Structured fields (color: beige, fit: slim, material: cotton) produce better prompts.
-4. **Outfit doesn't adapt to gender** — The same "plain white t-shirt" default is used regardless of whether the selected model is male or female.
-5. **No per-piece detail** — Missing color, material, and fit for each garment piece, which the prompt builder needs for consistency.
+### 3. Duplicate BLOCK_FIELD_MAP definitions
+**File:** `ProductImages.tsx` lines 52-65 AND `ProductImagesStep3Refine.tsx` lines 484-494
+**Issue:** Two separate copies of the same map. They can silently drift. The parent uses its copy for stale detail cleanup; the Refine step uses its copy for UI display. If a field is added to one but not the other, either cleanup won't work or UI won't show the field.
+**Fix:** Export `BLOCK_FIELD_MAP` from `detailBlockConfig.ts` and import in both files.
 
-## Plan
+### 4. Selected scenes can become stale after excludeCategories filtering
+**File:** `ProductImagesStep2Scenes.tsx`
+**Issue:** If user selects "In-Hand Studio" for a mixed batch, then removes non-excluded products (leaving only home-decor), the scene gets hidden from the UI but remains in `selectedSceneIds`. The user can proceed to Refine/Review/Generate with a scene that's invisible and incompatible.
+**Fix:** After computing `filteredGlobalScenes`, add an effect that removes any selected scene IDs that are no longer visible.
 
-### 1. Structured Outfit Pieces (types.ts + promptBuilder)
+## Medium Bugs
 
-Replace flat string fields with structured objects per piece:
+### 5. `buildOutfitDirective` is dead code
+**File:** `productImagePromptBuilder.ts` lines 504-511
+**Issue:** Reads `d.outfitStyle` and `d.outfitColorDirection` — but the new UI never sets these fields (it uses `outfitConfig` instead). This function always returns `''`, making the fallback in `buildPersonDirective` (line 472) always trigger `defaultOutfitDirective`. Not a runtime bug, but confusing and could mask issues.
+**Fix:** Remove `buildOutfitDirective` and its call sites; go directly to `defaultOutfitDirective`.
 
-```ts
-interface OutfitPiece {
-  garment: string;    // "t-shirt", "turtleneck", "blouse"
-  color: string;      // "white", "black", "beige"
-  fit?: string;       // "slim", "relaxed", "cropped"
-  material?: string;  // "cotton", "silk", "denim"
-}
+### 6. Person detail values persist invisibly when model is selected
+**File:** `ProductImagesStep3Refine.tsx` line 1311
+**Issue:** When `selectedModelId` is set, person detail chips (age, skin tone, expression) are hidden. But if the user first sets `ageRange: '18-25'`, then selects a model, the value stays in `details`. The prompt builder still injects `age 18-25` into the person directive even though the user can't see or edit it.
+**Fix:** When a model is selected, clear person detail fields or ignore them in the prompt builder when `selectedModelId` is set.
 
-interface OutfitConfig {
-  top?: OutfitPiece;
-  bottom?: OutfitPiece;
-  shoes?: OutfitPiece;
-  accessories?: string;
-  name?: string;       // for saved presets
-}
-```
+### 7. `Select All` in Universal scenes doesn't respect `excludeCategories`
+**File:** No "Select All" button exists for Universal scenes currently — but the scene selection still allows manual selection of hidden scenes if they were previously selected. Related to issue #4.
 
-**File: `types.ts`** — Add `OutfitConfig` type and `outfitConfig?: OutfitConfig` to `DetailSettings` (keep old `outfitTop/Bottom/Shoes/Accessories` for backward compat).
+## Minor Issues
 
-**File: `productImagePromptBuilder.ts`** — Update `defaultOutfitDirective` to read structured pieces first, building precise strings like "slim-fit white cotton t-shirt, cropped beige linen trousers, minimal white leather sneakers".
+### 8. Lighting injected for non-global scenes despite scoping
+**File:** `productImagePromptBuilder.ts` line 818
+**Issue:** `injectIfMissing('lighting', 'lightingDirective')` does NOT pass `globalOnly = true`, so user's lighting override gets injected into recommended/editorial scenes too. The plan said aesthetic overrides should only apply to universal scenes, but lighting leaks through.
+**Fix:** Change to `injectIfMissing('lighting', 'lightingDirective', true)`.
 
-### 2. Gender-Aware Outfit Defaults
+### 9. `sceneIntensity` (mood) also leaks to non-global scenes
+**File:** `productImagePromptBuilder.ts` line 820
+**Issue:** `injectIfMissing('mood', 'sceneIntensityDirective')` — no `globalOnly` flag. Mood override leaks into category scenes.
+**Fix:** Add `true` as the third argument.
 
-**File: `productImagePromptBuilder.ts`** — `categoryOutfitDefaults` gains a gender parameter. When a model is selected, read their `gender` field and switch defaults:
-- Male garments: "plain white crew-neck tee, slim navy chinos, white leather sneakers"
-- Female garments: "fitted white t-shirt, slim light beige trousers, minimal white sneakers"
+### 10. `stylingDensity` and `productProminence` leak to non-global scenes
+**File:** `productImagePromptBuilder.ts` lines 821-822
+**Issue:** Same pattern — these inject into all scenes regardless.
+**Fix:** Add `globalOnly = true` to both.
 
-**File: `ProductImagesStep3Refine.tsx`** — Pass selected model's gender to OutfitLockPanel so placeholders adapt.
+### 11. Missing quality toggle in Refine step
+**File:** `ProductImagesStep3Refine.tsx`
+**Issue:** The Format & Output section shows aspect ratio and image count, but no quality selector (Standard vs Pro). Quality is set in `INITIAL_DETAILS` as `'high'` and never changed by the user in the Refine UI. The Review step shows it, but users can't change it.
+**Fix:** Add a quality ChipSelector (Standard 3cr / Pro 6cr) in the Format section.
 
-### 3. Outfit Presets (Save & Load)
+## Summary — 11 issues found
 
-**Storage**: `localStorage` key `pi_outfit_presets` — array of `{ id, name, config: OutfitConfig, category, gender, createdAt }`. No DB table needed initially; keeps it fast and frictionless.
+| # | Severity | Issue | File |
+|---|----------|-------|------|
+| 1 | Critical | Credit calc hardcoded to 6 in Refine | Step3Refine |
+| 2 | Critical | INITIAL_DETAILS vs Auto defaults mismatch | ProductImages + Step3Refine |
+| 3 | Medium | Duplicate BLOCK_FIELD_MAP | ProductImages + Step3Refine |
+| 4 | Medium | Stale selected scenes after category filtering | Step2Scenes |
+| 5 | Low | Dead `buildOutfitDirective` code | promptBuilder |
+| 6 | Medium | Invisible person details persist with model | Step3Refine + promptBuilder |
+| 7 | Low | Select All edge case with hidden scenes | Step2Scenes |
+| 8 | Medium | Lighting leaks to non-global scenes | promptBuilder |
+| 9 | Medium | Mood leaks to non-global scenes | promptBuilder |
+| 10 | Medium | Styling/prominence leak to non-global scenes | promptBuilder |
+| 11 | Medium | No quality toggle in Refine UI | Step3Refine |
 
-**File: `ProductImagesStep3Refine.tsx`** — New `OutfitPresetBar` sub-component above the OutfitLockPanel:
-- Horizontal chip row of saved presets (e.g., "ASOS Clean", "Editorial Dark")
-- Click to load → fills the outfit fields
-- "Save current" button → prompts for name, saves to localStorage
-- "Delete" on hover
-- 3 built-in templates per category that can't be deleted (e.g., "Studio Standard", "Editorial", "Minimal")
-
-### 4. Last Used Settings Memory
-
-**File: `ProductImages.tsx`** — On step transition from Refine → Review, save `details` to `localStorage` key `pi_last_details_{category}` (keyed by primary category so garment settings don't bleed into fragrance).
-
-On component mount, if `localStorage` has a saved config for the current category, show a subtle banner: **"Load your last settings?"** with Apply / Dismiss. Clicking Apply fills `details` state. Dismissed = use fresh defaults.
-
-### 5. Improved OutfitLockPanel UI
-
-**File: `ProductImagesStep3Refine.tsx`** — Restructure the panel:
-
-```text
-┌─────────────────────────────────────────────────┐
-│ 🔒 Outfit Lock                                  │
-│                                                  │
-│ Presets: [Studio Standard] [Editorial] [+ Save]  │
-│                                                  │
-│ ┌─── Top ───────────────────────────────────┐   │
-│ │ Garment: [t-shirt ▾]  Color: [white ▾]    │   │
-│ │ Fit: [slim ▾]         Material: [cotton ▾] │   │
-│ └────────────────────────────────────────────┘   │
-│ ┌─── Bottom ────────────────────────────────┐   │
-│ │ Garment: [trousers ▾]  Color: [beige ▾]   │   │
-│ │ Fit: [slim ▾]          Material: [cotton ▾]│   │
-│ └────────────────────────────────────────────┘   │
-│ ┌─── Shoes ─────────────────────────────────┐   │
-│ │ Garment: [sneakers ▾]  Color: [white ▾]   │   │
-│ └────────────────────────────────────────────┘   │
-│ Accessories: [none ▾]                            │
-└─────────────────────────────────────────────────┘
-```
-
-Each sub-field uses a `ChipSelector` with common options (not free text), plus an "Other" option that opens a text input. This gives structure while preserving flexibility.
-
-### 6. Prompt Builder Enhancement
-
-**File: `productImagePromptBuilder.ts`** — New `buildStructuredOutfitString(config: OutfitConfig)`:
-- Concatenates each piece as: `{fit} {color} {material} {garment}` (skipping empty)
-- Example output: "slim-fit white cotton t-shirt, cropped beige linen trousers, minimal white leather sneakers"
-- Appends: "Same exact outfit in every shot. Clothing must NOT compete with the product."
-
-## Files to Update
-
-| File | Change |
-|------|--------|
-| `src/components/app/product-images/types.ts` | Add `OutfitPiece`, `OutfitConfig` types; add `outfitConfig` to `DetailSettings` |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Restructure OutfitLockPanel with structured fields, preset bar, gender awareness |
-| `src/lib/productImagePromptBuilder.ts` | Gender-aware defaults, structured outfit string builder, read `outfitConfig` |
-| `src/pages/ProductImages.tsx` | Save/load last settings per category via localStorage, "Load last settings?" banner |
-
-## What This Achieves
-
-- **Consistency**: Structured fields produce deterministic prompt strings → same outfit every time
-- **Speed**: Presets + last-used memory → 2 clicks instead of re-typing everything
-- **Pro control**: Per-piece color/fit/material gives B2B users the granularity they expect
-- **Gender intelligence**: Defaults adapt to the selected model automatically
+All 11 issues can be fixed in a single implementation pass across 4 files.
 
