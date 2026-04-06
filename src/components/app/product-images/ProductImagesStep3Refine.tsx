@@ -15,7 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
-  Save, Trash2, History, AlertTriangle, Check, Info,
+  Save, Trash2, History, Check, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
