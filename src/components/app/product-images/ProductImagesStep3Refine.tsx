@@ -1107,15 +1107,15 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   const showShoes = !!defaultConfig.shoes?.garment;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Lock className="w-3.5 h-3.5 text-primary" />
-        <span className="text-[11px] text-muted-foreground">Locked across all on-model scenes. Structured for consistency.</span>
-        {isMale && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Male defaults</Badge>}
+        <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
+        {isMale && <Badge variant="outline" className="text-xs h-5 px-2">Male defaults</Badge>}
       </div>
 
-      {/* Preset bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      {/* Preset bar — visual cards */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
           return (
@@ -1124,12 +1124,13 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
               type="button"
               onClick={() => loadPreset(preset)}
               className={cn(
-                'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium border transition-all cursor-pointer',
                 active
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+                  ? 'bg-primary/10 text-primary border-primary shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-muted/60',
               )}
             >
+              <PresetColorDots config={preset.config} />
               {preset.name}
             </button>
             {!preset.isBuiltIn && (
@@ -1142,22 +1143,22 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
           );
         })}
         {showSave ? (
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <Input
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') saveCurrentAsPreset(); if (e.key === 'Escape') setShowSave(false); }}
               placeholder="Preset name..."
-              className="h-6 w-28 text-[10px] px-2"
+              className="h-8 w-32 text-xs px-2.5"
               autoFocus
             />
-            <button type="button" onClick={saveCurrentAsPreset} className="text-primary hover:text-primary/80 cursor-pointer"><Save className="w-3.5 h-3.5" /></button>
-            <button type="button" onClick={() => setShowSave(false)} className="text-muted-foreground hover:text-foreground cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={saveCurrentAsPreset} className="text-primary hover:text-primary/80 cursor-pointer"><Save className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setShowSave(false)} className="text-muted-foreground hover:text-foreground cursor-pointer"><X className="w-4 h-4" /></button>
           </div>
         ) : (
           <button type="button" onClick={() => setShowSave(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
-            <Plus className="w-3 h-3" />Save
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
+            <Plus className="w-3.5 h-3.5" />Save
           </button>
         )}
       </div>
