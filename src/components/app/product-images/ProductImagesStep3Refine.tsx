@@ -1260,7 +1260,12 @@ export function ProductImagesStep3Refine({
       )}
 
       {/* ── SECTION 1: YOUR SCENES (cards with inline expansion) ── */}
-      {selectedScenes.length > 0 && (
+      {selectedScenes.length > 0 && (() => {
+        // Compute scenes with {{background}} token for quick-action strip
+        const scenesWithBackground = selectedScenes.filter(s => (s.promptTemplate || '').includes('{{background}}'));
+        const showBgStrip = scenesWithBackground.length >= 2;
+
+        return (
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <Camera className="w-4 h-4 text-primary" />
@@ -1271,6 +1276,30 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
+          {/* Quick Background strip */}
+          {showBgStrip && (
+            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Paintbrush className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold">Background</span>
+                <span className="text-[10px] text-muted-foreground">across {scenesWithBackground.length} scenes</span>
+              </div>
+              <ChipSelector label="" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
+                { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' },
+                { value: 'warm-neutral', label: 'Warm' }, { value: 'cool-neutral', label: 'Cool' },
+                { value: 'gradient', label: 'Soft Gradient' },
+              ]} />
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] text-muted-foreground">Applies to:</span>
+                {scenesWithBackground.map(s => (
+                  <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/40 overflow-hidden flex-shrink-0" title={s.title}>
+                    {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {selectedScenes.map(scene => {
               const isExpanded = expandedSceneId === scene.id;
@@ -1280,6 +1309,7 @@ export function ProductImagesStep3Refine({
               const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
               const templateCtrls = getTemplateControls(scene);
               const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+              const settingsCount = blockLabels.length;
 
               // Check if any template control has a non-default value
               const hasCustomizations = sceneBlocks.some(bk => {
@@ -1296,14 +1326,14 @@ export function ProductImagesStep3Refine({
                     type="button"
                     onClick={() => hasControls ? toggleSceneExpand(scene.id) : undefined}
                     className={cn(
-                      'w-full text-left rounded-xl border-2 p-2 transition-all',
+                      'w-full text-left rounded-xl border-2 p-2 transition-all group/card',
                       isExpanded
                         ? 'border-primary bg-primary/[0.03]'
                         : hasCustomizations
-                          ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50'
+                          ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm'
                           : sceneNeedsModel && needsModel
-                            ? 'border-amber-400/40 hover:border-amber-400/60'
-                            : 'border-border hover:border-primary/30',
+                            ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm'
+                            : 'border-border hover:border-primary/30 hover:shadow-sm',
                       hasControls ? 'cursor-pointer' : 'cursor-default',
                     )}
                   >
@@ -1334,11 +1364,17 @@ export function ProductImagesStep3Refine({
                             </span>
                           )}
                         </div>
-                        {/* Configurable blocks hint */}
-                        {blockLabels.length > 0 && !isExpanded && (
-                          <p className="text-[9px] text-muted-foreground mt-0.5 truncate">
-                            {blockLabels.slice(0, 3).join(', ')}{blockLabels.length > 3 ? ` +${blockLabels.length - 3}` : ''}
-                          </p>
+                        {/* Settings pill instead of truncated labels */}
+                        {hasControls && !isExpanded && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 text-[9px] text-muted-foreground font-medium">
+                              <Settings2 className="w-2.5 h-2.5" />
+                              {settingsCount <= 2
+                                ? blockLabels.join(', ')
+                                : `${settingsCount} settings`
+                              }
+                            </span>
+                          </div>
                         )}
                         {!hasControls && (
                           <p className="text-[9px] text-muted-foreground/60 mt-0.5 italic">No extra settings</p>
@@ -1347,7 +1383,10 @@ export function ProductImagesStep3Refine({
                       {/* Expand indicator */}
                       {hasControls && (
                         <div className="flex-shrink-0 mt-1">
-                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-primary" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                          {isExpanded
+                            ? <ChevronDown className="w-3.5 h-3.5 text-primary" />
+                            : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                          }
                         </div>
                       )}
                     </div>
@@ -1390,7 +1429,8 @@ export function ProductImagesStep3Refine({
             })}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── SECTION 2: Outfit & Model (if person scenes) ── */}
       {hasPersonBlock && (
