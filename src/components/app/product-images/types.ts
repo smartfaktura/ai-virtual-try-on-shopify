@@ -116,6 +116,7 @@ export interface ProductImageScene {
   categoryCollection?: string;
   sceneType?: SceneType;
   excludeCategories?: string[];
+  subCategory?: string;
 }
 
 export interface CategoryCollection {
