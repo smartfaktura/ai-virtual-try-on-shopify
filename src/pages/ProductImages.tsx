@@ -456,7 +456,7 @@ export default function ProductImages() {
     } catch {}
 
     startPolling(newJobMap);
-  }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
+  }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
   const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string }>) => {
     const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>();
