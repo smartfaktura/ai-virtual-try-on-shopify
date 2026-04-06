@@ -1421,19 +1421,37 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
-          {/* Quick Background strip (simplified — no advanced toggle) */}
+          {/* Quick Background strip — applies to ALL scenes */}
           {showBgStrip && (
             <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
-                <span className="text-[10px] text-muted-foreground">· {scenesWithBackground.length} scenes</span>
+                <span className="text-[10px] text-muted-foreground">· all {selectedScenes.length} scenes</span>
               </div>
-              <ChipSelector label="" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
-                { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' },
-                { value: 'warm-neutral', label: 'Warm' }, { value: 'cool-neutral', label: 'Cool' },
-                { value: 'gradient', label: 'Soft Gradient' },
-              ]} />
+              <BackgroundSwatchSelector value={details.backgroundTone || ''} onChange={v => update({ backgroundTone: v })} />
+              {/* Custom hex input */}
+              {details.backgroundTone === 'custom' && (
+                <div className="flex items-center gap-3 pt-1">
+                  <div
+                    className="w-8 h-8 rounded-md border border-border flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : '#FFFFFF' }}
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium">HEX</span>
+                    <Input
+                      value={details.backgroundCustomHex || '#'}
+                      onChange={e => {
+                        let v = e.target.value;
+                        if (!v.startsWith('#')) v = '#' + v;
+                        update({ backgroundCustomHex: v.slice(0, 7) });
+                      }}
+                      className="h-7 w-24 text-xs font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
