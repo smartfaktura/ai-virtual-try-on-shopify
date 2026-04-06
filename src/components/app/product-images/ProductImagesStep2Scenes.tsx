@@ -144,32 +144,31 @@ interface UnifiedCategorySectionProps {
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
-  const { globalScenes: hookGlobalScenes, categoryCollections: hookCategoryCollections } = useProductImageScenes();
-  const ACTIVE_GLOBAL_SCENES = hookGlobalScenes;
+  const { categoryCollections: hookCategoryCollections } = useProductImageScenes();
   const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
 
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
-  // Build unified views: for each category collection, pair with filtered global scenes
+  // Build unified views: each category collection stands alone (no more global scenes)
   const unifiedRecommended = useMemo(() => {
     return ACTIVE_CATEGORY_COLLECTIONS
       .filter(c => relevantCatIds.has(c.id))
       .map(c => ({
         ...c,
-        essentialScenes: getGlobalScenesForCategory(ACTIVE_GLOBAL_SCENES, c.id),
+        essentialScenes: [] as ProductImageScene[],
       }));
-  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS, ACTIVE_GLOBAL_SCENES]);
+  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS]);
 
   const unifiedOther = useMemo(() => {
     return ACTIVE_CATEGORY_COLLECTIONS
       .filter(c => !relevantCatIds.has(c.id))
       .map(c => ({
         ...c,
-        essentialScenes: getGlobalScenesForCategory(ACTIVE_GLOBAL_SCENES, c.id),
+        essentialScenes: [] as ProductImageScene[],
       }));
-  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS, ACTIVE_GLOBAL_SCENES]);
+  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS]);
 
   // If no category detected, show all global scenes in a flat "All Scenes" section
   const hasDetectedCategories = relevantCatIds.size > 0;
