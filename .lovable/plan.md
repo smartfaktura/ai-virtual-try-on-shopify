@@ -1,95 +1,65 @@
 
 
-# Admin Sub-Categories + Sortable Sections + Cleaner Step 2 Header
+# Improve Admin Scene Panel — Category Visibility + Better Controls
 
-## What we're solving
+## Current Problems
 
-1. **No sub-grouping in admin**: Currently scenes within a category (e.g. "Clothing & Apparel") are a flat list. You want to group them into sub-categories like "Limited Edition Celebrity Style", "Jackets & Outerwear", "Small Accessories (hats, gloves, belts)", etc. — manageable from the admin panel.
-2. **No section sort order**: The category sections themselves (Clothing, Fragrance, etc.) can't be reordered in admin. You want to control which sections appear first.
-3. **Step 2 header feels heavy**: "Select scenes / Choose the visuals... / S M L / Recommended for your products / Clothing & Apparel 19 Recommended" — too much visual noise at first glance.
+1. **Global scenes don't show which categories they serve**: A global scene like "In-Hand Studio" excludes garments, home-decor, tech — but in admin you can't see at a glance which categories it WILL appear in. You have to mentally invert the exclude list.
+
+2. **Exclude Categories only shown for non-global scenes**: The form hides the "Exclude from Categories" checkboxes when `isGlobal` is true (line 469: `{!isGlobal && ...}`), but global scenes are exactly the ones that NEED exclude controls — they're the universal scenes that should be filtered per category.
+
+3. **No "preview by category" view**: You can't quickly see "what will a Fragrance customer see?" without going to the actual product images flow.
+
+4. **Sub-category labels not prominent enough**: The sub_category field exists but it's just a small badge in the list — hard to scan and manage groupings.
 
 ## Plan
 
-### A. Database: Add `sub_category` column to `product_image_scenes`
+### A. Admin list: Show "Appears in" tags for global scenes
 
-Add a nullable `sub_category` text column. Scenes with the same `sub_category` value within a `category_collection` will be grouped together visually. Global scenes get sub_category too (e.g. `"essential"`, `"angles"`, `"detail"`).
+In the scene row (lines 298-312), for global scenes, compute and display green badges showing which categories this scene appears in:
 
-Also add a `category_sort_order` integer column (default 0) — this controls the order of the category sections themselves. The first scene in each category determines the category's sort position.
-
-**Migration:**
-```sql
-ALTER TABLE product_image_scenes 
-  ADD COLUMN IF NOT EXISTS sub_category text DEFAULT null,
-  ADD COLUMN IF NOT EXISTS category_sort_order integer DEFAULT 0;
-```
-
-### B. Admin Panel: Sub-category management + section sorting
-
-**`src/pages/AdminProductImageScenes.tsx`:**
-
-- Add a `Sub-Category` text input to `SceneForm` — free-text field where admin types e.g. "Limited Edition Celebrity Style", "Jackets & Outerwear", "Essentials"
-- Show sub-category as a small tag next to each scene in the list view
-- Add a "Category Sort Order" number input alongside the existing Category Collection dropdown — controls which category section appears first in Step 2
-- Group scenes within each category by sub_category in the admin list for visual clarity
-- Add up/down arrows at the category section level (not just individual scenes) to reorder entire categories
-
-### C. Hook: Expose sub-categories and category ordering
-
-**`src/hooks/useProductImageScenes.ts`:**
-
-- Update `DbScene` interface: add `sub_category: string | null` and `category_sort_order: number`
-- Update `dbToFrontend` to include `subCategory`
-- Update `ProductImageScene` type to include `subCategory?: string`
-- Update `buildCollections` to include sub-category grouping data
-- Add `CategoryCollection.subGroups: { label: string; scenes: ProductImageScene[] }[]`
-- Sort category collections by `category_sort_order` (from the first scene in each category)
-
-### D. Step 2 UI: Sub-group rendering + cleaner header
-
-**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`:**
-
-**Cleaner header** — simplify the top section:
-- Merge "Select scenes" heading and grid toggle into one compact row
-- Move "Recommended for your products" label into the first category's badge area (remove the standalone sub-header)
-- Selected count stays as a subtle badge, not a separate section
-
-**Sub-group rendering** — within each expanded category section:
-- Instead of always showing "Essential Shots" / "Category Shots", render by `subCategory` labels from DB
-- Scenes without a sub_category fall into a default "General" group
-- Each sub-group gets a small uppercase label divider (same style as current "Essential Shots")
-
-**Result layout:**
 ```text
-Select scenes                                          3 selected  [S][M][L]
+Clean Studio  [packshot]  [Essentials]  clean-studio
+Appears in: All categories ✓
 
-▼ Clothing & Apparel                         Recommended  7 selected
-  [Select All]
-  
-  ── Essentials ──
-  [Clean Studio] [Marketplace] [Top-Down] ...
-  
-  ── On-Model Looks ──
-  [Editorial Garment] [Movement Shot] [On-Model Look]
-  
-  ── Limited Edition Celebrity Style ──
-  [Red Carpet Look] [VIP Unboxing] [Celeb Street Style]
-
-▸ Fragrance                                              
-▸ Beauty & Skincare
+In-Hand Studio  [lifestyle]  [Essentials]  in-hand-studio  
+Appears in: Fragrance, Beauty, Makeup, Bags, Shoes, Supplements
+Excludes: Garments, Home Decor, Tech
 ```
 
-### E. Types update
+This is just `EXCLUDE_CATS` minus `scene.exclude_categories` — simple set difference, shown as small green/red badges.
 
-**`src/components/app/product-images/types.ts`:**
-- Add `subCategory?: string` to `ProductImageScene`
+### B. Show Exclude Categories for global scenes too
+
+Remove the `{!isGlobal && ...}` guard on line 469 so the exclude checkboxes appear for ALL scenes. Global scenes are the primary users of this feature.
+
+### C. Add "Preview by Category" filter toggle
+
+Add a dropdown at the top of the admin panel: "Preview as category: [All | Fragrance | Garments | ...]". When a category is selected, the list filters to show only scenes that would appear for that category:
+- Global scenes where `excludeCategories` doesn't include the selected category
+- Category-collection scenes matching that category
+
+This lets you quickly see "what does a garment customer see?" right in admin.
+
+### D. Better sub-category display in list
+
+Group scenes within each admin section by their `sub_category` value with a visible divider label. Instead of a flat list with tiny badges, show:
+
+```text
+▼ Global (Universal) — 12 scenes
+  ── Essentials (5) ──
+  Clean Studio | Marketplace | Editorial Surface | Product on Pedestal | Tabletop Lifestyle
+  
+  ── Angles & Detail (4) ──
+  Close-Up Detail | Side Profile | Back View | Top-Down / Flat Lay
+  
+  ── Uncategorized (3) ──
+  Accent Color Backdrop | In-Hand Studio | In-Hand Lifestyle
+```
 
 ## Files
 
 | File | Changes |
 |---|---|
-| Migration SQL | Add `sub_category` and `category_sort_order` columns |
-| `src/hooks/useProductImageScenes.ts` | Update DbScene, dbToFrontend, buildCollections with sub-category grouping and category sort order |
-| `src/components/app/product-images/types.ts` | Add `subCategory` to ProductImageScene |
-| `src/pages/AdminProductImageScenes.tsx` | Add sub-category input to SceneForm, category sort order input, show sub-category tags in list |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Render scenes by sub-category groups, simplify header, remove standalone "Recommended" sub-header |
+| `src/pages/AdminProductImageScenes.tsx` | Add "Appears in" badges for global scenes in list rows; remove `!isGlobal` guard on exclude checkboxes; add category preview filter dropdown; group scenes by sub_category with divider labels within each section |
 
