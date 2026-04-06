@@ -387,24 +387,11 @@ function PropPickerModal({ open, onOpenChange, products, excludeIds, alreadySele
 }
 
 /* ══════════════════════════════════════════════
-   Block field renderers (scene-specific)
+   Block field renderers (only actionDetails kept)
    ══════════════════════════════════════════════ */
-
-function getFocusOptions(sceneIds: string[]): { value: string; label: string }[] {
-  const hasBeauty = sceneIds.some(id => id.startsWith('makeup') || id.startsWith('beauty') || id.includes('lips') || id.includes('skin'));
-  if (hasBeauty) return [
-    { value: 'product', label: 'Product Focus' }, { value: 'texture-formula', label: 'Texture / Formula' },
-    { value: 'label', label: 'Label / Branding' }, { value: 'full-product', label: 'Full Product' },
-  ];
-  return [
-    { value: 'material', label: 'Material / Texture' }, { value: 'label', label: 'Label / Logo' },
-    { value: 'hardware', label: 'Hardware / Details' }, { value: 'packaging', label: 'Packaging' }, { value: 'full-product', label: 'Full Product' },
-  ];
-}
 
 function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string; details: DetailSettings; update: (p: Partial<DetailSettings>) => void; sceneIds: string[] }) {
   switch (blockKey) {
-    case 'personDetails': return null; // handled inline per scene
     case 'actionDetails':
       return (
         <div className="grid grid-cols-2 gap-3">
@@ -417,201 +404,6 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
           ]} />
         </div>
       );
-    case 'background':
-      return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <MultiChipSelector label="Tone" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
-            { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' }, { value: 'warm-neutral', label: 'Warm Neutral' },
-            { value: 'cool-neutral', label: 'Cool Neutral' }, { value: 'gradient', label: 'Soft Gradient' },
-          ]} />
-          <ChipSelector label="Shadow" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
-            { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft Drop' }, { value: 'natural', label: 'Natural' }, { value: 'dramatic', label: 'Dramatic' },
-          ]} />
-          <ChipSelector label="Spacing" value={details.compositionFraming} onChange={v => update({ compositionFraming: v })} options={[
-            { value: 'tight', label: 'Tight Crop' }, { value: 'balanced', label: 'Balanced' }, { value: 'generous', label: 'Generous' },
-          ]} />
-        </div>
-      );
-    case 'visualDirection':
-      return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <ChipSelector label="Mood" value={details.sceneIntensity} onChange={v => update({ sceneIntensity: v })} options={[
-            { value: 'clean', label: 'Clean & Modern' }, { value: 'warm', label: 'Warm & Inviting' }, { value: 'dramatic', label: 'Dramatic' },
-            { value: 'editorial', label: 'Editorial' }, { value: 'natural', label: 'Natural' },
-          ]} />
-          <ChipSelector label="Product Size" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
-            { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
-          ]} />
-          <ChipSelector label="Lighting" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
-            { value: 'soft-diffused', label: 'Soft Diffused' }, { value: 'natural', label: 'Natural' }, { value: 'studio', label: 'Studio' },
-            { value: 'dramatic', label: 'Dramatic' }, { value: 'golden-hour', label: 'Golden Hour' },
-          ]} />
-        </div>
-      );
-    case 'sceneEnvironment':
-      return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <MultiChipSelector label="Environment" value={details.environmentType} onChange={v => update({ environmentType: v })} options={[
-            { value: 'bathroom', label: 'Bathroom' }, { value: 'kitchen', label: 'Kitchen' }, { value: 'living-room', label: 'Living Room' },
-            { value: 'desk', label: 'Desk / Workspace' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'shelf', label: 'Shelf / Display' },
-          ]} />
-          <MultiChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
-            { value: 'marble', label: 'Marble' }, { value: 'wood', label: 'Wood' }, { value: 'concrete', label: 'Concrete' },
-            { value: 'fabric', label: 'Fabric / Linen' }, { value: 'glass', label: 'Glass' },
-          ]} />
-          <ChipSelector label="Styling" value={details.stylingDensity} onChange={v => update({ stylingDensity: v })} options={[
-            { value: 'minimal', label: 'Minimal' }, { value: 'moderate', label: 'Moderate' }, { value: 'styled', label: 'Fully Styled' },
-          ]} />
-        </div>
-      );
-    case 'detailFocus':
-      return (
-        <div className="grid grid-cols-2 gap-3">
-          <ChipSelector label="What to focus on" value={details.focusArea} onChange={v => update({ focusArea: v })} options={getFocusOptions(sceneIds)} />
-          <ChipSelector label="Crop Intensity" value={details.cropIntensity} onChange={v => update({ cropIntensity: v })} options={[
-            { value: 'slight', label: 'Slight Close-Up' }, { value: 'medium', label: 'Medium Close-Up' }, { value: 'extreme', label: 'Extreme Macro' },
-          ]} />
-        </div>
-      );
-    case 'angleSelection':
-      return (
-        <ChipSelector label="Number of Views" value={details.numberOfViews} onChange={v => update({ numberOfViews: v })} options={[
-          { value: '2', label: '2 angles' }, { value: '3', label: '3 angles' }, { value: '4', label: '4 angles' }, { value: '6', label: '6 angles' },
-        ]} />
-      );
-    case 'packagingDetails':
-      return (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <MultiChipSelector label="Packaging State" value={details.packagingState} onChange={v => update({ packagingState: v })} options={[
-              { value: 'sealed', label: 'Sealed / Closed' }, { value: 'open', label: 'Open / Unboxing' }, { value: 'both', label: 'Product + Packaging' },
-            ]} />
-            <ChipSelector label="Reference Strength" value={details.referenceStrength} onChange={v => update({ referenceStrength: v })} options={[
-              { value: 'loose', label: 'Loose' }, { value: 'balanced', label: 'Balanced' }, { value: 'strict', label: 'Strict' },
-            ]} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium">Packaging Reference Image</Label>
-            <p className="text-[10px] text-muted-foreground">Upload a photo of your packaging so we match it accurately.</p>
-            {details.packagingReferenceUrl ? (
-              <div className="flex items-center gap-3">
-                <img src={details.packagingReferenceUrl} alt="Packaging ref" className="w-16 h-16 rounded-lg object-cover border border-border" />
-                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => update({ packagingReferenceUrl: undefined })}>Remove</Button>
-              </div>
-            ) : (
-              <label className="flex items-center justify-center w-full h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-muted/30">
-                <span className="text-xs text-muted-foreground">Click to upload</span>
-                <input type="file" accept="image/*" className="hidden" onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = () => update({ packagingReferenceUrl: reader.result as string });
-                  reader.readAsDataURL(file);
-                }} />
-              </label>
-            )}
-          </div>
-        </div>
-      );
-    case 'productSize':
-      return (
-        <ChipSelector label="Detected Size" value={details.productSize} onChange={v => update({ productSize: v })} options={[
-          { value: 'auto', label: 'Auto' }, { value: 'very-small', label: 'Very Small' }, { value: 'small', label: 'Small' },
-          { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }, { value: 'extra-large', label: 'Extra Large' },
-        ]} />
-      );
-    default: return null;
-  }
-}
-
-const BLOCK_LABELS: Record<string, { title: string }> = {
-  personDetails: { title: 'Person / Model' },
-  actionDetails: { title: 'Action' },
-  background: { title: 'Background & Composition' },
-  visualDirection: { title: 'Visual Direction' },
-  sceneEnvironment: { title: 'Environment' },
-  detailFocus: { title: 'Focus Area' },
-  angleSelection: { title: 'Angles' },
-  packagingDetails: { title: 'Packaging' },
-  productSize: { title: 'Product Size' },
-};
-
-
-/* ══════════════════════════════════════════════
-   Template-derived controls helper
-   ══════════════════════════════════════════════ */
-
-type TemplateControlKey = 'lighting' | 'shadow' | 'mood' | 'surface' | 'background' | 'accent' | 'productProminence';
-
-function getTemplateControls(scene: ProductImageScene): TemplateControlKey[] {
-  const t = scene.promptTemplate || '';
-  const controls: TemplateControlKey[] = [];
-  if (t.includes('{{lightingDirective}}')) controls.push('lighting');
-  if (t.includes('{{shadowDirective}}')) controls.push('shadow');
-  if (t.includes('{{moodDirective}}')) controls.push('mood');
-  if (t.includes('{{surfaceDirective}}')) controls.push('surface');
-  if (t.includes('{{background}}')) controls.push('background');
-  if (t.includes('{{accentDirective}}') || t.includes('{{accentColorDirective}}')) controls.push('accent');
-  if (t.includes('{{productProminenceDirective}}')) controls.push('productProminence');
-  return controls;
-}
-
-const TEMPLATE_CONTROL_LABELS: Record<TemplateControlKey, string> = {
-  lighting: 'Lighting',
-  shadow: 'Shadow',
-  mood: 'Styling direction',
-  surface: 'Surface',
-  background: 'Background family',
-  accent: 'Accent color',
-  productProminence: 'Product prominence',
-};
-
-function TemplateControlChips({ controlKey, details, update }: {
-  controlKey: TemplateControlKey;
-  details: DetailSettings;
-  update: (p: Partial<DetailSettings>) => void;
-}) {
-  switch (controlKey) {
-    case 'lighting':
-      return <ChipSelector label="Lighting" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
-        { value: 'soft-diffused', label: 'Soft diffused' }, { value: 'warm-editorial', label: 'Warm editorial' },
-        { value: 'crisp-studio', label: 'Crisp studio' }, { value: 'natural-daylight', label: 'Natural daylight' },
-        { value: 'side-lit', label: 'Side-lit premium' },
-      ]} />;
-    case 'shadow':
-      return <ChipSelector label="Shadow" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
-        { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft' },
-        { value: 'natural', label: 'Natural' }, { value: 'defined', label: 'Defined' },
-      ]} />;
-    case 'mood':
-      return <ChipSelector label="Styling direction" value={details.mood} onChange={v => update({ mood: v })} options={[
-        { value: 'minimal-luxury', label: 'Minimal luxury' }, { value: 'clean-commercial', label: 'Clean commercial' },
-        { value: 'fashion-editorial', label: 'Fashion editorial' }, { value: 'beauty-clean', label: 'Beauty clean' },
-        { value: 'organic-natural', label: 'Organic natural' }, { value: 'modern-sleek', label: 'Modern sleek' },
-        { value: 'auto', label: 'Auto from product' },
-      ]} />;
-    case 'surface':
-      return <ChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
-        { value: 'minimal-studio', label: 'Minimal studio' }, { value: 'stone-plaster', label: 'Stone / plaster' },
-        { value: 'warm-wood', label: 'Warm wood' }, { value: 'fabric', label: 'Fabric / drape' },
-        { value: 'glossy', label: 'Glossy clean' }, { value: 'auto', label: 'Auto from product' },
-      ]} />;
-    case 'background':
-      return <ChipSelector label="Background family" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
-        { value: 'pure-white', label: 'Pure white' }, { value: 'soft-white', label: 'Soft white' },
-        { value: 'light-grey', label: 'Light grey' }, { value: 'warm-beige', label: 'Warm beige' },
-        { value: 'taupe', label: 'Taupe' }, { value: 'stone', label: 'Stone' }, { value: 'auto', label: 'Auto' },
-      ]} />;
-    case 'accent':
-      return <ChipSelector label="Accent color" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
-        { value: 'product-accent', label: 'Use product accent' }, { value: 'none', label: 'None' },
-        { value: 'brand-accent', label: 'Use brand accent' }, { value: 'custom', label: 'Custom hex' },
-        { value: 'subtle', label: 'Subtle accent' }, { value: 'strong', label: 'Strong accent' },
-      ]} />;
-    case 'productProminence':
-      return <ChipSelector label="Product prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
-        { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
-      ]} />;
     default: return null;
   }
 }
@@ -696,19 +488,18 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   const validCustomHex = /^#[0-9A-Fa-f]{6}$/.test(customHex);
 
   const handleCustomCardClick = () => {
-    if (hasCustom) return; // already active — use edit/X icons
+    if (hasCustom) return;
     toggleSwatch('custom');
     applyCustomHex(customHex);
     colorInputRef.current?.click();
   };
 
   const handleGradientCardClick = () => {
-    if (hasGradientCustom) return; // already active — use edit/X icons
+    if (hasGradientCustom) return;
     toggleSwatch('gradient-custom');
     gradFromInputRef.current?.click();
   };
 
-  /* Shared X-button overlay for any active card */
   const XButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
     <button
       type="button"
@@ -720,7 +511,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
     </button>
   );
 
-  /* Edit pencil for custom cards */
   const EditButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
     <button
       type="button"
@@ -732,7 +522,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
     </button>
   );
 
-  /* Save button for custom cards when canSave */
   const SaveButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
     <button
       type="button"
@@ -821,7 +610,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
               type="button"
               onClick={() => {
                 toggleSwatch(savedKey);
-                // Also apply to details so prompt builder picks it up
                 if (isGrad) {
                   update({ backgroundCustomGradient: { from: sc.gradient_from!, to: sc.gradient_to! } });
                 } else if (sc.hex) {
@@ -836,7 +624,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
                   : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm',
               )}
             >
-              {/* Delete saved color */}
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); deselectSwatch(savedKey); onDeleteSavedColor(sc.id); }}
@@ -936,113 +723,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
 }
 
 /* ══════════════════════════════════════════════
-   Constants
-   ══════════════════════════════════════════════ */
-
-const AUTO_AESTHETIC_DEFAULTS: Partial<DetailSettings> = {
-  backgroundTone: 'auto',
-  negativeSpace: 'auto',
-  surfaceType: 'auto',
-  lightingStyle: 'soft-diffused',
-  shadowStyle: 'natural',
-  mood: 'auto',
-  brandingVisibility: 'product-accent',
-};
-
-function isAutoApplied(details: DetailSettings): boolean {
-  return Object.entries(AUTO_AESTHETIC_DEFAULTS).every(
-    ([k, v]) => details[k as keyof DetailSettings] === v
-  );
-}
-
-function AutoAestheticButton({ details, update }: { details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
-  const active = isAutoApplied(details);
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        if (active) {
-          update({
-            backgroundTone: undefined, negativeSpace: undefined, surfaceType: undefined,
-            lightingStyle: undefined, shadowStyle: undefined, mood: undefined, brandingVisibility: undefined,
-          });
-        } else {
-          update(AUTO_AESTHETIC_DEFAULTS);
-        }
-      }}
-      className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
-        active
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
-      )}
-    >
-      <Sparkles className="w-3.5 h-3.5" />
-      Auto (Recommended)
-    </button>
-  );
-}
-
-function CustomHexPanel({ accentColor, onChange, isBrandMode }: { accentColor: string; onChange: (hex: string) => void; isBrandMode: boolean }) {
-  const [localHex, setLocalHex] = useState(accentColor || '#000000');
-
-  // Sync localHex when accentColor is cleared externally (e.g. via Auto or Reset)
-  useEffect(() => { setLocalHex(accentColor || '#000000'); }, [accentColor]);
-  const isValid = /^#([0-9A-Fa-f]{6})$/.test(localHex);
-
-  const handleBlur = () => {
-    if (isValid) onChange(localHex);
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
-      {isBrandMode && (
-        <p className="text-xs text-muted-foreground flex-1">No brand profile selected — enter your brand accent manually:</p>
-      )}
-      <div
-        className="w-8 h-8 rounded-md border border-border flex-shrink-0 shadow-sm"
-        style={{ backgroundColor: isValid ? localHex : '#000000' }}
-      />
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground font-medium">HEX</span>
-          <Input
-            value={localHex}
-            onChange={e => {
-              let v = e.target.value;
-              if (!v.startsWith('#')) v = '#' + v;
-              setLocalHex(v.slice(0, 7));
-            }}
-            onBlur={handleBlur}
-            onKeyDown={e => { if (e.key === 'Enter') handleBlur(); }}
-            className={cn('h-7 w-24 text-xs font-mono', !isValid && localHex.length === 7 && 'border-destructive')}
-            placeholder="#000000"
-          />
-        </div>
-        {!isValid && localHex.length === 7 && (
-          <span className="text-[10px] text-destructive">Invalid hex code</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-const ASPECT_RATIOS = [
-  { value: '1:1', label: 'Square 1:1' },
-  { value: '4:5', label: 'Portrait 4:5' },
-  { value: '3:4', label: 'Tall 3:4' },
-  { value: '9:16', label: 'Story 9:16' },
-  { value: '16:9', label: 'Landscape 16:9' },
-];
-
-const IMAGE_COUNT_OPTIONS = [
-  { value: '1', label: '1 image' },
-  { value: '2', label: '2 images' },
-  { value: '3', label: '3 images' },
-  { value: '4', label: '4 images' },
-];
-
-/* ══════════════════════════════════════════════
    Outfit Lock Panel (Pro structured system)
    ══════════════════════════════════════════════ */
 
@@ -1053,14 +733,12 @@ const GARMENT_OPTIONS: Record<string, string[]> = {
 };
 const COLOR_OPTIONS = ['white', 'black', 'beige', 'navy', 'cream', 'gray', 'brown', 'olive', 'blush', 'camel', 'charcoal', 'burgundy'];
 
-/* Color swatch hex map for visual color dots */
 const COLOR_HEX: Record<string, string> = {
   white: '#FFFFFF', black: '#1A1A1A', cream: '#FFFDD0', beige: '#F5F0E1',
   navy: '#1B2A4A', gray: '#9CA3AF', brown: '#6B4226', olive: '#556B2F',
   blush: '#DE98AB', camel: '#C19A6B', charcoal: '#36454F', burgundy: '#722F37',
 };
 
-/* Skin tone indicator colors */
 const SKIN_TONE_HEX: Record<string, string> = {
   light: '#FADCB8', medium: '#C68642', deep: '#5C3317',
 };
@@ -1068,7 +746,6 @@ const SKIN_TONE_HEX: Record<string, string> = {
 const FIT_OPTIONS = ['slim', 'relaxed', 'cropped', 'fitted', 'oversized', 'tailored', 'regular'];
 const MATERIAL_OPTIONS = ['cotton', 'silk', 'linen', 'denim', 'leather', 'wool', 'cashmere', 'knit', 'satin'];
 
-/* ── Color Dot ── */
 function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; hex?: string }) {
   const bg = hex || (color ? COLOR_HEX[color] || '#D1D5DB' : '#D1D5DB');
   const isBright = color === 'white' || color === 'cream';
@@ -1080,7 +757,6 @@ function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; he
   );
 }
 
-/* ── Preset Color Swatch (mini block with horizontal bands) ── */
 function PresetColorDots({ config }: { config: OutfitConfig }) {
   const colors = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
   return (
@@ -1130,7 +806,6 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
   },
 };
 
-// Gender-variant defaults
 const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
   garments: {
     top: { garment: 'crew-neck tee', color: 'white', fit: 'regular', material: 'cotton' },
@@ -1156,14 +831,11 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
   },
 };
 
-// Built-in presets per category
 function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
   let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
   if (!base) return [];
-  // Ensure complete outfit for all categories
   if (!base.bottom) base = { ...base, bottom: { garment: 'trousers', color: 'beige', fit: 'slim', material: 'cotton' } };
   if (!base.shoes) base = { ...base, shoes: { garment: 'sneakers', color: 'white', material: 'leather' } };
-  // Apply gender overrides so presets match the user's model gender
   if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
     base = { ...base, ...MALE_OUTFIT_OVERRIDES[category] };
   }
@@ -1230,7 +902,6 @@ function PieceField({ label, piece, onChange, pieceType }: {
         <Shirt className="w-3.5 h-3.5" />{label}
       </span>
 
-      {/* Garment */}
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground font-medium">Garment</Label>
         <div className="flex flex-wrap gap-2">
@@ -1249,7 +920,6 @@ function PieceField({ label, piece, onChange, pieceType }: {
         </div>
       </div>
 
-      {/* Color swatches */}
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground font-medium">Color</Label>
         <div className="flex flex-wrap gap-2">
@@ -1266,7 +936,6 @@ function PieceField({ label, piece, onChange, pieceType }: {
         </div>
       </div>
 
-      {/* Fit + Material */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground font-medium">Fit</Label>
@@ -1308,7 +977,6 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   const cat = primaryCategory || 'garments';
   const isMale = modelGender === 'male';
 
-  // Resolve defaults with gender awareness
   const defaultConfig = useMemo((): OutfitConfig => {
     const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[cat] || CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
     if (isMale && MALE_OUTFIT_OVERRIDES[cat]) {
@@ -1317,13 +985,10 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
     return base;
   }, [cat, isMale]);
 
-  // Current outfit config from details, falling back to defaults
   const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
 
-  // Track previous category to detect category changes
   const prevCatRef = useRef(cat);
 
-  // Initialize outfitConfig from category defaults — re-run when category/gender changes
    useEffect(() => {
     const categoryChanged = prevCatRef.current !== cat;
     prevCatRef.current = cat;
@@ -1345,7 +1010,6 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
     update({ outfitConfig: next });
   }, [currentConfig, update]);
 
-  // Check if a preset config matches the current config
   const isPresetActive = useCallback((presetConfig: OutfitConfig): boolean => {
     const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories'];
     return keys.every(k => {
@@ -1360,7 +1024,6 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
     });
   }, [currentConfig]);
 
-  // Presets: built-in + saved for this category
   const builtInPresets = useMemo(() => getBuiltInPresets(cat, isMale), [cat, isMale]);
   const categoryPresets = savedPresets.filter(p => p.category === cat);
   const allPresets = [...builtInPresets, ...categoryPresets];
@@ -1392,7 +1055,6 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
     savePresetsToStorage(updated);
   };
 
-  // Determine which pieces to show
   const showBottom = true;
   const showShoes = true;
 
@@ -1404,7 +1066,6 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         {isMale && <Badge variant="outline" className="text-xs h-5 px-2">Male defaults</Badge>}
       </div>
 
-      {/* Preset cards */}
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-primary" />Presets
       </span>
@@ -1464,13 +1125,10 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         )}
       </div>
 
-      {/* Structured outfit pieces */}
       <div className="space-y-2">
         <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
         {showBottom && <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />}
         {showShoes && <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />}
-
-        {/* Accessories moved to InlinePersonDetails "Accessories & Styling" section */}
       </div>
     </div>
   );
@@ -1629,7 +1287,6 @@ function InlinePersonDetails({ details, update, outfitAccessories, onAccessories
 
   return (
     <div className="space-y-4">
-      {/* Appearance group */}
       <div className="space-y-3">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1646,7 +1303,6 @@ function InlinePersonDetails({ details, update, outfitAccessories, onAccessories
         </div>
       </div>
 
-      {/* Accessories & Styling group — always visible */}
       <div className="space-y-3">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Accessories & Styling</span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1670,6 +1326,25 @@ function InlinePersonDetails({ details, update, outfitAccessories, onAccessories
     </div>
   );
 }
+
+/* ══════════════════════════════════════════════
+   Constants
+   ══════════════════════════════════════════════ */
+
+const ASPECT_RATIOS = [
+  { value: '1:1', label: 'Square 1:1' },
+  { value: '4:5', label: 'Portrait 4:5' },
+  { value: '3:4', label: 'Tall 3:4' },
+  { value: '9:16', label: 'Story 9:16' },
+  { value: '16:9', label: 'Landscape 16:9' },
+];
+
+const IMAGE_COUNT_OPTIONS = [
+  { value: '1', label: '1 image' },
+  { value: '2', label: '2 images' },
+  { value: '3', label: '3 images' },
+  { value: '4', label: '4 images' },
+];
 
 /* ══════════════════════════════════════════════
    Main Props
@@ -1715,7 +1390,6 @@ export function ProductImagesStep3Refine({
   // Scene-specific detail blocks
   const sceneGroups = getBlocksByScene(selectedSceneIds, dbScenes);
   const hasPersonBlock = sceneGroups.some(g => g.blocks.includes('personDetails'));
-  const hasSceneBlocks = sceneGroups.length > 0;
 
   // Scenes that need a model
   const scenesNeedingModel = useMemo(() =>
@@ -1726,84 +1400,43 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
-  const [_formatOpen, _setFormatOpen] = useState(false); // moved to Review step
-  const [_overridesOpen, _setOverridesOpen] = useState(false); // moved to Review step
   const [outfitOpen, setOutfitOpen] = useState(needsModel || hasPersonBlock);
-  const [_advancedOpen, _setAdvancedOpen] = useState(false); // kept for API compat
   const outfitRef = useRef<HTMLDivElement>(null);
-  const [propModalOpen, setPropModalOpen] = useState(false);
-  const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
 
   const scrollToOutfit = useCallback(() => {
     setOutfitOpen(true);
     setTimeout(() => outfitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   }, []);
 
+  // Check if a scene has actionDetails controls (the only expandable block now)
+  const sceneHasActionControls = (scene: ProductImageScene) => {
+    return (scene.triggerBlocks || []).includes('actionDetails');
+  };
+
   const toggleSceneExpand = (id: string) => {
     const scene = selectedScenes.find(s => s.id === id);
-    if (scene && !details.selectedModelId) {
-      const needsModelForScene = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
-      // Only redirect to outfit picker if scene has NO other expandable controls
-      if (needsModelForScene && !sceneHasControls(scene)) {
-        scrollToOutfit();
-        return;
-      }
+    if (!scene) return;
+
+    // If it's an on-model scene without a model, redirect to outfit picker
+    const isOnModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
+    if (isOnModel && !details.selectedModelId && !sceneHasActionControls(scene)) {
+      scrollToOutfit();
+      return;
     }
-    setExpandedSceneId(prev => prev === id ? null : id);
-  };
 
-  // Customization count
-  const IGNORE_KEYS = new Set([
-    'aspectRatio', 'quality', 'imageCount', 'sceneAspectOverrides', 'sceneProps',
-    'outfitConfig', 'selectedModelId', 'customNote',
-    'outfitTop', 'outfitBottom', 'outfitShoes', 'outfitAccessories',
-  ]);
-  const BASELINE: Record<string, string> = {
-    backgroundTone: 'auto', negativeSpace: 'auto', surfaceType: 'auto',
-    lightingStyle: 'soft-diffused', shadowStyle: 'natural', mood: 'auto',
-    brandingVisibility: 'product-accent',
-  };
-  const customizedCount = Object.entries(details).filter(([k, v]) => v && v !== '' && !IGNORE_KEYS.has(k) && BASELINE[k] !== v).length;
-
-  const handleReset = () => {
-    onDetailsChange({ aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount });
+    // Only expand if scene has action controls
+    if (sceneHasActionControls(scene)) {
+      setExpandedSceneId(prev => prev === id ? null : id);
+    }
   };
 
   // Format calculations
   const globalRatio = details.aspectRatio || '1:1';
-  const overrides = details.sceneAspectOverrides || {};
-  const sceneProps = details.sceneProps || {};
-  const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
-  const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
   const imgCount = parseInt(details.imageCount || '1', 10);
   const costPerImage = 6;
   const sceneCount = selectedScenes.length;
   const totalImages = productCount * sceneCount * imgCount;
   const totalCredits = totalImages * costPerImage;
-
-  const ratioOptions = ASPECT_RATIOS.map(r => ({ ...r, icon: <RatioShape ratio={r.value} /> }));
-
-  const handleSceneRatioChange = (sceneId: string, ratio: string) => {
-    const next = { ...overrides };
-    if (ratio === globalRatio) delete next[sceneId]; else next[sceneId] = ratio;
-    update({ sceneAspectOverrides: next });
-  };
-
-  const openPropModal = (sceneId: string | null) => { setPropModalSceneId(sceneId); setPropModalOpen(true); };
-  const handlePropConfirm = (ids: string[]) => {
-    const next = { ...sceneProps };
-    if (propModalSceneId === null) { for (const scene of selectedScenes) next[scene.id] = ids; }
-    else next[propModalSceneId] = ids;
-    update({ sceneProps: next });
-  };
-  const removeProp = (sceneId: string, propId: string) => {
-    const next = { ...sceneProps };
-    next[sceneId] = (next[sceneId] || []).filter(id => id !== propId);
-    if (next[sceneId].length === 0) delete next[sceneId];
-    update({ sceneProps: next });
-  };
-  const getProductById = (id: string) => allProducts.find(p => p.id === id);
-  const modalAlreadySelected = propModalSceneId === null ? [] : sceneProps[propModalSceneId] || [];
 
   // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
@@ -1813,47 +1446,12 @@ export function ProductImagesStep3Refine({
     return model?.gender;
   }, [details.selectedModelId, allModels]);
 
-  // Helper: get block labels for a scene (including template-derived ones)
-  const getSceneBlockLabels = (scene: ProductImageScene) => {
-    const labels = (scene.triggerBlocks || [])
-      .filter(b => b !== 'personDetails' && b !== 'customNote' && b !== 'consistency')
-      .map(b => BLOCK_LABELS[b]?.title)
-      .filter(Boolean);
-    // Add template-derived control labels
-    const templateCtrls = getTemplateControls(scene);
-    for (const ctrl of templateCtrls) {
-      const lbl = TEMPLATE_CONTROL_LABELS[ctrl];
-      if (lbl && !labels.includes(lbl)) labels.push(lbl);
-    }
-    return labels;
-  };
-
-  // Check if a scene has any expandable controls (blocks or template controls)
-  const sceneHasControls = (scene: ProductImageScene) => {
-    const group = sceneGroups.find(g => g.sceneId === scene.id);
-    const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
-    const templateCtrls = getTemplateControls(scene);
-    return sceneBlocks.length > 0 || templateCtrls.length > 0;
-  };
-
   return (
     <div className="space-y-5 pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Refine your shoot</h2>
-          <p className="text-sm text-muted-foreground mt-1">Smart defaults applied. Tap a scene to fine-tune, or jump straight to Review.</p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {customizedCount > 0 && (
-            <>
-              <Badge variant="secondary" className="text-[10px]">{customizedCount} customized</Badge>
-              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={handleReset}>
-                <RotateCcw className="w-3 h-3" />Reset
-              </Button>
-            </>
-          )}
-        </div>
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight">Refine your shoot</h2>
+        <p className="text-sm text-muted-foreground mt-1">Smart defaults applied automatically. Select a background, configure models, or jump straight to Review.</p>
       </div>
 
       {/* ── MODEL-NEEDED BANNER ── */}
@@ -1898,7 +1496,7 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
+      {/* ── SECTION 1: YOUR SCENES (simplified grid — no expandable settings except action) ── */}
       {selectedScenes.length > 0 && (() => {
         const bgScenes = selectedScenes.filter(s => s.triggerBlocks?.includes('background'));
         const showBgStrip = bgScenes.length >= 1;
@@ -1907,97 +1505,60 @@ export function ProductImagesStep3Refine({
         const productShots = selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
         const modelShots = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
 
-          const renderSceneCardButton = (scene: ProductImageScene) => {
-          const isExpanded = expandedSceneId === scene.id;
+        const renderSceneCard = (scene: ProductImageScene) => {
           const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
-          const group = sceneGroups.find(g => g.sceneId === scene.id);
-          const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
-          const templateCtrls = getTemplateControls(scene);
-          const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
-          const isClickable = hasControls || (sceneNeedsModel && needsModel);
-
-          const hasCustomizations = sceneBlocks.some(bk => {
-            const fields = BLOCK_FIELD_MAP[bk] || [];
-            return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
-          });
-
-          const controlPreviewNames: string[] = [];
-          for (const bk of sceneBlocks) {
-            const meta = BLOCK_LABELS[bk];
-            if (meta && controlPreviewNames.length < 2) controlPreviewNames.push(meta.title);
-          }
-          if (controlPreviewNames.length < 2) {
-            for (const ctrl of templateCtrls) {
-              if (controlPreviewNames.length < 2) controlPreviewNames.push(TEMPLATE_CONTROL_LABELS[ctrl]);
-            }
-          }
+          const hasAction = sceneHasActionControls(scene);
+          const isExpanded = expandedSceneId === scene.id;
+          const isClickable = hasAction || (sceneNeedsModel && needsModel);
 
           return (
-              <button
-                key={scene.id}
-                type="button"
-                onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
-                className={cn(
-                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card min-h-[72px]',
-                  isExpanded
-                    ? 'border-primary bg-primary/[0.03] shadow-sm'
-                    : hasCustomizations
-                      ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
-                      : sceneNeedsModel && needsModel
-                        ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
-                        : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
-                  isClickable ? 'cursor-pointer' : 'cursor-default',
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                    {scene.previewUrl ? (
-                      <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
-                      {(scene.triggerBlocks || []).includes('background') && (
-                        <span className="inline-flex items-center gap-0.5 px-1 py-px rounded bg-muted text-[9px] text-muted-foreground font-medium flex-shrink-0">
-                          <Paintbrush className="w-2.5 h-2.5" />BG
-                        </span>
-                      )}
-                    </div>
-                    {sceneNeedsModel && needsModel ? (
-                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
-                      </span>
-                    ) : hasCustomizations ? (
-                      <span className="flex items-center gap-1 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                        <span className="text-[10px] text-primary font-medium">customized</span>
-                      </span>
-                    ) : null}
-                  </div>
-                  {isClickable && (
-                    <Settings2 className={cn(
-                      'w-3.5 h-3.5 flex-shrink-0 transition-all',
-                      isExpanded
-                        ? 'text-primary'
-                        : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
-                    )} />
+            <button
+              key={scene.id}
+              type="button"
+              onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
+              className={cn(
+                'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card min-h-[72px]',
+                isExpanded
+                  ? 'border-primary bg-primary/[0.03] shadow-sm'
+                  : sceneNeedsModel && needsModel
+                    ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
+                    : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
+                isClickable ? 'cursor-pointer' : 'cursor-default',
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                  {scene.previewUrl ? (
+                    <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
                   )}
                 </div>
-              </button>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                  {sceneNeedsModel && needsModel ? (
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
+                    </span>
+                  ) : hasAction ? (
+                    <span className="text-[10px] text-muted-foreground mt-0.5 block">Tap to set action</span>
+                  ) : null}
+                </div>
+                {hasAction && (
+                  <Settings2 className={cn(
+                    'w-3.5 h-3.5 flex-shrink-0 transition-all',
+                    isExpanded
+                      ? 'text-primary'
+                      : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
+                  )} />
+                )}
+              </div>
+            </button>
           );
         };
 
-        /* ── Inline expanded panel for a scene ── */
-        const renderExpandedPanel = (scene: ProductImageScene) => {
-          const group = sceneGroups.find(g => g.sceneId === scene.id);
-          const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
-          const templateCtrls = getTemplateControls(scene);
-          const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
-          if (!hasControls) return null;
-
+        const renderExpandedActionPanel = (scene: ProductImageScene) => {
+          if (!sceneHasActionControls(scene)) return null;
           return (
             <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in fade-in duration-200">
               <div className="flex items-center gap-3 mb-3">
@@ -2009,47 +1570,11 @@ export function ProductImagesStep3Refine({
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              {sceneBlocks.map((blockKey, idx) => {
-                const meta = BLOCK_LABELS[blockKey];
-                if (!meta) return null;
-                return (
-                  <Collapsible key={blockKey} defaultOpen={idx === 0}>
-                    <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
-                      <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
-                      {meta.title}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="pb-3 pt-1">
-                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
-
-              {templateCtrls.length > 0 && (
-                <Collapsible defaultOpen={sceneBlocks.length === 0}>
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-3 group/block">
-                    <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
-                    Style
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="space-y-3 pb-3 pt-1">
-                      {templateCtrls.map(ctrl => (
-                        <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
-                      ))}
-                    </div>
-                    {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                      <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
+              <BlockFields blockKey="actionDetails" details={details} update={update} sceneIds={allSceneIds} />
             </div>
           );
         };
 
-        /* ── Chunk array into rows of N ── */
         const chunkArray = <T,>(arr: T[], size: number): T[][] => {
           const chunks: T[][] = [];
           for (let i = 0; i < arr.length; i += size) {
@@ -2058,10 +1583,8 @@ export function ProductImagesStep3Refine({
           return chunks;
         };
 
-        /* ── Render scene grid with row-aware expansion ── */
         const renderSceneGrid = (scenes: ProductImageScene[]) => {
-          // Responsive cols: 2 on mobile, 3 on sm, 4 on md+
-          const cols = isMobile ? 2 : 4; // simplified; CSS handles visual but we chunk by md default
+          const cols = isMobile ? 2 : 4;
           const rows = chunkArray(scenes, cols);
 
           return rows.map((row, rowIdx) => {
@@ -2071,16 +1594,13 @@ export function ProductImagesStep3Refine({
             return (
               <React.Fragment key={rowIdx}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {row.map(scene => {
-                    const isExpanded = expandedSceneId === scene.id;
-                    return (
-                      <div key={scene.id} className="relative">
-                        {renderSceneCardButton(scene)}
-                      </div>
-                    );
-                  })}
+                  {row.map(scene => (
+                    <div key={scene.id} className="relative">
+                      {renderSceneCard(scene)}
+                    </div>
+                  ))}
                 </div>
-                {activeScene && renderExpandedPanel(activeScene)}
+                {activeScene && renderExpandedActionPanel(activeScene)}
               </React.Fragment>
             );
           });
@@ -2092,9 +1612,6 @@ export function ProductImagesStep3Refine({
             <Camera className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold">Your scenes</span>
             <span className="text-[10px] text-muted-foreground">{selectedScenes.length} selected</span>
-            <div className="ml-auto">
-              <AutoAestheticButton details={details} update={update} />
-            </div>
           </div>
 
           {/* Product shots group — shown first */}
@@ -2241,9 +1758,7 @@ export function ProductImagesStep3Refine({
         </div>
       )}
 
-      {/* Consistency is auto-applied (default: balanced) — hidden from users for simplicity */}
-
-      {/* ── SECTION 4: Custom Note ── */}
+      {/* ── SECTION 3: Custom Note ── */}
       <Card>
         <CardContent className="p-4 space-y-3">
           <span className="text-sm font-semibold">Custom note</span>

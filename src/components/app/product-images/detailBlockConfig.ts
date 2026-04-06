@@ -8,17 +8,9 @@ export interface DetailBlockDef {
 }
 
 export const DETAIL_BLOCKS: DetailBlockDef[] = [
-  { key: 'background', title: 'Background & Composition', description: 'Control background tone, shadows, framing, and negative space.' },
-  { key: 'visualDirection', title: 'Visual Direction', description: 'Set mood, scene intensity, lighting, and product prominence.' },
-  { key: 'sceneEnvironment', title: 'Scene Environment', description: 'Define environment type, surface, styling density, and props.' },
   { key: 'personDetails', title: 'Visible Person Details', description: 'Configure presentation, age, skin tone, hand style, and more.' },
   { key: 'actionDetails', title: 'Action Details', description: 'Choose action type and intensity for product-in-use scenes.' },
-  { key: 'detailFocus', title: 'Detail Focus', description: 'Set focus area, crop intensity, and detail style.' },
-  { key: 'angleSelection', title: 'Angle Selection', description: 'Request specific views and number of angles.' },
   { key: 'packagingDetails', title: 'Packaging Details', description: 'Define packaging type, state, composition, and reference.' },
-  { key: 'productSize', title: 'Product Size', description: 'Confirm or correct the detected product size for realistic scale.' },
-  { key: 'branding', title: 'Branding Visibility', description: 'Control how prominently branding appears.' },
-  { key: 'layout', title: 'Layout Space', description: 'Set the balance between product focus and negative space.' },
 ];
 
 /** Map detail block keys to the detail settings fields they own */

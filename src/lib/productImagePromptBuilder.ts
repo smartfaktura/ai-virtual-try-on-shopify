@@ -831,14 +831,10 @@ export function buildDynamicPrompt(
 
   // For lighting: inject for ALL scenes when user explicitly set it (not just global)
   // Other directives remain global-only to let category templates drive the look
-  injectIfMissing('shadow', 'shadowDirective', true);
-  injectIfMissing('surface', 'surfaceDirective', true);
-  injectIfMissing('styling', 'stylingDirective', true);
+  // Auto-derived directives — lighting, body framing, outfit, and person are always injected
+  // Other per-scene controls (shadow, surface, mood, etc.) are now auto-derived from category defaults
+  // via token resolution and no longer need explicit injection
   injectIfMissing('lighting', 'lightingDirective', false);
-  injectIfMissing('composition', 'compositionDirective', true);
-  injectIfMissing('mood', 'sceneIntensityDirective', true);
-  injectIfMissing('styling density', 'stylingDensityDirective', true);
-  injectIfMissing('prominence', 'productProminenceDirective', true);
   injectIfMissing('body framing', 'bodyFramingDirective');
   // Outfit + person directives: inject for ALL scenes (not global-only)
   // so every on-model scene gets consistent outfit even if template forgot the token
