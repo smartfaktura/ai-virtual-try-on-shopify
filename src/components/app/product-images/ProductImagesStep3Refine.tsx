@@ -615,21 +615,53 @@ function TemplateControlChips({ controlKey, details, update }: {
 }
 
 /* ══════════════════════════════════════════════
-   Background Swatch Selector with color previews
+   Background Swatch Selector — studio-style 3:4 cards
    ══════════════════════════════════════════════ */
 
-const BG_SWATCH_OPTIONS: { value: string; label: string; swatch: string; isGradient?: boolean; gradient?: string }[] = [
-  { value: 'white', label: 'Pure White', swatch: '#FFFFFF' },
-  { value: 'light-gray', label: 'Light Gray', swatch: '#E5E7EB' },
-  { value: 'warm-neutral', label: 'Warm', swatch: '#F5F0EB' },
-  { value: 'cool-neutral', label: 'Cool', swatch: '#EDF0F4' },
-  { value: 'gradient', label: 'Soft Gradient', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)' },
-  { value: 'gradient-warm', label: 'Warm Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)' },
-  { value: 'gradient-cool', label: 'Cool Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)' },
-  { value: 'gradient-sunset', label: 'Sunset', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FEF3E6, #F8E0D0)' },
-  { value: 'custom', label: 'Custom Color', swatch: '', isGradient: false },
-  { value: 'gradient-custom', label: 'Custom Gradient', swatch: '', isGradient: true },
+const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradient?: boolean }[] = [
+  { value: 'white', label: 'Pure White', fill: '#FFFFFF' },
+  { value: 'off-white', label: 'Off-White', fill: '#FAFAFA' },
+  { value: 'light-gray', label: 'Light Gray', fill: '#E5E7EB' },
+  { value: 'warm-neutral', label: 'Warm Beige', fill: '#F5F0EB' },
+  { value: 'cool-neutral', label: 'Cool Gray', fill: '#EDF0F4' },
+  { value: 'taupe', label: 'Taupe', fill: '#D6CFC7' },
+  { value: 'sage', label: 'Sage', fill: '#E8EDE6' },
+  { value: 'blush', label: 'Blush', fill: '#F8ECE8' },
+  { value: 'charcoal', label: 'Charcoal', fill: '#3A3A3A' },
+  { value: 'gradient', label: 'Soft Gradient', fill: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)', isGradient: true },
+  { value: 'gradient-warm', label: 'Warm Fade', fill: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)', isGradient: true },
+  { value: 'gradient-cool', label: 'Cool Fade', fill: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)', isGradient: true },
 ];
+
+/* Curated palette for the custom color popover */
+const COLOR_PALETTE = [
+  '#FFFFFF','#FAFAFA','#F5F5F5','#E5E7EB','#D1D5DB','#9CA3AF',
+  '#F5F0EB','#EDF0F4','#D6CFC7','#E8EDE6','#F8ECE8','#FEF3C7',
+  '#FAF7F2','#F0E6D8','#E8DFD0','#D4C4B0','#C9B99A','#B8A88A',
+  '#FDE8E8','#FCE4EC','#F3E5F5','#E8EAF6','#E0F2F1','#E8F5E9',
+  '#6B7280','#4B5563','#374151','#3A3A3A','#1F2937','#1A1A1A',
+];
+
+function ColorPaletteGrid({ selected, onSelect }: { selected: string; onSelect: (hex: string) => void }) {
+  return (
+    <div className="grid grid-cols-6 gap-1.5">
+      {COLOR_PALETTE.map(hex => (
+        <button
+          key={hex}
+          type="button"
+          onClick={() => onSelect(hex)}
+          className={cn(
+            'w-7 h-7 rounded-md border transition-all',
+            selected.toUpperCase() === hex.toUpperCase()
+              ? 'ring-2 ring-primary ring-offset-1 border-primary'
+              : 'border-border/60 hover:border-primary/40 hover:scale-110',
+          )}
+          style={{ background: hex }}
+        />
+      ))}
+    </div>
+  );
+}
 
 function BackgroundSwatchSelector({ value, onChange, details, update }: {
   value: string;
@@ -639,6 +671,21 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
 }) {
   const [gradFrom, setGradFrom] = useState(details.backgroundCustomGradient?.from || '#F8F8F8');
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
+  const [customHex, setCustomHex] = useState(details.backgroundCustomHex || '#FFFFFF');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showGradientPicker, setShowGradientPicker] = useState(false);
+  const colorRef = useRef<HTMLDivElement>(null);
+  const gradientRef = useRef<HTMLDivElement>(null);
+
+  // Close popovers on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (colorRef.current && !colorRef.current.contains(e.target as Node)) setShowColorPicker(false);
+      if (gradientRef.current && !gradientRef.current.contains(e.target as Node)) setShowGradientPicker(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const applyGradient = (from: string, to: string) => {
     setGradFrom(from);
@@ -648,109 +695,202 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
     }
   };
 
-  // Parse comma-separated multi-select value
+  const applyCustomHex = (hex: string) => {
+    let v = hex;
+    if (!v.startsWith('#')) v = '#' + v;
+    v = v.slice(0, 7);
+    setCustomHex(v);
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+      update({ backgroundCustomHex: v });
+    }
+  };
+
   const selected = value ? value.split(',').filter(Boolean) : [];
 
   const toggleSwatch = (sVal: string) => {
-    const isCustomInput = sVal === 'custom' || sVal === 'gradient-custom';
     const current = new Set(selected);
-
     if (current.has(sVal)) {
-      // Deselect
       current.delete(sVal);
     } else {
-      // If selecting custom/gradient-custom, remove the other custom type (they're mutually exclusive)
       if (sVal === 'custom') current.delete('gradient-custom');
       if (sVal === 'gradient-custom') current.delete('custom');
       current.add(sVal);
     }
-
     onChange(Array.from(current).join(','));
   };
 
-  const showCustomHex = selected.includes('custom');
-  const showGradientInputs = selected.includes('gradient-custom');
+  const hasCustom = selected.includes('custom');
+  const hasGradientCustom = selected.includes('gradient-custom');
+  const validCustomHex = /^#[0-9A-Fa-f]{6}$/.test(customHex);
+
+  // Build display items: 12 presets + optional custom cards
+  const extraCards: { value: string; label: string; fill: string; isGradient?: boolean }[] = [];
+  if (hasCustom && validCustomHex) {
+    extraCards.push({ value: 'custom', label: 'Custom', fill: customHex });
+  }
+  if (hasGradientCustom) {
+    extraCards.push({ value: 'gradient-custom', label: 'Custom Grad', fill: `linear-gradient(135deg, ${gradFrom}, ${gradTo})`, isGradient: true });
+  }
+  const allCards = [...BG_SWATCH_OPTIONS, ...extraCards];
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-        {BG_SWATCH_OPTIONS.map(o => {
+      {/* Swatch grid — 3:4 aspect cards, 6 per row */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {allCards.map(o => {
           const isActive = selected.includes(o.value);
-          const swatchBg = o.isGradient
-            ? (o.gradient || `linear-gradient(135deg, ${gradFrom}, ${gradTo})`)
-            : o.swatch;
-
           return (
             <button
               key={o.value}
               type="button"
               onClick={() => toggleSwatch(o.value)}
+              aria-label={o.label}
               className={cn(
-                'flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition-all border cursor-pointer',
+                'relative rounded-xl overflow-hidden transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 isActive
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-border hover:border-primary/40 hover:bg-muted/30',
+                  ? 'ring-2 ring-primary shadow-md'
+                  : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm',
               )}
             >
-              {/* Swatch */}
-              {o.value === 'custom' ? (
-                <div className="w-8 h-8 rounded-md border border-border/60 flex items-center justify-center"
-                  style={{ background: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : undefined }}>
-                  <Paintbrush className="w-3.5 h-3.5 text-muted-foreground" />
+              {/* Full-bleed color / gradient fill */}
+              <div
+                className="aspect-[3/4] w-full"
+                style={{ background: o.fill }}
+              />
+
+              {/* Selected checkmark */}
+              {isActive && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                  <Check className="w-3 h-3 text-primary-foreground" />
                 </div>
-              ) : o.value === 'gradient-custom' ? (
-                <div className="w-8 h-8 rounded-md border border-border/60"
-                  style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }} />
-              ) : (
-                <div className="w-8 h-8 rounded-md border border-border/60"
-                  style={{ background: swatchBg }} />
               )}
-              <span className={cn('text-[9px] font-medium text-center leading-tight', isActive ? 'text-primary' : 'text-muted-foreground')}>
-                {o.label}
-              </span>
+
+              {/* Label overlay */}
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
+                <p className="text-[10px] font-medium text-white leading-tight">{o.label}</p>
+              </div>
             </button>
           );
         })}
       </div>
 
-      {/* Custom hex input */}
-      {showCustomHex && (
-        <div className="flex items-center gap-3 pl-1">
-          <div className="w-6 h-6 rounded border border-border"
-            style={{ background: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : '#FFFFFF' }} />
-          <Input
-            value={details.backgroundCustomHex || '#'}
-            onChange={e => {
-              let v = e.target.value;
-              if (!v.startsWith('#')) v = '#' + v;
-              update({ backgroundCustomHex: v.slice(0, 7) });
+      {/* Action buttons for custom pickers */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Custom Color Picker */}
+        <div className="relative" ref={colorRef}>
+          <Button
+            type="button"
+            variant={hasCustom ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+            onClick={() => {
+              if (!hasCustom) {
+                toggleSwatch('custom');
+                applyCustomHex(customHex);
+              }
+              setShowGradientPicker(false);
+              setShowColorPicker(prev => !prev);
             }}
-            className="h-7 w-24 text-xs font-mono"
-            placeholder="#FFFFFF"
-          />
-          <span className="text-[10px] text-muted-foreground">Enter any HEX color</span>
-        </div>
-      )}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Custom Color
+            {hasCustom && validCustomHex && (
+              <span className="w-3.5 h-3.5 rounded-full border border-white/40 inline-block" style={{ background: customHex }} />
+            )}
+          </Button>
 
-      {/* Custom gradient inputs */}
-      {showGradientInputs && (
-        <div className="flex items-center gap-3 pl-1 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">From</span>
-            <div className="w-6 h-6 rounded border border-border" style={{ background: gradFrom }} />
-            <Input value={gradFrom} onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(v.slice(0, 7), gradTo); }}
-              className="h-7 w-20 text-xs font-mono" placeholder="#F8F8F8" />
-          </div>
-          <span className="text-[10px] text-muted-foreground">→</span>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">To</span>
-            <div className="w-6 h-6 rounded border border-border" style={{ background: gradTo }} />
-            <Input value={gradTo} onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(gradFrom, v.slice(0, 7)); }}
-              className="h-7 w-20 text-xs font-mono" placeholder="#EEEEEE" />
-          </div>
-          <div className="w-16 h-6 rounded border border-border" style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }} />
+          {showColorPicker && (
+            <div className="absolute z-50 top-full mt-2 left-0 w-64 rounded-xl border bg-popover shadow-lg p-3 space-y-3 animate-in fade-in-0 zoom-in-95">
+              <p className="text-xs font-medium text-foreground">Pick a color</p>
+              <ColorPaletteGrid selected={customHex} onSelect={(hex) => { applyCustomHex(hex); }} />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg border border-border" style={{ background: validCustomHex ? customHex : '#FFFFFF' }} />
+                <Input
+                  value={customHex}
+                  onChange={e => applyCustomHex(e.target.value)}
+                  className="h-8 w-24 text-xs font-mono"
+                  placeholder="#FFFFFF"
+                />
+                <span className="text-[10px] text-muted-foreground">HEX</span>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Custom Gradient Picker */}
+        <div className="relative" ref={gradientRef}>
+          <Button
+            type="button"
+            variant={hasGradientCustom ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+            onClick={() => {
+              if (!hasGradientCustom) {
+                toggleSwatch('gradient-custom');
+              }
+              setShowColorPicker(false);
+              setShowGradientPicker(prev => !prev);
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Custom Gradient
+            {hasGradientCustom && (
+              <span className="w-8 h-3.5 rounded-full inline-block border border-white/40" style={{ background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})` }} />
+            )}
+          </Button>
+
+          {showGradientPicker && (
+            <div className="absolute z-50 top-full mt-2 left-0 w-72 rounded-xl border bg-popover shadow-lg p-3 space-y-4 animate-in fade-in-0 zoom-in-95">
+              <p className="text-xs font-medium text-foreground">Custom gradient</p>
+
+              {/* Live preview */}
+              <div className="h-10 rounded-lg border border-border" style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }} />
+
+              {/* From color */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">From</p>
+                <ColorPaletteGrid selected={gradFrom} onSelect={(hex) => applyGradient(hex, gradTo)} />
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded border border-border" style={{ background: gradFrom }} />
+                  <Input
+                    value={gradFrom}
+                    onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(v.slice(0, 7), gradTo); }}
+                    className="h-7 w-20 text-xs font-mono"
+                    placeholder="#F8F8F8"
+                  />
+                </div>
+              </div>
+
+              {/* To color */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">To</p>
+                <ColorPaletteGrid selected={gradTo} onSelect={(hex) => applyGradient(gradFrom, hex)} />
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded border border-border" style={{ background: gradTo }} />
+                  <Input
+                    value={gradTo}
+                    onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(gradFrom, v.slice(0, 7)); }}
+                    className="h-7 w-20 text-xs font-mono"
+                    placeholder="#EEEEEE"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Deselect custom buttons */}
+        {hasCustom && (
+          <Button type="button" variant="ghost" size="sm" className="h-8 text-xs gap-1 text-muted-foreground" onClick={() => toggleSwatch('custom')}>
+            <X className="w-3 h-3" /> Remove custom
+          </Button>
+        )}
+        {hasGradientCustom && (
+          <Button type="button" variant="ghost" size="sm" className="h-8 text-xs gap-1 text-muted-foreground" onClick={() => toggleSwatch('gradient-custom')}>
+            <X className="w-3 h-3" /> Remove gradient
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
