@@ -757,6 +757,9 @@ export default function ProductImages() {
                 details={details}
                 balance={balance}
                 onEditStep={(s) => setStep(s as PIStep)}
+                onDetailsChange={setDetails}
+                allProducts={userProducts}
+                selectedProductIds={selectedProductIds}
               />
             )}
 
