@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
-import { ALL_SCENES } from './sceneData';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
 import type { ModelProfile } from '@/types';
