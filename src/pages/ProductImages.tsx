@@ -108,6 +108,7 @@ export default function ProductImages() {
     setCompletedJobIds(new Set());
     setFailedJobIds(new Set());
     if (pollingRef.current) clearTimeout(pollingRef.current);
+    try { sessionStorage.removeItem('pi_generation_session'); } catch {}
   }, []);
 
   // Load user products
@@ -444,6 +445,17 @@ export default function ProductImages() {
     setEnqueuedCount(newJobMap.size);
     sendWake(token);
 
+    // Persist session so page refresh can resume polling
+    try {
+      sessionStorage.setItem('pi_generation_session', JSON.stringify({
+        jobMapEntries: Array.from(newJobMap.entries()),
+        expectedJobCount: totalExpected,
+        startTime: Date.now(),
+        selectedProductIds: Array.from(selectedProductIds),
+        selectedSceneIds: Array.from(selectedSceneIds),
+      }));
+    } catch {}
+
     startPolling(newJobMap);
   }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
@@ -470,6 +482,7 @@ export default function ProductImages() {
     setResults(resultMap);
     refreshBalance();
     setStep(6);
+    try { sessionStorage.removeItem('pi_generation_session'); } catch {}
   }, [selectedProducts, refreshBalance]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
@@ -524,6 +537,16 @@ export default function ProductImages() {
           return;
         }
 
+        // Near-complete auto-finish: if 90%+ done after 90 seconds, show available results
+        const elapsedMs = Date.now() - pollingStartRef.current;
+        const threshold = Math.ceil(jobIds.length * 0.9);
+        if (elapsedMs > 90_000 && done.length >= threshold && done.length > 0) {
+          const remaining = jobIds.length - done.length;
+          toast.info(`${remaining} image${remaining !== 1 ? 's' : ''} still processing — showing ${done.length} completed results.`);
+          finishWithResults(jobs, productMap);
+          return;
+        }
+
         pollingRef.current = setTimeout(poll, 3000);
       } catch {
         pollingRef.current = setTimeout(poll, 5000);
@@ -535,6 +558,29 @@ export default function ProductImages() {
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
+  }, []);
+
+  // Restore generation session on mount (page refresh recovery)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('pi_generation_session');
+      if (!saved || step !== 1) return;
+      const session = JSON.parse(saved);
+      const entries: [string, string][] = session.jobMapEntries || [];
+      if (entries.length === 0) return;
+      const restoredMap = new Map(entries);
+      setJobMap(restoredMap);
+      setExpectedJobCount(session.expectedJobCount || entries.length);
+      setEnqueuedCount(entries.length);
+      if (session.selectedProductIds) setSelectedProductIds(new Set(session.selectedProductIds));
+      if (session.selectedSceneIds) setSelectedSceneIds(new Set(session.selectedSceneIds));
+      // Adjust polling start to account for time already elapsed
+      pollingStartRef.current = session.startTime || Date.now();
+      setStep(5);
+      toast.info('Resuming your generation — hang tight!');
+      startPolling(restoredMap);
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canNavigateTo = (s: number) => {
