@@ -1,95 +1,130 @@
 
 
-# Fix Background Selector — Deselection, X Buttons, Saved Colors
+# Admin Product Image Scenes Manager
 
-## Problems
-1. **Cannot deselect Custom Color** — clicking the card always opens the native picker and re-selects it
-2. **Cannot deselect Custom Gradient** — same issue, always opens picker
-3. No visual way to remove/deselect custom selections (no X button)
-4. User wants ability to save custom colors for reuse
+## Context
 
-## Changes
+Product Image scenes are currently **hardcoded** in `sceneData.ts` (~100 scenes across 14 global scenes + 11 category collections). The existing `/app/admin/scenes` page manages Freestyle/TryOn scenes only. There is no admin UI to manage Product Image scenes.
 
-### File: `ProductImagesStep3Refine.tsx`
+## Approach
 
-**1. Fix deselection logic for Custom Color and Gradient cards**
-- Split the click handler: if already selected, deselect (toggle off) without opening picker
-- Add a separate small pencil/edit icon button on active custom cards to re-open the picker
-- Add an X button (top-left) on active custom/gradient cards to deselect and clear
+Move Product Image scene definitions to a new database table so admins can add, edit, reorder, hide, and configure scenes without code changes. The frontend falls back to the hardcoded data as seed, then reads from the database going forward.
 
-**2. Add X button on ALL active swatch cards**
-- When any swatch card is selected, show a small X icon (top-left) that deselects it on click (stops propagation so it doesn't re-select)
-- This gives a universal "remove" affordance across all backgrounds
+## Database
 
-**3. Save custom colors per user (database)**
-- Create a `user_saved_colors` table: `id`, `user_id`, `hex`, `gradient_from`, `gradient_to`, `label`, `created_at`
-- Limit to 6 saved colors per user
-- When a user picks a custom color/gradient, show a small "save" heart/bookmark icon on the card
-- Saved colors appear as additional cards in the grid (after presets, before the + cards)
-- Each saved card has an X to delete it from saved colors
+### New table: `product_image_scenes`
 
-**4. UI polish**
-- Active custom cards: show the fill + checkmark (top-right) + X (top-left) + small edit pencil icon
-- Inactive custom cards: dashed border + Plus icon (unchanged)
-- Saved color cards: same style as presets but with a small bookmark indicator and X to delete
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `scene_id` | text UNIQUE | e.g. `clean-packshot`, `fragrance_hero_surface` |
+| `title` | text | Display name |
+| `description` | text | Short description for users |
+| `prompt_template` | text | Full prompt with `{{tokens}}` |
+| `trigger_blocks` | text[] | Which detail panels to show |
+| `is_global` | boolean | True = universal scene |
+| `category_collection` | text | e.g. `fragrance`, `shoes` (null if global) |
+| `scene_type` | text | `macro`, `packshot`, `portrait`, `lifestyle`, `editorial`, `flatlay` |
+| `exclude_categories` | text[] | Product categories to hide this scene from |
+| `preview_image_url` | text | Optional preview thumbnail |
+| `is_active` | boolean | Soft-delete / hide |
+| `sort_order` | integer | Within its collection |
+| `created_at` | timestamptz | |
 
-### Database migration
-```sql
-CREATE TABLE public.user_saved_colors (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  hex text,
-  gradient_from text,
-  gradient_to text,
-  label text DEFAULT 'Custom',
-  created_at timestamptz DEFAULT now(),
-  CONSTRAINT max_colors CHECK (true)
-);
+RLS: Admin-only write, authenticated read.
 
-ALTER TABLE public.user_saved_colors ENABLE ROW LEVEL SECURITY;
+### Seed migration
 
-CREATE POLICY "Users manage own colors"
-  ON public.user_saved_colors FOR ALL TO authenticated
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-```
+A second migration seeds all ~100 hardcoded scenes from `sceneData.ts` into the table so nothing is lost.
 
-Enforce 6-color limit client-side (disable save button when at limit).
+## New Page: `/app/admin/product-image-scenes`
 
-### New hook: `useUserSavedColors.ts`
-- Fetch saved colors for current user
-- `saveColor(hex)` / `saveGradient(from, to)` — insert with limit check
-- `deleteColor(id)` — delete by id
-- Uses `useQuery` + `useMutation` with Supabase
-
-### Updated `BackgroundSwatchSelector` logic
+### Layout (single scrollable page)
 
 ```text
-Grid layout:
-[Preset 1-6]
-[Preset 7-12]
-[Saved 1] [Saved 2] ... [+ Color] [+ Gradient]
-
-Card states:
-- Inactive preset: ring-1, no badge
-- Active preset: ring-2 primary, checkmark (top-right), X (top-left)
-- Inactive custom: dashed border, + icon
-- Active custom: fill shown, checkmark, X (top-left), edit pencil (bottom-right corner)
-- Saved color: solid fill, small bookmark icon, X to delete
+┌──────────────────────────────────────────────────┐
+│ Product Image Scene Manager          [+ Add Scene]│
+│ [Search...]                    [Show hidden ☐]   │
+├──────────────────────────────────────────────────┤
+│ ▼ Global Scenes (14)                             │
+│   ┌─────────────────────────────────────────┐    │
+│   │ [≡] Clean Studio Shot    packshot  ✓    │    │
+│   │     triggerBlocks: background, productSize   │
+│   │     [Edit] [Hide] [↑] [↓]              │    │
+│   └─────────────────────────────────────────┘    │
+│   ...                                            │
+│                                                  │
+│ ▼ Fragrance (7 scenes)                           │
+│   ┌─────────────────────────────────────────┐    │
+│   │ [≡] Hero Bottle on Stone  editorial ✓   │    │
+│   │     [Edit] [Hide] [↑] [↓]              │    │
+│   └─────────────────────────────────────────┘    │
+│   ...                                            │
+│                                                  │
+│ ▼ Beauty & Skincare (7 scenes)                   │
+│   ...                                            │
+└──────────────────────────────────────────────────┘
 ```
 
-**Click behavior:**
-- Preset card click → toggle selection
-- Custom card click (inactive) → select + open picker
-- Custom card click (active) → do nothing (use edit icon to change, X to remove)
-- X button click → deselect/remove (stopPropagation)
-- Edit icon click → open native picker (stopPropagation)
+### Edit Panel (inline expand or modal)
+
+When clicking "Edit" on a scene row, an inline collapsible expands with:
+
+- **Title** — text input
+- **Description** — text input
+- **Scene Type** — select (macro/packshot/portrait/lifestyle/editorial/flatlay)
+- **Category Collection** — select (global, fragrance, beauty-skincare, etc.)
+- **Trigger Blocks** — multi-select checkboxes from the 11 known blocks
+- **Exclude Categories** — multi-select checkboxes (product categories like home-decor, tech-devices)
+- **Prompt Template** — large textarea with token reference guide
+- **Preview Image** — upload or URL input
+- **Active** — toggle switch
+- **Sort Order** — number input
+
+### Add New Scene
+
+"+ Add Scene" button opens the same form but empty, with category collection pre-selected if adding from within a collection section.
+
+### Features
+
+- **Search** across all scenes by title/description/scene_id
+- **Reorder** within collections (up/down arrows + save)
+- **Hide/Show** toggle (sets `is_active = false`)
+- **Prompt token reference** — collapsible guide showing all available `{{tokens}}`
+- **Bulk save** — dirty tracking with single save button
+
+## Code Changes
+
+### New hook: `useProductImageScenes.ts`
+
+- Fetches all scenes from `product_image_scenes` table
+- Provides `GLOBAL_SCENES` and `CATEGORY_COLLECTIONS` shaped data
+- Falls back to hardcoded `sceneData.ts` if table is empty (first-load safety)
+- CRUD mutations for admin operations
+
+### Update scene consumers
+
+- `ProductImagesStep2Scenes.tsx` — import scenes from hook instead of hardcoded `sceneData.ts`
+- `ProductImagesStep3Refine.tsx` — same
+- `ProductImagesStep4Review.tsx` — same
+- `productImagePromptBuilder.ts` — same
+- Keep `sceneData.ts` as fallback/seed reference only
+
+### Register route
+
+- Add lazy import + route in `App.tsx` at `/app/admin/product-image-scenes`
 
 ## Files
 
-| File | Changes |
+| File | Action |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | Fix click handlers, add X/edit buttons on active cards, integrate saved colors |
-| `src/hooks/useUserSavedColors.ts` | New hook for CRUD on saved colors |
-| Migration | Create `user_saved_colors` table with RLS |
+| Migration 1 | Create `product_image_scenes` table with RLS |
+| Migration 2 | Seed all ~100 scenes from hardcoded data |
+| `src/hooks/useProductImageScenes.ts` | New hook — fetch, CRUD, shaped output |
+| `src/pages/AdminProductImageScenes.tsx` | New admin page |
+| `src/App.tsx` | Add route |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Use hook instead of hardcoded imports |
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Use hook |
+| `src/components/app/product-images/ProductImagesStep4Review.tsx` | Use hook |
+| `src/lib/productImagePromptBuilder.ts` | Use hook-provided data |
 
