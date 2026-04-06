@@ -620,7 +620,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
 
     case 'personDirective': {
-      const needsPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       return buildPersonDirective(details, cat, needsPerson, ctx.modelGender);
     }
     case 'handStyle': return buildHandDirective(details);
