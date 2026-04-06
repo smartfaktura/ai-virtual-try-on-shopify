@@ -1,94 +1,66 @@
 
 
-# Fix: Product Images — Multiple Quality & Naming Issues
+# Merge Universal + Category Scenes into Unified Per-Category Sections
 
-## Problems Identified
+## Current Problem
+Step 2 shows scenes in 3 separate sections: "Universal Scenes" (global), "Recommended for your products" (category), and "Explore more" (other categories). This is confusing because:
+- Users don't know which universal scenes are relevant to their product type
+- Some universal scenes (In-Hand, Tabletop) don't suit certain categories but still show
+- The separation creates a disconnect between "universal" and "recommended"
 
-1. **Person appearing in product-only scenes** (Tabletop Lifestyle, Product on Pedestal, Accent Color Backdrop): The model reference is sent to the edge function for ALL scenes (line 391: `...(modelRef ? { model: modelRef } : {})`). When the edge function sees a model, it injects person instructions, causing people to appear in packshot/product-only scenes.
+## New Approach
+Merge everything into a single per-category view. When the user's products are detected as e.g. "Clothing & Apparel", they see ONE section containing both the relevant universal scenes AND the garment-specific scenes together, organized by sub-groups within that section.
 
-2. **In-Hand Studio/Lifestyle bad for garments**: The prompt says "held in a hand" which doesn't work for apparel. A tank top can't be held like a perfume bottle. These scenes should either be excluded for garments or have garment-specific prompt adaptation (e.g. "model holding the folded garment close to camera").
+### How it works
 
-3. **Scene labels showing "Scene"**: When polling or session restore resolves scene names, it falls back to `'Scene'` if `selectedScenes` doesn't contain the scene (e.g. DB-loaded scenes not matching). The `scene_name` is already stored in the DB — we should use it.
+**Detected categories** (e.g. garments): Show a single expanded section titled "Clothing & Apparel" containing:
+- Sub-group "Essential Shots" — universal scenes compatible with that category (Clean Studio, Marketplace, Editorial Surface, Close-Up Detail, Side Profile, Back View, Top-Down, Accent Backdrop, etc. minus excluded ones)
+- Sub-group "Category Shots" — the garment-specific scenes (Folded Display, Hanging Display, On-Model Look, etc.)
 
-4. **Background color not applied to non-global scenes**: The prompt builder only injects background for global scenes (`globalOnly` flag on line 832-838 for shadow, surface, styling, lighting). The `injectIfMissing` for background does check all scenes (line 823-830), but the `hasBgToken` check may not catch all templates. Need to verify non-global category scenes also get the user's selected background.
+**Non-detected categories**: Collapsed as before under "Explore more scenes"
 
-5. **In-Hand Lifestyle showing wrong composition for fashion**: Same root cause as #2 — prompts treat all products as handheld objects rather than adapting for garment presentation.
+**Multi-category**: If user has garments + fragrance, they get two expanded sections each with their own merged universal + category scenes. Universal scenes that apply to both appear in both sections (selection is shared — selecting "Clean Studio" in one section selects it everywhere).
 
-## Plan
+### Files to change
 
-### A. File: `src/pages/ProductImages.tsx` — Conditionally skip model reference for product-only scenes
+**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`** — Main restructuring:
+- Remove the standalone "Universal Scenes" grid section (lines 303-318)
+- For each detected category, build a merged scene list: filtered global scenes (respecting `excludeCategories`) + category collection scenes
+- Render each detected category as a single expanded section with internal sub-group labels ("Essential Shots" / "Category-Specific Shots")
+- Keep "Explore more" collapsed sections for non-detected categories, also including relevant universal scenes within them
+- Scene selection remains unified across sections (same `selectedSceneIds` Set)
 
-**Change the payload building loop** (~line 391) to only include `model` when the scene's `triggerBlocks` includes `personDetails` or `actionDetails`:
+**`src/components/app/product-images/sceneData.ts`** — No structural changes needed. The `excludeCategories` and `isGlobal` flags already provide the data needed to filter and merge.
 
-```typescript
-const sceneNeedsPerson = scene.triggerBlocks?.some(
-  (b: string) => b === 'personDetails' || b === 'actionDetails'
-);
+**`src/hooks/useProductImageScenes.ts`** — Add a new derived helper: `getUnifiedCategoryView(categoryId)` that returns global scenes (filtered for that category) + category-specific scenes merged into one array. Or this logic can live in the Step2 component directly.
 
-const payload = {
-  ...
-  ...(modelRef && sceneNeedsPerson ? { model: modelRef } : {}),
-  ...
-};
+### UI Layout (per detected category section)
+
+```text
+▼ Clothing & Apparel                    [Recommended] [7 selected]
+  [Select All] [Deselect All]
+  
+  ── Essential Shots ──
+  [Clean Studio] [Marketplace] [Editorial Surface] [Product on Pedestal]
+  [Tabletop Lifestyle] [Close-Up Detail] [Side Profile] [Back View]
+  [Top-Down / Flat Lay] [Accent Color Backdrop]
+  
+  ── Clothing-Specific Shots ──
+  [Folded Display] [Hanging Display] [Styled Flat Lay] [Fabric Detail]
+  [Editorial Garment] [On-Model Look] [Movement Shot]
+
+▼ Fragrance                              [Recommended] [3 selected]
+  ...same pattern with fragrance-relevant universal + fragrance scenes...
+
+▸ Beauty & Skincare                      (collapsed, not detected)
+▸ Shoes                                  (collapsed, not detected)
 ```
 
-This prevents the edge function from injecting person/model instructions for tabletop, pedestal, accent backdrop, and other product-only scenes.
+### Edge cases
+- If NO category is detected: show a single "All Scenes" section with all universal scenes + an "Explore by category" collapsed area
+- Packaging scenes (`Product + Packaging`, `Packaging Detail`) already have `excludeCategories: ['garments']` so they won't appear in clothing sections
+- In-Hand scenes already exclude garments, home-decor, tech-devices
 
-### B. File: `src/pages/ProductImages.tsx` — Fix scene name fallback in polling
-
-In `startPolling` (line 496) and the `onViewResults` callback (line 881), when `scene?.title` is not found, fall back to the `scene_name` from the DB query. Update the polling query to also select `scene_name`:
-
-```typescript
-// In poll query, select scene_name as well
-const { data: jobs } = await supabase
-  .from('generation_queue')
-  .select('id, status, result, scene_name')
-  .in('id', jobIds);
-
-// Use job.scene_name as fallback
-productMap.set(jobId, {
-  productId,
-  sceneName: scene?.title || 'Scene'  // initial map
-});
-
-// After fetching jobs, enrich with DB scene_name
-for (const job of jobs) {
-  const existing = productMap.get(job.id);
-  if (existing && existing.sceneName === 'Scene' && job.scene_name) {
-    productMap.set(job.id, { ...existing, sceneName: job.scene_name });
-  }
-}
-```
-
-### C. File: `src/components/app/product-images/sceneData.ts` — Fix In-Hand scenes for garments
-
-Add `'garments'` to the `excludeCategories` for both `in-hand-studio` and `in-hand-lifestyle`. Garments should NOT use "held in hand" scenes — they have their own category-specific on-model scenes.
-
-```typescript
-// in-hand-studio
-excludeCategories: ['home-decor', 'tech-devices', 'garments'],
-
-// in-hand-lifestyle  
-excludeCategories: ['home-decor', 'tech-devices', 'garments'],
-```
-
-### D. File: `src/lib/productImagePromptBuilder.ts` — Ensure background injection works for all scenes
-
-The background injection at line 823-830 checks `!hasBgToken && !isAuto(bgTone)`, but `bgTone` maps to `details.backgroundTone` while some users set `details.negativeSpace` (the background family). Verify both paths inject correctly. Also ensure the `injectIfMissing` calls for lighting, shadow etc. are NOT restricted to `globalOnly` for background — currently background injection is correct (not globalOnly), but we should also inject lighting for category scenes when user explicitly set it.
-
-### E. File: `src/components/app/product-images/sceneData.ts` — Add garment-specific category scenes for in-hand
-
-Add two new garment-specific scenes to the `garments` category collection:
-- **"Garment In-Hand Presentation"**: Close-up of someone presenting the folded/held garment naturally
-- **"Garment Lifestyle Hold"**: Model casually holding the garment in a lifestyle setting
-
-Or alternatively, adapt the global in-hand prompts to detect garment category and use different wording. The simpler approach is excluding garments from the generic in-hand and relying on existing on-model garment scenes.
-
-## Files
-
-| File | Changes |
-|---|---|
-| `src/pages/ProductImages.tsx` | Skip model ref for product-only scenes; fix scene name fallback using DB `scene_name` |
-| `src/components/app/product-images/sceneData.ts` | Add `garments` to `excludeCategories` for in-hand-studio and in-hand-lifestyle |
-| `src/lib/productImagePromptBuilder.ts` | Minor: ensure background/lighting injection covers category scenes when user explicitly set values |
+### Technical detail
+The `CategorySection` component will be extended to accept an optional `universalScenes` prop. When provided, it renders two sub-groups within the collapsible. The `toggleScene` and `selectAllCategory` functions will operate on the merged list.
 
