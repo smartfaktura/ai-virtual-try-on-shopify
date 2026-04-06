@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useUserSavedColors } from '@/hooks/useUserSavedColors';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Crown, UserX } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
