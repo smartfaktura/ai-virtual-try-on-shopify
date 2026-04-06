@@ -276,8 +276,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               selectedSceneIds={selectedSceneIds}
               isOpen={expandedCategories.has(cat.id)}
               onToggleOpen={() => toggleCategory(cat.id)}
-              toggleScene={toggleScene}
-              onSelectAll={() => selectAllUnified(cat.id)}
+              toggleScene={toggleSceneWithUpdate}
               isRecommended
               gridClass={gridClass}
             />
