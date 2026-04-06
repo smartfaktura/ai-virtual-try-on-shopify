@@ -423,6 +423,8 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   return (
     <div className="pt-3 pl-2">
       <div className="flex items-center gap-2 mb-2">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
+        <div className="h-px flex-1 bg-border" />
         <Button
           variant="ghost"
           size="sm"
@@ -432,8 +434,6 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
           {allSelected ? 'Deselect' : 'Select All'}
           {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
         </Button>
-        <div className="h-px flex-1 bg-border" />
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
       </div>
       <div className={`grid ${gridClass} gap-2`}>
         {scenes.map(scene => (
