@@ -1481,7 +1481,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
               )}
-            >custom</button>
+            ><span className="capitalize">Custom</span></button>
           </div>
           {currentConfig.accessories && !['none', 'minimal', 'statement', ''].includes(currentConfig.accessories) && (
             <Input
