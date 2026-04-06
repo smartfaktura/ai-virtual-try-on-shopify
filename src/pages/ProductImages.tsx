@@ -889,13 +889,21 @@ export default function ProductImages() {
                   if (pollingRef.current) clearTimeout(pollingRef.current);
                   // Fetch final state and transition
                   const jobIds = Array.from(jobMap.values());
-                  supabase.from('generation_queue').select('id, status, result').in('id', jobIds).then(({ data }) => {
+                  supabase.from('generation_queue').select('id, status, result, payload').in('id', jobIds).then(({ data }) => {
                     const productMap = new Map<string, { productId: string; sceneName: string }>();
                     for (const [key, jobId] of jobMap.entries()) {
                       const parts = key.split('_');
                       const sceneId = parts[1] || '';
                       const scene = selectedScenes.find(s => s.id === sceneId);
                       productMap.set(jobId, { productId: parts[0], sceneName: scene?.title || 'Scene' });
+                    }
+                    // Enrich scene names from payload
+                    for (const j of data || []) {
+                      const existing = productMap.get(j.id);
+                      if (existing && existing.sceneName === 'Scene' && j.payload) {
+                        const payloadSceneName = (j.payload as Record<string, unknown>)?.scene_name as string | undefined;
+                        if (payloadSceneName) productMap.set(j.id, { ...existing, sceneName: payloadSceneName });
+                      }
                     }
                     finishWithResults(data || [], productMap);
                   });
