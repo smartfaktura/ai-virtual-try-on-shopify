@@ -54,7 +54,8 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
     if (selectedModelId && !first6.some(m => m.modelId === selectedModelId) && !filteredUser.some(m => m.modelId === selectedModelId)) {
       const selectedModel = filteredGlobal.find(m => m.modelId === selectedModelId);
       if (selectedModel) {
-        return [...first6.slice(0, INLINE_LIMIT - 1), selectedModel];
+        const rest = filteredGlobal.filter(m => m.modelId !== selectedModelId).slice(0, INLINE_LIMIT - 1);
+        return [selectedModel, ...rest];
       }
     }
     return first6;
