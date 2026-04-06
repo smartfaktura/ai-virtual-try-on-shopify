@@ -59,10 +59,6 @@ export function useProductImageScenes() {
 
   const activeScenes: DbScene[] = scenes?.filter(s => s.is_active) ?? [];
 
-  const globalScenes: ProductImageScene[] = scenes
-    ? activeScenes.filter(s => s.is_global).map(dbToFrontend)
-    : GLOBAL_SCENES;
-
   const categoryCollections: CategoryCollection[] = scenes
     ? buildCollections(activeScenes)
     : CATEGORY_COLLECTIONS;
