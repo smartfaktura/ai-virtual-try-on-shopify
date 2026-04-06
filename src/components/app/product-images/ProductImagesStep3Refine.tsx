@@ -1476,6 +1476,140 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   );
 }
 
+/** Presets-only portion of OutfitLockPanel — always visible */
+function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+  primaryCategory?: string;
+  modelGender?: string;
+}) {
+  const [saveName, setSaveName] = useState('');
+  const [showSave, setShowSave] = useState(false);
+  const [savedPresets, setSavedPresets] = useState<OutfitPreset[]>(() => loadSavedPresets());
+
+  const cat = primaryCategory || 'garments';
+  const isMale = modelGender === 'male';
+
+  const defaultConfig = useMemo((): OutfitConfig => {
+    const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[cat] || CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
+    if (isMale && MALE_OUTFIT_OVERRIDES[cat]) return { ...base, ...MALE_OUTFIT_OVERRIDES[cat] };
+    return base;
+  }, [cat, isMale]);
+
+  const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
+
+  const isPresetActive = useCallback((presetConfig: OutfitConfig): boolean => {
+    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories'];
+    return keys.every(k => {
+      if (k === 'top' || k === 'bottom' || k === 'shoes') {
+        const a = currentConfig[k]; const b = presetConfig[k];
+        if (!a && !b) return true; if (!a || !b) return false;
+        return a.garment === b.garment && a.color === b.color && a.fit === b.fit && a.material === b.material;
+      }
+      return (currentConfig[k] || '') === (presetConfig[k] || '');
+    });
+  }, [currentConfig]);
+
+  const builtInPresets = useMemo(() => getBuiltInPresets(cat, isMale), [cat, isMale]);
+  const categoryPresets = savedPresets.filter(p => p.category === cat);
+  const allPresets = [...builtInPresets, ...categoryPresets];
+
+  const loadPreset = (preset: OutfitPreset) => { update({ outfitConfig: { ...preset.config } }); };
+
+  const saveCurrentAsPreset = () => {
+    if (!saveName.trim()) return;
+    const newPreset: OutfitPreset = { id: crypto.randomUUID(), name: saveName.trim(), config: currentConfig, category: cat, gender: modelGender, createdAt: new Date().toISOString() };
+    const updated = [...savedPresets, newPreset];
+    setSavedPresets(updated); savePresetsToStorage(updated); setSaveName(''); setShowSave(false);
+  };
+
+  const deletePreset = (id: string) => {
+    const updated = savedPresets.filter(p => p.id !== id);
+    setSavedPresets(updated); savePresetsToStorage(updated);
+  };
+
+  const PRESET_DESCRIPTIONS: Record<string, string> = {
+    'Studio Standard': 'Clean, neutral styling for commercial product focus',
+    'Editorial': 'Dark tones, tailored fits for magazine-ready shots',
+    'Minimal': 'Stripped-back whites and creams, relaxed silhouettes',
+    'Streetwear': 'Oversized fits, dark palette, urban energy',
+    'Luxury Soft': 'Silk and cashmere in warm neutrals, elevated elegance',
+  };
+
+  return (
+    <div className="space-y-2">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <Sparkles className="w-3.5 h-3.5 text-primary" />Presets
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {allPresets.map(preset => {
+          const active = isPresetActive(preset.config);
+          const description = PRESET_DESCRIPTIONS[preset.name] || '';
+          return (
+            <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
+              <button type="button" onClick={() => loadPreset(preset)}
+                className={cn('w-[160px] text-left p-3 rounded-xl border transition-all cursor-pointer',
+                  active ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm' : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60')}>
+                <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
+                {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
+              </button>
+              {!preset.isBuiltIn && (
+                <button type="button" onClick={() => deletePreset(preset.id)}
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all cursor-pointer p-0.5">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {showSave ? (
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <Input value={saveName} onChange={e => setSaveName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveCurrentAsPreset(); if (e.key === 'Escape') setShowSave(false); }}
+              placeholder="Preset name..." className="h-8 w-32 text-xs px-2.5" autoFocus />
+            <button type="button" onClick={saveCurrentAsPreset} className="text-primary hover:text-primary/80 cursor-pointer"><Save className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setShowSave(false)} className="text-muted-foreground hover:text-foreground cursor-pointer"><X className="w-4 h-4" /></button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setShowSave(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer flex-shrink-0">
+            <Plus className="w-3.5 h-3.5" />Save
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Piece fields portion of OutfitLockPanel — shown in collapsible */
+function OutfitPieceFields({ details, update, primaryCategory, modelGender }: {
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+  primaryCategory?: string;
+  modelGender?: string;
+}) {
+  const cat = primaryCategory || 'garments';
+  const isMale = modelGender === 'male';
+  const defaultConfig = useMemo((): OutfitConfig => {
+    const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[cat] || CATEGORY_OUTFIT_CONFIG_DEFAULTS['garments'];
+    if (isMale && MALE_OUTFIT_OVERRIDES[cat]) return { ...base, ...MALE_OUTFIT_OVERRIDES[cat] };
+    return base;
+  }, [cat, isMale]);
+
+  const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
+  const updateConfig = useCallback((partial: Partial<OutfitConfig>) => {
+    update({ outfitConfig: { ...currentConfig, ...partial } });
+  }, [currentConfig, update]);
+
+  return (
+    <>
+      <PieceField label="Top" piece={currentConfig.top} onChange={p => updateConfig({ top: p })} pieceType="top" />
+      <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />
+      <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />
+    </>
+  );
+}
+
 /* ══════════════════════════════════════════════
    Inline Person Details (compact per-scene)
    ══════════════════════════════════════════════ */
@@ -1606,11 +1740,11 @@ export function ProductImagesStep3Refine({
   }, []);
 
   const toggleSceneExpand = (id: string) => {
-    // If scene needs model and none selected, auto-open Outfit section instead
     const scene = selectedScenes.find(s => s.id === id);
     if (scene && !details.selectedModelId) {
       const needsModelForScene = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
-      if (needsModelForScene) {
+      // Only redirect to outfit picker if scene has NO other expandable controls
+      if (needsModelForScene && !sceneHasControls(scene)) {
         scrollToOutfit();
         return;
       }
@@ -1725,8 +1859,12 @@ export function ProductImagesStep3Refine({
       {/* ── MODEL-NEEDED BANNER ── */}
       {scenesNeedingModel.length > 0 && needsModel && (
         <div className="rounded-xl border border-border bg-card p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-            <User className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          <div className="flex -space-x-2 flex-shrink-0">
+            {globalModels.slice(0, 3).map((m, i) => (
+              <div key={m.modelId} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden bg-muted" style={{ zIndex: 3 - i }}>
+                <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover" />
+              </div>
+            ))}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-foreground">
@@ -2051,21 +2189,51 @@ export function ProductImagesStep3Refine({
                     onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
                   />
 
-                  {/* Outfit lock panel */}
-                  <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-
-                  {/* Inline person details & accessories */}
-                  <div className="space-y-2">
-                    {!details.selectedModelId && (
-                      <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
-                    )}
-                    <InlinePersonDetails
-                      details={details}
-                      update={update}
-                      outfitAccessories={details.outfitConfig?.accessories}
-                      onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                    />
+                  {/* Outfit presets — always visible */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
+                    </div>
+                    <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
                   </div>
+
+                  {/* Customize Outfit — collapsible */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 border-t border-border/40 cursor-pointer group/customize">
+                      <div className="flex items-center gap-2">
+                        <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Customize Outfit</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 pt-2 pb-1">
+                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Appearance & Styling — collapsible */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 border-t border-border/40 cursor-pointer group/appear">
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance & Styling</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2 pb-1">
+                        <InlinePersonDetails
+                          details={details}
+                          update={update}
+                          outfitAccessories={details.outfitConfig?.accessories}
+                          onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </CardContent>
               </Card>
             </CollapsibleContent>
