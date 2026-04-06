@@ -132,9 +132,12 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
             ))}
           </div>
           {filteredGlobal.length > INLINE_LIMIT && (
-            <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}>
+            <button
+              className="mt-2 w-full text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer py-2 hover:underline underline-offset-4"
+              onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}
+            >
               View all {filteredGlobal.length} models →
-            </Button>
+            </button>
           )}
         </div>
       )}
@@ -827,11 +830,11 @@ function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; he
   );
 }
 
-/* ── Preset Color Stripe (left-edge bars) ── */
+/* ── Preset Color Swatch (mini block with horizontal bands) ── */
 function PresetColorDots({ config }: { config: OutfitConfig }) {
   const colors = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
   return (
-    <div className="flex flex-col w-1 rounded-full overflow-hidden self-stretch">
+    <div className="flex flex-col w-5 h-5 rounded-md overflow-hidden border border-border/40 shrink-0">
       {colors.map((c, i) => (
         <div key={i} className="flex-1" style={{ backgroundColor: c }} />
       ))}
