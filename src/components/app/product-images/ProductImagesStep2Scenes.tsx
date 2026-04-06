@@ -178,18 +178,13 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     const ids = new Set<string>();
     const addFrom = (list: typeof unifiedRecommended) => {
       for (const c of list) {
-        c.essentialScenes.forEach(s => ids.add(s.id));
         c.scenes.forEach(s => ids.add(s.id));
       }
     };
     addFrom(unifiedRecommended);
     addFrom(unifiedOther);
-    // Also add global scenes for the "no category" fallback
-    if (!hasDetectedCategories) {
-      ACTIVE_GLOBAL_SCENES.forEach(s => ids.add(s.id));
-    }
     return ids;
-  }, [unifiedRecommended, unifiedOther, hasDetectedCategories, ACTIVE_GLOBAL_SCENES]);
+  }, [unifiedRecommended, unifiedOther]);
 
   // Prune stale selections
   useEffect(() => {
