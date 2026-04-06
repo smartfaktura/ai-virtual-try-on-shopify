@@ -778,10 +778,33 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   // Current outfit config from details, falling back to defaults
   const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
 
+  // Initialize outfitConfig from category defaults on mount so prompt builder matches UI
+  useEffect(() => {
+    if (!details.outfitConfig) {
+      update({ outfitConfig: defaultConfig });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const updateConfig = useCallback((partial: Partial<OutfitConfig>) => {
     const next = { ...currentConfig, ...partial };
     update({ outfitConfig: next });
   }, [currentConfig, update]);
+
+  // Check if a preset config matches the current config
+  const isPresetActive = useCallback((presetConfig: OutfitConfig): boolean => {
+    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories', 'name'];
+    return keys.every(k => {
+      if (k === 'top' || k === 'bottom' || k === 'shoes') {
+        const a = currentConfig[k];
+        const b = presetConfig[k];
+        if (!a && !b) return true;
+        if (!a || !b) return false;
+        return a.garment === b.garment && a.color === b.color && a.fit === b.fit && a.material === b.material;
+      }
+      return (currentConfig[k] || '') === (presetConfig[k] || '');
+    });
+  }, [currentConfig]);
 
   // Presets: built-in + saved for this category
   const builtInPresets = useMemo(() => getBuiltInPresets(cat), [cat]);
