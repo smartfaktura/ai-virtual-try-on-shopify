@@ -1469,9 +1469,12 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
    Inline Person Details (compact per-scene)
    ══════════════════════════════════════════════ */
 
-function InlinePersonDetails({ details, update }: { details: DetailSettings; update: (p: Partial<DetailSettings>) => void }) {
-  const [stylingOpen, setStylingOpen] = useState(false);
-
+function InlinePersonDetails({ details, update, outfitAccessories, onAccessoriesChange }: {
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+  outfitAccessories?: string;
+  onAccessoriesChange?: (v: string) => void;
+}) {
   const skinToneOptions = [
     { value: 'light', label: 'Light', icon: <ColorDot hex={SKIN_TONE_HEX.light} size={10} /> },
     { value: 'medium', label: 'Medium', icon: <ColorDot hex={SKIN_TONE_HEX.medium} size={10} /> },
@@ -1498,28 +1501,27 @@ function InlinePersonDetails({ details, update }: { details: DetailSettings; upd
         </div>
       </div>
 
-      {/* Styling Details group — collapsed by default */}
-      <Collapsible open={stylingOpen} onOpenChange={setStylingOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer">
-          <ChevronRight className={cn('w-3.5 h-3.5 transition-transform', stylingOpen && 'rotate-90')} />
-          Styling Details
-          <span className="text-[11px] font-normal normal-case text-muted-foreground/60">hands, nails, jewelry</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3">
-            <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
-              { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
-              { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+      {/* Accessories & Styling group — always visible */}
+      <div className="space-y-3">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Accessories & Styling</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
+            { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
+            { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+          ]} />
+          <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
+            { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
+          ]} />
+          <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
+            { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
+          ]} />
+          {onAccessoriesChange && (
+            <ChipSelector label="Accessories" value={outfitAccessories || ''} onChange={v => onAccessoriesChange(v)} options={[
+              { value: 'none', label: 'None' }, { value: 'minimal', label: 'Minimal' }, { value: 'statement', label: 'Statement' },
             ]} />
-            <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
-              { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
-            ]} />
-            <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
-              { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
-            ]} />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
