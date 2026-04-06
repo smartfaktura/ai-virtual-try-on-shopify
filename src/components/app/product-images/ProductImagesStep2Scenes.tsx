@@ -225,12 +225,6 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     setExpandedCategories(next);
   };
 
-  // toggleScene now handles both individual and bulk toggling
-  const toggleSceneWithUpdate = (id: string) => {
-    const next = new Set(selectedSceneIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    onSelectionChange(next);
-  };
 
   return (
     <div className="space-y-6 pb-20">
