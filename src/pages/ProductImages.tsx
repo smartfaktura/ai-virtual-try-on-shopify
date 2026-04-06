@@ -13,7 +13,7 @@ import { computeTotalImages, expandMultiSelects } from '@/lib/sceneVariations';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
-import { ALL_SCENES } from '@/components/app/product-images/sceneData';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/ProductImagesStep2Scenes';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal } from '@/components/app/AddProductModal';
