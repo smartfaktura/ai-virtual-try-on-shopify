@@ -1169,17 +1169,17 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         {showBottom && <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />}
         {showShoes && <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />}
 
-        {/* Accessories — chip selector */}
-        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5 space-y-2">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Shirt className="w-3 h-3" />Accessories
+        {/* Accessories */}
+        <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 space-y-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Shirt className="w-3.5 h-3.5" />Accessories
           </span>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {['none', 'minimal', 'statement'].map(opt => (
               <button key={opt} type="button"
                 onClick={() => updateConfig({ accessories: currentConfig.accessories === opt ? '' : opt })}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   currentConfig.accessories === opt
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
@@ -1189,7 +1189,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
             <button type="button"
               onClick={() => updateConfig({ accessories: currentConfig.accessories && !['none', 'minimal', 'statement'].includes(currentConfig.accessories) ? '' : 'custom' })}
               className={cn(
-                'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                'px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                 currentConfig.accessories && !['none', 'minimal', 'statement', ''].includes(currentConfig.accessories)
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
@@ -1201,7 +1201,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
               value={currentConfig.accessories === 'custom' ? '' : currentConfig.accessories}
               onChange={e => updateConfig({ accessories: e.target.value || 'custom' })}
               placeholder="Describe accessories..."
-              className="h-7 text-xs"
+              className="h-8 text-xs"
             />
           )}
         </div>
