@@ -1393,8 +1393,11 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         {isMale && <Badge variant="outline" className="text-xs h-5 px-2">Male defaults</Badge>}
       </div>
 
-      {/* Preset cards — descriptive */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {/* Preset cards */}
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <Sparkles className="w-3.5 h-3.5 text-primary" />Presets
+      </span>
+      <div className="flex flex-wrap gap-2">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
           const PRESET_DESCRIPTIONS: Record<string, string> = {
