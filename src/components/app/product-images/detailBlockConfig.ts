@@ -79,14 +79,14 @@ export function getBlocksByScene(
   const selectedScenes = allScenes.filter(s => selectedSceneIds.has(s.id));
 
   for (const scene of selectedScenes) {
-    for (const block of scene.triggerBlocks) {
+    for (const block of (scene.triggerBlocks || [])) {
       if (!blockToScenes.has(block)) blockToScenes.set(block, []);
       blockToScenes.get(block)!.push(scene.title);
     }
   }
 
   for (const scene of selectedScenes) {
-    const newBlocks = scene.triggerBlocks.filter(b => !claimed.has(b));
+    const newBlocks = (scene.triggerBlocks || []).filter(b => !claimed.has(b));
     if (newBlocks.length === 0) continue;
 
     for (const b of newBlocks) claimed.add(b);

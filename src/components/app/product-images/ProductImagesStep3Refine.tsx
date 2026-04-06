@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
-import { ALL_SCENES } from './sceneData';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
 import type { ModelProfile } from '@/types';
@@ -326,7 +326,8 @@ function MiniRatioChips({ value, globalValue, onChange }: { value: string; globa
 }
 
 function SceneThumbnail({ sceneId }: { sceneId: string }) {
-  const scene = ALL_SCENES.find(s => s.id === sceneId);
+  const { allScenes: dbScenes } = useProductImageScenes();
+  const scene = dbScenes.find(s => s.id === sceneId);
   const [hovered, setHovered] = useState(false);
   return (
     <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
@@ -1565,9 +1566,10 @@ export function ProductImagesStep3Refine({
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
+  const { allScenes: dbScenes } = useProductImageScenes();
 
   // Scene-specific detail blocks
-  const sceneGroups = getBlocksByScene(selectedSceneIds, ALL_SCENES);
+  const sceneGroups = getBlocksByScene(selectedSceneIds, dbScenes);
   const hasPersonBlock = sceneGroups.some(g => g.blocks.includes('personDetails'));
   const hasSceneBlocks = sceneGroups.length > 0;
 

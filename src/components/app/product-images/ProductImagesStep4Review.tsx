@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User, Shirt, Settings2, ImageIcon, Sparkles, ChevronRight, Plus, RotateCcw, X } from 'lucide-react';
-import { ALL_SCENES } from './sceneData';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
@@ -72,7 +72,8 @@ function friendlyLabel(val: string | undefined): string {
 }
 
 export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set() }: Step4Props) {
-  const selectedScenes = ALL_SCENES.filter(s => selectedSceneIds.has(s.id));
+  const { allScenes: dbScenes } = useProductImageScenes();
+  const selectedScenes = dbScenes.filter(s => selectedSceneIds.has(s.id));
   const update = useCallback((partial: Partial<DetailSettings>) => {
     onDetailsChange?.({ ...details, ...partial });
   }, [details, onDetailsChange]);
