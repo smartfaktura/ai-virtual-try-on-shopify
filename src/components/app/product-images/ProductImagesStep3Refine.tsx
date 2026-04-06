@@ -2046,7 +2046,12 @@ export function ProductImagesStep3Refine({
                   {!details.selectedModelId ? (
                     <div className="space-y-2">
                       <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
-                      <InlinePersonDetails details={details} update={update} />
+                      <InlinePersonDetails
+                        details={details}
+                        update={update}
+                        outfitAccessories={details.outfitConfig?.accessories}
+                        onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                      />
                     </div>
                   ) : null}
                 </CardContent>
