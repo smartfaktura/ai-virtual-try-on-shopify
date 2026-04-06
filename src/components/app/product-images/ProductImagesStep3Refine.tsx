@@ -484,6 +484,85 @@ const BLOCK_LABELS: Record<string, { title: string }> = {
 
 
 /* ══════════════════════════════════════════════
+   Template-derived controls helper
+   ══════════════════════════════════════════════ */
+
+type TemplateControlKey = 'lighting' | 'shadow' | 'mood' | 'surface' | 'background' | 'accent' | 'productProminence';
+
+function getTemplateControls(scene: ProductImageScene): TemplateControlKey[] {
+  const t = scene.promptTemplate || '';
+  const controls: TemplateControlKey[] = [];
+  if (t.includes('{{lightingDirective}}')) controls.push('lighting');
+  if (t.includes('{{shadowDirective}}')) controls.push('shadow');
+  if (t.includes('{{moodDirective}}')) controls.push('mood');
+  if (t.includes('{{surfaceDirective}}')) controls.push('surface');
+  if (t.includes('{{background}}')) controls.push('background');
+  if (t.includes('{{accentDirective}}') || t.includes('{{accentColorDirective}}')) controls.push('accent');
+  if (t.includes('{{productProminenceDirective}}')) controls.push('productProminence');
+  return controls;
+}
+
+const TEMPLATE_CONTROL_LABELS: Record<TemplateControlKey, string> = {
+  lighting: 'Lighting',
+  shadow: 'Shadow',
+  mood: 'Styling direction',
+  surface: 'Surface',
+  background: 'Background family',
+  accent: 'Accent color',
+  productProminence: 'Product prominence',
+};
+
+function TemplateControlChips({ controlKey, details, update }: {
+  controlKey: TemplateControlKey;
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+}) {
+  switch (controlKey) {
+    case 'lighting':
+      return <ChipSelector label="Lighting" value={details.lightingStyle} onChange={v => update({ lightingStyle: v })} options={[
+        { value: 'soft-diffused', label: 'Soft diffused' }, { value: 'warm-editorial', label: 'Warm editorial' },
+        { value: 'crisp-studio', label: 'Crisp studio' }, { value: 'natural-daylight', label: 'Natural daylight' },
+        { value: 'side-lit', label: 'Side-lit premium' },
+      ]} />;
+    case 'shadow':
+      return <ChipSelector label="Shadow" value={details.shadowStyle} onChange={v => update({ shadowStyle: v })} options={[
+        { value: 'none', label: 'None' }, { value: 'soft', label: 'Soft' },
+        { value: 'natural', label: 'Natural' }, { value: 'defined', label: 'Defined' },
+      ]} />;
+    case 'mood':
+      return <ChipSelector label="Styling direction" value={details.mood} onChange={v => update({ mood: v })} options={[
+        { value: 'minimal-luxury', label: 'Minimal luxury' }, { value: 'clean-commercial', label: 'Clean commercial' },
+        { value: 'fashion-editorial', label: 'Fashion editorial' }, { value: 'beauty-clean', label: 'Beauty clean' },
+        { value: 'organic-natural', label: 'Organic natural' }, { value: 'modern-sleek', label: 'Modern sleek' },
+        { value: 'auto', label: 'Auto from product' },
+      ]} />;
+    case 'surface':
+      return <ChipSelector label="Surface" value={details.surfaceType} onChange={v => update({ surfaceType: v })} options={[
+        { value: 'minimal-studio', label: 'Minimal studio' }, { value: 'stone-plaster', label: 'Stone / plaster' },
+        { value: 'warm-wood', label: 'Warm wood' }, { value: 'fabric', label: 'Fabric / drape' },
+        { value: 'glossy', label: 'Glossy clean' }, { value: 'auto', label: 'Auto from product' },
+      ]} />;
+    case 'background':
+      return <ChipSelector label="Background family" value={details.negativeSpace} onChange={v => update({ negativeSpace: v })} options={[
+        { value: 'pure-white', label: 'Pure white' }, { value: 'soft-white', label: 'Soft white' },
+        { value: 'light-grey', label: 'Light grey' }, { value: 'warm-beige', label: 'Warm beige' },
+        { value: 'taupe', label: 'Taupe' }, { value: 'stone', label: 'Stone' }, { value: 'auto', label: 'Auto' },
+      ]} />;
+    case 'accent':
+      return <ChipSelector label="Accent color" value={details.brandingVisibility} onChange={v => update({ brandingVisibility: v })} options={[
+        { value: 'product-accent', label: 'Use product accent' }, { value: 'none', label: 'None' },
+        { value: 'brand-accent', label: 'Use brand accent' }, { value: 'custom', label: 'Custom hex' },
+        { value: 'subtle', label: 'Subtle accent' }, { value: 'strong', label: 'Strong accent' },
+      ]} />;
+    case 'productProminence':
+      return <ChipSelector label="Product prominence" value={details.productProminence} onChange={v => update({ productProminence: v })} options={[
+        { value: 'hero', label: 'Hero (fills frame)' }, { value: 'balanced', label: 'Balanced' }, { value: 'contextual', label: 'Contextual' },
+      ]} />;
+    default: return null;
+  }
+}
+
+/* ══════════════════════════════════════════════
    Constants
    ══════════════════════════════════════════════ */
 
