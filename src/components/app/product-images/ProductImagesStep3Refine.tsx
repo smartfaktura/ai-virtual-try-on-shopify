@@ -1445,7 +1445,7 @@ export function ProductImagesStep3Refine({
               {modelShots.length > 0 && (
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {productShots.map(renderSceneCard)}
               </div>
             </div>
