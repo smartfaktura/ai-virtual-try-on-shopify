@@ -2055,21 +2055,51 @@ export function ProductImagesStep3Refine({
                     onSelect={(id) => update({ selectedModelId: details.selectedModelId === id ? undefined : id })}
                   />
 
-                  {/* Outfit lock panel */}
-                  <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
-
-                  {/* Inline person details & accessories */}
-                  <div className="space-y-2">
-                    {!details.selectedModelId && (
-                      <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
-                    )}
-                    <InlinePersonDetails
-                      details={details}
-                      update={update}
-                      outfitAccessories={details.outfitConfig?.accessories}
-                      onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                    />
+                  {/* Outfit presets — always visible */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs text-muted-foreground">Locked across all on-model scenes.</span>
+                    </div>
+                    <OutfitPresetsOnly details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
                   </div>
+
+                  {/* Customize Outfit — collapsible */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 border-t border-border/40 cursor-pointer group/customize">
+                      <div className="flex items-center gap-2">
+                        <Shirt className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground group-hover/customize:text-foreground transition-colors">Customize Outfit</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/customize:rotate-90" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 pt-2 pb-1">
+                        <OutfitPieceFields details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Appearance & Styling — collapsible */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 border-t border-border/40 cursor-pointer group/appear">
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance & Styling</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2 pb-1">
+                        <InlinePersonDetails
+                          details={details}
+                          update={update}
+                          outfitAccessories={details.outfitConfig?.accessories}
+                          onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </CardContent>
               </Card>
             </CollapsibleContent>
