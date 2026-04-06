@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Crown, UserX } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,12 +13,13 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import {
   Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
+  Save, Trash2, History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlocksByScene } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
-import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory } from './types';
+import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
 import type { ModelProfile } from '@/types';
 
 /* ══════════════════════════════════════════════
