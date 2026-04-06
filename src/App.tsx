@@ -48,6 +48,7 @@ const AdminModels = lazy(() => import('@/pages/AdminModels'));
 const AdminChatSessions = lazy(() => import('@/pages/AdminChatSessions'));
 const AdminFeedback = lazy(() => import('@/pages/AdminFeedback'));
 const AdminStatus = lazy(() => import('@/pages/AdminStatus'));
+const AdminProductImageScenes = lazy(() => import('@/pages/AdminProductImageScenes'));
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const About = lazy(() => import('@/pages/About'));
