@@ -1271,7 +1271,7 @@ function PieceField({ label, piece, onChange, pieceType }: {
               <button key={f} type="button" onClick={() => updateField('fit', f)}
                 className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   current.fit === f ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-                )}>{f}</button>
+                )}><span className="capitalize">{f}</span></button>
             ))}
           </div>
         </div>
