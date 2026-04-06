@@ -1686,14 +1686,10 @@ export function ProductImagesStep3Refine({
                     return (
                       <div key={scene.id} className="relative">
                         {renderSceneCardButton(scene)}
-                        {/* Triangle indicator */}
+                        {/* Connector line */}
                         {isExpanded && (
-                          <div className="flex justify-center relative z-10 -mb-[9px]">
-                            {/* Outer triangle (border) */}
-                            <div className="relative" style={{ width: 0, height: 0, borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderBottom: '9px solid hsl(var(--border))' }}>
-                              {/* Inner triangle (fill) */}
-                              <div className="absolute" style={{ left: -8, top: 1, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid hsl(var(--card))' }} />
-                            </div>
+                          <div className="flex justify-center">
+                            <div className="w-px h-3 bg-primary/30" />
                           </div>
                         )}
                       </div>
