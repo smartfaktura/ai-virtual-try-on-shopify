@@ -388,7 +388,7 @@ export default function ProductImages() {
               extra_variations: [variationEntry],
               selected_variations: [0],
               ...(additionalProducts ? { additional_products: additionalProducts } : {}),
-              ...(modelRef ? { model: modelRef } : {}),
+              ...(modelRef && scene.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails') ? { model: modelRef } : {}),
               ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
               quality,
               aspectRatio: details.sceneAspectOverrides?.[scene.id] || aspectRatio,
