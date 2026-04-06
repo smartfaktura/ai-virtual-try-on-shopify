@@ -221,14 +221,13 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
 
   // Filter universal scenes: hide scenes where ALL selected products fall into excluded categories
   const filteredGlobalScenes = useMemo(() => {
-    if (allDetectedCategories.size === 0) return GLOBAL_SCENES;
-    return GLOBAL_SCENES.filter(scene => {
+    if (allDetectedCategories.size === 0) return ACTIVE_GLOBAL_SCENES;
+    return ACTIVE_GLOBAL_SCENES.filter(scene => {
       if (!scene.excludeCategories || scene.excludeCategories.length === 0) return true;
-      // Show scene if at least one detected category is NOT excluded
       const catsArray = Array.from(allDetectedCategories);
       return catsArray.some(cat => !scene.excludeCategories!.includes(cat));
     });
-  }, [allDetectedCategories]);
+  }, [allDetectedCategories, ACTIVE_GLOBAL_SCENES]);
 
   // Prune stale selected scenes that are no longer visible after category filtering
   useEffect(() => {
