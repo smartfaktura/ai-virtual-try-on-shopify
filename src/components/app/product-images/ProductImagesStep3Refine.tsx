@@ -1761,7 +1761,7 @@ export function ProductImagesStep3Refine({
 
           const renderSceneCardButton = (scene: ProductImageScene) => {
           const isExpanded = expandedSceneId === scene.id;
-          const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+          const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
           const group = sceneGroups.find(g => g.sceneId === scene.id);
           const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
           const templateCtrls = getTemplateControls(scene);
