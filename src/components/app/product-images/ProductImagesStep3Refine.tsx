@@ -1733,50 +1733,40 @@ export function ProductImagesStep3Refine({
       </div>
 
       {/* ── MODEL-NEEDED BANNER ── */}
-      {scenesNeedingModel.length > 0 && (
-        <div className={cn(
-          'rounded-lg border-l-4 px-4 py-3 flex items-center gap-3 transition-colors',
-          needsModel
-            ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/15 border border-amber-200/40 dark:border-amber-800/30'
-            : 'border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-200/40 dark:border-emerald-800/30'
-        )}>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {needsModel ? (
-              <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
-            ) : (
-              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-            )}
-            <span className="text-xs text-muted-foreground">
-              {needsModel ? (
-                <>
-                  <span className="font-medium text-foreground">{scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}</span>{' '}
-                  need a model
-                </>
-              ) : (
-                <>
-                  <span className="font-medium text-foreground">Model applied</span>{' '}
-                  to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </span>
-            <div className="hidden sm:flex gap-1 ml-1">
-              {scenesNeedingModel.slice(0, 4).map(s => (
-                <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
-                  {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
-                </div>
-              ))}
-            </div>
+      {scenesNeedingModel.length > 0 && needsModel && (
+        <div className="rounded-xl border border-border bg-card p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+            <User className="w-6 h-6 text-amber-600 dark:text-amber-400" />
           </div>
-          {needsModel && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-[11px] h-6 px-2.5 gap-1 flex-shrink-0 rounded-full border-amber-400/50 text-amber-700 dark:text-amber-300 hover:bg-amber-100/50 dark:hover:bg-amber-900/30"
-              onClick={scrollToOutfit}
-            >
-              <User className="w-3 h-3" />Select
-            </Button>
-          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-foreground">
+              {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''} need a model
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Select a model to unlock on-model scenes and outfit styling.</p>
+          </div>
+          <Button
+            size="sm"
+            className="gap-1.5 flex-shrink-0"
+            onClick={scrollToOutfit}
+          >
+            <User className="w-3.5 h-3.5" />Select Model
+          </Button>
+        </div>
+      )}
+      {scenesNeedingModel.length > 0 && !needsModel && (
+        <div className="rounded-xl border border-emerald-200/40 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/10 px-4 py-3 flex items-center gap-3">
+          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          <span className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Model applied</span>{' '}
+            to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}
+          </span>
+          <div className="hidden sm:flex gap-1 ml-1">
+            {scenesNeedingModel.slice(0, 4).map(s => (
+              <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
+                {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
