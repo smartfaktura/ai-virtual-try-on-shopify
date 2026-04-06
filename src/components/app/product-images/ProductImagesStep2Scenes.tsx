@@ -13,7 +13,7 @@ interface Step2Props {
   productAnalyses?: Record<string, { category: string }>;
 }
 
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
+export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask'],
   'makeup-lipsticks': ['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'cosmetic', 'lip', 'bronzer', 'highlighter', 'primer', 'beauty'],
   'fragrance': ['perfume', 'cologne', 'fragrance', 'eau de', 'scent', 'parfum'],
