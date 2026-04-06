@@ -648,11 +648,34 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
     }
   };
 
+  // Parse comma-separated multi-select value
+  const selected = value ? value.split(',').filter(Boolean) : [];
+
+  const toggleSwatch = (sVal: string) => {
+    const isCustomInput = sVal === 'custom' || sVal === 'gradient-custom';
+    const current = new Set(selected);
+
+    if (current.has(sVal)) {
+      // Deselect
+      current.delete(sVal);
+    } else {
+      // If selecting custom/gradient-custom, remove the other custom type (they're mutually exclusive)
+      if (sVal === 'custom') current.delete('gradient-custom');
+      if (sVal === 'gradient-custom') current.delete('custom');
+      current.add(sVal);
+    }
+
+    onChange(Array.from(current).join(','));
+  };
+
+  const showCustomHex = selected.includes('custom');
+  const showGradientInputs = selected.includes('gradient-custom');
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
         {BG_SWATCH_OPTIONS.map(o => {
-          const isActive = value === o.value;
+          const isActive = selected.includes(o.value);
           const swatchBg = o.isGradient
             ? (o.gradient || `linear-gradient(135deg, ${gradFrom}, ${gradTo})`)
             : o.swatch;
@@ -661,7 +684,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
             <button
               key={o.value}
               type="button"
-              onClick={() => onChange(value === o.value ? '' : o.value)}
+              onClick={() => toggleSwatch(o.value)}
               className={cn(
                 'flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition-all border cursor-pointer',
                 isActive
@@ -691,7 +714,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
       </div>
 
       {/* Custom hex input */}
-      {value === 'custom' && (
+      {showCustomHex && (
         <div className="flex items-center gap-3 pl-1">
           <div className="w-6 h-6 rounded border border-border"
             style={{ background: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : '#FFFFFF' }} />
@@ -710,7 +733,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
       )}
 
       {/* Custom gradient inputs */}
-      {value === 'gradient-custom' && (
+      {showGradientInputs && (
         <div className="flex items-center gap-3 pl-1 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">From</span>
@@ -1782,6 +1805,11 @@ export function ProductImagesStep3Refine({
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
                 <Badge variant="outline" className="text-[9px] h-4 px-1.5">All {selectedScenes.length} scenes</Badge>
+                {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 1 && (
+                  <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
+                    ×{details.backgroundTone.split(',').filter(Boolean).length} variations
+                  </Badge>
+                )}
               </div>
               <BackgroundSwatchSelector value={details.backgroundTone || ''} onChange={v => update({ backgroundTone: v })} details={details} update={update} />
             </div>
