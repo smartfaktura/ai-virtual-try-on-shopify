@@ -1619,7 +1619,7 @@ export function ProductImagesStep3Refine({
           if (!hasControls) return null;
 
           return (
-            <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in slide-in-from-top-2 duration-200">
+            <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in fade-in duration-200">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
                   {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
