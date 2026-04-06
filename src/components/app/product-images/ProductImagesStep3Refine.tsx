@@ -1274,9 +1274,7 @@ export function ProductImagesStep3Refine({
 
       {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
       {selectedScenes.length > 0 && (() => {
-        // Compute scenes with {{background}} token for quick-action strip
-        const scenesWithBackground = selectedScenes.filter(s => (s.promptTemplate || '').includes('{{background}}'));
-        const showBgStrip = scenesWithBackground.length >= 2;
+        const showBgStrip = selectedScenes.length >= 2;
 
         // Group scenes: product shots vs on-model shots
         const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
