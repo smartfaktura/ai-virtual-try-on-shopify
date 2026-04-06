@@ -418,7 +418,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
       const outfitStr = buildOutfitDirective(d);
-      directive += ` ${outfitStr || defaultOutfitDirective(category)}`;
+      directive += ` ${outfitStr || defaultOutfitDirective(category, d)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
