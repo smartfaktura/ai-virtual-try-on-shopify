@@ -616,22 +616,31 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         </div>
       </div>
 
-      {/* Exclude from Categories — shown for ALL scenes (especially important for globals) */}
+      {/* Show in Categories — inverted UI over exclude_categories */}
       <div className="space-y-1.5">
-        <Label className="text-xs">
-          Exclude from Categories
-          {isGlobal && <span className="text-muted-foreground ml-1">(controls which product types see this universal scene)</span>}
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">
+            Show in Categories
+            {isGlobal && <span className="text-muted-foreground ml-1">(which product types see this scene)</span>}
+          </Label>
+          <div className="flex gap-1">
+            <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]"
+              onClick={() => set('exclude_categories', [])}>All</Button>
+            <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]"
+              onClick={() => set('exclude_categories', [...EXCLUDE_CATS])}>None</Button>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           {EXCLUDE_CATS.map(cat => {
-            const checked = (draft.exclude_categories || []).includes(cat);
+            const excluded = (draft.exclude_categories || []).includes(cat);
             return (
               <label key={cat} className="flex items-center gap-1.5 text-xs cursor-pointer">
                 <Checkbox
-                  checked={checked}
+                  checked={!excluded}
                   onCheckedChange={(v) => {
                     const current = draft.exclude_categories || [];
-                    set('exclude_categories', v ? [...current, cat] : current.filter(c => c !== cat));
+                    // v=true means "show" → remove from excludes; v=false means "hide" → add to excludes
+                    set('exclude_categories', v ? current.filter(c => c !== cat) : [...current, cat]);
                   }}
                 />
                 {CAT_LABEL_MAP[cat] || cat}
@@ -639,6 +648,7 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
             );
           })}
         </div>
+        <p className="text-[10px] text-muted-foreground">Uncheck categories where this scene should be hidden</p>
       </div>
 
       <div className="space-y-1.5">
