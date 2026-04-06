@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera,
 } from 'lucide-react';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
@@ -283,6 +285,14 @@ export default function AdminProductImageScenes() {
                       <div className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
                         !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
                       } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
+                        {/* Thumbnail */}
+                        <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40">
+                          {scene.preview_image_url ? (
+                            <img src={scene.preview_image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Camera className="w-4 h-4 text-muted-foreground/40" />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium truncate">{scene.title}</span>
@@ -339,7 +349,30 @@ export default function AdminProductImageScenes() {
 
 /* ── Reusable scene edit form ── */
 function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d: Partial<DbScene>) => void }) {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const set = (field: string, value: any) => onChange({ ...draft, [field]: value });
+
+  const handleImageUpload = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const sceneSlug = draft.scene_id || 'new';
+      const path = `${user.id}/scene-previews/${sceneSlug}-${ts}.${ext}`;
+      const { data, error } = await supabase.storage.from('product-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('product-uploads').getPublicUrl(data.path);
+      set('preview_image_url', urlData.publicUrl);
+      toast.success('Preview image uploaded');
+    } catch (e: any) {
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const isGlobal = draft.is_global || draft.category_collection === null;
 
@@ -449,15 +482,60 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Preview Image URL</Label>
-          <Input value={draft.preview_image_url || ''} onChange={e => set('preview_image_url', e.target.value || null)} placeholder="https://..." />
+      <div className="space-y-1.5">
+        <Label className="text-xs">Preview Image</Label>
+        <div className="flex items-start gap-4">
+          {/* Thumbnail preview */}
+          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted border border-border/40 flex items-center justify-center flex-shrink-0">
+            {draft.preview_image_url ? (
+              <img src={draft.preview_image_url} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <Camera className="w-6 h-6 text-muted-foreground/30" />
+            )}
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                {uploading ? 'Uploading…' : 'Upload'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImageUpload(f);
+                  e.target.value = '';
+                }}
+              />
+              {draft.preview_image_url && (
+                <Button type="button" variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => set('preview_image_url', null)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            <Input
+              value={draft.preview_image_url || ''}
+              onChange={e => set('preview_image_url', e.target.value || null)}
+              placeholder="Or paste URL..."
+              className="text-xs h-8"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-3 pt-5">
-          <Switch checked={draft.is_active ?? true} onCheckedChange={v => set('is_active', v)} id="active-toggle" />
-          <Label htmlFor="active-toggle" className="text-xs">Active</Label>
-        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Switch checked={draft.is_active ?? true} onCheckedChange={v => set('is_active', v)} id="active-toggle" />
+        <Label htmlFor="active-toggle" className="text-xs">Active</Label>
       </div>
     </div>
   );

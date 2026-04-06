@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera, LayoutGrid } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { GLOBAL_SCENES, CATEGORY_COLLECTIONS } from './sceneData';
-import type { ProductImageScene, UserProduct } from './types';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
+import type { ProductImageScene, UserProduct, CategoryCollection } from './types';
 
 interface Step2Props {
   selectedSceneIds: Set<string>;
@@ -189,6 +190,11 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
 }
 
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
+  const { globalScenes: hookGlobalScenes, categoryCollections: hookCategoryCollections } = useProductImageScenes();
+  // Use hook data (from DB) with hardcoded fallback already handled inside the hook
+  const ACTIVE_GLOBAL_SCENES = hookGlobalScenes;
+  const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
+
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
@@ -215,23 +221,20 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
 
   // Filter universal scenes: hide scenes where ALL selected products fall into excluded categories
   const filteredGlobalScenes = useMemo(() => {
-    if (allDetectedCategories.size === 0) return GLOBAL_SCENES;
-    return GLOBAL_SCENES.filter(scene => {
+    if (allDetectedCategories.size === 0) return ACTIVE_GLOBAL_SCENES;
+    return ACTIVE_GLOBAL_SCENES.filter(scene => {
       if (!scene.excludeCategories || scene.excludeCategories.length === 0) return true;
-      // Show scene if at least one detected category is NOT excluded
       const catsArray = Array.from(allDetectedCategories);
       return catsArray.some(cat => !scene.excludeCategories!.includes(cat));
     });
-  }, [allDetectedCategories]);
+  }, [allDetectedCategories, ACTIVE_GLOBAL_SCENES]);
 
   // Prune stale selected scenes that are no longer visible after category filtering
   useEffect(() => {
     const visibleGlobalIds = new Set(filteredGlobalScenes.map(s => s.id));
-    const allCategoryIds = new Set(CATEGORY_COLLECTIONS.flatMap(c => c.scenes.map(s => s.id)));
+    const allCategoryIds = new Set(ACTIVE_CATEGORY_COLLECTIONS.flatMap(c => c.scenes.map(s => s.id)));
     const stale = Array.from(selectedSceneIds).filter(id => {
-      // If it's a category scene, it's always visible (just collapsed)
       if (allCategoryIds.has(id)) return false;
-      // If it's a global scene that got filtered out, it's stale
       return !visibleGlobalIds.has(id);
     });
     if (stale.length > 0) {
@@ -239,7 +242,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
       stale.forEach(id => next.delete(id));
       onSelectionChange(next);
     }
-  }, [filteredGlobalScenes, selectedSceneIds, onSelectionChange]);
+  }, [filteredGlobalScenes, selectedSceneIds, onSelectionChange, ACTIVE_CATEGORY_COLLECTIONS]);
 
   // Sync expanded categories when selected products change
   useEffect(() => {
@@ -249,12 +252,12 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   const gridClass = GRID_CLASSES[gridSize];
 
   const recommendedCollections = useMemo(
-    () => CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id)),
-    [relevantCatIds],
+    () => ACTIVE_CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id)),
+    [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS],
   );
   const otherCollections = useMemo(
-    () => CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id)),
-    [relevantCatIds],
+    () => ACTIVE_CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id)),
+    [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS],
   );
 
   const toggleScene = (id: string) => {
@@ -270,7 +273,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   };
 
   const selectAllCategory = (catId: string) => {
-    const cat = CATEGORY_COLLECTIONS.find(c => c.id === catId);
+    const cat = ACTIVE_CATEGORY_COLLECTIONS.find(c => c.id === catId);
     if (!cat) return;
     const next = new Set(selectedSceneIds);
     const allSelected = cat.scenes.every(s => next.has(s.id));
