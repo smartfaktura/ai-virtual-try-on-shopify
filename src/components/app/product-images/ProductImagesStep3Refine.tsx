@@ -1114,18 +1114,41 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         {showBottom && <PieceField label="Bottom" piece={currentConfig.bottom} onChange={p => updateConfig({ bottom: p })} pieceType="bottom" />}
         {showShoes && <PieceField label="Shoes" piece={currentConfig.shoes} onChange={p => updateConfig({ shoes: p })} pieceType="shoes" />}
 
-        {/* Accessories */}
-        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-          <div className="flex items-center gap-2">
-            <Shirt className="w-3 h-3 text-muted-foreground" />
-            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Accessories</Label>
-            <Input
-              value={currentConfig.accessories || ''}
-              onChange={e => updateConfig({ accessories: e.target.value })}
-              placeholder="none"
-              className="h-6 text-[10px] border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 flex-1 placeholder:text-muted-foreground/60"
-            />
+        {/* Accessories — chip selector */}
+        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5 space-y-2">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Shirt className="w-3 h-3" />Accessories
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {['none', 'minimal', 'statement'].map(opt => (
+              <button key={opt} type="button"
+                onClick={() => updateConfig({ accessories: currentConfig.accessories === opt ? '' : opt })}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                  currentConfig.accessories === opt
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
+                )}
+              >{opt}</button>
+            ))}
+            <button type="button"
+              onClick={() => updateConfig({ accessories: currentConfig.accessories && !['none', 'minimal', 'statement'].includes(currentConfig.accessories) ? '' : 'custom' })}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                currentConfig.accessories && !['none', 'minimal', 'statement', ''].includes(currentConfig.accessories)
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
+              )}
+            >custom</button>
           </div>
+          {currentConfig.accessories && !['none', 'minimal', 'statement', ''].includes(currentConfig.accessories) && (
+            <Input
+              value={currentConfig.accessories === 'custom' ? '' : currentConfig.accessories}
+              onChange={e => updateConfig({ accessories: e.target.value || 'custom' })}
+              placeholder="Describe accessories..."
+              className="h-7 text-xs"
+            />
+          )}
         </div>
       </div>
     </div>
