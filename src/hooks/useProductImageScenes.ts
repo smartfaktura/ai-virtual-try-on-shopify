@@ -28,13 +28,10 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     description: d.description,
     promptTemplate: d.prompt_template,
     triggerBlocks: d.trigger_blocks,
-    isGlobal: d.is_global,
     categoryCollection: d.category_collection ?? undefined,
     sceneType: (d.scene_type as ProductImageScene['sceneType']) ?? 'packshot',
-    excludeCategories: d.exclude_categories,
     previewUrl: d.preview_image_url ?? undefined,
     subCategory: d.sub_category ?? undefined,
-    subCategoryOverrides: d.sub_category_overrides ?? undefined,
   };
 }
 
