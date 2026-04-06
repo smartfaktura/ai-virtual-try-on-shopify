@@ -79,6 +79,7 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     sort_order: 999,
     sub_category: null,
     category_sort_order: 0,
+    sub_category_overrides: {},
   };
 }
 
