@@ -139,6 +139,7 @@ interface UnifiedCategorySectionProps {
   categoryScenes: ProductImageScene[];
   categorySubGroups?: SubGroup[];
   selectedSceneIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
   isOpen: boolean;
   onToggleOpen: () => void;
   toggleScene: (id: string) => void;
