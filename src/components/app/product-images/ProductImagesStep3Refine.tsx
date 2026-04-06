@@ -1682,10 +1682,6 @@ export function ProductImagesStep3Refine({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {productShots.map(renderSceneCardButton)}
               </div>
-              {expandedSceneId && productShots.some(s => s.id === expandedSceneId) && (() => {
-                const scene = productShots.find(s => s.id === expandedSceneId);
-                return scene ? renderExpandedPanel(scene) : null;
-              })()}
             </div>
           )}
 
@@ -1704,12 +1700,76 @@ export function ProductImagesStep3Refine({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {modelShots.map(renderSceneCardButton)}
               </div>
-              {expandedSceneId && modelShots.some(s => s.id === expandedSceneId) && (() => {
-                const scene = modelShots.find(s => s.id === expandedSceneId);
-                return scene ? renderExpandedPanel(scene) : null;
-              })()}
             </div>
           )}
+
+          {/* Scene settings Sheet */}
+          <Sheet open={!!expandedSceneId} onOpenChange={(open) => { if (!open) setExpandedSceneId(null); }}>
+            <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+              {expandedSceneId && (() => {
+                const scene = selectedScenes.find(s => s.id === expandedSceneId);
+                if (!scene) return null;
+                const group = sceneGroups.find(g => g.sceneId === scene.id);
+                const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+                const templateCtrls = getTemplateControls(scene);
+                const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+                if (!hasControls) return null;
+
+                return (
+                  <>
+                    <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/40 shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                          {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
+                        </div>
+                        <SheetTitle className="text-sm font-semibold">{scene.title}</SheetTitle>
+                      </div>
+                    </SheetHeader>
+                    <ScrollArea className="flex-1">
+                      <div className="p-5 space-y-1">
+                        {sceneBlocks.map((blockKey, idx) => {
+                          const meta = BLOCK_LABELS[blockKey];
+                          if (!meta) return null;
+                          return (
+                            <Collapsible key={blockKey} defaultOpen={idx === 0}>
+                              <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
+                                <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                                {meta.title}
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <div className="pb-3 pt-1">
+                                  <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          );
+                        })}
+
+                        {templateCtrls.length > 0 && (
+                          <Collapsible defaultOpen={sceneBlocks.length === 0}>
+                            <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-3 group/block">
+                              <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                              Style
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="space-y-3 pb-3 pt-1">
+                                {templateCtrls.map(ctrl => (
+                                  <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                                ))}
+                              </div>
+                              {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                                <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                              )}
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </>
+                );
+              })()}
+            </SheetContent>
+          </Sheet>
         </div>
         );
       })()}
