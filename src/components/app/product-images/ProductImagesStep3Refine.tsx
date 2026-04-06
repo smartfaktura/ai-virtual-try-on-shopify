@@ -1089,7 +1089,7 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
-  const [aestheticOpen, setAestheticOpen] = useState(false);
+  // Removed: aestheticOpen state (Global Style section deleted)
   const [outfitOpen, setOutfitOpen] = useState(false);
   const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
