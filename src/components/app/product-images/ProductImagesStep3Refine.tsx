@@ -1969,6 +1969,16 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
+          {/* Product shots group — shown first */}
+          {productShots.length > 0 && (
+            <div className="space-y-2">
+              {modelShots.length > 0 && (
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
+              )}
+              {renderSceneGrid(productShots)}
+            </div>
+          )}
+
           {/* Quick Background strip — applies to ALL scenes */}
           {showBgStrip && (
             <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
@@ -1982,6 +1992,13 @@ export function ProductImagesStep3Refine({
                   </Badge>
                 )}
               </div>
+              {/* Attention message */}
+              {!details.backgroundTone && (
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200/30 dark:border-amber-800/20">
+                  <Paintbrush className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                  <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Select a background color for your selected scenes</span>
+                </div>
+              )}
               <BackgroundSwatchSelector
                 value={details.backgroundTone || ''}
                 onChange={v => update({ backgroundTone: v })}
@@ -1993,16 +2010,6 @@ export function ProductImagesStep3Refine({
                 onSaveGradient={(from, to) => saveGradient({ from, to })}
                 onDeleteSavedColor={deleteColor}
               />
-            </div>
-          )}
-
-          {/* Product shots group */}
-          {productShots.length > 0 && (
-            <div className="space-y-2">
-              {modelShots.length > 0 && (
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
-              )}
-              {renderSceneGrid(productShots)}
             </div>
           )}
 
