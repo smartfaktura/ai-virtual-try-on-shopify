@@ -1,47 +1,40 @@
 
 
-# Refine Step — Presets + Labels + Accessories Merge
+# Product Images Results — Fix White Bars + Add Scene Labels
 
-## Changes
+## Issues
 
-### 1. Preset section: Add "Presets" label header + remove horizontal scroll
-**File: `ProductImagesStep3Refine.tsx` (~lines 1396-1451)**
-- Add a section header above the preset cards: small label "Presets" with a Sparkles icon, matching the styling of other section headers (text-xs font-semibold uppercase tracking-wider)
-- Change layout from `flex overflow-x-auto` to `flex flex-wrap gap-2` — no horizontal scrollbar, cards wrap naturally
-- Keep the `+ Save` button at the end of the wrapped grid
+1. **White bars in grid**: Line 76 uses `aspect-[4/5] bg-white` with `object-contain`. When images don't match 4:5, white letterboxing appears. Fix: use `object-cover` so images fill the container, no white gaps.
 
-### 2. Capitalize all chip/button labels in outfit sections
-**File: `ProductImagesStep3Refine.tsx`**
+2. **No scene labels**: `finishWithResults` (line 450) only maps `jobId → productId`. The scene name from the key (`productId_sceneId_vIdx_i`) is lost. Users see 19 images with zero indication of which scene generated each one.
 
-All garment, color, fit, material, and accessory option labels currently render lowercase (e.g. "t-shirt", "white", "slim", "cotton", "none", "minimal", "statement", "custom"). Add a `capitalize` CSS class or a small helper to title-case the first letter of each label:
+3. **Generation quality issues**: These are prompt/AI quality issues, not code bugs. The generation outputs depend on the AI model's interpretation of prompts. No code fix here — this is iterative prompt tuning per scene template.
 
-- Garment chips (~line 1237): add `capitalize` to button text
-- Color chips (~line 1259): add `capitalize` to the `{c}` text
-- Fit chips (~line 1274): add `capitalize`
-- Material chips (~line 1283): add `capitalize`
-- Accessories chips (~line 1474): add `capitalize` to `{opt}` text
+## Plan
 
-This is simplest done by adding `capitalize` to the Tailwind classes on each chip button, which CSS-capitalizes the first letter.
+### File: `src/pages/ProductImages.tsx`
 
-### 3. Show Styling Details expanded by default (remove collapsible)
-**File: `ProductImagesStep3Refine.tsx` (~lines 1533-1554)**
-- Remove the `Collapsible` wrapper around "Styling Details" (Hand Style, Nails, Jewelry)
-- Render the fields directly, always visible, under a simple section heading
-- This makes the section consistent with the Appearance group above it
+**Enrich productMap with scene names**
+- Change `productMap` from `Map<string, string>` (jobId → productId) to `Map<string, { productId: string; sceneName: string }>`
+- Parse scene name from the key using `selectedScenes` lookup: `key.split('_')[1]` gives sceneId, find scene title
+- Update `finishWithResults` to build enriched results: `Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>`
+- Apply same change to the "Skip waiting" button handler (~line 827)
 
-### 4. Merge Accessories into Styling Details section
-**File: `ProductImagesStep3Refine.tsx`**
+### File: `src/components/app/product-images/ProductImagesStep6Results.tsx`
 
-Currently Accessories is a separate card in the `OutfitLockPanel` (~lines 1459-1494) and Styling Details is in `InlinePersonDetails` (~lines 1533-1554). These are conceptually similar (jewelry, accessories, hands, nails).
+**Fix white bars**
+- Line 76: Change `aspect-[4/5] bg-white` → `aspect-square bg-muted/30`
+- Line 80: Change `object-contain` → `object-cover`
 
-- Remove the standalone Accessories card from `OutfitLockPanel`
-- Move the accessories selector (none/minimal/statement/custom) into the Styling Details grid inside `InlinePersonDetails`, as a 4th `ChipSelector` alongside Hand Style, Nails, and Jewelry
-- Rename section header from "Styling Details" to "Accessories & Styling"
-- Pass `accessories` value through via the existing `details`/`update` props (accessories is already on OutfitConfig, just need to bridge it)
+**Add scene labels**
+- Update `Step6Props` interface to accept enriched results type with per-image `{ url, sceneName }`
+- Render a small text label or badge with `sceneName` below each image thumbnail
+- Update `allImages`, `openLightbox`, and `handleDownloadAll` to work with the new structure
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | All 4 changes |
+| `src/pages/ProductImages.tsx` | Enrich productMap with scene names, update finishWithResults |
+| `src/components/app/product-images/ProductImagesStep6Results.tsx` | Fix aspect ratio / object-fit, add scene name badges |
 
