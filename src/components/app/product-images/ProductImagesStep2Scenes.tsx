@@ -252,12 +252,12 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   const gridClass = GRID_CLASSES[gridSize];
 
   const recommendedCollections = useMemo(
-    () => CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id)),
-    [relevantCatIds],
+    () => ACTIVE_CATEGORY_COLLECTIONS.filter(c => relevantCatIds.has(c.id)),
+    [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS],
   );
   const otherCollections = useMemo(
-    () => CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id)),
-    [relevantCatIds],
+    () => ACTIVE_CATEGORY_COLLECTIONS.filter(c => !relevantCatIds.has(c.id)),
+    [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS],
   );
 
   const toggleScene = (id: string) => {
