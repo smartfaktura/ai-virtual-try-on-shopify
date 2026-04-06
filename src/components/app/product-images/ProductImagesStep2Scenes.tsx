@@ -341,31 +341,26 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         </div>
       )}
 
-      {/* Recommended (detected) categories — expanded, with essential + category shots merged */}
+      {/* Recommended (detected) categories */}
       {unifiedRecommended.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold text-primary">Recommended for your products</h3>
-          </div>
-          <div className="space-y-2">
-            {unifiedRecommended.map(cat => (
-              <UnifiedCategorySectionWithSelectAll
-                key={cat.id}
-                catId={cat.id}
-                catTitle={cat.title}
-                essentialScenes={cat.essentialScenes}
-                categoryScenes={cat.scenes}
-                selectedSceneIds={selectedSceneIds}
-                isOpen={expandedCategories.has(cat.id)}
-                onToggleOpen={() => toggleCategory(cat.id)}
-                toggleScene={toggleScene}
-                onSelectAll={() => selectAllUnified(cat.id)}
-                isRecommended
-                gridClass={gridClass}
-              />
-            ))}
-          </div>
+        <div className="space-y-2">
+          {unifiedRecommended.map(cat => (
+            <UnifiedCategorySectionWithSelectAll
+              key={cat.id}
+              catId={cat.id}
+              catTitle={cat.title}
+              essentialScenes={cat.essentialScenes}
+              categoryScenes={cat.scenes}
+              categorySubGroups={cat.subGroups}
+              selectedSceneIds={selectedSceneIds}
+              isOpen={expandedCategories.has(cat.id)}
+              onToggleOpen={() => toggleCategory(cat.id)}
+              toggleScene={toggleScene}
+              onSelectAll={() => selectAllUnified(cat.id)}
+              isRecommended
+              gridClass={gridClass}
+            />
+          ))}
         </div>
       )}
 
