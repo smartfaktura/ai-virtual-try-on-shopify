@@ -626,7 +626,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
-      const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);

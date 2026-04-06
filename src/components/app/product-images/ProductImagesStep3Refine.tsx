@@ -1812,7 +1812,7 @@ export function ProductImagesStep3Refine({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
-                      {scene.triggerBlocks.includes('background') && (
+                      {(scene.triggerBlocks || []).includes('background') && (
                         <span className="inline-flex items-center gap-0.5 px-1 py-px rounded bg-muted text-[9px] text-muted-foreground font-medium flex-shrink-0">
                           <Paintbrush className="w-2.5 h-2.5" />BG
                         </span>
