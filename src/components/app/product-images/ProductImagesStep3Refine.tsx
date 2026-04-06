@@ -1089,15 +1089,31 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
-  // Removed: aestheticOpen state (Global Style section deleted)
-  const [outfitOpen, setOutfitOpen] = useState(false);
   const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
+  const [outfitOpen, setOutfitOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const outfitRef = useRef<HTMLDivElement>(null);
   const [propModalOpen, setPropModalOpen] = useState(false);
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
-  const outfitRef = useRef<HTMLDivElement>(null);
 
-  const toggleSceneExpand = (id: string) => setExpandedSceneId(prev => prev === id ? null : id);
+  const scrollToOutfit = useCallback(() => {
+    setOutfitOpen(true);
+    setTimeout(() => outfitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  }, []);
+
+  const toggleSceneExpand = (id: string) => {
+    // If scene needs model and none selected, auto-open Outfit section instead
+    const scene = selectedScenes.find(s => s.id === id);
+    if (scene && !details.selectedModelId) {
+      const needsModelForScene = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+      if (needsModelForScene) {
+        scrollToOutfit();
+        return;
+      }
+    }
+    setExpandedSceneId(prev => prev === id ? null : id);
+  };
 
   // Customization count
   const IGNORE_KEYS = new Set([
