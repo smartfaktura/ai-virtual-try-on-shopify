@@ -12,7 +12,6 @@ interface Step4Props {
   selectedProducts: UserProduct[];
   selectedSceneIds: Set<string>;
   details: DetailSettings;
-  creditsPerImage: number;
   balance: number;
   onEditStep?: (step: number) => void;
 }
