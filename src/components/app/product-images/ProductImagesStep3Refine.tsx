@@ -1583,10 +1583,10 @@ export function ProductImagesStep3Refine({
                     )}
                   </div>
                   {isClickable && (
-                    <ChevronDown className={cn(
+                    <Settings2 className={cn(
                       'w-3.5 h-3.5 flex-shrink-0 transition-all',
                       isExpanded
-                        ? 'text-primary rotate-180'
+                        ? 'text-primary'
                         : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
                     )} />
                   )}
