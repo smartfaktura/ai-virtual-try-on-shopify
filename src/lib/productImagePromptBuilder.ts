@@ -458,8 +458,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     // No person details set — use smart defaults if scene requires a person
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
-      const outfitStr = buildOutfitDirective(d);
-      directive += ` ${outfitStr || defaultOutfitDirective(category, d, gender)}`;
+      directive += ` ${defaultOutfitDirective(category, d, gender)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
