@@ -1160,30 +1160,28 @@ export function ProductImagesStep3Refine({
     return model?.gender;
   }, [details.selectedModelId, allModels]);
 
-  // Helper: get block labels for a scene
+  // Helper: get block labels for a scene (including template-derived ones)
   const getSceneBlockLabels = (scene: ProductImageScene) => {
     const labels = scene.triggerBlocks
       .filter(b => b !== 'personDetails' && b !== 'customNote' && b !== 'consistency')
       .map(b => BLOCK_LABELS[b]?.title)
       .filter(Boolean);
+    // Add template-derived control labels
+    const templateCtrls = getTemplateControls(scene);
+    for (const ctrl of templateCtrls) {
+      const lbl = TEMPLATE_CONTROL_LABELS[ctrl];
+      if (lbl && !labels.includes(lbl)) labels.push(lbl);
+    }
     return labels;
   };
 
-  // Check if a scene card has been customized
-  const isSceneCustomized = (scene: ProductImageScene) => {
+  // Check if a scene has any expandable controls (blocks or template controls)
+  const sceneHasControls = (scene: ProductImageScene) => {
     const group = sceneGroups.find(g => g.sceneId === scene.id);
-    if (!group) return false;
-    return group.blocks.some(bk => {
-      const fields = BLOCK_FIELD_MAP[bk] || [];
-      return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
-    });
+    const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+    const templateCtrls = getTemplateControls(scene);
+    return sceneBlocks.length > 0 || templateCtrls.length > 0;
   };
-
-  // Scenes that DON'T have scene-specific overrides (for global style thumbs)
-  const globalInheritScenes = useMemo(() => {
-    const sceneSpecificIds = new Set(sceneGroups.map(g => g.sceneId));
-    return selectedScenes.filter(s => !sceneSpecificIds.has(s.id) || s.triggerBlocks.length <= 1);
-  }, [selectedScenes, sceneGroups]);
 
   return (
     <div className="space-y-5 pb-20">
