@@ -116,12 +116,20 @@ export interface ProductImageScene {
   categoryCollection?: string;
   sceneType?: SceneType;
   excludeCategories?: string[];
+  subCategory?: string;
+}
+
+export interface SubGroup {
+  label: string;
+  scenes: ProductImageScene[];
 }
 
 export interface CategoryCollection {
   id: string;
   title: string;
   scenes: ProductImageScene[];
+  subGroups?: SubGroup[];
+  categorySortOrder?: number;
 }
 
 export interface DetailSettings {

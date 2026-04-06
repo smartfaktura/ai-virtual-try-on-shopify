@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera, LayoutGrid } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
-import type { ProductImageScene, UserProduct, CategoryCollection } from './types';
+import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
 
 interface Step2Props {
   selectedSceneIds: Set<string>;
@@ -137,6 +137,7 @@ interface UnifiedCategorySectionProps {
   catTitle: string;
   essentialScenes: ProductImageScene[];
   categoryScenes: ProductImageScene[];
+  categorySubGroups?: SubGroup[];
   selectedSceneIds: Set<string>;
   isOpen: boolean;
   onToggleOpen: () => void;
@@ -145,81 +146,7 @@ interface UnifiedCategorySectionProps {
   gridClass: string;
 }
 
-function UnifiedCategorySection({
-  catId, catTitle, essentialScenes, categoryScenes,
-  selectedSceneIds, isOpen, onToggleOpen, toggleScene,
-  isRecommended, gridClass,
-}: UnifiedCategorySectionProps) {
-  const allScenes = [...essentialScenes, ...categoryScenes];
-  const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
-  const allSelected = allScenes.length > 0 && selectedCount === allScenes.length;
-
-  const handleSelectAll = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const next = new Set(selectedSceneIds);
-    if (allSelected) {
-      allScenes.forEach(s => next.delete(s.id));
-    } else {
-      allScenes.forEach(s => next.add(s.id));
-    }
-    // We need to call the parent handler — use a custom event pattern
-    (e.currentTarget as any).__selectAllHandler?.(next);
-  };
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
-      <CollapsibleTrigger className="w-full">
-        <div className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
-          isRecommended
-            ? 'border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.05]'
-            : 'border-border hover:bg-muted/30'
-        }`}>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{catTitle}</span>
-            <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
-            {isRecommended && (
-              <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Recommended</Badge>
-            )}
-            {selectedCount > 0 && (
-              <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount}</Badge>
-            )}
-          </div>
-          {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <SelectAllBar allSelected={allSelected} allScenes={allScenes} selectedSceneIds={selectedSceneIds} />
-
-        {essentialScenes.length > 0 && (
-          <div className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Essential Shots</p>
-            <div className={`grid ${gridClass} gap-2`}>
-              {essentialScenes.map(scene => (
-                <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {categoryScenes.length > 0 && (
-          <div className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{catTitle} Shots</p>
-            <div className={`grid ${gridClass} gap-2`}>
-              {categoryScenes.map(scene => (
-                <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
-              ))}
-            </div>
-          </div>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
-function SelectAllBar({ allSelected, allScenes, selectedSceneIds }: { allSelected: boolean; allScenes: ProductImageScene[]; selectedSceneIds: Set<string> }) {
-  // This is a display-only helper; actual toggle logic is handled by the parent via onSelectAll
-  return null;
-}
+// UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
   const { globalScenes: hookGlobalScenes, categoryCollections: hookCategoryCollections } = useProductImageScenes();
@@ -312,12 +239,9 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Select scenes</h2>
-          <p className="text-sm text-muted-foreground mt-1">Choose the visuals you want for your products.</p>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight">Select scenes</h2>
         <div className="flex items-center gap-2">
           {selectedSceneIds.size > 0 && (
             <>
@@ -344,55 +268,48 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         </div>
       )}
 
-      {/* Recommended (detected) categories — expanded, with essential + category shots merged */}
+      {/* Recommended (detected) categories */}
       {unifiedRecommended.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold text-primary">Recommended for your products</h3>
-          </div>
-          <div className="space-y-2">
-            {unifiedRecommended.map(cat => (
-              <UnifiedCategorySectionWithSelectAll
-                key={cat.id}
-                catId={cat.id}
-                catTitle={cat.title}
-                essentialScenes={cat.essentialScenes}
-                categoryScenes={cat.scenes}
-                selectedSceneIds={selectedSceneIds}
-                isOpen={expandedCategories.has(cat.id)}
-                onToggleOpen={() => toggleCategory(cat.id)}
-                toggleScene={toggleScene}
-                onSelectAll={() => selectAllUnified(cat.id)}
-                isRecommended
-                gridClass={gridClass}
-              />
-            ))}
-          </div>
+        <div className="space-y-2">
+          {unifiedRecommended.map(cat => (
+            <UnifiedCategorySectionWithSelectAll
+              key={cat.id}
+              catId={cat.id}
+              catTitle={cat.title}
+              essentialScenes={cat.essentialScenes}
+              categoryScenes={cat.scenes}
+              categorySubGroups={cat.subGroups}
+              selectedSceneIds={selectedSceneIds}
+              isOpen={expandedCategories.has(cat.id)}
+              onToggleOpen={() => toggleCategory(cat.id)}
+              toggleScene={toggleScene}
+              onSelectAll={() => selectAllUnified(cat.id)}
+              isRecommended
+              gridClass={gridClass}
+            />
+          ))}
         </div>
       )}
 
-      {/* Other categories — collapsed */}
       {unifiedOther.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">Explore more scenes by product type</h3>
-          <div className="space-y-2">
-            {unifiedOther.map(cat => (
-              <UnifiedCategorySectionWithSelectAll
-                key={cat.id}
-                catId={cat.id}
-                catTitle={cat.title}
-                essentialScenes={cat.essentialScenes}
-                categoryScenes={cat.scenes}
-                selectedSceneIds={selectedSceneIds}
-                isOpen={expandedCategories.has(cat.id)}
-                onToggleOpen={() => toggleCategory(cat.id)}
-                toggleScene={toggleScene}
-                onSelectAll={() => selectAllUnified(cat.id)}
-                gridClass={gridClass}
-              />
-            ))}
-          </div>
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
+          {unifiedOther.map(cat => (
+            <UnifiedCategorySectionWithSelectAll
+              key={cat.id}
+              catId={cat.id}
+              catTitle={cat.title}
+              essentialScenes={cat.essentialScenes}
+              categoryScenes={cat.scenes}
+              categorySubGroups={cat.subGroups}
+              selectedSceneIds={selectedSceneIds}
+              isOpen={expandedCategories.has(cat.id)}
+              onToggleOpen={() => toggleCategory(cat.id)}
+              toggleScene={toggleScene}
+              onSelectAll={() => selectAllUnified(cat.id)}
+              gridClass={gridClass}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -401,13 +318,31 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
 
 /** Wrapper that adds Select All / Deselect All button inside the collapsible */
 function UnifiedCategorySectionWithSelectAll({
-  catId, catTitle, essentialScenes, categoryScenes,
+  catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
   selectedSceneIds, isOpen, onToggleOpen, toggleScene, onSelectAll,
   isRecommended, gridClass,
 }: UnifiedCategorySectionProps & { onSelectAll: () => void }) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
   const allSelected = allScenes.length > 0 && selectedCount === allScenes.length;
+
+  // Build sub-groups for essential scenes (by subCategory from DB)
+  const essentialSubGroups = useMemo(() => {
+    const map = new Map<string, ProductImageScene[]>();
+    for (const s of essentialScenes) {
+      const key = s.subCategory || '';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    return Array.from(map.entries()).map(([label, scenes]) => ({ label: label || 'Essential Shots', scenes }));
+  }, [essentialScenes]);
+
+  // Use DB sub-groups for category scenes, or fall back to a single group
+  const catSubGroups = useMemo(() => {
+    if (categorySubGroups && categorySubGroups.length > 0) return categorySubGroups;
+    if (categoryScenes.length === 0) return [];
+    return [{ label: `${catTitle} Shots`, scenes: categoryScenes }];
+  }, [categorySubGroups, categoryScenes, catTitle]);
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
@@ -419,12 +354,14 @@ function UnifiedCategorySectionWithSelectAll({
         }`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{catTitle}</span>
-            <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
             {isRecommended && (
               <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Recommended</Badge>
             )}
             {selectedCount > 0 && (
-              <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount}</Badge>
+              <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount} / {allScenes.length}</Badge>
+            )}
+            {selectedCount === 0 && (
+              <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
             )}
           </div>
           {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -442,27 +379,29 @@ function UnifiedCategorySectionWithSelectAll({
           </Button>
         </div>
 
-        {essentialScenes.length > 0 && (
-          <div className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Essential Shots</p>
+        {/* Essential shots sub-groups */}
+        {essentialSubGroups.map((sg, i) => (
+          <div key={`ess-${i}`} className="pt-3 pl-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{sg.label}</p>
             <div className={`grid ${gridClass} gap-2`}>
-              {essentialScenes.map(scene => (
+              {sg.scenes.map(scene => (
                 <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
               ))}
             </div>
           </div>
-        )}
+        ))}
 
-        {categoryScenes.length > 0 && (
-          <div className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{catTitle} Shots</p>
+        {/* Category shots sub-groups */}
+        {catSubGroups.map((sg, i) => (
+          <div key={`cat-${i}`} className="pt-3 pl-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{sg.label}</p>
             <div className={`grid ${gridClass} gap-2`}>
-              {categoryScenes.map(scene => (
+              {sg.scenes.map(scene => (
                 <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
               ))}
             </div>
           </div>
-        )}
+        ))}
       </CollapsibleContent>
     </Collapsible>
   );

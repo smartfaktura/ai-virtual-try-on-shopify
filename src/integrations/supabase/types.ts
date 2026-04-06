@@ -1037,6 +1037,7 @@ export type Database = {
       product_image_scenes: {
         Row: {
           category_collection: string | null
+          category_sort_order: number | null
           created_at: string
           description: string
           exclude_categories: string[]
@@ -1048,11 +1049,13 @@ export type Database = {
           scene_id: string
           scene_type: string
           sort_order: number
+          sub_category: string | null
           title: string
           trigger_blocks: string[]
         }
         Insert: {
           category_collection?: string | null
+          category_sort_order?: number | null
           created_at?: string
           description?: string
           exclude_categories?: string[]
@@ -1064,11 +1067,13 @@ export type Database = {
           scene_id: string
           scene_type?: string
           sort_order?: number
+          sub_category?: string | null
           title: string
           trigger_blocks?: string[]
         }
         Update: {
           category_collection?: string | null
+          category_sort_order?: number | null
           created_at?: string
           description?: string
           exclude_categories?: string[]
@@ -1080,6 +1085,7 @@ export type Database = {
           scene_id?: string
           scene_type?: string
           sort_order?: number
+          sub_category?: string | null
           title?: string
           trigger_blocks?: string[]
         }

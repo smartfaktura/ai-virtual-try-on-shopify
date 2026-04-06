@@ -19,6 +19,8 @@ export interface DbScene {
   is_active: boolean;
   sort_order: number;
   created_at: string;
+  sub_category: string | null;
+  category_sort_order: number;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
@@ -33,6 +35,7 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     sceneType: (d.scene_type as ProductImageScene['sceneType']) ?? 'packshot',
     excludeCategories: d.exclude_categories,
     previewUrl: d.preview_image_url ?? undefined,
+    subCategory: d.sub_category ?? undefined,
   };
 }
 
@@ -118,17 +121,21 @@ export function useProductImageScenes() {
 }
 
 function buildCollections(scenes: DbScene[]): CategoryCollection[] {
-  const catMap = new Map<string, ProductImageScene[]>();
-  const catOrder = new Map<string, number>();
+  const catMap = new Map<string, DbScene[]>();
+  const catSortOrder = new Map<string, number>();
 
   for (const s of scenes) {
     if (s.is_global || !s.category_collection) continue;
     const cat = s.category_collection;
     if (!catMap.has(cat)) {
       catMap.set(cat, []);
-      catOrder.set(cat, s.sort_order);
+      catSortOrder.set(cat, s.category_sort_order ?? 0);
     }
-    catMap.get(cat)!.push(dbToFrontend(s));
+    // Use the lowest category_sort_order from any scene in this category
+    if ((s.category_sort_order ?? 0) < (catSortOrder.get(cat) ?? 0)) {
+      catSortOrder.set(cat, s.category_sort_order ?? 0);
+    }
+    catMap.get(cat)!.push(s);
   }
 
   const TITLE_MAP: Record<string, string> = {
@@ -147,10 +154,25 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
   };
 
   return Array.from(catMap.entries())
-    .sort((a, b) => (catOrder.get(a[0]) ?? 999) - (catOrder.get(b[0]) ?? 999))
-    .map(([id, scenes]) => ({
-      id,
-      title: TITLE_MAP[id] || id,
-      scenes,
-    }));
+    .sort((a, b) => (catSortOrder.get(a[0]) ?? 999) - (catSortOrder.get(b[0]) ?? 999))
+    .map(([id, dbScenes]) => {
+      const frontendScenes = dbScenes.map(dbToFrontend);
+      // Build sub-groups
+      const subGroupMap = new Map<string, ProductImageScene[]>();
+      for (const s of frontendScenes) {
+        const key = s.subCategory || '';
+        if (!subGroupMap.has(key)) subGroupMap.set(key, []);
+        subGroupMap.get(key)!.push(s);
+      }
+      const subGroups = Array.from(subGroupMap.entries())
+        .map(([label, scenes]) => ({ label: label || 'General', scenes }));
+
+      return {
+        id,
+        title: TITLE_MAP[id] || id,
+        scenes: frontendScenes,
+        subGroups,
+        categorySortOrder: catSortOrder.get(id) ?? 0,
+      };
+    });
 }

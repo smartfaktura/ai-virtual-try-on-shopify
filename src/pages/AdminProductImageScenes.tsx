@@ -74,6 +74,8 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     preview_image_url: null,
     is_active: true,
     sort_order: 999,
+    sub_category: null,
+    category_sort_order: 0,
   };
 }
 
@@ -293,17 +295,21 @@ export default function AdminProductImageScenes() {
                             <Camera className="w-4 h-4 text-muted-foreground/40" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{scene.title}</span>
-                            <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
-                            <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
-                            {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            Triggers: {scene.trigger_blocks.join(', ')}
-                            {scene.exclude_categories.length > 0 && ` · Excludes: ${scene.exclude_categories.join(', ')}`}
-                          </p>
+                             <span className="text-sm font-medium truncate">{scene.title}</span>
+                             <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
+                             {scene.sub_category && (
+                               <Badge variant="secondary" className="text-[10px]">{scene.sub_category}</Badge>
+                             )}
+                             <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
+                             {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
+                           </div>
+                           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                             Triggers: {scene.trigger_blocks.join(', ')}
+                             {scene.exclude_categories.length > 0 && ` · Excludes: ${scene.exclude_categories.join(', ')}`}
+                             {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
+                           </p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove(scene, 'up')} disabled={idx === 0}>
@@ -425,6 +431,17 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         <div className="space-y-1.5">
           <Label className="text-xs">Sort Order</Label>
           <Input type="number" value={draft.sort_order ?? 0} onChange={e => set('sort_order', parseInt(e.target.value) || 0)} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Sub-Category (grouping label)</Label>
+          <Input value={draft.sub_category || ''} onChange={e => set('sub_category', e.target.value || null)} placeholder="e.g. Essentials, On-Model Looks, Celebrity Style" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Category Sort Order (section position)</Label>
+          <Input type="number" value={draft.category_sort_order ?? 0} onChange={e => set('category_sort_order', parseInt(e.target.value) || 0)} />
         </div>
       </div>
 
