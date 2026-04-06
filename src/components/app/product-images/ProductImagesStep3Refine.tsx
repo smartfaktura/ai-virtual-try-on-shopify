@@ -633,36 +633,6 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'gradient-cool', label: 'Cool Fade', fill: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)', isGradient: true },
 ];
 
-/* Curated palette for the custom color popover */
-const COLOR_PALETTE = [
-  '#FFFFFF','#FAFAFA','#F5F5F5','#E5E7EB','#D1D5DB','#9CA3AF',
-  '#F5F0EB','#EDF0F4','#D6CFC7','#E8EDE6','#F8ECE8','#FEF3C7',
-  '#FAF7F2','#F0E6D8','#E8DFD0','#D4C4B0','#C9B99A','#B8A88A',
-  '#FDE8E8','#FCE4EC','#F3E5F5','#E8EAF6','#E0F2F1','#E8F5E9',
-  '#6B7280','#4B5563','#374151','#3A3A3A','#1F2937','#1A1A1A',
-];
-
-function ColorPaletteGrid({ selected, onSelect }: { selected: string; onSelect: (hex: string) => void }) {
-  return (
-    <div className="grid grid-cols-6 gap-1.5">
-      {COLOR_PALETTE.map(hex => (
-        <button
-          key={hex}
-          type="button"
-          onClick={() => onSelect(hex)}
-          className={cn(
-            'w-7 h-7 rounded-md border transition-all',
-            selected.toUpperCase() === hex.toUpperCase()
-              ? 'ring-2 ring-primary ring-offset-1 border-primary'
-              : 'border-border/60 hover:border-primary/40 hover:scale-110',
-          )}
-          style={{ background: hex }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function BackgroundSwatchSelector({ value, onChange, details, update }: {
   value: string;
   onChange: (v: string) => void;
@@ -672,7 +642,10 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
   const [gradFrom, setGradFrom] = useState(details.backgroundCustomGradient?.from || '#F8F8F8');
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
   const [customHex, setCustomHex] = useState(details.backgroundCustomHex || '#FFFFFF');
-  const [openPanel, setOpenPanel] = useState<'color' | 'gradient' | null>(null);
+
+  const colorInputRef = useRef<HTMLInputElement>(null);
+  const gradFromInputRef = useRef<HTMLInputElement>(null);
+  const gradToInputRef = useRef<HTMLInputElement>(null);
 
   const applyGradient = (from: string, to: string) => {
     setGradFrom(from);
@@ -715,18 +688,48 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
       toggleSwatch('custom');
       applyCustomHex(customHex);
     }
-    setOpenPanel(prev => prev === 'color' ? null : 'color');
+    colorInputRef.current?.click();
   };
 
   const handleGradientCardClick = () => {
     if (!hasGradientCustom) {
       toggleSwatch('gradient-custom');
     }
-    setOpenPanel(prev => prev === 'gradient' ? null : 'gradient');
+    gradFromInputRef.current?.click();
   };
 
   return (
     <div className="space-y-3">
+      {/* Hidden native color inputs */}
+      <input
+        ref={colorInputRef}
+        type="color"
+        value={validCustomHex ? customHex : '#FFFFFF'}
+        onChange={e => applyCustomHex(e.target.value)}
+        className="sr-only"
+        tabIndex={-1}
+      />
+      <input
+        ref={gradFromInputRef}
+        type="color"
+        value={gradFrom}
+        onChange={e => {
+          applyGradient(e.target.value, gradTo);
+          // After "from" is picked, open "to" picker on next tick
+          setTimeout(() => gradToInputRef.current?.click(), 300);
+        }}
+        className="sr-only"
+        tabIndex={-1}
+      />
+      <input
+        ref={gradToInputRef}
+        type="color"
+        value={gradTo}
+        onChange={e => applyGradient(gradFrom, e.target.value)}
+        className="sr-only"
+        tabIndex={-1}
+      />
+
       {/* Swatch grid — 4:3 aspect cards, 6 per row */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {BG_SWATCH_OPTIONS.map(o => {
@@ -757,7 +760,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
           );
         })}
 
-        {/* Custom Color card */}
+        {/* Custom Color card — opens native color picker */}
         <button
           type="button"
           onClick={handleCustomCardClick}
@@ -785,7 +788,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
           </div>
         </button>
 
-        {/* Custom Gradient card */}
+        {/* Custom Gradient card — opens native from/to color pickers */}
         <button
           type="button"
           onClick={handleGradientCardClick}
@@ -813,74 +816,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
           </div>
         </button>
       </div>
-
-      {/* Inline Custom Color picker panel */}
-      <Collapsible open={openPanel === 'color'} onOpenChange={(o) => setOpenPanel(o ? 'color' : null)}>
-        <CollapsibleContent>
-          <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-foreground">Pick a custom color</p>
-              <button type="button" onClick={() => { if (hasCustom) toggleSwatch('custom'); setOpenPanel(null); }} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <ColorPaletteGrid selected={customHex} onSelect={(hex) => applyCustomHex(hex)} />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg border border-border" style={{ background: validCustomHex ? customHex : '#FFFFFF' }} />
-              <Input
-                value={customHex}
-                onChange={e => applyCustomHex(e.target.value)}
-                className="h-8 w-24 text-xs font-mono"
-                placeholder="#FFFFFF"
-              />
-              <span className="text-[10px] text-muted-foreground">HEX</span>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Inline Custom Gradient picker panel */}
-      <Collapsible open={openPanel === 'gradient'} onOpenChange={(o) => setOpenPanel(o ? 'gradient' : null)}>
-        <CollapsibleContent>
-          <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-foreground">Custom gradient</p>
-              <button type="button" onClick={() => { if (hasGradientCustom) toggleSwatch('gradient-custom'); setOpenPanel(null); }} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <div className="h-10 rounded-lg border border-border" style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">From</p>
-                <ColorPaletteGrid selected={gradFrom} onSelect={(hex) => applyGradient(hex, gradTo)} />
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded border border-border" style={{ background: gradFrom }} />
-                  <Input
-                    value={gradFrom}
-                    onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(v.slice(0, 7), gradTo); }}
-                    className="h-7 w-20 text-xs font-mono"
-                    placeholder="#F8F8F8"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">To</p>
-                <ColorPaletteGrid selected={gradTo} onSelect={(hex) => applyGradient(gradFrom, hex)} />
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded border border-border" style={{ background: gradTo }} />
-                  <Input
-                    value={gradTo}
-                    onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(gradFrom, v.slice(0, 7)); }}
-                    className="h-7 w-20 text-xs font-mono"
-                    placeholder="#EEEEEE"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 }
