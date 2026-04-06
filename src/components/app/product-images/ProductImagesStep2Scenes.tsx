@@ -230,18 +230,25 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         </div>
       </div>
 
-      {/* No category detected: show all global scenes as flat grid + explore categories below */}
-      {!hasDetectedCategories && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold">All Scenes</h3>
-          </div>
-          <div className={`grid ${gridClass} gap-2`}>
-            {ACTIVE_GLOBAL_SCENES.map(scene => (
-              <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
-            ))}
-          </div>
+      {/* No category detected: show all category collections expanded */}
+      {!hasDetectedCategories && ACTIVE_CATEGORY_COLLECTIONS.length > 0 && (
+        <div className="space-y-2">
+          {ACTIVE_CATEGORY_COLLECTIONS.map(cat => (
+            <UnifiedCategorySectionWithSelectAll
+              key={cat.id}
+              catId={cat.id}
+              catTitle={cat.title}
+              essentialScenes={[]}
+              categoryScenes={cat.scenes}
+              categorySubGroups={cat.subGroups}
+              selectedSceneIds={selectedSceneIds}
+              onSelectionChange={onSelectionChange}
+              isOpen={expandedCategories.has(cat.id)}
+              onToggleOpen={() => toggleCategory(cat.id)}
+              toggleScene={toggleScene}
+              gridClass={gridClass}
+            />
+          ))}
         </div>
       )}
 

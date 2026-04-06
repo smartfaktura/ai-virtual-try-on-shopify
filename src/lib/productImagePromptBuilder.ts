@@ -809,8 +809,8 @@ export function buildDynamicPrompt(
   let prompt = template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
   // Auto-inject key directives if template didn't include their tokens
-  // For category-collection scenes (non-global), skip aesthetic overrides — let their templates drive the look
-  const isGlobalScene = scene.isGlobal;
+  // For category-collection scenes, skip aesthetic overrides — let their templates drive the look
+  const isGlobalScene = !scene.categoryCollection;
   const injectIfMissing = (keyword: string, tokenName: string, globalOnly = false) => {
     if (globalOnly && !isGlobalScene) return;
     const resolved = resolveToken(tokenName, ctx);
