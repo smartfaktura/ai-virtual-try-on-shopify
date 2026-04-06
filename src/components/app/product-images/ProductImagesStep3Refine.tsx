@@ -1026,8 +1026,13 @@ export function ProductImagesStep3Refine({
   const getProductById = (id: string) => allProducts.find(p => p.id === id);
   const modalAlreadySelected = propModalSceneId === null ? [] : sceneProps[propModalSceneId] || [];
 
-  // All models
+  // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
+  const selectedModelGender = useMemo(() => {
+    if (!details.selectedModelId) return undefined;
+    const model = allModels.find(m => m.modelId === details.selectedModelId);
+    return model?.gender;
+  }, [details.selectedModelId, allModels]);
 
   return (
     <div className="space-y-6 pb-20">
