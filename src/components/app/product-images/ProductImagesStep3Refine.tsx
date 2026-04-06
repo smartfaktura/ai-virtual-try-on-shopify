@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Crown, UserX } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -532,6 +532,9 @@ function AutoAestheticButton({ details, update }: { details: DetailSettings; upd
 
 function CustomHexPanel({ accentColor, onChange, isBrandMode }: { accentColor: string; onChange: (hex: string) => void; isBrandMode: boolean }) {
   const [localHex, setLocalHex] = useState(accentColor || '#000000');
+
+  // Sync localHex when accentColor is cleared externally (e.g. via Auto or Reset)
+  useEffect(() => { setLocalHex(accentColor || '#000000'); }, [accentColor]);
   const isValid = /^#([0-9A-Fa-f]{6})$/.test(localHex);
 
   const handleBlur = () => {
@@ -653,9 +656,13 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
 };
 
 // Built-in presets per category
-function getBuiltInPresets(category: string): OutfitPreset[] {
-  const base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
+function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
+  let base = CATEGORY_OUTFIT_CONFIG_DEFAULTS[category];
   if (!base) return [];
+  // Apply gender overrides so presets match the user's model gender
+  if (isMale && MALE_OUTFIT_OVERRIDES[category]) {
+    base = { ...base, ...MALE_OUTFIT_OVERRIDES[category] };
+  }
   return [
     { id: `builtin-studio-${category}`, name: 'Studio Standard', config: base, category, isBuiltIn: true, createdAt: '' },
     { id: `builtin-editorial-${category}`, name: 'Editorial', config: {
@@ -778,13 +785,18 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   // Current outfit config from details, falling back to defaults
   const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
 
-  // Initialize outfitConfig from category defaults on mount so prompt builder matches UI
+  // Track previous category to detect category changes
+  const prevCatRef = useRef(cat);
+
+  // Initialize outfitConfig from category defaults — re-run when category/gender changes
   useEffect(() => {
-    if (!details.outfitConfig) {
+    const categoryChanged = prevCatRef.current !== cat;
+    prevCatRef.current = cat;
+    if (!details.outfitConfig || categoryChanged) {
       update({ outfitConfig: defaultConfig });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [defaultConfig]);
 
   const updateConfig = useCallback((partial: Partial<OutfitConfig>) => {
     const next = { ...currentConfig, ...partial };
@@ -807,7 +819,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   }, [currentConfig]);
 
   // Presets: built-in + saved for this category
-  const builtInPresets = useMemo(() => getBuiltInPresets(cat), [cat]);
+  const builtInPresets = useMemo(() => getBuiltInPresets(cat, isMale), [cat, isMale]);
   const categoryPresets = savedPresets.filter(p => p.category === cat);
   const allPresets = [...builtInPresets, ...categoryPresets];
 

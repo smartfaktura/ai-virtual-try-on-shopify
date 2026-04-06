@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User } from 'lucide-react';
+import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User, Shirt } from 'lucide-react';
 import { ALL_SCENES } from './sceneData';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -61,10 +61,24 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
 
   const personEntries: { label: string; value: string }[] = [];
-  if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
-  if (details.ageRange) personEntries.push({ label: 'Age', value: details.ageRange });
-  if (details.skinTone) personEntries.push({ label: 'Skin', value: friendlyLabel(details.skinTone) });
-  if (details.selectedModelId) personEntries.push({ label: 'Model', value: 'Selected' });
+  if (details.selectedModelId) {
+    // When a model is selected, person detail fields are ignored by the prompt builder
+    personEntries.push({ label: 'Model', value: 'Selected' });
+  } else {
+    if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
+    if (details.ageRange) personEntries.push({ label: 'Age', value: details.ageRange });
+    if (details.skinTone) personEntries.push({ label: 'Skin', value: friendlyLabel(details.skinTone) });
+  }
+
+  // Outfit summary entries
+  const outfitEntries: { label: string; value: string }[] = [];
+  if (details.outfitConfig) {
+    const oc = details.outfitConfig;
+    if (oc.top) outfitEntries.push({ label: 'Top', value: [oc.top.fit, oc.top.color, oc.top.material, oc.top.garment].filter(Boolean).join(' ') });
+    if (oc.bottom) outfitEntries.push({ label: 'Bottom', value: [oc.bottom.fit, oc.bottom.color, oc.bottom.material, oc.bottom.garment].filter(Boolean).join(' ') });
+    if (oc.shoes) outfitEntries.push({ label: 'Shoes', value: [oc.shoes.fit, oc.shoes.color, oc.shoes.material, oc.shoes.garment].filter(Boolean).join(' ') });
+    if (oc.accessories) outfitEntries.push({ label: 'Accessories', value: oc.accessories });
+  }
 
   return (
     <div className="space-y-6 pb-20">
@@ -239,6 +253,32 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             </div>
             <div className="flex flex-wrap gap-1.5">
               {personEntries.map(e => (
+                <Badge key={e.label} variant="secondary" className="text-[10px]">
+                  {e.label}: {e.value}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Outfit summary */}
+      {outfitEntries.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Shirt className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs font-semibold">Locked outfit</p>
+              </div>
+              {onEditStep && (
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
+                  <Pencil className="w-3 h-3" />Edit
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {outfitEntries.map(e => (
                 <Badge key={e.label} variant="secondary" className="text-[10px]">
                   {e.label}: {e.value}
                 </Badge>
