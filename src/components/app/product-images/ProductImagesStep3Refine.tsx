@@ -54,7 +54,8 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, onSele
     if (selectedModelId && !first6.some(m => m.modelId === selectedModelId) && !filteredUser.some(m => m.modelId === selectedModelId)) {
       const selectedModel = filteredGlobal.find(m => m.modelId === selectedModelId);
       if (selectedModel) {
-        return [...first6.slice(0, INLINE_LIMIT - 1), selectedModel];
+        const rest = filteredGlobal.filter(m => m.modelId !== selectedModelId).slice(0, INLINE_LIMIT - 1);
+        return [selectedModel, ...rest];
       }
     }
     return first6;
@@ -826,12 +827,14 @@ function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; he
   );
 }
 
-/* ── Preset Color Summary (3 dots) ── */
+/* ── Preset Color Stripe (left-edge bars) ── */
 function PresetColorDots({ config }: { config: OutfitConfig }) {
-  const dots = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
+  const colors = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      {dots.map((c, i) => <ColorDot key={i} color={c} size={8} />)}
+    <div className="flex flex-col w-1 rounded-full overflow-hidden self-stretch">
+      {colors.map((c, i) => (
+        <div key={i} className="flex-1" style={{ backgroundColor: c }} />
+      ))}
     </div>
   );
 }
@@ -1683,8 +1686,12 @@ export function ProductImagesStep3Refine({
                         {renderSceneCardButton(scene)}
                         {/* Triangle indicator */}
                         {isExpanded && (
-                          <div className="flex justify-center -mb-2 relative z-10">
-                            <div className="w-3 h-3 bg-card border-l border-t border-primary/30 rotate-45 translate-y-[-6px]" />
+                          <div className="flex justify-center relative z-10 -mb-[9px]">
+                            {/* Outer triangle (border) */}
+                            <div className="relative" style={{ width: 0, height: 0, borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderBottom: '9px solid hsl(var(--border))' }}>
+                              {/* Inner triangle (fill) */}
+                              <div className="absolute" style={{ left: -8, top: 1, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid hsl(var(--card))' }} />
+                            </div>
                           </div>
                         )}
                       </div>
