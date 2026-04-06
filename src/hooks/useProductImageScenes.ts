@@ -21,6 +21,7 @@ export interface DbScene {
   created_at: string;
   sub_category: string | null;
   category_sort_order: number;
+  sub_category_overrides: Record<string, string> | null;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
@@ -36,6 +37,7 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     excludeCategories: d.exclude_categories,
     previewUrl: d.preview_image_url ?? undefined,
     subCategory: d.sub_category ?? undefined,
+    subCategoryOverrides: d.sub_category_overrides ?? undefined,
   };
 }
 

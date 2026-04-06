@@ -139,6 +139,7 @@ interface UnifiedCategorySectionProps {
   categoryScenes: ProductImageScene[];
   categorySubGroups?: SubGroup[];
   selectedSceneIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
   isOpen: boolean;
   onToggleOpen: () => void;
   toggleScene: (id: string) => void;
@@ -225,18 +226,6 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     setExpandedCategories(next);
   };
 
-  const selectAllUnified = (catId: string) => {
-    const rec = unifiedRecommended.find(c => c.id === catId);
-    const oth = unifiedOther.find(c => c.id === catId);
-    const cat = rec || oth;
-    if (!cat) return;
-    const allScenes = [...cat.essentialScenes, ...cat.scenes];
-    const next = new Set(selectedSceneIds);
-    const allSelected = allScenes.every(s => next.has(s.id));
-    if (allSelected) allScenes.forEach(s => next.delete(s.id));
-    else allScenes.forEach(s => next.add(s.id));
-    onSelectionChange(next);
-  };
 
   return (
     <div className="space-y-6 pb-20">
@@ -280,10 +269,10 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               categoryScenes={cat.scenes}
               categorySubGroups={cat.subGroups}
               selectedSceneIds={selectedSceneIds}
+              onSelectionChange={onSelectionChange}
               isOpen={expandedCategories.has(cat.id)}
               onToggleOpen={() => toggleCategory(cat.id)}
               toggleScene={toggleScene}
-              onSelectAll={() => selectAllUnified(cat.id)}
               isRecommended
               gridClass={gridClass}
             />
@@ -303,10 +292,10 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
               categoryScenes={cat.scenes}
               categorySubGroups={cat.subGroups}
               selectedSceneIds={selectedSceneIds}
+              onSelectionChange={onSelectionChange}
               isOpen={expandedCategories.has(cat.id)}
               onToggleOpen={() => toggleCategory(cat.id)}
               toggleScene={toggleScene}
-              onSelectAll={() => selectAllUnified(cat.id)}
               gridClass={gridClass}
             />
           ))}
@@ -316,26 +305,31 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   );
 }
 
-/** Wrapper that adds Select All / Deselect All button inside the collapsible */
+/** Wrapper that adds per-sub-group Select All buttons */
 function UnifiedCategorySectionWithSelectAll({
   catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
-  selectedSceneIds, isOpen, onToggleOpen, toggleScene, onSelectAll,
+  selectedSceneIds, onSelectionChange, isOpen, onToggleOpen, toggleScene,
   isRecommended, gridClass,
-}: UnifiedCategorySectionProps & { onSelectAll: () => void }) {
+}: UnifiedCategorySectionProps) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
-  const allSelected = allScenes.length > 0 && selectedCount === allScenes.length;
 
-  // Build sub-groups for essential scenes (by subCategory from DB)
+  // Resolve sub-category label using overrides for this category context
+  const resolveLabel = (scene: ProductImageScene, fallback: string) => {
+    const override = scene.subCategoryOverrides?.[catId];
+    return override || scene.subCategory || fallback;
+  };
+
+  // Build sub-groups for essential scenes (by resolved subCategory)
   const essentialSubGroups = useMemo(() => {
     const map = new Map<string, ProductImageScene[]>();
     for (const s of essentialScenes) {
-      const key = s.subCategory || '';
+      const key = resolveLabel(s, 'Essential Shots');
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(s);
     }
-    return Array.from(map.entries()).map(([label, scenes]) => ({ label: label || 'Essential Shots', scenes }));
-  }, [essentialScenes]);
+    return Array.from(map.entries()).map(([label, scenes]) => ({ label, scenes }));
+  }, [essentialScenes, catId]);
 
   // Use DB sub-groups for category scenes, or fall back to a single group
   const catSubGroups = useMemo(() => {
@@ -343,6 +337,14 @@ function UnifiedCategorySectionWithSelectAll({
     if (categoryScenes.length === 0) return [];
     return [{ label: `${catTitle} Shots`, scenes: categoryScenes }];
   }, [categorySubGroups, categoryScenes, catTitle]);
+
+  const bulkToggle = (scenes: ProductImageScene[]) => {
+    const next = new Set(selectedSceneIds);
+    const allSelected = scenes.every(s => next.has(s.id));
+    if (allSelected) scenes.forEach(s => next.delete(s.id));
+    else scenes.forEach(s => next.add(s.id));
+    onSelectionChange(next);
+  };
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
@@ -368,42 +370,77 @@ function UnifiedCategorySectionWithSelectAll({
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="flex items-center gap-2 pt-2 pl-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs h-7"
-            onClick={(e) => { e.stopPropagation(); onSelectAll(); }}
-          >
-            {allSelected ? 'Deselect All' : 'Select All'}
-          </Button>
-        </div>
-
         {/* Essential shots sub-groups */}
-        {essentialSubGroups.map((sg, i) => (
-          <div key={`ess-${i}`} className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{sg.label}</p>
-            <div className={`grid ${gridClass} gap-2`}>
-              {sg.scenes.map(scene => (
-                <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
-              ))}
-            </div>
-          </div>
-        ))}
+        {essentialSubGroups.map((sg, i) => {
+          const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+          return (
+            <SubGroupSection
+              key={`ess-${i}`}
+              label={sg.label}
+              scenes={sg.scenes}
+              selectedSceneIds={selectedSceneIds}
+              toggleScene={toggleScene}
+              allSelected={sgAllSelected}
+              onToggleAll={() => bulkToggle(sg.scenes)}
+              gridClass={gridClass}
+            />
+          );
+        })}
 
         {/* Category shots sub-groups */}
-        {catSubGroups.map((sg, i) => (
-          <div key={`cat-${i}`} className="pt-3 pl-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{sg.label}</p>
-            <div className={`grid ${gridClass} gap-2`}>
-              {sg.scenes.map(scene => (
-                <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
-              ))}
-            </div>
-          </div>
-        ))}
+        {catSubGroups.map((sg, i) => {
+          const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+          return (
+            <SubGroupSection
+              key={`cat-${i}`}
+              label={sg.label}
+              scenes={sg.scenes}
+              selectedSceneIds={selectedSceneIds}
+              toggleScene={toggleScene}
+              allSelected={sgAllSelected}
+              onToggleAll={() => bulkToggle(sg.scenes)}
+              gridClass={gridClass}
+            />
+          );
+        })}
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+/** Per-sub-group section with Select All on left and label on right */
+function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass }: {
+  label: string;
+  scenes: ProductImageScene[];
+  selectedSceneIds: Set<string>;
+  toggleScene: (id: string) => void;
+  allSelected: boolean;
+  onToggleAll: () => void;
+  gridClass: string;
+}) {
+  const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
+
+  return (
+    <div className="pt-3 pl-2">
+      <div className="flex items-center gap-2 mb-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[10px] h-6 px-2 shrink-0"
+          onClick={(e) => { e.stopPropagation(); onToggleAll(); }}
+        >
+          {allSelected ? 'Deselect' : 'Select All'}
+          {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
+        </Button>
+        <div className="h-px flex-1 bg-border" />
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
+      </div>
+      <div className={`grid ${gridClass} gap-2`}>
+        {scenes.map(scene => (
+          <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
+        ))}
+      </div>
+    </div>
   );
 }
 

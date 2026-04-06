@@ -1,0 +1,1 @@
+ALTER TABLE product_image_scenes ADD COLUMN IF NOT EXISTS sub_category_overrides jsonb DEFAULT '{}'::jsonb;
