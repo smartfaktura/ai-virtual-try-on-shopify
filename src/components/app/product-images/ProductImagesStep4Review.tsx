@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User } from 'lucide-react';
+import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User, Shirt } from 'lucide-react';
 import { ALL_SCENES } from './sceneData';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
