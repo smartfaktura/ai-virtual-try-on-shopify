@@ -1563,7 +1563,14 @@ export function ProductImagesStep3Refine({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                      {scene.triggerBlocks.includes('background') && (
+                        <span className="inline-flex items-center gap-0.5 px-1 py-px rounded bg-muted text-[9px] text-muted-foreground font-medium flex-shrink-0">
+                          <Paintbrush className="w-2.5 h-2.5" />BG
+                        </span>
+                      )}
+                    </div>
                     {sceneNeedsModel && needsModel ? (
                       <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
