@@ -108,6 +108,7 @@ export default function ProductImages() {
     setCompletedJobIds(new Set());
     setFailedJobIds(new Set());
     if (pollingRef.current) clearTimeout(pollingRef.current);
+    try { sessionStorage.removeItem('pi_generation_session'); } catch {}
   }, []);
 
   // Load user products
