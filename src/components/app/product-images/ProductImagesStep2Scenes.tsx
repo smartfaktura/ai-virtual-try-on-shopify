@@ -225,16 +225,10 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     setExpandedCategories(next);
   };
 
-  const selectAllUnified = (catId: string) => {
-    const rec = unifiedRecommended.find(c => c.id === catId);
-    const oth = unifiedOther.find(c => c.id === catId);
-    const cat = rec || oth;
-    if (!cat) return;
-    const allScenes = [...cat.essentialScenes, ...cat.scenes];
+  // toggleScene now handles both individual and bulk toggling
+  const toggleSceneWithUpdate = (id: string) => {
     const next = new Set(selectedSceneIds);
-    const allSelected = allScenes.every(s => next.has(s.id));
-    if (allSelected) allScenes.forEach(s => next.delete(s.id));
-    else allScenes.forEach(s => next.add(s.id));
+    if (next.has(id)) next.delete(id); else next.add(id);
     onSelectionChange(next);
   };
 
