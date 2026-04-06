@@ -2042,18 +2042,18 @@ export function ProductImagesStep3Refine({
                   {/* Outfit lock panel */}
                   <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
 
-                  {/* Inline person details (only when no specific model selected) */}
-                  {!details.selectedModelId ? (
-                    <div className="space-y-2">
+                  {/* Inline person details & accessories */}
+                  <div className="space-y-2">
+                    {!details.selectedModelId && (
                       <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
-                      <InlinePersonDetails
-                        details={details}
-                        update={update}
-                        outfitAccessories={details.outfitConfig?.accessories}
-                        onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                      />
-                    </div>
-                  ) : null}
+                    )}
+                    <InlinePersonDetails
+                      details={details}
+                      update={update}
+                      outfitAccessories={details.outfitConfig?.accessories}
+                      onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </CollapsibleContent>
