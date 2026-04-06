@@ -481,17 +481,8 @@ const BLOCK_LABELS: Record<string, { title: string }> = {
   productSize: { title: 'Product Size' },
 };
 
-const BLOCK_FIELD_MAP: Record<string, (keyof DetailSettings)[]> = {
-  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
-  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
-  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
-  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
-  actionDetails: ['actionType', 'actionIntensity'],
-  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
-  angleSelection: ['requestedViews', 'numberOfViews'],
-  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
-  productSize: ['productSize'],
-};
+// Use centralized BLOCK_FIELD_MAP from detailBlockConfig
+import { BLOCK_FIELD_MAP } from './detailBlockConfig';
 
 /* ══════════════════════════════════════════════
    Constants
