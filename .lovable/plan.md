@@ -1,71 +1,47 @@
 
 
-# Refine Step — Kill "Global Style", Embed Controls in Scene Cards
+# Improve Scene Card Discoverability + Add Quick Background Control
 
-## Problem
+## Problems
 
-"Global Style" is confusing — it says "applies to all scenes" but editorial scenes have their own specific mood/lighting baked into templates. Users don't understand what controls affect what. Too many settings scattered across separate sections.
+1. **Scene cards don't look clickable** — the chevron is small, the truncated "Background..." text is confusing, and users don't realize they can tap to expand and change settings.
 
-## Solution: No Global Section. Each Scene Shows Its Own Controls.
+2. **No quick way to change background across scenes** — many scenes share solid backgrounds (Clean Studio, Marketplace, Side Profile, Back View, Top-Down, etc.) but users must open each card individually to find the background control.
 
-Every scene's `promptTemplate` uses specific directives (e.g., `{{lightingDirective}}`, `{{shadowDirective}}`, `{{moodDirective}}`). Instead of a separate "Global Style" section, **scan each scene's template** and show only the controls that scene actually uses — right inside its card expansion.
+## Changes
 
-If two scenes both use `{{lightingDirective}}`, the same `details.lightingStyle` value appears in both cards. Changing it in one updates the other automatically. No need to explain "shared" — users discover it naturally.
+### 1. Make scene cards visually interactive
 
-## What Changes
+- Add a subtle hover effect and a "Tap to customize" hint on the card when NOT expanded
+- Replace the tiny truncated "Background..." label with clearer action text: show configurable block count as a pill, e.g. `⚙ 3 settings` instead of truncated labels
+- Add a subtle dashed bottom border or "expand" affordance (like a small down-arrow indicator at the card bottom center) to signal expandability
 
-### Scene card expansion: show ALL relevant controls per scene
+### 2. Add "Background" quick-action button in scenes header
 
-For each scene, compute which controls to show by scanning its `promptTemplate` for directive tokens:
+Between "Your scenes" header and the scene grid, add a small inline action strip for cross-cutting controls:
 
-| Template token | Control shown |
-|---|---|
-| `{{lightingDirective}}` | Lighting chip selector |
-| `{{shadowDirective}}` | Shadow style chip |
-| `{{moodDirective}}` | Styling direction chip |
-| `{{surfaceDirective}}` | Surface / material chip |
-| `{{background}}` | Background family chip |
-| `{{accentDirective}}` or `{{accentColorDirective}}` | Accent color chip |
-| `{{productProminenceDirective}}` | Product prominence chip |
+```text
+Your scenes  7 selected — tap to fine-tune     ✨ Auto (Recommended)
+┌──────────────────────────────────────────────────────────────┐
+│ 🎨 Background: [Pure White] [Light Gray] [Warm] [Cool] ... │
+│     Applies to: [thumb][thumb][thumb][thumb][thumb] 5 scenes│
+└──────────────────────────────────────────────────────────────┘
+```
 
-These are shown BELOW the existing scene-specific `BlockFields` in a "Style" sub-group. Result: every scene card becomes self-contained — the user sees everything that affects THAT scene in one place.
+- This strip only appears when 2+ selected scenes have `{{background}}` in their `promptTemplate`
+- Shows the background tone ChipSelector (same as the existing `backgroundTone` field)
+- Below the chips, show mini thumbnails of scenes this applies to
+- Changing the value updates `details.backgroundTone` which is already used by all those scenes
+- The strip is collapsible (starts open) so it doesn't overwhelm
 
-Example — "Clean Studio Shot" card expands to show:
-- Background & Composition (from `triggerBlocks`)
-- Product Size (from `triggerBlocks`)
-- **Lighting** (from template scan — uses `{{lightingDirective}}`)
-- **Shadow** (from template scan — uses `{{shadowDirective}}`)
+### 3. Scene card label improvements
 
-Example — "Editorial on Surface" card expands to show:
-- Visual Direction (from `triggerBlocks`)
-- Environment (from `triggerBlocks`)
-- **Lighting**, **Mood/Styling**, **Surface**, **Accent** (from template scan)
-
-Scenes that were previously "No extra settings" (like Marketplace Listing with only `triggerBlocks: ['background']`) now show Lighting + Shadow from their template — giving users control they didn't have before.
-
-### Remove Global Style section entirely
-
-Delete the entire "Global Style" collapsible (current Section 3, lines ~1349-1465). No replacement needed — all its controls now live inside scene cards.
-
-Move the "Auto (Recommended)" button to the header area next to "Your scenes" as a quick reset.
-
-### Consistency control
-
-The multi-product consistency chip (`auto-balance` / `anchor-first` / `strong` / `strict`) moves into a small standalone card between the scene cards section and Custom Note — it's a cross-cutting concern that doesn't belong to any single scene.
-
-## New Section Order
-
-1. Model-needed info banner (unchanged)
-2. Your scenes — with "Auto (Recommended)" reset in header + scene cards with full inline controls
-3. Outfit & Model (unchanged)
-4. Consistency (if multi-product — small standalone chip)
-5. Custom note
-6. Format & Output (collapsed)
-7. Credit preview (always visible)
+- Instead of truncated "Background..." show a clean pill: `⚙ 2 settings` or `⚙ Lighting, Shadow` (max 2 labels, no truncation)
+- When expanded, hide this pill (the full controls are visible)
 
 ## Files to Update
 
 | File | Changes |
-|---|---|
-| `ProductImagesStep3Refine.tsx` | (1) Add `getTemplateControls(scene)` helper scanning `promptTemplate` for directive tokens, returning list of control keys. (2) In scene card expansion, render template-derived controls (Lighting, Shadow, Mood, Surface, Background, Accent chips) below the existing `BlockFields`. (3) Delete entire Global Style collapsible section. (4) Move `AutoAestheticButton` to scene section header. (5) Move consistency chip to standalone small section. (6) Remove `aestheticOpen` state and `globalInheritScenes` computation. |
+|------|---------|
+| `ProductImagesStep3Refine.tsx` | (1) Add `scenesWithBackground` computation — filter `selectedScenes` where `promptTemplate` includes `{{background}}`. (2) Render a "Background" quick-action strip between header and grid when `scenesWithBackground.length >= 2`, with `ChipSelector` for `backgroundTone` + mini scene thumbs. (3) Improve scene card hover/cursor styles and replace truncated block labels with a clean settings count pill. (4) Add subtle visual expand affordance to cards. |
 
