@@ -724,7 +724,7 @@ export default function ProductImages() {
             )}
 
             {step === 3 && (
-              <>
+              <div>
                 {showLastSettingsBanner && (
                   <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/[0.03] mb-4">
                     <History className="w-4 h-4 text-primary flex-shrink-0" />
@@ -733,33 +733,28 @@ export default function ProductImages() {
                     <Button size="sm" className="h-7 text-xs" onClick={loadLastSettings}>Apply</Button>
                   </div>
                 )}
-              <ProductImagesStep3Refine
-                selectedSceneIds={selectedSceneIds}
-                productCount={selectedProducts.length}
-                details={details}
-                onDetailsChange={setDetails}
-                userModels={userModelProfiles}
-                globalModels={globalModelProfiles}
-                selectedScenes={selectedScenes}
-                allProducts={userProducts}
-                selectedProductIds={selectedProductIds}
-                hasMultipleCategories={(() => {
-                  const cats = new Set<string>();
-                  for (const p of selectedProducts) {
-                    const analysis = p.analysis_json as any;
-                    if (analysis?.category) cats.add(analysis.category);
-                    else cats.add(p.product_type || 'other');
-                  }
-                  return cats.size > 1;
-                })()}
-                primaryCategory={(() => {
-                  for (const p of selectedProducts) {
-                    const analysis = p.analysis_json as any;
-                    if (analysis?.category) return analysis.category as string;
-                  }
-                  return selectedProducts[0]?.product_type || undefined;
-                })()}
-              />
+                <ProductImagesStep3Refine
+                  selectedSceneIds={selectedSceneIds}
+                  productCount={selectedProducts.length}
+                  details={details}
+                  onDetailsChange={setDetails}
+                  userModels={userModelProfiles}
+                  globalModels={globalModelProfiles}
+                  selectedScenes={selectedScenes}
+                  allProducts={userProducts}
+                  selectedProductIds={selectedProductIds}
+                  hasMultipleCategories={(() => {
+                    const cats = new Set<string>();
+                    for (const p of selectedProducts) {
+                      const analysis = p.analysis_json as any;
+                      if (analysis?.category) cats.add(analysis.category);
+                      else cats.add(p.product_type || 'other');
+                    }
+                    return cats.size > 1;
+                  })()}
+                  primaryCategory={primaryCategory}
+                />
+              </div>
             )}
 
             {step === 4 && (
