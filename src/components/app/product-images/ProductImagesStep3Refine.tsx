@@ -1282,7 +1282,7 @@ function PieceField({ label, piece, onChange, pieceType }: {
               <button key={m} type="button" onClick={() => updateField('material', m)}
                 className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   current.material === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-                )}>{m}</button>
+                )}><span className="capitalize">{m}</span></button>
             ))}
           </div>
         </div>
