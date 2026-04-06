@@ -1,39 +1,94 @@
 
 
-# Fix: Stuck generation loses all results
+# Fix: Product Images — Multiple Quality & Naming Issues
 
-## Problem
-When generation gets stuck at 19/20, the user has no way to see the 19 completed images. If they refresh the page, ALL progress is lost because state lives only in React `useState`. The "Skip waiting" button exists but only appears after 60 seconds. There is no auto-finish for near-complete batches, and no session recovery.
+## Problems Identified
+
+1. **Person appearing in product-only scenes** (Tabletop Lifestyle, Product on Pedestal, Accent Color Backdrop): The model reference is sent to the edge function for ALL scenes (line 391: `...(modelRef ? { model: modelRef } : {})`). When the edge function sees a model, it injects person instructions, causing people to appear in packshot/product-only scenes.
+
+2. **In-Hand Studio/Lifestyle bad for garments**: The prompt says "held in a hand" which doesn't work for apparel. A tank top can't be held like a perfume bottle. These scenes should either be excluded for garments or have garment-specific prompt adaptation (e.g. "model holding the folded garment close to camera").
+
+3. **Scene labels showing "Scene"**: When polling or session restore resolves scene names, it falls back to `'Scene'` if `selectedScenes` doesn't contain the scene (e.g. DB-loaded scenes not matching). The `scene_name` is already stored in the DB — we should use it.
+
+4. **Background color not applied to non-global scenes**: The prompt builder only injects background for global scenes (`globalOnly` flag on line 832-838 for shadow, surface, styling, lighting). The `injectIfMissing` for background does check all scenes (line 823-830), but the `hasBgToken` check may not catch all templates. Need to verify non-global category scenes also get the user's selected background.
+
+5. **In-Hand Lifestyle showing wrong composition for fashion**: Same root cause as #2 — prompts treat all products as handheld objects rather than adapting for garment presentation.
 
 ## Plan
 
-### 1. Near-complete auto-finish (ProductImages.tsx, polling logic)
-Inside the `poll` function, after checking done count (line 519), add a near-complete check:
-- If elapsed > 90 seconds AND done >= 90% of jobs, auto-finish with available results
-- Show toast: "1 image still processing — showing 19 completed results"
-- This prevents the stuck-at-19/20 scenario entirely
+### A. File: `src/pages/ProductImages.tsx` — Conditionally skip model reference for product-only scenes
 
-### 2. Session persistence via sessionStorage (ProductImages.tsx)
-**Save on entering Step 5:**
-- Store `{ jobIds: [...], jobMapEntries: [...[key, value]], startTime, expectedJobCount }` to `sessionStorage` key `pi_generation_session`
+**Change the payload building loop** (~line 391) to only include `model` when the scene's `triggerBlocks` includes `personDetails` or `actionDetails`:
 
-**Restore on component mount:**
-- Check sessionStorage for active session
-- If found and step is 1 (default): restore step to 5, rebuild jobMap, resume polling
-- User sees progress screen again instead of being dumped to Step 1
+```typescript
+const sceneNeedsPerson = scene.triggerBlocks?.some(
+  (b: string) => b === 'personDetails' || b === 'actionDetails'
+);
 
-**Clear on Step 6 or reset:**
-- Remove sessionStorage entry when results display or user starts over
+const payload = {
+  ...
+  ...(modelRef && sceneNeedsPerson ? { model: modelRef } : {}),
+  ...
+};
+```
 
-### 3. Earlier and smarter "Skip" button (ProductImagesStep5Generating.tsx)
-- Show after **30 seconds** (down from 60s) when >50% jobs are done
-- Change to `default` variant (more visible) when 90%+ jobs complete
-- Label changes to "View 19 completed results" showing actual count
+This prevents the edge function from injecting person/model instructions for tabletop, pedestal, accent backdrop, and other product-only scenes.
+
+### B. File: `src/pages/ProductImages.tsx` — Fix scene name fallback in polling
+
+In `startPolling` (line 496) and the `onViewResults` callback (line 881), when `scene?.title` is not found, fall back to the `scene_name` from the DB query. Update the polling query to also select `scene_name`:
+
+```typescript
+// In poll query, select scene_name as well
+const { data: jobs } = await supabase
+  .from('generation_queue')
+  .select('id, status, result, scene_name')
+  .in('id', jobIds);
+
+// Use job.scene_name as fallback
+productMap.set(jobId, {
+  productId,
+  sceneName: scene?.title || 'Scene'  // initial map
+});
+
+// After fetching jobs, enrich with DB scene_name
+for (const job of jobs) {
+  const existing = productMap.get(job.id);
+  if (existing && existing.sceneName === 'Scene' && job.scene_name) {
+    productMap.set(job.id, { ...existing, sceneName: job.scene_name });
+  }
+}
+```
+
+### C. File: `src/components/app/product-images/sceneData.ts` — Fix In-Hand scenes for garments
+
+Add `'garments'` to the `excludeCategories` for both `in-hand-studio` and `in-hand-lifestyle`. Garments should NOT use "held in hand" scenes — they have their own category-specific on-model scenes.
+
+```typescript
+// in-hand-studio
+excludeCategories: ['home-decor', 'tech-devices', 'garments'],
+
+// in-hand-lifestyle  
+excludeCategories: ['home-decor', 'tech-devices', 'garments'],
+```
+
+### D. File: `src/lib/productImagePromptBuilder.ts` — Ensure background injection works for all scenes
+
+The background injection at line 823-830 checks `!hasBgToken && !isAuto(bgTone)`, but `bgTone` maps to `details.backgroundTone` while some users set `details.negativeSpace` (the background family). Verify both paths inject correctly. Also ensure the `injectIfMissing` calls for lighting, shadow etc. are NOT restricted to `globalOnly` for background — currently background injection is correct (not globalOnly), but we should also inject lighting for category scenes when user explicitly set it.
+
+### E. File: `src/components/app/product-images/sceneData.ts` — Add garment-specific category scenes for in-hand
+
+Add two new garment-specific scenes to the `garments` category collection:
+- **"Garment In-Hand Presentation"**: Close-up of someone presenting the folded/held garment naturally
+- **"Garment Lifestyle Hold"**: Model casually holding the garment in a lifestyle setting
+
+Or alternatively, adapt the global in-hand prompts to detect garment category and use different wording. The simpler approach is excluding garments from the generic in-hand and relying on existing on-model garment scenes.
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `src/pages/ProductImages.tsx` | Near-complete auto-finish in poll loop, sessionStorage save/restore/clear, resume polling on mount |
-| `src/components/app/product-images/ProductImagesStep5Generating.tsx` | Earlier skip button (30s), prominent styling at 90%+, dynamic label with completed count |
+| `src/pages/ProductImages.tsx` | Skip model ref for product-only scenes; fix scene name fallback using DB `scene_name` |
+| `src/components/app/product-images/sceneData.ts` | Add `garments` to `excludeCategories` for in-hand-studio and in-hand-lifestyle |
+| `src/lib/productImagePromptBuilder.ts` | Minor: ensure background/lighting injection covers category scenes when user explicitly set values |
 
