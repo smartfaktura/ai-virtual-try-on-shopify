@@ -13,7 +13,7 @@ import { computeTotalImages, expandMultiSelects } from '@/lib/sceneVariations';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
-import { ALL_SCENES } from '@/components/app/product-images/sceneData';
+import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/ProductImagesStep2Scenes';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal } from '@/components/app/AddProductModal';
@@ -57,6 +57,7 @@ export default function ProductImages() {
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts } = useProductAnalysis();
+  const { allScenes } = useProductImageScenes();
 
   const INITIAL_DETAILS: DetailSettings = {
     aspectRatio: '1:1', quality: 'high', imageCount: '1',
@@ -128,8 +129,8 @@ export default function ProductImages() {
   );
 
   const selectedScenes = useMemo(
-    () => ALL_SCENES.filter(s => selectedSceneIds.has(s.id)),
-    [selectedSceneIds],
+    () => allScenes.filter(s => selectedSceneIds.has(s.id)),
+    [allScenes, selectedSceneIds],
   );
 
   // Primary category for outfit defaults
@@ -247,7 +248,7 @@ export default function ProductImages() {
 
   // Stale detail cleanup when scenes change
   useEffect(() => {
-    const triggered = getTriggeredBlocks(selectedSceneIds, ALL_SCENES, selectedProducts.length);
+    const triggered = getTriggeredBlocks(selectedSceneIds, allScenes, selectedProducts.length);
     const staleKeys: (keyof DetailSettings)[] = [];
     for (const [block, fields] of Object.entries(BLOCK_FIELD_MAP)) {
       if (!triggered.includes(block)) {
@@ -282,7 +283,7 @@ export default function ProductImages() {
   }, [details.selectedModelId, userModelProfiles, globalModelProfiles]);
 
   // Build instruction from scene + details — use live analyses map instead of stale DB row
-  const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
+  const buildInstruction = useCallback((scene: typeof allScenes[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
     return buildDynamicPrompt(scene, product, analysis, details, selectedModelGender);
   }, [details, analyses, selectedModelGender]);
