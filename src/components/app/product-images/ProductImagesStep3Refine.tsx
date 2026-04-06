@@ -1678,8 +1678,12 @@ export function ProductImagesStep3Refine({
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {productShots.map(renderSceneCard)}
+                {productShots.map(renderSceneCardButton)}
               </div>
+              {expandedSceneId && productShots.some(s => s.id === expandedSceneId) && (() => {
+                const scene = productShots.find(s => s.id === expandedSceneId);
+                return scene ? renderExpandedPanel(scene) : null;
+              })()}
             </div>
           )}
 
@@ -1696,8 +1700,12 @@ export function ProductImagesStep3Refine({
                 )}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {modelShots.map(renderSceneCard)}
+                {modelShots.map(renderSceneCardButton)}
               </div>
+              {expandedSceneId && modelShots.some(s => s.id === expandedSceneId) && (() => {
+                const scene = modelShots.find(s => s.id === expandedSceneId);
+                return scene ? renderExpandedPanel(scene) : null;
+              })()}
             </div>
           )}
         </div>
