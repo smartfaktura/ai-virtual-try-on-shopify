@@ -248,7 +248,7 @@ export default function ProductImages() {
 
   // Stale detail cleanup when scenes change
   useEffect(() => {
-    const triggered = getTriggeredBlocks(selectedSceneIds, ALL_SCENES, selectedProducts.length);
+    const triggered = getTriggeredBlocks(selectedSceneIds, allScenes, selectedProducts.length);
     const staleKeys: (keyof DetailSettings)[] = [];
     for (const [block, fields] of Object.entries(BLOCK_FIELD_MAP)) {
       if (!triggered.includes(block)) {
