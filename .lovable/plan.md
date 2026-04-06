@@ -1,104 +1,124 @@
 
 
-# Refine Step Overhaul: Scene-Driven Layout, Outfit Locking System, and UX Fixes
+# Pro-Level Styling & Outfit System for Product Images
 
-## Problems Identified
+## Current State Analysis
 
-1. **"Visible Person Styling" is a random dump** — All person fields (hands, models, outfits, age, skin tone) are thrown into one collapsed section with no scene context. User wants each scene that needs a person to show its own auto-selected defaults inline, editable if needed.
+The system has a functional but basic outfit mechanism:
+- **OutfitLockPanel**: 4 text inputs (top, bottom, shoes, accessories) with category defaults
+- **Prompt builder**: `defaultOutfitDirective()` reads these fields, falls back to hardcoded category defaults
+- **No persistence**: Settings reset every session — users re-enter the same outfit every time
+- **No presets**: No way to save a "look" and reuse it across shoots
+- **Flat structure**: Each piece is just a free-text string — no structured color/material/fit breakdown
+- **No "last used" memory**: The `INITIAL_DETAILS` in `ProductImages.tsx` is hardcoded every mount
 
-2. **No outfit locking system** — The backend has `defaultOutfitDirective()` with hardcoded outfits (e.g., "beige trousers, white sneakers" for garments), but users can't see or control this. Need a Catalog Studio-inspired outfit lock panel where users see the pre-written outfit and can edit specific pieces (top, bottom, shoes, accessories).
+## Problems
 
-3. **"Clean Studio Shot" doesn't adapt to category** — The same `clean-packshot` scene template is used for garments (where it should be a ghost-mannequin or flat-lay) and bags (where it's a standard packshot). No category-aware prompt variant exists.
-
-4. **Format & Output is collapsed** — This is one of the most important settings (aspect ratio, images per scene, credit estimate) but it's hidden in a collapsed section. Should be visible by default.
-
-5. **"Customize per scene" is unclear** — The label "Customize per scene" under Format doesn't communicate that it's about adding props/accessories to specific scenes. Needs clearer labeling.
-
-6. **"Use Smart Defaults" CTA looks bad** — The current button with "Active" badge doesn't look like a proper CTA. Should be more subtle, and the default should already be "product accent" for accent color.
-
-7. **Accent color default** — When Overall Aesthetic is opened, accent color should default to "product-accent" (use product accent) rather than "none".
+1. **No memory** — B2B users run 50+ shoots/month. Re-entering "slim beige trousers, white sneakers" every time is painful.
+2. **No outfit presets** — A fashion brand has 2-3 standard looks (e.g., "ASOS Clean", "Editorial Dark", "Summer Casual"). No way to define and reuse them.
+3. **Free-text is imprecise** — "beige trousers" gives inconsistent results. Structured fields (color: beige, fit: slim, material: cotton) produce better prompts.
+4. **Outfit doesn't adapt to gender** — The same "plain white t-shirt" default is used regardless of whether the selected model is male or female.
+5. **No per-piece detail** — Missing color, material, and fit for each garment piece, which the prompt builder needs for consistency.
 
 ## Plan
 
-### File 1: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+### 1. Structured Outfit Pieces (types.ts + promptBuilder)
 
-**A. Restructure layout — Scene-driven sections instead of category-grouped:**
+Replace flat string fields with structured objects per piece:
 
-Replace the current structure of:
-- Smart Defaults CTA (ugly)
-- Scene strip
-- Overall Aesthetic (collapsed)
-- Person Styling (collapsed, all fields dumped)
-- Scene-specific details (collapsed per scene)
-- Custom Note
-- Format & Output (collapsed)
-
-With:
-- **Format & Output (OPEN by default)** — aspect ratio, images per scene, credit estimate. Moved to top since it's critical.
-- **Overall Aesthetic** — collapsed, with note about universal scenes. Default accent color to `product-accent`. Remove the big "Smart Defaults" button; replace with a smaller inline "Auto (Recommended)" chip that's already active by default.
-- **Outfit Lock** (new section, only for categories with person scenes) — Catalog-style outfit control with pre-filled values per category. Shows: Top, Bottom, Shoes, Accessories as editable text chips. Locked across all on-model scenes.
-- **Scene Details** — Each scene that has trigger blocks gets its own collapsible row showing: scene thumbnail, scene name, relevant controls (including inline person details if that scene needs a person, with auto-selected defaults shown). No separate "Person Styling" mega-section.
-- **Custom Note** — stays at bottom.
-
-**B. Remove "Smart Defaults" big CTA button:**
-
-Replace with the existing `AutoAestheticButton` chip inside the Aesthetic section. The defaults are already applied on mount, so no need for a separate CTA.
-
-**C. Change `AUTO_AESTHETIC_DEFAULTS` to set `brandingVisibility: 'product-accent'`** instead of `'none'`.
-
-**D. Set `formatOpen` default to `true`** so Format & Output is visible immediately.
-
-**E. Rename "Customize per scene" to "Scene Ratios & Props"** with description "Set per-scene aspect ratios or add styling accessories."
-
-**F. Build `OutfitLockPanel` sub-component:**
-
-A new inline component showing pre-filled outfit fields based on category:
-- For garments: Top (default: "plain white t-shirt"), Bottom (default: "slim-fit beige trousers"), Shoes (default: "minimal white sneakers"), Accessories (default: "none")
-- For bags: Top (default: "black turtleneck"), Bottom (default: "dark navy trousers"), Shoes (default: "black ankle boots"), etc.
-- For shoes: Top (default: "plain white tee"), Bottom (default: "cropped slim dark denim"), etc.
-
-Each field is a text input with the default pre-filled. Changes update `details.outfitStyle` and `details.outfitColorDirection` which feed into the prompt builder.
-
-New `DetailSettings` fields: `outfitTop`, `outfitBottom`, `outfitShoes`, `outfitAccessories` (all optional strings).
-
-**G. Move person details inline per scene:**
-
-For each scene that has `personDetails` in its triggerBlocks, show a compact row of auto-selected chips (presentation, age, skin tone) below that scene's collapsible. The model picker stays as a top-level option since it applies globally.
-
-### File 2: `src/components/app/product-images/types.ts`
-
-Add new fields to `DetailSettings`:
 ```ts
-outfitTop?: string;
-outfitBottom?: string;
-outfitShoes?: string;
-outfitAccessories?: string;
+interface OutfitPiece {
+  garment: string;    // "t-shirt", "turtleneck", "blouse"
+  color: string;      // "white", "black", "beige"
+  fit?: string;       // "slim", "relaxed", "cropped"
+  material?: string;  // "cotton", "silk", "denim"
+}
+
+interface OutfitConfig {
+  top?: OutfitPiece;
+  bottom?: OutfitPiece;
+  shoes?: OutfitPiece;
+  accessories?: string;
+  name?: string;       // for saved presets
+}
 ```
 
-### File 3: `src/lib/productImagePromptBuilder.ts`
+**File: `types.ts`** — Add `OutfitConfig` type and `outfitConfig?: OutfitConfig` to `DetailSettings` (keep old `outfitTop/Bottom/Shoes/Accessories` for backward compat).
 
-**H. Update `defaultOutfitDirective` to read from DetailSettings outfit fields:**
+**File: `productImagePromptBuilder.ts`** — Update `defaultOutfitDirective` to read structured pieces first, building precise strings like "slim-fit white cotton t-shirt, cropped beige linen trousers, minimal white leather sneakers".
 
-If `outfitTop`, `outfitBottom`, `outfitShoes` are set, build the outfit string from those instead of the hardcoded defaults. Fall back to category defaults if empty.
+### 2. Gender-Aware Outfit Defaults
 
-**I. Add category-aware prompt override for `clean-packshot`:**
+**File: `productImagePromptBuilder.ts`** — `categoryOutfitDefaults` gains a gender parameter. When a model is selected, read their `gender` field and switch defaults:
+- Male garments: "plain white crew-neck tee, slim navy chinos, white leather sneakers"
+- Female garments: "fitted white t-shirt, slim light beige trousers, minimal white sneakers"
 
-In `buildDynamicPrompt`, when scene is `clean-packshot` and category is `garments`, inject "ghost mannequin or flat-lay style" into the prompt. For other categories, use the standard packshot template. This can be done via `categoryOverrides` on the scene definition or inline in the prompt builder.
+**File: `ProductImagesStep3Refine.tsx`** — Pass selected model's gender to OutfitLockPanel so placeholders adapt.
 
-### File 4: `src/components/app/product-images/sceneData.ts`
+### 3. Outfit Presets (Save & Load)
 
-**J. Add category note to `clean-packshot` description:**
+**Storage**: `localStorage` key `pi_outfit_presets` — array of `{ id, name, config: OutfitConfig, category, gender, createdAt }`. No DB table needed initially; keeps it fast and frictionless.
 
-Update description: "Pure white background cut-out. For clothing: ghost mannequin or flat-lay style. For accessories and products: standard packshot."
+**File: `ProductImagesStep3Refine.tsx`** — New `OutfitPresetBar` sub-component above the OutfitLockPanel:
+- Horizontal chip row of saved presets (e.g., "ASOS Clean", "Editorial Dark")
+- Click to load → fills the outfit fields
+- "Save current" button → prompts for name, saves to localStorage
+- "Delete" on hover
+- 3 built-in templates per category that can't be deleted (e.g., "Studio Standard", "Editorial", "Minimal")
 
-Add to the scene's `promptTemplate` a `{{categoryPackshotDirective}}` token that resolves differently per category.
+### 4. Last Used Settings Memory
+
+**File: `ProductImages.tsx`** — On step transition from Refine → Review, save `details` to `localStorage` key `pi_last_details_{category}` (keyed by primary category so garment settings don't bleed into fragrance).
+
+On component mount, if `localStorage` has a saved config for the current category, show a subtle banner: **"Load your last settings?"** with Apply / Dismiss. Clicking Apply fills `details` state. Dismissed = use fresh defaults.
+
+### 5. Improved OutfitLockPanel UI
+
+**File: `ProductImagesStep3Refine.tsx`** — Restructure the panel:
+
+```text
+┌─────────────────────────────────────────────────┐
+│ 🔒 Outfit Lock                                  │
+│                                                  │
+│ Presets: [Studio Standard] [Editorial] [+ Save]  │
+│                                                  │
+│ ┌─── Top ───────────────────────────────────┐   │
+│ │ Garment: [t-shirt ▾]  Color: [white ▾]    │   │
+│ │ Fit: [slim ▾]         Material: [cotton ▾] │   │
+│ └────────────────────────────────────────────┘   │
+│ ┌─── Bottom ────────────────────────────────┐   │
+│ │ Garment: [trousers ▾]  Color: [beige ▾]   │   │
+│ │ Fit: [slim ▾]          Material: [cotton ▾]│   │
+│ └────────────────────────────────────────────┘   │
+│ ┌─── Shoes ─────────────────────────────────┐   │
+│ │ Garment: [sneakers ▾]  Color: [white ▾]   │   │
+│ └────────────────────────────────────────────┘   │
+│ Accessories: [none ▾]                            │
+└─────────────────────────────────────────────────┘
+```
+
+Each sub-field uses a `ChipSelector` with common options (not free text), plus an "Other" option that opens a text input. This gives structure while preserving flexibility.
+
+### 6. Prompt Builder Enhancement
+
+**File: `productImagePromptBuilder.ts`** — New `buildStructuredOutfitString(config: OutfitConfig)`:
+- Concatenates each piece as: `{fit} {color} {material} {garment}` (skipping empty)
+- Example output: "slim-fit white cotton t-shirt, cropped beige linen trousers, minimal white leather sneakers"
+- Appends: "Same exact outfit in every shot. Clothing must NOT compete with the product."
 
 ## Files to Update
 
 | File | Change |
 |------|--------|
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Major restructure: Format on top (open), outfit lock panel, scene-inline person details, remove Smart Defaults CTA, rename Customize, default accent to product-accent |
-| `src/components/app/product-images/types.ts` | Add `outfitTop/Bottom/Shoes/Accessories` to DetailSettings |
-| `src/lib/productImagePromptBuilder.ts` | Read outfit fields, add `categoryPackshotDirective` token, update default outfit builder |
-| `src/components/app/product-images/sceneData.ts` | Add `{{categoryPackshotDirective}}` to clean-packshot template |
+| `src/components/app/product-images/types.ts` | Add `OutfitPiece`, `OutfitConfig` types; add `outfitConfig` to `DetailSettings` |
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Restructure OutfitLockPanel with structured fields, preset bar, gender awareness |
+| `src/lib/productImagePromptBuilder.ts` | Gender-aware defaults, structured outfit string builder, read `outfitConfig` |
+| `src/pages/ProductImages.tsx` | Save/load last settings per category via localStorage, "Load last settings?" banner |
+
+## What This Achieves
+
+- **Consistency**: Structured fields produce deterministic prompt strings → same outfit every time
+- **Speed**: Presets + last-used memory → 2 clicks instead of re-typing everything
+- **Pro control**: Per-piece color/fit/material gives B2B users the granularity they expect
+- **Gender intelligence**: Defaults adapt to the selected model automatically
 
