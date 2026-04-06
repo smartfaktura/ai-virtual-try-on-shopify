@@ -1,47 +1,58 @@
 
 
-# Improve Scene Card Discoverability + Add Quick Background Control
+# Refine Step — UX Polish Pass
 
-## Problems
+## Problems to Fix
 
-1. **Scene cards don't look clickable** — the chevron is small, the truncated "Background..." text is confusing, and users don't realize they can tap to expand and change settings.
-
-2. **No quick way to change background across scenes** — many scenes share solid backgrounds (Clean Studio, Marketplace, Side Profile, Back View, Top-Down, etc.) but users must open each card individually to find the background control.
+1. **Scene cards don't look clickable** — the chevron only appears on hover, no "tap to customize" affordance. Users see a wall of cards and don't know they're interactive.
+2. **Background strip has no "advanced details" access** — user wants a quick way to also tweak lighting/shadow/surface from the same area without opening individual cards.
+3. **Clicking a "needs model" card doesn't open Outfit & Model** — the card expands its own (empty) settings, but the user expects the Outfit section to open automatically.
 
 ## Changes
 
-### 1. Make scene cards visually interactive
+### 1. Make scene cards obviously interactive
 
-- Add a subtle hover effect and a "Tap to customize" hint on the card when NOT expanded
-- Replace the tiny truncated "Background..." label with clearer action text: show configurable block count as a pill, e.g. `⚙ 3 settings` instead of truncated labels
-- Add a subtle dashed bottom border or "expand" affordance (like a small down-arrow indicator at the card bottom center) to signal expandability
+- Always show the chevron (not just on hover) — use `opacity-40` default, `opacity-100` on hover
+- Add a subtle bottom bar text: `"Tap to customize"` visible by default (hidden when expanded)
+- Add `hover:bg-muted/30` background tint on the entire card for a clear interactive signal
+- When expanded, show `"Collapse"` text + upward chevron instead
 
-### 2. Add "Background" quick-action button in scenes header
+### 2. Add "Advanced details" toggle next to Background strip
 
-Between "Your scenes" header and the scene grid, add a small inline action strip for cross-cutting controls:
+Below the Background chips, add a row: `"⚙ Advanced"` button that expands inline to show Lighting, Shadow, Surface, and Accent color chip selectors — all from the template-derived controls. These affect the same `details` fields, so they sync with individual scene cards automatically.
+
+Only show controls that at least 2 scenes actually use (computed from `getTemplateControls`).
 
 ```text
-Your scenes  7 selected — tap to fine-tune     ✨ Auto (Recommended)
-┌──────────────────────────────────────────────────────────────┐
-│ 🎨 Background: [Pure White] [Light Gray] [Warm] [Cool] ... │
-│     Applies to: [thumb][thumb][thumb][thumb][thumb] 5 scenes│
-└──────────────────────────────────────────────────────────────┘
+┌─ Background  across 7 scenes ─────────────────┐
+│ [Pure White] [Light Gray] [Warm] [Cool] ...    │
+│ Applies to: [thumb][thumb]...                  │
+│                                                │
+│ ⚙ Advanced details              [collapse ▴]  │
+│ ┌────────────────────────────────────────────┐ │
+│ │ Lighting: [Soft diffused] [Warm ed.] ...   │ │
+│ │ Shadow:   [None] [Soft] [Natural] ...      │ │
+│ │ Surface:  [Minimal studio] [Stone] ...     │ │
+│ └────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────┘
 ```
 
-- This strip only appears when 2+ selected scenes have `{{background}}` in their `promptTemplate`
-- Shows the background tone ChipSelector (same as the existing `backgroundTone` field)
-- Below the chips, show mini thumbnails of scenes this applies to
-- Changing the value updates `details.backgroundTone` which is already used by all those scenes
-- The strip is collapsible (starts open) so it doesn't overwhelm
+### 3. Auto-open Outfit & Model when clicking a "needs model" card
 
-### 3. Scene card label improvements
+When user clicks a scene card that has `personDetails` or `actionDetails` in `triggerBlocks` AND no model is selected yet:
+- Don't expand the scene card (it has no useful settings without a model)
+- Instead, set `outfitOpen = true` and scroll to the Outfit & Model section
+- This reuses the existing scroll-to-outfit logic from the banner button
 
-- Instead of truncated "Background..." show a clean pill: `⚙ 2 settings` or `⚙ Lighting, Shadow` (max 2 labels, no truncation)
-- When expanded, hide this pill (the full controls are visible)
+### 4. Minor layout polish
 
-## Files to Update
+- Reduce gap between scene cards from `gap-2` to `gap-1.5`
+- Make the "settings pill" slightly more prominent with a subtle border
+- Ensure scene card titles don't truncate aggressively — allow 2 lines with `line-clamp-2` instead of `truncate`
+
+## File to Update
 
 | File | Changes |
 |------|---------|
-| `ProductImagesStep3Refine.tsx` | (1) Add `scenesWithBackground` computation — filter `selectedScenes` where `promptTemplate` includes `{{background}}`. (2) Render a "Background" quick-action strip between header and grid when `scenesWithBackground.length >= 2`, with `ChipSelector` for `backgroundTone` + mini scene thumbs. (3) Improve scene card hover/cursor styles and replace truncated block labels with a clean settings count pill. (4) Add subtle visual expand affordance to cards. |
+| `ProductImagesStep3Refine.tsx` | (1) Always-visible chevron on cards with reduced opacity. (2) Add "Tap to customize" / "Collapse" text affordance. (3) Add hover bg tint. (4) Add "Advanced details" collapsible section inside the Background strip with shared Lighting/Shadow/Surface/Accent chips — computed from template controls used by 2+ scenes. (5) In `toggleSceneExpand`, if scene needs model and no model selected, auto-open Outfit & scroll instead of expanding card. (6) Title `line-clamp-2`, settings pill border, gap tweaks. |
 
