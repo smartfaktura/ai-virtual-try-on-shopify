@@ -1,27 +1,49 @@
 
 
-# Fix: Step 3 Refine & Step 4 Review Crash After Scene Migration
+# Debug Report: Product Images Scene ↔ Settings Correlation
 
-## Root Cause
+## Root Problem
 
-Both `ProductImagesStep3Refine.tsx` and `ProductImagesStep4Review.tsx` still import the **static** `ALL_SCENES` from `sceneData.ts`. These static scenes have **no `triggerBlocks` property**. When `getBlocksByScene()` iterates `scene.triggerBlocks` (line 82 of `detailBlockConfig.ts`), it throws a TypeError on `undefined`, crashing the app into the ErrorBoundary.
+The `ProductImageScene` type defines `triggerBlocks` as **optional** (`string[] | undefined`), but it is accessed without null-safety in **~15 places** across two files. When any scene object lacks `triggerBlocks` (e.g. from the static fallback or a DB row with an empty/null value), the code crashes with `Cannot read properties of undefined (reading 'includes'/'some')`.
 
-## Fix
+## Affected Files & Locations
 
-### `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- Remove `import { ALL_SCENES } from './sceneData'`
-- Add `import { useProductImageScenes } from '@/hooks/useProductImageScenes'`
-- Call `const { allScenes } = useProductImageScenes()` inside the component
-- Replace all 3 uses of `ALL_SCENES` (lines 329, 1570) with `allScenes`
+### 1. `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+**6 unsafe accesses on `selectedScenes` (the prop from parent):**
+- Line 1578: `s.triggerBlocks.some(...)` — scenesNeedingModel filter
+- Line 1602: `scene.triggerBlocks.some(...)` — toggleSceneExpand
+- Line 1759: `s.triggerBlocks.some(...)` — productShots filter
+- Line 1760: `s.triggerBlocks.some(...)` — modelShots filter
+- Line 1764: `scene.triggerBlocks.some(...)` — renderSceneCardButton
+- Line 1815: `scene.triggerBlocks.includes(...)` — background badge
 
-### `src/components/app/product-images/ProductImagesStep4Review.tsx`
-- Remove `import { ALL_SCENES } from './sceneData'`
-- Add `import { useProductImageScenes } from '@/hooks/useProductImageScenes'`
-- Call `const { allScenes } = useProductImageScenes()` inside the component
-- Replace `ALL_SCENES.filter(...)` (line 75) with `allScenes.filter(...)`
+All of these operate on the `selectedScenes` **prop**, which comes from the parent's `allScenes.filter(...)`. The `allScenes` from `useProductImageScenes` hook returns scenes with `triggerBlocks` populated from DB — but the **type** allows `undefined`, and if the hook is still loading or falls back to static data (which has NO triggerBlocks), these crash.
 
-### `src/components/app/product-images/detailBlockConfig.ts`
-- Add null-safety: change `scene.triggerBlocks` to `(scene.triggerBlocks || [])` on lines 82 and 89 to prevent crashes if any scene is missing the field
+### 2. `src/lib/productImagePromptBuilder.ts`
+**~8 unsafe accesses** at lines 527-528, 554, 561, 623, 629, 797. These fire during generation (Step 5) when building prompts. If any scene somehow has undefined triggerBlocks, generation crashes.
 
-This ensures both components use database-backed scenes with proper `triggerBlocks`, and adds a safety net in the shared utility.
+### 3. `src/components/app/product-images/detailBlockConfig.ts`
+Already patched with `(scene.triggerBlocks || [])` — this file is safe.
+
+## Fix Plan
+
+### Change 1: Add null-safety to all `triggerBlocks` accesses in `ProductImagesStep3Refine.tsx`
+
+Replace every `s.triggerBlocks.some(...)` and `s.triggerBlocks.includes(...)` with `(s.triggerBlocks || []).some(...)` / `(s.triggerBlocks || []).includes(...)` at all 6 locations.
+
+### Change 2: Add null-safety to all `triggerBlocks` accesses in `productImagePromptBuilder.ts`
+
+Replace every `scene.triggerBlocks.includes(...)` with `(scene.triggerBlocks || []).includes(...)` at all ~8 locations. Line 527 already assigns `const triggers = scene.triggerBlocks` — change to `const triggers = scene.triggerBlocks || []`.
+
+### Change 3 (optional but recommended): Make `triggerBlocks` required in `ProductImageScene` type
+
+In `src/components/app/product-images/types.ts` line 114, change `triggerBlocks?: string[]` to `triggerBlocks: string[]`. This would catch any future regressions at compile time. The `dbToFrontend` mapper always provides this field, and the static fallback would need a default `[]` added.
+
+## Files Modified
+
+| File | Change |
+|---|---|
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Add `|| []` guard to 6 `triggerBlocks` accesses |
+| `src/lib/productImagePromptBuilder.ts` | Add `|| []` guard to ~8 `triggerBlocks` accesses |
+| `src/components/app/product-images/types.ts` | Make `triggerBlocks` required with default `[]` |
 
