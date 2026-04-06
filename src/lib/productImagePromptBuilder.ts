@@ -806,9 +806,9 @@ export function buildDynamicPrompt(
   injectIfMissing('styling', 'stylingDirective', true);
   injectIfMissing('lighting', 'lightingDirective', true);
   injectIfMissing('composition', 'compositionDirective', true);
-  injectIfMissing('mood', 'sceneIntensityDirective');
-  injectIfMissing('styling density', 'stylingDensityDirective');
-  injectIfMissing('prominence', 'productProminenceDirective');
+  injectIfMissing('mood', 'sceneIntensityDirective', true);
+  injectIfMissing('styling density', 'stylingDensityDirective', true);
+  injectIfMissing('prominence', 'productProminenceDirective', true);
   injectIfMissing('body framing', 'bodyFramingDirective');
 
   // Prepend reference isolation instruction BEFORE cleanup so it appears early

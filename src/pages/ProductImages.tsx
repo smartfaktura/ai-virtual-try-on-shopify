@@ -62,7 +62,7 @@ export default function ProductImages() {
     aspectRatio: '1:1', quality: 'high', imageCount: '1',
     backgroundTone: 'auto', negativeSpace: 'auto', surfaceType: 'auto',
     lightingStyle: 'soft-diffused', shadowStyle: 'natural', mood: 'auto',
-    brandingVisibility: 'none',
+    brandingVisibility: 'product-accent',
   };
 
   const [step, setStep] = useState<PIStep>(1);
