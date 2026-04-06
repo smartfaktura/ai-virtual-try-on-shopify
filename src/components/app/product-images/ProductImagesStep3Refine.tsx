@@ -872,6 +872,12 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
     top: { garment: 'camisole', color: 'cream', fit: 'fitted', material: 'silk' },
     accessories: 'none',
   },
+  'hats-small': {
+    top: { garment: 'blazer', color: 'black', fit: 'fitted', material: 'wool' },
+    bottom: { garment: 'trousers', color: 'charcoal', fit: 'slim', material: 'wool' },
+    shoes: { garment: 'loafers', color: 'black', material: 'leather' },
+    accessories: 'none',
+  },
 };
 
 // Gender-variant defaults
@@ -892,6 +898,11 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
   },
   fragrance: {
     top: { garment: 'shirt', color: 'white', fit: 'fitted', material: 'cotton' },
+  },
+  'hats-small': {
+    top: { garment: 'bomber jacket', color: 'navy', fit: 'regular', material: 'nylon' },
+    bottom: { garment: 'chinos', color: 'charcoal', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
   },
 };
 
@@ -1076,7 +1087,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
 
   // Check if a preset config matches the current config
   const isPresetActive = useCallback((presetConfig: OutfitConfig): boolean => {
-    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories', 'name'];
+    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories'];
     return keys.every(k => {
       if (k === 'top' || k === 'bottom' || k === 'shoes') {
         const a = currentConfig[k];
