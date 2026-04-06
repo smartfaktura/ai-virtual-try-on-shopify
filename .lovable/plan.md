@@ -1,84 +1,68 @@
 
 
-# Refine Step — Comprehensive UI/UX Polish
+# Debug & Fix Product Images Issues
 
-## Summary
-Remove the connector line, add fashion style presets, reduce text on scene cards, equalize card sizes, fix preset color swatches, and address minor UX issues.
+## Bugs Found
 
----
+### Bug 1: Category detection fails for "bag" products — scenes not recommended
 
-## 1. Remove connector line between card and panel
+**Root cause:** `primaryCategory` in `ProductImages.tsx` (line 133-139) falls back to `product_type` raw string (e.g. `"bag"`) when `analysis_json` is missing. But the scene system uses category IDs like `"bags-accessories"`. The `detectRelevantCategories` function in Step 2 has a keyword fallback with word-boundary matching, but `primaryCategory` does NOT use this — it just returns the raw `product_type` string.
 
-**File:** `ProductImagesStep3Refine.tsx` (~line 1692-1697)
+Additionally, the `analyses` map from `useProductAnalysis` is populated asynchronously. If analysis hasn't completed yet when Step 2 renders, `productAnalyses` will be empty, and the keyword fallback in `detectRelevantCategories` will run. But since the keyword match for "bag" looks for `\bbag\b` in the combined text — and `product_type` IS included in the combined text — the Step 2 detection should work for scene recommendations.
 
-Remove the `w-px h-3 bg-primary/30` div entirely. The expanded panel already has `border-primary/30` which visually associates it with the active card.
+The real gap is `primaryCategory`: it returns raw `product_type` ("bag") instead of the matching category ID ("bags-accessories"). This breaks outfit presets because `CATEGORY_OUTFIT_CONFIG_DEFAULTS` keys are category IDs.
 
----
+**Fix:** In `ProductImages.tsx`, add a keyword-based fallback to `primaryCategory` that maps raw `product_type` to the correct category ID using the same `CATEGORY_KEYWORDS` logic from Step 2. Extract/share the keyword map, or inline a simple mapper function.
 
-## 2. Add fashion style presets to outfit presets
+### Bug 2: Fashion presets (Streetwear, Luxury Soft) not showing
 
-Currently only 3 generic presets exist (Studio Standard, Editorial, Minimal). Add 2 more clothing-specific presets inspired by the catalog feature's fashion styles:
+**Root cause:** `getBuiltInPresets` at line 899 does `CATEGORY_OUTFIT_CONFIG_DEFAULTS[category]` — if category is `"bag"` (the raw product_type), there's no matching key, so it returns `[]`. No presets show at all. This is a direct consequence of Bug 1.
 
-**File:** `ProductImagesStep3Refine.tsx` (`getBuiltInPresets` function, ~line 899-920)
+**Fix:** Same as Bug 1 — once `primaryCategory` resolves to `"bags-accessories"`, the presets will render.
 
-Add presets:
-- **Streetwear** — dark tones, oversized fit, sneakers
-- **Luxury Soft** — cream/camel tones, tailored fits, silk/cashmere materials
+### Bug 3: `analyses` not passed to Step 2 correctly when products lack `analysis_json`
 
-Keep preset names short (no descriptions needed — the color swatch communicates the vibe).
+The `analyses` map is populated by `useProductAnalysis` which is triggered on Step 1. If the edge function hasn't responded yet when the user moves to Step 2, `productAnalyses` will be `{}`, and the system falls back to keyword matching. This is actually working correctly but may explain why the "Recommended" section shows "Other / Custom" instead of "Bags & Accessories" — the AI analysis may have returned a different category or failed.
 
----
+**Fix:** Also pass the `analyses` map to `primaryCategory` computation so it uses AI results when available.
 
-## 3. Fix PresetColorDots — colors render as named strings, not hex
+## Changes
 
-**File:** `ProductImagesStep3Refine.tsx` (~line 834-842)
+### File: `src/pages/ProductImages.tsx`
 
-The `PresetColorDots` component uses `config.top?.color` directly as `backgroundColor`, but these are color *names* like `"white"`, `"black"`, `"cream"` — not hex values. CSS interprets `"white"` and `"black"` correctly but fails on `"cream"`, `"beige"`, `"camel"`, `"navy"`, `"charcoal"`, etc.
+1. Update `primaryCategory` to also check the `analyses` map (from `useProductAnalysis`) and add a keyword-fallback mapper that converts raw `product_type` strings to category IDs:
 
-Fix: resolve each color through the existing `COLOR_HEX` map before rendering. Change `style={{ backgroundColor: c }}` to `style={{ backgroundColor: COLOR_HEX[c] || c }}`.
+```
+const primaryCategory = useMemo(() => {
+  for (const p of selectedProducts) {
+    // Check live analyses map first
+    const liveAnalysis = analyses[p.id];
+    if (liveAnalysis?.category) return liveAnalysis.category;
+    // Then cached analysis_json
+    const analysis = p.analysis_json as any;
+    if (analysis?.category) return analysis.category;
+  }
+  // Keyword fallback: map raw product_type to category ID
+  const combined = selectedProducts.map(p => 
+    `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
+  ).join(' ');
+  for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) return catId;
+  }
+  return undefined;
+}, [selectedProducts, analyses]);
+```
 
-Also increase swatch size from `w-5 h-5` to `w-6 h-6` for better visibility.
+2. Import `CATEGORY_KEYWORDS` from Step 2 (or extract it to a shared constants file so both Step 2 and ProductImages.tsx can use it).
 
----
+### File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-## 4. Reduce text on scene cards — make all cards same height
-
-**File:** `ProductImagesStep3Refine.tsx` (~line 1560-1603, `renderSceneCardButton`)
-
-Current issues:
-- Some cards show long subtitle text ("Packaging, Lighting…", "Background & Composition, Lighting…") making them taller than others
-- The "needs model" / "customized" / hover text adds variable height
-
-Fixes:
-- Remove the `controlPreviewNames` subtitle text entirely (lines 1586-1588). The settings icon already signals expandability.
-- Remove the hover "→ Customize" text (lines 1589-1591). The cursor + icon are sufficient affordances.
-- Add `min-h-[72px]` to the card button to enforce uniform height across all cards
-- Keep only: title + BG badge + status indicator (needs model / customized dot)
-
----
-
-## 5. Minor UX improvements found during analysis
-
-### 5a. "View all models" link — add icon for clarity
-Add a `ChevronRight` icon after the text to make it feel more like a navigation action.
-
-### 5b. Background strip section — tighten heading
-The "All N scenes" badge is redundant when there's only one product shot group. Keep it but make it more subtle.
-
-### 5c. Expanded panel animation — smoother entry
-Change `slide-in-from-top-2` to `fade-in` for a calmer, less distracting transition on the expanded settings panel (~line 1615).
-
-### 5d. Model-needed banner — remove scene thumbnails on mobile
-On mobile, the tiny 5x5 thumbnails are too small to be useful. Hide them with `hidden sm:flex`.
-
-### 5e. Outfit section — auto-expand when model IS selected
-Currently `outfitOpen` defaults to `needsModel`. When a model is already selected, the outfit section starts collapsed, hiding the outfit presets. Change to always default open when person scenes exist.
-
----
+3. Export `CATEGORY_KEYWORDS` so it can be reused by `ProductImages.tsx`.
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | All 5 changes above: remove connector, add presets, fix color hex, reduce card text, minor UX tweaks |
+| `ProductImagesStep2Scenes.tsx` | Export `CATEGORY_KEYWORDS` |
+| `ProductImages.tsx` | Import `CATEGORY_KEYWORDS`, update `primaryCategory` to check `analyses` map + keyword fallback |
 
