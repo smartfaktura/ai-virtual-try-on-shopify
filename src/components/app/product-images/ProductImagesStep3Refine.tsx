@@ -1328,7 +1328,7 @@ export function ProductImagesStep3Refine({
                       ]} />
                     </div>
                   </div>
-                )}
+                ) : null}
               </CardContent>
             </Card>
           </CollapsibleContent>
