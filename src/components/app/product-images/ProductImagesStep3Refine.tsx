@@ -628,7 +628,6 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'taupe', label: 'Taupe', fill: '#D6CFC7' },
   { value: 'sage', label: 'Sage', fill: '#E8EDE6' },
   { value: 'blush', label: 'Blush', fill: '#F8ECE8' },
-  { value: 'charcoal', label: 'Charcoal', fill: '#3A3A3A' },
   { value: 'gradient', label: 'Soft Gradient', fill: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)', isGradient: true },
   { value: 'gradient-warm', label: 'Warm Fade', fill: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)', isGradient: true },
   { value: 'gradient-cool', label: 'Cool Fade', fill: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)', isGradient: true },
@@ -775,8 +774,8 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
         tabIndex={-1}
       />
 
-      {/* Swatch grid — 4:3 aspect cards, 6 per row */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {/* Swatch grid — square aspect cards, 8 per row */}
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
         {/* Preset cards */}
         {BG_SWATCH_OPTIONS.map(o => {
           const isActive = selected.includes(o.value);
@@ -794,14 +793,14 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
               )}
             >
               {isActive && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch(o.value); }} />}
-              <div className="aspect-[4/3] w-full" style={{ background: o.fill }} />
+              <div className="aspect-square w-full" style={{ background: o.fill }} />
               {isActive && (
-                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                  <Check className="w-3 h-3 text-primary-foreground" />
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                  <Check className="w-2.5 h-2.5 text-primary-foreground" />
                 </div>
               )}
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
-                <p className="text-[10px] font-medium text-white leading-tight">{o.label}</p>
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
+                <p className="text-[9px] font-medium text-white leading-tight truncate">{o.label}</p>
               </div>
             </button>
           );
@@ -845,14 +844,14 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
               >
                 <Trash2 className="w-2.5 h-2.5 text-white" />
               </button>
-              <div className="aspect-[4/3] w-full" style={{ background: fill }} />
+              <div className="aspect-square w-full" style={{ background: fill }} />
               {isActive && (
-                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                  <Check className="w-3 h-3 text-primary-foreground" />
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                  <Check className="w-2.5 h-2.5 text-primary-foreground" />
                 </div>
               )}
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
-                <p className="text-[10px] font-medium text-white leading-tight truncate">{sc.label}</p>
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
+                <p className="text-[9px] font-medium text-white leading-tight truncate">{sc.label}</p>
               </div>
             </button>
           );
@@ -876,18 +875,18 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
             <SaveButton onClick={(e) => { e.stopPropagation(); onSaveColor(customHex); }} />
           )}
           <div
-            className="aspect-[4/3] w-full flex items-center justify-center"
+            className="aspect-square w-full flex items-center justify-center"
             style={{ background: hasCustom && validCustomHex ? customHex : undefined }}
           >
-            {!hasCustom && <Plus className="w-5 h-5 text-muted-foreground" />}
+            {!hasCustom && <Plus className="w-4 h-4 text-muted-foreground" />}
           </div>
           {hasCustom && (
-            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-              <Check className="w-3 h-3 text-primary-foreground" />
+            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+              <Check className="w-2.5 h-2.5 text-primary-foreground" />
             </div>
           )}
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
-            <p className="text-[10px] font-medium text-white leading-tight">Custom</p>
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
+            <p className="text-[9px] font-medium text-white leading-tight">Custom</p>
           </div>
         </button>
 
@@ -909,18 +908,18 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
             <SaveButton onClick={(e) => { e.stopPropagation(); onSaveGradient(gradFrom, gradTo); }} />
           )}
           <div
-            className="aspect-[4/3] w-full flex items-center justify-center"
+            className="aspect-square w-full flex items-center justify-center"
             style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : undefined }}
           >
-            {!hasGradientCustom && <Plus className="w-5 h-5 text-muted-foreground" />}
+            {!hasGradientCustom && <Plus className="w-4 h-4 text-muted-foreground" />}
           </div>
           {hasGradientCustom && (
-            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-              <Check className="w-3 h-3 text-primary-foreground" />
+            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+              <Check className="w-2.5 h-2.5 text-primary-foreground" />
             </div>
           )}
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
-            <p className="text-[10px] font-medium text-white leading-tight">Gradient</p>
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
+            <p className="text-[9px] font-medium text-white leading-tight">Gradient</p>
           </div>
         </button>
       </div>
@@ -1394,24 +1393,32 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
         {isMale && <Badge variant="outline" className="text-xs h-5 px-2">Male defaults</Badge>}
       </div>
 
-      {/* Preset bar — visual cards */}
+      {/* Preset cards — descriptive */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {allPresets.map(preset => {
           const active = isPresetActive(preset.config);
+          const PRESET_DESCRIPTIONS: Record<string, string> = {
+            'Studio Standard': 'Clean, neutral styling for commercial product focus',
+            'Editorial': 'Dark tones, tailored fits for magazine-ready shots',
+            'Minimal': 'Stripped-back whites and creams, relaxed silhouettes',
+            'Streetwear': 'Oversized fits, dark palette, urban energy',
+            'Luxury Soft': 'Silk and cashmere in warm neutrals, elevated elegance',
+          };
+          const description = PRESET_DESCRIPTIONS[preset.name] || '';
           return (
           <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
             <button
               type="button"
               onClick={() => loadPreset(preset)}
               className={cn(
-                'flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium border transition-all cursor-pointer',
+                'w-[160px] text-left p-3 rounded-xl border transition-all cursor-pointer',
                 active
-                  ? 'bg-primary/10 text-primary border-primary shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-muted/60',
+                  ? 'bg-primary/10 border-primary ring-2 ring-primary/30 shadow-sm'
+                  : 'bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/60',
               )}
             >
-              <PresetColorDots config={preset.config} />
-              {preset.name}
+              <span className={cn('text-xs font-semibold block', active ? 'text-primary' : 'text-foreground')}>{preset.name}</span>
+              {description && <span className="text-[10px] text-muted-foreground leading-snug mt-0.5 block">{description}</span>}
             </button>
             {!preset.isBuiltIn && (
               <button type="button" onClick={() => deletePreset(preset.id)}
@@ -1734,50 +1741,40 @@ export function ProductImagesStep3Refine({
       </div>
 
       {/* ── MODEL-NEEDED BANNER ── */}
-      {scenesNeedingModel.length > 0 && (
-        <div className={cn(
-          'rounded-lg border-l-4 px-4 py-3 flex items-center gap-3 transition-colors',
-          needsModel
-            ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/15 border border-amber-200/40 dark:border-amber-800/30'
-            : 'border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-200/40 dark:border-emerald-800/30'
-        )}>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {needsModel ? (
-              <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
-            ) : (
-              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-            )}
-            <span className="text-xs text-muted-foreground">
-              {needsModel ? (
-                <>
-                  <span className="font-medium text-foreground">{scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}</span>{' '}
-                  need a model
-                </>
-              ) : (
-                <>
-                  <span className="font-medium text-foreground">Model applied</span>{' '}
-                  to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </span>
-            <div className="hidden sm:flex gap-1 ml-1">
-              {scenesNeedingModel.slice(0, 4).map(s => (
-                <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
-                  {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
-                </div>
-              ))}
-            </div>
+      {scenesNeedingModel.length > 0 && needsModel && (
+        <div className="rounded-xl border border-border bg-card p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+            <User className="w-6 h-6 text-amber-600 dark:text-amber-400" />
           </div>
-          {needsModel && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-[11px] h-6 px-2.5 gap-1 flex-shrink-0 rounded-full border-amber-400/50 text-amber-700 dark:text-amber-300 hover:bg-amber-100/50 dark:hover:bg-amber-900/30"
-              onClick={scrollToOutfit}
-            >
-              <User className="w-3 h-3" />Select
-            </Button>
-          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-foreground">
+              {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''} need a model
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Select a model to unlock on-model scenes and outfit styling.</p>
+          </div>
+          <Button
+            size="sm"
+            className="gap-1.5 flex-shrink-0"
+            onClick={scrollToOutfit}
+          >
+            <User className="w-3.5 h-3.5" />Select Model
+          </Button>
+        </div>
+      )}
+      {scenesNeedingModel.length > 0 && !needsModel && (
+        <div className="rounded-xl border border-emerald-200/40 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/10 px-4 py-3 flex items-center gap-3">
+          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          <span className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Model applied</span>{' '}
+            to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}
+          </span>
+          <div className="hidden sm:flex gap-1 ml-1">
+            {scenesNeedingModel.slice(0, 4).map(s => (
+              <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
+                {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -1980,6 +1977,16 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
+          {/* Product shots group — shown first */}
+          {productShots.length > 0 && (
+            <div className="space-y-2">
+              {modelShots.length > 0 && (
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
+              )}
+              {renderSceneGrid(productShots)}
+            </div>
+          )}
+
           {/* Quick Background strip — applies to ALL scenes */}
           {showBgStrip && (
             <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
@@ -1993,6 +2000,13 @@ export function ProductImagesStep3Refine({
                   </Badge>
                 )}
               </div>
+              {/* Attention message */}
+              {!details.backgroundTone && (
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200/30 dark:border-amber-800/20">
+                  <Paintbrush className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                  <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Select a background color for your selected scenes</span>
+                </div>
+              )}
               <BackgroundSwatchSelector
                 value={details.backgroundTone || ''}
                 onChange={v => update({ backgroundTone: v })}
@@ -2004,16 +2018,6 @@ export function ProductImagesStep3Refine({
                 onSaveGradient={(from, to) => saveGradient({ from, to })}
                 onDeleteSavedColor={deleteColor}
               />
-            </div>
-          )}
-
-          {/* Product shots group */}
-          {productShots.length > 0 && (
-            <div className="space-y-2">
-              {modelShots.length > 0 && (
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
-              )}
-              {renderSceneGrid(productShots)}
             </div>
           )}
 
