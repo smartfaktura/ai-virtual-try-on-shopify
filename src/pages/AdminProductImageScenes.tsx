@@ -16,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter,
 } from 'lucide-react';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
@@ -45,6 +45,9 @@ const EXCLUDE_CATS = [
   'hats-small', 'shoes', 'garments', 'home-decor', 'tech-devices',
   'food-beverage', 'supplements-wellness',
 ];
+
+const CAT_LABEL_MAP: Record<string, string> = {};
+CATEGORIES.forEach(c => { CAT_LABEL_MAP[c.value] = c.label; });
 
 const PROMPT_TOKENS = [
   '{{productName}}', '{{productType}}', '{{materialTexture}}', '{{background}}',
@@ -79,11 +82,33 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
   };
 }
 
+/** Compute which categories a global scene appears in */
+function getAppearsIn(scene: DbScene): string[] {
+  if (!scene.is_global) return [];
+  if (!scene.exclude_categories || scene.exclude_categories.length === 0) return ['all'];
+  return EXCLUDE_CATS.filter(c => !scene.exclude_categories.includes(c));
+}
+
+/** Group scenes by sub_category within a flat array */
+function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene[] }[] {
+  const map = new Map<string, DbScene[]>();
+  for (const s of scenes) {
+    const key = s.sub_category || '';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(s);
+  }
+  return Array.from(map.entries()).map(([label, sc]) => ({
+    label: label || 'Uncategorized',
+    scenes: sc,
+  }));
+}
+
 export default function AdminProductImageScenes() {
   const { isAdmin } = useIsAdmin();
   const { rawScenes, isLoading, updateScene, upsertScene, deleteScene } = useProductImageScenes();
   const [search, setSearch] = useState('');
   const [showHidden, setShowHidden] = useState(false);
+  const [previewCategory, setPreviewCategory] = useState<string>('__all__');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['__global__']));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
@@ -102,8 +127,17 @@ export default function AdminProductImageScenes() {
         s.description.toLowerCase().includes(q)
       );
     }
+    // Preview by category filter
+    if (previewCategory !== '__all__') {
+      scenes = scenes.filter(s => {
+        if (s.is_global) {
+          return !s.exclude_categories.includes(previewCategory);
+        }
+        return s.category_collection === previewCategory;
+      });
+    }
     return scenes;
-  }, [rawScenes, showHidden, search]);
+  }, [rawScenes, showHidden, search, previewCategory]);
 
   // Group by category
   const grouped = useMemo(() => {
@@ -215,10 +249,25 @@ export default function AdminProductImageScenes() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search scenes..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        {/* Preview by category filter */}
+        <div className="flex items-center gap-1.5">
+          <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+          <Select value={previewCategory} onValueChange={setPreviewCategory}>
+            <SelectTrigger className="w-[180px] h-9 text-xs">
+              <SelectValue placeholder="Preview as category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All categories</SelectItem>
+              {EXCLUDE_CATS.map(c => (
+                <SelectItem key={c} value={c}>{CAT_LABEL_MAP[c] || c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2">
           <Switch checked={showHidden} onCheckedChange={setShowHidden} id="show-hidden" />
@@ -268,86 +317,187 @@ export default function AdminProductImageScenes() {
         <div className="py-12 text-center text-muted-foreground">Loading scenes...</div>
       ) : (
         <div className="space-y-3">
-          {Array.from(grouped.entries()).map(([key, scenes]) => (
-            <Collapsible key={key} open={expandedSections.has(key)} onOpenChange={() => toggleSection(key)}>
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold">{catLabel(key)}</span>
-                    <Badge variant="secondary" className="text-[10px]">{scenes.length}</Badge>
-                  </div>
-                  {expandedSections.has(key) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="space-y-1.5 pl-2 pt-2">
-                  {scenes.map((scene, idx) => (
-                    <div key={scene.id}>
-                      <div className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
-                        !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
-                      } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
-                        {/* Thumbnail */}
-                        <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40">
-                          {scene.preview_image_url ? (
-                            <img src={scene.preview_image_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <Camera className="w-4 h-4 text-muted-foreground/40" />
-                          )}
-                        </div>
-                          <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium truncate">{scene.title}</span>
-                             <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
-                             {scene.sub_category && (
-                               <Badge variant="secondary" className="text-[10px]">{scene.sub_category}</Badge>
-                             )}
-                             <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
-                             {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
-                           </div>
-                           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                             Triggers: {scene.trigger_blocks.join(', ')}
-                             {scene.exclude_categories.length > 0 && ` · Excludes: ${scene.exclude_categories.join(', ')}`}
-                             {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
-                           </p>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove(scene, 'up')} disabled={idx === 0}>
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove(scene, 'down')} disabled={idx === scenes.length - 1}>
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => editingId === scene.id ? cancelEdit() : startEdit(scene)}>
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleToggleActive(scene)}>
-                            {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </Button>
-                        </div>
-                      </div>
+          {Array.from(grouped.entries()).map(([key, scenes]) => {
+            const subGroups = groupBySubCategory(scenes);
+            const hasMultipleSubGroups = subGroups.length > 1 || (subGroups.length === 1 && subGroups[0].label !== 'Uncategorized');
 
-                      {/* Inline edit form */}
-                      {editingId === scene.id && (
-                        <Card className="mt-1.5 border-primary/20">
-                          <CardContent className="py-4 space-y-4">
-                            <SceneForm draft={editDraft} onChange={setEditDraft as any} />
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
-                              <Button onClick={saveEdit} disabled={updateScene.isPending} className="gap-1.5">
-                                <Save className="w-4 h-4" /> Save
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
+            return (
+              <Collapsible key={key} open={expandedSections.has(key)} onOpenChange={() => toggleSection(key)}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold">{catLabel(key)}</span>
+                      <Badge variant="secondary" className="text-[10px]">{scenes.length}</Badge>
                     </div>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          ))}
+                    {expandedSections.has(key) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pl-2 pt-2 space-y-3">
+                    {hasMultipleSubGroups ? (
+                      subGroups.map(sg => (
+                        <div key={sg.label}>
+                          <div className="flex items-center gap-2 mb-1.5 pl-1">
+                            <div className="h-px flex-1 max-w-[60px] bg-border" />
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{sg.label}</span>
+                            <Badge variant="outline" className="text-[9px]">{sg.scenes.length}</Badge>
+                            <div className="h-px flex-1 bg-border" />
+                          </div>
+                          <div className="space-y-1.5">
+                            {sg.scenes.map((scene, idx) => (
+                              <SceneRow
+                                key={scene.id}
+                                scene={scene}
+                                idx={idx}
+                                total={sg.scenes.length}
+                                editingId={editingId}
+                                editDraft={editDraft}
+                                onStartEdit={startEdit}
+                                onCancelEdit={cancelEdit}
+                                onSaveEdit={saveEdit}
+                                onToggleActive={handleToggleActive}
+                                onMove={handleMove}
+                                setEditDraft={setEditDraft}
+                                updatePending={updateScene.isPending}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="space-y-1.5">
+                        {scenes.map((scene, idx) => (
+                          <SceneRow
+                            key={scene.id}
+                            scene={scene}
+                            idx={idx}
+                            total={scenes.length}
+                            editingId={editingId}
+                            editDraft={editDraft}
+                            onStartEdit={startEdit}
+                            onCancelEdit={cancelEdit}
+                            onSaveEdit={saveEdit}
+                            onToggleActive={handleToggleActive}
+                            onMove={handleMove}
+                            setEditDraft={setEditDraft}
+                            updatePending={updateScene.isPending}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Scene row component ── */
+function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, setEditDraft, updatePending }: {
+  scene: DbScene;
+  idx: number;
+  total: number;
+  editingId: string | null;
+  editDraft: Partial<DbScene>;
+  onStartEdit: (s: DbScene) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: () => void;
+  onToggleActive: (s: DbScene) => void;
+  onMove: (s: DbScene, dir: 'up' | 'down') => void;
+  setEditDraft: (d: Partial<DbScene>) => void;
+  updatePending: boolean;
+}) {
+  const appearsIn = getAppearsIn(scene);
+
+  return (
+    <div>
+      <div className={`flex items-start gap-3 p-2.5 rounded-lg border transition-colors ${
+        !scene.is_active ? 'opacity-50 border-dashed' : 'border-border'
+      } ${editingId === scene.id ? 'border-primary/40 bg-primary/[0.02]' : 'hover:bg-muted/20'}`}>
+        {/* Thumbnail */}
+        <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0 border border-border/40 mt-0.5">
+          {scene.preview_image_url ? (
+            <img src={scene.preview_image_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <Camera className="w-4 h-4 text-muted-foreground/40" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium truncate">{scene.title}</span>
+            <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
+            {scene.sub_category && (
+              <Badge variant="secondary" className="text-[10px]">{scene.sub_category}</Badge>
+            )}
+            <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
+            {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
+          </div>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+            Triggers: {scene.trigger_blocks.join(', ')}
+            {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
+          </p>
+          {/* "Appears in" badges for global scenes */}
+          {scene.is_global && (
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <span className="text-[10px] text-muted-foreground">Appears in:</span>
+              {appearsIn[0] === 'all' ? (
+                <Badge className="text-[9px] bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20">All categories ✓</Badge>
+              ) : (
+                <>
+                  {appearsIn.map(c => (
+                    <Badge key={c} className="text-[9px] bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20">
+                      {CAT_LABEL_MAP[c] || c}
+                    </Badge>
+                  ))}
+                  {scene.exclude_categories.length > 0 && (
+                    <>
+                      <span className="text-[10px] text-muted-foreground ml-1">Excludes:</span>
+                      {scene.exclude_categories.map(c => (
+                        <Badge key={c} variant="outline" className="text-[9px] text-destructive border-destructive/30">
+                          {CAT_LABEL_MAP[c] || c}
+                        </Badge>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
+            <ArrowUp className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(scene, 'down')} disabled={idx === total - 1}>
+            <ArrowDown className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => editingId === scene.id ? onCancelEdit() : onStartEdit(scene)}>
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleActive(scene)}>
+            {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          </Button>
+        </div>
+      </div>
+
+      {/* Inline edit form */}
+      {editingId === scene.id && (
+        <Card className="mt-1.5 border-primary/20">
+          <CardContent className="py-4 space-y-4">
+            <SceneForm draft={editDraft} onChange={setEditDraft as any} />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={onCancelEdit}>Cancel</Button>
+              <Button onClick={onSaveEdit} disabled={updatePending} className="gap-1.5">
+                <Save className="w-4 h-4" /> Save
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -466,28 +616,30 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         </div>
       </div>
 
-      {!isGlobal && (
-        <div className="space-y-1.5">
-          <Label className="text-xs">Exclude from Categories</Label>
-          <div className="flex flex-wrap gap-2">
-            {EXCLUDE_CATS.map(cat => {
-              const checked = (draft.exclude_categories || []).includes(cat);
-              return (
-                <label key={cat} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                  <Checkbox
-                    checked={checked}
-                    onCheckedChange={(v) => {
-                      const current = draft.exclude_categories || [];
-                      set('exclude_categories', v ? [...current, cat] : current.filter(c => c !== cat));
-                    }}
-                  />
-                  {cat}
-                </label>
-              );
-            })}
-          </div>
+      {/* Exclude from Categories — shown for ALL scenes (especially important for globals) */}
+      <div className="space-y-1.5">
+        <Label className="text-xs">
+          Exclude from Categories
+          {isGlobal && <span className="text-muted-foreground ml-1">(controls which product types see this universal scene)</span>}
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {EXCLUDE_CATS.map(cat => {
+            const checked = (draft.exclude_categories || []).includes(cat);
+            return (
+              <label key={cat} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={(v) => {
+                    const current = draft.exclude_categories || [];
+                    set('exclude_categories', v ? [...current, cat] : current.filter(c => c !== cat));
+                  }}
+                />
+                {CAT_LABEL_MAP[cat] || cat}
+              </label>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       <div className="space-y-1.5">
         <Label className="text-xs">Prompt Template</Label>
