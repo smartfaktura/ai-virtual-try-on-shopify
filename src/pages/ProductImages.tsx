@@ -522,7 +522,18 @@ export default function ProductImages() {
     switch (step) {
       case 1: setStep(2); break;
       case 2: setStep(3); break;
-      case 3: setStep(4); break;
+      case 3: {
+        // Auto-select model if on-model scenes exist but no model is selected
+        const hasOnModelScenes = selectedScenes.some(s =>
+          s.triggerBlocks?.some(b => b === 'personDetails' || b === 'actionDetails')
+        );
+        if (hasOnModelScenes && !details.selectedModelId && globalModelProfiles.length > 0) {
+          setDetails(prev => ({ ...prev, selectedModelId: globalModelProfiles[0].modelId }));
+          toast.info('Smart defaults applied — we auto-selected a model and best settings for your scenes. You can go back to Refine to customize.');
+        }
+        setStep(4);
+        break;
+      }
       case 4: handleGenerate(); break;
     }
   };

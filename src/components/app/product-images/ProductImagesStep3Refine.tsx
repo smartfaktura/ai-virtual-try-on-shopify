@@ -11,8 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
@@ -1306,6 +1305,7 @@ export function ProductImagesStep3Refine({
   hasMultipleCategories = false,
   primaryCategory,
 }: Step3RefineProps) {
+  const isMobile = useIsMobile();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
 
@@ -1595,6 +1595,107 @@ export function ProductImagesStep3Refine({
           );
         };
 
+        /* ── Inline expanded panel for a scene ── */
+        const renderExpandedPanel = (scene: ProductImageScene) => {
+          const group = sceneGroups.find(g => g.sceneId === scene.id);
+          const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+          const templateCtrls = getTemplateControls(scene);
+          const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+          if (!hasControls) return null;
+
+          return (
+            <div className="col-span-full rounded-xl border border-primary/30 bg-card shadow-md p-5 space-y-1 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                  {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
+                </div>
+                <span className="text-sm font-semibold flex-1">{scene.title}</span>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setExpandedSceneId(null)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              {sceneBlocks.map((blockKey, idx) => {
+                const meta = BLOCK_LABELS[blockKey];
+                if (!meta) return null;
+                return (
+                  <Collapsible key={blockKey} defaultOpen={idx === 0}>
+                    <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
+                      <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                      {meta.title}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pb-3 pt-1">
+                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
+
+              {templateCtrls.length > 0 && (
+                <Collapsible defaultOpen={sceneBlocks.length === 0}>
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-3 group/block">
+                    <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                    Style
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-3 pb-3 pt-1">
+                      {templateCtrls.map(ctrl => (
+                        <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                      ))}
+                    </div>
+                    {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                      <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </div>
+          );
+        };
+
+        /* ── Chunk array into rows of N ── */
+        const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+          const chunks: T[][] = [];
+          for (let i = 0; i < arr.length; i += size) {
+            chunks.push(arr.slice(i, i + size));
+          }
+          return chunks;
+        };
+
+        /* ── Render scene grid with row-aware expansion ── */
+        const renderSceneGrid = (scenes: ProductImageScene[]) => {
+          // Responsive cols: 2 on mobile, 3 on sm, 4 on md+
+          const cols = isMobile ? 2 : 4; // simplified; CSS handles visual but we chunk by md default
+          const rows = chunkArray(scenes, cols);
+
+          return rows.map((row, rowIdx) => {
+            const activeInRow = expandedSceneId && row.some(s => s.id === expandedSceneId);
+            const activeScene = activeInRow ? row.find(s => s.id === expandedSceneId) : null;
+
+            return (
+              <React.Fragment key={rowIdx}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {row.map(scene => {
+                    const isExpanded = expandedSceneId === scene.id;
+                    return (
+                      <div key={scene.id} className="relative">
+                        {renderSceneCardButton(scene)}
+                        {/* Triangle indicator */}
+                        {isExpanded && (
+                          <div className="flex justify-center -mb-2 relative z-10">
+                            <div className="w-3 h-3 bg-card border-l border-t border-primary/30 rotate-45 translate-y-[-6px]" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {activeScene && renderExpandedPanel(activeScene)}
+              </React.Fragment>
+            );
+          });
+        };
 
         return (
         <div className="space-y-4">
@@ -1625,9 +1726,7 @@ export function ProductImagesStep3Refine({
               {modelShots.length > 0 && (
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {productShots.map(renderSceneCardButton)}
-              </div>
+              {renderSceneGrid(productShots)}
             </div>
           )}
 
@@ -1643,79 +1742,9 @@ export function ProductImagesStep3Refine({
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {modelShots.map(renderSceneCardButton)}
-              </div>
+              {renderSceneGrid(modelShots)}
             </div>
           )}
-
-          {/* Scene settings Sheet */}
-          <Sheet open={!!expandedSceneId} onOpenChange={(open) => { if (!open) setExpandedSceneId(null); }}>
-            <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
-              {expandedSceneId && (() => {
-                const scene = selectedScenes.find(s => s.id === expandedSceneId);
-                if (!scene) return null;
-                const group = sceneGroups.find(g => g.sceneId === scene.id);
-                const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
-                const templateCtrls = getTemplateControls(scene);
-                const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
-                if (!hasControls) return null;
-
-                return (
-                  <>
-                    <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/40 shrink-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                          {scene.previewUrl ? <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-4 h-4 text-muted-foreground/40 m-auto mt-3" />}
-                        </div>
-                        <SheetTitle className="text-sm font-semibold">{scene.title}</SheetTitle>
-                      </div>
-                    </SheetHeader>
-                    <ScrollArea className="flex-1">
-                      <div className="p-5 space-y-1">
-                        {sceneBlocks.map((blockKey, idx) => {
-                          const meta = BLOCK_LABELS[blockKey];
-                          if (!meta) return null;
-                          return (
-                            <Collapsible key={blockKey} defaultOpen={idx === 0}>
-                              <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
-                                <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
-                                {meta.title}
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <div className="pb-3 pt-1">
-                                  <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
-                                </div>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          );
-                        })}
-
-                        {templateCtrls.length > 0 && (
-                          <Collapsible defaultOpen={sceneBlocks.length === 0}>
-                            <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-3 group/block">
-                              <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
-                              Style
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <div className="space-y-3 pb-3 pt-1">
-                                {templateCtrls.map(ctrl => (
-                                  <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
-                                ))}
-                              </div>
-                              {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                                <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-                              )}
-                            </CollapsibleContent>
-                          </Collapsible>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </>
-                );
-              })()}
-            </SheetContent>
-          </Sheet>
         </div>
         );
       })()}
