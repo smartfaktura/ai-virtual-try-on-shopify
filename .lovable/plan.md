@@ -1,115 +1,104 @@
 
 
-# Improve Product Images: Category-Aware Universal Scenes, Accent Color, and Refine UX
+# Refine Step Overhaul: Scene-Driven Layout, Outfit Locking System, and UX Fixes
 
 ## Problems Identified
 
-1. **Universal scenes are not category-aware** — "In-Hand Studio" shows for furniture/home-decor products where it makes no sense. Each universal scene should have a compatibility list.
-2. **"More Angles" is misleading** — It's a single scene that says "multi-angle" but generates 1 image. It should be removed and replaced with explicit angle scenes (Front, Side, Back, Top-Down) or clearly generate multiple outputs.
-3. **Refine step is overwhelming** — No scene context visible, no quick "just use smart defaults" path. Users don't know what they're adjusting or for which scenes.
-4. **Overall Aesthetic applies globally** — but editorial/recommended scenes often have their own mood; applying uniform background/lighting to those produces poor results.
-5. **No product accent color stored** — The AI analysis already extracts `colorFamily` but there's no dedicated `accentColor` field. This should be extracted, persisted, and used as a dynamic default in the Aesthetic section.
-6. **No "Dynamic Background" universal scene** — User wants a scene that uses the product's accent color as the background tone.
+1. **"Visible Person Styling" is a random dump** — All person fields (hands, models, outfits, age, skin tone) are thrown into one collapsed section with no scene context. User wants each scene that needs a person to show its own auto-selected defaults inline, editable if needed.
+
+2. **No outfit locking system** — The backend has `defaultOutfitDirective()` with hardcoded outfits (e.g., "beige trousers, white sneakers" for garments), but users can't see or control this. Need a Catalog Studio-inspired outfit lock panel where users see the pre-written outfit and can edit specific pieces (top, bottom, shoes, accessories).
+
+3. **"Clean Studio Shot" doesn't adapt to category** — The same `clean-packshot` scene template is used for garments (where it should be a ghost-mannequin or flat-lay) and bags (where it's a standard packshot). No category-aware prompt variant exists.
+
+4. **Format & Output is collapsed** — This is one of the most important settings (aspect ratio, images per scene, credit estimate) but it's hidden in a collapsed section. Should be visible by default.
+
+5. **"Customize per scene" is unclear** — The label "Customize per scene" under Format doesn't communicate that it's about adding props/accessories to specific scenes. Needs clearer labeling.
+
+6. **"Use Smart Defaults" CTA looks bad** — The current button with "Active" badge doesn't look like a proper CTA. Should be more subtle, and the default should already be "product accent" for accent color.
+
+7. **Accent color default** — When Overall Aesthetic is opened, accent color should default to "product-accent" (use product accent) rather than "none".
 
 ## Plan
 
-### 1. Category Compatibility for Universal Scenes
+### File 1: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-**File: `src/components/app/product-images/sceneData.ts`**
+**A. Restructure layout — Scene-driven sections instead of category-grouped:**
 
-Add an optional `excludeCategories` field to `ProductImageScene` type and populate it on universal scenes:
+Replace the current structure of:
+- Smart Defaults CTA (ugly)
+- Scene strip
+- Overall Aesthetic (collapsed)
+- Person Styling (collapsed, all fields dumped)
+- Scene-specific details (collapsed per scene)
+- Custom Note
+- Format & Output (collapsed)
 
-| Scene | Exclude Categories |
-|-------|-------------------|
-| In-Hand Studio | `home-decor`, `tech-devices` (large items) |
-| In-Hand Lifestyle | `home-decor`, `tech-devices` |
-| Product + Packaging | `garments` (no box) |
-| Packaging Detail | `garments` |
+With:
+- **Format & Output (OPEN by default)** — aspect ratio, images per scene, credit estimate. Moved to top since it's critical.
+- **Overall Aesthetic** — collapsed, with note about universal scenes. Default accent color to `product-accent`. Remove the big "Smart Defaults" button; replace with a smaller inline "Auto (Recommended)" chip that's already active by default.
+- **Outfit Lock** (new section, only for categories with person scenes) — Catalog-style outfit control with pre-filled values per category. Shows: Top, Bottom, Shoes, Accessories as editable text chips. Locked across all on-model scenes.
+- **Scene Details** — Each scene that has trigger blocks gets its own collapsible row showing: scene thumbnail, scene name, relevant controls (including inline person details if that scene needs a person, with auto-selected defaults shown). No separate "Person Styling" mega-section.
+- **Custom Note** — stays at bottom.
 
-**File: `src/components/app/product-images/types.ts`**
+**B. Remove "Smart Defaults" big CTA button:**
 
-Add `excludeCategories?: string[]` to `ProductImageScene`.
+Replace with the existing `AutoAestheticButton` chip inside the Aesthetic section. The defaults are already applied on mount, so no need for a separate CTA.
 
-**File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`**
+**C. Change `AUTO_AESTHETIC_DEFAULTS` to set `brandingVisibility: 'product-accent'`** instead of `'none'`.
 
-Filter `GLOBAL_SCENES` through detected categories — hide scenes where ALL selected products fall into excluded categories.
+**D. Set `formatOpen` default to `true`** so Format & Output is visible immediately.
 
-### 2. Replace "More Angles" with Specific Angle Scenes
+**E. Rename "Customize per scene" to "Scene Ratios & Props"** with description "Set per-scene aspect ratios or add styling accessories."
 
-**File: `src/components/app/product-images/sceneData.ts`**
+**F. Build `OutfitLockPanel` sub-component:**
 
-Remove the `more-angles` scene. Replace with 3 explicit scenes:
-- **Side Profile** — Product from 90° side angle
-- **Back View** — Product from behind showing back construction
-- **Top-Down / Flat Lay** — Overhead bird's-eye view
+A new inline component showing pre-filled outfit fields based on category:
+- For garments: Top (default: "plain white t-shirt"), Bottom (default: "slim-fit beige trousers"), Shoes (default: "minimal white sneakers"), Accessories (default: "none")
+- For bags: Top (default: "black turtleneck"), Bottom (default: "dark navy trousers"), Shoes (default: "black ankle boots"), etc.
+- For shoes: Top (default: "plain white tee"), Bottom (default: "cropped slim dark denim"), etc.
 
-Each produces 1 image with a clear, specific angle instruction in the prompt.
+Each field is a text input with the default pre-filled. Changes update `details.outfitStyle` and `details.outfitColorDirection` which feed into the prompt builder.
 
-### 3. Extract & Store Product Accent Color
+New `DetailSettings` fields: `outfitTop`, `outfitBottom`, `outfitShoes`, `outfitAccessories` (all optional strings).
 
-**File: `supabase/functions/analyze-product-category/index.ts`**
+**G. Move person details inline per scene:**
 
-Add `accentColor` (hex code like "#D4A574") to the AI analysis schema. The AI already sees the image — ask it to extract the dominant/accent color as a hex value.
+For each scene that has `personDetails` in its triggerBlocks, show a compact row of auto-selected chips (presentation, age, skin tone) below that scene's collapsible. The model picker stays as a top-level option since it applies globally.
 
-**File: `src/components/app/product-images/types.ts`**
+### File 2: `src/components/app/product-images/types.ts`
 
-Add `accentColor?: string` to `ProductAnalysis`.
+Add new fields to `DetailSettings`:
+```ts
+outfitTop?: string;
+outfitBottom?: string;
+outfitShoes?: string;
+outfitAccessories?: string;
+```
 
-**File: `src/hooks/useProductAnalysis.ts`**
+### File 3: `src/lib/productImagePromptBuilder.ts`
 
-Pass `accentColor` through from the response (no code change needed — it flows through `analysis_json`).
+**H. Update `defaultOutfitDirective` to read from DetailSettings outfit fields:**
 
-### 4. Add "Dynamic Accent Background" Universal Scene
+If `outfitTop`, `outfitBottom`, `outfitShoes` are set, build the outfit string from those instead of the hardcoded defaults. Fall back to category defaults if empty.
 
-**File: `src/components/app/product-images/sceneData.ts`**
+**I. Add category-aware prompt override for `clean-packshot`:**
 
-Add a new universal scene:
-- **ID**: `accent-backdrop`
-- **Title**: "Accent Color Backdrop"
-- **Description**: "Product on a background derived from its dominant color."
-- **Prompt template**: Uses `{{accentColorDirective}}` token that resolves to the extracted hex from analysis.
+In `buildDynamicPrompt`, when scene is `clean-packshot` and category is `garments`, inject "ghost mannequin or flat-lay style" into the prompt. For other categories, use the standard packshot template. This can be done via `categoryOverrides` on the scene definition or inline in the prompt builder.
 
-**File: `src/lib/productImagePromptBuilder.ts`**
+### File 4: `src/components/app/product-images/sceneData.ts`
 
-Add `accentColorDirective` token resolution — reads `accentColor` from product analysis and generates: "Background is a smooth gradient of [hex color], complementary to the product's dominant tone."
+**J. Add category note to `clean-packshot` description:**
 
-### 5. Scope Overall Aesthetic to Universal Scenes Only
+Update description: "Pure white background cut-out. For clothing: ghost mannequin or flat-lay style. For accessories and products: standard packshot."
 
-**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
-
-Add a note under Overall Aesthetic: "Applies to universal scenes. Recommended scenes use their own optimized styling."
-
-**File: `src/lib/productImagePromptBuilder.ts`**
-
-When building prompts, skip injecting aesthetic overrides (background family, surface, lighting) for category-collection scenes — let their templates drive the look. Only inject aesthetic tokens for `isGlobal: true` scenes.
-
-### 6. Simplify Refine Step UX
-
-**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
-
-**A. Add "Use Smart Defaults" prominent action:**
-At the top of the Refine step, add a large card/button: "Use Smart Defaults — We'll pick the best aesthetic based on your product's colors and category. Just click Review."
-
-When clicked, it auto-sets:
-- `accentColor` → from product analysis `accentColor`
-- `backgroundFamily` → `auto`
-- `lightingFamily` → category default
-- All other fields → `auto`
-- Collapses all sections
-
-**B. Show selected scene thumbnails as context strip:**
-Below the header, render a horizontal strip of small scene thumbnails (reusing `SceneCard` mini variant) so the user sees which scenes they're refining. This gives context without needing to go back.
-
-**C. Default all collapsibles to collapsed** except "Overall Aesthetic" (which should show the Auto button prominently).
+Add to the scene's `promptTemplate` a `{{categoryPackshotDirective}}` token that resolves differently per category.
 
 ## Files to Update
 
 | File | Change |
 |------|--------|
-| `src/components/app/product-images/types.ts` | Add `excludeCategories`, `accentColor` fields |
-| `src/components/app/product-images/sceneData.ts` | Add exclusions to scenes, replace "More Angles", add accent backdrop scene |
-| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Filter universal scenes by category compatibility |
-| `supabase/functions/analyze-product-category/index.ts` | Add `accentColor` hex extraction |
-| `src/lib/productImagePromptBuilder.ts` | Add accent color token, scope aesthetic to universal scenes |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Add smart defaults CTA, scene context strip, simplify layout |
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Major restructure: Format on top (open), outfit lock panel, scene-inline person details, remove Smart Defaults CTA, rename Customize, default accent to product-accent |
+| `src/components/app/product-images/types.ts` | Add `outfitTop/Bottom/Shoes/Accessories` to DetailSettings |
+| `src/lib/productImagePromptBuilder.ts` | Read outfit fields, add `categoryPackshotDirective` token, update default outfit builder |
+| `src/components/app/product-images/sceneData.ts` | Add `{{categoryPackshotDirective}}` to clean-packshot template |
 
