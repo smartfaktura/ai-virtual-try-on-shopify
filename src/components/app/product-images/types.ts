@@ -112,12 +112,9 @@ export interface ProductImageScene {
   previewUrl?: string;
   chips?: string[];
   triggerBlocks: string[];
-  isGlobal: boolean;
   categoryCollection?: string;
   sceneType?: SceneType;
-  excludeCategories?: string[];
   subCategory?: string;
-  subCategoryOverrides?: Record<string, string>;
 }
 
 export interface SubGroup {

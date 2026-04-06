@@ -116,13 +116,12 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
   const catSortOrder = new Map<string, number>();
 
   for (const s of scenes) {
-    if (s.is_global || !s.category_collection) continue;
+    if (!s.category_collection) continue;
     const cat = s.category_collection;
     if (!catMap.has(cat)) {
       catMap.set(cat, []);
       catSortOrder.set(cat, s.category_sort_order ?? 0);
     }
-    // Use the lowest category_sort_order from any scene in this category
     if ((s.category_sort_order ?? 0) < (catSortOrder.get(cat) ?? 0)) {
       catSortOrder.set(cat, s.category_sort_order ?? 0);
     }
