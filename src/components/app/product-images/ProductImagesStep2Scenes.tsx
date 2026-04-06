@@ -307,10 +307,9 @@ function UnifiedCategorySectionWithSelectAll({
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
 
-  // Resolve sub-category label using overrides for this category context
+  // Resolve sub-category label
   const resolveLabel = (scene: ProductImageScene, fallback: string) => {
-    const override = scene.subCategoryOverrides?.[catId];
-    return override || scene.subCategory || fallback;
+    return scene.subCategory || fallback;
   };
 
   // Build sub-groups for essential scenes (by resolved subCategory)
