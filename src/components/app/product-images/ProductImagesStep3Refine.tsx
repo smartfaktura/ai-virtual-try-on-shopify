@@ -972,7 +972,11 @@ export function ProductImagesStep3Refine({
   const toggleBlock = (id: string) => { const n = new Set(openBlocks); if (n.has(id)) n.delete(id); else n.add(id); setOpenBlocks(n); };
 
   // Customization count
-  const IGNORE_KEYS = new Set(['aspectRatio', 'quality', 'imageCount', 'sceneAspectOverrides', 'sceneProps']);
+  const IGNORE_KEYS = new Set([
+    'aspectRatio', 'quality', 'imageCount', 'sceneAspectOverrides', 'sceneProps',
+    'outfitConfig', 'selectedModelId', 'customNote',
+    'outfitTop', 'outfitBottom', 'outfitShoes', 'outfitAccessories',
+  ]);
   const customizedCount = Object.entries(details).filter(([k, v]) => v && v !== '' && !IGNORE_KEYS.has(k)).length;
 
   const handleReset = () => {
