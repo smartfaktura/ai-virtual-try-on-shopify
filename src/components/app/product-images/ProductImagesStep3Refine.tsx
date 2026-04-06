@@ -1266,6 +1266,9 @@ export function ProductImagesStep3Refine({
             <Camera className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold">Your scenes</span>
             <span className="text-[10px] text-muted-foreground">{selectedScenes.length} selected — tap to fine-tune</span>
+            <div className="ml-auto">
+              <AutoAestheticButton details={details} update={update} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
