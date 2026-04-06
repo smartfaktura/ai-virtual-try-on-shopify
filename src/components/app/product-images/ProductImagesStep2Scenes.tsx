@@ -281,7 +281,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
           <h3 className="text-sm font-semibold">Universal Scenes</h3>
         </div>
         <div className={`grid ${gridClass} gap-2`}>
-          {GLOBAL_SCENES.map(scene => (
+          {filteredGlobalScenes.map(scene => (
             <SceneCard
               key={scene.id}
               scene={scene}
