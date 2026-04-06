@@ -21,6 +21,7 @@ export interface DbScene {
   created_at: string;
   sub_category: string | null;
   category_sort_order: number;
+  sub_category_overrides: Record<string, string> | null;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
