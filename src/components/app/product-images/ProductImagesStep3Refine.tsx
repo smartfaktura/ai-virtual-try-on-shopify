@@ -1725,8 +1725,12 @@ export function ProductImagesStep3Refine({
       {/* ── MODEL-NEEDED BANNER ── */}
       {scenesNeedingModel.length > 0 && needsModel && (
         <div className="rounded-xl border border-border bg-card p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-            <User className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          <div className="flex -space-x-2 flex-shrink-0">
+            {globalModels.slice(0, 3).map((m, i) => (
+              <div key={m.modelId} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden bg-muted" style={{ zIndex: 3 - i }}>
+                <img src={m.previewUrl} alt={m.name} className="w-full h-full object-cover" />
+              </div>
+            ))}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-foreground">
