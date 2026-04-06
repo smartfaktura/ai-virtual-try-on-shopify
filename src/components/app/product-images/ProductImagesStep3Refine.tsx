@@ -1474,7 +1474,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40',
                 )}
-              >{opt}</button>
+              ><span className="capitalize">{opt}</span></button>
             ))}
             <button type="button"
               onClick={() => updateConfig({ accessories: currentConfig.accessories && !['none', 'minimal', 'statement'].includes(currentConfig.accessories) ? '' : 'custom' })}
