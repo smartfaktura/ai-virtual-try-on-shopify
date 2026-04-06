@@ -292,7 +292,7 @@ export default function ProductImages() {
     if (!canAfford) { openBuyModal(); return; }
 
     const imgCount = parseInt(details.imageCount || '1', 10);
-    const totalExpected = selectedProducts.length * selectedScenes.length * imgCount;
+    const totalExpected = computeTotalImages(selectedProducts.length, selectedScenes, imgCount, details);
     setExpectedJobCount(totalExpected);
     setEnqueuedCount(0);
     setCompletedJobs(0);
