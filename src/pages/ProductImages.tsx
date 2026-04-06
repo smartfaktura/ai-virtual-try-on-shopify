@@ -531,7 +531,7 @@ export default function ProductImages() {
     };
 
     pollingRef.current = setTimeout(poll, 2000);
-  }, [finishWithResults]);
+  }, [finishWithResults, selectedScenes]);
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
