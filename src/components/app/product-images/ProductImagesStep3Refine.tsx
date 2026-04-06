@@ -1575,7 +1575,7 @@ export function ProductImagesStep3Refine({
 
   // Scenes that need a model
   const scenesNeedingModel = useMemo(() =>
-    selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails')),
+    selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')),
     [selectedScenes]
   );
   const needsModel = scenesNeedingModel.length > 0 && !details.selectedModelId;
@@ -1599,7 +1599,7 @@ export function ProductImagesStep3Refine({
     // If scene needs model and none selected, auto-open Outfit section instead
     const scene = selectedScenes.find(s => s.id === id);
     if (scene && !details.selectedModelId) {
-      const needsModelForScene = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+      const needsModelForScene = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
       if (needsModelForScene) {
         scrollToOutfit();
         return;
@@ -1671,7 +1671,7 @@ export function ProductImagesStep3Refine({
 
   // Helper: get block labels for a scene (including template-derived ones)
   const getSceneBlockLabels = (scene: ProductImageScene) => {
-    const labels = scene.triggerBlocks
+    const labels = (scene.triggerBlocks || [])
       .filter(b => b !== 'personDetails' && b !== 'customNote' && b !== 'consistency')
       .map(b => BLOCK_LABELS[b]?.title)
       .filter(Boolean);
@@ -1756,12 +1756,12 @@ export function ProductImagesStep3Refine({
         const showBgStrip = bgScenes.length >= 1;
 
         // Group scenes: product shots vs on-model shots
-        const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
-        const modelShots = selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
+        const productShots = selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
+        const modelShots = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
 
           const renderSceneCardButton = (scene: ProductImageScene) => {
           const isExpanded = expandedSceneId === scene.id;
-          const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+          const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
           const group = sceneGroups.find(g => g.sceneId === scene.id);
           const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
           const templateCtrls = getTemplateControls(scene);
@@ -1812,7 +1812,7 @@ export function ProductImagesStep3Refine({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
-                      {scene.triggerBlocks.includes('background') && (
+                      {(scene.triggerBlocks || []).includes('background') && (
                         <span className="inline-flex items-center gap-0.5 px-1 py-px rounded bg-muted text-[9px] text-muted-foreground font-medium flex-shrink-0">
                           <Paintbrush className="w-2.5 h-2.5" />BG
                         </span>

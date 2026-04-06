@@ -524,7 +524,7 @@ function resolveCameraDirective(scene: ProductImageScene): string {
   if (st && CAMERA_MAP[st]) return CAMERA_MAP[st];
 
   // Infer from trigger blocks
-  const triggers = scene.triggerBlocks;
+  const triggers = scene.triggerBlocks || [];
   if (triggers.includes('detailFocus')) return CAMERA_MAP['macro'];
   if (triggers.includes('personDetails') && !triggers.includes('sceneEnvironment')) return CAMERA_MAP['portrait'];
   if (triggers.includes('sceneEnvironment') && triggers.includes('personDetails')) return CAMERA_MAP['lifestyle'];
@@ -551,14 +551,14 @@ function resolveFocusArea(d: DetailSettings, scene: ProductImageScene): string {
   if (id.includes('dose') || id.includes('scoop')) return FOCUS_AREA_DEFAULTS['dose'];
 
   // Fall back based on trigger blocks
-  if (scene.triggerBlocks.includes('detailFocus')) return FOCUS_AREA_DEFAULTS['macro'];
+  if ((scene.triggerBlocks || []).includes('detailFocus')) return FOCUS_AREA_DEFAULTS['macro'];
   return 'key product details and construction quality';
 }
 
 // ── Negative prompt builder ──
 function buildNegativePrompt(scene: ProductImageScene): string {
   const parts = [BASE_NEGATIVES, PRODUCT_NEGATIVES];
-  const hasPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+  const hasPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
   if (hasPerson) parts.push(PERSON_NEGATIVES);
   return parts.join(' ');
 }
@@ -620,13 +620,13 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
 
     case 'personDirective': {
-      const needsPerson = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       return buildPersonDirective(details, cat, needsPerson, ctx.modelGender);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
-      const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
+      const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
