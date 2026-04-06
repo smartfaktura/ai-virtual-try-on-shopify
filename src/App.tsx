@@ -198,6 +198,7 @@ const App = () => {
                         <Route path="/admin/chat-sessions" element={<AdminChatSessions />} />
                         <Route path="/admin/feedback" element={<AdminFeedback />} />
                         <Route path="/admin/status" element={<AdminStatus />} />
+                        <Route path="/admin/product-image-scenes" element={<AdminProductImageScenes />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
