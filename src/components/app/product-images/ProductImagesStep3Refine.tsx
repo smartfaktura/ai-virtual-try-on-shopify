@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Crown, UserX } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -778,10 +778,33 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   // Current outfit config from details, falling back to defaults
   const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
 
+  // Initialize outfitConfig from category defaults on mount so prompt builder matches UI
+  useEffect(() => {
+    if (!details.outfitConfig) {
+      update({ outfitConfig: defaultConfig });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const updateConfig = useCallback((partial: Partial<OutfitConfig>) => {
     const next = { ...currentConfig, ...partial };
     update({ outfitConfig: next });
   }, [currentConfig, update]);
+
+  // Check if a preset config matches the current config
+  const isPresetActive = useCallback((presetConfig: OutfitConfig): boolean => {
+    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories', 'name'];
+    return keys.every(k => {
+      if (k === 'top' || k === 'bottom' || k === 'shoes') {
+        const a = currentConfig[k];
+        const b = presetConfig[k];
+        if (!a && !b) return true;
+        if (!a || !b) return false;
+        return a.garment === b.garment && a.color === b.color && a.fit === b.fit && a.material === b.material;
+      }
+      return (currentConfig[k] || '') === (presetConfig[k] || '');
+    });
+  }, [currentConfig]);
 
   // Presets: built-in + saved for this category
   const builtInPresets = useMemo(() => getBuiltInPresets(cat), [cat]);
@@ -829,14 +852,18 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
 
       {/* Preset bar */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-        {allPresets.map(preset => (
+        {allPresets.map(preset => {
+          const active = isPresetActive(preset.config);
+          return (
           <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
             <button
               type="button"
               onClick={() => loadPreset(preset)}
               className={cn(
                 'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
-                'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+                active
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
               )}
             >
               {preset.name}
@@ -848,7 +875,8 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
               </button>
             )}
           </div>
-        ))}
+          );
+        })}
         {showSave ? (
           <div className="flex items-center gap-1 flex-shrink-0">
             <Input
@@ -972,7 +1000,11 @@ export function ProductImagesStep3Refine({
   const toggleBlock = (id: string) => { const n = new Set(openBlocks); if (n.has(id)) n.delete(id); else n.add(id); setOpenBlocks(n); };
 
   // Customization count
-  const IGNORE_KEYS = new Set(['aspectRatio', 'quality', 'imageCount', 'sceneAspectOverrides', 'sceneProps']);
+  const IGNORE_KEYS = new Set([
+    'aspectRatio', 'quality', 'imageCount', 'sceneAspectOverrides', 'sceneProps',
+    'outfitConfig', 'selectedModelId', 'customNote',
+    'outfitTop', 'outfitBottom', 'outfitShoes', 'outfitAccessories',
+  ]);
   const customizedCount = Object.entries(details).filter(([k, v]) => v && v !== '' && !IGNORE_KEYS.has(k)).length;
 
   const handleReset = () => {

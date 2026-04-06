@@ -138,6 +138,17 @@ export default function ProductImages() {
     return selectedProducts[0]?.product_type || undefined;
   }, [selectedProducts]);
 
+  // Memoize hasMultipleCategories
+  const hasMultipleCategories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const p of selectedProducts) {
+      const analysis = p.analysis_json as any;
+      if (analysis?.category) cats.add(analysis.category);
+      else cats.add(p.product_type || 'other');
+    }
+    return cats.size > 1;
+  }, [selectedProducts]);
+
   // Check for last-used settings when entering Refine step
   useEffect(() => {
     if (step === 3 && primaryCategory) {
@@ -728,15 +739,7 @@ export default function ProductImages() {
                   selectedScenes={selectedScenes}
                   allProducts={userProducts}
                   selectedProductIds={selectedProductIds}
-                  hasMultipleCategories={(() => {
-                    const cats = new Set<string>();
-                    for (const p of selectedProducts) {
-                      const analysis = p.analysis_json as any;
-                      if (analysis?.category) cats.add(analysis.category);
-                      else cats.add(p.product_type || 'other');
-                    }
-                    return cats.size > 1;
-                  })()}
+                  hasMultipleCategories={hasMultipleCategories}
                   primaryCategory={primaryCategory}
                 />
               </div>
@@ -747,7 +750,6 @@ export default function ProductImages() {
                 selectedProducts={selectedProducts}
                 selectedSceneIds={selectedSceneIds}
                 details={details}
-                creditsPerImage={creditsPerImage}
                 balance={balance}
                 onEditStep={(s) => setStep(s as PIStep)}
               />
