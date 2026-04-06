@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
