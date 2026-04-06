@@ -19,6 +19,7 @@ export interface ProductAnalysis {
   finish: string;
   packagingRelevant: boolean;
   personCompatible: boolean;
+  accentColor?: string;
 }
 
 // ── Scene assignment ──
