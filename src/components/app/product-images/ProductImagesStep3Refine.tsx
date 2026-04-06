@@ -1602,7 +1602,8 @@ export function ProductImagesStep3Refine({
 
       {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
       {selectedScenes.length > 0 && (() => {
-        const showBgStrip = selectedScenes.length >= 2;
+        const bgScenes = selectedScenes.filter(s => s.triggerBlocks?.includes('background'));
+        const showBgStrip = bgScenes.length >= 1;
 
         // Group scenes: product shots vs on-model shots
         const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
@@ -1804,7 +1805,7 @@ export function ProductImagesStep3Refine({
               <div className="flex items-center gap-2">
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5">All {selectedScenes.length} scenes</Badge>
+                <Badge variant="outline" className="text-[9px] h-4 px-1.5">{bgScenes.length === selectedScenes.length ? `All ${bgScenes.length} scenes` : `${bgScenes.length} of ${selectedScenes.length} scenes`}</Badge>
                 {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 1 && (
                   <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
                     ×{details.backgroundTone.split(',').filter(Boolean).length} variations
