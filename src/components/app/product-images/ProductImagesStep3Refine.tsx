@@ -827,12 +827,14 @@ function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; he
   );
 }
 
-/* ── Preset Color Summary (3 dots) ── */
+/* ── Preset Color Stripe (left-edge bars) ── */
 function PresetColorDots({ config }: { config: OutfitConfig }) {
-  const dots = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
+  const colors = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      {dots.map((c, i) => <ColorDot key={i} color={c} size={8} />)}
+    <div className="flex flex-col w-1 rounded-full overflow-hidden self-stretch">
+      {colors.map((c, i) => (
+        <div key={i} className="flex-1" style={{ backgroundColor: c }} />
+      ))}
     </div>
   );
 }
