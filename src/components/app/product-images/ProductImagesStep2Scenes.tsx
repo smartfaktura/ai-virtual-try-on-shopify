@@ -232,11 +232,9 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   // Prune stale selected scenes that are no longer visible after category filtering
   useEffect(() => {
     const visibleGlobalIds = new Set(filteredGlobalScenes.map(s => s.id));
-    const allCategoryIds = new Set(CATEGORY_COLLECTIONS.flatMap(c => c.scenes.map(s => s.id)));
+    const allCategoryIds = new Set(ACTIVE_CATEGORY_COLLECTIONS.flatMap(c => c.scenes.map(s => s.id)));
     const stale = Array.from(selectedSceneIds).filter(id => {
-      // If it's a category scene, it's always visible (just collapsed)
       if (allCategoryIds.has(id)) return false;
-      // If it's a global scene that got filtered out, it's stale
       return !visibleGlobalIds.has(id);
     });
     if (stale.length > 0) {
@@ -244,7 +242,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
       stale.forEach(id => next.delete(id));
       onSelectionChange(next);
     }
-  }, [filteredGlobalScenes, selectedSceneIds, onSelectionChange]);
+  }, [filteredGlobalScenes, selectedSceneIds, onSelectionChange, ACTIVE_CATEGORY_COLLECTIONS]);
 
   // Sync expanded categories when selected products change
   useEffect(() => {
