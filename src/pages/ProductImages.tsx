@@ -48,8 +48,6 @@ const STEP_DEFS = [
   { number: 6, label: 'Results', icon: CheckCircle },
 ];
 
-// Import centralized BLOCK_FIELD_MAP
-import { BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
 
 export default function ProductImages() {
   const navigate = useNavigate();
