@@ -445,6 +445,17 @@ export default function ProductImages() {
     setEnqueuedCount(newJobMap.size);
     sendWake(token);
 
+    // Persist session so page refresh can resume polling
+    try {
+      sessionStorage.setItem('pi_generation_session', JSON.stringify({
+        jobMapEntries: Array.from(newJobMap.entries()),
+        expectedJobCount: totalExpected,
+        startTime: Date.now(),
+        selectedProductIds: Array.from(selectedProductIds),
+        selectedSceneIds: Array.from(selectedSceneIds),
+      }));
+    } catch {}
+
     startPolling(newJobMap);
   }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
