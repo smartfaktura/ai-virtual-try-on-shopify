@@ -1297,13 +1297,25 @@ export function ProductImagesStep3Refine({
             return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
           });
 
+          // Get first 2 control names for preview hint
+          const controlPreviewNames: string[] = [];
+          for (const bk of sceneBlocks) {
+            const meta = BLOCK_LABELS[bk];
+            if (meta && controlPreviewNames.length < 2) controlPreviewNames.push(meta.title);
+          }
+          if (controlPreviewNames.length < 2) {
+            for (const ctrl of templateCtrls) {
+              if (controlPreviewNames.length < 2) controlPreviewNames.push(TEMPLATE_CONTROL_LABELS[ctrl]);
+            }
+          }
+
           return (
             <div key={scene.id} className="col-span-1">
               <button
                 type="button"
                 onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
                 className={cn(
-                  'w-full text-left rounded-xl border p-2 transition-all duration-150 group/card',
+                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
                   isExpanded
                     ? 'border-primary bg-primary/[0.03] shadow-sm'
                     : hasCustomizations
@@ -1314,31 +1326,36 @@ export function ProductImagesStep3Refine({
                   isClickable ? 'cursor-pointer' : 'cursor-default',
                 )}
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   {/* Thumbnail */}
-                  <div className="w-12 h-12 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                  <div className="w-14 h-14 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
                     {scene.previewUrl ? (
                       <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
                     )}
                   </div>
-                  {/* Title + status dot */}
+                  {/* Title + status + control preview */}
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium truncate block">{scene.title}</span>
-                    {sceneNeedsModel && needsModel && (
+                    <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                    {sceneNeedsModel && needsModel ? (
                       <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
                       </span>
-                    )}
-                    {hasCustomizations && !(sceneNeedsModel && needsModel) && (
+                    ) : hasCustomizations ? (
                       <span className="flex items-center gap-1 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                         <span className="text-[10px] text-primary font-medium">customized</span>
                       </span>
+                    ) : controlPreviewNames.length > 0 ? (
+                      <span className="text-[10px] text-muted-foreground/60 mt-0.5 block group-hover/card:hidden">{controlPreviewNames.join(', ')}…</span>
+                    ) : null}
+                    {/* Hover hint */}
+                    {isClickable && !isExpanded && (
+                      <span className="text-[10px] text-primary/70 font-medium mt-0.5 hidden group-hover/card:block">→ Customize</span>
                     )}
                   </div>
-                  {/* Chevron — always visible */}
+                  {/* Chevron */}
                   {isClickable && (
                     <ChevronDown className={cn(
                       'w-3.5 h-3.5 flex-shrink-0 transition-all',
@@ -1350,32 +1367,44 @@ export function ProductImagesStep3Refine({
                 </div>
               </button>
 
-              {/* Inline expanded settings — stays in single column below */}
+              {/* Inline expanded settings — collapsible sub-sections */}
               {isExpanded && hasControls && (
-                <div className="mt-1.5 rounded-xl border border-primary/20 bg-card p-4 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-                  {sceneBlocks.map(blockKey => {
+                <div className="mt-1.5 rounded-xl border border-primary/20 bg-card p-3 space-y-1 overflow-hidden transition-all duration-200">
+                  {sceneBlocks.map((blockKey, idx) => {
                     const meta = BLOCK_LABELS[blockKey];
                     if (!meta) return null;
                     return (
-                      <div key={blockKey} className="space-y-2">
-                        <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
-                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
-                      </div>
+                      <Collapsible key={blockKey} defaultOpen={idx === 0}>
+                        <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/block">
+                          <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                          {meta.title}
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="pb-2 pt-1">
+                            <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     );
                   })}
 
                   {templateCtrls.length > 0 && (
-                    <div className="space-y-3 pt-2 border-t border-border/40">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Style</span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {templateCtrls.map(ctrl => (
-                          <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
-                        ))}
-                      </div>
-                      {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                        <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-                      )}
-                    </div>
+                    <Collapsible defaultOpen={sceneBlocks.length === 0}>
+                      <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer border-t border-border/30 pt-2 group/block">
+                        <ChevronRight className="w-3 h-3 transition-transform group-data-[state=open]/block:rotate-90" />
+                        Style
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-2 pt-1">
+                          {templateCtrls.map(ctrl => (
+                            <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                          ))}
+                        </div>
+                        {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                          <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
                   )}
                 </div>
               )}
