@@ -1408,6 +1408,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_saved_colors: {
+        Row: {
+          created_at: string | null
+          gradient_from: string | null
+          gradient_to: string | null
+          hex: string | null
+          id: string
+          label: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          gradient_from?: string | null
+          gradient_to?: string | null
+          hex?: string | null
+          id?: string
+          label?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          gradient_from?: string | null
+          gradient_to?: string | null
+          hex?: string | null
+          id?: string
+          label?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       video_inputs: {
         Row: {
           analysis_json: Json | null
