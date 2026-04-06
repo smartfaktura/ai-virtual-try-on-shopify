@@ -48,6 +48,7 @@ const AdminModels = lazy(() => import('@/pages/AdminModels'));
 const AdminChatSessions = lazy(() => import('@/pages/AdminChatSessions'));
 const AdminFeedback = lazy(() => import('@/pages/AdminFeedback'));
 const AdminStatus = lazy(() => import('@/pages/AdminStatus'));
+const AdminProductImageScenes = lazy(() => import('@/pages/AdminProductImageScenes'));
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const About = lazy(() => import('@/pages/About'));
@@ -197,6 +198,7 @@ const App = () => {
                         <Route path="/admin/chat-sessions" element={<AdminChatSessions />} />
                         <Route path="/admin/feedback" element={<AdminFeedback />} />
                         <Route path="/admin/status" element={<AdminStatus />} />
+                        <Route path="/admin/product-image-scenes" element={<AdminProductImageScenes />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

@@ -1034,6 +1034,57 @@ export type Database = {
         }
         Relationships: []
       }
+      product_image_scenes: {
+        Row: {
+          category_collection: string | null
+          created_at: string
+          description: string
+          exclude_categories: string[]
+          id: string
+          is_active: boolean
+          is_global: boolean
+          preview_image_url: string | null
+          prompt_template: string
+          scene_id: string
+          scene_type: string
+          sort_order: number
+          title: string
+          trigger_blocks: string[]
+        }
+        Insert: {
+          category_collection?: string | null
+          created_at?: string
+          description?: string
+          exclude_categories?: string[]
+          id?: string
+          is_active?: boolean
+          is_global?: boolean
+          preview_image_url?: string | null
+          prompt_template?: string
+          scene_id: string
+          scene_type?: string
+          sort_order?: number
+          title: string
+          trigger_blocks?: string[]
+        }
+        Update: {
+          category_collection?: string | null
+          created_at?: string
+          description?: string
+          exclude_categories?: string[]
+          id?: string
+          is_active?: boolean
+          is_global?: boolean
+          preview_image_url?: string | null
+          prompt_template?: string
+          scene_id?: string
+          scene_type?: string
+          sort_order?: number
+          title?: string
+          trigger_blocks?: string[]
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           created_at: string
