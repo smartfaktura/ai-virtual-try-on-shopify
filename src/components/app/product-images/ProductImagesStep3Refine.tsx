@@ -532,6 +532,9 @@ function AutoAestheticButton({ details, update }: { details: DetailSettings; upd
 
 function CustomHexPanel({ accentColor, onChange, isBrandMode }: { accentColor: string; onChange: (hex: string) => void; isBrandMode: boolean }) {
   const [localHex, setLocalHex] = useState(accentColor || '#000000');
+
+  // Sync localHex when accentColor is cleared externally (e.g. via Auto or Reset)
+  useEffect(() => { setLocalHex(accentColor || '#000000'); }, [accentColor]);
   const isValid = /^#([0-9A-Fa-f]{6})$/.test(localHex);
 
   const handleBlur = () => {
