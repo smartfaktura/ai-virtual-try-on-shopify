@@ -129,8 +129,8 @@ export default function ProductImages() {
   );
 
   const selectedScenes = useMemo(
-    () => ALL_SCENES.filter(s => selectedSceneIds.has(s.id)),
-    [selectedSceneIds],
+    () => allScenes.filter(s => selectedSceneIds.has(s.id)),
+    [allScenes, selectedSceneIds],
   );
 
   // Primary category for outfit defaults
