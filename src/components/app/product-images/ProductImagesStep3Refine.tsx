@@ -1676,18 +1676,6 @@ export function ProductImagesStep3Refine({
                     <div className="space-y-2">
                       <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
                       <InlinePersonDetails details={details} update={update} />
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                        <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
-                          { value: 'clean-studio', label: 'Clean studio' }, { value: 'natural-lifestyle', label: 'Natural lifestyle' },
-                          { value: 'polished-beauty', label: 'Polished beauty' }, { value: 'auto', label: 'Auto' },
-                        ]} />
-                        <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
-                          { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
-                        ]} />
-                        <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
-                          { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
-                        ]} />
-                      </div>
                     </div>
                   ) : null}
                 </CardContent>
