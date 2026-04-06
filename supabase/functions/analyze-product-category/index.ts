@@ -37,6 +37,7 @@ Return a JSON object with these exact fields:
 - finish: surface finish (e.g. "matte", "glossy", "satin", "textured", "brushed")
 - packagingRelevant: boolean - true if product typically has notable packaging (perfumes, cosmetics, tech)
 - personCompatible: boolean - true if product can be shown with a person (held, worn, used)
+- accentColor: the dominant/accent color of the product as a hex code (e.g. "#D4A574", "#1A1A1A", "#E8C4B0"). Pick the single most visually prominent color.
 
 Be precise and confident. Use the image as primary signal, with title/description as context.`;
 
@@ -90,8 +91,9 @@ Be precise and confident. Use the image as primary signal, with title/descriptio
                   finish: { type: "string" },
                   packagingRelevant: { type: "boolean" },
                   personCompatible: { type: "boolean" },
+                  accentColor: { type: "string", description: "Dominant/accent color as hex code e.g. #D4A574" },
                 },
-                required: ["category", "sizeClass", "colorFamily", "materialFamily", "finish", "packagingRelevant", "personCompatible"],
+                required: ["category", "sizeClass", "colorFamily", "materialFamily", "finish", "packagingRelevant", "personCompatible", "accentColor"],
                 additionalProperties: false,
               },
             },

@@ -54,6 +54,7 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['personDetails', 'actionDetails', 'productSize'],
     isGlobal: true,
     sceneType: 'portrait',
+    excludeCategories: ['home-decor', 'tech-devices'],
   },
   {
     id: 'in-hand-lifestyle',
@@ -63,6 +64,7 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['personDetails', 'actionDetails', 'sceneEnvironment', 'productSize'],
     isGlobal: true,
     sceneType: 'lifestyle',
+    excludeCategories: ['home-decor', 'tech-devices'],
   },
   {
     id: 'closeup-detail',
@@ -74,13 +76,31 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     sceneType: 'macro',
   },
   {
-    id: 'more-angles',
-    title: 'More Angles',
-    description: 'Additional angle views: front, side, back, top-down.',
-    promptTemplate: 'Multi-angle product photograph of {{productName}}. Clean {{background}} background. {{lightingDirective}} Consistent lighting and color temperature across all views. Sharp focus on {{materialTexture}} from every angle. {{shadowDirective}} Each angle reveals unique construction details. {{consistencyDirective}} {{cameraDirective}}',
-    triggerBlocks: ['angleSelection'],
+    id: 'side-profile',
+    title: 'Side Profile',
+    description: 'Product from 90° side angle showing depth and construction.',
+    promptTemplate: 'Product photograph of {{productName}} from a 90-degree side angle. {{lightingDirective}} Side view revealing depth, construction, and profile silhouette. {{materialTexture}}. {{shadowDirective}} Clean {{background}} background with sharp product edges. {{consistencyDirective}} {{cameraDirective}}',
+    triggerBlocks: ['background'],
     isGlobal: true,
     sceneType: 'packshot',
+  },
+  {
+    id: 'back-view',
+    title: 'Back View',
+    description: 'Rear view showing back construction and details.',
+    promptTemplate: 'Product photograph of {{productName}} from the back/rear angle. {{lightingDirective}} Showing back construction, label placement, and structural details. {{materialTexture}}. {{shadowDirective}} Clean {{background}} background. {{consistencyDirective}} {{cameraDirective}}',
+    triggerBlocks: ['background'],
+    isGlobal: true,
+    sceneType: 'packshot',
+  },
+  {
+    id: 'top-down-flatlay',
+    title: 'Top-Down / Flat Lay',
+    description: 'Overhead bird\'s-eye view of the product.',
+    promptTemplate: 'Overhead flat-lay photograph of {{productName}} shot from directly above. {{lightingDirective}} Bird\'s-eye view revealing top surface, shape outline, and footprint. {{materialTexture}}. {{shadowDirective}} Clean {{background}} background. {{consistencyDirective}} {{cameraDirective}}',
+    triggerBlocks: ['background'],
+    isGlobal: true,
+    sceneType: 'flatlay',
   },
   {
     id: 'product-packaging',
@@ -90,6 +110,7 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['packagingDetails'],
     isGlobal: true,
     sceneType: 'packshot',
+    excludeCategories: ['garments'],
   },
   {
     id: 'packaging-detail',
@@ -99,6 +120,16 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
     triggerBlocks: ['packagingDetails', 'detailFocus'],
     isGlobal: true,
     sceneType: 'macro',
+    excludeCategories: ['garments'],
+  },
+  {
+    id: 'accent-backdrop',
+    title: 'Accent Color Backdrop',
+    description: 'Product on a dynamic background derived from its dominant color.',
+    promptTemplate: 'Product photograph of {{productName}} on a {{accentColorDirective}}. {{lightingDirective}} Sharp center-frame composition with crisp product edges. {{materialTexture}}. {{shadowDirective}} {{consistencyDirective}} {{cameraDirective}}',
+    triggerBlocks: ['background'],
+    isGlobal: true,
+    sceneType: 'packshot',
   },
 ];
 

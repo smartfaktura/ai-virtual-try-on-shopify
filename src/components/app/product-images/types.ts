@@ -19,6 +19,7 @@ export interface ProductAnalysis {
   finish: string;
   packagingRelevant: boolean;
   personCompatible: boolean;
+  accentColor?: string;
 }
 
 // ── Scene assignment ──
@@ -88,6 +89,7 @@ export interface ProductImageScene {
   isGlobal: boolean;
   categoryCollection?: string;
   sceneType?: SceneType;
+  excludeCategories?: string[];
 }
 
 export interface CategoryCollection {

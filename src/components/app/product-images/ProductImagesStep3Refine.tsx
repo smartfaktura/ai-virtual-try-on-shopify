@@ -639,9 +639,9 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [openBlocks, setOpenBlocks] = useState<Set<string>>(new Set());
-  const [aestheticOpen, setAestheticOpen] = useState(true);
-  const [personOpen, setPersonOpen] = useState(true);
-  const [formatOpen, setFormatOpen] = useState(true);
+  const [aestheticOpen, setAestheticOpen] = useState(false);
+  const [personOpen, setPersonOpen] = useState(false);
+  const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [propModalOpen, setPropModalOpen] = useState(false);
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
@@ -697,6 +697,54 @@ export function ProductImagesStep3Refine({
 
   return (
     <div className="space-y-6 pb-20">
+      {/* Smart Defaults CTA */}
+      <button
+        type="button"
+        onClick={() => {
+          update(AUTO_AESTHETIC_DEFAULTS);
+          setAestheticOpen(false);
+          setPersonOpen(false);
+        }}
+        className={cn(
+          'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer text-left',
+          isAutoApplied(details)
+            ? 'border-primary bg-primary/5'
+            : 'border-border hover:border-primary/40 hover:bg-muted/30',
+        )}
+      >
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold">Use Smart Defaults</p>
+          <p className="text-xs text-muted-foreground">We'll pick the best aesthetic based on your product's colors and category. Just click Review.</p>
+        </div>
+        {isAutoApplied(details) && (
+          <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0 flex-shrink-0">Active</Badge>
+        )}
+      </button>
+
+      {/* Scene context strip */}
+      {selectedScenes.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Refining {selectedScenes.length} scene{selectedScenes.length !== 1 ? 's' : ''}:</p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {selectedScenes.map(scene => (
+              <div key={scene.id} className="flex flex-col items-center gap-1 flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-muted border border-border overflow-hidden">
+                  {scene.previewUrl ? (
+                    <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
+                  )}
+                </div>
+                <span className="text-[9px] text-muted-foreground text-center w-12 truncate">{scene.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -730,6 +778,7 @@ export function ProductImagesStep3Refine({
         <CollapsibleContent>
           <Card className="mt-2 border-primary/10">
             <CardContent className="p-4 space-y-4">
+              <p className="text-[11px] text-muted-foreground italic">Applies to universal scenes. Recommended scenes use their own optimized styling.</p>
               {/* Auto (Recommended) button */}
               <AutoAestheticButton details={details} update={update} />
 
