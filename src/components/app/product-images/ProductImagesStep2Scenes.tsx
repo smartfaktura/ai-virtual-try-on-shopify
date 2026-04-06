@@ -69,13 +69,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
   return matched;
 }
 
-/** Returns global scenes that are compatible with a given category */
-function getGlobalScenesForCategory(globalScenes: ProductImageScene[], categoryId: string): ProductImageScene[] {
-  return globalScenes.filter(scene => {
-    if (!scene.excludeCategories || scene.excludeCategories.length === 0) return true;
-    return !scene.excludeCategories.includes(categoryId);
-  });
-}
+// Global scenes removed — all scenes now belong to individual categories
 
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
   return (
