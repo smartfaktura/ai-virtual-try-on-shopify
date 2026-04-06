@@ -1610,6 +1610,8 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender }: {
   );
 }
 
+/* ══════════════════════════════════════════════
+   Inline Person Details (compact per-scene)
    ══════════════════════════════════════════════ */
 
 function InlinePersonDetails({ details, update, outfitAccessories, onAccessoriesChange }: {
