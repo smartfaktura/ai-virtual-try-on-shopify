@@ -57,6 +57,7 @@ export default function ProductImages() {
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts } = useProductAnalysis();
+  const { allScenes } = useProductImageScenes();
 
   const INITIAL_DETAILS: DetailSettings = {
     aspectRatio: '1:1', quality: 'high', imageCount: '1',
