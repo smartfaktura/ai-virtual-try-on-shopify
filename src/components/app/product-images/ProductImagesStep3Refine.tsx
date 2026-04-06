@@ -1089,15 +1089,31 @@ export function ProductImagesStep3Refine({
 
   // UI state
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
-  // Removed: aestheticOpen state (Global Style section deleted)
-  const [outfitOpen, setOutfitOpen] = useState(false);
   const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
+  const [outfitOpen, setOutfitOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const outfitRef = useRef<HTMLDivElement>(null);
   const [propModalOpen, setPropModalOpen] = useState(false);
   const [propModalSceneId, setPropModalSceneId] = useState<string | null>(null);
-  const outfitRef = useRef<HTMLDivElement>(null);
 
-  const toggleSceneExpand = (id: string) => setExpandedSceneId(prev => prev === id ? null : id);
+  const scrollToOutfit = useCallback(() => {
+    setOutfitOpen(true);
+    setTimeout(() => outfitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  }, []);
+
+  const toggleSceneExpand = (id: string) => {
+    // If scene needs model and none selected, auto-open Outfit section instead
+    const scene = selectedScenes.find(s => s.id === id);
+    if (scene && !details.selectedModelId) {
+      const needsModelForScene = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+      if (needsModelForScene) {
+        scrollToOutfit();
+        return;
+      }
+    }
+    setExpandedSceneId(prev => prev === id ? null : id);
+  };
 
   // Customization count
   const IGNORE_KEYS = new Set([
@@ -1247,10 +1263,7 @@ export function ProductImagesStep3Refine({
                 size="sm"
                 variant="outline"
                 className="text-xs h-7 gap-1 flex-shrink-0 border-amber-500/40 hover:bg-amber-100/50 dark:hover:bg-amber-900/30"
-                onClick={() => {
-                  setOutfitOpen(true);
-                  setTimeout(() => outfitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-                }}
+                onClick={scrollToOutfit}
               >
                 <User className="w-3 h-3" />Select Model
               </Button>
@@ -1276,9 +1289,9 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
-          {/* Quick Background strip */}
+          {/* Quick Background + Advanced strip */}
           {showBgStrip && (
-            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
@@ -1297,10 +1310,43 @@ export function ProductImagesStep3Refine({
                   </div>
                 ))}
               </div>
+
+              {/* Advanced details toggle */}
+              {(() => {
+                // Compute which controls 2+ scenes share
+                const controlCounts = new Map<TemplateControlKey, number>();
+                for (const s of selectedScenes) {
+                  for (const c of getTemplateControls(s)) {
+                    if (c !== 'background') controlCounts.set(c, (controlCounts.get(c) || 0) + 1);
+                  }
+                }
+                const sharedControls = Array.from(controlCounts.entries())
+                  .filter(([, count]) => count >= 2)
+                  .map(([key]) => key);
+
+                if (sharedControls.length === 0) return null;
+
+                return (
+                  <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                    <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer pt-1 border-t border-border/30 w-full">
+                      <Settings2 className="w-3 h-3" />
+                      <span>Advanced details</span>
+                      <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', advancedOpen && 'rotate-180')} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        {sharedControls.map(ctrl => (
+                          <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })()}
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
             {selectedScenes.map(scene => {
               const isExpanded = expandedSceneId === scene.id;
               const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
@@ -1309,6 +1355,7 @@ export function ProductImagesStep3Refine({
               const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
               const templateCtrls = getTemplateControls(scene);
               const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+              const isClickable = hasControls || (sceneNeedsModel && needsModel);
               const settingsCount = blockLabels.length;
 
               // Check if any template control has a non-default value
@@ -1324,17 +1371,17 @@ export function ProductImagesStep3Refine({
                 )}>
                   <button
                     type="button"
-                    onClick={() => hasControls ? toggleSceneExpand(scene.id) : undefined}
+                    onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
                     className={cn(
-                      'w-full text-left rounded-xl border-2 p-2 transition-all group/card',
+                      'w-full text-left rounded-xl border-2 p-2 transition-all duration-150 group/card',
                       isExpanded
                         ? 'border-primary bg-primary/[0.03]'
                         : hasCustomizations
-                          ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm'
+                          ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
                           : sceneNeedsModel && needsModel
-                            ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm'
-                            : 'border-border hover:border-primary/30 hover:shadow-sm',
-                      hasControls ? 'cursor-pointer' : 'cursor-default',
+                            ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
+                            : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
+                      isClickable ? 'cursor-pointer' : 'cursor-default',
                     )}
                   >
                     <div className="flex items-start gap-2.5">
@@ -1349,7 +1396,7 @@ export function ProductImagesStep3Refine({
                       {/* Info */}
                       <div className="flex-1 min-w-0 py-0.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold truncate">{scene.title}</span>
+                          <span className="text-xs font-semibold line-clamp-2">{scene.title}</span>
                           {hasCustomizations && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
                         </div>
                         {/* Status */}
@@ -1364,29 +1411,37 @@ export function ProductImagesStep3Refine({
                             </span>
                           )}
                         </div>
-                        {/* Settings pill instead of truncated labels */}
-                        {hasControls && !isExpanded && (
+                        {/* Settings pill + tap hint */}
+                        {isClickable && !isExpanded && (
                           <div className="flex items-center gap-1 mt-1">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 text-[9px] text-muted-foreground font-medium">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 border border-border/40 text-[9px] text-muted-foreground font-medium">
                               <Settings2 className="w-2.5 h-2.5" />
-                              {settingsCount <= 2
-                                ? blockLabels.join(', ')
-                                : `${settingsCount} settings`
+                              {hasControls
+                                ? (settingsCount <= 2 ? blockLabels.join(', ') : `${settingsCount} settings`)
+                                : 'Select model'
                               }
                             </span>
                           </div>
                         )}
-                        {!hasControls && (
+                        {isExpanded && (
+                          <span className="text-[9px] text-primary font-medium mt-1 inline-flex items-center gap-0.5">Collapse</span>
+                        )}
+                        {!isClickable && (
                           <p className="text-[9px] text-muted-foreground/60 mt-0.5 italic">No extra settings</p>
                         )}
                       </div>
-                      {/* Expand indicator */}
-                      {hasControls && (
-                        <div className="flex-shrink-0 mt-1">
-                          {isExpanded
-                            ? <ChevronDown className="w-3.5 h-3.5 text-primary" />
-                            : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity" />
-                          }
+                      {/* Expand indicator — always visible */}
+                      {isClickable && (
+                        <div className="flex flex-col items-center gap-0.5 flex-shrink-0 mt-1">
+                          <ChevronDown className={cn(
+                            'w-3.5 h-3.5 transition-all',
+                            isExpanded
+                              ? 'text-primary rotate-180'
+                              : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
+                          )} />
+                          {!isExpanded && (
+                            <span className="text-[8px] text-muted-foreground/0 group-hover/card:text-muted-foreground/60 transition-colors leading-none">tap</span>
+                          )}
                         </div>
                       )}
                     </div>
