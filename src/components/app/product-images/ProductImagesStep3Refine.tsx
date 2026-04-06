@@ -931,58 +931,77 @@ function PieceField({ label, piece, onChange, pieceType }: {
 }) {
   const garments = GARMENT_OPTIONS[pieceType] || [];
   const current = piece || { garment: '', color: '', fit: '', material: '' };
+  const [showAllGarments, setShowAllGarments] = useState(false);
 
   const updateField = (field: keyof OutfitPiece, value: string) => {
     onChange({ ...current, [field]: value === current[field] ? '' : value });
   };
 
+  const INLINE_GARMENT_LIMIT = 5;
+  const visibleGarments = showAllGarments ? garments : garments.slice(0, INLINE_GARMENT_LIMIT);
+  const hasMore = garments.length > INLINE_GARMENT_LIMIT;
+
   return (
-    <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-        <Shirt className="w-3 h-3" />{label}
+    <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <Shirt className="w-3.5 h-3.5" />{label}
       </span>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Garment</Label>
-          <div className="flex flex-wrap gap-1">
-            {garments.slice(0, 6).map(g => (
-              <button key={g} type="button" onClick={() => updateField('garment', g)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
-                  current.garment === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-                )}>{g}</button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Color</Label>
-          <div className="flex flex-wrap gap-1">
-            {COLOR_OPTIONS.slice(0, 6).map(c => (
-              <button key={c} type="button" onClick={() => updateField('color', c)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
-                  current.color === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
-                )}>{c}</button>
-            ))}
-          </div>
+
+      {/* Garment */}
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground font-medium">Garment</Label>
+        <div className="flex flex-wrap gap-2">
+          {visibleGarments.map(g => (
+            <button key={g} type="button" onClick={() => updateField('garment', g)}
+              className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
+                current.garment === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+              )}>{g}</button>
+          ))}
+          {hasMore && !showAllGarments && (
+            <button type="button" onClick={() => setShowAllGarments(true)}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer">
+              More…
+            </button>
+          )}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Fit</Label>
-          <div className="flex flex-wrap gap-1">
-            {FIT_OPTIONS.slice(0, 5).map(f => (
+
+      {/* Color swatches */}
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground font-medium">Color</Label>
+        <div className="flex flex-wrap gap-2">
+          {COLOR_OPTIONS.map(c => (
+            <button key={c} type="button" onClick={() => updateField('color', c)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
+                current.color === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
+              )}>
+              <ColorDot color={c} size={12} />
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Fit + Material */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground font-medium">Fit</Label>
+          <div className="flex flex-wrap gap-2">
+            {FIT_OPTIONS.map(f => (
               <button key={f} type="button" onClick={() => updateField('fit', f)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   current.fit === f ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
                 )}>{f}</button>
             ))}
           </div>
         </div>
-        <div className="space-y-1">
-          <Label className="text-[9px] text-muted-foreground">Material</Label>
-          <div className="flex flex-wrap gap-1">
-            {MATERIAL_OPTIONS.slice(0, 5).map(m => (
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground font-medium">Material</Label>
+          <div className="flex flex-wrap gap-2">
+            {MATERIAL_OPTIONS.map(m => (
               <button key={m} type="button" onClick={() => updateField('material', m)}
-                className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer',
                   current.material === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
                 )}>{m}</button>
             ))}
