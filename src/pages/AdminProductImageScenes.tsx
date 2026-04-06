@@ -295,17 +295,21 @@ export default function AdminProductImageScenes() {
                             <Camera className="w-4 h-4 text-muted-foreground/40" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{scene.title}</span>
-                            <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
-                            <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
-                            {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            Triggers: {scene.trigger_blocks.join(', ')}
-                            {scene.exclude_categories.length > 0 && ` · Excludes: ${scene.exclude_categories.join(', ')}`}
-                          </p>
+                             <span className="text-sm font-medium truncate">{scene.title}</span>
+                             <Badge variant="outline" className="text-[10px]">{scene.scene_type}</Badge>
+                             {scene.sub_category && (
+                               <Badge variant="secondary" className="text-[10px]">{scene.sub_category}</Badge>
+                             )}
+                             <code className="text-[10px] text-muted-foreground font-mono">{scene.scene_id}</code>
+                             {!scene.is_active && <Badge variant="destructive" className="text-[10px]">Hidden</Badge>}
+                           </div>
+                           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                             Triggers: {scene.trigger_blocks.join(', ')}
+                             {scene.exclude_categories.length > 0 && ` · Excludes: ${scene.exclude_categories.join(', ')}`}
+                             {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
+                           </p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove(scene, 'up')} disabled={idx === 0}>
