@@ -481,8 +481,6 @@ const BLOCK_LABELS: Record<string, { title: string }> = {
   productSize: { title: 'Product Size' },
 };
 
-// Use centralized BLOCK_FIELD_MAP from detailBlockConfig
-import { BLOCK_FIELD_MAP } from './detailBlockConfig';
 
 /* ══════════════════════════════════════════════
    Constants
