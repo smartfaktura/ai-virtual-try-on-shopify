@@ -1558,7 +1558,7 @@ export function ProductImagesStep3Refine({
                 type="button"
                 onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
                 className={cn(
-                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card',
+                  'w-full text-left rounded-xl border p-2.5 transition-all duration-150 group/card min-h-[72px]',
                   isExpanded
                     ? 'border-primary bg-primary/[0.03] shadow-sm'
                     : hasCustomizations
