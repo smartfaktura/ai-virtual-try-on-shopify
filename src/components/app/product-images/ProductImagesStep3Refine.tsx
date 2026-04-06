@@ -1383,8 +1383,8 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   };
 
   // Determine which pieces to show
-  const showBottom = !!defaultConfig.bottom?.garment;
-  const showShoes = !!defaultConfig.shoes?.garment;
+  const showBottom = true;
+  const showShoes = true;
 
   return (
     <div className="space-y-4">
