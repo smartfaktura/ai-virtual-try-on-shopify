@@ -1585,6 +1585,7 @@ export function ProductImagesStep3Refine({
   primaryCategory,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
+  const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
 
