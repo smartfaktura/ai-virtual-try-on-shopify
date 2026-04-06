@@ -1305,6 +1305,7 @@ export function ProductImagesStep3Refine({
   hasMultipleCategories = false,
   primaryCategory,
 }: Step3RefineProps) {
+  const isMobile = useIsMobile();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
   const allSceneIds = Array.from(selectedSceneIds);
 
