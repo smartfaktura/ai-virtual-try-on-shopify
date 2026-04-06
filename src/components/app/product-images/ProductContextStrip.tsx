@@ -24,8 +24,8 @@ export function ProductContextStrip({ products, onChangeProducts }: ProductConte
           {products.slice(0, 12).map(p => (
             <Tooltip key={p.id}>
               <TooltipTrigger asChild>
-                <div className="w-8 h-8 rounded-md overflow-hidden bg-white flex-shrink-0 border border-border/40 p-0.5">
-                  <ShimmerImage src={p.image_url} alt={p.title} loading="eager" className="w-full h-full object-contain" />
+                <div className="w-8 h-8 rounded-md overflow-hidden bg-white flex-shrink-0 border border-border/40">
+                  <ShimmerImage src={p.image_url} alt={p.title} loading="eager" className="w-full h-full object-cover" />
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">{p.title}</TooltipContent>
