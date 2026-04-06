@@ -1,66 +1,95 @@
 
 
-# Merge Universal + Category Scenes into Unified Per-Category Sections
+# Admin Sub-Categories + Sortable Sections + Cleaner Step 2 Header
 
-## Current Problem
-Step 2 shows scenes in 3 separate sections: "Universal Scenes" (global), "Recommended for your products" (category), and "Explore more" (other categories). This is confusing because:
-- Users don't know which universal scenes are relevant to their product type
-- Some universal scenes (In-Hand, Tabletop) don't suit certain categories but still show
-- The separation creates a disconnect between "universal" and "recommended"
+## What we're solving
 
-## New Approach
-Merge everything into a single per-category view. When the user's products are detected as e.g. "Clothing & Apparel", they see ONE section containing both the relevant universal scenes AND the garment-specific scenes together, organized by sub-groups within that section.
+1. **No sub-grouping in admin**: Currently scenes within a category (e.g. "Clothing & Apparel") are a flat list. You want to group them into sub-categories like "Limited Edition Celebrity Style", "Jackets & Outerwear", "Small Accessories (hats, gloves, belts)", etc. — manageable from the admin panel.
+2. **No section sort order**: The category sections themselves (Clothing, Fragrance, etc.) can't be reordered in admin. You want to control which sections appear first.
+3. **Step 2 header feels heavy**: "Select scenes / Choose the visuals... / S M L / Recommended for your products / Clothing & Apparel 19 Recommended" — too much visual noise at first glance.
 
-### How it works
+## Plan
 
-**Detected categories** (e.g. garments): Show a single expanded section titled "Clothing & Apparel" containing:
-- Sub-group "Essential Shots" — universal scenes compatible with that category (Clean Studio, Marketplace, Editorial Surface, Close-Up Detail, Side Profile, Back View, Top-Down, Accent Backdrop, etc. minus excluded ones)
-- Sub-group "Category Shots" — the garment-specific scenes (Folded Display, Hanging Display, On-Model Look, etc.)
+### A. Database: Add `sub_category` column to `product_image_scenes`
 
-**Non-detected categories**: Collapsed as before under "Explore more scenes"
+Add a nullable `sub_category` text column. Scenes with the same `sub_category` value within a `category_collection` will be grouped together visually. Global scenes get sub_category too (e.g. `"essential"`, `"angles"`, `"detail"`).
 
-**Multi-category**: If user has garments + fragrance, they get two expanded sections each with their own merged universal + category scenes. Universal scenes that apply to both appear in both sections (selection is shared — selecting "Clean Studio" in one section selects it everywhere).
+Also add a `category_sort_order` integer column (default 0) — this controls the order of the category sections themselves. The first scene in each category determines the category's sort position.
 
-### Files to change
-
-**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`** — Main restructuring:
-- Remove the standalone "Universal Scenes" grid section (lines 303-318)
-- For each detected category, build a merged scene list: filtered global scenes (respecting `excludeCategories`) + category collection scenes
-- Render each detected category as a single expanded section with internal sub-group labels ("Essential Shots" / "Category-Specific Shots")
-- Keep "Explore more" collapsed sections for non-detected categories, also including relevant universal scenes within them
-- Scene selection remains unified across sections (same `selectedSceneIds` Set)
-
-**`src/components/app/product-images/sceneData.ts`** — No structural changes needed. The `excludeCategories` and `isGlobal` flags already provide the data needed to filter and merge.
-
-**`src/hooks/useProductImageScenes.ts`** — Add a new derived helper: `getUnifiedCategoryView(categoryId)` that returns global scenes (filtered for that category) + category-specific scenes merged into one array. Or this logic can live in the Step2 component directly.
-
-### UI Layout (per detected category section)
-
-```text
-▼ Clothing & Apparel                    [Recommended] [7 selected]
-  [Select All] [Deselect All]
-  
-  ── Essential Shots ──
-  [Clean Studio] [Marketplace] [Editorial Surface] [Product on Pedestal]
-  [Tabletop Lifestyle] [Close-Up Detail] [Side Profile] [Back View]
-  [Top-Down / Flat Lay] [Accent Color Backdrop]
-  
-  ── Clothing-Specific Shots ──
-  [Folded Display] [Hanging Display] [Styled Flat Lay] [Fabric Detail]
-  [Editorial Garment] [On-Model Look] [Movement Shot]
-
-▼ Fragrance                              [Recommended] [3 selected]
-  ...same pattern with fragrance-relevant universal + fragrance scenes...
-
-▸ Beauty & Skincare                      (collapsed, not detected)
-▸ Shoes                                  (collapsed, not detected)
+**Migration:**
+```sql
+ALTER TABLE product_image_scenes 
+  ADD COLUMN IF NOT EXISTS sub_category text DEFAULT null,
+  ADD COLUMN IF NOT EXISTS category_sort_order integer DEFAULT 0;
 ```
 
-### Edge cases
-- If NO category is detected: show a single "All Scenes" section with all universal scenes + an "Explore by category" collapsed area
-- Packaging scenes (`Product + Packaging`, `Packaging Detail`) already have `excludeCategories: ['garments']` so they won't appear in clothing sections
-- In-Hand scenes already exclude garments, home-decor, tech-devices
+### B. Admin Panel: Sub-category management + section sorting
 
-### Technical detail
-The `CategorySection` component will be extended to accept an optional `universalScenes` prop. When provided, it renders two sub-groups within the collapsible. The `toggleScene` and `selectAllCategory` functions will operate on the merged list.
+**`src/pages/AdminProductImageScenes.tsx`:**
+
+- Add a `Sub-Category` text input to `SceneForm` — free-text field where admin types e.g. "Limited Edition Celebrity Style", "Jackets & Outerwear", "Essentials"
+- Show sub-category as a small tag next to each scene in the list view
+- Add a "Category Sort Order" number input alongside the existing Category Collection dropdown — controls which category section appears first in Step 2
+- Group scenes within each category by sub_category in the admin list for visual clarity
+- Add up/down arrows at the category section level (not just individual scenes) to reorder entire categories
+
+### C. Hook: Expose sub-categories and category ordering
+
+**`src/hooks/useProductImageScenes.ts`:**
+
+- Update `DbScene` interface: add `sub_category: string | null` and `category_sort_order: number`
+- Update `dbToFrontend` to include `subCategory`
+- Update `ProductImageScene` type to include `subCategory?: string`
+- Update `buildCollections` to include sub-category grouping data
+- Add `CategoryCollection.subGroups: { label: string; scenes: ProductImageScene[] }[]`
+- Sort category collections by `category_sort_order` (from the first scene in each category)
+
+### D. Step 2 UI: Sub-group rendering + cleaner header
+
+**`src/components/app/product-images/ProductImagesStep2Scenes.tsx`:**
+
+**Cleaner header** — simplify the top section:
+- Merge "Select scenes" heading and grid toggle into one compact row
+- Move "Recommended for your products" label into the first category's badge area (remove the standalone sub-header)
+- Selected count stays as a subtle badge, not a separate section
+
+**Sub-group rendering** — within each expanded category section:
+- Instead of always showing "Essential Shots" / "Category Shots", render by `subCategory` labels from DB
+- Scenes without a sub_category fall into a default "General" group
+- Each sub-group gets a small uppercase label divider (same style as current "Essential Shots")
+
+**Result layout:**
+```text
+Select scenes                                          3 selected  [S][M][L]
+
+▼ Clothing & Apparel                         Recommended  7 selected
+  [Select All]
+  
+  ── Essentials ──
+  [Clean Studio] [Marketplace] [Top-Down] ...
+  
+  ── On-Model Looks ──
+  [Editorial Garment] [Movement Shot] [On-Model Look]
+  
+  ── Limited Edition Celebrity Style ──
+  [Red Carpet Look] [VIP Unboxing] [Celeb Street Style]
+
+▸ Fragrance                                              
+▸ Beauty & Skincare
+```
+
+### E. Types update
+
+**`src/components/app/product-images/types.ts`:**
+- Add `subCategory?: string` to `ProductImageScene`
+
+## Files
+
+| File | Changes |
+|---|---|
+| Migration SQL | Add `sub_category` and `category_sort_order` columns |
+| `src/hooks/useProductImageScenes.ts` | Update DbScene, dbToFrontend, buildCollections with sub-category grouping and category sort order |
+| `src/components/app/product-images/types.ts` | Add `subCategory` to ProductImageScene |
+| `src/pages/AdminProductImageScenes.tsx` | Add sub-category input to SceneForm, category sort order input, show sub-category tags in list |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Render scenes by sub-category groups, simplify header, remove standalone "Recommended" sub-header |
 
