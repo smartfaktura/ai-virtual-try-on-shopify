@@ -1,27 +1,22 @@
 
 
-# Fix Scene Card Expansion Layout
+# Fix Scene Settings: Use Side Panel Instead of Below-Grid Expansion
 
 ## Problem
 
-The expanded settings panel is rendered **inside** the CSS grid as a `col-span-full` sibling of `col-span-1` cards. CSS grid places items sequentially, so the expanded panel fills the remaining columns of its row and then wraps — creating unpredictable gaps and layout shifts depending on which card position is clicked and the current breakpoint. This is why it feels "buggy across different screens."
+The expanded settings panel renders below the entire card grid, pushing content off-screen. Users click a card and see nothing happen because the panel is hidden below the fold. Auto-scroll is a band-aid — the real issue is the interaction pattern.
 
-## Fix
+## Solution
 
-**Move the expanded panel outside the grid entirely.** Instead of rendering it as a grid sibling via `React.Fragment`, render it as a standalone full-width block **below** the grid. The card itself stays in the grid with its highlighted border; the settings panel appears beneath the entire grid row as a clearly separated panel.
+**Replace the below-grid expansion with a right-side Sheet (drawer).** Clicking a scene card opens a slide-in panel from the right edge with that scene's settings. The card grid stays fully visible and undisturbed.
 
-### Implementation
+This pattern is already used elsewhere in the app (Sheet component exists in `src/components/ui/sheet.tsx`). It works well on all screen sizes — on mobile it overlays the full width, on desktop it slides in at ~400px.
 
-In `ProductImagesStep3Refine.tsx`, split `renderSceneCard` into two parts:
-
-1. **Card only** (stays inside the grid) — remove the expanded panel from the Fragment, just return the button card.
-2. **Expanded panel** (rendered outside the grid) — after each `<div className="grid ...">` that maps scene cards, render a conditional block: `{expandedSceneId && expandedScene is in this group && <ExpandedPanel />}`.
-
-This guarantees the panel always gets full container width regardless of grid column count or card position.
-
-### Changes
+## Changes
 
 | File | What |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | (1) Extract card rendering to only return the button — no Fragment, no expanded panel inside grid. (2) After each grid (`productShots` grid and `modelShots` grid), render the expanded panel conditionally when the expanded scene belongs to that group. The panel markup stays identical, just moves outside the `grid` div. |
+| `ProductImagesStep3Refine.tsx` | (1) Remove inline `renderExpandedPanel` calls from after both grids. (2) Add a single `<Sheet>` at the bottom of the section, controlled by `expandedSceneId`. When a scene card is clicked, `expandedSceneId` is set and the Sheet opens with that scene's settings. (3) The Sheet header shows the scene thumbnail + title. The body contains the same collapsible blocks (Visual Direction, Style, etc.) that currently live in `renderExpandedPanel`. (4) Scene cards keep their selected/highlighted border state but no longer need the chevron rotation — replace with a small settings icon. (5) Clicking the card again or the Sheet's X closes it. |
+
+The Sheet provides immediate visibility (slides in from the right, always in viewport), clear visual hierarchy (overlay with backdrop), and works responsively out of the box.
 
