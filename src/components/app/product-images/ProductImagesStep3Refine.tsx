@@ -1082,7 +1082,7 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
 
   // Check if a preset config matches the current config
   const isPresetActive = useCallback((presetConfig: OutfitConfig): boolean => {
-    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories', 'name'];
+    const keys: (keyof OutfitConfig)[] = ['top', 'bottom', 'shoes', 'accessories'];
     return keys.every(k => {
       if (k === 'top' || k === 'bottom' || k === 'shoes') {
         const a = currentConfig[k];
