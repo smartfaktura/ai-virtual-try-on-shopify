@@ -628,7 +628,6 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'taupe', label: 'Taupe', fill: '#D6CFC7' },
   { value: 'sage', label: 'Sage', fill: '#E8EDE6' },
   { value: 'blush', label: 'Blush', fill: '#F8ECE8' },
-  { value: 'charcoal', label: 'Charcoal', fill: '#3A3A3A' },
   { value: 'gradient', label: 'Soft Gradient', fill: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)', isGradient: true },
   { value: 'gradient-warm', label: 'Warm Fade', fill: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)', isGradient: true },
   { value: 'gradient-cool', label: 'Cool Fade', fill: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)', isGradient: true },
