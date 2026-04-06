@@ -117,6 +117,7 @@ export interface ProductImageScene {
   sceneType?: SceneType;
   excludeCategories?: string[];
   subCategory?: string;
+  subCategoryOverrides?: Record<string, string>;
 }
 
 export interface SubGroup {

@@ -37,6 +37,7 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     excludeCategories: d.exclude_categories,
     previewUrl: d.preview_image_url ?? undefined,
     subCategory: d.sub_category ?? undefined,
+    subCategoryOverrides: d.sub_category_overrides ?? undefined,
   };
 }
 
