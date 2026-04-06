@@ -575,42 +575,107 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; swatch: string; isGradi
   { value: 'gradient-warm', label: 'Warm Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)' },
   { value: 'gradient-cool', label: 'Cool Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)' },
   { value: 'gradient-sunset', label: 'Sunset', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FEF3E6, #F8E0D0)' },
-  { value: 'custom', label: 'Custom', swatch: '', isGradient: false },
+  { value: 'custom', label: 'Custom Color', swatch: '', isGradient: false },
+  { value: 'gradient-custom', label: 'Custom Gradient', swatch: '', isGradient: true },
 ];
 
-function BackgroundSwatchSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function BackgroundSwatchSelector({ value, onChange, details, update }: {
+  value: string;
+  onChange: (v: string) => void;
+  details: DetailSettings;
+  update: (p: Partial<DetailSettings>) => void;
+}) {
+  const [gradFrom, setGradFrom] = useState(details.backgroundCustomGradient?.from || '#F8F8F8');
+  const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
+
+  const applyGradient = (from: string, to: string) => {
+    setGradFrom(from);
+    setGradTo(to);
+    if (/^#[0-9A-Fa-f]{6}$/.test(from) && /^#[0-9A-Fa-f]{6}$/.test(to)) {
+      update({ backgroundCustomGradient: { from, to } });
+    }
+  };
+
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {BG_SWATCH_OPTIONS.map(o => {
-        const isActive = value === o.value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => onChange(value === o.value ? '' : o.value)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
-              isActive
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
-            )}
-          >
-            {/* Color swatch */}
-            {o.value !== 'custom' && (
-              <span
-                className="w-3 h-3 rounded-sm flex-shrink-0 border border-border/60"
-                style={{
-                  background: o.isGradient ? o.gradient : o.swatch,
-                }}
-              />
-            )}
-            {o.value === 'custom' && (
-              <Paintbrush className="w-3 h-3 flex-shrink-0" />
-            )}
-            {o.label}
-          </button>
-        );
-      })}
+    <div className="space-y-3">
+      <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+        {BG_SWATCH_OPTIONS.map(o => {
+          const isActive = value === o.value;
+          const swatchBg = o.isGradient
+            ? (o.gradient || `linear-gradient(135deg, ${gradFrom}, ${gradTo})`)
+            : o.swatch;
+
+          return (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => onChange(value === o.value ? '' : o.value)}
+              className={cn(
+                'flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition-all border cursor-pointer',
+                isActive
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-border hover:border-primary/40 hover:bg-muted/30',
+              )}
+            >
+              {/* Swatch */}
+              {o.value === 'custom' ? (
+                <div className="w-8 h-8 rounded-md border border-border/60 flex items-center justify-center"
+                  style={{ background: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : undefined }}>
+                  <Paintbrush className="w-3.5 h-3.5 text-muted-foreground" />
+                </div>
+              ) : o.value === 'gradient-custom' ? (
+                <div className="w-8 h-8 rounded-md border border-border/60"
+                  style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }} />
+              ) : (
+                <div className="w-8 h-8 rounded-md border border-border/60"
+                  style={{ background: swatchBg }} />
+              )}
+              <span className={cn('text-[9px] font-medium text-center leading-tight', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                {o.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Custom hex input */}
+      {value === 'custom' && (
+        <div className="flex items-center gap-3 pl-1">
+          <div className="w-6 h-6 rounded border border-border"
+            style={{ background: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : '#FFFFFF' }} />
+          <Input
+            value={details.backgroundCustomHex || '#'}
+            onChange={e => {
+              let v = e.target.value;
+              if (!v.startsWith('#')) v = '#' + v;
+              update({ backgroundCustomHex: v.slice(0, 7) });
+            }}
+            className="h-7 w-24 text-xs font-mono"
+            placeholder="#FFFFFF"
+          />
+          <span className="text-[10px] text-muted-foreground">Enter any HEX color</span>
+        </div>
+      )}
+
+      {/* Custom gradient inputs */}
+      {value === 'gradient-custom' && (
+        <div className="flex items-center gap-3 pl-1 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">From</span>
+            <div className="w-6 h-6 rounded border border-border" style={{ background: gradFrom }} />
+            <Input value={gradFrom} onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(v.slice(0, 7), gradTo); }}
+              className="h-7 w-20 text-xs font-mono" placeholder="#F8F8F8" />
+          </div>
+          <span className="text-[10px] text-muted-foreground">→</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">To</span>
+            <div className="w-6 h-6 rounded border border-border" style={{ background: gradTo }} />
+            <Input value={gradTo} onChange={e => { let v = e.target.value; if (!v.startsWith('#')) v = '#' + v; applyGradient(gradFrom, v.slice(0, 7)); }}
+              className="h-7 w-20 text-xs font-mono" placeholder="#EEEEEE" />
+          </div>
+          <div className="w-16 h-6 rounded border border-border" style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }} />
+        </div>
+      )}
     </div>
   );
 }
