@@ -633,11 +633,16 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'gradient-cool', label: 'Cool Fade', fill: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)', isGradient: true },
 ];
 
-function BackgroundSwatchSelector({ value, onChange, details, update }: {
+function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor }: {
   value: string;
   onChange: (v: string) => void;
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
+  savedColors: { id: string; hex: string | null; gradient_from: string | null; gradient_to: string | null; label: string }[];
+  canSave: boolean;
+  onSaveColor: (hex: string) => void;
+  onSaveGradient: (from: string, to: string) => void;
+  onDeleteSavedColor: (id: string) => void;
 }) {
   const [gradFrom, setGradFrom] = useState(details.backgroundCustomGradient?.from || '#F8F8F8');
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
@@ -679,24 +684,64 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
     onChange(Array.from(current).join(','));
   };
 
+  const deselectSwatch = (sVal: string) => {
+    const current = new Set(selected);
+    current.delete(sVal);
+    onChange(Array.from(current).join(','));
+  };
+
   const hasCustom = selected.includes('custom');
   const hasGradientCustom = selected.includes('gradient-custom');
   const validCustomHex = /^#[0-9A-Fa-f]{6}$/.test(customHex);
 
   const handleCustomCardClick = () => {
-    if (!hasCustom) {
-      toggleSwatch('custom');
-      applyCustomHex(customHex);
-    }
+    if (hasCustom) return; // already active — use edit/X icons
+    toggleSwatch('custom');
+    applyCustomHex(customHex);
     colorInputRef.current?.click();
   };
 
   const handleGradientCardClick = () => {
-    if (!hasGradientCustom) {
-      toggleSwatch('gradient-custom');
-    }
+    if (hasGradientCustom) return; // already active — use edit/X icons
+    toggleSwatch('gradient-custom');
     gradFromInputRef.current?.click();
   };
+
+  /* Shared X-button overlay for any active card */
+  const XButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute top-1 left-1 z-10 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors"
+      aria-label="Remove"
+    >
+      <X className="w-3 h-3 text-white" />
+    </button>
+  );
+
+  /* Edit pencil for custom cards */
+  const EditButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute bottom-6 right-1.5 z-10 w-5 h-5 rounded-full bg-black/50 hover:bg-primary flex items-center justify-center transition-colors"
+      aria-label="Edit color"
+    >
+      <Paintbrush className="w-2.5 h-2.5 text-white" />
+    </button>
+  );
+
+  /* Save button for custom cards when canSave */
+  const SaveButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute top-1 right-7 z-10 w-5 h-5 rounded-full bg-black/50 hover:bg-primary flex items-center justify-center transition-colors"
+      aria-label="Save color"
+    >
+      <Save className="w-2.5 h-2.5 text-white" />
+    </button>
+  );
 
   return (
     <div className="space-y-3">
@@ -715,7 +760,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
         value={gradFrom}
         onChange={e => {
           applyGradient(e.target.value, gradTo);
-          // After "from" is picked, open "to" picker on next tick
           setTimeout(() => gradToInputRef.current?.click(), 300);
         }}
         className="sr-only"
@@ -732,6 +776,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
 
       {/* Swatch grid — 4:3 aspect cards, 6 per row */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {/* Preset cards */}
         {BG_SWATCH_OPTIONS.map(o => {
           const isActive = selected.includes(o.value);
           return (
@@ -747,6 +792,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
                   : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm',
               )}
             >
+              {isActive && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch(o.value); }} />}
               <div className="aspect-[4/3] w-full" style={{ background: o.fill }} />
               {isActive && (
                 <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
@@ -760,7 +806,58 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
           );
         })}
 
-        {/* Custom Color card — opens native color picker */}
+        {/* Saved color cards */}
+        {savedColors.map(sc => {
+          const isGrad = !!(sc.gradient_from && sc.gradient_to);
+          const fill = isGrad
+            ? `linear-gradient(135deg, ${sc.gradient_from}, ${sc.gradient_to})`
+            : sc.hex || '#FFFFFF';
+          const savedKey = `saved-${sc.id}`;
+          const isActive = selected.includes(savedKey);
+          return (
+            <button
+              key={sc.id}
+              type="button"
+              onClick={() => {
+                toggleSwatch(savedKey);
+                // Also apply to details so prompt builder picks it up
+                if (isGrad) {
+                  update({ backgroundCustomGradient: { from: sc.gradient_from!, to: sc.gradient_to! } });
+                } else if (sc.hex) {
+                  update({ backgroundCustomHex: sc.hex });
+                }
+              }}
+              aria-label={sc.label}
+              className={cn(
+                'relative rounded-xl overflow-hidden transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                isActive
+                  ? 'ring-2 ring-primary shadow-md'
+                  : 'ring-1 ring-border hover:ring-primary/30 hover:shadow-sm',
+              )}
+            >
+              {/* Delete saved color */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); deselectSwatch(savedKey); onDeleteSavedColor(sc.id); }}
+                className="absolute top-1 left-1 z-10 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors"
+                aria-label="Delete saved color"
+              >
+                <Trash2 className="w-2.5 h-2.5 text-white" />
+              </button>
+              <div className="aspect-[4/3] w-full" style={{ background: fill }} />
+              {isActive && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                </div>
+              )}
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
+                <p className="text-[10px] font-medium text-white leading-tight truncate">{sc.label}</p>
+              </div>
+            </button>
+          );
+        })}
+
+        {/* Custom Color card */}
         <button
           type="button"
           onClick={handleCustomCardClick}
@@ -772,6 +869,11 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
               : 'ring-1 ring-dashed ring-border hover:ring-primary/30 hover:shadow-sm',
           )}
         >
+          {hasCustom && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch('custom'); }} />}
+          {hasCustom && <EditButton onClick={(e) => { e.stopPropagation(); colorInputRef.current?.click(); }} />}
+          {hasCustom && canSave && validCustomHex && (
+            <SaveButton onClick={(e) => { e.stopPropagation(); onSaveColor(customHex); }} />
+          )}
           <div
             className="aspect-[4/3] w-full flex items-center justify-center"
             style={{ background: hasCustom && validCustomHex ? customHex : undefined }}
@@ -788,7 +890,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
           </div>
         </button>
 
-        {/* Custom Gradient card — opens native from/to color pickers */}
+        {/* Custom Gradient card */}
         <button
           type="button"
           onClick={handleGradientCardClick}
@@ -800,6 +902,11 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
               : 'ring-1 ring-dashed ring-border hover:ring-primary/30 hover:shadow-sm',
           )}
         >
+          {hasGradientCustom && <XButton onClick={(e) => { e.stopPropagation(); deselectSwatch('gradient-custom'); }} />}
+          {hasGradientCustom && <EditButton onClick={(e) => { e.stopPropagation(); gradFromInputRef.current?.click(); }} />}
+          {hasGradientCustom && canSave && (
+            <SaveButton onClick={(e) => { e.stopPropagation(); onSaveGradient(gradFrom, gradTo); }} />
+          )}
           <div
             className="aspect-[4/3] w-full flex items-center justify-center"
             style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : undefined }}
@@ -816,6 +923,13 @@ function BackgroundSwatchSelector({ value, onChange, details, update }: {
           </div>
         </button>
       </div>
+
+      {/* Saved colors info */}
+      {savedColors.length > 0 && (
+        <p className="text-[10px] text-muted-foreground">
+          {savedColors.length}/6 saved colors • Click trash to remove
+        </p>
+      )}
     </div>
   );
 }
