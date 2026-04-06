@@ -1256,7 +1256,7 @@ function PieceField({ label, piece, onChange, pieceType }: {
                 current.color === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40'
               )}>
               <ColorDot color={c} size={12} />
-              {c}
+              <span className="capitalize">{c}</span>
             </button>
           ))}
         </div>
