@@ -1696,12 +1696,6 @@ export function ProductImagesStep3Refine({
                     return (
                       <div key={scene.id} className="relative">
                         {renderSceneCardButton(scene)}
-                        {/* Connector line */}
-                        {isExpanded && (
-                          <div className="flex justify-center">
-                            <div className="w-px h-3 bg-primary/30" />
-                          </div>
-                        )}
                       </div>
                     );
                   })}
