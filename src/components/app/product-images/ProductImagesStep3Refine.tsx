@@ -1311,7 +1311,7 @@ export function ProductImagesStep3Refine({
                 <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
 
                 {/* Inline person details (only when no specific model selected) */}
-                {!details.selectedModelId && (
+                {!details.selectedModelId ? (
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
                     <InlinePersonDetails details={details} update={update} />
