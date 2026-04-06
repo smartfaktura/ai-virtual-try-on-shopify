@@ -804,7 +804,7 @@ export function buildDynamicPrompt(
   injectIfMissing('shadow', 'shadowDirective', true);
   injectIfMissing('surface', 'surfaceDirective', true);
   injectIfMissing('styling', 'stylingDirective', true);
-  injectIfMissing('lighting', 'lightingDirective');
+  injectIfMissing('lighting', 'lightingDirective', true);
   injectIfMissing('composition', 'compositionDirective', true);
   injectIfMissing('mood', 'sceneIntensityDirective');
   injectIfMissing('styling density', 'stylingDensityDirective');
