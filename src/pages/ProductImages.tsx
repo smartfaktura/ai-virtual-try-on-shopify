@@ -133,11 +133,22 @@ export default function ProductImages() {
   // Primary category for outfit defaults
   const primaryCategory = useMemo(() => {
     for (const p of selectedProducts) {
+      // Check live analyses map first
+      const liveAnalysis = analyses[p.id];
+      if (liveAnalysis?.category) return liveAnalysis.category;
+      // Then cached analysis_json
       const analysis = p.analysis_json as any;
       if (analysis?.category) return analysis.category as string;
     }
-    return selectedProducts[0]?.product_type || undefined;
-  }, [selectedProducts]);
+    // Keyword fallback: map raw product_type to category ID
+    const combined = selectedProducts.map(p =>
+      `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase()
+    ).join(' ');
+    for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(combined))) return catId;
+    }
+    return undefined;
+  }, [selectedProducts, analyses]);
 
   // Memoize hasMultipleCategories
   const hasMultipleCategories = useMemo(() => {
