@@ -215,11 +215,14 @@ export interface DetailSettings {
   // Model selection (replaces generic person details when set)
   selectedModelId?: string;
 
-  // Outfit locking (Catalog Studio-style per-piece control)
+  // Outfit locking (Catalog Studio-style per-piece control) — legacy flat strings
   outfitTop?: string;
   outfitBottom?: string;
   outfitShoes?: string;
   outfitAccessories?: string;
+
+  // Structured outfit config (preferred over flat strings)
+  outfitConfig?: OutfitConfig;
 }
 
 export interface GenerationPlan {
