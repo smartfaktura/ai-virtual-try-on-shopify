@@ -19,6 +19,8 @@ export interface DbScene {
   is_active: boolean;
   sort_order: number;
   created_at: string;
+  sub_category: string | null;
+  category_sort_order: number;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
