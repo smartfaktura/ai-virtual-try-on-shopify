@@ -551,7 +551,7 @@ function resolveFocusArea(d: DetailSettings, scene: ProductImageScene): string {
   if (id.includes('dose') || id.includes('scoop')) return FOCUS_AREA_DEFAULTS['dose'];
 
   // Fall back based on trigger blocks
-  if (scene.triggerBlocks.includes('detailFocus')) return FOCUS_AREA_DEFAULTS['macro'];
+  if ((scene.triggerBlocks || []).includes('detailFocus')) return FOCUS_AREA_DEFAULTS['macro'];
   return 'key product details and construction quality';
 }
 
