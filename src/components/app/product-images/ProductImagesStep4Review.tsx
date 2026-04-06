@@ -61,10 +61,24 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   if (details.consistency) aestheticEntries.push({ label: 'Consistency', value: friendlyLabel(details.consistency) });
 
   const personEntries: { label: string; value: string }[] = [];
-  if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
-  if (details.ageRange) personEntries.push({ label: 'Age', value: details.ageRange });
-  if (details.skinTone) personEntries.push({ label: 'Skin', value: friendlyLabel(details.skinTone) });
-  if (details.selectedModelId) personEntries.push({ label: 'Model', value: 'Selected' });
+  if (details.selectedModelId) {
+    // When a model is selected, person detail fields are ignored by the prompt builder
+    personEntries.push({ label: 'Model', value: 'Selected' });
+  } else {
+    if (details.presentation) personEntries.push({ label: 'Presentation', value: friendlyLabel(details.presentation) });
+    if (details.ageRange) personEntries.push({ label: 'Age', value: details.ageRange });
+    if (details.skinTone) personEntries.push({ label: 'Skin', value: friendlyLabel(details.skinTone) });
+  }
+
+  // Outfit summary entries
+  const outfitEntries: { label: string; value: string }[] = [];
+  if (details.outfitConfig) {
+    const oc = details.outfitConfig;
+    if (oc.top) outfitEntries.push({ label: 'Top', value: [oc.top.fit, oc.top.color, oc.top.material, oc.top.garment].filter(Boolean).join(' ') });
+    if (oc.bottom) outfitEntries.push({ label: 'Bottom', value: [oc.bottom.fit, oc.bottom.color, oc.bottom.material, oc.bottom.garment].filter(Boolean).join(' ') });
+    if (oc.shoes) outfitEntries.push({ label: 'Shoes', value: [oc.shoes.fit, oc.shoes.color, oc.shoes.material, oc.shoes.garment].filter(Boolean).join(' ') });
+    if (oc.accessories) outfitEntries.push({ label: 'Accessories', value: oc.accessories });
+  }
 
   return (
     <div className="space-y-6 pb-20">

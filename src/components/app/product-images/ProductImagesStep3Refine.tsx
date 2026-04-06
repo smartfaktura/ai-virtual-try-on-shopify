@@ -785,13 +785,18 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
   // Current outfit config from details, falling back to defaults
   const currentConfig: OutfitConfig = details.outfitConfig || defaultConfig;
 
-  // Initialize outfitConfig from category defaults on mount so prompt builder matches UI
+  // Track previous category to detect category changes
+  const prevCatRef = useRef(cat);
+
+  // Initialize outfitConfig from category defaults — re-run when category/gender changes
   useEffect(() => {
-    if (!details.outfitConfig) {
+    const categoryChanged = prevCatRef.current !== cat;
+    prevCatRef.current = cat;
+    if (!details.outfitConfig || categoryChanged) {
       update({ outfitConfig: defaultConfig });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [defaultConfig]);
 
   const updateConfig = useCallback((partial: Partial<OutfitConfig>) => {
     const next = { ...currentConfig, ...partial };
