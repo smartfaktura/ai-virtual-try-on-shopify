@@ -209,6 +209,9 @@ export interface DetailSettings {
   // Custom background hex (used when backgroundTone = 'custom')
   backgroundCustomHex?: string;
 
+  // Custom gradient (used when backgroundTone = 'gradient-custom')
+  backgroundCustomGradient?: { from: string; to: string };
+
   // Per-scene aspect ratio overrides (sceneId -> ratio)
   sceneAspectOverrides?: Record<string, string>;
 

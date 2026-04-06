@@ -590,6 +590,13 @@ function resolveToken(token: string, ctx: TokenContext): string {
       if (colorWorld === 'custom' && details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex)) {
         return `solid background in color ${details.backgroundCustomHex}`;
       }
+      // Custom gradient background
+      if (colorWorld === 'gradient-custom' && details.backgroundCustomGradient) {
+        const { from, to } = details.backgroundCustomGradient;
+        if (/^#[0-9A-Fa-f]{6}$/.test(from) && /^#[0-9A-Fa-f]{6}$/.test(to)) {
+          return `smooth gradient background transitioning from ${from} to ${to}`;
+        }
+      }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
