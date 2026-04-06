@@ -451,7 +451,7 @@ export default function ProductImages() {
     sendWake(token);
 
     startPolling(newJobMap);
-  }, [selectedProducts, selectedScenes, canAfford, details, buildInstruction, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles]);
+  }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
   const finishWithResults = useCallback((jobs: any[], productMap: Map<string, string>) => {
     const resultMap = new Map<string, { images: string[]; productName: string }>();
