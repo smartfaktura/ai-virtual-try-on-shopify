@@ -220,7 +220,7 @@ export default function ProductImages() {
     for (const [block, fields] of Object.entries(BLOCK_FIELD_MAP)) {
       if (!triggered.includes(block)) {
         for (const field of fields) {
-          if (details[field]) staleKeys.push(field);
+          if (details[field as keyof DetailSettings]) staleKeys.push(field as keyof DetailSettings);
         }
       }
     }
