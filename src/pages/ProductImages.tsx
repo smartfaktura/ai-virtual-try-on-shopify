@@ -206,11 +206,19 @@ export default function ProductImages() {
     }
   }, [step, selectedProducts, analyzeProducts]);
 
+  // Resolve selected model gender for prompt builder
+  const selectedModelGender = useMemo(() => {
+    if (!details.selectedModelId) return undefined;
+    const allModels = [...(userModelProfiles || []), ...(globalModelProfiles || [])];
+    const model = allModels.find(m => m.modelId === details.selectedModelId);
+    return model?.gender;
+  }, [details.selectedModelId, userModelProfiles, globalModelProfiles]);
+
   // Build instruction from scene + details — use live analyses map instead of stale DB row
   const buildInstruction = useCallback((scene: typeof ALL_SCENES[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
-    return buildDynamicPrompt(scene, product, analysis, details);
-  }, [details, analyses]);
+    return buildDynamicPrompt(scene, product, analysis, details, selectedModelGender);
+  }, [details, analyses, selectedModelGender]);
 
   // Generation handler
   const handleGenerate = useCallback(async () => {
