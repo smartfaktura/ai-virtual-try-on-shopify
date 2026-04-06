@@ -11,17 +11,14 @@ export interface DbScene {
   description: string;
   prompt_template: string;
   trigger_blocks: string[];
-  is_global: boolean;
   category_collection: string | null;
   scene_type: string;
-  exclude_categories: string[];
   preview_image_url: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
   sub_category: string | null;
   category_sort_order: number;
-  sub_category_overrides: Record<string, string> | null;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
