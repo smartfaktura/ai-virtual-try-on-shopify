@@ -400,7 +400,7 @@ export default function ProductImages() {
             await paceDelay(newJobMap.size);
 
             const result = await enqueueWithRetry(
-              { jobType: 'workflow', payload, imageCount: 1, quality, hasModel: !!modelRef, hasScene: false, skipWake: true },
+              { jobType: 'workflow', payload, imageCount: 1, quality: 'high', hasModel: !!modelRef, hasScene: false, skipWake: true },
               token,
             );
 
