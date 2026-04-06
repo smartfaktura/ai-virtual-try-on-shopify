@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChevronDown, ChevronRight, Sparkles, Camera } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, Camera } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
@@ -69,13 +69,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
   return matched;
 }
 
-/** Returns global scenes that are compatible with a given category */
-function getGlobalScenesForCategory(globalScenes: ProductImageScene[], categoryId: string): ProductImageScene[] {
-  return globalScenes.filter(scene => {
-    if (!scene.excludeCategories || scene.excludeCategories.length === 0) return true;
-    return !scene.excludeCategories.includes(categoryId);
-  });
-}
+// Global scenes removed — all scenes now belong to individual categories
 
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
   return (
@@ -150,32 +144,31 @@ interface UnifiedCategorySectionProps {
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
 
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
-  const { globalScenes: hookGlobalScenes, categoryCollections: hookCategoryCollections } = useProductImageScenes();
-  const ACTIVE_GLOBAL_SCENES = hookGlobalScenes;
+  const { categoryCollections: hookCategoryCollections } = useProductImageScenes();
   const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
 
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
 
-  // Build unified views: for each category collection, pair with filtered global scenes
+  // Build unified views: each category collection stands alone (no more global scenes)
   const unifiedRecommended = useMemo(() => {
     return ACTIVE_CATEGORY_COLLECTIONS
       .filter(c => relevantCatIds.has(c.id))
       .map(c => ({
         ...c,
-        essentialScenes: getGlobalScenesForCategory(ACTIVE_GLOBAL_SCENES, c.id),
+        essentialScenes: [] as ProductImageScene[],
       }));
-  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS, ACTIVE_GLOBAL_SCENES]);
+  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS]);
 
   const unifiedOther = useMemo(() => {
     return ACTIVE_CATEGORY_COLLECTIONS
       .filter(c => !relevantCatIds.has(c.id))
       .map(c => ({
         ...c,
-        essentialScenes: getGlobalScenesForCategory(ACTIVE_GLOBAL_SCENES, c.id),
+        essentialScenes: [] as ProductImageScene[],
       }));
-  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS, ACTIVE_GLOBAL_SCENES]);
+  }, [relevantCatIds, ACTIVE_CATEGORY_COLLECTIONS]);
 
   // If no category detected, show all global scenes in a flat "All Scenes" section
   const hasDetectedCategories = relevantCatIds.size > 0;
@@ -185,18 +178,13 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
     const ids = new Set<string>();
     const addFrom = (list: typeof unifiedRecommended) => {
       for (const c of list) {
-        c.essentialScenes.forEach(s => ids.add(s.id));
         c.scenes.forEach(s => ids.add(s.id));
       }
     };
     addFrom(unifiedRecommended);
     addFrom(unifiedOther);
-    // Also add global scenes for the "no category" fallback
-    if (!hasDetectedCategories) {
-      ACTIVE_GLOBAL_SCENES.forEach(s => ids.add(s.id));
-    }
     return ids;
-  }, [unifiedRecommended, unifiedOther, hasDetectedCategories, ACTIVE_GLOBAL_SCENES]);
+  }, [unifiedRecommended, unifiedOther]);
 
   // Prune stale selections
   useEffect(() => {
@@ -242,18 +230,25 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
         </div>
       </div>
 
-      {/* No category detected: show all global scenes as flat grid + explore categories below */}
-      {!hasDetectedCategories && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold">All Scenes</h3>
-          </div>
-          <div className={`grid ${gridClass} gap-2`}>
-            {ACTIVE_GLOBAL_SCENES.map(scene => (
-              <SceneCard key={scene.id} scene={scene} selected={selectedSceneIds.has(scene.id)} onToggle={() => toggleScene(scene.id)} />
-            ))}
-          </div>
+      {/* No category detected: show all category collections expanded */}
+      {!hasDetectedCategories && ACTIVE_CATEGORY_COLLECTIONS.length > 0 && (
+        <div className="space-y-2">
+          {ACTIVE_CATEGORY_COLLECTIONS.map(cat => (
+            <UnifiedCategorySectionWithSelectAll
+              key={cat.id}
+              catId={cat.id}
+              catTitle={cat.title}
+              essentialScenes={[]}
+              categoryScenes={cat.scenes}
+              categorySubGroups={cat.subGroups}
+              selectedSceneIds={selectedSceneIds}
+              onSelectionChange={onSelectionChange}
+              isOpen={expandedCategories.has(cat.id)}
+              onToggleOpen={() => toggleCategory(cat.id)}
+              toggleScene={toggleScene}
+              gridClass={gridClass}
+            />
+          ))}
         </div>
       )}
 
@@ -314,10 +309,9 @@ function UnifiedCategorySectionWithSelectAll({
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
 
-  // Resolve sub-category label using overrides for this category context
+  // Resolve sub-category label
   const resolveLabel = (scene: ProductImageScene, fallback: string) => {
-    const override = scene.subCategoryOverrides?.[catId];
-    return override || scene.subCategory || fallback;
+    return scene.subCategory || fallback;
   };
 
   // Build sub-groups for essential scenes (by resolved subCategory)

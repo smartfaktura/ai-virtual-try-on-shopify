@@ -21,7 +21,6 @@ import {
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
 const CATEGORIES = [
-  { value: '__global__', label: 'Global (Universal)' },
   { value: 'fragrance', label: 'Fragrance' },
   { value: 'beauty-skincare', label: 'Beauty & Skincare' },
   { value: 'makeup-lipsticks', label: 'Makeup & Lipsticks' },
@@ -39,11 +38,6 @@ const TRIGGER_BLOCKS = [
   'background', 'visualDirection', 'sceneEnvironment', 'personDetails',
   'actionDetails', 'detailFocus', 'angleSelection', 'packagingDetails',
   'productSize', 'branding', 'layout',
-];
-const EXCLUDE_CATS = [
-  'fragrance', 'beauty-skincare', 'makeup-lipsticks', 'bags-accessories',
-  'hats-small', 'shoes', 'garments', 'home-decor', 'tech-devices',
-  'food-beverage', 'supplements-wellness',
 ];
 
 const CAT_LABEL_MAP: Record<string, string> = {};
@@ -70,24 +64,14 @@ function emptyScene(): Partial<DbScene> & { scene_id: string } {
     description: '',
     prompt_template: '',
     trigger_blocks: ['background'],
-    is_global: false,
     category_collection: null,
     scene_type: 'packshot',
-    exclude_categories: [],
     preview_image_url: null,
     is_active: true,
     sort_order: 999,
     sub_category: null,
     category_sort_order: 0,
-    sub_category_overrides: {},
   };
-}
-
-/** Compute which categories a global scene appears in */
-function getAppearsIn(scene: DbScene): string[] {
-  if (!scene.is_global) return [];
-  if (!scene.exclude_categories || scene.exclude_categories.length === 0) return ['all'];
-  return EXCLUDE_CATS.filter(c => !scene.exclude_categories.includes(c));
 }
 
 /** Group scenes by sub_category within a flat array */
@@ -104,13 +88,23 @@ function groupBySubCategory(scenes: DbScene[]): { label: string; scenes: DbScene
   }));
 }
 
+/** Build inline sub-category summary string: "Essential Shots (6), Hero Scenes (4)" */
+function subCategorySummary(scenes: DbScene[]): string {
+  const map = new Map<string, number>();
+  for (const s of scenes) {
+    const key = s.sub_category || 'Uncategorized';
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  return Array.from(map.entries()).map(([label, count]) => `${label} (${count})`).join(', ');
+}
+
 export default function AdminProductImageScenes() {
   const { isAdmin } = useIsAdmin();
   const { rawScenes, isLoading, updateScene, upsertScene, deleteScene } = useProductImageScenes();
   const [search, setSearch] = useState('');
   const [showHidden, setShowHidden] = useState(false);
   const [previewCategory, setPreviewCategory] = useState<string>('__all__');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['__global__']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<DbScene>>({});
   const [addingNew, setAddingNew] = useState(false);
@@ -128,14 +122,8 @@ export default function AdminProductImageScenes() {
         s.description.toLowerCase().includes(q)
       );
     }
-    // Preview by category filter
     if (previewCategory !== '__all__') {
-      scenes = scenes.filter(s => {
-        if (s.is_global) {
-          return !s.exclude_categories.includes(previewCategory);
-        }
-        return s.category_collection === previewCategory;
-      });
+      scenes = scenes.filter(s => s.category_collection === previewCategory);
     }
     return scenes;
   }, [rawScenes, showHidden, search, previewCategory]);
@@ -143,13 +131,11 @@ export default function AdminProductImageScenes() {
   // Group by category
   const grouped = useMemo(() => {
     const map = new Map<string, DbScene[]>();
-    map.set('__global__', []);
     for (const s of filtered) {
-      const key = s.is_global ? '__global__' : (s.category_collection || 'other');
+      const key = s.category_collection || 'other';
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(s);
     }
-    // Sort within each group
     for (const [, arr] of map) {
       arr.sort((a, b) => a.sort_order - b.sort_order);
     }
@@ -189,11 +175,7 @@ export default function AdminProductImageScenes() {
       return;
     }
     try {
-      const payload = {
-        ...newDraft,
-        is_global: newDraft.category_collection === null || (newDraft as any)._isGlobal,
-      };
-      await upsertScene.mutateAsync(payload as any);
+      await upsertScene.mutateAsync(newDraft as any);
       toast.success('Scene created');
       setAddingNew(false);
       setNewDraft(emptyScene());
@@ -212,7 +194,7 @@ export default function AdminProductImageScenes() {
   };
 
   const handleMove = async (scene: DbScene, direction: 'up' | 'down') => {
-    const key = scene.is_global ? '__global__' : (scene.category_collection || 'other');
+    const key = scene.category_collection || 'other';
     const group = grouped.get(key) || [];
     const idx = group.findIndex(s => s.id === scene.id);
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
@@ -255,17 +237,16 @@ export default function AdminProductImageScenes() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search scenes..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
-        {/* Preview by category filter */}
         <div className="flex items-center gap-1.5">
           <Filter className="w-3.5 h-3.5 text-muted-foreground" />
           <Select value={previewCategory} onValueChange={setPreviewCategory}>
             <SelectTrigger className="w-[180px] h-9 text-xs">
-              <SelectValue placeholder="Preview as category" />
+              <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">All categories</SelectItem>
-              {EXCLUDE_CATS.map(c => (
-                <SelectItem key={c} value={c}>{CAT_LABEL_MAP[c] || c}</SelectItem>
+              {CATEGORIES.map(c => (
+                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -321,15 +302,19 @@ export default function AdminProductImageScenes() {
           {Array.from(grouped.entries()).map(([key, scenes]) => {
             const subGroups = groupBySubCategory(scenes);
             const hasMultipleSubGroups = subGroups.length > 1 || (subGroups.length === 1 && subGroups[0].label !== 'Uncategorized');
+            const summary = subCategorySummary(scenes);
 
             return (
               <Collapsible key={key} open={expandedSections.has(key)} onOpenChange={() => toggleSection(key)}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Layers className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-semibold">{catLabel(key)}</span>
                       <Badge variant="secondary" className="text-[10px]">{scenes.length}</Badge>
+                      {summary && (
+                        <span className="text-[10px] text-muted-foreground">{summary}</span>
+                      )}
                     </div>
                     {expandedSections.has(key) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </div>
@@ -413,8 +398,6 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
   setEditDraft: (d: Partial<DbScene>) => void;
   updatePending: boolean;
 }) {
-  const appearsIn = getAppearsIn(scene);
-
   return (
     <div>
       <div className={`flex items-start gap-3 p-2.5 rounded-lg border transition-colors ${
@@ -442,33 +425,6 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
             Triggers: {scene.trigger_blocks.join(', ')}
             {scene.category_sort_order > 0 && ` · Cat order: ${scene.category_sort_order}`}
           </p>
-          {/* "Appears in" badges for global scenes */}
-          {scene.is_global && (
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <span className="text-[10px] text-muted-foreground">Appears in:</span>
-              {appearsIn[0] === 'all' ? (
-                <Badge className="text-[9px] bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20">All categories ✓</Badge>
-              ) : (
-                <>
-                  {appearsIn.map(c => (
-                    <Badge key={c} className="text-[9px] bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20">
-                      {CAT_LABEL_MAP[c] || c}
-                    </Badge>
-                  ))}
-                  {scene.exclude_categories.length > 0 && (
-                    <>
-                      <span className="text-[10px] text-muted-foreground ml-1">Excludes:</span>
-                      {scene.exclude_categories.map(c => (
-                        <Badge key={c} variant="outline" className="text-[9px] text-destructive border-destructive/30">
-                          {CAT_LABEL_MAP[c] || c}
-                        </Badge>
-                      ))}
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(scene, 'up')} disabled={idx === 0}>
@@ -531,8 +487,6 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
     }
   };
 
-  const isGlobal = draft.is_global || draft.category_collection === null;
-
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-2 gap-4">
@@ -562,16 +516,10 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Category Collection</Label>
+          <Label className="text-xs">Category</Label>
           <Select
-            value={isGlobal ? '__global__' : (draft.category_collection || 'other')}
-            onValueChange={v => {
-              if (v === '__global__') {
-                onChange({ ...draft, is_global: true, category_collection: null });
-              } else {
-                onChange({ ...draft, is_global: false, category_collection: v });
-              }
-            }}
+            value={draft.category_collection || 'other'}
+            onValueChange={v => set('category_collection', v)}
           >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -588,48 +536,13 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs">Sub-Category (grouping label)</Label>
-          <Input value={draft.sub_category || ''} onChange={e => set('sub_category', e.target.value || null)} placeholder="e.g. Essentials, On-Model Looks, Celebrity Style" />
+          <Input value={draft.sub_category || ''} onChange={e => set('sub_category', e.target.value || null)} placeholder="e.g. Essential Shots, On-Model, Hero Scenes" />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Category Sort Order (section position)</Label>
           <Input type="number" value={draft.category_sort_order ?? 0} onChange={e => set('category_sort_order', parseInt(e.target.value) || 0)} />
         </div>
       </div>
-
-      {/* Category-specific sub-category label overrides */}
-      <Collapsible>
-        <CollapsibleTrigger className="w-full">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer py-1">
-            <ChevronRight className="w-3.5 h-3.5 [[data-state=open]>&]:rotate-90 transition-transform" />
-            <span className="font-medium">Category-specific labels</span>
-            <span className="text-[10px]">(override sub-category name per product type)</span>
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="grid grid-cols-2 gap-2 pt-2 pl-4">
-            {EXCLUDE_CATS.map(cat => {
-              const overrides = (draft.sub_category_overrides as Record<string, string>) || {};
-              return (
-                <div key={cat} className="flex items-center gap-2">
-                  <Label className="text-[10px] w-28 shrink-0 text-muted-foreground">{CAT_LABEL_MAP[cat] || cat}</Label>
-                  <Input
-                    value={overrides[cat] || ''}
-                    onChange={e => {
-                      const next = { ...overrides };
-                      if (e.target.value) next[cat] = e.target.value;
-                      else delete next[cat];
-                      set('sub_category_overrides', next);
-                    }}
-                    placeholder={draft.sub_category || 'Default'}
-                    className="text-xs h-7"
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 pl-4">Leave empty to use the default sub-category label</p>
-        </CollapsibleContent>
-      </Collapsible>
 
       <div className="space-y-1.5">
         <Label className="text-xs">Trigger Blocks</Label>
@@ -652,41 +565,6 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         </div>
       </div>
 
-      {/* Show in Categories — inverted UI over exclude_categories */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">
-            Show in Categories
-            {isGlobal && <span className="text-muted-foreground ml-1">(which product types see this scene)</span>}
-          </Label>
-          <div className="flex gap-1">
-            <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]"
-              onClick={() => set('exclude_categories', [])}>All</Button>
-            <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]"
-              onClick={() => set('exclude_categories', [...EXCLUDE_CATS])}>None</Button>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {EXCLUDE_CATS.map(cat => {
-            const excluded = (draft.exclude_categories || []).includes(cat);
-            return (
-              <label key={cat} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                <Checkbox
-                  checked={!excluded}
-                  onCheckedChange={(v) => {
-                    const current = draft.exclude_categories || [];
-                    // v=true means "show" → remove from excludes; v=false means "hide" → add to excludes
-                    set('exclude_categories', v ? current.filter(c => c !== cat) : [...current, cat]);
-                  }}
-                />
-                {CAT_LABEL_MAP[cat] || cat}
-              </label>
-            );
-          })}
-        </div>
-        <p className="text-[10px] text-muted-foreground">Uncheck categories where this scene should be hidden</p>
-      </div>
-
       <div className="space-y-1.5">
         <Label className="text-xs">Prompt Template</Label>
         <Textarea
@@ -700,7 +578,6 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
       <div className="space-y-1.5">
         <Label className="text-xs">Preview Image</Label>
         <div className="flex items-start gap-4">
-          {/* Thumbnail preview */}
           <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted border border-border/40 flex items-center justify-center flex-shrink-0">
             {draft.preview_image_url ? (
               <img src={draft.preview_image_url} alt="Preview" className="w-full h-full object-cover" />

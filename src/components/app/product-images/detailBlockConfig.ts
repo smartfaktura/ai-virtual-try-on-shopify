@@ -40,13 +40,13 @@ export const BLOCK_FIELD_MAP: Record<string, string[]> = {
 /** Get triggered blocks from a set of selected scene IDs */
 export function getTriggeredBlocks(
   selectedSceneIds: Set<string>,
-  allScenes: Array<{ id: string; triggerBlocks: string[] }>,
+  allScenes: Array<{ id: string; triggerBlocks?: string[] }>,
   productCount: number,
 ): string[] {
   const blocks = new Set<string>();
   for (const scene of allScenes) {
     if (selectedSceneIds.has(scene.id)) {
-      for (const b of scene.triggerBlocks) blocks.add(b);
+      for (const b of (scene.triggerBlocks || [])) blocks.add(b);
     }
   }
   // Always show custom note

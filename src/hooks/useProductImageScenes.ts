@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { GLOBAL_SCENES, CATEGORY_COLLECTIONS, ALL_SCENES as FALLBACK_ALL } from '@/components/app/product-images/sceneData';
+import { CATEGORY_COLLECTIONS, ALL_SCENES as FALLBACK_ALL } from '@/components/app/product-images/sceneData';
 import type { ProductImageScene, CategoryCollection } from '@/components/app/product-images/types';
 
 export interface DbScene {
@@ -11,17 +11,14 @@ export interface DbScene {
   description: string;
   prompt_template: string;
   trigger_blocks: string[];
-  is_global: boolean;
   category_collection: string | null;
   scene_type: string;
-  exclude_categories: string[];
   preview_image_url: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
   sub_category: string | null;
   category_sort_order: number;
-  sub_category_overrides: Record<string, string> | null;
 }
 
 function dbToFrontend(d: DbScene): ProductImageScene {
@@ -31,13 +28,10 @@ function dbToFrontend(d: DbScene): ProductImageScene {
     description: d.description,
     promptTemplate: d.prompt_template,
     triggerBlocks: d.trigger_blocks,
-    isGlobal: d.is_global,
     categoryCollection: d.category_collection ?? undefined,
     sceneType: (d.scene_type as ProductImageScene['sceneType']) ?? 'packshot',
-    excludeCategories: d.exclude_categories,
     previewUrl: d.preview_image_url ?? undefined,
     subCategory: d.sub_category ?? undefined,
-    subCategoryOverrides: d.sub_category_overrides ?? undefined,
   };
 }
 
@@ -64,10 +58,6 @@ export function useProductImageScenes() {
   const scenes = rawScenes && rawScenes.length > 0 ? rawScenes : null;
 
   const activeScenes: DbScene[] = scenes?.filter(s => s.is_active) ?? [];
-
-  const globalScenes: ProductImageScene[] = scenes
-    ? activeScenes.filter(s => s.is_global).map(dbToFrontend)
-    : GLOBAL_SCENES;
 
   const categoryCollections: CategoryCollection[] = scenes
     ? buildCollections(activeScenes)
@@ -113,7 +103,6 @@ export function useProductImageScenes() {
   return {
     rawScenes: rawScenes ?? [],
     isLoading,
-    globalScenes,
     categoryCollections,
     allScenes,
     upsertScene,
@@ -127,13 +116,12 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
   const catSortOrder = new Map<string, number>();
 
   for (const s of scenes) {
-    if (s.is_global || !s.category_collection) continue;
+    if (!s.category_collection) continue;
     const cat = s.category_collection;
     if (!catMap.has(cat)) {
       catMap.set(cat, []);
       catSortOrder.set(cat, s.category_sort_order ?? 0);
     }
-    // Use the lowest category_sort_order from any scene in this category
     if ((s.category_sort_order ?? 0) < (catSortOrder.get(cat) ?? 0)) {
       catSortOrder.set(cat, s.category_sort_order ?? 0);
     }

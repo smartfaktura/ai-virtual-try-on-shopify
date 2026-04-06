@@ -111,13 +111,10 @@ export interface ProductImageScene {
   promptTemplate?: string;
   previewUrl?: string;
   chips?: string[];
-  triggerBlocks: string[];
-  isGlobal: boolean;
+  triggerBlocks?: string[];
   categoryCollection?: string;
   sceneType?: SceneType;
-  excludeCategories?: string[];
   subCategory?: string;
-  subCategoryOverrides?: Record<string, string>;
 }
 
 export interface SubGroup {
