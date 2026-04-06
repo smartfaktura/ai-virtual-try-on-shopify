@@ -1,28 +1,45 @@
 
 
-# Flip "Exclude" to "Show in Categories" (Include-based UI)
+# Per-Sub-Category Select All + Category-Specific Sub-Category Naming
 
-## Problem
-The current UI says "Exclude from Categories" — you check boxes for categories that should NOT see this scene. This is confusing because you have to think in negatives. Much easier to check which categories SHOULD see the scene.
+## What changes
 
-## Solution
-Flip the checkbox UI to **"Show in Categories"** with an inverted logic:
-- Checkboxes represent categories where the scene IS visible
-- All categories start checked (scene visible everywhere)
-- Unchecking a category adds it to `exclude_categories` in the database
-- No database changes needed — just invert the UI logic
+### 1. Per-sub-group "Select All" buttons in Step 2
+Currently the single "Select All" button selects every scene in the entire category. Instead, each sub-group (e.g. "Essential Shots", "On-Model Looks") gets its own small "Select All" button, placed on the left — with the sub-category label moved to the right of the same row for a cleaner layout.
 
-## Changes
+```text
+[Select All]  ─────────────────────────  ESSENTIAL SHOTS
+[scene] [scene] [scene] [scene]
 
-**`src/pages/AdminProductImageScenes.tsx`**:
+[Select All]  ─────────────────────────  ON-MODEL LOOKS
+[scene] [scene] [scene]
+```
 
-1. Rename label from "Exclude from Categories" to **"Show in Categories"**
-2. Invert checkbox logic:
-   - Currently: `checked = exclude_categories.includes(cat)` (checked = hidden)
-   - New: `checked = !exclude_categories.includes(cat)` (checked = visible)
-3. Invert toggle: unchecking adds to `exclude_categories`, checking removes from it
-4. Add a subtle helper: "Uncheck categories where this scene should be hidden"
-5. Add quick actions: **"All"** / **"None"** buttons to bulk toggle
+The top-level "Select All" button is removed.
 
-The "Appears in" badges in the list view already show the positive framing, so those stay as-is.
+### 2. Category-specific sub-category display names
+Global scenes use a single `sub_category` value (e.g. "Essentials") but this label may not fit every category context. Add a `sub_category_overrides` JSON column to `product_image_scenes` so a global scene can say: `{ "fragrance": "Must-Have Shots", "garments": "Core Looks" }`.
+
+When rendering Step 2, the frontend checks if an override exists for the current category context and uses it instead of the default `sub_category`.
+
+### 3. Admin panel: manage overrides
+In `SceneForm`, below the existing "Sub-Category" input, add an expandable section "Category-specific labels" showing one input per category where the admin can type alternate display names. Empty = use default.
+
+## Database
+
+**Migration** — add one column:
+```sql
+ALTER TABLE product_image_scenes
+  ADD COLUMN IF NOT EXISTS sub_category_overrides jsonb DEFAULT '{}'::jsonb;
+```
+
+## Files
+
+| File | Change |
+|---|---|
+| Migration | Add `sub_category_overrides` column |
+| `src/hooks/useProductImageScenes.ts` | Add `sub_category_overrides` to `DbScene`, pass through to frontend type as `subCategoryOverrides` |
+| `src/components/app/product-images/types.ts` | Add `subCategoryOverrides?: Record<string, string>` to `ProductImageScene` |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Remove top-level "Select All"; add per-sub-group select-all buttons on the left with label on the right; resolve sub-category display name using overrides for current category context |
+| `src/pages/AdminProductImageScenes.tsx` | Add "Category-specific labels" expandable section in `SceneForm` with per-category override inputs |
 
