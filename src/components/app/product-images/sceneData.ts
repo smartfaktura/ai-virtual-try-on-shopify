@@ -4,8 +4,8 @@ export const GLOBAL_SCENES: ProductImageScene[] = [
   {
     id: 'clean-packshot',
     title: 'Clean Studio Shot',
-    description: 'Pure white background cut-out for listings and catalogs.',
-    promptTemplate: 'Professional ecommerce product photograph of {{productName}} ({{productType}}) on {{background}} seamless background. {{lightingDirective}} Sharp center-frame composition with crisp product edges. Ultra-sharp focus on every surface detail — {{materialTexture}}, label text, finish reflections. True-to-life color accuracy, {{shadowDirective}} {{compositionDirective}} {{negativeSpaceDirective}} {{consistencyDirective}} {{cameraDirective}}',
+    description: 'Pure white background cut-out. For clothing: ghost mannequin or flat-lay. For accessories and products: standard packshot.',
+    promptTemplate: '{{categoryPackshotDirective}} Professional ecommerce product photograph of {{productName}} ({{productType}}) on {{background}} seamless background. {{lightingDirective}} Sharp center-frame composition with crisp product edges. Ultra-sharp focus on every surface detail — {{materialTexture}}, label text, finish reflections. True-to-life color accuracy, {{shadowDirective}} {{compositionDirective}} {{negativeSpaceDirective}} {{consistencyDirective}} {{cameraDirective}}',
     triggerBlocks: ['background', 'productSize'],
     isGlobal: true,
     sceneType: 'packshot',

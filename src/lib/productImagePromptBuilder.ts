@@ -364,22 +364,43 @@ function defaultPersonDirective(category?: string): string {
   }
 }
 
-// ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
-function defaultOutfitDirective(category?: string): string {
+// ── Category-aware outfit defaults (per-piece) ──
+interface OutfitPieces { top: string; bottom: string; shoes: string; accessories: string; }
+
+function categoryOutfitDefaults(category?: string): OutfitPieces {
   switch (category) {
     case 'garments':
-      return 'Wearing slim-fit light beige cotton trousers and minimal white sneakers — same outfit in every shot. Clothing must NOT compete with the product.';
+      return { top: 'plain white t-shirt', bottom: 'slim-fit light beige cotton trousers', shoes: 'minimal white sneakers', accessories: 'none' };
     case 'bags-accessories':
-      return 'Wearing a fitted black turtleneck, slim dark navy trousers, and black ankle boots — same outfit in every shot. Product is the styling hero.';
+      return { top: 'fitted black turtleneck', bottom: 'slim dark navy trousers', shoes: 'black ankle boots', accessories: 'none' };
     case 'shoes':
-      return 'Wearing cropped slim dark denim and a plain white tee — same outfit in every shot. Visual focus stays on the footwear.';
+      return { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' };
     case 'fragrance':
     case 'beauty-skincare':
     case 'makeup-lipsticks':
-      return 'Wearing minimal, elegant styling — bare shoulders or simple neckline, nothing competing with the product. Same look in every shot.';
+      return { top: 'minimal elegant neckline', bottom: '', shoes: '', accessories: 'none' };
     default:
-      return 'Wearing clean, understated clothing in neutral tones — same outfit in every shot. Product remains the visual focus.';
+      return { top: 'clean neutral top', bottom: 'understated trousers in neutral tones', shoes: 'minimal clean shoes', accessories: 'none' };
   }
+}
+
+// ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
+function defaultOutfitDirective(category?: string, details?: DetailSettings): string {
+  const defaults = categoryOutfitDefaults(category);
+  const top = details?.outfitTop || defaults.top;
+  const bottom = details?.outfitBottom || defaults.bottom;
+  const shoes = details?.outfitShoes || defaults.shoes;
+  const acc = details?.outfitAccessories || defaults.accessories;
+
+  const parts: string[] = [];
+  if (top) parts.push(top);
+  if (bottom) parts.push(bottom);
+  if (shoes) parts.push(shoes);
+  const outfitStr = parts.join(', ');
+  const accStr = acc && acc !== 'none' ? ` Accessories: ${acc}.` : '';
+
+  if (!outfitStr) return 'Wearing minimal, elegant styling — nothing competing with the product. Same look in every shot.';
+  return `Wearing ${outfitStr} — same outfit in every shot. Clothing must NOT compete with the product.${accStr}`;
 }
 
 // ── Person directive builder (skips auto values) ──
@@ -397,7 +418,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
       const outfitStr = buildOutfitDirective(d);
-      directive += ` ${outfitStr || defaultOutfitDirective(category)}`;
+      directive += ` ${outfitStr || defaultOutfitDirective(category, d)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
@@ -411,7 +432,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   if (outfitStr) {
     directive += ` ${outfitStr}`;
   } else if (sceneNeedsPerson) {
-    directive += ` ${defaultOutfitDirective(category)}`;
+    directive += ` ${defaultOutfitDirective(category, d)}`;
   }
 
   // Append model reference if present
@@ -558,7 +579,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const outfit = buildOutfitDirective(details);
       if (outfit) return outfit;
       const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
@@ -606,6 +627,19 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
 
     case 'brandingDirective': return '';
+
+    case 'categoryPackshotDirective': {
+      switch (cat) {
+        case 'garments':
+          return 'Ghost mannequin / invisible mannequin style OR flat-lay arrangement on clean surface.';
+        case 'shoes':
+          return 'Standard packshot with shoe angled 3/4 view showing both the upper and sole profile.';
+        case 'bags-accessories':
+          return 'Standard packshot with accessory propped upright showing front face and hardware details.';
+        default:
+          return '';
+      }
+    }
 
     case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType);
 
