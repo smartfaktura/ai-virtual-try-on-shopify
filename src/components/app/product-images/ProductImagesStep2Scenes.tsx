@@ -190,6 +190,11 @@ function CategorySection({ cat, selectedSceneIds, expandedCategories, toggleScen
 }
 
 export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, selectedProducts, productAnalyses }: Step2Props) {
+  const { globalScenes: hookGlobalScenes, categoryCollections: hookCategoryCollections } = useProductImageScenes();
+  // Use hook data (from DB) with hardcoded fallback already handled inside the hook
+  const ACTIVE_GLOBAL_SCENES = hookGlobalScenes;
+  const ACTIVE_CATEGORY_COLLECTIONS = hookCategoryCollections;
+
   const relevantCatIds = useMemo(() => detectRelevantCategories(selectedProducts, productAnalyses), [selectedProducts, productAnalyses]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set(relevantCatIds));
   const [gridSize, setGridSize] = useState<GridSize>('medium');
