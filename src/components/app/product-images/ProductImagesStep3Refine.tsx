@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -15,7 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Paintbrush, User, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
-  Save, Trash2, History, AlertTriangle, Check, Info,
+  Save, Trash2, History, Check, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
@@ -1458,55 +1458,50 @@ export function ProductImagesStep3Refine({
 
       {/* ── MODEL-NEEDED BANNER ── */}
       {scenesNeedingModel.length > 0 && (
-        <Alert variant={needsModel ? 'default' : 'default'} className={cn(
-          'border transition-colors',
+        <div className={cn(
+          'rounded-lg border-l-4 px-4 py-3 flex items-center gap-3 transition-colors',
           needsModel
-            ? 'border-amber-500/40 bg-amber-50/50 dark:bg-amber-950/20'
-            : 'border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20'
+            ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/15 border border-amber-200/40 dark:border-amber-800/30'
+            : 'border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-200/40 dark:border-emerald-800/30'
         )}>
-          <div className="flex items-start gap-3">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             {needsModel ? (
-              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
             ) : (
-              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
             )}
-            <div className="flex-1 min-w-0">
-              <AlertDescription className="text-sm">
-                {needsModel ? (
-                  <>
-                    <span className="font-medium text-foreground">
-                      {scenesNeedingModel.map(s => `"${s.title}"`).join(', ')}
-                    </span>{' '}
-                    {scenesNeedingModel.length === 1 ? 'includes' : 'include'} a person.
-                    Select a model or configure person details below.
-                  </>
-                ) : (
-                  <>
-                    <span className="font-medium text-foreground">Model selected</span>{' '}
-                    — applied to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}.
-                  </>
-                )}
-              </AlertDescription>
-              <div className="flex gap-1.5 mt-1.5">
-                {scenesNeedingModel.map(s => (
-                  <div key={s.id} className="w-6 h-6 rounded bg-muted border border-border/60 overflow-hidden flex-shrink-0">
-                    {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40 m-auto" />}
-                  </div>
-                ))}
-              </div>
+            <span className="text-xs text-muted-foreground">
+              {needsModel ? (
+                <>
+                  <span className="font-medium text-foreground">{scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}</span>{' '}
+                  need a model
+                </>
+              ) : (
+                <>
+                  <span className="font-medium text-foreground">Model applied</span>{' '}
+                  to {scenesNeedingModel.length} scene{scenesNeedingModel.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </span>
+            <div className="flex gap-1 ml-1">
+              {scenesNeedingModel.slice(0, 4).map(s => (
+                <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/50 overflow-hidden flex-shrink-0">
+                  {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
+                </div>
+              ))}
             </div>
-            {needsModel && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs h-7 gap-1 flex-shrink-0 border-amber-500/40 hover:bg-amber-100/50 dark:hover:bg-amber-900/30"
-                onClick={scrollToOutfit}
-              >
-                <User className="w-3 h-3" />Select Model
-              </Button>
-            )}
           </div>
-        </Alert>
+          {needsModel && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-[11px] h-6 px-2.5 gap-1 flex-shrink-0 rounded-full border-amber-400/50 text-amber-700 dark:text-amber-300 hover:bg-amber-100/50 dark:hover:bg-amber-900/30"
+              onClick={scrollToOutfit}
+            >
+              <User className="w-3 h-3" />Select
+            </Button>
+          )}
+        </div>
       )}
 
       {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
@@ -1568,7 +1563,14 @@ export function ProductImagesStep3Refine({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-medium line-clamp-2 leading-snug">{scene.title}</span>
+                      {scene.triggerBlocks.includes('background') && (
+                        <span className="inline-flex items-center gap-0.5 px-1 py-px rounded bg-muted text-[9px] text-muted-foreground font-medium flex-shrink-0">
+                          <Paintbrush className="w-2.5 h-2.5" />BG
+                        </span>
+                      )}
+                    </div>
                     {sceneNeedsModel && needsModel ? (
                       <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
@@ -1684,14 +1686,10 @@ export function ProductImagesStep3Refine({
                     return (
                       <div key={scene.id} className="relative">
                         {renderSceneCardButton(scene)}
-                        {/* Triangle indicator */}
+                        {/* Connector line */}
                         {isExpanded && (
-                          <div className="flex justify-center relative z-10 -mb-[9px]">
-                            {/* Outer triangle (border) */}
-                            <div className="relative" style={{ width: 0, height: 0, borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderBottom: '9px solid hsl(var(--border))' }}>
-                              {/* Inner triangle (fill) */}
-                              <div className="absolute" style={{ left: -8, top: 1, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid hsl(var(--card))' }} />
-                            </div>
+                          <div className="flex justify-center">
+                            <div className="w-px h-3 bg-primary/30" />
                           </div>
                         )}
                       </div>
