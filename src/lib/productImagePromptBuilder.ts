@@ -444,8 +444,8 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
   const outfitStr = parts.join(', ');
   const accStr = acc && acc !== 'none' ? ` Accessories: ${acc}.` : '';
 
-  if (!outfitStr) return 'Wearing minimal, elegant styling — nothing competing with the product. Same look in every shot.';
-  return `Wearing ${outfitStr} — same outfit in every shot. Clothing must NOT compete with the product.${accStr}`;
+  if (!outfitStr) return 'OUTFIT LOCK — Wearing minimal, elegant styling — nothing competing with the product. This exact look must repeat identically in every on-model shot.';
+  return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. Clothing must NOT compete with the product.${accStr}`;
 }
 
 // ── Person directive builder (skips auto values) ──
