@@ -563,6 +563,59 @@ function TemplateControlChips({ controlKey, details, update }: {
 }
 
 /* ══════════════════════════════════════════════
+   Background Swatch Selector with color previews
+   ══════════════════════════════════════════════ */
+
+const BG_SWATCH_OPTIONS: { value: string; label: string; swatch: string; isGradient?: boolean; gradient?: string }[] = [
+  { value: 'white', label: 'Pure White', swatch: '#FFFFFF' },
+  { value: 'light-gray', label: 'Light Gray', swatch: '#E5E7EB' },
+  { value: 'warm-neutral', label: 'Warm', swatch: '#F5F0EB' },
+  { value: 'cool-neutral', label: 'Cool', swatch: '#EDF0F4' },
+  { value: 'gradient', label: 'Soft Gradient', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)' },
+  { value: 'gradient-warm', label: 'Warm Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)' },
+  { value: 'gradient-cool', label: 'Cool Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)' },
+  { value: 'gradient-sunset', label: 'Sunset', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FEF3E6, #F8E0D0)' },
+  { value: 'custom', label: 'Custom', swatch: '', isGradient: false },
+];
+
+function BackgroundSwatchSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {BG_SWATCH_OPTIONS.map(o => {
+        const isActive = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(value === o.value ? '' : o.value)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
+              isActive
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+            )}
+          >
+            {/* Color swatch */}
+            {o.value !== 'custom' && (
+              <span
+                className="w-3 h-3 rounded-sm flex-shrink-0 border border-border/60"
+                style={{
+                  background: o.isGradient ? o.gradient : o.swatch,
+                }}
+              />
+            )}
+            {o.value === 'custom' && (
+              <Paintbrush className="w-3 h-3 flex-shrink-0" />
+            )}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
    Constants
    ══════════════════════════════════════════════ */
 
