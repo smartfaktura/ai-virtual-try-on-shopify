@@ -482,6 +482,7 @@ export default function ProductImages() {
     setResults(resultMap);
     refreshBalance();
     setStep(6);
+    try { sessionStorage.removeItem('pi_generation_session'); } catch {}
   }, [selectedProducts, refreshBalance]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
