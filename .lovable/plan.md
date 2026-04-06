@@ -1,67 +1,60 @@
 
 
-# Upgrade Background Swatch Selector
+# Improve Background Swatch Selector — Inline Custom Pickers
 
-## What changes
+## Problem
 
-Redesign the background selector: bigger 3:4 swatch cards in a 6-column grid, expand to 12 total options (including gradients, custom color, custom gradient), and replace raw HEX inputs with modern popover-based color pickers.
-
-## Layout
-
-All 12 items in one unified grid — 2 rows of 6 on desktop:
-
-```text
-Row 1: Pure White | Off-White | Light Gray | Warm Beige | Cool Gray | Taupe
-Row 2: Sage | Blush | Charcoal | Soft Gradient | Warm Fade | Cool Fade
-```
-
-Below the grid: two action buttons — `+ Custom Color` and `+ Custom Gradient` — that open popover pickers. When a custom color/gradient is picked, it appears as a temporary 13th card appended to the grid.
+The Custom Color and Custom Gradient buttons open floating popovers that feel disconnected from the swatch grid. The user wants them to feel like part of the same grid — consistent card style, smaller cards overall.
 
 ## Changes
 
 ### File: `ProductImagesStep3Refine.tsx`
 
-**1. Redefine `BG_SWATCH_OPTIONS` to 12 items:**
+**1. Make swatch cards smaller — switch from 3:4 to 4:3 aspect ratio**
+- Change `aspect-[3/4]` → `aspect-[4/3]` for a more compact, landscape-oriented card
+- This reduces vertical space significantly while keeping 6-per-row
 
-| # | Value | Label | Fill |
-|---|---|---|---|
-| 1 | `white` | Pure White | #FFFFFF |
-| 2 | `off-white` | Off-White | #FAFAFA |
-| 3 | `light-gray` | Light Gray | #E5E7EB |
-| 4 | `warm-neutral` | Warm Beige | #F5F0EB |
-| 5 | `cool-neutral` | Cool Gray | #EDF0F4 |
-| 6 | `taupe` | Taupe | #D6CFC7 |
-| 7 | `sage` | Sage | #E8EDE6 |
-| 8 | `blush` | Blush | #F8ECE8 |
-| 9 | `charcoal` | Charcoal | #3A3A3A |
-| 10 | `gradient` | Soft Gradient | linear-gradient(135deg, #F8F8F8, #EEE) |
-| 11 | `gradient-warm` | Warm Fade | linear-gradient(135deg, #FAF7F2, #F0E6D8) |
-| 12 | `gradient-cool` | Cool Fade | linear-gradient(135deg, #F0F4F8, #E0E8F0) |
+**2. Add Custom Color and Custom Gradient as the 13th and 14th grid cards (not separate buttons)**
+- Remove the separate `+ Custom Color` and `+ Custom Gradient` buttons below the grid
+- Instead, append two permanent cards at the end of the grid:
+  - Card 13: "Custom Color" — shows a `+` icon or the chosen color fill when active, with a dashed border when inactive
+  - Card 14: "Custom Gradient" — same pattern, dashed border + icon when inactive, gradient fill when active
+- Clicking these cards opens an inline panel (not a floating popover) that slides in below the grid, containing the color palette + HEX input (or dual pickers for gradient)
+- The inline panel uses `Collapsible` for smooth expand/collapse animation
+- Closing/toggling deselects the custom value if desired (or keeps it selected with an X to remove)
 
-Remove `gradient-sunset`, `custom`, `gradient-custom` from the grid array (custom options move to action buttons below).
+**3. Inline picker panels replace floating popovers**
+- Custom Color panel: slides open below the grid with the curated 6×5 palette + HEX input + live preview swatch, all in a bordered rounded card
+- Custom Gradient panel: same slide-open pattern with dual From/To palettes + live gradient preview bar
+- Only one panel open at a time — selecting Custom Gradient closes Custom Color panel and vice versa
+- Panel has a subtle top border connecting it visually to the grid
 
-**2. Bigger 3:4 swatch cards, 6 per row:**
-- Change grid from `grid-cols-5 sm:grid-cols-10` → `grid-cols-3 sm:grid-cols-6`
-- Each swatch: `aspect-[3/4]` rounded-xl card with full-bleed color fill, label overlaid at bottom (white text on dark gradient overlay), checkmark badge top-right when selected
-- Matches the `CatalogStepBackgroundsV2` card style already in the codebase
+**4. Visual consistency**
+- Custom cards use the same `rounded-xl`, label overlay, and checkmark badge as preset cards
+- Inactive custom cards show a dashed `ring-1 ring-dashed` border with a centered `Plus` icon and muted label
+- Active custom cards show the chosen fill with the same `ring-2 ring-primary` selected state
 
-**3. Custom Color popover:**
-- `+ Custom Color` button below the grid
-- Opens a `Popover` with a curated 6×5 palette grid of common product photography colors + HEX input at bottom
-- Live preview swatch in popover
-- On confirm, `custom` value is toggled into the selection and an extra card with the custom fill appears appended to the grid
+## Layout
 
-**4. Custom Gradient popover:**
-- `+ Custom Gradient` button next to custom color
-- Opens a `Popover` with dual color pickers ("From" / "To"), each with the same palette grid + HEX input
-- Live gradient preview bar between them
-- On confirm, `gradient-custom` value is toggled and a gradient-filled card appears in the grid
+```text
+Grid (6 per row, aspect 4:3):
+┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐
+│Wht │ │Off │ │Gry │ │Wrm │ │Coo │ │Tau │
+└────┘ └────┘ └────┘ └────┘ └────┘ └────┘
+┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐
+│Sag │ │Blu │ │Chr │ │Sft │ │Wrm │ │Col │
+└────┘ └────┘ └────┘ └────┘ └────┘ └────┘
+┌╌╌╌╌┐ ┌╌╌╌╌┐
+│ +  │ │ +  │  ← dashed-border cards
+│Cust│ │Grad│
+└╌╌╌╌┘ └╌╌╌╌┘
 
-**5. Multi-select logic stays the same** — toggle adds/removes from comma-separated string. `custom` and `gradient-custom` remain mutually exclusive with each other.
+[▼ Inline picker panel when custom card is active]
+```
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | Rewrite `BG_SWATCH_OPTIONS` (12 items), redesign `BackgroundSwatchSelector` with 3:4 aspect cards, 6-col grid, popover color/gradient pickers |
+| `ProductImagesStep3Refine.tsx` | Integrate custom color/gradient as grid cards; replace floating popovers with collapsible inline panels; change aspect ratio to 4:3 |
 
