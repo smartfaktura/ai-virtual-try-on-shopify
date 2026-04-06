@@ -501,14 +501,7 @@ function buildHandDirective(d: DetailSettings): string {
   return parts.join(', ');
 }
 
-function buildOutfitDirective(d: DetailSettings): string {
-  const style = isAuto(d.outfitStyle) ? undefined : d.outfitStyle;
-  const color = isAuto(d.outfitColorDirection) ? undefined : d.outfitColorDirection;
-  if (!style && !color) return '';
-  const s = style ? `Wearing ${style.replace(/-/g, ' ')} outfit` : 'Outfit';
-  const c = color ? ` in ${color.replace(/-/g, ' ')} tones` : '';
-  return `${s}${c}.`;
-}
+// buildOutfitDirective removed — outfitConfig system replaces outfitStyle/outfitColorDirection
 
 // ── Packaging directive builder ──
 function buildPackagingDirective(d: DetailSettings): string {
