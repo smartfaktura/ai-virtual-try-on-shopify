@@ -89,6 +89,7 @@ export interface ProductImageScene {
   isGlobal: boolean;
   categoryCollection?: string;
   sceneType?: SceneType;
+  excludeCategories?: string[];
 }
 
 export interface CategoryCollection {
