@@ -66,7 +66,7 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   'white': 'clean white color palette with pure, bright tones',
   'light-gray': 'soft light-gray color palette with neutral, understated tones',
   'gradient': 'subtle gradient color palette with smooth tonal transitions',
-  // Gradient presets
+  // Gradient presets (also used as backgroundTone values)
   'gradient-warm': 'warm gradient background fading from soft cream to warm sand tones',
   'gradient-cool': 'cool gradient background fading from pale blue-white to soft steel gray',
   'gradient-sunset': 'warm sunset-toned gradient background fading from soft peach to blush pink',
@@ -589,6 +589,13 @@ function resolveToken(token: string, ctx: TokenContext): string {
       // Custom hex background
       if (colorWorld === 'custom' && details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex)) {
         return `solid background in color ${details.backgroundCustomHex}`;
+      }
+      // Custom gradient background
+      if (colorWorld === 'gradient-custom' && details.backgroundCustomGradient) {
+        const { from, to } = details.backgroundCustomGradient;
+        if (/^#[0-9A-Fa-f]{6}$/.test(from) && /^#[0-9A-Fa-f]{6}$/.test(to)) {
+          return `smooth gradient background transitioning from ${from} to ${to}`;
+        }
       }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
