@@ -416,7 +416,7 @@ export default function ProductImages() {
                 workflow_slug: 'product-images',
                 product_name: product.title,
                 job_type: 'workflow',
-                quality,
+                quality: 'high',
                 imageCount: 1,
                 batch_id: batchId,
               });
