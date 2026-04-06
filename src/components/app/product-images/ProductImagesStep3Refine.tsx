@@ -1671,7 +1671,7 @@ export function ProductImagesStep3Refine({
 
   // Helper: get block labels for a scene (including template-derived ones)
   const getSceneBlockLabels = (scene: ProductImageScene) => {
-    const labels = scene.triggerBlocks
+    const labels = (scene.triggerBlocks || [])
       .filter(b => b !== 'personDetails' && b !== 'customNote' && b !== 'consistency')
       .map(b => BLOCK_LABELS[b]?.title)
       .filter(Boolean);
