@@ -796,9 +796,44 @@ const GARMENT_OPTIONS: Record<string, string[]> = {
   bottom: ['trousers', 'chinos', 'jeans', 'skirt', 'shorts', 'leggings', 'wide-leg pants'],
   shoes: ['sneakers', 'ankle boots', 'heels', 'loafers', 'sandals', 'mules', 'flats'],
 };
-const COLOR_OPTIONS = ['white', 'black', 'beige', 'navy', 'cream', 'gray', 'brown', 'olive', 'blush', 'camel'];
+const COLOR_OPTIONS = ['white', 'black', 'beige', 'navy', 'cream', 'gray', 'brown', 'olive', 'blush', 'camel', 'charcoal', 'burgundy'];
+
+/* Color swatch hex map for visual color dots */
+const COLOR_HEX: Record<string, string> = {
+  white: '#FFFFFF', black: '#1A1A1A', cream: '#FFFDD0', beige: '#F5F0E1',
+  navy: '#1B2A4A', gray: '#9CA3AF', brown: '#6B4226', olive: '#556B2F',
+  blush: '#DE98AB', camel: '#C19A6B', charcoal: '#36454F', burgundy: '#722F37',
+};
+
+/* Skin tone indicator colors */
+const SKIN_TONE_HEX: Record<string, string> = {
+  light: '#FADCB8', medium: '#C68642', deep: '#5C3317',
+};
+
 const FIT_OPTIONS = ['slim', 'relaxed', 'cropped', 'fitted', 'oversized', 'tailored', 'regular'];
 const MATERIAL_OPTIONS = ['cotton', 'silk', 'linen', 'denim', 'leather', 'wool', 'cashmere', 'knit', 'satin'];
+
+/* ── Color Dot ── */
+function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; hex?: string }) {
+  const bg = hex || (color ? COLOR_HEX[color] || '#D1D5DB' : '#D1D5DB');
+  const isBright = color === 'white' || color === 'cream';
+  return (
+    <span
+      className={cn('rounded-full inline-block flex-shrink-0', isBright && 'border border-border')}
+      style={{ width: size, height: size, backgroundColor: bg }}
+    />
+  );
+}
+
+/* ── Preset Color Summary (3 dots) ── */
+function PresetColorDots({ config }: { config: OutfitConfig }) {
+  const dots = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      {dots.map((c, i) => <ColorDot key={i} color={c} size={8} />)}
+    </div>
+  );
+}
 
 const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
   garments: {
