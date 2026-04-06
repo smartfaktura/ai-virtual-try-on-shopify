@@ -46,7 +46,7 @@ export function getTriggeredBlocks(
   const blocks = new Set<string>();
   for (const scene of allScenes) {
     if (selectedSceneIds.has(scene.id)) {
-      for (const b of scene.triggerBlocks) blocks.add(b);
+      for (const b of (scene.triggerBlocks || [])) blocks.add(b);
     }
   }
   // Always show custom note
