@@ -563,6 +563,59 @@ function TemplateControlChips({ controlKey, details, update }: {
 }
 
 /* ══════════════════════════════════════════════
+   Background Swatch Selector with color previews
+   ══════════════════════════════════════════════ */
+
+const BG_SWATCH_OPTIONS: { value: string; label: string; swatch: string; isGradient?: boolean; gradient?: string }[] = [
+  { value: 'white', label: 'Pure White', swatch: '#FFFFFF' },
+  { value: 'light-gray', label: 'Light Gray', swatch: '#E5E7EB' },
+  { value: 'warm-neutral', label: 'Warm', swatch: '#F5F0EB' },
+  { value: 'cool-neutral', label: 'Cool', swatch: '#EDF0F4' },
+  { value: 'gradient', label: 'Soft Gradient', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F8F8F8, #EEEEEE)' },
+  { value: 'gradient-warm', label: 'Warm Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FAF7F2, #F0E6D8)' },
+  { value: 'gradient-cool', label: 'Cool Fade', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #F0F4F8, #E0E8F0)' },
+  { value: 'gradient-sunset', label: 'Sunset', swatch: '', isGradient: true, gradient: 'linear-gradient(135deg, #FEF3E6, #F8E0D0)' },
+  { value: 'custom', label: 'Custom', swatch: '', isGradient: false },
+];
+
+function BackgroundSwatchSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {BG_SWATCH_OPTIONS.map(o => {
+        const isActive = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(value === o.value ? '' : o.value)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
+              isActive
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+            )}
+          >
+            {/* Color swatch */}
+            {o.value !== 'custom' && (
+              <span
+                className="w-3 h-3 rounded-sm flex-shrink-0 border border-border/60"
+                style={{
+                  background: o.isGradient ? o.gradient : o.swatch,
+                }}
+              />
+            )}
+            {o.value === 'custom' && (
+              <Paintbrush className="w-3 h-3 flex-shrink-0" />
+            )}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
    Constants
    ══════════════════════════════════════════════ */
 
@@ -1274,9 +1327,7 @@ export function ProductImagesStep3Refine({
 
       {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
       {selectedScenes.length > 0 && (() => {
-        // Compute scenes with {{background}} token for quick-action strip
-        const scenesWithBackground = selectedScenes.filter(s => (s.promptTemplate || '').includes('{{background}}'));
-        const showBgStrip = scenesWithBackground.length >= 2;
+        const showBgStrip = selectedScenes.length >= 2;
 
         // Group scenes: product shots vs on-model shots
         const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
@@ -1423,19 +1474,37 @@ export function ProductImagesStep3Refine({
             </div>
           </div>
 
-          {/* Quick Background strip (simplified — no advanced toggle) */}
+          {/* Quick Background strip — applies to ALL scenes */}
           {showBgStrip && (
             <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
-                <span className="text-[10px] text-muted-foreground">· {scenesWithBackground.length} scenes</span>
+                <span className="text-[10px] text-muted-foreground">· all {selectedScenes.length} scenes</span>
               </div>
-              <ChipSelector label="" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
-                { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' },
-                { value: 'warm-neutral', label: 'Warm' }, { value: 'cool-neutral', label: 'Cool' },
-                { value: 'gradient', label: 'Soft Gradient' },
-              ]} />
+              <BackgroundSwatchSelector value={details.backgroundTone || ''} onChange={v => update({ backgroundTone: v })} />
+              {/* Custom hex input */}
+              {details.backgroundTone === 'custom' && (
+                <div className="flex items-center gap-3 pt-1">
+                  <div
+                    className="w-8 h-8 rounded-md border border-border flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex) ? details.backgroundCustomHex : '#FFFFFF' }}
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium">HEX</span>
+                    <Input
+                      value={details.backgroundCustomHex || '#'}
+                      onChange={e => {
+                        let v = e.target.value;
+                        if (!v.startsWith('#')) v = '#' + v;
+                        update({ backgroundCustomHex: v.slice(0, 7) });
+                      }}
+                      className="h-7 w-24 text-xs font-mono"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

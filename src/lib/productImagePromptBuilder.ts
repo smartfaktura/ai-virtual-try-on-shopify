@@ -66,6 +66,10 @@ const COLOR_WORLD_MAP: Record<string, string> = {
   'white': 'clean white color palette with pure, bright tones',
   'light-gray': 'soft light-gray color palette with neutral, understated tones',
   'gradient': 'subtle gradient color palette with smooth tonal transitions',
+  // Gradient presets
+  'gradient-warm': 'warm gradient background fading from soft cream to warm sand tones',
+  'gradient-cool': 'cool gradient background fading from pale blue-white to soft steel gray',
+  'gradient-sunset': 'warm sunset-toned gradient background fading from soft peach to blush pink',
 };
 
 // ── Styling density map ──
@@ -582,6 +586,10 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'background': {
       const bgFamily = details.negativeSpace;
       const colorWorld = details.backgroundTone;
+      // Custom hex background
+      if (colorWorld === 'custom' && details.backgroundCustomHex && /^#[0-9A-Fa-f]{6}$/.test(details.backgroundCustomHex)) {
+        return `solid background in color ${details.backgroundCustomHex}`;
+      }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
@@ -803,7 +811,17 @@ export function buildDynamicPrompt(
       prompt += ` ${resolved}`;
     }
   };
-  injectIfMissing('background', 'background', true);
+
+  // Background is ALWAYS injected globally (user expects it to apply to all scenes)
+  const bgTone = details.backgroundTone;
+  const hasBgToken = (template || '').includes('{{background}}');
+  if (!hasBgToken && !isAuto(bgTone)) {
+    const bgResolved = resolveToken('background', ctx);
+    if (bgResolved && !prompt.toLowerCase().includes('background')) {
+      prompt += ` Background: ${bgResolved}.`;
+    }
+  }
+
   injectIfMissing('shadow', 'shadowDirective', true);
   injectIfMissing('surface', 'surfaceDirective', true);
   injectIfMissing('styling', 'stylingDirective', true);
