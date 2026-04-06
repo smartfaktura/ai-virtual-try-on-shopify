@@ -144,7 +144,53 @@ export default function ProductImages() {
     [selectedSceneIds],
   );
 
-  // Derived credit calculation
+  // Primary category for outfit defaults
+  const primaryCategory = useMemo(() => {
+    for (const p of selectedProducts) {
+      const analysis = p.analysis_json as any;
+      if (analysis?.category) return analysis.category as string;
+    }
+    return selectedProducts[0]?.product_type || undefined;
+  }, [selectedProducts]);
+
+  // Check for last-used settings when entering Refine step
+  useEffect(() => {
+    if (step === 3 && primaryCategory) {
+      const key = `pi_last_details_${primaryCategory}`;
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          setLastSettingsCategory(primaryCategory);
+          setShowLastSettingsBanner(true);
+        }
+      } catch {}
+    } else {
+      setShowLastSettingsBanner(false);
+    }
+  }, [step, primaryCategory]);
+
+  // Save details when moving from Refine to Review
+  useEffect(() => {
+    if (step === 4 && primaryCategory) {
+      try {
+        localStorage.setItem(`pi_last_details_${primaryCategory}`, JSON.stringify(details));
+      } catch {}
+    }
+  }, [step, primaryCategory, details]);
+
+  const loadLastSettings = useCallback(() => {
+    if (!lastSettingsCategory) return;
+    try {
+      const saved = localStorage.getItem(`pi_last_details_${lastSettingsCategory}`);
+      if (saved) {
+        const parsed = JSON.parse(saved) as DetailSettings;
+        // Keep format settings from current session but load everything else
+        setDetails({ ...parsed, aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount });
+      }
+    } catch {}
+    setShowLastSettingsBanner(false);
+  }, [lastSettingsCategory, details.aspectRatio, details.quality, details.imageCount]);
+
   const imageCount = parseInt(details.imageCount || '1', 10);
   const quality = details.quality || 'high';
   const creditsPerImage = quality === 'standard' ? 3 : 6;
