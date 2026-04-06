@@ -273,7 +273,7 @@ export function ProductImagesStep2Scenes({ selectedSceneIds, onSelectionChange, 
   };
 
   const selectAllCategory = (catId: string) => {
-    const cat = CATEGORY_COLLECTIONS.find(c => c.id === catId);
+    const cat = ACTIVE_CATEGORY_COLLECTIONS.find(c => c.id === catId);
     if (!cat) return;
     const next = new Set(selectedSceneIds);
     const allSelected = cat.scenes.every(s => next.has(s.id));

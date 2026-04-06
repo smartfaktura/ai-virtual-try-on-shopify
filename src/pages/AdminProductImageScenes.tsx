@@ -482,15 +482,60 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Preview Image URL</Label>
-          <Input value={draft.preview_image_url || ''} onChange={e => set('preview_image_url', e.target.value || null)} placeholder="https://..." />
+      <div className="space-y-1.5">
+        <Label className="text-xs">Preview Image</Label>
+        <div className="flex items-start gap-4">
+          {/* Thumbnail preview */}
+          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted border border-border/40 flex items-center justify-center flex-shrink-0">
+            {draft.preview_image_url ? (
+              <img src={draft.preview_image_url} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <Camera className="w-6 h-6 text-muted-foreground/30" />
+            )}
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                {uploading ? 'Uploading…' : 'Upload'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImageUpload(f);
+                  e.target.value = '';
+                }}
+              />
+              {draft.preview_image_url && (
+                <Button type="button" variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => set('preview_image_url', null)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            <Input
+              value={draft.preview_image_url || ''}
+              onChange={e => set('preview_image_url', e.target.value || null)}
+              placeholder="Or paste URL..."
+              className="text-xs h-8"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-3 pt-5">
-          <Switch checked={draft.is_active ?? true} onCheckedChange={v => set('is_active', v)} id="active-toggle" />
-          <Label htmlFor="active-toggle" className="text-xs">Active</Label>
-        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Switch checked={draft.is_active ?? true} onCheckedChange={v => set('is_active', v)} id="active-toggle" />
+        <Label htmlFor="active-toggle" className="text-xs">Active</Label>
       </div>
     </div>
   );
