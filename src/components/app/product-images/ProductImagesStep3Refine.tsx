@@ -1263,10 +1263,7 @@ export function ProductImagesStep3Refine({
                 size="sm"
                 variant="outline"
                 className="text-xs h-7 gap-1 flex-shrink-0 border-amber-500/40 hover:bg-amber-100/50 dark:hover:bg-amber-900/30"
-                onClick={() => {
-                  setOutfitOpen(true);
-                  setTimeout(() => outfitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-                }}
+                onClick={scrollToOutfit}
               >
                 <User className="w-3 h-3" />Select Model
               </Button>
