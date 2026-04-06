@@ -834,9 +834,9 @@ function ColorDot({ color, size = 12, hex }: { color?: string; size?: number; he
 function PresetColorDots({ config }: { config: OutfitConfig }) {
   const colors = [config.top?.color, config.bottom?.color, config.shoes?.color].filter(Boolean) as string[];
   return (
-    <div className="flex flex-col w-5 h-5 rounded-md overflow-hidden border border-border/40 shrink-0">
+    <div className="flex flex-col w-6 h-6 rounded-md overflow-hidden border border-border/40 shrink-0">
       {colors.map((c, i) => (
-        <div key={i} className="flex-1" style={{ backgroundColor: c }} />
+        <div key={i} className="flex-1" style={{ backgroundColor: COLOR_HEX[c] || c }} />
       ))}
     </div>
   );
