@@ -91,7 +91,7 @@ export default function ProductImages() {
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
   const [completedJobs, setCompletedJobs] = useState(0);
-  const [results, setResults] = useState<Map<string, { images: string[]; productName: string }>>(new Map());
+  const [results, setResults] = useState<Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>>(new Map());
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expectedJobCount, setExpectedJobCount] = useState(0);
   const [enqueuedCount, setEnqueuedCount] = useState(0);
@@ -447,24 +447,24 @@ export default function ProductImages() {
     startPolling(newJobMap);
   }, [selectedProducts, selectedScenes, canAfford, details, openBuyModal, setBalanceFromServer, queryClient, quality, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
-  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, string>) => {
-    const resultMap = new Map<string, { images: string[]; productName: string }>();
+  const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string }>) => {
+    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string }>; productName: string }>();
     for (const job of jobs) {
       if (job.status !== 'completed' || !job.result) continue;
-      const productId = productMap.get(job.id) || 'unknown';
-      const product = selectedProducts.find(p => p.id === productId);
+      const meta = productMap.get(job.id) || { productId: 'unknown', sceneName: 'Scene' };
+      const product = selectedProducts.find(p => p.id === meta.productId);
       const r = job.result as any;
-      const images: string[] = [];
+      const images: Array<{ url: string; sceneName: string }> = [];
       if (Array.isArray(r.images)) {
         for (const img of r.images) {
           const url = typeof img === 'string' ? img : img?.url || img?.image_url;
-          if (url) images.push(url);
+          if (url) images.push({ url, sceneName: meta.sceneName });
         }
       }
       if (images.length > 0) {
-        const existing = resultMap.get(productId) || { images: [], productName: product?.title || 'Product' };
+        const existing = resultMap.get(meta.productId) || { images: [], productName: product?.title || 'Product' };
         existing.images.push(...images);
-        resultMap.set(productId, existing);
+        resultMap.set(meta.productId, existing);
       }
     }
     setResults(resultMap);
@@ -474,10 +474,13 @@ export default function ProductImages() {
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
-    const productMap = new Map<string, string>();
+    const productMap = new Map<string, { productId: string; sceneName: string }>();
     for (const [key, jobId] of activeJobMap.entries()) {
-      const productId = key.split('_')[0];
-      productMap.set(jobId, productId);
+      const parts = key.split('_');
+      const productId = parts[0];
+      const sceneId = parts[1] || '';
+      const scene = selectedScenes.find(s => s.id === sceneId);
+      productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene' });
     }
     pollingStartRef.current = Date.now();
     const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
@@ -528,7 +531,7 @@ export default function ProductImages() {
     };
 
     pollingRef.current = setTimeout(poll, 2000);
-  }, [finishWithResults]);
+  }, [finishWithResults, selectedScenes]);
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
@@ -824,8 +827,13 @@ export default function ProductImages() {
                   // Fetch final state and transition
                   const jobIds = Array.from(jobMap.values());
                   supabase.from('generation_queue').select('id, status, result').in('id', jobIds).then(({ data }) => {
-                    const productMap = new Map<string, string>();
-                    for (const [key, jobId] of jobMap.entries()) productMap.set(jobId, key.split('_')[0]);
+                    const productMap = new Map<string, { productId: string; sceneName: string }>();
+                    for (const [key, jobId] of jobMap.entries()) {
+                      const parts = key.split('_');
+                      const sceneId = parts[1] || '';
+                      const scene = selectedScenes.find(s => s.id === sceneId);
+                      productMap.set(jobId, { productId: parts[0], sceneName: scene?.title || 'Scene' });
+                    }
                     finishWithResults(data || [], productMap);
                   });
                 }}
