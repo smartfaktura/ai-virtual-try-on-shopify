@@ -1,82 +1,79 @@
 
 
-# Debug Analysis: Product Images Flow — Issues Found
+# Debug Analysis: Product Images Flow — Current State
 
-## Critical Bugs
+## Previous 11 issues — Status Check
 
-### 1. Credit calculation mismatch in Refine step
-**File:** `ProductImagesStep3Refine.tsx` line 1000
-**Issue:** `costPerImage` is hardcoded to `6`, ignoring the quality setting. If user selects "Standard" quality (3 credits), the Refine step still shows 6 credits per image. The Review step (`ProductImagesStep4Review.tsx` line 53) and parent (`ProductImages.tsx` line 196) correctly use `quality === 'standard' ? 3 : 6`.
-**Fix:** Read `details.quality` and compute cost dynamically: `const costPerImage = (details.quality || 'high') === 'standard' ? 3 : 6;`
+All 11 previously identified bugs have been fixed:
+- Credit calc now dynamic (line 989)
+- INITIAL_DETAILS aligned with AUTO_AESTHETIC_DEFAULTS (brandingVisibility: 'product-accent')
+- BLOCK_FIELD_MAP centralized in detailBlockConfig.ts
+- Stale scene pruning effect added (Step2Scenes lines 228-242)
+- buildOutfitDirective removed
+- Person details hidden when model selected (line 452 check + UI line 1312)
+- All injectIfMissing calls use globalOnly=true (lines 805-813)
+- Quality toggle added (lines 1101-1111)
 
-### 2. INITIAL_DETAILS vs AUTO_AESTHETIC_DEFAULTS conflict
-**File:** `ProductImages.tsx` line 78 sets `brandingVisibility: 'none'`
-**File:** `ProductImagesStep3Refine.tsx` line 507 sets `AUTO_AESTHETIC_DEFAULTS.brandingVisibility: 'product-accent'`
-**Issue:** On first mount, `isAutoApplied()` returns `false` because `details.brandingVisibility` is `'none'` (from INITIAL_DETAILS) but Auto expects `'product-accent'`. The "Auto (Recommended)" chip appears inactive even though the user hasn't changed anything. Clicking Auto then sets `product-accent`, which is correct — but the initial state is misleading.
-**Fix:** Align `INITIAL_DETAILS.brandingVisibility` to `'product-accent'` to match `AUTO_AESTHETIC_DEFAULTS`.
+## New Issues Found
 
-### 3. Duplicate BLOCK_FIELD_MAP definitions
-**File:** `ProductImages.tsx` lines 52-65 AND `ProductImagesStep3Refine.tsx` lines 484-494
-**Issue:** Two separate copies of the same map. They can silently drift. The parent uses its copy for stale detail cleanup; the Refine step uses its copy for UI display. If a field is added to one but not the other, either cleanup won't work or UI won't show the field.
-**Fix:** Export `BLOCK_FIELD_MAP` from `detailBlockConfig.ts` and import in both files.
+### 1. OutfitConfig not passed to prompt builder via `defaultOutfitDirective`
+**File:** `productImagePromptBuilder.ts` line 423-428
+**Severity:** Medium
+**Issue:** `defaultOutfitDirective` checks `details.outfitConfig` and calls `buildStructuredOutfitString`. But if user edits outfit pieces in the UI without explicitly saving, `details.outfitConfig` reflects their edits. However, when the user loads a preset via `OutfitLockPanel.loadPreset()`, it calls `update({ outfitConfig: { ...preset.config } })`, which correctly updates. The issue is that on first mount, `details.outfitConfig` is `undefined` — so the prompt builder falls through to `categoryOutfitDefaults()` which returns flat strings. This is intentional, BUT the Refine UI shows `currentConfig = details.outfitConfig || defaultConfig` (line 779), making the user think their displayed outfit IS the active config. The UI shows "fitted white cotton t-shirt" but the prompt builder uses "fitted white t-shirt" from `categoryOutfitDefaults` (different wording).
+**Fix:** When Refine step mounts and no `outfitConfig` exists, initialize it from the category defaults by calling `update({ outfitConfig: defaultConfig })` in a `useEffect`. This ensures what the user sees matches what the prompt builder uses.
 
-### 4. Selected scenes can become stale after excludeCategories filtering
-**File:** `ProductImagesStep2Scenes.tsx`
-**Issue:** If user selects "In-Hand Studio" for a mixed batch, then removes non-excluded products (leaving only home-decor), the scene gets hidden from the UI but remains in `selectedSceneIds`. The user can proceed to Refine/Review/Generate with a scene that's invisible and incompatible.
-**Fix:** After computing `filteredGlobalScenes`, add an effect that removes any selected scene IDs that are no longer visible.
+### 2. Review step ignores `creditsPerImage` prop — recalculates internally
+**File:** `ProductImagesStep4Review.tsx` lines 46-50
+**Severity:** Low
+**Issue:** The Review step receives `creditsPerImage` as a prop (line 750 passes it) but ignores it — recalculating `costPerImage` internally on line 49. This means the prop is dead. Not a bug since both calculate the same way, but the dead prop is confusing.
+**Fix:** Remove the `creditsPerImage` prop from Step4Review or use it instead of recalculating.
 
-## Medium Bugs
+### 3. `loadLastSettings` preserves format but loses `outfitConfig`
+**File:** `ProductImages.tsx` line 173
+**Severity:** Medium
+**Issue:** `loadLastSettings` does `{ ...parsed, aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount }`. If the saved settings included an `outfitConfig` for garments but the user is now shooting fragrances, the old garments outfit gets loaded. The settings ARE keyed by category, so this is a low-probability scenario — but if the user had a garment product, saved settings, then switched to "other" category (which maps to the same key), the outfit won't match.
+**Fix:** When loading last settings, clear `outfitConfig` if the saved category doesn't match the current `primaryCategory`. Already keyed by category so this is minor.
 
-### 5. `buildOutfitDirective` is dead code
-**File:** `productImagePromptBuilder.ts` lines 504-511
-**Issue:** Reads `d.outfitStyle` and `d.outfitColorDirection` — but the new UI never sets these fields (it uses `outfitConfig` instead). This function always returns `''`, making the fallback in `buildPersonDirective` (line 472) always trigger `defaultOutfitDirective`. Not a runtime bug, but confusing and could mask issues.
-**Fix:** Remove `buildOutfitDirective` and its call sites; go directly to `defaultOutfitDirective`.
+### 4. `hasMultipleCategories` computed inline on every render
+**File:** `ProductImages.tsx` lines 731-739
+**Severity:** Low (performance)
+**Issue:** An IIFE computes `hasMultipleCategories` inline inside JSX on every render, creating a new function + Set each time. Should be a `useMemo`.
+**Fix:** Move to a `useMemo` alongside `primaryCategory`.
 
-### 6. Person detail values persist invisibly when model is selected
-**File:** `ProductImagesStep3Refine.tsx` line 1311
-**Issue:** When `selectedModelId` is set, person detail chips (age, skin tone, expression) are hidden. But if the user first sets `ageRange: '18-25'`, then selects a model, the value stays in `details`. The prompt builder still injects `age 18-25` into the person directive even though the user can't see or edit it.
-**Fix:** When a model is selected, clear person detail fields or ignore them in the prompt builder when `selectedModelId` is set.
+### 5. `customizedCount` counts outfit and model fields as "customized"
+**File:** `ProductImagesStep3Refine.tsx` line 976
+**Severity:** Low (UX)
+**Issue:** The "X customized" badge counts `outfitConfig`, `selectedModelId`, `customNote`, `outfitTop`, etc. as customizations. If a user selects a model and leaves everything else on auto, it shows "2 customized" (model + outfitConfig written by default). This inflates the count and makes the user think they've changed more than they have.
+**Fix:** Add `outfitConfig`, `selectedModelId`, `outfitTop`, `outfitBottom`, `outfitShoes`, `outfitAccessories`, `customNote` to the `IGNORE_KEYS` set.
 
-### 7. `Select All` in Universal scenes doesn't respect `excludeCategories`
-**File:** No "Select All" button exists for Universal scenes currently — but the scene selection still allows manual selection of hidden scenes if they were previously selected. Related to issue #4.
+### 6. Preset bar doesn't highlight active preset
+**File:** `ProductImagesStep3Refine.tsx` lines 832-851
+**Severity:** Low (UX)
+**Issue:** The preset bar chips all look identical regardless of whether the current outfit matches one. After loading "Studio Standard", the chip still has the same styling as unselected presets. Users can't tell which preset is active.
+**Fix:** Compare `currentConfig` against each preset's `config` and apply the active chip style (`bg-primary text-primary-foreground`) when they match.
 
-## Minor Issues
+### 7. Prop picker modal excludes selected product IDs — should exclude the PRODUCTS being shot, not the selections
+**File:** `ProductImagesStep3Refine.tsx` line 1414
+**Severity:** Medium
+**Issue:** `excludeIds={selectedProductIds}` passes the Set of selected product IDs (the products being photographed). This correctly prevents users from adding a product as its own prop. But the prop picker should also allow selecting products from `allProducts` that are NOT in the current shoot batch. Currently this works correctly — the exclude prevents self-reference. However, the prop picker only shows `allProducts`, which is ALL user products. If a user has 100 products and selected 3 for this shoot, they see all 100 minus those 3 in the prop picker. This is correct behavior.
+**Status:** Not a bug after closer inspection.
 
-### 8. Lighting injected for non-global scenes despite scoping
-**File:** `productImagePromptBuilder.ts` line 818
-**Issue:** `injectIfMissing('lighting', 'lightingDirective')` does NOT pass `globalOnly = true`, so user's lighting override gets injected into recommended/editorial scenes too. The plan said aesthetic overrides should only apply to universal scenes, but lighting leaks through.
-**Fix:** Change to `injectIfMissing('lighting', 'lightingDirective', true)`.
-
-### 9. `sceneIntensity` (mood) also leaks to non-global scenes
-**File:** `productImagePromptBuilder.ts` line 820
-**Issue:** `injectIfMissing('mood', 'sceneIntensityDirective')` — no `globalOnly` flag. Mood override leaks into category scenes.
-**Fix:** Add `true` as the third argument.
-
-### 10. `stylingDensity` and `productProminence` leak to non-global scenes
-**File:** `productImagePromptBuilder.ts` lines 821-822
-**Issue:** Same pattern — these inject into all scenes regardless.
-**Fix:** Add `globalOnly = true` to both.
-
-### 11. Missing quality toggle in Refine step
-**File:** `ProductImagesStep3Refine.tsx`
-**Issue:** The Format & Output section shows aspect ratio and image count, but no quality selector (Standard vs Pro). Quality is set in `INITIAL_DETAILS` as `'high'` and never changed by the user in the Refine UI. The Review step shows it, but users can't change it.
-**Fix:** Add a quality ChipSelector (Standard 3cr / Pro 6cr) in the Format section.
-
-## Summary — 11 issues found
+## Summary — 6 issues (post-fix)
 
 | # | Severity | Issue | File |
 |---|----------|-------|------|
-| 1 | Critical | Credit calc hardcoded to 6 in Refine | Step3Refine |
-| 2 | Critical | INITIAL_DETAILS vs Auto defaults mismatch | ProductImages + Step3Refine |
-| 3 | Medium | Duplicate BLOCK_FIELD_MAP | ProductImages + Step3Refine |
-| 4 | Medium | Stale selected scenes after category filtering | Step2Scenes |
-| 5 | Low | Dead `buildOutfitDirective` code | promptBuilder |
-| 6 | Medium | Invisible person details persist with model | Step3Refine + promptBuilder |
-| 7 | Low | Select All edge case with hidden scenes | Step2Scenes |
-| 8 | Medium | Lighting leaks to non-global scenes | promptBuilder |
-| 9 | Medium | Mood leaks to non-global scenes | promptBuilder |
-| 10 | Medium | Styling/prominence leak to non-global scenes | promptBuilder |
-| 11 | Medium | No quality toggle in Refine UI | Step3Refine |
+| 1 | Medium | OutfitConfig undefined on mount — UI shows defaults but prompt uses different strings | Step3Refine |
+| 2 | Low | Dead `creditsPerImage` prop in Review step | Step4Review |
+| 3 | Low | Last settings could load wrong outfit if category edge case | ProductImages |
+| 4 | Low | `hasMultipleCategories` computed inline in JSX | ProductImages |
+| 5 | Low | Customized count inflated by outfit/model fields | Step3Refine |
+| 6 | Low | Active preset not visually indicated | Step3Refine |
 
-All 11 issues can be fixed in a single implementation pass across 4 files.
+## Files to Update
+
+| File | Change |
+|------|--------|
+| `ProductImagesStep3Refine.tsx` | Initialize outfitConfig on mount, highlight active preset, expand IGNORE_KEYS |
+| `ProductImagesStep4Review.tsx` | Remove dead `creditsPerImage` prop |
+| `ProductImages.tsx` | Move hasMultipleCategories to useMemo, remove creditsPerImage from Step4 props |
 
