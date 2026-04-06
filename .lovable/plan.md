@@ -1,42 +1,30 @@
 
 
-# Improve Refine Step: Banner, Background Indicators, Triangle
+# Fix "View All" Button & Preset Color Indicators
 
-## 1. Redesign Model-Needed Banner
+## 1. Improve "View all models" button
 
-The current `Alert` with `AlertTriangle` icon looks generic and dated. Replace with a sleek inline card:
+The current button sits too close to the model cards and looks like a generic outline button. Fix:
 
-**File:** `ProductImagesStep3Refine.tsx` (lines 1459-1510)
+**File:** `ProductImagesStep3Refine.tsx` (lines 134-138)
 
-- Remove the `Alert`/`AlertDescription` wrapper
-- Replace with a minimal bordered card: subtle amber left-border accent (4px), clean layout with scene thumbnails inline, and a compact "Select Model" pill button
-- When model IS selected: show a subtle green left-border with checkmark and "Model applied to N scenes" in muted text — much more compact, single line
-- Remove the large triangle icon; use a small colored dot indicator instead
+- Add `mt-2` spacing above the button
+- Change from `Button variant="outline"` to a subtle text-link style: `text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer py-2` with an underline on hover
+- This creates clear visual separation and makes it feel like a "browse more" link rather than a competing action button
 
-## 2. Show Background-Editable Indicator on Scene Cards
+## 2. Redesign preset color indicators
 
-Each scene's `triggerBlocks` array already defines whether it has `'background'` controls. Surface this on the card:
+The current `PresetColorDots` renders a thin 1px-wide vertical stripe that's nearly invisible. Replace with a more prominent, elegant swatch:
 
-**File:** `ProductImagesStep3Refine.tsx` (in `renderSceneCardButton`)
+**File:** `ProductImagesStep3Refine.tsx` (lines 830-839)
 
-- Check if scene has `'background'` in its `triggerBlocks`
-- If yes, show a small `Paintbrush` icon or "BG" chip on the card so users can see at a glance which scenes support background customization
-- This answers the user's question: not all scenes have background settings — only those with `'background'` in `triggerBlocks` (e.g., Packshot, Marketplace, Pedestal) do
-
-## 3. Fix Triangle Indicator
-
-The CSS border-triangle approach still looks awkward. Replace with a cleaner visual connector:
-
-**File:** `ProductImagesStep3Refine.tsx` (lines 1687-1696)
-
-- Remove the layered border-triangle divs entirely
-- Instead, use a simple thin vertical line (2px wide, 12px tall, border color) centered below the active card, connecting it to the expanded panel
-- The expanded panel itself already has `border-primary/30` — the connector line uses the same color
-- This creates a clean, minimal "stem" connecting card to panel, matching the app's editorial aesthetic
+- Replace the thin `w-1` stripe with a `w-5 h-5 rounded-md overflow-hidden` square that shows the 3 colors as horizontal bands (each taking 1/3 height)
+- This creates a mini color swatch block that's clearly visible at a glance
+- Update the preset button layout to accommodate the slightly larger swatch (keep `gap-2`)
 
 ## Files
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | (1) Redesign model banner to sleek left-bordered card. (2) Add background-editable indicator on scene cards. (3) Replace triangle with thin vertical connector line. |
+| `ProductImagesStep3Refine.tsx` | (1) Restyle "View all" as a spaced text-link. (2) Redesign `PresetColorDots` to a visible color swatch square. |
 
