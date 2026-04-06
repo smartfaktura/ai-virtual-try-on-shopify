@@ -13,7 +13,7 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { ALL_SCENES } from '@/components/app/product-images/sceneData';
-import { getTriggeredBlocks } from '@/components/app/product-images/detailBlockConfig';
+import { getTriggeredBlocks, BLOCK_FIELD_MAP } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -48,21 +48,6 @@ const STEP_DEFS = [
   { number: 6, label: 'Results', icon: CheckCircle },
 ];
 
-// Map detail block keys to the detail settings fields they own
-const BLOCK_FIELD_MAP: Record<string, (keyof DetailSettings)[]> = {
-  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
-  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
-  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
-  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
-  actionDetails: ['actionType', 'actionIntensity'],
-  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
-  angleSelection: ['requestedViews', 'numberOfViews'],
-  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
-  productSize: ['productSize'],
-  branding: ['brandingVisibility'],
-  layout: ['layoutSpace'],
-  consistency: ['consistency'],
-};
 
 export default function ProductImages() {
   const navigate = useNavigate();
@@ -75,7 +60,7 @@ export default function ProductImages() {
     aspectRatio: '1:1', quality: 'high', imageCount: '1',
     backgroundTone: 'auto', negativeSpace: 'auto', surfaceType: 'auto',
     lightingStyle: 'soft-diffused', shadowStyle: 'natural', mood: 'auto',
-    brandingVisibility: 'none',
+    brandingVisibility: 'product-accent',
   };
 
   const [step, setStep] = useState<PIStep>(1);
@@ -233,7 +218,7 @@ export default function ProductImages() {
     for (const [block, fields] of Object.entries(BLOCK_FIELD_MAP)) {
       if (!triggered.includes(block)) {
         for (const field of fields) {
-          if (details[field]) staleKeys.push(field);
+          if (details[field as keyof DetailSettings]) staleKeys.push(field as keyof DetailSettings);
         }
       }
     }

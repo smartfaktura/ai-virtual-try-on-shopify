@@ -21,6 +21,22 @@ export const DETAIL_BLOCKS: DetailBlockDef[] = [
   { key: 'layout', title: 'Layout Space', description: 'Set the balance between product focus and negative space.' },
 ];
 
+/** Map detail block keys to the detail settings fields they own */
+export const BLOCK_FIELD_MAP: Record<string, string[]> = {
+  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
+  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
+  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
+  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
+  actionDetails: ['actionType', 'actionIntensity'],
+  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
+  angleSelection: ['requestedViews', 'numberOfViews'],
+  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
+  productSize: ['productSize'],
+  branding: ['brandingVisibility'],
+  layout: ['layoutSpace'],
+  consistency: ['consistency'],
+};
+
 /** Get triggered blocks from a set of selected scene IDs */
 export function getTriggeredBlocks(
   selectedSceneIds: Set<string>,

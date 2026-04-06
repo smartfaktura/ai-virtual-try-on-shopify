@@ -447,19 +447,22 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 // ── Person directive builder (skips auto values) ──
 function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string): string {
   const parts: string[] = [];
-  if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
-  if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
-  if (!isAuto(d.skinTone)) parts.push(`${d.skinTone} skin tone`);
-  if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
-  if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
-  if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
+  // When a specific model is selected, skip user-set person details (age, skin, expression etc.)
+  // — those fields are hidden in the UI and shouldn't leak into the prompt
+  if (!d.selectedModelId) {
+    if (!isAuto(d.presentation)) parts.push(`${d.presentation} presentation`);
+    if (!isAuto(d.ageRange)) parts.push(`age ${d.ageRange}`);
+    if (!isAuto(d.skinTone)) parts.push(`${d.skinTone} skin tone`);
+    if (!isAuto(d.expression)) parts.push(`${d.expression} expression`);
+    if (!isAuto(d.hairVisibility)) parts.push(`${d.hairVisibility} hair visibility`);
+    if (!isAuto(d.cropType)) parts.push(`${d.cropType} crop`);
+  }
 
   if (parts.length === 0) {
     // No person details set — use smart defaults if scene requires a person
     if (sceneNeedsPerson) {
       let directive = defaultPersonDirective(category);
-      const outfitStr = buildOutfitDirective(d);
-      directive += ` ${outfitStr || defaultOutfitDirective(category, d, gender)}`;
+      directive += ` ${defaultOutfitDirective(category, d, gender)}`;
       directive += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return directive;
     }
@@ -468,11 +471,8 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   let directive = `Model: ${parts.join(', ')}.`;
 
-  // Append outfit if present, or use smart default for on-model scenes
-  const outfitStr = buildOutfitDirective(d);
-  if (outfitStr) {
-    directive += ` ${outfitStr}`;
-  } else if (sceneNeedsPerson) {
+  // Append outfit using structured config or smart default for on-model scenes
+  if (sceneNeedsPerson) {
     directive += ` ${defaultOutfitDirective(category, d, gender)}`;
   }
 
@@ -501,14 +501,7 @@ function buildHandDirective(d: DetailSettings): string {
   return parts.join(', ');
 }
 
-function buildOutfitDirective(d: DetailSettings): string {
-  const style = isAuto(d.outfitStyle) ? undefined : d.outfitStyle;
-  const color = isAuto(d.outfitColorDirection) ? undefined : d.outfitColorDirection;
-  if (!style && !color) return '';
-  const s = style ? `Wearing ${style.replace(/-/g, ' ')} outfit` : 'Outfit';
-  const c = color ? ` in ${color.replace(/-/g, ' ')} tones` : '';
-  return `${s}${c}.`;
-}
+// buildOutfitDirective removed — outfitConfig system replaces outfitStyle/outfitColorDirection
 
 // ── Packaging directive builder ──
 function buildPackagingDirective(d: DetailSettings): string {
@@ -618,8 +611,6 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
-      const outfit = buildOutfitDirective(details);
-      if (outfit) return outfit;
       const needsOutfit = scene.triggerBlocks.includes('personDetails') || scene.triggerBlocks.includes('actionDetails');
       return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender) : '';
     }
@@ -815,11 +806,11 @@ export function buildDynamicPrompt(
   injectIfMissing('shadow', 'shadowDirective', true);
   injectIfMissing('surface', 'surfaceDirective', true);
   injectIfMissing('styling', 'stylingDirective', true);
-  injectIfMissing('lighting', 'lightingDirective');
+  injectIfMissing('lighting', 'lightingDirective', true);
   injectIfMissing('composition', 'compositionDirective', true);
-  injectIfMissing('mood', 'sceneIntensityDirective');
-  injectIfMissing('styling density', 'stylingDensityDirective');
-  injectIfMissing('prominence', 'productProminenceDirective');
+  injectIfMissing('mood', 'sceneIntensityDirective', true);
+  injectIfMissing('styling density', 'stylingDensityDirective', true);
+  injectIfMissing('prominence', 'productProminenceDirective', true);
   injectIfMissing('body framing', 'bodyFramingDirective');
 
   // Prepend reference isolation instruction BEFORE cleanup so it appears early

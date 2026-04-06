@@ -16,7 +16,7 @@ import {
   Save, Trash2, History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getBlocksByScene } from './detailBlockConfig';
+import { getBlocksByScene, BLOCK_FIELD_MAP } from './detailBlockConfig';
 import { ALL_SCENES } from './sceneData';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import type { DetailSettings, ProductImageScene, UserProduct, RefineSettings, OverallAesthetic, PersonStyling, ProductCategory, OutfitConfig, OutfitPiece, OutfitPreset } from './types';
@@ -481,17 +481,6 @@ const BLOCK_LABELS: Record<string, { title: string }> = {
   productSize: { title: 'Product Size' },
 };
 
-const BLOCK_FIELD_MAP: Record<string, (keyof DetailSettings)[]> = {
-  background: ['backgroundTone', 'shadowStyle', 'compositionFraming', 'negativeSpace'],
-  visualDirection: ['mood', 'sceneIntensity', 'productProminence', 'lightingStyle'],
-  sceneEnvironment: ['environmentType', 'surfaceType', 'stylingDensity', 'props'],
-  personDetails: ['presentation', 'ageRange', 'skinTone', 'handStyle', 'nails', 'jewelryVisible', 'cropType', 'expression', 'hairVisibility'],
-  actionDetails: ['actionType', 'actionIntensity'],
-  detailFocus: ['focusArea', 'cropIntensity', 'detailStyle'],
-  angleSelection: ['requestedViews', 'numberOfViews'],
-  packagingDetails: ['packagingType', 'packagingState', 'packagingComposition', 'packagingFocus', 'referenceStrength'],
-  productSize: ['productSize'],
-};
 
 /* ══════════════════════════════════════════════
    Constants
@@ -997,7 +986,7 @@ export function ProductImagesStep3Refine({
   const hasOverrides = Object.values(overrides).some(v => v !== globalRatio);
   const hasAnyProps = Object.values(sceneProps).some(arr => arr.length > 0);
   const imgCount = parseInt(details.imageCount || '1', 10);
-  const costPerImage = 6;
+  const costPerImage = (details.quality || 'high') === 'standard' ? 3 : 6;
   const sceneCount = selectedScenes.length;
   const totalImages = productCount * sceneCount * imgCount;
   const totalCredits = totalImages * costPerImage;
@@ -1107,6 +1096,18 @@ export function ProductImagesStep3Refine({
                     <span className="text-sm font-semibold">Images per scene</span>
                   </div>
                   <ChipSelector label="" value={details.imageCount || '1'} onChange={v => update({ imageCount: v })} options={IMAGE_COUNT_OPTIONS} />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold">Quality</span>
+                  </div>
+                  <ChipSelector label="" value={details.quality || 'high'} onChange={v => update({ quality: v })} options={[
+                    { value: 'standard', label: 'Standard (3 cr)' },
+                    { value: 'high', label: 'Pro (6 cr)' },
+                  ]} />
                 </CardContent>
               </Card>
             </div>
@@ -1308,7 +1309,7 @@ export function ProductImagesStep3Refine({
                 <OutfitLockPanel details={details} update={update} primaryCategory={primaryCategory} modelGender={selectedModelGender} />
 
                 {/* Inline person details (only when no specific model selected) */}
-                {!details.selectedModelId && (
+                {!details.selectedModelId ? (
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-muted-foreground">Person details (auto-selected)</span>
                     <InlinePersonDetails details={details} update={update} />
@@ -1325,7 +1326,7 @@ export function ProductImagesStep3Refine({
                       ]} />
                     </div>
                   </div>
-                )}
+                ) : null}
               </CardContent>
             </Card>
           </CollapsibleContent>
