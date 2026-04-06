@@ -335,12 +335,6 @@ export default function ProductImages() {
       const base64Image = await convertImageToBase64(product.image_url);
       const productAnalysis = analyses[product.id] || (product as any).analysis_json || null;
 
-      // Build extra_variations from selected scenes with full prompt instructions
-      const extraVariations = selectedScenes.map(scene => ({
-        label: scene.title,
-        instruction: buildInstruction(scene, product),
-        aspect_ratio: details.sceneAspectOverrides?.[scene.id] || undefined,
-      }));
 
       // Each scene gets its own job (1 image per job for reliability)
       // Multi-select fields expand into separate variation jobs
