@@ -844,14 +844,14 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
               >
                 <Trash2 className="w-2.5 h-2.5 text-white" />
               </button>
-              <div className="aspect-[4/3] w-full" style={{ background: fill }} />
+              <div className="aspect-square w-full" style={{ background: fill }} />
               {isActive && (
-                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                  <Check className="w-3 h-3 text-primary-foreground" />
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                  <Check className="w-2.5 h-2.5 text-primary-foreground" />
                 </div>
               )}
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5">
-                <p className="text-[10px] font-medium text-white leading-tight truncate">{sc.label}</p>
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/40 to-transparent px-1 py-1">
+                <p className="text-[9px] font-medium text-white leading-tight truncate">{sc.label}</p>
               </div>
             </button>
           );
