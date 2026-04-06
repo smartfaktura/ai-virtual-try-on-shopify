@@ -432,7 +432,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
   if (outfitStr) {
     directive += ` ${outfitStr}`;
   } else if (sceneNeedsPerson) {
-    directive += ` ${defaultOutfitDirective(category)}`;
+    directive += ` ${defaultOutfitDirective(category, d)}`;
   }
 
   // Append model reference if present
