@@ -1,47 +1,43 @@
 
 
-# Refine Step — UI Polish Pass
+# Admin Product Image Scenes — Image Upload & Preview Integration
+
+## What we're building
+Add image upload capability to the admin scene manager so admins can upload preview images directly (instead of pasting URLs), and show those previews as thumbnails in the scene list rows. Also wire scene cards in the user-facing Step 2 to display these uploaded previews.
 
 ## Changes
 
-### 1. Smaller background swatch cards + remove Charcoal
-**File: `ProductImagesStep3Refine.tsx`**
-- Change card aspect from `aspect-[4/3]` to `aspect-square` in the `BackgroundSwatchSelector` grid
-- Increase grid density: `grid-cols-4 sm:grid-cols-8` (was `grid-cols-3 sm:grid-cols-6`)
-- Remove `charcoal` entry from `BG_SWATCH_OPTIONS` array
-- Shrink label text and overlay padding to match smaller cards
+### 1. Admin page: Add image upload to SceneForm
+**File: `src/pages/AdminProductImageScenes.tsx`**
+- Replace the "Preview Image URL" text input with a combined upload + URL field
+- Add a file input (`<input type="file" accept="image/*">`) with an "Upload" button
+- On file select, upload to `product-uploads` bucket under path `scene-previews/{scene_id}-{timestamp}.{ext}`, get public URL, set it as `preview_image_url`
+- Show a small thumbnail preview next to the field when a URL is set
+- Keep the URL input as fallback for pasting external URLs
+- Use `useFileUpload` hook or inline Supabase storage upload
 
-### 2. Improve "needs model" banner
-**File: `ProductImagesStep3Refine.tsx`**
-- Restyle the model-needed banner from the current amber left-bordered card into a proper wizard-style attention card with an icon, bold heading, description text, and a styled "Select Model" button (not the current tiny pill)
-- Use a card-like layout: rounded-xl, subtle background, centered content with a User icon and clear CTA
+### 2. Admin page: Show preview thumbnails in scene list rows
+**File: `src/pages/AdminProductImageScenes.tsx`**
+- In each scene row (lines ~283-312), add a small 40×40 rounded thumbnail before the title
+- If `scene.preview_image_url` exists, show the image; otherwise show a Camera placeholder icon
+- This gives admins immediate visual feedback on which scenes have previews
 
-### 3. Reorder: Product shots before Background
-**File: `ProductImagesStep3Refine.tsx`**
-- In the scenes section render block (~lines 1972-2037), move the product shots grid **above** the Background strip
-- Background strip moves to render between product shots and on-model shots (or after both if no model shots)
+### 3. Step2 scene cards: Already wired
+The `SceneCard` component in `ProductImagesStep2Scenes.tsx` already reads `scene.previewUrl` and renders it (line 87). The `dbToFrontend` function in `useProductImageScenes.ts` maps `preview_image_url` → `previewUrl` (line 35). So once images are uploaded via admin, they'll automatically appear on user-facing scene cards. **No changes needed here** — just verify the data flow works.
 
-### 4. Add background attention message
-**File: `ProductImagesStep3Refine.tsx`**
-- Add a small attention banner above the Background section (similar style to model banner but more subtle) reading: "Select a background for your selected scenes" with a Paintbrush icon
-- Show count of scenes that use backgrounds, hide banner once at least one background is selected
+### 4. Step2: Use dynamic scenes from hook instead of hardcoded imports
+**File: `src/components/app/product-images/ProductImagesStep2Scenes.tsx`**
+- Currently imports `GLOBAL_SCENES` and `CATEGORY_COLLECTIONS` from `sceneData.ts` (hardcoded)
+- Switch to importing from `useProductImageScenes` hook so admin changes (including uploaded images) are reflected
+- Keep hardcoded data as fallback (already handled by the hook)
 
-### 5. Improve outfit presets — descriptive cards instead of color dots
-**File: `ProductImagesStep3Refine.tsx`**
-- Replace the current preset bar (horizontal chips with `PresetColorDots`) with descriptive cards
-- Each card: title, 1-line description of the styling direction, no color swatches
-- Descriptions:
-  - **Studio Standard** — "Clean, neutral styling for commercial product focus"
-  - **Editorial** — "Dark tones, tailored fits for magazine-ready shots"
-  - **Minimal** — "Stripped-back whites and creams, relaxed silhouettes"
-  - **Streetwear** — "Oversized fits, dark palette, urban energy"
-  - **Luxury Soft** — "Silk and cashmere in warm neutrals, elevated elegance"
-- Cards layout: horizontal scroll row, each ~160px wide, rounded-xl border, active state with primary ring
-- Remove `PresetColorDots` component usage from preset buttons
+### 5. Storage: Use existing `product-uploads` bucket
+The `product-uploads` bucket is already public. Scene preview images will be uploaded under a `scene-previews/` prefix within it. No new bucket or migration needed.
 
 ## Files
 
-| File | Changes |
+| File | Action |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | All 5 changes above |
+| `src/pages/AdminProductImageScenes.tsx` | Add upload UI + thumbnails in list rows |
+| `src/components/app/product-images/ProductImagesStep2Scenes.tsx` | Switch from hardcoded to hook-based scene data |
 
