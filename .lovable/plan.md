@@ -1,50 +1,90 @@
 
 
-# Refine Step — UX Cleanup
+# Background System Overhaul — Apply to All + Color Swatches + Gradients + Custom Hex
 
-## Problems from Screenshot
+## What's Wrong
 
-1. **Expanded scene panel is overwhelming** — clicking "Editorial on S..." opens a huge inline panel showing Visual Direction (Mood, Product Size, Lighting) + Environment (Environment, Surface, Styling) all at once as a wall of chips. Too many options visible simultaneously in a narrow column.
+1. **Background only affects ~11/19 scenes** — the strip says "7 scenes" because it filters on `{{background}}` token presence. The user expects "Pure White" to apply across ALL selected scenes. Scenes without the token silently ignore the setting.
 
-2. **Scene cards show truncated names** — "Clean Studio...", "Editorial on S...", "Tabletop Life..." are unreadable. The grid is too tight.
+2. **No visual color swatches** — the background chips are plain text ("Pure White", "Light Gray"). Users expect to see a colored rectangle next to each option so they can visually identify the tone.
 
-3. **Template controls + block controls mixed together** — the expanded panel shows both `BlockFields` (Visual Direction, Environment) and `TemplateControlChips` (Style section) without clear hierarchy. Users see 15+ chip selectors at once.
+3. **No gradient options** — only a single "Soft Gradient" chip exists. Users want to see gradient presets (warm fade, cool fade, etc.) and the ability to input a custom gradient.
 
-4. **No progressive disclosure in expanded panel** — all controls dump at once. Users who want to change just one thing (e.g. lighting) have to visually scan through everything.
+4. **No custom hex/color input** — users want to type their own hex code or pick a custom color for backgrounds.
 
-5. **"customized" dot is too subtle** — tiny 1.5px dot + 10px text doesn't communicate what was changed or invite exploration.
+5. **Changes are cosmetic only if the prompt template doesn't contain `{{background}}`** — this is the core bug. The backgroundTone needs to be injected into ALL scene prompts, not just those with the token.
 
-6. **Background strip + Advanced details compete with scene card expansion** — three levels of controls for the same fields (BG strip → Advanced → scene card inline) creates confusion about which one controls what.
+## Plan
 
-## Proposed Fixes
+### 1. Fix prompt injection: backgroundTone applies globally
 
-### 1. Collapsible sub-sections inside expanded panel
-Instead of dumping all `BlockFields` + `TemplateControlChips` at once, wrap each block in its own mini-collapsible with the block title as trigger. First block auto-opens, rest collapsed. This way clicking "Editorial on Street" shows:
-- **Visual Direction** ▾ (open by default)
-- **Environment** ▸ (collapsed)  
-- **Style** ▸ (collapsed)
+**File: `src/lib/productImagePromptBuilder.ts`**
 
-Each section only 3-4 chips, not 15.
+In the main prompt builder function, after resolving all template tokens, append a background directive suffix to scenes that DON'T already have `{{background}}` in their template. This ensures every scene gets the user's background preference injected.
 
-### 2. Wider scene cards with readable titles
-- Change grid from `grid-cols-5` to `grid-cols-4` on lg screens
-- Use `line-clamp-2` instead of `truncate` for titles
-- Increase thumbnail from `w-12 h-12` to `w-14 h-14`
+Add logic: if the scene template doesn't contain `{{background}}` AND `backgroundTone` is set (not 'auto'), append a background instruction line like: `"Background: {resolved background tone}."` to the final prompt.
 
-### 3. Simplify the Background strip
-- Remove the "Advanced details" collapsible from the BG strip entirely — those controls are already available inside each scene card's expansion. Having them in two places is confusing.
-- Keep the BG strip as a single-purpose quick action: just background tone chips + scene count label.
+Also add new entries to `COLOR_WORLD_MAP` for gradient presets and custom hex values.
 
-### 4. Better "tap to customize" affordance
-- Add subtle text below scene title: `"Lighting, Shadow..."` (first 2 control names) in muted 10px — gives users a preview of what they'll find inside without a confusing "⚙ 7 settings" pill.
-- On hover, show a soft `→ Customize` text replacing the control names.
+### 2. Background strip applies to ALL scenes
 
-### 5. Scene card expansion opens as a slide-down panel
-- Add `overflow-hidden` transition with max-height animation for smoother expand/collapse instead of the current `animate-in fade-in slide-in-from-top` which feels jumpy.
+**File: `ProductImagesStep3Refine.tsx`**
+
+- Remove the filter `scenesWithBackground.length >= 2` — always show the background strip when there are 2+ selected scenes
+- Change label from "· {scenesWithBackground.length} scenes" to "· all {selectedScenes.length} scenes"
+- This makes it clear the background setting is global
+
+### 3. Add color swatches to background chips
+
+**File: `ProductImagesStep3Refine.tsx`**
+
+Create a new `BackgroundChipSelector` component (inline) that renders each option with a small colored square:
+
+| Value | Swatch Color |
+|-------|-------------|
+| `white` | `#FFFFFF` (with border) |
+| `light-gray` | `#E5E7EB` |
+| `warm-neutral` | `#F5F0EB` |
+| `cool-neutral` | `#EDF0F4` |
+| `gradient` | CSS linear-gradient preview |
+
+Each chip: `[■ Pure White]` — 12x12 rounded color swatch + label text.
+
+### 4. Add gradient presets
+
+Expand the background options with gradient presets:
+
+| Value | Label | Gradient CSS |
+|-------|-------|-------------|
+| `gradient-warm` | Warm Fade | `#FAF7F2 → #F0E6D8` |
+| `gradient-cool` | Cool Fade | `#F0F4F8 → #E0E8F0` |
+| `gradient-sunset` | Sunset | `#FEF3E6 → #F8E0D0` |
+| `gradient` | Soft Gradient | `#F8F8F8 → #EEEEEE` |
+
+Add corresponding entries to `COLOR_WORLD_MAP` in the prompt builder for proper prompt injection.
+
+### 5. Add custom hex/gradient input
+
+Below the background chips, add a compact row:
+- **Custom color**: a hex input field with a small color preview swatch (reuse existing `CustomHexPanel` pattern but simplified)
+- When the user enters a custom hex, set `backgroundTone` to `custom` and store the hex value in a new field `backgroundCustomHex` on `DetailSettings`
+
+Add `backgroundCustomHex` to the `DetailSettings` type and handle it in the prompt builder.
+
+### 6. Update DetailSettings type
+
+**File: `src/components/app/product-images/types.ts`**
+
+Add:
+```
+backgroundCustomHex?: string;
+```
 
 ## Files to Update
 
 | File | Changes |
 |---|---|
-| `ProductImagesStep3Refine.tsx` | (1) Wrap each block inside expanded panel in a mini-Collapsible — first auto-opens, rest collapsed. (2) Widen grid to `grid-cols-4` on lg, increase thumbnail to `w-14 h-14`, use `line-clamp-2` for titles. (3) Remove "Advanced details" collapsible from BG strip — keep only background tone chips. (4) Show first 2 control names as subtle preview text below scene title. (5) Smoother expand animation. |
+| `types.ts` | Add `backgroundCustomHex?: string` to `DetailSettings` |
+| `ProductImagesStep3Refine.tsx` | (1) Remove `scenesWithBackground` filter — show strip for all scenes. (2) Replace plain `ChipSelector` with new `BackgroundChipSelector` that renders color swatches. (3) Add gradient preset chips. (4) Add custom hex input row below chips. (5) Update label to "all N scenes". |
+| `productImagePromptBuilder.ts` | (1) Add gradient preset entries to `COLOR_WORLD_MAP`. (2) Add custom hex handling. (3) After template token resolution, inject background directive into scenes that don't have `{{background}}` token — ensuring global application. |
 
