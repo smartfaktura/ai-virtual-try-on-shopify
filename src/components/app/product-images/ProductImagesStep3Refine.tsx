@@ -852,14 +852,18 @@ function OutfitLockPanel({ details, update, primaryCategory, modelGender }: {
 
       {/* Preset bar */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-        {allPresets.map(preset => (
+        {allPresets.map(preset => {
+          const active = isPresetActive(preset.config);
+          return (
           <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
             <button
               type="button"
               onClick={() => loadPreset(preset)}
               className={cn(
                 'px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
-                'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
+                active
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground',
               )}
             >
               {preset.name}
