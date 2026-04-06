@@ -1091,7 +1091,7 @@ export function ProductImagesStep3Refine({
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
   const [formatOpen, setFormatOpen] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
-  const [outfitOpen, setOutfitOpen] = useState(false);
+  const [outfitOpen, setOutfitOpen] = useState(needsModel);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const outfitRef = useRef<HTMLDivElement>(null);
   const [propModalOpen, setPropModalOpen] = useState(false);
@@ -1272,18 +1272,123 @@ export function ProductImagesStep3Refine({
         </Alert>
       )}
 
-      {/* ── SECTION 1: YOUR SCENES (cards with inline expansion) ── */}
+      {/* ── SECTION 1: YOUR SCENES (grouped cards) ── */}
       {selectedScenes.length > 0 && (() => {
         // Compute scenes with {{background}} token for quick-action strip
         const scenesWithBackground = selectedScenes.filter(s => (s.promptTemplate || '').includes('{{background}}'));
         const showBgStrip = scenesWithBackground.length >= 2;
 
+        // Group scenes: product shots vs on-model shots
+        const productShots = selectedScenes.filter(s => !s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
+        const modelShots = selectedScenes.filter(s => s.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails'));
+
+        const renderSceneCard = (scene: ProductImageScene) => {
+          const isExpanded = expandedSceneId === scene.id;
+          const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
+          const group = sceneGroups.find(g => g.sceneId === scene.id);
+          const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
+          const templateCtrls = getTemplateControls(scene);
+          const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
+          const isClickable = hasControls || (sceneNeedsModel && needsModel);
+
+          // Check if any template control has a non-default value
+          const hasCustomizations = sceneBlocks.some(bk => {
+            const fields = BLOCK_FIELD_MAP[bk] || [];
+            return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
+          });
+
+          return (
+            <div key={scene.id} className="col-span-1">
+              <button
+                type="button"
+                onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
+                className={cn(
+                  'w-full text-left rounded-xl border p-2 transition-all duration-150 group/card',
+                  isExpanded
+                    ? 'border-primary bg-primary/[0.03] shadow-sm'
+                    : hasCustomizations
+                      ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
+                      : sceneNeedsModel && needsModel
+                        ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
+                        : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
+                  isClickable ? 'cursor-pointer' : 'cursor-default',
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  {/* Thumbnail */}
+                  <div className="w-12 h-12 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
+                    {scene.previewUrl ? (
+                      <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Camera className="w-4 h-4 text-muted-foreground/30" /></div>
+                    )}
+                  </div>
+                  {/* Title + status dot */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-medium truncate block">{scene.title}</span>
+                    {sceneNeedsModel && needsModel && (
+                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />needs model
+                      </span>
+                    )}
+                    {hasCustomizations && !(sceneNeedsModel && needsModel) && (
+                      <span className="flex items-center gap-1 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <span className="text-[10px] text-primary font-medium">customized</span>
+                      </span>
+                    )}
+                  </div>
+                  {/* Chevron — always visible */}
+                  {isClickable && (
+                    <ChevronDown className={cn(
+                      'w-3.5 h-3.5 flex-shrink-0 transition-all',
+                      isExpanded
+                        ? 'text-primary rotate-180'
+                        : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
+                    )} />
+                  )}
+                </div>
+              </button>
+
+              {/* Inline expanded settings — stays in single column below */}
+              {isExpanded && hasControls && (
+                <div className="mt-1.5 rounded-xl border border-primary/20 bg-card p-4 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                  {sceneBlocks.map(blockKey => {
+                    const meta = BLOCK_LABELS[blockKey];
+                    if (!meta) return null;
+                    return (
+                      <div key={blockKey} className="space-y-2">
+                        <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
+                        <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
+                      </div>
+                    );
+                  })}
+
+                  {templateCtrls.length > 0 && (
+                    <div className="space-y-3 pt-2 border-t border-border/40">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Style</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {templateCtrls.map(ctrl => (
+                          <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
+                        ))}
+                      </div>
+                      {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
+                        <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        };
+
         return (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Camera className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold">Your scenes</span>
-            <span className="text-[10px] text-muted-foreground">{selectedScenes.length} selected — tap to fine-tune</span>
+            <span className="text-[10px] text-muted-foreground">{selectedScenes.length} selected</span>
             <div className="ml-auto">
               <AutoAestheticButton details={details} update={update} />
             </div>
@@ -1295,25 +1400,16 @@ export function ProductImagesStep3Refine({
               <div className="flex items-center gap-2">
                 <Paintbrush className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs font-semibold">Background</span>
-                <span className="text-[10px] text-muted-foreground">across {scenesWithBackground.length} scenes</span>
+                <span className="text-[10px] text-muted-foreground">· {scenesWithBackground.length} scenes</span>
               </div>
               <ChipSelector label="" value={details.backgroundTone} onChange={v => update({ backgroundTone: v })} options={[
                 { value: 'white', label: 'Pure White' }, { value: 'light-gray', label: 'Light Gray' },
                 { value: 'warm-neutral', label: 'Warm' }, { value: 'cool-neutral', label: 'Cool' },
                 { value: 'gradient', label: 'Soft Gradient' },
               ]} />
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] text-muted-foreground">Applies to:</span>
-                {scenesWithBackground.map(s => (
-                  <div key={s.id} className="w-5 h-5 rounded bg-muted border border-border/40 overflow-hidden flex-shrink-0" title={s.title}>
-                    {s.previewUrl ? <img src={s.previewUrl} alt={s.title} className="w-full h-full object-cover" /> : <Camera className="w-2.5 h-2.5 text-muted-foreground/40 m-auto" />}
-                  </div>
-                ))}
-              </div>
 
               {/* Advanced details toggle */}
               {(() => {
-                // Compute which controls 2+ scenes share
                 const controlCounts = new Map<TemplateControlKey, number>();
                 for (const s of selectedScenes) {
                   for (const c of getTemplateControls(s)) {
@@ -1346,143 +1442,35 @@ export function ProductImagesStep3Refine({
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
-            {selectedScenes.map(scene => {
-              const isExpanded = expandedSceneId === scene.id;
-              const sceneNeedsModel = scene.triggerBlocks.some(b => b === 'personDetails' || b === 'actionDetails');
-              const blockLabels = getSceneBlockLabels(scene);
-              const group = sceneGroups.find(g => g.sceneId === scene.id);
-              const sceneBlocks = group?.blocks.filter(b => b !== 'personDetails') || [];
-              const templateCtrls = getTemplateControls(scene);
-              const hasControls = sceneBlocks.length > 0 || templateCtrls.length > 0;
-              const isClickable = hasControls || (sceneNeedsModel && needsModel);
-              const settingsCount = blockLabels.length;
+          {/* Product shots group */}
+          {productShots.length > 0 && (
+            <div className="space-y-2">
+              {modelShots.length > 0 && (
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Product shots</span>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
+                {productShots.map(renderSceneCard)}
+              </div>
+            </div>
+          )}
 
-              // Check if any template control has a non-default value
-              const hasCustomizations = sceneBlocks.some(bk => {
-                const fields = BLOCK_FIELD_MAP[bk] || [];
-                return fields.some(f => details[f as keyof DetailSettings] && details[f as keyof DetailSettings] !== '');
-              });
-
-              return (
-                <div key={scene.id} className={cn(
-                  'col-span-1',
-                  isExpanded && 'col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-5'
-                )}>
-                  <button
-                    type="button"
-                    onClick={() => isClickable ? toggleSceneExpand(scene.id) : undefined}
-                    className={cn(
-                      'w-full text-left rounded-xl border-2 p-2 transition-all duration-150 group/card',
-                      isExpanded
-                        ? 'border-primary bg-primary/[0.03]'
-                        : hasCustomizations
-                          ? 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:shadow-sm hover:bg-muted/30'
-                          : sceneNeedsModel && needsModel
-                            ? 'border-amber-400/40 hover:border-amber-400/60 hover:shadow-sm hover:bg-muted/30'
-                            : 'border-border hover:border-primary/30 hover:shadow-sm hover:bg-muted/30',
-                      isClickable ? 'cursor-pointer' : 'cursor-default',
-                    )}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      {/* Thumbnail */}
-                      <div className="w-16 h-16 rounded-lg bg-muted border border-border/40 overflow-hidden flex-shrink-0">
-                        {scene.previewUrl ? (
-                          <img src={scene.previewUrl} alt={scene.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center"><Camera className="w-5 h-5 text-muted-foreground/30" /></div>
-                        )}
-                      </div>
-                      {/* Info */}
-                      <div className="flex-1 min-w-0 py-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold line-clamp-2">{scene.title}</span>
-                          {hasCustomizations && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
-                        </div>
-                        {/* Status */}
-                        <div className="flex items-center gap-1 mt-1">
-                          {sceneNeedsModel && needsModel ? (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5">
-                              <AlertTriangle className="w-2.5 h-2.5" />needs model
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
-                              <Check className="w-2.5 h-2.5" />ready
-                            </span>
-                          )}
-                        </div>
-                        {/* Settings pill + tap hint */}
-                        {isClickable && !isExpanded && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 border border-border/40 text-[9px] text-muted-foreground font-medium">
-                              <Settings2 className="w-2.5 h-2.5" />
-                              {hasControls
-                                ? (settingsCount <= 2 ? blockLabels.join(', ') : `${settingsCount} settings`)
-                                : 'Select model'
-                              }
-                            </span>
-                          </div>
-                        )}
-                        {isExpanded && (
-                          <span className="text-[9px] text-primary font-medium mt-1 inline-flex items-center gap-0.5">Collapse</span>
-                        )}
-                        {!isClickable && (
-                          <p className="text-[9px] text-muted-foreground/60 mt-0.5 italic">No extra settings</p>
-                        )}
-                      </div>
-                      {/* Expand indicator — always visible */}
-                      {isClickable && (
-                        <div className="flex flex-col items-center gap-0.5 flex-shrink-0 mt-1">
-                          <ChevronDown className={cn(
-                            'w-3.5 h-3.5 transition-all',
-                            isExpanded
-                              ? 'text-primary rotate-180'
-                              : 'text-muted-foreground/40 group-hover/card:text-muted-foreground',
-                          )} />
-                          {!isExpanded && (
-                            <span className="text-[8px] text-muted-foreground/0 group-hover/card:text-muted-foreground/60 transition-colors leading-none">tap</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Inline expanded settings */}
-                  {isExpanded && hasControls && (
-                    <div className="mt-2 rounded-xl border border-primary/20 bg-card p-4 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-                      {/* Scene-specific block fields */}
-                      {sceneBlocks.map(blockKey => {
-                        const meta = BLOCK_LABELS[blockKey];
-                        if (!meta) return null;
-                        return (
-                          <div key={blockKey} className="space-y-2">
-                            <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
-                            <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
-                          </div>
-                        );
-                      })}
-
-                      {/* Template-derived style controls */}
-                      {templateCtrls.length > 0 && (
-                        <div className="space-y-3 pt-2 border-t border-border/40">
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Style</span>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {templateCtrls.map(ctrl => (
-                              <TemplateControlChips key={ctrl} controlKey={ctrl} details={details} update={update} />
-                            ))}
-                          </div>
-                          {/* Custom hex panel for accent control */}
-                          {templateCtrls.includes('accent') && (details.brandingVisibility === 'custom' || details.brandingVisibility === 'brand-accent') && (
-                            <CustomHexPanel accentColor={details.accentColor || ''} onChange={hex => update({ accentColor: hex })} isBrandMode={details.brandingVisibility === 'brand-accent'} />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {/* On-model shots group */}
+          {modelShots.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">On-model shots</span>
+                {needsModel && (
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    select a model below
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
+                {modelShots.map(renderSceneCard)}
+              </div>
+            </div>
+          )}
         </div>
         );
       })()}
