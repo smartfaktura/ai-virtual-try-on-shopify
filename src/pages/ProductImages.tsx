@@ -474,10 +474,13 @@ export default function ProductImages() {
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
-    const productMap = new Map<string, string>();
+    const productMap = new Map<string, { productId: string; sceneName: string }>();
     for (const [key, jobId] of activeJobMap.entries()) {
-      const productId = key.split('_')[0];
-      productMap.set(jobId, productId);
+      const parts = key.split('_');
+      const productId = parts[0];
+      const sceneId = parts[1] || '';
+      const scene = selectedScenes.find(s => s.id === sceneId);
+      productMap.set(jobId, { productId, sceneName: scene?.title || 'Scene' });
     }
     pollingStartRef.current = Date.now();
     const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
