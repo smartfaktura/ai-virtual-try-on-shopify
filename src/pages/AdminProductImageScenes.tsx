@@ -16,8 +16,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2,
 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
@@ -322,6 +327,7 @@ export default function AdminProductImageScenes() {
                                 onSaveEdit={saveEdit}
                                 onToggleActive={handleToggleActive}
                                 onMove={handleMove}
+                                onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                                 setEditDraft={setEditDraft}
                                 updatePending={updateScene.isPending}
                               />
@@ -344,6 +350,7 @@ export default function AdminProductImageScenes() {
                             onSaveEdit={saveEdit}
                             onToggleActive={handleToggleActive}
                             onMove={handleMove}
+                            onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                             setEditDraft={setEditDraft}
                             updatePending={updateScene.isPending}
                           />
@@ -362,7 +369,7 @@ export default function AdminProductImageScenes() {
 }
 
 /* ── Scene row component ── */
-function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, setEditDraft, updatePending }: {
+function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCancelEdit, onSaveEdit, onToggleActive, onMove, onDelete, setEditDraft, updatePending }: {
   scene: DbScene;
   idx: number;
   total: number;
@@ -373,6 +380,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
   onSaveEdit: () => void;
   onToggleActive: (s: DbScene) => void;
   onMove: (s: DbScene, dir: 'up' | 'down') => void;
+  onDelete: (id: string) => void;
   setEditDraft: (d: Partial<DbScene>) => void;
   updatePending: boolean;
 }) {
@@ -417,6 +425,30 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleActive(scene)}>
             {scene.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete scene permanently?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently remove <strong>{scene.title}</strong> ({scene.scene_id}). This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => onDelete(scene.id)}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
