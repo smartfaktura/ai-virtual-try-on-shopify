@@ -1,26 +1,29 @@
 
 
-# Fix "Edit Account" for Trend Watch
+# Make "Refresh All" Smart — Skip Recently-Synced Accounts
 
 ## Problem
-The "Edit Account" menu item does nothing — the `onEdit` handler is `() => {}`. The `AddAccountModal` also has no edit mode, so there's no way to change a category or other fields after adding an account.
+"Refresh All" calls the Instagram API for every active account regardless of when it was last synced. Each account costs 2-5 RapidAPI requests. This wastes quota when accounts were synced minutes ago.
+
+## Solution
+Add a staleness check so "Refresh All" only syncs accounts that haven't been synced in the last N hours (default: 6 hours). Individual sync buttons remain unchanged (always force-sync).
 
 ## Changes
 
-### 1. Update `AddAccountModal` to support edit mode
-- Add optional `editingAccount` prop with existing account data
-- When provided, pre-fill all fields (display name, username, category, source mode, profile URL)
-- Change dialog title to "Edit Account" and button text to "Save Changes"
-- Add an `onUpdate` callback prop that receives `{ id, ...fields }` and calls a Supabase update on `watch_accounts`
+### 1. Update `handleRefreshAll` in `AdminTrendWatch.tsx`
+- Before calling `syncAccount` for each account, check `last_synced_at`
+- Skip accounts where `last_synced_at` is less than 6 hours old
+- Show a toast summary: "Refreshed 3 accounts, skipped 5 (recently synced)"
+- Accounts with `sync_status: 'failed'` or no `last_synced_at` are always included
 
-### 2. Wire up edit flow in `AdminTrendWatch.tsx`
-- Add `editingAccount` state (`useState<any>(null)`)
-- When `onEdit(account)` is called, set `editingAccount` to that account and open the modal
-- Pass `editingAccount` to `AddAccountModal`
-- Add an `updateAccount` mutation that does `supabase.from('watch_accounts').update({...}).eq('id', id)` and invalidates queries
-- When the modal closes, clear `editingAccount`
+### 2. Update the edge function `fetch-instagram-feed/index.ts`
+- Fix the broken CORS import (same issue as the other functions — uses the non-existent esm.sh path)
+- Replace with inline `corsHeaders` constant
+
+### 3. Minor UX: tooltip on "Refresh All" button
+- Add a title/tooltip: "Syncs accounts not refreshed in the last 6 hours"
 
 ## Files to modify
-- `src/components/app/trend-watch/AddAccountModal.tsx` — add edit mode with pre-filled fields
-- `src/pages/AdminTrendWatch.tsx` — wire `onEdit`, add update mutation, pass editing state to modal
+- `src/pages/AdminTrendWatch.tsx` — smart refresh logic with staleness filter
+- `supabase/functions/fetch-instagram-feed/index.ts` — fix CORS import
 
