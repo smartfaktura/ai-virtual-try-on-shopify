@@ -54,6 +54,15 @@ const BG_MAP: Record<string, string> = {
   'colored': 'solid colored',
   'taupe': 'warm taupe',
   'stone': 'natural stone gray',
+  // Swatch values from BackgroundSwatchSelector UI
+  'sage': 'soft sage green (#E8EDE6)',
+  'blush': 'soft blush pink (#F8ECE8)',
+  'white': 'pure seamless white (#FFFFFF)',
+  'warm-neutral': 'warm beige (#F5F0EB)',
+  'cool-neutral': 'cool gray (#EDF0F4)',
+  'ivory': 'warm ivory (#FFFFF0)',
+  'charcoal': 'deep charcoal gray (#36454F)',
+  'navy': 'deep navy (#2B3A4E)',
 };
 
 // ── Color world map (stored in backgroundTone) ──
@@ -596,6 +605,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
         if (/^#[0-9A-Fa-f]{6}$/.test(from) && /^#[0-9A-Fa-f]{6}$/.test(to)) {
           return `smooth gradient background transitioning from ${from} to ${to}`;
         }
+      }
+      // Check if backgroundTone is a direct swatch value in BG_MAP (e.g. sage, blush, white)
+      const swatchResolved = (!isAuto(colorWorld) && BG_MAP[colorWorld!]) ? BG_MAP[colorWorld!] : null;
+      if (swatchResolved) {
+        return `${swatchResolved} seamless background`;
       }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
