@@ -19,7 +19,7 @@ export function AddAccountModal({ open, onOpenChange, onAdd, onUpdate, editingAc
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [category, setCategory] = useState<string>(TREND_CATEGORIES[0]);
-  const [sourceMode, setSourceMode] = useState('manual');
+  const [sourceMode, setSourceMode] = useState('official_api');
   const [profileUrl, setProfileUrl] = useState('');
 
   const isEditing = !!editingAccount;
@@ -35,7 +35,7 @@ export function AddAccountModal({ open, onOpenChange, onAdd, onUpdate, editingAc
       setDisplayName('');
       setUsername('');
       setCategory(TREND_CATEGORIES[0]);
-      setSourceMode('manual');
+      setSourceMode('official_api');
       setProfileUrl('');
     }
   }, [editingAccount, open]);
