@@ -729,7 +729,7 @@ export default function ProductImages() {
               (() => {
                 const filtered = userProducts.filter(p =>
                   p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-                  p.product_type.toLowerCase().includes(productSearch.toLowerCase())
+                   (p.product_type || '').toLowerCase().includes(productSearch.toLowerCase())
                 );
 
                 if (filtered.length === 0 && productSearch) {
@@ -755,15 +755,18 @@ export default function ProductImages() {
                           const isSelected = selectedProductIds.has(up.id);
                           const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
                           return (
-                            <button key={up.id} type="button" disabled={isDisabled} onClick={() => {
-                              const s = new Set(selectedProductIds);
-                              if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                              setSelectedProductIds(s);
-                            }} className={cn(
-                              'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left',
-                              isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
-                              isDisabled && 'opacity-40 cursor-not-allowed'
-                            )}>
+                            <div key={up.id} role="button" tabIndex={0} onClick={() => {
+                               if (isDisabled) return;
+                               const s = new Set(selectedProductIds);
+                               if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
+                               setSelectedProductIds(s);
+                             }} onKeyDown={(e) => {
+                               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isDisabled) return; const s = new Set(selectedProductIds); if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id); setSelectedProductIds(s); }
+                             }} className={cn(
+                               'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left cursor-pointer',
+                               isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
+                               isDisabled && 'opacity-40 cursor-not-allowed'
+                             )}>
                               <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
@@ -790,7 +793,7 @@ export default function ProductImages() {
                               )}>
                                 {isSelected && <Check className="w-3 h-3" />}
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -806,15 +809,18 @@ export default function ProductImages() {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
                         return (
-                          <button key={up.id} type="button" disabled={isDisabled} onClick={() => {
-                            const s = new Set(selectedProductIds);
-                            if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                            setSelectedProductIds(s);
-                          }} className={cn(
-                            'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
-                            isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
-                            isDisabled && 'opacity-40 cursor-not-allowed'
-                          )}>
+                          <div key={up.id} role="button" tabIndex={0} onClick={() => {
+                             if (isDisabled) return;
+                             const s = new Set(selectedProductIds);
+                             if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
+                             setSelectedProductIds(s);
+                           }} onKeyDown={(e) => {
+                             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isDisabled) return; const s = new Set(selectedProductIds); if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id); setSelectedProductIds(s); }
+                           }} className={cn(
+                             'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left cursor-pointer',
+                             isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
+                             isDisabled && 'opacity-40 cursor-not-allowed'
+                           )}>
                             <div className={cn(
                               'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
                               isSelected ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
@@ -841,7 +847,7 @@ export default function ProductImages() {
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
                               {up.product_type && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>}
                             </div>
-                          </button>
+                          </div>
                         );
                       })}
                       <button type="button" onClick={() => setAddProductOpen(true)} className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground">
