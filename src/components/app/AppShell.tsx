@@ -343,6 +343,20 @@ export function AppShell({ children }: AppShellProps) {
                       <Eye className="w-4 h-4" />
                       Scenes
                     </button>
+                    <button
+                      onClick={() => { navigate('/app/admin/trend-watch'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      Trend Watch
+                    </button>
+                    <button
+                      onClick={() => { navigate('/app/admin/scene-library'); setUserMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      Scene Library
+                    </button>
                   </>
                 )}
                 <button
