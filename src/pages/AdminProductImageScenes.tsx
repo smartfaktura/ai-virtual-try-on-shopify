@@ -350,6 +350,7 @@ export default function AdminProductImageScenes() {
                             onSaveEdit={saveEdit}
                             onToggleActive={handleToggleActive}
                             onMove={handleMove}
+                            onDelete={(id) => deleteScene.mutateAsync(id).then(() => toast.success('Scene deleted'))}
                             setEditDraft={setEditDraft}
                             updatePending={updateScene.isPending}
                           />
