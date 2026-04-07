@@ -94,9 +94,11 @@ Deno.serve(async (req) => {
       console.log("[INSTAGRAM-FEED] Raw response keys:", JSON.stringify(Object.keys(postsData)));
       console.log("[INSTAGRAM-FEED] Raw response preview:", JSON.stringify(postsData).slice(0, 2000));
 
-      // RapidAPI response structure: extract posts from the response
+      // RapidAPI response structure: { result: { edges: [{ node: {...} }] } }
       let posts: any[] = [];
-      if (Array.isArray(postsData)) {
+      if (postsData?.result?.edges) {
+        posts = postsData.result.edges.map((e: any) => e.node || e);
+      } else if (Array.isArray(postsData)) {
         posts = postsData;
       } else if (postsData?.data?.edges) {
         posts = postsData.data.edges.map((e: any) => e.node || e);
@@ -106,16 +108,6 @@ Deno.serve(async (req) => {
         posts = postsData.items;
       } else if (postsData?.data && Array.isArray(postsData.data)) {
         posts = postsData.data;
-      } else if (postsData?.data?.user?.edge_owner_to_timeline_media?.edges) {
-        posts = postsData.data.user.edge_owner_to_timeline_media.edges.map((e: any) => e.node || e);
-      } else if (postsData?.edge_owner_to_timeline_media?.edges) {
-        posts = postsData.edge_owner_to_timeline_media.edges.map((e: any) => e.node || e);
-      } else if (postsData?.graphql?.user?.edge_owner_to_timeline_media?.edges) {
-        posts = postsData.graphql.user.edge_owner_to_timeline_media.edges.map((e: any) => e.node || e);
-      } else if (postsData?.user?.media?.nodes) {
-        posts = postsData.user.media.nodes;
-      } else if (postsData?.medias) {
-        posts = postsData.medias;
       }
 
       console.log("[INSTAGRAM-FEED] Parsed posts count:", posts.length);
