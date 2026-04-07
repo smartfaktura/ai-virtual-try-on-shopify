@@ -35,7 +35,7 @@ export function AddAccountModal({ open, onOpenChange, onAdd, onUpdate, editingAc
       setDisplayName('');
       setUsername('');
       setCategory(TREND_CATEGORIES[0]);
-      setSourceMode('manual');
+      setSourceMode('official_api');
       setProfileUrl('');
     }
   }, [editingAccount, open]);
