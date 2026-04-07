@@ -26,6 +26,7 @@ export default function AdminTrendWatch() {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [refreshingAll, setRefreshingAll] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
 
   const activeAccounts = useMemo(() => {
