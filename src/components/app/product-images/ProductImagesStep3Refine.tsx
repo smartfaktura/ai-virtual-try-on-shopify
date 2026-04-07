@@ -1506,6 +1506,37 @@ export function ProductImagesStep3Refine({
   const visibleScenes = showAllShots ? selectedScenes : selectedScenes.slice(0, SHOTS_LIMIT);
   const hasMoreShots = selectedScenes.length > SHOTS_LIMIT;
 
+  // Extra reference upload handler
+  const handleExtraRefUpload = useCallback(async (sceneId: string, file: File) => {
+    if (!onSceneExtraRefsChange) return;
+    setUploadingSceneId(sceneId);
+    try {
+      const ts = Date.now();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { data, error } = await (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      const { data: urlData } = (await import('@/integrations/supabase/client')).supabase.storage
+        .from('product-uploads')
+        .getPublicUrl(data.path);
+      onSceneExtraRefsChange({ ...sceneExtraRefs, [sceneId]: urlData.publicUrl });
+    } catch (e: any) {
+      const { toast } = await import('@/lib/brandedToast');
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingSceneId(null);
+    }
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
+  const removeExtraRef = useCallback((sceneId: string) => {
+    if (!onSceneExtraRefsChange) return;
+    const next = { ...sceneExtraRefs };
+    delete next[sceneId];
+    onSceneExtraRefsChange(next);
+  }, [sceneExtraRefs, onSceneExtraRefsChange]);
+
   const renderShotCard = (scene: ProductImageScene) => {
     const sceneNeedsModel = (scene.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails');
     const hasBg = (scene.triggerBlocks || []).includes('background');
