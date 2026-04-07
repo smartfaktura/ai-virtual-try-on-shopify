@@ -1100,6 +1100,7 @@ export type Database = {
           is_active: boolean
           preview_image_url: string | null
           prompt_template: string
+          requires_extra_reference: boolean
           scene_id: string
           scene_type: string
           sort_order: number
@@ -1116,6 +1117,7 @@ export type Database = {
           is_active?: boolean
           preview_image_url?: string | null
           prompt_template?: string
+          requires_extra_reference?: boolean
           scene_id: string
           scene_type?: string
           sort_order?: number
@@ -1132,6 +1134,7 @@ export type Database = {
           is_active?: boolean
           preview_image_url?: string | null
           prompt_template?: string
+          requires_extra_reference?: boolean
           scene_id?: string
           scene_type?: string
           sort_order?: number
