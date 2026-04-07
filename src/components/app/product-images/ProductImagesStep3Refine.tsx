@@ -1280,42 +1280,35 @@ function InlinePersonDetails({ details, update, outfitAccessories, onAccessories
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance</span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
-            { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
-            { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={skinToneOptions} />
-          <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
-            { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
-          ]} />
-        </div>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <ChipSelector label="Presentation" value={details.presentation} onChange={v => update({ presentation: v })} options={[
+          { value: 'feminine', label: 'Feminine' }, { value: 'masculine', label: 'Masculine' }, { value: 'neutral', label: 'Neutral' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Age Range" value={details.ageRange} onChange={v => update({ ageRange: v })} options={[
+          { value: '18-25', label: '18–25' }, { value: '25-35', label: '25–35' }, { value: '35-50', label: '35–50' }, { value: '50+', label: '50+' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Skin Tone" value={details.skinTone} onChange={v => update({ skinTone: v })} options={skinToneOptions} />
+        <ChipSelector label="Expression" value={details.expression} onChange={v => update({ expression: v })} options={[
+          { value: 'neutral', label: 'Neutral' }, { value: 'soft-smile', label: 'Soft smile' }, { value: 'confident', label: 'Confident' }, { value: 'auto', label: 'Auto' },
+        ]} />
       </div>
-
-      <div className="space-y-3">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Accessories & Styling</span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
-            { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
-            { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+        <ChipSelector label="Hand Style" value={details.handStyle} onChange={v => update({ handStyle: v })} options={[
+          { value: 'clean-studio', label: 'Manicured' }, { value: 'natural-lifestyle', label: 'Natural' },
+          { value: 'polished-beauty', label: 'Polished' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
+          { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
+          { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
+        ]} />
+        {onAccessoriesChange && (
+          <ChipSelector label="Accessories" value={outfitAccessories || ''} onChange={v => onAccessoriesChange(v)} options={[
+            { value: 'none', label: 'None' }, { value: 'minimal', label: 'Minimal' }, { value: 'statement', label: 'Statement' },
           ]} />
-          <ChipSelector label="Nails" value={details.nails} onChange={v => update({ nails: v })} options={[
-            { value: 'natural', label: 'Natural' }, { value: 'polished', label: 'Polished' }, { value: 'minimal', label: 'Minimal' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          <ChipSelector label="Jewelry" value={details.jewelryVisible} onChange={v => update({ jewelryVisible: v })} options={[
-            { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'styled', label: 'Styled' }, { value: 'auto', label: 'Auto' },
-          ]} />
-          {onAccessoriesChange && (
-            <ChipSelector label="Accessories" value={outfitAccessories || ''} onChange={v => onAccessoriesChange(v)} options={[
-              { value: 'none', label: 'None' }, { value: 'minimal', label: 'Minimal' }, { value: 'statement', label: 'Statement' },
-            ]} />
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
