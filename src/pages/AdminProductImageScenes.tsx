@@ -439,9 +439,9 @@ export default function AdminProductImageScenes() {
           <Switch checked={showHidden} onCheckedChange={setShowHidden} id="show-hidden" />
           <Label htmlFor="show-hidden" className="text-xs">Show hidden</Label>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setShowTokenRef(!showTokenRef)} className="gap-1.5 text-xs">
-          <Info className="w-3.5 h-3.5" /> Prompt tokens
-        </Button>
+        <Link to="/app/admin/prompt-tokens" target="_blank" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+          <Info className="w-3.5 h-3.5" /> Token Reference <ExternalLink className="w-3 h-3" />
+        </Link>
         <Badge variant="secondary" className="text-xs">{filtered.length} scenes</Badge>
       </div>
 
