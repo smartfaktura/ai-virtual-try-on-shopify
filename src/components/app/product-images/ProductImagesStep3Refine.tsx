@@ -1446,7 +1446,7 @@ export function ProductImagesStep3Refine({
             isExpanded
               ? 'border-primary shadow-sm'
               : sceneNeedsModel && needsModel
-                ? 'border-amber-400/40 hover:border-amber-400/60'
+                ? 'border-primary/30 hover:border-primary/50'
                 : 'border-border hover:border-primary/30',
             hasAction ? 'cursor-pointer' : 'cursor-default',
           )}
