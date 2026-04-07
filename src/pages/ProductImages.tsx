@@ -755,15 +755,18 @@ export default function ProductImages() {
                           const isSelected = selectedProductIds.has(up.id);
                           const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
                           return (
-                            <button key={up.id} type="button" disabled={isDisabled} onClick={() => {
-                              const s = new Set(selectedProductIds);
-                              if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                              setSelectedProductIds(s);
-                            }} className={cn(
-                              'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left',
-                              isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
-                              isDisabled && 'opacity-40 cursor-not-allowed'
-                            )}>
+                            <div key={up.id} role="button" tabIndex={0} onClick={() => {
+                               if (isDisabled) return;
+                               const s = new Set(selectedProductIds);
+                               if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
+                               setSelectedProductIds(s);
+                             }} onKeyDown={(e) => {
+                               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isDisabled) return; const s = new Set(selectedProductIds); if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id); setSelectedProductIds(s); }
+                             }} className={cn(
+                               'w-full flex items-center gap-3 px-3 py-2 rounded-lg border-2 transition-all text-left cursor-pointer',
+                               isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
+                               isDisabled && 'opacity-40 cursor-not-allowed'
+                             )}>
                               <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground truncate">{up.title}</p>
