@@ -683,7 +683,7 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
           )}
           <div
             className="aspect-square w-full flex items-center justify-center"
-            style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : undefined }}
+            style={{ background: hasGradientCustom ? `linear-gradient(135deg, ${gradFrom}, ${gradTo})` : 'linear-gradient(135deg, #E8E8E8, #D0D0D0)' }}
           >
             {!hasGradientCustom && <Plus className="w-4 h-4 text-muted-foreground" />}
           </div>
