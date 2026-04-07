@@ -1994,6 +1994,7 @@ export type Database = {
           id: string
           instagram_account_id: string | null
           is_active: boolean
+          last_sync_cursor: string | null
           last_synced_at: string | null
           priority_order: number
           profile_image_url: string | null
@@ -2009,6 +2010,7 @@ export type Database = {
           id?: string
           instagram_account_id?: string | null
           is_active?: boolean
+          last_sync_cursor?: string | null
           last_synced_at?: string | null
           priority_order?: number
           profile_image_url?: string | null
@@ -2024,6 +2026,7 @@ export type Database = {
           id?: string
           instagram_account_id?: string | null
           is_active?: boolean
+          last_sync_cursor?: string | null
           last_synced_at?: string | null
           priority_order?: number
           profile_image_url?: string | null
