@@ -34,6 +34,7 @@ export default function AdminTrendWatch() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(TREND_CATEGORIES));
   const [activeTab, setActiveTab] = useState('feed');
 
