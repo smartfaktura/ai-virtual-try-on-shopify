@@ -606,6 +606,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
           return `smooth gradient background transitioning from ${from} to ${to}`;
         }
       }
+      // Check if backgroundTone is a direct swatch value in BG_MAP (e.g. sage, blush, white)
+      const swatchResolved = (!isAuto(colorWorld) && BG_MAP[colorWorld!]) ? BG_MAP[colorWorld!] : null;
+      if (swatchResolved) {
+        return `${swatchResolved} seamless background`;
+      }
       const bgResolved = (!isAuto(bgFamily) && BG_MAP[bgFamily!]) ? BG_MAP[bgFamily!] : (isAuto(bgFamily) ? defaultBackground(cat) : bgFamily!.replace(/-/g, ' '));
       const cwResolved = (!isAuto(colorWorld) && COLOR_WORLD_MAP[colorWorld!]) ? ` with ${COLOR_WORLD_MAP[colorWorld!]}` : '';
       return `${bgResolved}${cwResolved}`;
