@@ -247,6 +247,11 @@ export default function AdminTrendWatch() {
         </TabsContent>
 
         <TabsContent value="drafts">
+          <div className="flex justify-end mb-4">
+            <Button size="sm" variant="secondary" onClick={() => { setPastedFile(null); setImageModalOpen(true); }}>
+              <ImagePlus className="w-4 h-4 mr-1" /> Add Image
+            </Button>
+          </div>
           <DraftScenesPanel />
         </TabsContent>
 
