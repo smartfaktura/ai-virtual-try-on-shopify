@@ -16,8 +16,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Search, Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown,
-  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink,
+  Eye, EyeOff, Pencil, Save, X, Layers, Info, Upload, Camera, Filter, ExternalLink, Trash2,
 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
 
 const SCENE_TYPES = ['macro', 'packshot', 'portrait', 'lifestyle', 'editorial', 'flatlay'];
