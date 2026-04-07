@@ -639,6 +639,18 @@ function SceneForm({ draft, onChange }: { draft: Partial<DbScene>; onChange: (d:
         <Switch checked={draft.is_active ?? true} onCheckedChange={v => set('is_active', v)} id="active-toggle" />
         <Label htmlFor="active-toggle" className="text-xs">Active</Label>
       </div>
+
+      <div className="flex items-center gap-3 pt-1">
+        <Checkbox
+          checked={draft.requires_extra_reference ?? false}
+          onCheckedChange={(v) => set('requires_extra_reference', !!v)}
+          id="extra-ref-toggle"
+        />
+        <div>
+          <Label htmlFor="extra-ref-toggle" className="text-xs font-medium cursor-pointer">Requires extra reference image</Label>
+          <p className="text-[10px] text-muted-foreground mt-0.5">When selected, users will be asked to upload an additional product photo (e.g. back/side view) for this scene</p>
+        </div>
+      </div>
     </div>
   );
 }
