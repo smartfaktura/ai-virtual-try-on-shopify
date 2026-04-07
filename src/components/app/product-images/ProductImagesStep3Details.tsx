@@ -324,7 +324,7 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Refine your scenes</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Setup your scenes</h2>
           <p className="text-sm text-muted-foreground mt-1">Optional tweaks based on your selected scenes. We'll use smart defaults for anything you skip.</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
