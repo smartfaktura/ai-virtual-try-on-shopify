@@ -217,7 +217,7 @@ export function ColorPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-2xl max-h-[85vh]">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">Custom Color</DialogTitle>
         </DialogHeader>
