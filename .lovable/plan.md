@@ -1,21 +1,22 @@
 
 
-# Fix Style & Outfit card background
+# Fix Style & Outfit card border consistency
 
-The Style & Outfit card on line 1620 has `bg-secondary/5` which adds a grey tint. The other section cards don't have this extra background class — they just use the default white Card background.
+## Problem
+The Style & Outfit card has `className="border-none shadow-sm"` while all other section cards use plain `<Card>` (which renders with the default border and no explicit shadow). This creates a visible inconsistency.
 
 ## Change
 
 **File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx` — line 1620
 
 Replace:
-```
-<Card className="border-none shadow-sm bg-secondary/5">
-```
-With:
-```
+```tsx
 <Card className="border-none shadow-sm">
 ```
+With:
+```tsx
+<Card>
+```
 
-This removes the grey tint so the card matches the other white sections.
+This makes it match Choose model, Background style, and Additional note cards exactly.
 
