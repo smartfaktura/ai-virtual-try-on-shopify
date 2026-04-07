@@ -174,8 +174,6 @@ Deno.serve(async (req) => {
           );
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
-            console.log("[INSTAGRAM-FEED] Profile response keys:", JSON.stringify(Object.keys(profileData)));
-            console.log("[INSTAGRAM-FEED] Profile response preview:", JSON.stringify(profileData).slice(0, 1000));
             profileImg = profileData?.result?.profile_pic_url_hd
               || profileData?.result?.profile_pic_url
               || profileData?.data?.profile_pic_url_hd
